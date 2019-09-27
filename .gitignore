@@ -122,3 +122,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Experimental data
+# Experimental Set Calibration/
+Experimental Set Calibration/Calibration/Calibration Data/
+Experimental Set Control/
+Labview Learning/
+Python Learning/Experiment Output*/
