@@ -173,8 +173,7 @@ if should_plot:
     ####################
 
 with open(filepath, 'w', newline='') as output_file, \
-     nidaqmx.Task('Current and Voltage Reading Task') as e_task, \
-     nidaqmx.Task('RTD Temperature Reading Task') as t_task:
+     nidaqmx.Task('Current and Voltage Reading Task') as e_task:
 
     output_writer = csv.writer(output_file)
 
@@ -213,13 +212,10 @@ with open(filepath, 'w', newline='') as output_file, \
         min_val=0.0, max_val=7.0
     )
     
-    # t_task.timing.cfg_samp_clk_timing(sample_rate, sample_mode=sample_mode)
     e_task.timing.cfg_samp_clk_timing(sample_rate, sample_mode=sample_mode)
-    # t_task.start()
     e_task.start()
 
     print_if_must(('anything', 'info'), f'e_task samp_clk_rate: {e_task.timing.samp_clk_rate}')
-    # # print_if_must(('anything', 'info'), f't_task samp_clk_rate: {t_task.timing.samp_clk_rate}')
 
 #%%
     """
@@ -235,7 +231,6 @@ with open(filepath, 'w', newline='') as output_file, \
         """
         Read data -------------------------------------------------------
         """
-        # readings[t_task.name] = t_task.read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
         readings[e_task.name] = e_task.read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
 
 #%%
@@ -251,7 +246,6 @@ with open(filepath, 'w', newline='') as output_file, \
         
         # Thermal data:
         rtd_read_value = rtd_channel.read(e_task, readings, dtype=np.array)
-        # rtd_read_value = rtd_channel.read(t_task, readings, dtype=np.array)
         rtd_temperature = rtd_read_value
         if rtd_temperature.size > 0:
             rtd_temperature = calibrated_polynomial(rtd_temperature)
