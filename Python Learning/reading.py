@@ -78,11 +78,11 @@ must_print = {
     'sleeping': True
 }
 
-sample_rate = 10 # Hz
+sample_rate = 4 # Hz
 sample_mode = nidaqmx.constants.AcquisitionType.CONTINUOUS
 samples_per_channel = 1000000
-sleeping_time = 0.1 / sample_rate
-# sleeping_time = 0.1 #/ sample_rate
+sample_period = 1 / sample_rate # s
+sleeping_time = 0.5 * sample_period
 
 write_period = 10
 
@@ -91,7 +91,7 @@ output_dir_pattern = str(pathlib.Path() / r'Experiment Output %d-%m-%Y')
 filename_pattern = r'Experiment {index} -- %H-%M.csv'
 
 figsize = (13, 6)
-x_axis_size = 10 * sample_rate
+x_axis_size = 100 * sample_rate
 
 should_plot = True
 
@@ -258,33 +258,27 @@ with open(filepath, 'w', newline='') as output_file, \
         Saving -------------------------------------------------------
         """        
         local_data = {
-            **voltage_readings,
             'Voltage': voltage,
             'Current': current,
             'Power': power,
             'Temperature': rtd_temperature,
             'LED Voltage': led_voltage
         }
-        keys = sorted(local_data.keys())
+        keys = local_data.keys()
 
         if first:
             data = generate_empty_copy(local_data)
 
         for key in keys:
             data[key] = np.append(data[key], local_data[key])
-
-        print(f'Readings:\n{readings}')
-        print(f'Local data:\n{local_data}')
-        print(f'Data:\n{data}')
         
         continue_key = False
         for key, a in local_data.items():
             if a.size == 0:
                 print_if(('anything', 'sleeping'), f'{key} is causing sleep')
                 continue_key = True
-            time.sleep(sleeping_time)
-            break
         if continue_key:
+            time.sleep(sleeping_time)
             continue
 
         # if any(a.size == 0 for a in local_data.values()):
@@ -327,9 +321,6 @@ with open(filepath, 'w', newline='') as output_file, \
             if first:
                 win = pg.GraphicsWindow(title=filepath.name)
                 ps = {
-                    'Orange Resistor': win.addPlot(title='Orange Resistor', row=0, col=3),
-                    'Blue Resistor': win.addPlot(title='Blue Resistor', row=1, col=3),
-                    'Yellow Resistor': win.addPlot(title='Yellow Resistor', row=2, col=3),
                     'Voltage': win.addPlot(title='Voltage', row=0, col=4),
                     'Current': win.addPlot(title='Current', row=1, col=4),
                     'Power': win.addPlot(title='Power', row=2, col=4),
