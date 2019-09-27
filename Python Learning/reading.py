@@ -63,7 +63,7 @@ Settings -------------------------------------------------------
 #         except (OSError, serial.SerialException):
 #             ser.close()
 
-read_continuously = False
+read_continuously = True
 maximum_number_of_iterations = 5
 
 must_print = {
@@ -78,11 +78,11 @@ must_print = {
     'sleeping': True
 }
 
-sample_rate = 1 # Hz
+sample_rate = 10 # Hz
 sample_mode = nidaqmx.constants.AcquisitionType.CONTINUOUS
 samples_per_channel = 1000000
-# sleeping_time = 0.1 / sample_rate
-sleeping_time = 0.1 #/ sample_rate
+sleeping_time = 0.1 / sample_rate
+# sleeping_time = 0.1 #/ sample_rate
 
 write_period = 10
 
@@ -91,7 +91,7 @@ output_dir_pattern = str(pathlib.Path() / r'Experiment Output %d-%m-%Y')
 filename_pattern = r'Experiment {index} -- %H-%M.csv'
 
 figsize = (13, 6)
-x_axis_size = 100 * sample_rate
+x_axis_size = 10 * sample_rate
 
 should_plot = True
 
@@ -173,7 +173,7 @@ if should_plot:
     ####################
 
 with open(filepath, 'w', newline='') as output_file, \
-     nidaqmx.Task('Current and Voltage Reading Task') as e_task:
+     nidaqmx.Task('Experiment') as experiment:
 
     output_writer = csv.writer(output_file)
 
@@ -183,39 +183,39 @@ with open(filepath, 'w', newline='') as output_file, \
     """
     for channel_nickname, voltage_reading_channel in voltage_channels.items():
         voltage_channels[channel_nickname].add_to_task(
-            task=e_task, channel_specification='voltage_chan',
+            task=experiment, channel_specification='voltage_chan',
             terminal_config=nidaqmx.constants.TerminalConfiguration.DIFFERENTIAL,
             min_val=0.0, max_val=10.0)
 
     rtd_channel.add_to_task(
-        task=e_task, channel_specification='rtd_chan',
+        task=experiment, channel_specification='rtd_chan',
         resistance_config=nidaqmx.constants.ResistanceConfiguration.FOUR_WIRE,
         min_val=0.0, max_val=100.0,
         rtd_type=nidaqmx.constants.RTDType.CUSTOM,
         current_excit_source=nidaqmx.constants.ExcitationSource.INTERNAL, current_excit_val=1e-3,
         r_0=100)
-    # TODO: try to add RTD to e_task
+    # TODO: try to add RTD to experiment
     rtd_channel.ni.ai_rtd_a = 3.9083e-3 # This is how the original rtd was defined for the calibration
     rtd_channel.ni.ai_rtd_b = -577.5e-9
     rtd_channel.ni.ai_rtd_c = -4.183e-12
 
     current_channel.add_to_task(
-        task=e_task, channel_specification='current_chan',
+        task=experiment, channel_specification='current_chan',
         terminal_config=nidaqmx.constants.TerminalConfiguration.DIFFERENTIAL,
         min_val=-15, max_val=15,
         shunt_resistor_loc=nidaqmx.constants.CurrentShuntResistorLocation.EXTERNAL,
         ext_shunt_resistor_val=4e-3
     )
     led_reading_channel.add_to_task(
-        task=e_task, channel_specification='voltage_chan',
+        task=experiment, channel_specification='voltage_chan',
         terminal_config=nidaqmx.constants.TerminalConfiguration.DIFFERENTIAL,
         min_val=0.0, max_val=7.0
     )
     
-    e_task.timing.cfg_samp_clk_timing(sample_rate, sample_mode=sample_mode)
-    e_task.start()
+    experiment.timing.cfg_samp_clk_timing(sample_rate, sample_mode=sample_mode)
+    experiment.start()
 
-    print_if_must(('anything', 'info'), f'e_task samp_clk_rate: {e_task.timing.samp_clk_rate}')
+    print_if_must(('anything', 'info'), f'experiment samp_clk_rate: {experiment.timing.samp_clk_rate}')
 
 #%%
     """
@@ -231,27 +231,27 @@ with open(filepath, 'w', newline='') as output_file, \
         """
         Read data -------------------------------------------------------
         """
-        readings[e_task.name] = e_task.read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
+        readings[experiment.name] = experiment.read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
 
 #%%
         """
         Process data -------------------------------------------------------
         """
         # Electric data:
-        voltage_readings = {key: chan.read(e_task, readings, dtype=np.array) for key, chan in voltage_channels.items()}
+        voltage_readings = {key: chan.read(experiment, readings, dtype=np.array) for key, chan in voltage_channels.items()}
         voltage_readings_values = np.array(list(voltage_readings.values()))
         voltage = np.sum(voltage_readings_values, axis=0) if voltage_readings_values.size > 0 else voltage_readings_values
-        current = current_channel.read(e_task, readings, dtype=np.array)
+        current = current_channel.read(experiment, readings, dtype=np.array)
         power = voltage * current
         
         # Thermal data:
-        rtd_read_value = rtd_channel.read(e_task, readings, dtype=np.array)
+        rtd_read_value = rtd_channel.read(experiment, readings, dtype=np.array)
         rtd_temperature = rtd_read_value
         if rtd_temperature.size > 0:
             rtd_temperature = calibrated_polynomial(rtd_temperature)
             
         # LED data:
-        led_voltage = led_reading_channel.read(e_task, readings, dtype=np.array)
+        led_voltage = led_reading_channel.read(experiment, readings, dtype=np.array)
 
 #%%
         """
