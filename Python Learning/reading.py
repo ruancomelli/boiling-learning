@@ -75,7 +75,8 @@ must_print = {
     'temperature': True,
     'writing': True,
     'led read state': True,
-    'sleeping': True
+    'elapsed time': True,
+    'sleeping': False
 }
 
 sample_rate = 4 # Hz
@@ -105,8 +106,8 @@ def format_output_dir(output_dir_pattern):
     return pathlib.Path(datetime.now().strftime(output_dir_pattern))
 
 def format_filename(output_dir, file_pattern):
-    format_time = lambda fpattern, c: datetime.now().strftime(fpattern.format(index=c))
-    substituted_filepath = lambda fpattern, c: output_dir / format_time(fpattern, c)
+    format_time = lambda fpattern, counter: datetime.now().strftime(fpattern.format(index=counter))
+    substituted_filepath = lambda fpattern, counter: output_dir / format_time(fpattern, counter)
 
     counter = 0
     while substituted_filepath(file_pattern, counter).is_file():
@@ -194,7 +195,6 @@ with open(filepath, 'w', newline='') as output_file, \
         rtd_type=nidaqmx.constants.RTDType.CUSTOM,
         current_excit_source=nidaqmx.constants.ExcitationSource.INTERNAL, current_excit_val=1e-3,
         r_0=100)
-    # TODO: try to add RTD to experiment
     rtd_channel.ni.ai_rtd_a = 3.9083e-3 # This is how the original rtd was defined for the calibration
     rtd_channel.ni.ai_rtd_b = -577.5e-9
     rtd_channel.ni.ai_rtd_c = -4.183e-12
@@ -225,14 +225,15 @@ with open(filepath, 'w', newline='') as output_file, \
     should_continue = True
     iter_count = 0
     readings = {}
-    # elapsed_time = # TODO: implement this
-    while first or should_continue:        
+    start = time.time()
+    while first or should_continue:
+        print_if_must(('anything', 'info'), f'> Iteration {iter_count}')
 #%%
         """
         Read data -------------------------------------------------------
         """
         readings[experiment.name] = experiment.read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
-
+        elapsed_time = np.array([time.time() - start])
 #%%
         """
         Process data -------------------------------------------------------
@@ -258,13 +259,20 @@ with open(filepath, 'w', newline='') as output_file, \
         Saving -------------------------------------------------------
         """        
         local_data = {
+            'Time instant': np.array([datetime.fromtimestamp(start + et) for et in elapsed_time]),
+            'Elapsed time': elapsed_time,
             'Voltage': voltage,
             'Current': current,
             'Power': power,
             'Temperature': rtd_temperature,
-            'LED Voltage': led_voltage
+            'LED voltage': led_voltage
         }
         keys = local_data.keys()
+        n_values = min([local.size for local in local_data.values()])
+        
+        if n_values > 0:
+            elapsed_time += np.arange(n_values)*sample_period
+            print_if_must(('anything', 'elapsed time'), f'Elapsed time [s]: {elapsed_time}')
 
         if first:
             data = generate_empty_copy(local_data)
@@ -275,7 +283,7 @@ with open(filepath, 'w', newline='') as output_file, \
         continue_key = False
         for key, a in local_data.items():
             if a.size == 0:
-                print_if(('anything', 'sleeping'), f'{key} is causing sleep')
+                print_if_must(('anything', 'sleeping'), f'{key} is causing sleep')
                 continue_key = True
         if continue_key:
             time.sleep(sleeping_time)
@@ -325,18 +333,16 @@ with open(filepath, 'w', newline='') as output_file, \
                     'Current': win.addPlot(title='Current', row=1, col=4),
                     'Power': win.addPlot(title='Power', row=2, col=4),
                     'Temperature': win.addPlot(title='Temperature', row=0, col=0, rowspan=2, colspan=3),
-                    'LED Voltage': win.addPlot(title='LED Voltage', row=2, col=0, colspan=3)
+                    'LED voltage': win.addPlot(title='LED Voltage', row=2, col=0, colspan=3)
                 }
                 # ps = {key: win.addPlot(title=key) for key in keys}
-                curves = {key: ps[key].plot() for key in keys}
+                curves = {key: ps[key].plot() for key in ps}
 
-                x = {key: np.zeros(x_axis_size) for key in keys}
-                y = {key: np.zeros(x_axis_size) for key in keys}
+                x = {key: np.zeros(x_axis_size) for key in ps}
+                y = {key: np.zeros(x_axis_size) for key in ps}
 
-            for key in keys:
-                n_values = local_data[key].size
-                
-                x[key][0:n_values] = range(iter_count, iter_count + n_values)
+            for key in ps:                
+                x[key][0:n_values] = elapsed_time
                 x[key] = np.roll(x[key], -n_values)
                 
                 y[key][0:n_values] = local_data[key]
@@ -359,12 +365,6 @@ with open(filepath, 'w', newline='') as output_file, \
         first = False
         if not read_continuously:
             should_continue = iter_count <= maximum_number_of_iterations
-
-#%%
-        """
-        Wait -------------------------------------------------------
-        """
-        time.sleep(sleeping_time)
 
 
 if should_plot:
