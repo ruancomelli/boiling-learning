@@ -123,6 +123,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# User defined ignores
+*.vscode
 Experimental Set Calibration/Calibration/Calibration Data/
 Experimental Set Control/
 Labview Learning/
