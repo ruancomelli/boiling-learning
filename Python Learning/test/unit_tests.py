@@ -10,8 +10,12 @@ if os.environ['COMPUTERNAME'] == 'LABSOLAR29-001':
     os.environ["PATH"] += os.pathsep + str(pathlib.Path('C:') / 'Users'/ 'ruan.comelli'/ 'AppData' / 'Local' / 'Continuum' / 'anaconda3' / 'bin')
     os.environ["PATH"] += os.pathsep + str(pathlib.Path('C:') / 'Users'/ 'ruan.comelli'/ 'AppData' / 'Local' / 'Continuum' / 'anaconda3' / 'condabin')
 
-from Device import Device
-from Channel import Channel, ChannelType, NIChannelType
+import sys
+from pprint import pprint
+pprint(sys.path)
+
+import daq
+from daq import Device, Channel, ChannelType, NIChannelType
 
 import unittest
 import nidaqmx
