@@ -3,7 +3,9 @@ import re
 import csv
 import numpy as np
 import pint
-import sklearn, sklearn.pipeline, sklearn.preprocessing, sklearn.linear_model
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
 
 # Support functions
 def regularized_untangled_file_name(details):
@@ -92,10 +94,17 @@ for temperature_pair in temperature_pairs.values():
 	x = np.append(x, temperature_pair[0])
 	y = np.append(y, temperature_pair[1])
 
-model = sklearn.pipeline.Pipeline([('poly', sklearn.preprocessing.PolynomialFeatures(degree=3)), 
-								   ('linear', sklearn.linear_model.LinearRegression(fit_intercept=False))])
-model = model.fit(x[:, np.newaxis], y)
+def fit_polynomial(x, y, degree):
+	model = Pipeline([
+		('poly', PolynomialFeatures(degree=degree)), 
+		('linear', LinearRegression(fit_intercept=False))
+	])
+	model.fit(x[:, np.newaxis], y)
+	return model
+	
+model = fit_polynomial(x, y, 3)
 coefficients = model.named_steps['linear'].coef_
 
 with open(pathlib.Path(__file__).parent / 'coefficients.csv', 'w') as coeff_file:
 	coeff_file.writelines("%s\n" % item for item in coefficients)
+
