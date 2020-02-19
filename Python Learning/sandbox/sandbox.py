@@ -4,7 +4,7 @@
 if True:
     def hi(arg: str) -> bool:
         return True
-    
+
 print(hi.__annotations__)
 print(hi(1))
 
@@ -16,10 +16,10 @@ class X:
 
 def change_value(x):
     x.value += 1
-    
+
 def change(x):
     x = X(5)
-    
+
 x = X(3)
 change_value(x)
 print(x.value)
@@ -47,8 +47,8 @@ def merge_dicts(*dicts, inplace=False):
             return merge_dicts({}, *dicts, inplace=True)
     else:
         return {}
-    
-    
+
+
 a = {
     'p': 0,
     'y': 1
@@ -80,7 +80,7 @@ print('Heat fluxes:', heat_fluxes, 'W/m^2')
 print('Heat fluxes:', heat_fluxes/100**2, 'W/cm^2')
 
 #%%
-# Relative paths    
+# Relative paths
 def common_values(lhs, rhs):
     for lvalue, rvalue in zip(lhs, rhs):
         if lvalue == rvalue:
@@ -97,15 +97,15 @@ def common_path(lhs, rhs):
     return common_list(
         reversed(resolved_lhs.parents),
         reversed(resolved_rhs.parents))[-1]
-    
+
 # def relative_path(origin, destination):
 #     common = common_path(origin, destination)
-    
+
 #     upwards_path = origin.relative_to(common)
 #     upwards = Path('/'.join(['..'] * len(upwards_path.parts)))
-    
+
 #     downwards = destination.relative_to(common)
-    
+
 #     return upwards.joinpath(downwards)
 
 def relative_path(origin, destination):
@@ -175,7 +175,7 @@ print(relu(a, True))
 #         split_arrays = []
 #         previous_size = 1
 #         for size in sizes:
-#             train_size = 
+#             train_size =
 #             split_arrays.append(
 #                 train_test_split(*arrays, train_size=train_size, **options)
 #             )
@@ -197,9 +197,9 @@ except ImportError:
     def prod(iterable, start=1.0):
         from functools import reduce
         import operator
-        
+
         return start*reduce(operator.mul, iterable, 1)
-    
+
 import numpy as np
 
 dims = [4, 4, 4, 4]
@@ -220,3 +220,7 @@ import sympy
 wire_diameter = 0.518e-3 # m
 wire_length = 6.5e-2 # m
 wire_surface_area = np.pi * wire_diameter * wire_length
+
+#%%
+print('Hello, {name}'.format(name='Frodo', surname='Baggins'))
+print('{name}' in 'Hello, {name}')

@@ -1,0 +1,11 @@
+{
+    "files": {
+        "test_0.data": {
+            "creator": "identity",
+            "parameters": {
+                "value_name": "one",
+                "x": 3
+            }
+        }
+    }
+}
