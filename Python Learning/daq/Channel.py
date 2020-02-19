@@ -1,18 +1,17 @@
 import enum
 import nidaqmx
 
-class Channel:
-    NIChannelType = nidaqmx.constants.ChannelType
+ChannelType = enum.Enum('ChannelType', 'UNDEFINED ANALOG COUNTER DIGITAL INPUT OUTPUT')
+NIChannelType = nidaqmx.constants.ChannelType
 
-    ChannelType = enum.Enum('ChannelType', 'UNDEFINED ANALOG COUNTER DIGITAL INPUT OUTPUT')
-    
+class Channel:
     channel_table = {}
-    
+
     exclusive_types = [
         [ChannelType.UNDEFINED, ChannelType.ANALOG, ChannelType.COUNTER, ChannelType.DIGITAL],
         [ChannelType.UNDEFINED, ChannelType.INPUT, ChannelType.OUTPUT]
     ]
-    
+
     channel_type_keys = {
         NIChannelType.ANALOG_INPUT: 'ai',
         NIChannelType.DIGITAL_INPUT: 'di',
@@ -103,7 +102,7 @@ class Channel:
     def read(self, task, readings, *args, dtype=None, **kwargs):
         if dtype is None:
             dtype = list
-            
+
         if len(Channel.channel_table[task.name]) > 0:
             if len(Channel.channel_table[task.name]) == 1:
                 return dtype(readings[task.name])
@@ -111,6 +110,3 @@ class Channel:
                 return dtype(readings[task.name][self.index_in_table(task)])
         else:
             return None
-        
-ChannelType = Channel.ChannelType
-NIChannelType = Channel.NIChannelType
