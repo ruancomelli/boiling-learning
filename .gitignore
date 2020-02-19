@@ -124,7 +124,6 @@ dmypy.json
 .pyre/
 
 # User defined ignores
-*.vscode
 Experimental Set Calibration/Calibration/Calibration Data/
 Experimental Set Control/
 Labview Learning/
@@ -135,3 +134,4 @@ Python Learning/selected_experiments/
 References/
 Surfaces/
 *.ini
+*.png
