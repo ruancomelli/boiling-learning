@@ -20,7 +20,7 @@ from daq import Device, Channel, ChannelType, NIChannelType
 import unittest
 import nidaqmx
 
-class DeviceTest(unittest.TestCase):
+class daq_Device_test(unittest.TestCase):
     def test_init(self):
         d = Device()
         self.assertEqual(d.name, '')
@@ -58,7 +58,7 @@ class DeviceTest(unittest.TestCase):
         self.assertEqual(Device(), Device())
         self.assertEqual(Device('Dev0'), Device('Dev0'))
 
-class ChannelTest(unittest.TestCase):
+class daq_Channel_Test(unittest.TestCase):
     def test_init(self):
         ch = Channel(Device('Dev0'), name='ai0', description='My Channel')
         self.assertEqual(ch.name, 'ai0')
@@ -175,6 +175,8 @@ class ChannelTest(unittest.TestCase):
 
             self.assertTrue(ch.exists(task))
             self.assertEqual(ch.index_in_table(task), 0)
+
+
 
 
 if __name__ == '__main__':
