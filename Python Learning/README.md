@@ -1,3 +1,7 @@
+# README
+
+This file is intended to <!-- TODO: finish this -->
+
 ### Miscelaneous
 
 In this section, miscelaneous files and directories are detailed.
