@@ -1,43 +1,43 @@
 class Mirror:
-    class Split(dict):
+    class Fork(dict):
         pass
     
     def __init__(self, config_params, **kwargs):
         self.config = config_params
-        self.real = dict(**kwargs)
-        self.mirror = dict()
-        self.mirrored = False
+        self.contents = kwargs
+        self.forks = dict()
+        self.forked = False
         self.default = dict()
-        self.prop = False
         self.split()
         
+    def __str__(self):
+        return f'Mirror(config={self.config}, forked={self.forked}, contents={self.contents}, default={self.default}, forks={self.forks})'
+        
     def __iter__(self):
-        return self.mirror.__iter__()
+        return self.forks.__iter__()
     
     def __getitem__(self, key):
-        return self.mirror.__getitem__(key)
+        return self.forks.__getitem__(key)
         
     def split(self):
-        self.mirrored = False
-        for key, real_value in self.real.items():
+        self.forked = False
+        for key, real_value in self.contents.items():
             if (
-                isinstance(real_value, Mirror.Split)
+                isinstance(real_value, Mirror.Fork)
                 or (
                     self.config.get('propagate', False) 
                     and isinstance(real_value, Mirror)
-                    and real_value.mirrored
+                    and real_value.forked
                 )
             ):
-                self.mirrored = True
+                self.forked = True
                 for splitter_key in real_value:
-                    if splitter_key not in self.mirror:
-                        self.mirror[splitter_key] = self.default.copy()
-                    self.mirror[splitter_key][key] = real_value[splitter_key]
+                    self.forks.setdefault(splitter_key, self.default.copy())[key] = real_value[splitter_key]
             else:
                 self.default[key] = real_value
-                for v in self.mirror.values():
+                for v in self.forks.values():
                     v[key] = real_value
-        if not self.mirrored:
-            self.mirror = self.real
+        if not self.forked:
+            self.forks = self.contents
             
         return self
