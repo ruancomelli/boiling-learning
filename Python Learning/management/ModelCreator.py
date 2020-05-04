@@ -8,7 +8,6 @@ class ModelCreator:
         default_params=None,
         expand_params: bool = False,
         resolver=None,
-        splitter=None
     ):
         self.default_params = default_params if default_params is not None else {}
         self.expand_params = expand_params
@@ -21,14 +20,6 @@ class ModelCreator:
             self.resolver = default_resolver
         else:
             self.resolver = resolver
-        
-        def default_splitter(description, params, hidden_params):
-            return (utils.merge_dicts(params, description), utils.merge_dicts(params, hidden_params))
-            
-        if splitter is None:
-            self.splitter = default_splitter
-        else:
-            self.splitter = splitter
         
     def __call__(self, params=None):
         if params is None:
@@ -43,6 +34,3 @@ class ModelCreator:
         
     def resolve(self, params):
         return self.resolver(self.default_params, params)
-        
-    def split(self, description, params, hidden_params):
-        return self.splitter(description, params, hidden_params)
