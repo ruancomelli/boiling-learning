@@ -3,8 +3,11 @@ from pathlib import Path
 
 def add_to_system_path(path_to_add, add_if_exists=False):
     str_to_add = str(path_to_add)
-    if add_if_exists or str_to_add not in os.environ['PATH']:
-        os.environ['PATH'] += os.pathsep + str(str_to_add)
+    if add_if_exists or (str_to_add not in os.environ['PATH']):
+        os.environ['PATH'] += os.pathsep + str_to_add
+
+python_project_home_path = Path().absolute().resolve()
+project_home_path = python_project_home_path.parent.resolve()
 
 # ensure that anaconda is in system's PATH
 # if os.environ['COMPUTERNAME'] == 'LABSOLAR29-001':
@@ -15,6 +18,9 @@ def add_to_system_path(path_to_add, add_if_exists=False):
 #     add_to_system_path(Path('C:') / 'Users'/ 'ruan.comelli'/ 'AppData' / 'Local' / 'Continuum' / 'anaconda3' / 'Scripts')
 #     add_to_system_path(Path('C:') / 'Users'/ 'ruan.comelli'/ 'AppData' / 'Local' / 'Continuum' / 'anaconda3' / 'bin')
 #     add_to_system_path(Path('C:') / 'Users'/ 'ruan.comelli'/ 'AppData' / 'Local' / 'Continuum' / 'anaconda3' / 'condabin')
+
+
+# defaultdict is a very useful class!!!
 
 import nidaqmx
 from datetime import datetime
@@ -30,14 +36,61 @@ import pyqtgraph as pg
 
 from daq import Channel, ChannelType, Device
 
+class BoilingSurface:
+    def __init__(self, settings):
+        self.name = settings.get('name', None)
+        self.name = self.name if self.name else None
+        
+        self.type = settings['type']
+        
+        if self.type == 'ribbon':
+            self.length = settings['length']
+            self.width = settings['width']
+            self.thickness = settings['thickness']
+        elif self.type == 'wire':
+            self.length = settings['length']
+            self.diameter = settings['diameter']
+        else:
+            raise ValueError(f'type {self.type} not supported')
+        
+    @property
+    def cross_section_area(self):
+        if self.type == 'ribbon':
+            return self.width * self.thickness)
+        elif self.type == 'wire':
+            return np.pi * 0.25 * self.diameter**2
+        else:
+            raise ValueError(f'it is not possible to calculate cross section area for surface type {self.type}')
+    
+    @property
+    def surface_area(self):
+        if self.type == 'ribbon':
+            return 2*self.length*(self.width + self.thickness)
+        elif self.type == 'wire':
+            return np.pi * self.length * self.diameter
+        else:
+            raise ValueError(f'it is not possible to calculate surface area for surface type {self.type}')
+        
+
 #%%
 # -------------------------------------------------------
 # Settings
 # -------------------------------------------------------
+def read_settings():
+    import json
+    
+    with open(python_project_home_path / 'experiment_settings.json') as json_file:
+        return json.load(json_file)
 
+settings = read_settings()
+surface = BoilingSurface(settings['surface'])
+
+# ribbon or wire?
 wire_diameter = 0.518e-3 # m
 wire_length = 6.5e-2 # m
-wire_surface_area = np.pi * wire_diameter * wire_length
+# wire_cross_section = np.pi * 0.25 * wire_diameter**2
+# wire_surface_area = np.pi * wire_diameter * wire_length
+wire_surface_area = surface.surface_area
 
 read_continuously = True
 maximum_number_of_iterations = 21
@@ -48,36 +101,39 @@ must_print = {
     'voltage': False,
     'current': False,
     'power': False,
-    'flux': False,
+    'flux': True,
     'resistance': False,
-    'bulk temperature': False,
-    'writing': False,
+    'bulk temperature': True,
+    'writing': True,
     'led read state': False,
     'elapsed time': False,
     'sleeping': False,
     'wire temperature': True,
-    'temperature from resistance': False,
+    'temperature from resistance': True,
 }
 
-sample_rate = 4 # Hz
+sample_rate = 10 # Hz
 sample_mode = nidaqmx.constants.AcquisitionType.CONTINUOUS
-samples_per_channel = 1000000
+samples_per_channel = 100
 sample_period = 1 / sample_rate # s
 sleeping_time = 0.5 * sample_period
 
 write_period = 100
+calibration_filepath = project_home_path / 'Experimental Set Calibration' / 'Processing' / 'coefficients.csv'
 
-calibration_filepath = Path('.').absolute().parent.resolve() / 'Experimental Set Calibration' / 'Processing' / 'coefficients.csv'
-output_dir_pattern = str(Path() / r'Experiment Output %Y-%m-%d %H-%M ({index})')
+# output_dir_pattern = str(python_project_home_path / 'experiments' / r'Experiment %Y-%m-%d %H-%M ({index})')
+output_dir_pattern = str(python_project_home_path / 'experiments' / r'Experiment %Y-%m-%d %H-%M{optional_index}')
+def optional_index_format(counter)
+    return f' ({counter})' if counter != 0 else ''
 # filename_pattern = r'Experiment %H-%M ({index}).csv'
 filename_pattern = r'data.csv'
-report_pattern = r'report.md'
 
-x_axis_size = 100 * sample_rate
+x_axis_size = 10 * sample_rate
 
 should_plot = True
 
 measure_loop_time = False
+save = False
 
 # Pairs (T, f) where T is the measured temperature in °C and f is the factor to multiply the wire resistance
 factor_table = pd.DataFrame({
@@ -109,16 +165,25 @@ factor_table = pd.DataFrame({
     ]
 })
 
-reference_resistance = 0.2
+reference_temperature = 20 # deg C
+reference_resistivity = (
+    650
+    * 1.66242611301008E-09 # ohm per circular mil-foot -> ohm meter
+)
+reference_resistance = reference_resistivity * wire_length / wire_cross_section
 
 def calculate_resistance(voltage, current):
     return np.where(np.abs(current) >= 1e-8, np.abs(voltage / current), reference_resistance)
 
 def calculate_temperature(resistance):
     from scipy import interpolate
+
+    T_to_f = interpolate.interp1d(factor_table['Temperature'], factor_table['Factor'], copy=False, fill_value='extrapolate')
+    reference_factor = T_to_f(reference_temperature)
+
     factor = resistance / reference_resistance
-    f = interpolate.interp1d(factor_table['Factor'], factor_table['Temperature'], copy=False, fill_value='extrapolate')
-    return f(factor)
+    f_to_T = interpolate.interp1d(factor_table['Factor'], factor_table['Temperature'], copy=False, fill_value='extrapolate')
+    return f_to_T(factor)
 
 @functools.lru_cache(maxsize=128)
 def correct_wire_temperature(reference_file):
@@ -127,8 +192,8 @@ def correct_wire_temperature(reference_file):
     mean_wire_temperature = df['Wire Temperature [deg C]'].mean()
 
     return mean_bulk_temperature - mean_wire_temperature
-wire_temperature_correction_reference_file = Path('.') / 'experiments' / 'Experiment Output 2020-02-14' / 'Experiment 10-03 (0).csv'
-# wire_temperature_correction_reference_file = Path('.') / 'experiments' / 'Experiment Output 2020-02-18' / 'Experiment 16-44 (0).csv'
+wire_temperature_correction_reference_file = Path() / 'experiments' / 'Experiment Output 2020-02-14' / 'Experiment 10-03 (0).csv'
+# wire_temperature_correction_reference_file = Path() / 'experiments' / 'Experiment Output 2020-02-18' / 'Experiment 16-44 (0).csv'
 wire_temperature_correction = correct_wire_temperature(wire_temperature_correction_reference_file)
 
 # For timestamps: <https://knowledge.ni.com/KnowledgeArticleDetails?id=kA00Z000000kJy2SAE&l=pt-BR>
@@ -140,20 +205,30 @@ Support definitions -------------------------------------------------------
 def format_output_dir(output_dir_pattern):
     from pathlib import Path
 
-    full_dir_pattern = str(Path('.') / 'experiments' / datetime.now().strftime(output_dir_pattern))
+    full_dir_pattern = str(Path() / 'experiments' / datetime.now().strftime(output_dir_pattern))
 
-    format_time = lambda dirpattern, counter: datetime.now().strftime(dirpattern.format(index=counter))
-    substituted_output_dir = lambda dirpattern, counter: Path(format_time(full_dir_pattern, counter))
+    def format_time(dirpattern, counter): 
+        return datetime.now().strftime(
+            dirpattern.format(
+                index=counter,
+                optional_index=optional_index_format(counter)
+            )
+        )
+    def substituted_output_dir(dirpattern, counter): 
+        return Path(format_time(full_dir_pattern, counter))
 
     counter = 0
-    if '{index}' in output_dir_pattern:
+    if any(key in output_dir_pattern for key in ('{index}', '{optional_index}')):
         while substituted_output_dir(full_dir_pattern, counter).is_dir():
             counter += 1
+        
     return format_time(full_dir_pattern, counter)
 
 def format_filename(output_dir, file_pattern):
-    format_time = lambda fpattern, counter: datetime.now().strftime(fpattern.format(index=counter))
-    substituted_filepath = lambda fpattern, counter: output_dir / format_time(fpattern, counter)
+    def format_time(fpattern, counter):
+        return datetime.now().strftime(fpattern.format(index=counter))
+    def substituted_filepath(fpattern, counter):
+        return output_dir / format_time(fpattern, counter)
 
     counter = 0
     if '{index}' in file_pattern:
@@ -184,10 +259,13 @@ voltage_channels = {
     'Blue Resistor': Channel(Device('cDAQ1Mod4'), 'ai4', 'Blue Resistor', ChannelType.ANALOG, ChannelType.INPUT),
     'Yellow Resistor': Channel(Device('cDAQ1Mod4'), 'ai5', 'Yellow Resistor', ChannelType.ANALOG, ChannelType.INPUT)
 }
+# voltage_channels = {
+#     'Wire Voltage': Channel(Device('cDAQ1Mod4'), 'ai2', 'Wire Voltage', ChannelType.ANALOG, ChannelType.INPUT)
+# }
 current_channel = Channel(Device('cDAQ1Mod4'), 'ai0', 'Current Reading Channel', ChannelType.ANALOG, ChannelType.INPUT)
 rtd_channel = Channel(Device('cDAQ1Mod6'), 'ai0', 'RTD Reading Channel', ChannelType.ANALOG, ChannelType.INPUT)
 led_reading_channel = Channel(Device('cDAQ1Mod4'), 'ai7', 'LED Reading Channel', ChannelType.ANALOG, ChannelType.INPUT)
-thermocouple_channel = Channel(Device('cDAQ1Mod1'), 'ai0', 'Thermocouple Reading Channel', ChannelType.ANALOG, ChannelType.INPUT)
+thermocouple_channel = Channel(Device('cDAQ1Mod1'), 'ai1', 'Thermocouple Reading Channel', ChannelType.ANALOG, ChannelType.INPUT)
 
 #%%
 """
@@ -215,8 +293,8 @@ with open(calibration_filepath, 'r') as calibration_coefficients_file:
 # Initialize
 # -------------------------------------------------------
 output_dir = Path(format_output_dir(output_dir_pattern))
+output_dir.mkdir(parents=True, exist_ok=True)
 filepath = output_dir / format_filename(output_dir, filename_pattern)
-os.makedirs(output_dir, exist_ok=True)
 print_if_must(('anything', 'info'), f'> File path: {filepath}')
 
 
@@ -311,7 +389,7 @@ with open(filepath, 'w', newline='') as output_file, \
         current = current_channel.read(experiment, readings, dtype=np.array)
         power = voltage * current
         flux = power / wire_surface_area
-        resistance = calculate_resistance(voltage, current)
+        # resistance = calculate_resistance(voltage, current)
 
         # Thermal data:
         rtd_read_value = rtd_channel.read(experiment, readings, dtype=np.array)
@@ -320,8 +398,10 @@ with open(filepath, 'w', newline='') as output_file, \
             rtd_temperature = calibrated_polynomial(rtd_temperature)
 
         wire_temperature = thermocouple_channel.read(experiment, readings, dtype=np.array)
-        wire_temperature_corrected = wire_temperature + wire_temperature_correction
-        # temperature_from_resistance = calculate_temperature(resistance)
+        # wire_temperature_corrected = wire_temperature + wire_temperature_correction
+        # wire_temperature_from_resistance = calculate_temperature(resistance)
+
+        superheat = wire_temperature - rtd_temperature
 
         # LED data:
         led_voltage = led_reading_channel.read(experiment, readings, dtype=np.array)
@@ -336,12 +416,13 @@ with open(filepath, 'w', newline='') as output_file, \
             'Power [W]': power,
             'Flux [W/m^2]': flux,
             'Flux [W/cm^2]': flux/100**2,
-            'Resistance [Ohm]': resistance,
+            # 'Resistance [Ohm]': resistance,
             'Bulk Temperature [deg C]': rtd_temperature,
             'LED Voltage [V]': led_voltage,
             'Wire Temperature [deg C]': wire_temperature,
-            # 'Temperature from Resistance [deg C]': temperature_from_resistance,
-            'Wire Temperature (corrected) [deg C]': wire_temperature_corrected,
+            'Superheat [deg C]': superheat,
+            # 'Temperature from Resistance [deg C]': wire_temperature_from_resistance,
+            # 'Wire Temperature (corrected) [deg C]': wire_temperature_corrected,
         }
         n_values = min([local.size for local in local_data.values()])
 
@@ -399,16 +480,17 @@ with open(filepath, 'w', newline='') as output_file, \
         # -------------------------------------------------------
         # Writing to file
         # -------------------------------------------------------
-        if first:
-            output_writer.writerow(keys)
+        if save:
+            if first:
+                output_writer.writerow(keys)
 
-        if iter_count % write_period == 0:
-            print_if_must(('anything', 'writing'), '>> Writing to file...', end='')
+            if iter_count % write_period == 0:
+                print_if_must(('anything', 'writing'), '>> Writing to file...', end='')
 
-            output_writer.writerows(zip(*[data[key] for key in keys]))
-            data = generate_empty_copy(local_data)
+                output_writer.writerows(zip(*[data[key] for key in keys]))
+                data = generate_empty_copy(local_data)
 
-            print_if_must(('anything', 'writing'), '>> Done')
+                print_if_must(('anything', 'writing'), '>> Done')
 
 #%%
         """
@@ -419,12 +501,12 @@ with open(filepath, 'w', newline='') as output_file, \
         print_if_must(('anything', 'current'), f'>> Current [A]: {current}', conds=[current.size > 0])
         print_if_must(('anything', 'power'), f'>> Power [W]: {power}', conds=[power.size > 0])
         print_if_must(('anything', 'flux'), f'>> Flux [W/m^2]: {flux}', conds=[flux.size > 0])
-        print_if_must(('anything', 'resistance'), f'>> Resistance [Ohm]: {resistance}', conds=[resistance.size > 0])
+        # print_if_must(('anything', 'resistance'), f'>> Resistance [Ohm]: {resistance}', conds=[resistance.size > 0])
         print_if_must(('anything', 'bulk temperature'), f'>> Bulk Temperature [°C]: {rtd_temperature}', conds=[rtd_temperature.size > 0])
         print_if_must(('anything', 'led read state'), f'>> LED: {led_voltage}', conds=[led_voltage.size > 0])
         print_if_must(('anything', 'wire temperature'), f'>> Wire Temperature [°C]: {wire_temperature}', conds=[wire_temperature.size > 0])
-        # print_if_must(('anything', 'temperature from resistance'), f'>> Temperature from Resistance [deg C]: {temperature_from_resistance}', conds=[temperature_from_resistance.size > 0])
-        print_if_must(('anything', 'wire temperature corrected'), f'>> Wire Temperature (corrected) [deg C]: {wire_temperature_corrected}', conds=[wire_temperature_corrected.size > 0])
+        # print_if_must(('anything', 'temperature from resistance'), f'>> Temperature from Resistance [deg C]: {wire_temperature_from_resistance}', conds=[wire_temperature_from_resistance.size > 0])
+        # print_if_must(('anything', 'wire temperature corrected'), f'>> Wire Temperature (corrected) [deg C]: {wire_temperature_corrected}', conds=[wire_temperature_corrected.size > 0])
 
 #%%
         # -------------------------------------------------------
@@ -436,17 +518,18 @@ with open(filepath, 'w', newline='') as output_file, \
             if first:
                 win = pg.GraphicsWindow(title=filepath.name)
                 ps = {
-                    'Bulk Temperature [deg C]': win.addPlot(title='Bulk Temperature', row=0, col=0, rowspan=2, colspan=2),
-                    'Wire Temperature [deg C]': win.addPlot(title='Wire Temperature', row=2, col=0, rowspan=2, colspan=2),
-                    'Power [W]': win.addPlot(title='Power', row=0, col=2, rowspan=2, colspan=2),
-                    'Flux [W/m^2]': win.addPlot(title='Flux [W/m^2]', row=2, col=2, rowspan=2, colspan=2),
-                    'Flux [W/cm^2]': win.addPlot(title='Flux [W/cm^2]', row=0, col=5, rowspan=2, colspan=2),
-                    'Voltage [V]': win.addPlot(title='Voltage', row=0, col=4),
-                    'Current [A]': win.addPlot(title='Current', row=1, col=4),
-                    'Resistance [Ohm]': win.addPlot(title='Resistance', row=2, col=4),
+                    'Bulk Temperature [deg C]': win.addPlot(title='Bulk Temperature', row=0, col=0, rowspan=2, colspan=1),
+                    'Wire Temperature [deg C]': win.addPlot(title='Wire Temperature', row=0, col=1, rowspan=2, colspan=1),
+                    'Superheat [deg C]': win.addPlot(title='Wire Temperature', row=0, col=2, rowspan=2, colspan=1),
+                    'Power [W]': win.addPlot(title='Power', row=3, col=2, colspan=1),
+                    # 'Flux [W/m^2]': win.addPlot(title='Flux [W/m^2]', row=1, col=2, colspan=1),
+                    'Flux [W/cm^2]': win.addPlot(title='Flux [W/cm^2]', row=0, col=3, rowspan=2, colspan=3),
+                    'Voltage [V]': win.addPlot(title='Voltage', row=3, col=0),
+                    'Current [A]': win.addPlot(title='Current', row=3, col=1),
+                    # 'Resistance [Ohm]': win.addPlot(title='Resistance', row=2, col=4),
                     'LED Voltage [V]': win.addPlot(title='LED Voltage', row=3, col=4),
-                    'Wire Temperature (corrected) [deg C]': win.addPlot(title='Wire Temperature (corrected) [deg C]', row=2, col=5, rowspan=2, colspan=3),
-                    # 'Temperature from Resistance [deg C]': win.addPlot(title='Temperature from Resistance [deg C]', row=3, col=6),
+                    # 'Wire Temperature (corrected) [deg C]': win.addPlot(title='Wire Temperature (corrected) [deg C]', row=2, col=2, rowspan=2, colspan=2),
+                    # 'Temperature from Resistance [deg C]': win.addPlot(title='Temperature from Resistance [deg C]', row=2, col=6),
                 }
                 curves = {key: ps[key].plot() for key in ps}
 
@@ -519,7 +602,7 @@ datatype = [
 ]
 # datatype = numpy.float32
 
-filename = Path('.') / 'Experiment Output 20-01-2020' / 'Experiment 0 -- 17-56.csv'
+filename = Path() / 'Experiment Output 20-01-2020' / 'Experiment 0 -- 17-56.csv'
 
 # data = numpy.memmap(filename, datatype, 'r')
 # plt.plot(data['Elapsed time'], data['floatq'], 'r,')
