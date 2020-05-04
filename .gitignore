@@ -130,7 +130,11 @@ Labview Learning/
 Python Learning/experiments/Experiment Output*/
 Python Learning/images/
 Python Learning/models/
+Python Learning/sandbox.py
+Python Learning/sandbox/
 Python Learning/selected_experiments/
+Python Learning/testing_process/
+Python Learning/testing_tf_process/
 References/
 Surfaces/
 *.ini
