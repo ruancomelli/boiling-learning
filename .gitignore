@@ -135,3 +135,7 @@ References/
 Surfaces/
 *.ini
 *.png
+*.m4a
+*.mp4
+cases/
+*.vscode/
