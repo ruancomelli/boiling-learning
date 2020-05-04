@@ -1,0 +1,26 @@
+{
+	"surface": {
+		"name": "",
+		"type": "wire",
+		"length": 6.5e-2,
+		"diameter": 0.518e-3
+	},
+	"log": {
+		"print": {
+			"anything": true,
+			"info": false,
+			"voltage": false,
+			"current": false,
+			"power": false,
+			"flux": true,
+			"resistance": false,
+			"bulk temperature": true,
+			"writing": true,
+			"led read state": false,
+			"elapsed time": false,
+			"sleeping": false,
+			"wire temperature": true,
+			"temperature from resistance": true
+		}
+	}
+}
