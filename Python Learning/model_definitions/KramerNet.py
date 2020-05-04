@@ -5,15 +5,15 @@ import utils
 import management
 
 def is_classification(problem):
-    return problem.lower() in ['classification', 'regime']
+    return problem.lower() in {'classification', 'regime'}
 
 def is_regression(problem):
-    return problem.lower() in ['regression', 'heat flux', 'h', 'power']
+    return problem.lower() in {'regression', 'heat flux', 'h', 'power'}
 
 def build(
     input_shape,
-    problem,
-    num_classes,
+    problem='regression',
+    num_classes=None,
 ):
     input_data = Input(shape=input_shape)
     x = Conv2D(64,(3, 3), padding='same', activation='relu')(input_data)
@@ -68,10 +68,7 @@ def creator_method(
 
     history = None
     if fit_setup['do']:
-        if fit_setup['method'] == 'fit':
-            history = model.fit(**fit_setup['params'])
-        elif fit_setup['method'] == 'fit_generator':
-            history = model.fit_generator(**fit_setup['params'])
+        history = model.fit(**fit_setup['params'])
 
     return {
         'model': model,
@@ -80,7 +77,7 @@ def creator_method(
 
 creator = management.ModelCreator(
     creator_method=creator_method,
-    creator_name='kramer_net',
+    creator_name='KramerNet',
     default_params=dict(
         input_shape=(224, 224, 3),
         num_classes=3,
