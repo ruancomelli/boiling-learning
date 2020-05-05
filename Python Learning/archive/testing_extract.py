@@ -1,9 +1,9 @@
-import utils
+import boiling_learning.utils
 
 filepath = project_path / 'cases' / 'case 1' / 'videos' / 'GOPR2850.MP4'
 outputdir = project_path / 'testing_extract'
 
-utils.rmdir(outputdir, recursive=True, keep=True)
+boiling_learning.utils.rmdir(outputdir, recursive=True, keep=True)
 
 def chunkify(x, chunksize):
     return ((x // chunksize) * chunksize, (x // chunksize + 1) * chunksize - 1)
@@ -21,7 +21,7 @@ frame_list = (
 #     for frame_number in range(200)
 # )
 
-utils.video.extract_frames(
+boiling_learning.utils.video.extract_frames(
     filepath,
     outputdir,
     # frame_list=frame_list,

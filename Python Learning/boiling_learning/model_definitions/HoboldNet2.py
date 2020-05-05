@@ -1,8 +1,8 @@
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Flatten, Dense, Dropout, Conv2D, MaxPool2D
 
-import utils
-import management
+import boiling_learning.utils
+from boiling_learning.management import ModelCreator
 
 def is_classification(problem):
     return problem.lower() in {'classification', 'regime'}
@@ -42,7 +42,7 @@ def restore(checkpoint):
     if checkpoint.get('restore', False):
         from pathlib import Path
         import parse
-        from utils import append
+        from boiling_learning.utils import append
         
         epoch_str = 'epoch'
         
@@ -73,7 +73,7 @@ def creator_method(
     fit_setup,
     fetch,
 ):
-    compile_setup, fit_setup = utils.regularize_default(
+    compile_setup, fit_setup = boiling_learning.utils.regularize_default(
         (compile_setup, fit_setup),
         cond=lambda x: x is not None,
         default=lambda x: dict(do=False),
@@ -111,7 +111,7 @@ def creator_method(
         for k in fetch
     }
 
-creator = management.ModelCreator(
+creator = ModelCreator(
     creator_method=creator_method,
     creator_name='HoboldNet2',
     default_params=dict(

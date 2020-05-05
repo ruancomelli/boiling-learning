@@ -1,5 +1,5 @@
 from parse import parse
-import utils
+import boiling_learning.utils
 
 def chunkify(index, chunk_size):
     min_index = (index // chunk_size) * chunk_size
@@ -7,7 +7,7 @@ def chunkify(index, chunk_size):
     return min_index, max_index
 
 for subcase in case.frames_path.iterdir():
-    utils.print_header(subcase)
+    boiling_learning.utils.print_header(subcase)
     for old_path in subcase.iterdir():
         parse_result = parse('{}_frame{index:d}.png', old_path.name)
 

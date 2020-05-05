@@ -1,5 +1,5 @@
-from utils import utils
-from utils import image
+from boiling_learning.utils import boiling_learning.utils
+from boiling_learning.utils import image
 
 import contextlib
 

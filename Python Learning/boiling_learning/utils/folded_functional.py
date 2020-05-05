@@ -1,4 +1,4 @@
-import utils
+import boiling_learning.utils
 # TODO: from folded to packed
 class Folded:
     def __init__(self, f):
@@ -25,12 +25,12 @@ def compose(*ffs, filter_None=False):
     def _compose2(f, g):
         if filter_None:
             if f is None:
-                f = utils.identity
+                f = boiling_learning.utils.identity
             if g is None:
-                g = utils.identity
+                g = boiling_learning.utils.identity
         
         def result(x):
             return g(f(x))
         return result
     
-    return reduce(_compose2, ffs, utils.identity)
+    return reduce(_compose2, ffs, boiling_learning.utils.identity)

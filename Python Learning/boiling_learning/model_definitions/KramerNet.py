@@ -1,8 +1,8 @@
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Flatten, Dense, Dropout, Conv2D, MaxPool2D
+from tensorflow.keras.layers import Input, Flatten, Dense, Dropout, Conv2D, MaxPooling2D
 
-import utils
-import management
+import boiling_learning.utils
+from boiling_learning.management import ModelCreator
 
 def is_classification(problem):
     return problem.lower() in {'classification', 'regime'}
@@ -10,20 +10,26 @@ def is_classification(problem):
 def is_regression(problem):
     return problem.lower() in {'regression', 'heat flux', 'h', 'power'}
 
-# See supplementary material for Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning
 def build(
     input_shape,
     problem='regression',
     num_classes=None,
 ):
     input_data = Input(shape=input_shape)
-    x = Conv2D(32, (5, 5), padding='same', activation='relu')(input_data)
-    x = Conv2D(64, (5, 5), padding='same', activation='relu')(x)
-    x = MaxPool2D((2, 2), strides=(2, 2))(x)
-    x = Dropout(0.5)(x)
+    x = Conv2D(64,(3, 3), padding='same', activation='relu')(input_data)
+    x = Conv2D(64,(3, 3), padding='same', activation='relu')(x)
+    x = MaxPooling2D((2, 2))(x)
+    x = Dropout(0.2)(x)
+    x = Conv2D(64,(3, 3), padding='same', activation='relu')(x)
+    x = Conv2D(64,(3, 3), padding='same', activation='relu')(x)
+    x = MaxPooling2D((2, 2))(x)
+    x = Dropout(0.2)(x)
+    x = Conv2D(128,(3, 3), padding='same', activation='relu')(x)
+    x = Conv2D(128,(3, 3), padding='same', activation='relu')(x)
+    x = MaxPooling2D((2, 2))(x)
     x = Flatten()(x)
-    x = Dense(500, activation='relu')(x)
     x = Dropout(0.5)(x)
+    x = Dense(256, activation='relu')(x)
 
     if is_classification(problem):
         predictions = Dense(num_classes, activation='softmax')(x)
@@ -42,9 +48,8 @@ def creator_method(
     problem,
     compile_setup,
     fit_setup,
-    fetch,
 ):
-    compile_setup, fit_setup = utils.regularize_default(
+    compile_setup, fit_setup = boiling_learning.utils.regularize_default(
         (compile_setup, fit_setup),
         cond=lambda x: x is not None,
         default=lambda x: dict(do=False),
@@ -65,21 +70,16 @@ def creator_method(
     if fit_setup['do']:
         history = model.fit(**fit_setup['params'])
 
-    available_data = {
+    return {
         'model': model,
         'history': history
     }
 
-    return {
-        k: available_data[k]
-        for k in fetch
-    }
-
-creator = management.ModelCreator(
+creator = ModelCreator(
     creator_method=creator_method,
-    creator_name='HoboldNetSupplementary',
+    creator_name='KramerNet',
     default_params=dict(
-        input_shape=[224, 224, 1],
+        input_shape=(224, 224, 3),
         num_classes=3,
         problem='regression',
     ),

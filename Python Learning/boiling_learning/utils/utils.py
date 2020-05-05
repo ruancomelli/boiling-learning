@@ -451,7 +451,7 @@ def crop_array(
     x_lim=None,
     y_lim=None
 ):
-    idx = utils.check_value_match(
+    idx = boiling_learning.utils.check_value_match(
         [
             dict(
                 lims=lambda x: x is not None,
@@ -504,7 +504,7 @@ def shift_array(
     shift_x=None,
     shift_y=None
 ):
-    idx = utils.check_value_match(
+    idx = boiling_learning.utils.check_value_match(
         [
             {
                 'shifts': lambda x: x is None,

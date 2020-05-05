@@ -7,7 +7,7 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.optimizers import Adam
 
-import utils
+import boiling_learning.utils
 import management
 from management import Mirror
 
@@ -18,12 +18,12 @@ pp = pprint.PrettyPrinter(indent=4, width=160)
 
 save_map = {
     'model': management.save_keras_model,
-    'history': utils.fold
+    'history': boiling_learning.utils.fold
     # 'history': management.save_pkl
 }
 load_map = {
     'model': management.load_keras_model,
-    'history': utils.fold
+    'history': boiling_learning.utils.fold
     # 'history': management.load_pkl
 }
 

@@ -3,7 +3,7 @@ import parse
 
 import collections
 
-import utils
+import boiling_learning.utils
 
 
 # class FileList(collections.abc.MutableMapping):
@@ -41,7 +41,7 @@ import utils
 #                 for file_name in self.files.values()
 #             ]
 
-#             missing_elems = utils.missing_elements(int_key_list)
+#             missing_elems = boiling_learning.utils.missing_elements(int_key_list)
 #             if missing_elems:
 #                 index = missing_elems[0]
 #             else:

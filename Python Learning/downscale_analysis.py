@@ -1,3 +1,12 @@
+from functools import partial
+import matplotlib.pyplot as plt
+from more_itertools import first
+from skimage import img_as_float
+from skimage.color import rgb2gray
+from skimage.io import imshow, imread
+
+from boiling_learning.utils.image import crop, downscale
+
 def evaluate_downsampling(img, evaluator, downsamplers):
     return [
         evaluator(img, downsampler(img))
@@ -24,12 +33,6 @@ def img_shannon_cross_entropy_ratio(ref, img):
         / img_shannon_cross_entropy(ref, ref)
     )
 
-from skimage.io import imread
-from more_itertools import first
-from functools import partial
-
-from skimage.color import rgb2gray
-
 img_path = first((case.path / 'frames_crop').glob('**/*.png'))
 print(img_path)
 img = rgb2gray(imread(img_path))
@@ -38,7 +41,7 @@ ev_ds = evaluate_downsampling(
     img,
     img_retained_variance,
     [
-        partial(utils.image.downscale, shape=ds)
+        partial(downscale, shape=ds)
         for ds in range(1, 11)
     ]
 )
@@ -47,12 +50,6 @@ print(ev_ds)
 # ------------------------------------------
 # PART 2
 # ------------------------------------------
-
-from skimage.io import imshow, imread
-from skimage import img_as_float
-import matplotlib.pyplot as plt
-
-import utils
 
 in_path = python_project_home_path / 'testing_extract' / 'from_0_to_9' / 'my_frame_1.png'
 
@@ -68,7 +65,7 @@ right = 1100
 
 plt.subplot(1, 3, 2)
 
-cropped = utils.image.crop(
+cropped = crop(
     img,
     top=top,
     bottom=bottom,
@@ -81,7 +78,7 @@ imshow(cropped)
 plt.subplot(1, 3, 3)
 
 img = img_as_float(img)
-downscaled = utils.image.downscale(
+downscaled = downscale(
     img,
     5
 )

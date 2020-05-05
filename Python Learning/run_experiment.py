@@ -19,10 +19,8 @@ project_home_path = python_project_home_path.parent.resolve()
 #     add_to_system_path(Path('C:') / 'Users'/ 'ruan.comelli'/ 'AppData' / 'Local' / 'Continuum' / 'anaconda3' / 'bin')
 #     add_to_system_path(Path('C:') / 'Users'/ 'ruan.comelli'/ 'AppData' / 'Local' / 'Continuum' / 'anaconda3' / 'condabin')
 
-
 # defaultdict is a very useful class!!!
 
-import nidaqmx
 from datetime import datetime
 import scipy
 import numpy as np
@@ -31,10 +29,11 @@ import pandas as pd
 import time
 import functools
 
-from pyqtgraph.Qt import QtGui, QtCore
+import nidaqmx
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui, QtCore
 
-from daq import Channel, ChannelType, Device
+from boiling_learning.daq import Channel, ChannelType, Device
 
 class BoilingSurface:
     def __init__(self, settings):
@@ -77,10 +76,10 @@ class BoilingSurface:
 # Settings
 # -------------------------------------------------------
 def read_settings():
-    import json
+    from json import load
     
     with open(python_project_home_path / 'experiment_settings.json') as json_file:
-        return json.load(json_file)
+        return load(json_file)
 
 settings = read_settings()
 surface = BoilingSurface(settings['surface'])
@@ -578,33 +577,30 @@ if should_plot:
 # -------------------------------------------------------
 # Plot Results
 # -------------------------------------------------------
-import numpy
-import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 # datatype = [
-#     ('index', numpy.float32),
-#     ('floati', numpy.float32),
-#     ('floatq', numpy.float32)
+#     ('index', np.float32),
+#     ('floati', np.float32),
+#     ('floatq', np.float32)
 # ]
 datatype = [
-    ('Time instant', numpy.float32),
-    ('Elapsed time', numpy.float32),
-    ('Voltage', numpy.float32),
-    ('Current', numpy.float32),
-    ('Power', numpy.float32),
-    ('Flux', numpy.float32),
-    ('Resistance', numpy.float32),
-    ('Bulk Temperature', numpy.float32),
-    ('LED Voltage', numpy.float32),
-    ('Wire Temperature', numpy.float32),
+    ('Time instant', np.float32),
+    ('Elapsed time', np.float32),
+    ('Voltage', np.float32),
+    ('Current', np.float32),
+    ('Power', np.float32),
+    ('Flux', np.float32),
+    ('Resistance', np.float32),
+    ('Bulk Temperature', np.float32),
+    ('LED Voltage', np.float32),
+    ('Wire Temperature', np.float32),
 ]
-# datatype = numpy.float32
+# datatype = np.float32
 
 filename = Path() / 'Experiment Output 20-01-2020' / 'Experiment 0 -- 17-56.csv'
 
-# data = numpy.memmap(filename, datatype, 'r')
+# data = np.memmap(filename, datatype, 'r')
 # plt.plot(data['Elapsed time'], data['floatq'], 'r,')
 # plt.grid(True)
 # plt.title("Signal-Diagram")
