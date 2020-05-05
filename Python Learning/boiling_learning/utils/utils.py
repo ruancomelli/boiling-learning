@@ -1,9 +1,6 @@
 def empty(*args, **kwargs):
     pass
 
-def identity(arg):
-    return arg
-
 def constant(value):
     def wrapper(*args, **kwargs):
         return value
@@ -12,19 +9,6 @@ def constant(value):
 def constant_callable(callable):
     def wrapper(*args, **kwargs):
         return callable()
-    return wrapper
-
-def fold(*args, **kwargs):
-    return args, kwargs
-
-def folded(f):
-    from functools import wraps
-    
-    @wraps(f)
-    def wrapper(params):
-        # params[0] == args
-        # params[1] == kwargs
-        return f(*params[0], **params[1])
     return wrapper
 
 def has_duplicates(iterable):

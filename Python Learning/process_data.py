@@ -10,7 +10,7 @@ import skimage
 import skimage.color
 from sklearn.preprocessing import FunctionTransformer
 
-import boiling_learning.utils
+import boiling_learning as bl
 from boiling_learning.management import Persistent, PersistentTransformer
 
 # TODO: use type annotations everywhere
@@ -43,7 +43,7 @@ def load_persistent(path, auto_purge=False):
 
 class TransformationPipeline:
     def __init__(self, *transformers):
-        self._pipe = boiling_learning.utils.folded_functional.compose(*transformers)
+        self._pipe = boiling_learning.utils.packed_functional.compose(*transformers)
         
     def transform(self, X, many=False, fetch=None, parallel=False):
         # TODO: implement parallelization
@@ -69,16 +69,16 @@ class TransformationPipeline:
                     
                 with ProcessingPool(*processes) as pool:
                 # with Pool(*processes) as pool:
-                    boiling_learning.utils.print_header(f'Creating pool with ncpus={pool.ncpus} and nodes={pool.nodes}')
+                    bl.utils.print_header(f'Creating pool with ncpus={pool.ncpus} and nodes={pool.nodes}')
                     if should_fetch:
                         return pool.map(transformer, X)
-                        # return pool.map(boiling_learning.utils.worker.apply_to_f, ((transformer, x, {}) for x in X))
-                        # return pool.map(boiling_learning.utils.worker.apply_to_obj, ((self, 'transform', x, {}) for x in X))
+                        # return pool.map(bl.utils.worker.apply_to_f, ((transformer, x, {}) for x in X))
+                        # return pool.map(bl.utils.worker.apply_to_obj, ((self, 'transform', x, {}) for x in X))
                     else:
                         consume(pool.uimap(transformer, X))
                         # consume(pool.imap_unordered(transformer, X))
-                        # consume(pool.imap_unordered(boiling_learning.utils.worker.apply_to_f, ((transformer, x, {}) for x in X)))
-                        # consume(pool.imap_unordered(boiling_learning.utils.worker.apply_to_obj, ((self, 'transform', x, {}) for x in X)))
+                        # consume(pool.imap_unordered(bl.utils.worker.apply_to_f, ((transformer, x, {}) for x in X)))
+                        # consume(pool.imap_unordered(bl.utils.worker.apply_to_obj, ((self, 'transform', x, {}) for x in X)))
                         return self
                     
             else:
@@ -102,7 +102,7 @@ class ArgGenerator:
     def __init__(self, f, generator, keyer=None, auto_generate=False):
         self._generator = generator
         self._store = dict()
-        self._fun = boiling_learning.utils.folded(f)
+        self._fun = bl.utils.packed_functional.packed(f)
         self._keyer = keyer
         self._auto_generate = auto_generate
         
@@ -131,7 +131,7 @@ class ArgGenerator:
             self.generate(key)
         return self._fun(self[key])
 
-@boiling_learning.utils.constant_callable
+@bl.utils.constant_callable
 def random_coin():
     from random import choice
     
@@ -376,7 +376,7 @@ class ImageDatasetTransformer:
         )
         
         if self._persist_last:
-            transformers = boiling_learning.utils.append(transformers, Persistent.persist)
+            transformers = bl.utils.append(transformers, Persistent.persist)
         
         self._assembled = True
         self._pipe = TransformationPipeline(*transformers)
@@ -397,7 +397,7 @@ class ImageDatasetTransformer:
 #         PersistentTransformer(
 #             'crop',
 #             path_transformer=mover(python_project_home_path / 'testing_process_grayscale_crop'),
-#             value_transformer=functools.partial(boiling_learning.utils.image.crop, top=300, bottom=300, left=400, right=400),
+#             value_transformer=functools.partial(bl.utils.image.crop, top=300, bottom=300, left=400, right=400),
 #             lazy=True
 #         ),
 #         PersistentTransformer(
@@ -405,7 +405,7 @@ class ImageDatasetTransformer:
 #             path_transformer=mover(python_project_home_path / 'testing_process_grayscale_crop_flip'),
 #             value_transformer=auto_gen(ArgGenerator(
 #                 lambda *args, **kwargs: functools.partial(
-#                     boiling_learning.utils.image.flip,
+#                     bl.utils.image.flip,
 #                     *args,
 #                     **kwargs    
 #                 ),
@@ -436,7 +436,7 @@ def sync_to_img_ds(path_transformer, img_ds):
 #         PersistentTransformer(
 #             'crop',
 #             path_transformer=sync_to_img_ds(mover(python_project_home_path / 'crop', head_aggregator='_'), img_ds),
-#             value_transformer=functools.partial(boiling_learning.utils.image.crop, top=300, bottom=300, left=400, right=400),
+#             value_transformer=functools.partial(bl.utils.image.crop, top=300, bottom=300, left=400, right=400),
 #             lazy=True
 #         ),
 #         PersistentTransformer(
@@ -450,7 +450,7 @@ def sync_to_img_ds(path_transformer, img_ds):
 #             path_transformer=sync_to_img_ds(mover(python_project_home_path / 'flip', head_aggregator='_'), img_ds),
 #             value_transformer=auto_gen(ArgGenerator(
 #                 lambda *args, **kwargs: functools.partial(
-#                     boiling_learning.utils.image.flip,
+#                     bl.utils.image.flip,
 #                     *args,
 #                     **kwargs
 #                 ),
@@ -597,12 +597,12 @@ class Case:
             audio_path = (self.audios_path / subcase).with_suffix(f'.{self.audio_format}')
             
             if verbose:
-                boiling_learning.utils.print_header(f'Extracting audio for file \"{audio_path}\"')
+                bl.utils.print_header(f'Extracting audio for file \"{audio_path}\"')
             
             if overwrite or not audio_path.is_file():
                 if verbose:
                     print(f'Audio does not exist. Extracting...', end=' ')
-                boiling_learning.utils.video.extract_audio(video_path, audio_path)
+                bl.utils.video.extract_audio(video_path, audio_path)
                 if verbose:
                     print(f'Done.')
             elif verbose:
@@ -620,11 +620,11 @@ class Case:
             video_frames_path.mkdir(exist_ok=True, parents=True)
             
             if verbose:
-                boiling_learning.utils.print_header(f'Extracting frames for file \"{str(video_frames_path)}\"')
+                bl.utils.print_header(f'Extracting frames for file \"{str(video_frames_path)}\"')
             
             if not overwrite:
                 n_extracted_frames = mit.ilen(subcase_frames_dict[subcase])
-                n_frames = boiling_learning.utils.video.count_frames(video_path, fast=True)
+                n_frames = bl.utils.video.count_frames(video_path, fast=True)
                 overwrite = n_extracted_frames != n_frames
                 
             if overwrite:                
@@ -639,8 +639,8 @@ class Case:
                         max_index = min_index + chunk_size - 1
                         return Path(f'from_{min_index}_to_{max_index}') / f'{subcase}_frame{index}.{self.frame_format}'
                     
-                boiling_learning.utils.rmdir(video_frames_path, recursive=True, keep=True)
-                boiling_learning.utils.video.extract_frames(
+                bl.utils.rmdir(video_frames_path, recursive=True, keep=True)
+                bl.utils.video.extract_frames(
                     video_path,
                     video_frames_path,
                     filename_pattern=f'{subcase}_frame%05d.{self.frame_format}',
@@ -680,12 +680,12 @@ class Case:
         #         continue
         #     subcase_data = data[subcase]
             
-        #     if boiling_learning.utils.has_duplicates((path_column, subcase_column) + tuple(subcase_data.keys())):
+        #     if bl.utils.has_duplicates((path_column, subcase_column) + tuple(subcase_data.keys())):
         #         raise ValueError(f'incompatibility between path column named "{path_column}", subcase column named "{subcase_column}" and data keys {list(subcase_data.keys())} from subcase "{subcase}". Make sure that path_column and subcase_column are not data keys and are different from each other.')
             
         #     dataframe = dataframe.append(
         #         pd.DataFrame(
-        #             boiling_learning.utils.merge_dicts(
+        #             bl.utils.merge_dicts(
         #                 {
         #                     path_column: list(paths),
         #                     subcase_column: subcase
@@ -701,7 +701,7 @@ class Case:
         return pd.concat(
             (
                 pd.DataFrame(
-                    boiling_learning.utils.merge_dicts(
+                    bl.utils.merge_dicts(
                         {
                             path_column: list(paths),
                             subcase_column: subcase
@@ -761,7 +761,7 @@ class Case:
 # case.extract_frames()
 
 # df = case.as_dataframe(predefined_column_types={'subcase': 'category', 'nominal_heat_flux': 'category'})
-# boiling_learning.utils.print_header('case.df')
+# bl.utils.print_header('case.df')
 # print(df)
 
 # ds = case.as_dataset(
@@ -798,7 +798,7 @@ def plot_experiment(
         
     if label_filters is None:
         label_filters = [
-            ('Original data', boiling_learning.utils.identity)
+            ('Original data', bl.utils.packed_functional.identity)
         ]
         
     header = pd.read_csv(experiment_data_path, nrows=1).columns
@@ -840,8 +840,8 @@ def plot_experiment(
 from pprint import pprint
 
 # label_filters = (
-#     ('Original data', boiling_learning.utils.identity),
-#     ('Moving average (n=11)', functools.partial(boiling_learning.utils.filters.smooth_mean, size=11)),
+#     ('Original data', bl.utils.packed_functional.identity),
+#     ('Moving average (n=11)', functools.partial(bl.utils.filters.smooth_mean, size=11)),
 #     ('Clipped (200 W per cm2)', lambda x: np.minimum(x, 200), {'Flux [W/cm^2]'}),
 # )
 # for experiment_name in (
