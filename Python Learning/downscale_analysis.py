@@ -5,7 +5,7 @@ from skimage import img_as_float
 from skimage.color import rgb2gray
 from skimage.io import imshow, imread
 
-from boiling_learning.utils.image import crop, downscale
+from boiling_learning.preprocessing.image import crop, downscale
 
 def evaluate_downsampling(img, evaluator, downsamplers):
     return [

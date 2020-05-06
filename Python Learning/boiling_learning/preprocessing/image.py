@@ -3,7 +3,17 @@ from skimage.io import imread, imsave
 from skimage.transform import AffineTransform, downscale_local_mean, warp
 from skimage.util import crop as skimage_crop
 
-# TODO: can wrappers remove code repetition in crop and shift for the "if image is None: image = imread(in_path)" and the "if out_path is not None: imsave(out_path)"?
+# TODO: finish this?
+# TODO: comment
+# def auto_input(key, pred, input_method, replaced, raise_if_incompatible=True):
+#     def wrapper(f):
+#         def wrapped(*args, **kwargs):
+#             if key in kwargs:
+#                 val = kwargs.pop(key)
+#                 if pred(val):
+#                     if raise_if_incompatible and replaced in kwargs:
+#                         raise ValueError('auto_input got conflicting arguments.') # TODO: maybe write a better message?
+#                     kwargs[replaced] = val
 
 def crop(
         image=None,
@@ -77,7 +87,7 @@ def shift(
 
 def flip(image, horizontal=False, vertical=False):
     # TODO: check_value_match here!
-    # use in_path and out_path?
+    # TODO: use in_path and out_path?
     
     if horizontal and not vertical:
         return image[:, ::-1, ...]
@@ -89,6 +99,8 @@ def flip(image, horizontal=False, vertical=False):
         return image
     
 def downscale(image, shape): 
+    # TODO: use in_path and out_path?
+    
     if isinstance(shape, int):
         if image.ndim == 2:
             shape = (shape, shape)
@@ -102,4 +114,4 @@ def downscale(image, shape):
 # def grayscale(image, **kwargs): 
 #     return rgb2gray(image, **kwargs)
 
-# greyscale = grayscale
+greyscale = grayscale

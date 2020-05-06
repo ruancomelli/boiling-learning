@@ -9,3 +9,7 @@
 - [ ] Improve the project structure
 - [ ] Implement parallelization for `TransformationPipeline`s
 - [ ] Use type annotations where applicable
+- [ ] Can wrappers remove code repetition in crop and shift for the `if image is None: image = imread(in_path)` and the `if out_path is not None: imsave(out_path)`?
+- [ ] Document code
+- [ ] Check for inconsistent input values in many functions, some of which are marked with a comment like `# TODO: use check_value_match`
+- [ ] In the `Case` class, many properties can be converted to cached properties. Python 3.8 may be necessary

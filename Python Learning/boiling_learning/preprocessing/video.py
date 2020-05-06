@@ -1,4 +1,12 @@
 import contextlib
+import subprocess
+import os
+import binascii
+from pathlib import Path
+        
+import cv2
+from more_itertools import ilen, unzip
+from parse import parse
 
 # Original code: $ ffmpeg -i "video.mov" -f image2 "video-frame%05d.png"
 # Source 2: <https://forums.fast.ai/t/extracting-frames-from-video-file-with-ffmpeg/29818>
@@ -8,15 +16,7 @@ def extract_frames(filepath, outputdir, filename_pattern='frame%d.png', frame_li
     # TODO: when creating unique temporary folder, check that it can't match any generated subfolder
     # TODO: use python's tempfile module
     
-    import subprocess
-    
     if frame_list is not None or final_pattern is not None:
-        import os
-        import binascii
-        from pathlib import Path
-        
-        from more_itertools import unzip
-        from parse import parse
         
         if frame_list is not None:
             frame_list = sorted(frame_list, key=lambda x: x[0])
@@ -112,8 +112,6 @@ def extract_frames(filepath, outputdir, filename_pattern='frame%d.png', frame_li
 # Original code: $ ffmpeg -i input.mp4 -c:a copy -vn -sn output.m4a
 # Source: <https://superuser.com/a/633765>
 def extract_audio(in_path, out_path):
-    import subprocess
-
     out_path.parent.mkdir(exist_ok=True, parents=True)
         
     command_list =  [
@@ -130,8 +128,6 @@ def extract_audio(in_path, out_path):
 
 @contextlib.contextmanager
 def open_video(video_path):
-    import cv2
-    
     cap = cv2.VideoCapture(str(video_path))
     
     try:
@@ -147,12 +143,8 @@ def frames(video_path):
             yield frame
             
 def count_frames(video_path, fast=False):
-    import cv2
-
     if fast:
         with open_video(video_path) as cap:
             return int(round(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
-    else:
-        from more_itertools import ilen
-        
+    else:        
         return ilen(frames(video_path))

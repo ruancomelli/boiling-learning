@@ -15,6 +15,4 @@ img_ds = ImageDataset(
     test_key='test',
     df=df
 )
-img_ds.transform_images(
-    image_dataset_transformer(img_ds)
-)
+img_ds.transform_images(image_dataset_transformer(img_ds))

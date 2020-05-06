@@ -638,7 +638,6 @@ def dir_as_tree_apply(dir_path, fs, dir_pred=None):
 #     }
     
 #     return d
-            
 
 # ---------------------------------- Timer ----------------------------------
 from contextlib import contextmanager
@@ -651,9 +650,17 @@ def elapsed_timer():
     start_time = default_timer()
 
     class _Timer:
-        start = start_time
-        end = default_timer()
-        duration = end - start
+        @property
+        def start(self):
+            return start_time
+        
+        @property
+        def end(self):
+            return default_timer()
+        
+        @property
+        def duration(self):
+            return self.end - self.start
 
     yield _Timer
 
