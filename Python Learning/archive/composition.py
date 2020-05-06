@@ -1,4 +1,4 @@
-from boiling_learning.utils.folded_functional import compose
+from boiling_learning.utils.packed_functional import compose
 
 def f(x):
     return x**2

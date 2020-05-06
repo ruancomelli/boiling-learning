@@ -1,10 +1,6 @@
-from boiling_learning.utils import boiling_learning.utils
-from boiling_learning.utils import image
-
 import contextlib
 
 # Original code: $ ffmpeg -i "video.mov" -f image2 "video-frame%05d.png"
-# Source: <https://scikit-image.org/docs/dev/user_guide/video.html>
 # Source 2: <https://forums.fast.ai/t/extracting-frames-from-video-file-with-ffmpeg/29818>
 def extract_frames(filepath, outputdir, filename_pattern='frame%d.png', frame_list=None, verbose=False, make_parents=True, final_pattern=None):
     # TODO: use check_value_match?

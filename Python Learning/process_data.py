@@ -8,13 +8,12 @@ import more_itertools as mit
 
 import skimage
 import skimage.color
-from sklearn.preprocessing import FunctionTransformer
 
 import boiling_learning as bl
 from boiling_learning.management import Persistent, PersistentTransformer
 
-# TODO: use type annotations everywhere
-        
+_marker = object()
+
 python_project_home_path = Path().absolute().resolve()
 project_home_path = python_project_home_path.parent.resolve()
 
@@ -46,8 +45,6 @@ class TransformationPipeline:
         self._pipe = boiling_learning.utils.packed_functional.compose(*transformers)
         
     def transform(self, X, many=False, fetch=None, parallel=False):
-        # TODO: implement parallelization
-
         import os
         from functools import partial
 
@@ -126,7 +123,10 @@ class ArgGenerator:
             self[key] = self._generator(key)
         return self._store[key]
     
-    def __call__(self, key):
+    def __call__(self, key=_marker):
+        if key is _marker:
+            return self._fun(bl.utils.packed_functional.pack())
+            
         if self._auto_generate:
             self.generate(key)
         return self._fun(self[key])
@@ -137,13 +137,12 @@ def random_coin():
     
     return choice([False, True])
 
-def auto_gen(arg_gen, key_index=0):
+def auto_gen(arg_generator, key_index=0):
     def wrapped(*args, **kwargs):
         args = list(args)
         key = args.pop(key_index)
-        return arg_gen(key)(*args, **kwargs)
+        return arg_generator(key)(*args, **kwargs)
     return wrapped
-        
 
 # an ImageDataset is a file CSV in df_path and the correspondent images. The file in df_path contains at least two columns. One of this columns contains file paths, and the other the targets for training, validation or test. This is intended for using flow_from_dataframe. There may be an optional column which specifies if that image belongs to the training, the validation or the test sets.
 class ImageDataset:

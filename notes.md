@@ -12,3 +12,5 @@
 - Problems with the silver-welding:
   - The base material is damaged due to the high temperatures.
   - There is a big fin, the welding point. A new technique allows us to reduce this effect.
+
+- A special glue seems promissing.

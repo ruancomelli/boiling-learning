@@ -6,13 +6,29 @@ def constant(value):
         return value
     return wrapper
 
-def constant_callable(callable):
+def constant_callable(value_callable):
     def wrapper(*args, **kwargs):
-        return callable()
+        return value_callable()
     return wrapper
 
+def comment(f, s: str = ''):
+    from functools import wraps
+    
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        if s:
+            print(s)
+        else:
+            print(f)
+        return f(*args, **kwargs)
+    return wrapped
+
 def has_duplicates(iterable):
-    return len(list(iterable)) != len(set(iterable))
+    try:
+        iterable_len = len(iterable)
+    except TypeError:
+        iterable_len = len(list(iterable))
+    return iterable_len != len(set(iterable))
 
 def missing_elements(int_list): # source: adapted from <https://stackoverflow.com/questions/16974047/efficient-way-to-find-missing-elements-in-an-integer-sequence>
     if int_list:
@@ -20,7 +36,7 @@ def missing_elements(int_list): # source: adapted from <https://stackoverflow.co
         full_list = set(range(start, end + 1))
         return sorted(full_list.difference(int_list))
     else:
-        return set([])
+        return []
 
 def merge_dicts(*dict_args, latter_precedence=True):
     # source: <https://stackoverflow.com/a/61051590/5811400>
@@ -326,7 +342,6 @@ def prepare_fig(
     * fig_size and subfig_size can be a pair (width, height) or a string in ['tiny', 'small', 'normal', 'intermediate', 'large', 'big']
     """
     import matplotlib.pyplot as plt
-    import operator
                 
     if None not in (fig_size, subfig_size):
         raise ValueError('incompatible arguments: either figsize or subfig_size must be None')
@@ -377,8 +392,8 @@ def prepare_fig(
     }
 
 def as_json(obj, cls=None):
-    import json
-    return json.loads( json.dumps(obj, cls=cls) )
+    from json import loads, dumps
+    return loads(dumps(obj, cls=cls))
 
 def json_equivalent(lhs, rhs, cls=None):
     return as_json(lhs, cls) == as_json(rhs, cls)
@@ -435,7 +450,7 @@ def crop_array(
     x_lim=None,
     y_lim=None
 ):
-    idx = boiling_learning.utils.check_value_match(
+    idx = check_value_match(
         [
             dict(
                 lims=lambda x: x is not None,
@@ -488,7 +503,7 @@ def shift_array(
     shift_x=None,
     shift_y=None
 ):
-    idx = boiling_learning.utils.check_value_match(
+    idx = check_value_match(
         [
             {
                 'shifts': lambda x: x is None,
@@ -624,3 +639,24 @@ def dir_as_tree_apply(dir_path, fs, dir_pred=None):
     
 #     return d
             
+
+# ---------------------------------- Timer ----------------------------------
+from contextlib import contextmanager
+from timeit import default_timer
+
+@contextmanager
+def elapsed_timer():
+    # Source: <https://stackoverflow.com/a/61613140/5811400>
+    
+    start_time = default_timer()
+
+    class _Timer:
+        start = start_time
+        end = default_timer()
+        duration = end - start
+
+    yield _Timer
+
+    end_time = default_timer()
+    _Timer.end = end_time
+    _Timer.duration = end_time - start_time

@@ -1,5 +1,3 @@
-import boiling_learning.utils
-
 def identity(arg):
     return arg
 
