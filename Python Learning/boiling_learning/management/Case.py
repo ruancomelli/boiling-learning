@@ -2,6 +2,8 @@ from pathlib import Path
 
 from more_itertools import flatten
 
+from boiling_learning.preprocessing import ImageDataset
+
 class Case:
     def __init__(
         self,

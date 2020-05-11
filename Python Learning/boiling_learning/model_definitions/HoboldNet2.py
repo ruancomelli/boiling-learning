@@ -1,7 +1,7 @@
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Flatten, Dense, Dropout, Conv2D, MaxPool2D
 
-import boiling_learning.utils
+import boiling_learning as bl
 from boiling_learning.management import ModelCreator
 
 def is_classification(problem):
@@ -36,32 +36,6 @@ def build(
 
     return model
 
-def restore(checkpoint):
-    last_epoch = -1
-    model = None
-    if checkpoint.get('restore', False):
-        from pathlib import Path
-        import parse
-        from boiling_learning.utils import append
-        
-        epoch_str = 'epoch'
-        
-        path = Path(checkpoint['path'])
-        glob_pattern = path.name.replace(f'{{{epoch_str}}}', '*')
-        parser = parse.compile(path.name)
-        
-        paths = path.parent.glob(glob_pattern) 
-        parsed = (parser.parse(path_item.name) for path_item in paths)
-        succesfull_parsed = filter(lambda p: p is not None and epoch_str in p, parsed)
-        epochs = append((int(p[epoch_str]) for p in parsed), last_epoch)
-        last_epoch = max(epochs)
-                
-        if last_epoch != -1:
-            path_str = str(path).format(epoch=last_epoch)
-            model = checkpoint['load_method'](path_str)
-            
-    return last_epoch, model
-
 def creator_method(
     input_shape,
     verbose,
@@ -73,7 +47,7 @@ def creator_method(
     fit_setup,
     fetch,
 ):
-    compile_setup, fit_setup = boiling_learning.utils.regularize_default(
+    compile_setup, fit_setup = bl.utils.regularize_default(
         (compile_setup, fit_setup),
         cond=lambda x: x is not None,
         default=lambda x: dict(do=False),
@@ -81,7 +55,7 @@ def creator_method(
         call_default=True
     )
     
-    last_epoch, model = restore(checkpoint)
+    last_epoch, model = bl.model.restore(**checkpoint)
     initial_epoch = max(last_epoch, 0)
     
     if model is None:        

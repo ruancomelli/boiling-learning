@@ -13,3 +13,6 @@
 - [ ] Document code
 - [ ] Check for inconsistent input values in many functions, some of which are marked with a comment like `# TODO: use check_value_match`
 - [ ] In the `Case` class, many properties can be converted to cached properties. Python 3.8 may be necessary
+- [ ] Allow the user to choose if only the train data must be modified `ImageDatasetTransformer`
+- [ ] Allow dataset augmentation, not only transformation in `ImageDatasetTransformer`
+- [ ] In boiling_learning.model.restore: allow a complete dictionary of important keys, not only epoch. For instance, `keys={'epoch_str': int, 'val_acc': float}`

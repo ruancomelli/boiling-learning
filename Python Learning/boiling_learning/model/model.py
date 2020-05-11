@@ -1,6 +1,10 @@
+from pathlib import Path
 import enum
 
+import parse
 from sklearn.model_selection import train_test_split
+
+import boiling_learning as bl
 
 class SplitSubset(enum.Enum):
     TRAIN = enum.auto()
@@ -45,3 +49,27 @@ def train_val_test_split(dataset, n_samples, train_size=None, val_size=None, tes
             
     return train_set, val_set, test_set
     
+def restore(
+    restore=False,
+    path=None,
+    load_method=None,
+    epoch_str='epoch'
+):
+    last_epoch = -1
+    model = None
+    if restore:
+        path = Path(path)
+        glob_pattern = path.name.replace(f'{{{epoch_str}}}', '*')
+        parser = parse.compile(path.name)
+        
+        paths = path.parent.glob(glob_pattern) 
+        parsed = (parser.parse(path_item.name) for path_item in paths)
+        succesfull_parsed = filter(lambda p: p is not None and epoch_str in p, parsed)
+        epochs = bl.utils.append((int(p[epoch_str]) for p in parsed), last_epoch)
+        last_epoch = max(epochs)
+                
+        if last_epoch != -1:
+            path_str = str(path).format(epoch=last_epoch)
+            model = load_method(path_str)
+            
+    return last_epoch, model

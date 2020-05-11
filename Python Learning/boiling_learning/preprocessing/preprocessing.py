@@ -4,6 +4,8 @@ from functools import partial
 import more_itertools as mit
 from skimage import img_as_float, img_as_ubyte
 from skimage.io import imread, imsave
+import pandas as pd
+import numpy as np
 
 import boiling_learning as bl
 
@@ -177,9 +179,9 @@ class ImageDataset:
         indices = np.arange(n_samples, dtype=int)
         
         indices_train, indices_val, indices_test = bl.model.train_val_test_split(
-			indices, n_samples, train_size=train_size, val_size=val_size, test_size=test_size,
-			**options
-		)
+            indices, n_samples, train_size=train_size, val_size=val_size, test_size=test_size,
+            **options
+        )
                 
         self.df[self.set_column] = pd.Series(pd.concat((
             pd.Series(data=self.train_key, index=indices_train),
@@ -248,12 +250,12 @@ class TransformationPipeline:
                 #         # mit.consume(pool.imap_unordered(bl.utils.worker.apply_to_obj, ((self, 'transform', x, {}) for x in X)))
                 #         return self
             # else:
-			mapper = map(transformer, X)
-			if should_fetch:
-				return list(mapper)
-			else:
-				mit.consume(mapper)
-				return self
+            mapper = map(transformer, X)
+            if should_fetch:
+                return list(mapper)
+            else:
+                mit.consume(mapper)
+                return self
         else:
             if should_fetch:
                 if callable(fetch):
@@ -269,7 +271,7 @@ class ImageDatasetTransformer:
         # transformers is an iterable yielding (path_transformer, value_transformer)
         
         if loader is None:
-            loader = partial(load_persistent, auto_purge=self._auto_purge)
+            loader = partial(load_persistent, auto_purge=auto_purge)
         
         self.loader = loader
         self.transformers = transformers
@@ -277,7 +279,6 @@ class ImageDatasetTransformer:
         self._persist_last = persist_last
         self._pipe = None
         self._assembled = False
-        self._auto_purge = auto_purge
     
     def _assemble(self):        
         if self._persist_intermediate:
