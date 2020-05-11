@@ -1,82 +1,36 @@
 from pathlib import Path
+from pickle import UnpicklingError
+from json import JSONDecodeError
 
-import boiling_learning.utils
+import parse
+from tensorflow.keras.models import load_model
+
+import boiling_learning as bl
 
 # TODO: check out <https://www.mlflow.org/docs/latest/tracking.html>
-
-def save_serialized(save_map):
-    def save(return_dict, path):
-        path = Path(path)
-        path.mkdir(exist_ok=True, parents=True)
-        for key, obj in return_dict.items():
-            path_ = path / key
-            save_map[key](obj, path_)
-    return save
-
-def save_keras_model(keras_model, path, **kwargs):
-    from pathlib import Path
-    
-    path = Path(path).absolute().resolve()
-    path.mkdir(exist_ok=True, parents=True)
-    
-    keras_model.save(path, **kwargs)
-
-def save_pkl(obj, path):
-    import pickle
-
-    path = Path(path).absolute().resolve()
-
-    with path.open('wb') as file:
-        pickle.dump(obj, file, protocol=pickle.HIGHEST_PROTOCOL)
-
-def load_serialized(load_map):
-    def load(path):
-        loaded = {}
-        path = Path(path)
-        for key, loader in load_map.items():
-            path_ = path / key
-            loaded[key] = loader(path_)
-            
-        return loaded
-    return load
-
-def load_keras_model(path, **kwargs):
-    from tensorflow.keras.models import load_model
-
-    return load_model(
-        path,
-        **kwargs
-    )
-
-def load_pkl(path):
-    import pickle
-
-    with path.absolute().resolve().open('rb') as file:
-        return pickle.load(file)
 
 class ModelManager:
     def __init__(
         self,
+        root_path,
         models_path=None,
         table_path=None,
-        encoding='utf-8',
         load_table=True,
         file_name_fmt='{index}.data',
         creator_method=None,
         creator_name=None,
-        save_method=save_pkl,
-        load_method=load_pkl,
+        save_method=bl.io.save_pkl,
+        load_method=bl.io.load_pkl,
         verbose=0,
         printer=print,
     ):
         if models_path is None:
-            models_path = Path() / 'models'
+            models_path = root_path / 'models'
         self.models_path = Path(models_path).resolve()
 
         if table_path is None:
             table_path = (self.models_path / 'lookup_table.json').resolve()
         self.table_path = Path(table_path).resolve()
-        self.encoding = encoding
 
         if load_table:
             self.load_lookup_table()
@@ -95,23 +49,19 @@ class ModelManager:
         return self.save_lookup_table()
 
     def save_lookup_table(self):
-        import json
-        
-        self.table_path.parent.mkdir(parents=True, exist_ok=True)
-        with self.table_path.open('w', encoding=self.encoding) as lookup_table_file:
-            json.dump(self.lookup_table, lookup_table_file, indent=4, ensure_ascii=False)
+        bl.io.save_json(self.lookup_table, self.table_path)
             
         return self
 
-    def load_lookup_table(self):
-        import json
-        
+    def load_lookup_table(self, raise_if_fails=False):
         if not self.table_path.exists():
             self._initialize_lookup_table()
-        with self.table_path.open('r', encoding=self.encoding) as lookup_table_file:
-            try:
-                self.lookup_table = json.load(lookup_table_file)
-            except json.JSONDecodeError:
+        try:
+            self.lookup_table = bl.io.load_json(self.table_path)
+        except (FileNotFoundError, JSONDecodeError, OSError):
+            if raise_if_fails:
+                raise
+            else:
                 self._initialize_lookup_table()
                 return self.load_lookup_table()
         
@@ -123,9 +73,7 @@ class ModelManager:
             'parameters': description
         }
         
-    def model_path(self, description, creator_name=None, include: bool = True):        
-        import parse
-        
+    def model_path(self, description, creator_name=None, include: bool = True):                
         if creator_name is not None:
             return self.model_path(
                 description=self._merge_description_and_creator_name(
@@ -143,7 +91,7 @@ class ModelManager:
 
         file_dict = self.lookup_table['files']
         for file_name, content in file_dict.items():
-            if boiling_learning.utils.json_equivalent(content, description):
+            if bl.utils.json_equivalent(content, description):
                 break
         else:
             pattern = parse.compile(self.file_name_fmt)
@@ -159,7 +107,7 @@ class ModelManager:
                 if cast[0]
             ]
             
-            missing_elems = boiling_learning.utils.missing_elements(int_key_list)
+            missing_elems = bl.utils.missing_elements(int_key_list)
             if missing_elems:
                 index = missing_elems[0]
             else:
@@ -168,7 +116,7 @@ class ModelManager:
 
         file_path = (self.models_path / file_name).resolve().absolute()
         
-        key = boiling_learning.utils.relative_path(self.table_path.parent, file_path)
+        key = bl.utils.relative_path(self.table_path.parent, file_path)
 
         if include:
             file_dict[key] = description
@@ -179,7 +127,7 @@ class ModelManager:
 
     def delete_model(self, description):
         for file_name, content in self.lookup_table['files'].items():
-            if boiling_learning.utils.json_equivalent(content, description):
+            if bl.utils.json_equivalent(content, description):
                 break
 
         self.lookup_table['files'].pop(file_name)
@@ -201,10 +149,9 @@ class ModelManager:
         params=None,
         save: bool = False,
         load: bool = False,
-        raise_if_load_fails: bool = False
-    ):
-        from pickle import UnpicklingError
-        
+        raise_if_load_fails: bool = False,
+        include_description: bool = True,
+    ):        
         if creator_method is None:
             creator_method = self.creator_method
 
@@ -242,6 +189,12 @@ class ModelManager:
                     raise
 
         model = creator_method(params)
+        
+        if include_description:
+            model['description'] = self._merge_description_and_creator_name(
+                description=description,
+                creator_name=creator_name
+            )
 
         if save:
             self.save_model(model, path)
