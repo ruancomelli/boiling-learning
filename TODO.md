@@ -1,10 +1,10 @@
 # TODO List
 
-- [ ] Allow the first experimental file to be Experiment HH-MM.txt (without index) in `run_experiment.py`
+- [ ] (TEST REQUIRED) Allow the first experimental file to be Experiment HH-MM.txt (without index) in `run_experiment.py`
 - [ ] Use `collections.ChainMap` where this is the intended functionality
 - [ ] Write unit tests
 - [ ] Write a config file, so that configurations are not hard-coded in Python, but in a JSON file
-- [ ] Python Learning: design a preprocessing function that takes a `tf.tensor`. This function should take a batch, preprocess it (possibly using many cores) and then fetch the results. The results should then be saved to disk
+- [ ] Python Learning: design a preprocessing function that takes a `tf.tensor`. This function should take a batch, preprocess it (possibly using many cores) and then fetch the results. The results should then be saved to disk. Useful links: [TensorFlow guide to data performance](https://www.tensorflow.org/guide/data_performance), [TensorFlow tutorial to image classification](https://www.tensorflow.org/tutorials/images/classification), [TensorFlow tutorial to loading images](https://www.tensorflow.org/tutorials/load_data/images), [TensorFlow guide to building input pipelines](https://www.tensorflow.org/guide/data).
 - [x] Move library code to a specific module
 - [ ] Improve the project structure
 - [ ] Implement parallelization for `TransformationPipeline`s
@@ -16,3 +16,29 @@
 - [ ] Allow the user to choose if only the train data must be modified `ImageDatasetTransformer`
 - [ ] Allow dataset augmentation, not only transformation in `ImageDatasetTransformer`
 - [ ] In boiling_learning.model.restore: allow a complete dictionary of important keys, not only epoch. For instance, `keys={'epoch_str': int, 'val_acc': float}`
+- [ ] Implement asynchronous `UserPool`
+- [ ] In the `Parameters` class, allow getting `dict` keys. Usage: getting from a `dict` creates a branch:
+
+```python
+p = Parameters(params={'a': 0})
+assert p[{'a': 'b'}] == {'b': 0}
+```
+
+- [ ] In the `Parameters` class, allow setting `dict` keys. Usage: setting from a `dict` gets specific values from the source:
+
+```python
+p = Parameters(params={'a': 0, 'b': 1})
+p[{'a': 'C', 'd': 'F'}] = {'C': 1000, 'F': 2000}
+assert p == Parameters(params={'a': 1000, 'b': 1, 'd': 2000})
+```
+
+- [ ] Fix apparent error in `utils.remove_duplicates`
+- [ ] Refactor `ModelManager`, including separate functions to:
+  - [ ] create new model path;
+  - [ ] retrieve existing model path;
+  - [ ] check if model path already exists;
+  - [ ] check if model was already saved, or if it exists only in the table;
+- [ ] Format code in PEP style
+- [ ] Decide if `Parameters` will supporting forking
+- [ ] Use [TensorFlow estimators](https://www.tensorflow.org/guide/estimator)?
+- [ ] Allow different batch sizes for different models
