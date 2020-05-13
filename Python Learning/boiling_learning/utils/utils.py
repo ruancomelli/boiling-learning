@@ -728,3 +728,35 @@ class SimpleRepr:
             id=id(self) & 0xFFFFFF,
             attrs=" ".join("{}={!r}".format(k, v) for k, v in self.__dict__.items()),
             )
+        
+def simple_pprint(self, obj, stream, indent, allowance, context, level):
+    """
+    Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
+    """
+    # Source: <https://stackoverflow.com/a/52521743/5811400>
+    write = stream.write
+    
+    cls = obj.__class__
+    write(cls.__name__ + "(")
+    _format_kwarg_dict_items(
+        self, obj.__dict__.copy().items(), stream, indent + len(cls.__name__), allowance + 1, context, level
+    )
+    write(")")
+
+def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, level):
+    '''
+    Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
+    '''
+    write = stream.write
+    indent += self._indent_per_level
+    delimnl = ',\n' + ' ' * indent
+    last_index = len(items) - 1
+    for i, (key, ent) in enumerate(items):
+        last = i == last_index
+        write(key)
+        write('=')
+        self._format(ent, stream, indent + len(key) + 1,
+                        allowance if last else 1,
+                        context, level)
+        if not last:
+            write(delimnl)

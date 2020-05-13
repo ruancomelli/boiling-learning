@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+import pprint
 
 import boiling_learning as bl
 
@@ -116,3 +117,5 @@ class Parameters(Mapping, bl.utils.SimpleRepr):
     #         forks = self
             
     #     return forks
+
+pprint.PrettyPrinter._dispatch[Parameters.__repr__] = bl.utils.simple_pprint
