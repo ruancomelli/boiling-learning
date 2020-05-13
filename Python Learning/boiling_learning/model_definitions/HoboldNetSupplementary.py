@@ -47,15 +47,7 @@ def creator_method(
     compile_setup,
     fit_setup,
     fetch,
-):
-    compile_setup, fit_setup = bl.utils.regularize_default(
-        (compile_setup, fit_setup),
-        cond=lambda x: x is not None,
-        default=lambda x: dict(do=False),
-        many=True,
-        call_default=True
-    )
-    
+):    
     last_epoch, model = bl.model.restore(**checkpoint)
     initial_epoch = max(last_epoch, 0)
     
@@ -67,14 +59,13 @@ def creator_method(
             num_classes
         )
 
-        if compile_setup['do']:
+        if compile_setup.get('do', False):
             model.compile(**compile_setup['params'])
 
     history = None
-    if fit_setup['do']:
-        if initial_epoch < fit_setup['params']['epochs']:
-            fit_setup['params']['initial_epoch'] = initial_epoch
-            history = model.fit(**fit_setup['params'])
+    if fit_setup.get('do', False):
+        fit_setup['params']['initial_epoch'] = initial_epoch
+        history = model.fit(**fit_setup['params'])
 
     available_data = {
         'model': model,

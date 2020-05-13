@@ -19,8 +19,10 @@ class Case:
         frame_format='png',
         video_data_path=None
     ):
+        # TODO: either path or (root_path and name) should be given
         if path is None:
-            self.path = Path(root_path) / name
+            self.root_path = Path(root_path)
+            self.path = self.root_path / name
             self.name = name
         else:
             self.path = Path(path)

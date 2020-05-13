@@ -1,3 +1,8 @@
+import re
+from pathlib import Path
+
+import more_itertools as mit
+
 def empty(*args, **kwargs):
     pass
 
@@ -22,6 +27,31 @@ def comment(f, s: str = ''):
             print(f)
         return f(*args, **kwargs)
     return wrapped
+
+def remove_duplicates(iterable, key=None):
+    # See <https://more-itertools.readthedocs.io/en/stable/api.html#more_itertools.unique_everseen>
+    
+    if key is None:
+        return mit.unique_everseen(iterable)
+    elif callable(key):    
+        return mit.unique_everseen(
+            iterable,
+            key=key
+        )
+    elif isinstance(key, dict):            
+        return mit.unique_everseen(
+            iterable,
+            key=lambda elem: key[type(elem)]
+        )
+    elif key == 'fast':
+        return remove_duplicates(
+            iterable,
+            key={
+                list: tuple,
+                set: frozenset,
+                dict: (lambda elem: frozenset(elem.items())),
+            }
+        )
 
 def has_duplicates(iterable):
     try:
@@ -52,9 +82,20 @@ def merge_dicts(*dict_args, latter_precedence=True):
     
     return dict(ChainMap(*dict_args))
 
+def projection(*indices):
+    def wrapped(*args):
+        return tuple(args[i] for i in indices)
+    return wrapped
+
+def partial_isinstance(type_):
+    def wrapped(x):
+        return isinstance(x, type_)
+    return wrapped
+
 def alternate_iter(
     iterables,
     default_indices=None,
+    skip_repeated=True
 ):    
     '''
         >>> alternate_iter(
@@ -79,6 +120,9 @@ def alternate_iter(
     
     if default_indices is None:
         default_indices = (0,) * len(iterables)
+        
+    if skip_repeated: # compute the 
+        yield tuple(iterable[default_indices[idx]] for idx, iterable in enumerate(iterables))
 
     for iterable_index, iterable in enumerate(iterables):
         head = tuple(
@@ -93,8 +137,16 @@ def alternate_iter(
                 iterables[iterable_index+1:], default_indices[iterable_index+1:]
             )
         )
-        for item in iterable:
-            yield head + (item,) + tail
+        if skip_repeated:
+            for idx in range(len(iterable)):
+                if idx == default_indices[iterable_index]:
+                    continue
+                else:
+                    item = iterable[idx]
+                    yield head + (item,) + tail
+        else:
+            for item in iterable:
+                yield head + (item,) + tail
 
 def combine_dict(dct, gen=None):
     from more_itertools import unzip
@@ -549,9 +601,23 @@ def relative_path(origin, destination):
     from os.path import relpath
     return relpath(destination, start=origin)
 
+def remove_copy(directory, pattern):
+    def remove_copy_idx(path):
+        pattern = re.compile('(.*) \([0-9]+\)\.png')
+        matches = pattern.match(path.name)
+        if matches:
+            name = matches[1]
+            return (True, path.with_name(name).with_suffix(path.suffix))
+        else:
+            return (False, None)
+        
+    for f in Path(directory).glob(pattern):
+        success, original_f = remove_copy_idx(f)
+        if success and original_f.is_file():
+            f.unlink()
+
 # Source: https://stackoverflow.com/a/57892171/5811400
 def rmdir(path, recursive=False, keep=False):
-    from pathlib import Path
     from shutil import rmtree
     
     path = Path(path)
@@ -580,8 +646,6 @@ def group_files(path, keyfunc=None):
     return d      
         
 def mover(out_dir, up_level=0, make_dir=True, head_aggregator=None, verbose=False):
-    from pathlib import Path
-    
     out_dir = Path(out_dir)
     
     def wrapper(in_path):
@@ -610,7 +674,6 @@ def dir_as_tree(dir_path, file_pred=None, dir_pred=None):
     ret_list = []
     ret_dict = {}
     
-    # ret_list = (path for path in dir_path.iterdir())
     for path in dir_path.iterdir():
         if path.is_file() and (file_pred is None or file_pred(path)):
             ret_list.append(path)
@@ -625,19 +688,6 @@ def dir_as_tree_apply(dir_path, fs, dir_pred=None):
         for path in dir_path.iterdir()
         if path.is_dir() and (dir_pred is None or dir_pred(path))
     }
-
-# def dir_as_tree_apply(dir_path, f, file_pred=None, dir_pred=None):
-#     from itertools import groupby
-    
-#     d = {
-#         k: list(g)
-#         for k, g in groupby(
-#             dir_path.iterdir(),
-#             key=lambda p: p.is_file()
-#         )
-#     }
-    
-#     return d
 
 # ---------------------------------- Timer ----------------------------------
 from contextlib import contextmanager
@@ -667,3 +717,14 @@ def elapsed_timer():
     end_time = default_timer()
     _Timer.end = end_time
     _Timer.duration = end_time - start_time
+    
+# ---------------------------------- Timer ----------------------------------
+class SimpleRepr:
+    """A mixin implementing a simple __repr__."""
+    # Source: <https://stackoverflow.com/a/44595303/5811400>
+    def __repr__(self):
+        return "<{class_} @{id:x} {attrs}>".format(
+            class_=self.__class__.__name__,
+            id=id(self) & 0xFFFFFF,
+            attrs=" ".join("{}={!r}".format(k, v) for k, v in self.__dict__.items()),
+            )

@@ -1,6 +1,8 @@
 from collections.abc import Mapping
 
-class Parameters(Mapping):
+import boiling_learning as bl
+
+class Parameters(Mapping, bl.utils.SimpleRepr):
     # class Fork(dict):
     #     pass
     
@@ -39,22 +41,16 @@ class Parameters(Mapping):
                 d_ = d_.setdefault(p_, {})
             d_[p[-1]] = value
 
-    def __init__(self, config=None, params=None):
-        
-        def is_set(x):
-            return isinstance(x, set)
-        def is_list(x):
-            return isinstance(x, list)
-               
+    def __init__(self, config=None, params=None):               
         if config is None:
             config = {
                 'get': [
-                    (is_set, Parameters.get_set),
-                    (is_list, Parameters.get_list)
+                    (bl.utils.partial_isinstance(set), Parameters.get_set),
+                    (bl.utils.partial_isinstance(list), Parameters.get_list)
                 ],
                 'set': [
-                    (is_set, Parameters.set_set),
-                    (is_list, Parameters.set_list)
+                    (bl.utils.partial_isinstance(set), Parameters.set_set),
+                    (bl.utils.partial_isinstance(list), Parameters.set_list)
                 ]
             }
         self.config = config
@@ -62,6 +58,9 @@ class Parameters(Mapping):
         if params is None:
             params = {}
         self.params = params
+        
+    def __str__(self):
+        return f'Parameters(config={self.config}, params={self.params})'
         
     def register_get_method(self, pred, method):
         self.config['get'].append(pred, method)

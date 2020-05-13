@@ -3,7 +3,6 @@ from pickle import UnpicklingError
 from json import JSONDecodeError
 
 import parse
-from tensorflow.keras.models import load_model
 
 import boiling_learning as bl
 
@@ -89,14 +88,13 @@ class ModelManager:
             except ValueError:
                 return (False, obj)
 
-        file_dict = self.lookup_table['files']
-        for file_name, content in file_dict.items():
+        for file_name, content in self.lookup_table['files'].items():
             if bl.utils.json_equivalent(content, description):
                 break
         else:
             pattern = parse.compile(self.file_name_fmt)
             
-            parsed_items = (pattern.parse(key) for key in file_dict)
+            parsed_items = (pattern.parse(key) for key in self.lookup_table['files'])
             indices = (parsed['index'] for parsed in parsed_items if 'index' in parsed)
             int_key_list = [
                 cast[1]
@@ -119,9 +117,8 @@ class ModelManager:
         key = bl.utils.relative_path(self.table_path.parent, file_path)
 
         if include:
-            file_dict[key] = description
-
-        self.save_lookup_table()
+            self.lookup_table['files'][key] = description
+            self.save_lookup_table()
         
         return file_path
 
@@ -150,7 +147,7 @@ class ModelManager:
         save: bool = False,
         load: bool = False,
         raise_if_load_fails: bool = False,
-        include_description: bool = True,
+        append_description: bool = False,
     ):        
         if creator_method is None:
             creator_method = self.creator_method
@@ -165,7 +162,9 @@ class ModelManager:
             self.printer('Params:', params)
             
         if creator_name is None:
-            if hasattr(creator_method, 'creator_name'):
+            if hasattr(creator_method, 'creator') and hasattr(creator_method.creator, 'creator_name'):
+                creator_name = creator_method.creator.creator_name
+            elif hasattr(creator_method, 'creator_name'):
                 creator_name = creator_method.creator_name
             elif self.creator_name is not None:
                 creator_name = self.creator_name
@@ -190,7 +189,7 @@ class ModelManager:
 
         model = creator_method(params)
         
-        if include_description:
+        if append_description:
             model['description'] = self._merge_description_and_creator_name(
                 description=description,
                 creator_name=creator_name

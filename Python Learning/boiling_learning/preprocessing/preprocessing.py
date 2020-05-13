@@ -159,7 +159,6 @@ class ImageDataset:
             
     def transform_images(self, transformer, **kwargs):
         # TODO: remove this code duplication
-        # TODO: allow that only train data is modified
         # TODO: allow dataset augmentation, not only transformation
         
         return transformer.transform_images(self.paths, **kwargs)
@@ -190,8 +189,8 @@ class ImageDataset:
         )), dtype='category')
         
         return self
-    
-def load_persistent(path, auto_purge=False):    
+
+def load_persistent(path, auto_purge=False):
     def imread_as_float(path):
         try:
             return img_as_float(imread(path))

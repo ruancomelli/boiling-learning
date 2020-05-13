@@ -1,3 +1,9 @@
+from pathlib import Path
+import json
+import pickle
+
+from tensorflow.keras.models import load_model
+
 def save_serialized(save_map):
     def save(return_dict, path):
         path = Path(path)
@@ -9,20 +15,20 @@ def save_serialized(save_map):
 
 def save_keras_model(keras_model, path, **kwargs):
     path = Path(path).absolute().resolve()
-    path.mkdir(exist_ok=True, parents=True)
+    path.parent.mkdir(exist_ok=True, parents=True)
     
     keras_model.save(path, **kwargs)
 
 def save_pkl(obj, path):
     path = Path(path).absolute().resolve()
-    path.mkdir(exist_ok=True, parents=True)
+    path.parent.mkdir(exist_ok=True, parents=True)
 
     with path.open('wb') as file:
         pickle.dump(obj, file, protocol=pickle.HIGHEST_PROTOCOL)
         
 def save_json(obj, path):
     path = Path(path).absolute().resolve()
-    path.mkdir(exist_ok=True, parents=True)
+    path.parent.mkdir(exist_ok=True, parents=True)
 
     with path.open('w', encoding='utf-8') as file:
         json.dump(obj, file, indent=4, ensure_ascii=False)
