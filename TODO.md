@@ -17,14 +17,14 @@
 - [ ] Allow dataset augmentation, not only transformation in `ImageDatasetTransformer`
 - [ ] In boiling_learning.model.restore: allow a complete dictionary of important keys, not only epoch. For instance, `keys={'epoch_str': int, 'val_acc': float}`
 - [ ] Implement asynchronous `UserPool`
-- [ ] In the `Parameters` class, allow getting `dict` keys. Usage: getting from a `dict` creates a branch:
+- [x] In the `Parameters` class, allow getting `dict` keys. Usage: getting from a `dict` creates a branch:
 
 ```python
 p = Parameters(params={'a': 0})
 assert p[{'a': 'b'}] == {'b': 0}
 ```
 
-- [ ] In the `Parameters` class, allow setting `dict` keys. Usage: setting from a `dict` gets specific values from the source:
+- [x] In the `Parameters` class, allow setting `dict` keys. Usage: setting from a `dict` gets specific values from the source:
 
 ```python
 p = Parameters(params={'a': 0, 'b': 1})
@@ -32,6 +32,9 @@ p[{'a': 'C', 'd': 'F'}] = {'C': 1000, 'F': 2000}
 assert p == Parameters(params={'a': 1000, 'b': 1, 'd': 2000})
 ```
 
+- [ ] In the `Parameters` class, decide what to do if there are `set` keys inside `list` keys when getting.
+- [ ] In the `Parameters` class, decide what to do if there are `dict` keys inside `list` keys.
+- [ ] In the `Parameters` class, allow modified `del` paths. For instance, `del p[['a', 'b']]` should delete `'b'` from `p['a']`.
 - [ ] Fix apparent error in `utils.remove_duplicates`
 - [ ] Refactor `ModelManager`, including separate functions to:
   - [ ] create new model path;

@@ -723,11 +723,18 @@ class SimpleRepr:
     """A mixin implementing a simple __repr__."""
     # Source: <https://stackoverflow.com/a/44595303/5811400>
     def __repr__(self):
-        return "<{class_} @{id:x} {attrs}>".format(
-            class_=self.__class__.__name__,
-            id=id(self) & 0xFFFFFF,
-            attrs=" ".join("{}={!r}".format(k, v) for k, v in self.__dict__.items()),
-            )
+        class_name = self.__class__.__name__
+        address = id(self) & 0xFFFFFF
+        attrs = ', '.join(f'{key}={value!r}' for key, value in self.__dict__.items())
+        
+        return f'<{class_name} @{address:x} {attrs}>'
+        
+class SimpleStr:
+    def __str__(self):
+        class_name = self.__class__.__name__
+        attrs = ', '.join(f'{key}={value}' for key, value in self.__dict__.items())
+        
+        return f'{class_name}({attrs})'
         
 def simple_pprint(self, obj, stream, indent, allowance, context, level):
     """

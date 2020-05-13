@@ -1,30 +1,37 @@
-from collections.abc import Mapping
+from collections.abc import MutableMapping
 import pprint
 
 import boiling_learning as bl
 
-class Parameters(Mapping, bl.utils.SimpleRepr):
+class Parameters(MutableMapping, bl.utils.SimpleRepr, bl.utils.SimpleStr):
     # class Fork(dict):
     #     pass
     
     @staticmethod
-    def get_set(d, key):
+    def get_from_set(d, key):
         return {k: d[k] for k in key}
 
     @staticmethod
-    def get_list(d, key):
+    def get_from_list(d, key):
         d_ = d
         for k in key:
             d_ = d_[k]
         return d_
+
+    @staticmethod
+    def get_from_dict(d, key):
+        return {
+            v: d[k]
+            for k, v in key.items()
+        }
         
     @staticmethod
-    def set_set(d, key, value):
+    def set_from_set(d, key, value):
         for k in key:
             d[k] = value
     
     @staticmethod
-    def set_list(d, key, value):
+    def set_from_list(d, key, value):
         paths = [[]]
         for k in key:
             if isinstance(k, set):
@@ -42,49 +49,61 @@ class Parameters(Mapping, bl.utils.SimpleRepr):
                 d_ = d_.setdefault(p_, {})
             d_[p[-1]] = value
 
-    def __init__(self, config=None, params=None):               
+    @staticmethod
+    def set_from_dict(d, key, value):
+        for k, v in key.items():
+            d[k] = value[v]
+
+    def __init__(self, params=None, config=None):    
+        if params is None:
+            params = {}
+        self.params = params
+                   
         if config is None:
             config = {
                 'get': [
-                    (bl.utils.partial_isinstance(set), Parameters.get_set),
-                    (bl.utils.partial_isinstance(list), Parameters.get_list)
+                    (bl.utils.partial_isinstance(set), Parameters.get_from_set),
+                    (bl.utils.partial_isinstance(list), Parameters.get_from_list),
+                    (bl.utils.partial_isinstance(dict), Parameters.get_from_dict)
                 ],
                 'set': [
-                    (bl.utils.partial_isinstance(set), Parameters.set_set),
-                    (bl.utils.partial_isinstance(list), Parameters.set_list)
+                    (bl.utils.partial_isinstance(set), Parameters.set_from_set),
+                    (bl.utils.partial_isinstance(list), Parameters.set_from_list),
+                    (bl.utils.partial_isinstance(dict), Parameters.set_from_dict)
                 ]
             }
         self.config = config
         
-        if params is None:
-            params = {}
-        self.params = params
-        
-    def __str__(self):
-        return f'Parameters(config={self.config}, params={self.params})'
-        
     def register_get_method(self, pred, method):
-        self.config['get'].append(pred, method)
+        self.config.setdefault('get', []).append((pred, method))
         
     def register_set_method(self, pred, method):
-        self.config['set'].append(pred, method)
+        self.config.setdefault('set', []).append((pred, method))
+        
+    def register_del_method(self, pred, method):
+        self.config.setdefault('del', []).append((pred, method))
         
     def __getitem__(self, key):
-        for pred, func in self.config['get']:
+        for pred, func in self.config.get('get', []):
             if pred(key):
-                return func(self.params, key)
-        return self.params[key]
+                return func(self, key)
+        return self.params.__getitem__(key)
         
     def __setitem__(self, key, value):
-        for pred, func in self.config['set']:
+        for pred, func in self.config.get('set', []):
             if pred(key):
-                func(self.params, key, value)
-                break
+                func(self, key, value)
+                return
         else:
-            self.params[key] = value
+            self.params.__setitem__(key, value)
         
     def __delitem__(self, key):
-        self.params.__delitem__(key)
+        for pred, func in self.config.get('del', []):
+            if pred(key):
+                func(self, key)
+                return
+        else:
+            self.params.__delitem__(key)
         
     def __iter__(self):
         return self.params.__iter__()
