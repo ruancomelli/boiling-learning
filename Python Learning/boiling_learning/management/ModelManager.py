@@ -72,7 +72,13 @@ class ModelManager:
             'parameters': description
         }
         
-    def model_path(self, description, creator_name=None, include: bool = True):                
+    def model_path(
+        self,
+        description,
+        creator_name=None,
+        include: bool = True,
+        missing_ok: bool = True,
+    ):
         if creator_name is not None:
             return self.model_path(
                 description=self._merge_description_and_creator_name(
@@ -92,6 +98,9 @@ class ModelManager:
             if bl.utils.json_equivalent(content, description):
                 break
         else:
+            if not missing_ok:
+                raise ValueError(f'could not find model with the following description: {description}')
+            
             pattern = parse.compile(self.file_name_fmt)
             
             parsed_items = (pattern.parse(key) for key in self.lookup_table['files'])
