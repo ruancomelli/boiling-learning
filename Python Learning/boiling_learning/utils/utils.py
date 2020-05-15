@@ -1,7 +1,14 @@
 import re
 from pathlib import Path
+from collections import ChainMap
+import operator
+from itertools import product
 
+import matplotlib.pyplot as plt
 import more_itertools as mit
+from more_itertools import unzip
+
+_sentinel = object()
 
 def empty(*args, **kwargs):
     pass
@@ -60,23 +67,17 @@ def has_duplicates(iterable):
         iterable_len = len(list(iterable))
     return iterable_len != len(set(iterable))
 
-def missing_elements(int_list): # source: adapted from <https://stackoverflow.com/questions/16974047/efficient-way-to-find-missing-elements-in-an-integer-sequence>
+def missing_elements(int_list):
+    # source: adapted from <https://stackoverflow.com/questions/16974047/efficient-way-to-find-missing-elements-in-an-integer-sequence>
     if int_list:
+        int_list = sorted(int_list)
         start, end = int_list[0], int_list[-1]
-        full_list = set(range(start, end + 1))
-        return sorted(full_list.difference(int_list))
+        full = range(start, end + 1)
+        return list(filter(lambda x: x not in int_list, full))
     else:
         return []
 
 def merge_dicts(*dict_args, latter_precedence=True):
-    # source: <https://stackoverflow.com/a/61051590/5811400>
-    
-    """
-    Given any number of dicts, shallow copy and merge into a new dict,
-    precedence goes to key value pairs in latter dicts.
-    """
-    from collections import ChainMap
-    
     if latter_precedence:
         dict_args = reversed(dict_args)
     
@@ -149,11 +150,8 @@ def alternate_iter(
                 yield head + (item,) + tail
 
 def combine_dict(dct, gen=None):
-    from more_itertools import unzip
-
     if gen is None:
         def default_gen(x):
-            from itertools import product
             return product(*x)
         gen = default_gen
 
@@ -175,184 +173,52 @@ def dict_complement(dict_, keys):
     
 def dict_product(**kwargs):
     # source: <https://stackoverflow.com/a/5228294/5811400>
-    from itertools import product
-    
     keys = kwargs.keys()
     vals = kwargs.values()
     for instance in product(*vals):
         yield dict(zip(keys, instance))
-    
-def extract_value(dicts, key=None, keys=None, default_behaviour='value', default=None):
-    # use check_value_match here?
-    
-    if isinstance(dicts, dict):
-        dicts = [dicts]
-        
-    if not (None in (key, keys)):
-        raise ValueError(f'either key or keys must be None')
-    elif key is None:
+
+def extract_value(dicts, key=None, default=_sentinel, many=False):
+    if many:
         return {
-            key: extract_value(dicts, key=key, default_behaviour='value', default=default)
-            for key in keys
+            k: extract_value(dicts, key=k, default=default, many=False)
+            for k in key
         }
     else:
-        for d in dicts:
-            if key in d:
-                return d[key]
-            
-        default_behaviour = default_behaviour.lower()
-            
-        if default_behaviour == 'value':
-            return default
-        elif default_behaviour == 'raise':
-            raise ValueError(f'key {key} was not found in the dictionaries.')
+        cm = ChainMap(*dicts)
+        if default is _sentinel:
+            if key in cm:
+                return cm[key]
+            else:
+                raise ValueError(f'key {key} was not found in the dictionaries.')
         else:
-            raise ValueError(f'default_behaviour must be either \'value\' or \'raise\'. Got \'{default_behaviour}\'.')
-        
-def get_nested(dict_, *keys, **kwargs):
-    available_kwargs = ['default']
-    if not all(key in available_kwargs for key in kwargs):
-        raise TypeError(f'invalid named arguments. Expected only keys in {available_kwargs}, got {list(kwargs.keys())}')
-        
-    if 'default' in kwargs:
-        for key in keys:
-            dict_ = dict_.get(key, kwargs['default'])
-    else:
-        for key in keys:
-            dict_ = dict_[key]
-    return dict_
+            return cm.get(key, default)
 
-def set_nested(dict_, keys, value):
-    for key in keys[:-1]:
-        dict_ = dict_.setdefault(key, {})
-    dict_[keys[-1]] = value
-    
+def invert_dict(d):
+    return dict((v, k) for k, v in d.items())
+
+def extract_keys(d, value, cmp=operator.eq):
+    for k, v in d.items():
+        if cmp(value, v):
+            yield k
+        
+# ---------------------------------- Operators ----------------------------------
+def is_None(x):
+    return x is None
+def is_not_None(x):
+    return x is not None
+
+# ---------------------------------- Printing ----------------------------------
 def print_verbose(verbose, *args, **kwargs):
     if verbose:
         print(*args, **kwargs)
-
-def print_value(
-    name: str, value,
-    *args,
-    append_new_line: bool = False,
-    fmt: str = '{name} = {value}',
-    note: str = '',
-    note_fmt: str = ' ({note})',
-    **kwargs):
-    """Standardized method for printing named values.
-
-    Parameters
-    ----------
-    name            : name to be printed
-    value           : value to be printed
-    *args           : variadic arguments to be forwarded to the print function
-    append_new_line : if True, prints a new line after everything was printed
-    fmt             : format string to be used
-    note            : note to be included after formatting
-    note_fmt        : format for the note
-    **kwargs        : variadic keyworded arguments to be forwarded to the print function
-    """
-    if note:
-        fmt = fmt + note_fmt.format(note=note)
-    print(fmt.format(name=name, value=value), *args, **kwargs)
         
-    if append_new_line:
-        print()
-        
-def print_array(
-    name: str, value,
-    *args,
-    **kwargs):
-    """Standardized method for printing named arrays.
-
-    Parameters
-    ----------
-    name     : name to be printed
-    value    : array to be printed
-    *args    : variadic arguments to be forwarded to the print function
-    **kwargs : variadic keyworded arguments to be forwarded to the print function
-    """
-    if value.ndim == 1:
-        fmt = '{name} = {value}'
-        append_new_line = False
-    elif value.ndim == 2:
-        fmt = '{name} =\n{value}'
-        append_new_line = True
-    else:
-        raise ValueError('expecting a 1-D or 2-D array')
-    print_value(
-        name, value,
-        *args,
-        append_new_line=append_new_line,
-        fmt=fmt,
-        note='Shape: {shape}'.format(shape=value.shape),
-        note_fmt=' ({note})',
-        **kwargs)
-
-def print_bool(
-    name: str, value: bool,
-    *args,
-    append_new_line: bool = False,
-    note: str = '',
-    note_fmt: str = ' ({note})',
-    **kwargs):
-    """Standardized method for printing boolean named values.
-
-    Parameters
-    ----------
-    name            : name to be printed
-    value           : value to be printed
-    *args           : variadic arguments to be forwarded to the print function
-    append_new_line : if True, prints a new line after everything was printed
-    note            : note to be included after formatting
-    note_fmt        : format for the note
-    **kwargs        : variadic keyworded arguments to be forwarded to the print function
-    """
-    print_value(
-        name, value,
-        *args,
-        append_new_line=append_new_line,
-        fmt='{name}: {value}',
-        note=note,
-        note_fmt=note_fmt,
-        **kwargs)
-
-def print_close(
-    name_lhs: str, name_rhs: str,
-    value_lhs, value_rhs,
-    *args,
-    tol: float = 1e-10,
-    append_new_line: bool = False,
-    note: str = '',
-    note_fmt: str = ' ({note})',
-    **kwargs):
-    """Standardized method for printing boolean named values.
-
-    Parameters
-    ----------
-    name            : name to be printed
-    value           : value to be printed
-    *args           : variadic arguments to be forwarded to the print function
-    append_new_line : if True, prints a new line after everything was printed
-    note            : note to be included after formatting
-    note_fmt        : format for the note
-    **kwargs        : variadic keyworded arguments to be forwarded to the print function
-    """
-    import numpy as np
-    
-    print_bool(
-        f'{name_lhs} == {name_rhs}',
-        np.all(np.abs(value_lhs - value_rhs) <= tol),
-        *args,
-        append_new_line=append_new_line,
-        note=note,
-        note_fmt=note_fmt,
-        **kwargs)
-
 def print_header(
     s: str,
     level: int = 0,
-    levels=('#', '=', '-', '~', '^', '*', '+')):
+    levels=('#', '=', '-', '~', '^', '*', '+'),
+    verbose: bool = True
+):
     """Standardized method for printing a section header.
 
     Prints the argument s underlined.
@@ -362,11 +228,12 @@ def print_header(
     s       : string to be printed
     level   : index of level symbol to be used
     levels  : iterable of level symbols to choose from
+    verbose : verbose mode
     """
     s = str(s)
-    print()
-    print(s)
-    print(levels[level] * len(s))
+    print_verbose(verbose)
+    print_verbose(verbose, s)
+    print_verbose(verbose, levels[level] * len(s))
     
 # ---------------------------------- Plotting functions ----------------------------------
 def prepare_fig(
@@ -392,9 +259,7 @@ def prepare_fig(
     * only two of the three arguments n_cols, n_rows and n_elems must be given. The other one is calculated.
     * only two of the two arguments fig_size and subfig_size must be computed. The other one is calculated.
     * fig_size and subfig_size can be a pair (width, height) or a string in ['tiny', 'small', 'normal', 'intermediate', 'large', 'big']
-    """
-    import matplotlib.pyplot as plt
-                
+    """                
     if None not in (fig_size, subfig_size):
         raise ValueError('incompatible arguments: either figsize or subfig_size must be None')
     if None not in (n_cols, n_rows, n_elems):
@@ -505,31 +370,31 @@ def crop_array(
     idx = check_value_match(
         [
             dict(
-                lims=lambda x: x is not None,
-                x_min=lambda x: x is None,
-                x_max=lambda x: x is None,
-                y_min=lambda x: x is None,
-                y_max=lambda x: x is None,
-                x_lim=lambda x: x is None,
-                y_lim=lambda x: x is None
+                lims=is_not_None,
+                x_min=is_None,
+                x_max=is_None,
+                y_min=is_None,
+                y_max=is_None,
+                x_lim=is_None,
+                y_lim=is_None
             ),
             dict(
-                lims=lambda x: x is None,
-                x_min=lambda x: x is not None,
-                x_max=lambda x: x is not None,
-                y_min=lambda x: x is not None,
-                y_max=lambda x: x is not None,
-                x_lim=lambda x: x is None,
-                y_lim=lambda x: x is None
+                lims=is_None,
+                x_min=is_not_None,
+                x_max=is_not_None,
+                y_min=is_not_None,
+                y_max=is_not_None,
+                x_lim=is_None,
+                y_lim=is_None
             ),
             dict(
-                lims=lambda x: x is None,
-                x_min=lambda x: x is None,
-                x_max=lambda x: x is None,
-                y_min=lambda x: x is None,
-                y_max=lambda x: x is None,
-                x_lim=lambda x: x is not None,
-                y_lim=lambda x: x is not None
+                lims=is_None,
+                x_min=is_None,
+                x_max=is_None,
+                y_min=is_None,
+                y_max=is_None,
+                x_lim=is_not_None,
+                y_lim=is_not_None
             )
         ],
         dict(
@@ -558,14 +423,14 @@ def shift_array(
     idx = check_value_match(
         [
             {
-                'shifts': lambda x: x is None,
-                'shift_x': lambda x: x is not None,
-                'shift_y': lambda x: x is not None,
+                'shifts': is_None,
+                'shift_x': is_not_None,
+                'shift_y': is_not_None,
             },
             {
-                'shifts': lambda x: x is not None,
-                'shift_x': lambda x: x is None,
-                'shift_y': lambda x: x is None,
+                'shifts': is_not_None,
+                'shift_x': is_None,
+                'shift_y': is_None,
             }
         ],
         {
@@ -645,7 +510,13 @@ def group_files(path, keyfunc=None):
         d.setdefault(keyfunc(p), []).append(p)
     return d      
         
-def mover(out_dir, up_level=0, make_dir=True, head_aggregator=None, verbose=False):
+def mover(
+    out_dir,
+    up_level: int = 0,
+    make_dir: bool = True,
+    head_aggregator=None,
+    verbose: bool = False
+):
     out_dir = Path(out_dir)
     
     def wrapper(in_path):
@@ -661,10 +532,9 @@ def mover(out_dir, up_level=0, make_dir=True, head_aggregator=None, verbose=Fals
         if make_dir:
             out_path.parent.mkdir(exist_ok=True, parents=True)
             
-        if verbose:
-            print(f'mover: up_level={up_level}; make_dir={make_dir}; head_aggregator={head_aggregator}')
-            print(in_path)
-            print('>', out_path)
+        print_verbose(verbose, f'mover: up_level={up_level}; make_dir={make_dir}; head_aggregator={head_aggregator}')
+        print_verbose(verbose, in_path)
+        print_verbose(verbose, '>', out_path)
         
         return out_path
         
@@ -718,7 +588,7 @@ def elapsed_timer():
     _Timer.end = end_time
     _Timer.duration = end_time - start_time
     
-# ---------------------------------- Timer ----------------------------------
+# ---------------------------------- Class printing ----------------------------------
 class SimpleRepr:
     """A mixin implementing a simple __repr__."""
     # Source: <https://stackoverflow.com/a/44595303/5811400>

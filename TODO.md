@@ -1,7 +1,11 @@
 # TODO List
 
 - [ ] (TEST REQUIRED) Allow the first experimental file to be Experiment HH-MM.txt (without index) in `run_experiment.py`
-- [ ] Use `collections.ChainMap` where this is the intended functionality
+- [ ] Refactor code. Ideas:
+  - use the `collections` library;
+  - use the `operator` library;
+  - try to remove unnecessary functions;
+  - try to remove unnecessary dependencies;
 - [ ] Write unit tests
 - [ ] Write a config file, so that configurations are not hard-coded in Python, but in a JSON file
 - [ ] Python Learning: design a preprocessing function that takes a `tf.tensor`. This function should take a batch, preprocess it (possibly using many cores) and then fetch the results. The results should then be saved to disk. Useful links: [TensorFlow guide to data performance](https://www.tensorflow.org/guide/data_performance), [TensorFlow tutorial to image classification](https://www.tensorflow.org/tutorials/images/classification), [TensorFlow tutorial to loading images](https://www.tensorflow.org/tutorials/load_data/images), [TensorFlow guide to building input pipelines](https://www.tensorflow.org/guide/data).
@@ -36,12 +40,23 @@ assert p == Parameters(params={'a': 1000, 'b': 1, 'd': 2000})
 - [ ] In the `Parameters` class, decide what to do if there are `dict` keys inside `list` keys.
 - [ ] In the `Parameters` class, allow modified `del` paths. For instance, `del p[['a', 'b']]` should delete `'b'` from `p['a']`.
 - [ ] Fix apparent error in `utils.remove_duplicates`
-- [ ] Refactor `ModelManager`, including separate functions to:
-  - [ ] create new model path;
-  - [ ] retrieve existing model path;
-  - [ ] check if model path already exists;
-  - [ ] check if model was already saved, or if it exists only in the table;
+- [x] Refactor `ModelManager`, including separate functions to:
+  - [x] create new model path;
+  - [x] retrieve existing model path;
+  - [x] check if model path already exists;
+  - [x] check if model was already saved, or if it exists only in the table;
 - [ ] Format code in PEP style
 - [ ] Decide if `Parameters` will supporting forking
 - [ ] Use [TensorFlow estimators](https://www.tensorflow.org/guide/estimator)?
 - [ ] Allow different batch sizes for different models
+- [ ] Why do `more_itertools.filter_except` and `more_itertools.map_except` need to do `exceptions = tuple(exceptions)`?
+- [ ] Finish step detection analysis
+- [ ] Implement a mini-translator: translates from the old-string-format minilanguage to the new format
+- [ ] Implement a function wrapper that transforms the arguments before forwarding. For instance: 
+
+```python
+import operator
+lower_eq = transform(operator.eq, keyfunc=lambda x: x.lower())
+assert 'Hi' != 'hi'
+assert lower_eq('Hi', 'hi')
+```
