@@ -18,9 +18,9 @@ def constant(value):
         return value
     return wrapper
 
-def constant_callable(value_callable):
+def constant_callable(callable_value):
     def wrapper(*args, **kwargs):
-        return value_callable()
+        return callable_value()
     return wrapper
 
 def comment(f, s: str = ''):
@@ -105,7 +105,7 @@ def alternate_iter(
                 'rohan',
                 ['alpha', 'beta']
             ],
-            default_indices=[1, 3, 0]
+            default_indices=[1, 3] # equivalent to default_indices = (1, 3, 0)
         )
         [(1, 'a', 'alpha'),
         (2, 'a', 'alpha'),
@@ -118,11 +118,13 @@ def alternate_iter(
         (2, 'a', 'alpha'),
         (2, 'a', 'beta')]
     '''    
-    
     if default_indices is None:
         default_indices = (0,) * len(iterables)
+    else:
+        default_indices = tuple(default_indices)
+        default_indices = default_indices + (0,)*(len(iterables) - len(default_indices))
         
-    if skip_repeated: # compute the 
+    if skip_repeated: 
         yield tuple(iterable[default_indices[idx]] for idx, iterable in enumerate(iterables))
 
     for iterable_index, iterable in enumerate(iterables):
@@ -139,11 +141,10 @@ def alternate_iter(
             )
         )
         if skip_repeated:
-            for idx in range(len(iterable)):
+            for idx, item in enumerate(iterable):
                 if idx == default_indices[iterable_index]:
                     continue
                 else:
-                    item = iterable[idx]
                     yield head + (item,) + tail
         else:
             for item in iterable:
@@ -482,24 +483,25 @@ def remove_copy(directory, pattern):
             f.unlink()
 
 # Source: https://stackoverflow.com/a/57892171/5811400
-def rmdir(path, recursive=False, keep=False):
-    from shutil import rmtree
-    
+def rmdir(path, recursive=False, keep=False, missing_ok=False):
     path = Path(path)
     
-    if recursive:
-        if keep:
-            for child in path.iterdir():
-                if child.is_file():
-                    child.unlink()
-                else:
-                    rmdir(child, recursive=recursive, keep=False)
+    if not path.is_dir():
+        if missing_ok:
+            return
         else:
-            rmtree(path)
+            raise NotADirectoryError(f'path is expected to be a directory when missing_ok={missing_ok}. Got {path}.')
+    
+    if recursive:
+        for child in path.iterdir():
+            if child.is_file():
+                child.unlink()
+            elif child.is_dir():
+                rmdir(child, recursive=recursive, keep=False, missing_ok=True)
+        if not keep:
+            path.rmdir()
     elif keep:
-        raise ValueError('"keep" option is only valid in recursive mode')
-    else:
-        path.rmdir()
+        ValueError('cannot keep dir when not in recursive mode.')
               
 def group_files(path, keyfunc=None):
     if keyfunc is None:

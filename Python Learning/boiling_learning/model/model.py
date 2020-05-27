@@ -6,24 +6,38 @@ from sklearn.model_selection import train_test_split
 
 import boiling_learning as bl
 
+_sentinel = object()
+
 class SplitSubset(enum.Enum):
     TRAIN = enum.auto()
     VAL = enum.auto()
+    TRAIN_VAL = enum.auto()
     TEST = enum.auto()
+    ALL = enum.auto()
+    
+    @classmethod
+    def get_split(cls, s, default=_sentinel):
+        if s in cls:
+            return s
+        else:
+            return cls.from_string(s, default=default)
 
     @classmethod
-    def from_string(cls, s, raise_if_not_found=False):
-        for k, v in SplitSubset.conversion_table.items():
+    def from_string(cls, s, default=_sentinel):
+        for k, v in cls.conversion_table.items():
             if s in v:
                 return k
-        if raise_if_not_found:
-            raise ValueError(f'string {s} was not found in the conversion table. Available values are {list(SplitSubset.conversion_table.values())}.')
-        return None
-
+        if default is _sentinel:
+            raise ValueError(f'string {s} was not found in the conversion table. Available values are {list(cls.conversion_table.values())}.')
+        else:
+            return default
+ 
 SplitSubset.conversion_table = {
     SplitSubset.TRAIN: {'train'},
     SplitSubset.VAL: {'val', 'validation'},
+    SplitSubset.TRAIN_VAL: set('train' + connector + validation_key for connector in ['_', '_and_'] for validation_key in ['val', 'validation']),
     SplitSubset.TEST: {'test'},
+    SplitSubset.ALL: {'all'},
 }
 
 def train_val_test_split(dataset, n_samples, train_size=None, val_size=None, test_size=None, **options):

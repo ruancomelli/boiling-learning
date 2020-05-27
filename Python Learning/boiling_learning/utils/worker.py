@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 import more_itertools as mit
 
 import boiling_learning as bl
@@ -16,22 +18,38 @@ def apply_to_f(tpl):
     f, args, kwargs = tpl
     return f(*args, **kwargs)
 
-class UserPool:
+class UserPool(Sequence):
     # See <https://stackoverflow.com/a/23665658/5811400>
     
-    def __init__(self, workers, manager=None, current=None, server=None):
-        self.workers = workers
+    def __init__(
+        self,
+        workers,
+        manager=None,
+        current=None,
+        server=None,
+        workers_key='allowed_users',
+        manager_key='manager',
+        server_key='server',
+    ):
+        workers = list(workers)
         
         if manager is None:
             manager = workers[0]
         self.manager = manager
         
+        self.workers = sorted(workers)
+        
         if current is not None:
             self.current = current
+        self.server = server
             
-        if server is not None:
-            self.server = server
+        self.workers_key = workers_key
+        self.manager_key = manager_key
+        self.server_key = server_key
         
+    def __getitem__(self, key):
+        return self.workers.__getitem__(key)
+    
     def __len__(self):
         return self.workers.__len__()
     
@@ -40,29 +58,37 @@ class UserPool:
         return self._current
     @current.setter
     def current(self, current):
-        if current not in self.workers:
+        if current not in self:
             raise ValueError(f'notebook user {current} is not expected. Allowed users are {self.workers}.')
         self._current = current
         
     @property
     def clients(self):
-        return list(filter(lambda worker: worker != self.manager, self.workers))
+        return list(filter(lambda worker: worker != self.manager, self))
     
-    @staticmethod
-    def from_json(path):
+    @classmethod
+    def from_json(
+        cls,
+        path,
+        workers_key='allowed_users',
+        manager_key='manager',
+        server_key='server'
+    ):
         config = bl.io.load_json(path)
         
-        return UserPool(
-            workers=config['allowed_users'],
-            manager=config.get('manager', None),
-            server=config.get('server', None)
+        return cls(
+            workers=config[workers_key],
+            manager=config.get(manager_key, None),
+            server=config.get(server_key, None)
         )
         
     def to_json(self, path):
         obj = {
-            'allowed_users': self.workers,
-            'manager': self.manager,
+            self.workers_key: self.workers,
+            self.manager_key: self.manager,
         }
+        if self.server is not None:
+            obj[self.server_key] = self.server
         bl.io.save_json(obj, path)
         
     def _distribute_iterable(self, iterable):
@@ -70,7 +96,7 @@ class UserPool:
 
         return dict(
             zip(
-                self.workers,
+                self,
                 mit.distribute(n_workers, iterable)
             )
         )
@@ -80,6 +106,9 @@ class UserPool:
     
     def is_manager(self):
         return self.current == self.manager
+    
+    def is_client(self):
+        return self.current in self.clients
     
     def is_server(self):
         return self.current == self.server

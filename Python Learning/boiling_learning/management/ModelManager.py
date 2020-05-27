@@ -234,8 +234,8 @@ class ModelManager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
         description=None,
         creator=None,
         creator_name=None,
-        include: bool = True,
-        missing_ok: bool = True,
+        include: bool = False,
+        missing_ok: bool = False,
         full: bool = True
     ):
         content = self._make_content(content=content, description=description, creator=creator, creator_name=creator_name)
@@ -268,8 +268,6 @@ class ModelManager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
         path,
         raise_if_load_fails
     ):
-        if self.verbose >= 1:
-            self.printer('Trying to load')
         try:
             return True, self.load_model(path)
         except tuple(getattr(self.load_method, 'expected_exceptions', (FileNotFoundError, OSError))):

@@ -1,5 +1,7 @@
 from pathlib import Path
 from functools import partial
+import operator
+import itertools as it
 
 import more_itertools as mit
 from skimage import img_as_float, img_as_ubyte
@@ -9,8 +11,9 @@ import numpy as np
 
 import boiling_learning as bl
 
+_sentinel = object()
 # an ImageDataset is a file CSV in df_path and the correspondent images. The file in df_path contains at least two columns. One of this columns contains file paths, and the other the targets for training, validation or test. This is intended for using flow_from_dataframe. There may be an optional column which specifies if that image belongs to the training, the validation or the test sets.
-class ImageDataset:
+class ImageDataset(bl.utils.SimpleRepr, bl.utils.SimpleStr):
     def __init__(
         self,
         df_path=None,
@@ -37,21 +40,6 @@ class ImageDataset:
             if df is None:
                 df = pd.DataFrame()
             self.df = df
-    
-    def __repr__(self):
-        return f'ImageDataset(df_path={self.df_path}, path_column={self.path_column}, target_column={self.target_column}, set_column={self.set_column}, train_key={self.train_key}, val_key={self.val_key}, test_key={self.test_key})'
-    
-    def __str__(self):
-        return '\n'.join((
-            f'ImageDataset at {self.df_path}',
-            f'path_column={self.path_column}',
-            f'target_column={self.target_column}',
-            f'set_column={self.set_column}',
-            f'train_key={self.train_key}',
-            f'val_key={self.val_key}',
-            f'test_key={self.test_key}',
-            f'{self.df}'
-        ))
         
     def load(self, path=None, cheap=False):
         if path is None:
@@ -130,6 +118,15 @@ class ImageDataset:
     @property
     def paths(self):
         return self.df[self.path_column]
+    @property
+    def train_paths(self):
+        return self.paths[self.df[self.set_column] == self.train_key]
+    @property
+    def val_paths(self):
+        return self.paths[self.df[self.set_column] == self.val_key]
+    @property
+    def test_paths(self):
+        return self.paths[self.df[self.set_column] == self.test_key]
     
     @paths.setter
     def paths(self, other):
@@ -212,7 +209,7 @@ def load_persistent(path, auto_purge=False):
 
 class TransformationPipeline:
     def __init__(self, *transformers):
-        self._pipe = boiling_learning.utils.packed_functional.compose(*transformers)
+        self._pipe = bl.utils.packed_functional.compose(*transformers)
         
     def transform(
         self,
@@ -266,22 +263,34 @@ class TransformationPipeline:
                 return self
 
 class ImageDatasetTransformer:
-    def __init__(self, transformers, loader=None, persist_intermediate=False, persist_last=True, auto_purge=False):
+    def __init__(
+        self,
+        transformers,
+        loader=None,
+        saver=None,
+        persist_intermediate=False,
+        persist_last=True,
+        auto_purge=False
+    ):
         # transformers is an iterable yielding (path_transformer, value_transformer)
         
         if loader is None:
             loader = partial(load_persistent, auto_purge=auto_purge)
-        
         self.loader = loader
+        
+        if saver is None:
+            saver = bl.management.Persistent.persist
+        self.saver = saver
+        
         self.transformers = transformers
         self._persist_intermediate = persist_intermediate
         self._persist_last = persist_last
         self._pipe = None
         self._assembled = False
     
-    def _assemble(self):        
+    def _assemble(self): 
         if self._persist_intermediate:
-            transformers = mit.intersperse(bl.management.Persistent.persist, self.transformers)        
+            transformers = mit.intersperse(self.saver, self.transformers)        
         else:
             transformers = self.transformers
 
