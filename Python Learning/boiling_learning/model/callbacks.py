@@ -1,3 +1,5 @@
+import datetime
+
 from tensorflow.keras.callbacks import Callback
 
 # Source: <https://stackoverflow.com/q/47731935/5811400>
@@ -74,3 +76,104 @@ class AdditionalValidationSets(Callback):
                 ])
                 print(f'{validation_set_name}[{values_str}]')
                 
+class TimePrinter(Callback):
+    def __init__(
+        self,
+        streamer=print,
+        fmt='%Y-%m-%d %H:%M:%S',
+        when=None,
+    ):
+        super().__init__()
+                
+        self.streamer = streamer
+        self.fmt = fmt
+        
+        if when is None:
+            when = {
+                'on_batch_begin',
+                'on_batch_end',
+                'on_epoch_begin',
+                'on_epoch_end',
+                'on_predict_batch_begin',
+                'on_predict_batch_end',
+                'on_predict_begin',
+                'on_predict_end',
+                'on_test_batch_begin',
+                'on_test_batch_end',
+                'on_test_begin',
+                'on_test_end',
+                'on_train_batch_begin',
+                'on_train_batch_end',
+                'on_train_begin',
+                'on_train_end',
+            }
+        self.when = when
+        
+    def _str_now(self):
+        return datetime.datetime.now().strftime(self.fmt)
+    
+    def on_batch_begin(self, *args, **kwargs):
+        if 'on_batch_begin' in self.when:
+            self.streamer(f'--- beginning batch at {self._str_now()}', end='')
+
+    def on_batch_end(self, *args, **kwargs):
+        if 'on_batch_end' in self.when:
+            self.streamer(f' | ending batch at {self._str_now()}')
+
+    def on_epoch_begin(self, *args, **kwargs):
+        if 'on_epoch_begin' in self.when:
+            self.streamer(f'-- beginning epoch at {self._str_now()}')
+
+    def on_epoch_end(self, *args, **kwargs):
+        if 'on_epoch_end' in self.when:
+            self.streamer(f'-- ending epoch at {self._str_now()}')
+
+    def on_predict_batch_begin(self, *args, **kwargs):
+        if 'on_predict_batch_begin' in self.when:
+            self.streamer(f'--- beginning predict_batch at {self._str_now()}', end='')
+
+    def on_predict_batch_end(self, *args, **kwargs):
+        if 'on_predict_batch_end' in self.when:
+            self.streamer(f' | ending predict_batch at {self._str_now()}')
+
+    def on_predict_begin(self, *args, **kwargs):
+        if 'on_predict_begin' in self.when:
+            self.streamer(f'- beginning predict at {self._str_now()}')
+
+    def on_predict_end(self, *args, **kwargs):
+        if 'on_predict_end' in self.when:
+            self.streamer(f'- ending predict at {self._str_now()}')
+
+    def on_test_batch_begin(self, *args, **kwargs):
+        if 'on_test_batch_begin' in self.when:
+            self.streamer(f'--- beginning test_batch at {self._str_now()}', end='')
+
+    def on_test_batch_end(self, *args, **kwargs):
+        if 'on_test_batch_end' in self.when:
+            self.streamer(f' | ending test_batch at {self._str_now()}')
+
+    def on_test_begin(self, *args, **kwargs):
+        if 'on_test_begin' in self.when:
+            self.streamer(f'- beginning test at {self._str_now()}')
+
+    def on_test_end(self, *args, **kwargs):
+        if 'on_test_end' in self.when:
+            self.streamer(f'- ending test at {self._str_now()}')
+
+    def on_train_batch_begin(self, *args, **kwargs):
+        if 'on_train_batch_begin' in self.when:
+            self.streamer(f'--- beginning train_batch at {self._str_now()}', end='')
+
+    def on_train_batch_end(self, *args, **kwargs):
+        if 'on_train_batch_end' in self.when:
+            self.streamer(f' | ending train_batch at {self._str_now()}')
+
+    def on_train_begin(self, *args, **kwargs):
+        if 'on_train_begin' in self.when:
+            self.streamer(f'- beginning train at {self._str_now()}')
+
+    def on_train_end(self, *args, **kwargs):
+        if 'on_train_end' in self.when:
+            self.streamer(f'- ending train at {self._str_now()}')
+
+        
