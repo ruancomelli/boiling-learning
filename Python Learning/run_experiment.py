@@ -9,16 +9,6 @@ def add_to_system_path(path_to_add, add_if_exists=False):
 python_project_home_path = Path().absolute().resolve()
 project_home_path = python_project_home_path.parent.resolve()
 
-# ensure that anaconda is in system's PATH
-# if os.environ['COMPUTERNAME'] == 'LABSOLAR29-001':
-#     add_to_system_path(Path('C:') / 'Users'/ 'ruan.comelli'/ 'AppData' / 'Local' / 'Continuum' / 'anaconda3')
-#     add_to_system_path(Path('C:') / 'Users'/ 'ruan.comelli'/ 'AppData' / 'Local' / 'Continuum' / 'anaconda3' / 'Library' / 'mingw-w64' / 'bin')
-#     add_to_system_path(Path('C:') / 'Users'/ 'ruan.comelli'/ 'AppData' / 'Local' / 'Continuum' / 'anaconda3' / 'Library' / 'usr' / 'bin')
-#     add_to_system_path(Path('C:') / 'Users'/ 'ruan.comelli'/ 'AppData' / 'Local' / 'Continuum' / 'anaconda3' / 'Library' / 'bin')
-#     add_to_system_path(Path('C:') / 'Users'/ 'ruan.comelli'/ 'AppData' / 'Local' / 'Continuum' / 'anaconda3' / 'Scripts')
-#     add_to_system_path(Path('C:') / 'Users'/ 'ruan.comelli'/ 'AppData' / 'Local' / 'Continuum' / 'anaconda3' / 'bin')
-#     add_to_system_path(Path('C:') / 'Users'/ 'ruan.comelli'/ 'AppData' / 'Local' / 'Continuum' / 'anaconda3' / 'condabin')
-
 # defaultdict is a very useful class!!!
 
 from datetime import datetime
@@ -33,6 +23,7 @@ import nidaqmx
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 
+import boiling_learning as bl
 from boiling_learning.daq import Channel, ChannelType, Device
 
 class BoilingSurface:
@@ -108,7 +99,7 @@ must_print = {
     'elapsed time': False,
     'sleeping': False,
     'wire temperature': True,
-    'temperature from resistance': True,
+    'temperature from resistance': False,
 }
 
 sample_rate = 10 # Hz
@@ -238,16 +229,12 @@ def format_filename(output_dir, file_pattern):
 def generate_empty_copy(local_data):
     return dict.fromkeys(local_data, np.array([]))
 
-def print_if(cond, *args, **kwargs):
-    if cond:
-        print(*args, **kwargs)
-
 def print_if_must(keys, *args, conds=None, **kwargs):
     if conds is None:
         conds = []
 
     cond = all(must_print.get(key, False) for key in keys) and all(conds)
-    print_if(cond, *args, **kwargs)
+    bl.utils.print_verbose(cond, *args, **kwargs)
 
 #%%
 # -------------------------------------------------------
@@ -258,9 +245,6 @@ voltage_channels = {
     'Blue Resistor': Channel(Device('cDAQ1Mod4'), 'ai4', 'Blue Resistor', ChannelType.ANALOG, ChannelType.INPUT),
     'Yellow Resistor': Channel(Device('cDAQ1Mod4'), 'ai5', 'Yellow Resistor', ChannelType.ANALOG, ChannelType.INPUT)
 }
-# voltage_channels = {
-#     'Wire Voltage': Channel(Device('cDAQ1Mod4'), 'ai2', 'Wire Voltage', ChannelType.ANALOG, ChannelType.INPUT)
-# }
 current_channel = Channel(Device('cDAQ1Mod4'), 'ai0', 'Current Reading Channel', ChannelType.ANALOG, ChannelType.INPUT)
 rtd_channel = Channel(Device('cDAQ1Mod6'), 'ai0', 'RTD Reading Channel', ChannelType.ANALOG, ChannelType.INPUT)
 led_reading_channel = Channel(Device('cDAQ1Mod4'), 'ai7', 'LED Reading Channel', ChannelType.ANALOG, ChannelType.INPUT)
@@ -382,7 +366,10 @@ with open(filepath, 'w', newline='') as output_file, \
         # Process data
         # -------------------------------------------------------
         # Electric data:
-        voltage_readings = {key: chan.read(experiment, readings, dtype=np.array) for key, chan in voltage_channels.items()}
+        voltage_readings = {
+            key: chan.read(experiment, readings, dtype=np.array)
+            for key, chan in voltage_channels.items()
+        }
         voltage_readings_values = np.array(list(voltage_readings.values()))
         voltage = np.sum(voltage_readings_values, axis=0) if voltage_readings_values.size > 0 else voltage_readings_values
         current = current_channel.read(experiment, readings, dtype=np.array)
@@ -500,20 +487,18 @@ with open(filepath, 'w', newline='') as output_file, \
         print_if_must(('anything', 'current'), f'>> Current [A]: {current}', conds=[current.size > 0])
         print_if_must(('anything', 'power'), f'>> Power [W]: {power}', conds=[power.size > 0])
         print_if_must(('anything', 'flux'), f'>> Flux [W/m^2]: {flux}', conds=[flux.size > 0])
-        # print_if_must(('anything', 'resistance'), f'>> Resistance [Ohm]: {resistance}', conds=[resistance.size > 0])
+        print_if_must(('anything', 'resistance'), f'>> Resistance [Ohm]: {resistance}', conds=[resistance.size > 0])
         print_if_must(('anything', 'bulk temperature'), f'>> Bulk Temperature [°C]: {rtd_temperature}', conds=[rtd_temperature.size > 0])
         print_if_must(('anything', 'led read state'), f'>> LED: {led_voltage}', conds=[led_voltage.size > 0])
         print_if_must(('anything', 'wire temperature'), f'>> Wire Temperature [°C]: {wire_temperature}', conds=[wire_temperature.size > 0])
-        # print_if_must(('anything', 'temperature from resistance'), f'>> Temperature from Resistance [deg C]: {wire_temperature_from_resistance}', conds=[wire_temperature_from_resistance.size > 0])
-        # print_if_must(('anything', 'wire temperature corrected'), f'>> Wire Temperature (corrected) [deg C]: {wire_temperature_corrected}', conds=[wire_temperature_corrected.size > 0])
+        print_if_must(('anything', 'temperature from resistance'), f'>> Temperature from Resistance [deg C]: {wire_temperature_from_resistance}', conds=[wire_temperature_from_resistance.size > 0])
+        print_if_must(('anything', 'wire temperature corrected'), f'>> Wire Temperature (corrected) [deg C]: {wire_temperature_corrected}', conds=[wire_temperature_corrected.size > 0])
 
 #%%
         # -------------------------------------------------------
         # Plotting
         # -------------------------------------------------------
         if should_plot:
-            number_of_variables = len(local_data)
-
             if first:
                 win = pg.GraphicsWindow(title=filepath.name)
                 ps = {
@@ -540,10 +525,10 @@ with open(filepath, 'w', newline='') as output_file, \
                     ps[key].setLabel('left', key)
 
             for key in ps:
-                x[key][0:n_values] = elapsed_time
+                x[key][:n_values] = elapsed_time
                 x[key] = np.roll(x[key], -n_values)
 
-                y[key][0:n_values] = local_data[key]
+                y[key][:n_values] = local_data[key]
                 y[key] = np.roll(y[key], -n_values)
 
                 if iter_count < x_axis_size:

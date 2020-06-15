@@ -154,7 +154,7 @@ class Case:
                         return Path(f'from_{min_index}_to_{max_index}') / f'{subcase}_frame{index}.{self.frame_format}'
                     
                 bl.utils.rmdir(video_frames_path, recursive=True, keep=True)
-                bl.utils.video.extract_frames(
+                bl.preprocessing.video.extract_frames(
                     video_path,
                     video_frames_path,
                     filename_pattern=f'{subcase}_frame%05d.{self.frame_format}',

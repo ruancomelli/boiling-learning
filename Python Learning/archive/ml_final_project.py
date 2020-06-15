@@ -174,11 +174,11 @@ def regularize_default(
 from pathlib import Path
 import json
 
-# ModelManager is a class design for automating the process of creating, saving and loading models.
+# Manager is a class design for automating the process of creating, saving and loading models.
 # By means of the function provide_model, the manager will first check if any models were already
 # created and trained using the given parameters. If so, the model is not retrained, but only loaded
 # from disk.
-class ModelManager:
+class Manager:
     def __init__(
         self,
         models_path=None,
@@ -355,7 +355,7 @@ class ModelManager:
 
         return model
 
-# ModelCreator facilitates the interface between creator functions and the ModelManager.
+# ModelCreator facilitates the interface between creator functions and the Manager.
 # A creator function is any function that takes parameters (or a dict of parameters) and
 # outputs a model (trained or not, compiled or not) and, possibly, additional values such
 # that training history
@@ -1005,7 +1005,7 @@ test_gen = test_datagen.flow_from_dataframe(
 ### Gerenciamento automático de modelos
 """
 
-# define new save and load methods to use with ModelManager
+# define new save and load methods to use with Manager
 
 def save_serialized(save_map):
     def save(return_dict, path):
@@ -1061,7 +1061,7 @@ load_map = {
     'history': load_pkl
 }
 
-manager = ModelManager(
+manager = Manager(
     models_path=models_path,
     file_name_fmt='{index}.model',
     save_method=save_serialized(save_map),

@@ -11,7 +11,7 @@ import boiling_learning.utils
 import management
 from management import Mirror
 
-from model_definitions import KramerNet, LinearRegression
+from model.definitions import KramerNet, LinearRegression
 
 import pprint
 pp = pprint.PrettyPrinter(indent=4, width=160)
@@ -27,7 +27,7 @@ load_map = {
     # 'history': management.load_pkl
 }
 
-manager = management.ModelManager(
+manager = management.Manager(
     file_name_fmt='{index}.model',
     save_method=management.save_serialized(save_map),
     load_method=management.load_serialized(load_map),

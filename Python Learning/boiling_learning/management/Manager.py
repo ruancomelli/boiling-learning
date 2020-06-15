@@ -11,41 +11,43 @@ import boiling_learning as bl
 
 _sentinel = object()
 
-class ModelManager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
+class Manager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
     def __init__(
         self,
         root_path,
-        models_path=None,
+        data_path=None,
         table_path=None,
         load_table=True,
         id_fmt='{index}.data',
         index_key='index',
-        lookup_table_models_key='models',
-        lookup_table_model_path_key='path',
-        lookup_table_model_creator_key='creator',
-        lookup_table_model_description_key='parameters',
+        data_key='models',
+        path_key='path',
+        creator_key='creator',
+        description_key='parameters',
         save_method=bl.io.save_pkl,
         load_method=bl.io.load_pkl,
         verbose=0,
         printer=print,
     ):
-        if models_path is None:
-            models_path = root_path / 'models'
-        self.models_path = Path(models_path).resolve()
+        self.index_key = index_key
+        self.data_key = data_key
+        self.path_key = path_key
+        self.creator_key = creator_key
+        self.description_key = description_key
+        
+        self.root_path = Path(root_path)
+        if data_path is None:
+            data_path = self.root_path / self.data_key
+        self.data_path = Path(data_path).resolve()
 
         if table_path is None:
-            table_path = (self.models_path / 'lookup_table.json').resolve()
+            table_path = (self.data_path / 'lookup_table.json').resolve()
         self.table_path = Path(table_path).resolve()
 
         if load_table:
             self.load_lookup_table()
         
         self.id_fmt = id_fmt
-        self.index_key = index_key
-        self.lookup_table_models_key = lookup_table_models_key
-        self.lookup_table_model_path_key = lookup_table_model_path_key
-        self.lookup_table_model_creator_key = lookup_table_model_creator_key
-        self.lookup_table_model_description_key = lookup_table_model_description_key
         self.save_method = save_method
         self.load_method = load_method
         self.verbose = verbose
@@ -53,7 +55,7 @@ class ModelManager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
 
     def _initialize_lookup_table(self):
         self.lookup_table = {
-            self.lookup_table_models_key: {}
+            self.data_key: {}
         }
         
         return self.save_lookup_table()
@@ -87,7 +89,7 @@ class ModelManager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
         
     @property
     def entries(self):
-        return self.lookup_table[self.lookup_table_models_key]
+        return self.lookup_table[self.data_key]
         
     @property
     def model_ids(self):
@@ -109,13 +111,16 @@ class ModelManager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
         matched_items = filter(bool, parsed_items) # keep only those that have matched
         indexed_items = filter(lambda item: self.index_key in item, matched_items) # keep only those that have matched the index key
         indices = map(operator.itemgetter(self.index_key), indexed_items) # get the indices
-        int_indices_list = list(mit.map_except(int, indices, ValueError, TypeError)) # cast indices to int
+        int_indices_list = sorted(mit.map_except(int, indices, ValueError, TypeError)) # cast indices to int
         
-        missing_elems = sorted(bl.utils.missing_elements(int_indices_list))
-        if missing_elems:
-            index = missing_elems[0]
+        if int_indices_list:
+            missing_elems = bl.utils.missing_ints(int_indices_list)
+            index = mit.first(
+                missing_elems,
+                int_indices_list[-1] + 1
+            )
         else:
-            index = max(int_indices_list, default=-1) + 1
+            index = 0
         
         return self.id_fmt.format(**{self.index_key: index})
     
@@ -126,26 +131,26 @@ class ModelManager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
         entry = self._get_entry(model_id)
         return {
             key: entry[key]
-            for key in (self.lookup_table_model_creator_key, self.lookup_table_model_description_key)
+            for key in (self.creator_key, self.description_key)
         }
         
     def _get_description(self, model_id):
         entry = self._get_entry(model_id)
-        return entry[self.lookup_table_model_description_key]
+        return entry[self.description_key]
         
     def _get_creator(self, model_id):
         entries = self._get_entry(model_id)
-        return entries[self.lookup_table_model_creator_key]
+        return entries[self.creator_key]
         
     def _get_path(self, model_id):
         entries = self._get_entry(model_id)
-        return entries[self.lookup_table_model_path_key]
+        return entries[self.path_key]
     
-    def _make_creator_name(self, content=None, creator=None, creator_name=None):
+    def _resolve_creator_name(self, content=None, creator=None, creator_name=None):
         if creator_name is not None:
             return creator_name
-        elif content is not None and self.lookup_table_model_creator_key in content:
-            return content[self.lookup_table_model_creator_key]
+        elif content is not None and self.creator_key in content:
+            return content[self.creator_key]
         elif hasattr(creator, 'creator') and hasattr(creator.creator, 'creator_name'): # support creator type
             return creator.creator.creator_name
         elif hasattr(creator, 'creator_name'): # support model creator
@@ -153,24 +158,24 @@ class ModelManager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
         else:
             return str(creator)
         
-    def _make_description(self, content=None, description=None):
+    def _resolve_description(self, content=None, description=None):
         if description is not None:
             return description
         else:
-            return content[self.lookup_table_model_description_key]
+            return content[self.description_key]
         
-    def _make_content(self, content=None, description=None, creator=None, creator_name=None):
+    def _resolve_content(self, content=None, description=None, creator=None, creator_name=None):
         if content is not None:
             return content
         else:    
-            creator_name = self._make_creator_name(content=content, creator=creator, creator_name=creator_name)
+            creator_name = self._resolve_creator_name(content=content, creator=creator, creator_name=creator_name)
             
             return {
-                self.lookup_table_model_creator_key: creator_name,
-                self.lookup_table_model_description_key: description
+                self.creator_key: creator_name,
+                self.description_key: description
             }
         
-    def _make_entry(
+    def _resolve_entry(
         self,
         content=None,
         description=None,
@@ -178,13 +183,13 @@ class ModelManager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
         creator_name=None,
         path=None
     ):
-        content = self._make_content(content=content, description=description, creator=creator, creator_name=creator_name)
+        content = self._resolve_content(content=content, description=description, creator=creator, creator_name=creator_name)
         
         if path is None:
             raise TypeError(f'invalid model path: {path}')
         
         return bl.utils.merge_dicts(
-            {self.lookup_table_model_path_key: path},
+            {self.path_key: path},
             content,
             latter_precedence=False
         )
@@ -212,7 +217,7 @@ class ModelManager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
         creator_name=None,
         missing_ok: bool = True
     ):
-        content = self._make_content(content=content, description=description, creator=creator, creator_name=creator_name)
+        content = self._resolve_content(content=content, description=description, creator=creator, creator_name=creator_name)
         
         candidates = bl.utils.extract_keys(
             self.contents,
@@ -226,7 +231,7 @@ class ModelManager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
         elif missing_ok:
             return self.new_model_id()
         else:
-            raise ValueError(f'could not find model with the following content: {content}')            
+            raise ValueError(f'could not find model with the following content: {content}')
     
     def model_path(
         self,
@@ -238,17 +243,17 @@ class ModelManager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
         missing_ok: bool = False,
         full: bool = True
     ):
-        content = self._make_content(content=content, description=description, creator=creator, creator_name=creator_name)
+        content = self._resolve_content(content=content, description=description, creator=creator, creator_name=creator_name)
 
         model_id = self.model_id(
             content=content,
             missing_ok=missing_ok
         )
-        model_full_path = (self.models_path / model_id).resolve().absolute()
+        model_full_path = (self.data_path / model_id).resolve().absolute()
         model_rel_path = bl.utils.relative_path(self.table_path.parent, model_full_path)
         
         if include:
-            entry = self._make_entry(
+            entry = self._resolve_entry(
                 content=content,
                 path=model_rel_path
             )
@@ -302,7 +307,45 @@ class ModelManager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
             path=path,
             raise_if_load_fails=raise_if_load_fails
         )
-
+        
+    def retrieve_models(
+        self,
+        entry_pred=None
+    ):
+        path_key = self.path_key
+        entries = self.entries.items()
+        
+        entries = (
+            (model_id, entry)
+            for model_id, entry in entries
+            if path_key in entry
+        )
+        
+        if entry_pred is not None:
+            entries = (
+                (model_id, entry)
+                for model_id, entry in entries
+                if entry_pred(entry)
+            )
+        
+        entries = (
+            (model_id, self.table_path.parent / entry[path_key])
+            for model_id, entry in entries
+        )
+        
+        entries = (
+            (model_id, self._retrieve_model(path, raise_if_load_fails=False))
+            for model_id, path in entries
+        )
+        
+        entries = (
+            (model_id, model)
+            for model_id, (success, model) in entries
+            if success
+        )
+        
+        return entries
+        
     def provide_model(
         self,
         content=None,
@@ -313,7 +356,7 @@ class ModelManager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
         save: bool = False,
         load: bool = False,
         raise_if_load_fails: bool = False,
-        content_key=None,
+        content_key=_sentinel,
     ):
         if params is None:
             params = {}
@@ -341,7 +384,7 @@ class ModelManager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
 
         model = creator(params)
         
-        if content_key is not None:
+        if content_key is not _sentinel:
             model[content_key] = content
 
         if save:
