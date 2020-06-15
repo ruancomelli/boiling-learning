@@ -3,6 +3,7 @@ from functools import partial
 import operator
 import itertools as it
 
+import tensorflow as tf    
 import more_itertools as mit
 from skimage import img_as_float, img_as_ubyte
 from skimage.io import imread, imsave
@@ -11,7 +12,13 @@ import numpy as np
 
 import boiling_learning as bl
 
+# DEBUG
+import pprint
+# DEBUG END
+
 _sentinel = object()
+AUTOTUNE = tf.data.experimental.AUTOTUNE
+
 # an ImageDataset is a file CSV in df_path and the correspondent images. The file in df_path contains at least two columns. One of this columns contains file paths, and the other the targets for training, validation or test. This is intended for using flow_from_dataframe. There may be an optional column which specifies if that image belongs to the training, the validation or the test sets.
 class ImageDataset(bl.utils.SimpleRepr, bl.utils.SimpleStr):
     def __init__(
@@ -309,3 +316,177 @@ class ImageDatasetTransformer:
         if not self._assembled:
             self._assemble()
         return self._pipe.transform(images, many=True, **kwargs)
+    
+# TODO: test this
+class ImageDatasetTransformerTF(bl.utils.SimpleRepr, bl.utils.SimpleStr):
+    '''Transforms a sequence of images using a sequence of transformations.
+    '''
+    
+    def __init__(
+        self,
+        path_transformers,
+        transformers,
+        batch_size,
+        loader,
+        saver,
+        split_id='all',
+        chunk_size=None,
+        chunk_index=None,
+    ):
+        self.path_transformers = path_transformers
+        self.transformers = transformers
+        self.batch_size = batch_size
+        self.loader = loader
+        self.saver = saver
+        
+        self.split_id = bl.model.SplitSubset.get_split(split_id)
+        
+        if (
+            (chunk_size is None and chunk_index is not None)
+            or (chunk_size is not None and chunk_index is None)
+        ):
+            raise ValueError('chunk_size and chunk_index must be both None or both integers.')
+        
+        self.chunk_size = chunk_size
+        self.chunk_index = chunk_index
+        
+    def is_using_chunks(self):
+        return self.chunk_size is not None
+
+    def _extract_paths(self, img_ds, split_id=None):
+        if split_id is bl.model.SplitSubset.TRAIN:
+            df = img_ds.train_paths
+        elif split_id is bl.model.SplitSubset.VAL:
+            df = img_ds.val_paths
+        elif split_id is bl.model.SplitSubset.TEST:
+            df = img_ds.test_paths
+        elif split_id is bl.model.SplitSubset.ALL:
+            df = img_ds.paths
+        else:
+            raise ValueError(f'split_id={split_id} not supported.')
+        df = self._get_chunk(df)
+        
+        return df
+    
+    def _get_chunk(self, df):
+        if self.is_using_chunks():
+            chunks = mit.chunked(df, self.chunk_size)
+            chunk = mit.nth_or_last(chunks, self.chunk_index)
+            return chunk
+        else:
+            return df
+    
+    def _load_tensor(self, sources):
+        sources = map(str, sources)
+        
+        ds = tf.data.Dataset.from_generator(
+            lambda: sources,
+            tf.string    
+        )
+        ds = ds.map(
+            self.loader,
+            num_parallel_calls=AUTOTUNE
+        )
+        ds = ds.prefetch(AUTOTUNE)
+        
+        return ds
+    
+    def _save_tensor(self, dests, ds):
+        for dest_chunk, img_chunk in zip(
+            mit.ichunked(dests, self.batch_size),
+            ds.batch(self.batch_size).as_numpy_iterator()
+        ):
+            for dest, img in zip(dest_chunk, img_chunk):
+                self.saver(img, dest)
+    
+    def _full_trajectories(self, img_ds):
+        sources = self._extract_paths(img_ds, self.split_id)
+        sources = map(Path, sources)
+        
+        def trajectory(source):
+            return it.accumulate(
+                # self.path_transformers, # Python 3.8 only
+                mit.prepend(source, self.path_transformers),
+                lambda current_path, path_transformer: path_transformer(current_path),
+                # initial=source # Python 3.8 only
+            )
+        
+        trajs = map(trajectory, sources)
+        trajs = map(list, trajs)
+        
+        return trajs
+    
+    def _valid_trajectories(self, trajs, erased_marker, cmp_marker=operator.is_):
+        def split_source_dest(traj):
+            traj, erased = mit.partition(
+                partial(cmp_marker, erased_marker),
+                traj
+            )
+            dests, possible_sources = mit.partition(
+                operator.methodcaller('is_file'),
+                traj
+            )
+            
+            possible_sources = list(possible_sources)
+            source = possible_sources.pop()
+            
+            erased = it.chain(
+                erased,
+                it.repeat(erased_marker, len(possible_sources))
+            )
+            
+            return list(erased) + [source] + list(dests)
+        
+        trajs = map(split_source_dest, trajs)
+        
+        return trajs
+    
+    def _step_from_idx(self, trajs, step_idx, erased_marker, cmp_marker=operator.is_):        
+        trajs = it.filterfalse(
+            lambda traj: cmp_marker(traj[step_idx], erased_marker), # removes erased trajectories, i.e., the ones that already exist and don't need to be transformed
+            trajs
+        )
+        trajs = map(
+            operator.itemgetter(step_idx, step_idx+1),
+            trajs
+        )
+        trajs = mit.peekable(trajs)
+        
+        if trajs:
+            sources, dests = mit.unzip(trajs)
+        else:
+            sources = bl.utils.empty_gen()
+            dests = bl.utils.empty_gen()
+            
+        return sources, dests
+    
+    def transform_images(self, img_ds):
+        erased_marker = None
+        full_trajs = list(self._full_trajectories(img_ds))
+        
+        for step_idx, transformer in enumerate(self.transformers):
+            trajs = trajs if step_idx else full_trajs
+            
+            trajs = self._valid_trajectories(trajs, erased_marker=erased_marker)
+            trajs = list(trajs)
+            sources, dests = self._step_from_idx(trajs, step_idx, erased_marker=erased_marker)
+            
+            ds = self._load_tensor(sources)
+            ds = ds.map(
+                transformer,
+                num_parallel_calls=AUTOTUNE
+            )
+            
+            self._save_tensor(dests, ds)
+                
+        final = map(
+            mit.last,
+            full_trajs
+        )
+        ds = self._load_tensor(final)
+            
+        return full_trajs, ds
+    
+    
+# Message to mateus.stahelin@lepten.ufsc.br
+# Além disso, gostaria de saber se conheces uma solução para o problema que estou tendo, relacionado à mesma questão.Vou explicar o que estou fazendo, e talvez você tenha até uma ideia melhor do que fazer. Eu estou treinando redes neurais na plataforma online Google Colab, que é basicamente um processador de notebooks em Python com acesso direto ao Google Drive e a GPUs. Não é necessário ter nada instalado no computador (além do Google Chrome), nem mesmo o Google Drive. Tudo é feito na nuvem.Um dos obstáculos é que o Google Colab disponibiliza apenas uma quantidade limitada de RAM e processamento para cada usuário (um usuário é definido pela conta de e-mail utilizada). Então o que fiz para paralelizar o trabalho, além de utilizar as GPUs, foi logar no Google Colab em várias páginas do Google Chrome utilizando contas de e-mail diferentes. Por exemplo, em uma página eu entro com a minha conta do laboratório (ruan.comelli@lepten.ufsc.br), e, em outra, com a minha conta pessoal (ruancomelli@gmail.com). No total, estou utilizando 6 contas de e-mail, cada uma treinando uma rede neural diferente. Ao fim do treinamento, eu tenho 6 redes treinadas paralelamente.Os dois problemas que surgiram com isso são:O Google Colab exige que o usuário fique conectado à internet durante a utilização da plataforma. Porém a conexão aqui em casa é ruim e falha sempre. Como resultado, o treinamento das redes é paralisado. Isso me impede de deixá-las treinando durante a noite, por exemplo.Cada página do Google Chrome consome uma quantidade enorme de RAM, e meu computador pessoal não tem capacidade para isso. Quando coloco as redes para treinar, o computador fica inutilizável.Todo o processamento que é feito no Google Colab poderia ser feito localmente, mas isso consumiria muito mais do processamento do computador e exigiria que o meu banco de dados fosse constantemente downloaded e uploaded entre a nuvem e o meu computador.
