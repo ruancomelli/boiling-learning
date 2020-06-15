@@ -2,6 +2,7 @@ from pathlib import Path
 import json
 import pickle
 
+import h5py
 from tensorflow.keras.models import load_model
 
 def save_serialized(save_map):
@@ -57,3 +58,19 @@ def load_pkl(path):
 def load_json(path):
     with Path(path).absolute().resolve().open('r', encoding='utf-8') as file:
         return json.load(file)
+
+def saver_hdf5(key=''):
+    def save_hdf5(obj, path):
+        path = Path(path).absolute().resolve()
+        with h5py.File(str(path), 'w') as hf:
+            hf.create_dataset(key, data=obj)
+    return save_hdf5
+
+def loader_hdf5(key=''):
+    def load_hdf5(path):
+        path = Path(path).absolute().resolve()
+        with h5py.File(str(path), 'r') as hf:
+            return hf.get(key)
+    return load_hdf5
+            
+            
