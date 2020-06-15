@@ -35,7 +35,7 @@ class Channel(bl.utils.SimpleRepr, bl.utils.SimpleStr):
 
     def __init__(
         self,
-        device: bl.daq.Channel,
+        device: bl.daq.Device,
         name: str = '',
         description: str = '',
         type1: ChannelType = ChannelType.UNDEFINED,
