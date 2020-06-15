@@ -1,56 +1,66 @@
+import os
 import re
 from pathlib import Path
 from collections import ChainMap
 import operator
 from itertools import product
+from timeit import default_timer
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Union
+)
+import shutil
+import tempfile
+from contextlib import contextmanager
+import pprint
 
 import matplotlib.pyplot as plt
 import more_itertools as mit
 from more_itertools import unzip
+from sortedcontainers import SortedSet
 
 _sentinel = object()
 
-def empty(*args, **kwargs):
+def empty(*args, **kwargs) -> None:
     pass
 
-def constant(value):
-    def wrapper(*args, **kwargs):
-        return value
-    return wrapper
+def constant(value, call_value: bool = False) -> Callable:
+    if call_value:
+        def _constant(*args, **kwargs):
+            return value()
+    else:
+        def _constant(*args, **kwargs):
+            return value
+    return _constant
 
-def constant_callable(callable_value):
-    def wrapper(*args, **kwargs):
-        return callable_value()
-    return wrapper
+def constant_callable(value) -> Callable:
+    return constant(value, call_value=True)
 
-def comment(f, s: str = ''):
+def comment(
+    f: Callable, 
+    s: str = '',
+    printer: Callable[[str], Any] = print
+) -> Callable:
     from functools import wraps
     
     @wraps(f)
     def wrapped(*args, **kwargs):
-        if s:
-            print(s)
-        else:
-            print(f)
+        printer(s)
         return f(*args, **kwargs)
     return wrapped
 
-def remove_duplicates(iterable, key=None):
+def remove_duplicates(
+    iterable: Iterable,
+    key: Union[None, object, Dict, Callable] = _sentinel
+) -> Iterable:
     # See <https://more-itertools.readthedocs.io/en/stable/api.html#more_itertools.unique_everseen>
     
-    if key is None:
-        return mit.unique_everseen(iterable)
-    elif callable(key):    
-        return mit.unique_everseen(
-            iterable,
-            key=key
-        )
-    elif isinstance(key, dict):            
-        return mit.unique_everseen(
-            iterable,
-            key=lambda elem: key[type(elem)]
-        )
-    elif key == 'fast':
+    if key is _sentinel:
+        # use default optimization
         return remove_duplicates(
             iterable,
             key={
@@ -59,34 +69,42 @@ def remove_duplicates(iterable, key=None):
                 dict: (lambda elem: frozenset(elem.items())),
             }
         )
+    elif isinstance(key, dict):
+        return mit.unique_everseen(
+            iterable,
+            key=lambda elem: key.get(type(elem), elem)
+        )
+    else:    
+        return mit.unique_everseen(
+            iterable,
+            key=key
+        )
 
 def has_duplicates(iterable):
-    try:
-        iterable_len = len(iterable)
-    except TypeError:
-        iterable_len = len(list(iterable))
-    return iterable_len != len(set(iterable))
-
-def missing_elements(int_list):
-    # source: adapted from <https://stackoverflow.com/questions/16974047/efficient-way-to-find-missing-elements-in-an-integer-sequence>
-    if int_list:
-        int_list = sorted(int_list)
-        start, end = int_list[0], int_list[-1]
-        full = range(start, end + 1)
-        return list(filter(lambda x: x not in int_list, full))
+    if isinstance(iterable, list):
+        iterable_list = iterable
+    elif isinstance(iterable, set):
+        return False
     else:
-        return []
+        iterable_list = list(iterable)
+
+    return len(iterable_list) != mit.ilen(remove_duplicates(iterable_list))
+
+def missing_ints(ints: Iterable[int]) -> List[int]:
+    # source: adapted from <https://stackoverflow.com/questions/16974047/efficient-way-to-find-missing-elements-in-an-integer-sequence>
+    ints = SortedSet(ints)
+    if ints:
+        start, end = ints[0], ints[-1]
+        full = range(start, end + 1)
+        return filter(lambda x: x not in ints, full)
+    else:
+        return empty_gen()
 
 def merge_dicts(*dict_args, latter_precedence=True):
     if latter_precedence:
         dict_args = reversed(dict_args)
     
     return dict(ChainMap(*dict_args))
-
-def projection(*indices):
-    def wrapped(*args):
-        return tuple(args[i] for i in indices)
-    return wrapped
 
 def partial_isinstance(type_):
     def wrapped(x):
@@ -95,7 +113,7 @@ def partial_isinstance(type_):
 
 def alternate_iter(
     iterables,
-    default_indices=None,
+    default_indices=tuple(),
     skip_repeated=True
 ):    
     '''
@@ -117,12 +135,9 @@ def alternate_iter(
         (2, 'n', 'alpha'),
         (2, 'a', 'alpha'),
         (2, 'a', 'beta')]
-    '''    
-    if default_indices is None:
-        default_indices = (0,) * len(iterables)
-    else:
-        default_indices = tuple(default_indices)
-        default_indices = default_indices + (0,)*(len(iterables) - len(default_indices))
+    '''
+    default_indices = tuple(default_indices)
+    default_indices = default_indices + (0,)*(len(iterables) - len(default_indices))
         
     if skip_repeated: 
         yield tuple(iterable[default_indices[idx]] for idx, iterable in enumerate(iterables))
@@ -202,6 +217,12 @@ def extract_keys(d, value, cmp=operator.eq):
     for k, v in d.items():
         if cmp(value, v):
             yield k
+
+def map_keys(dct, key_map):
+    return {
+        v: dct[k]
+        for k, v in key_map.items()
+    }
         
 # ---------------------------------- Operators ----------------------------------
 def is_None(x):
@@ -210,7 +231,7 @@ def is_not_None(x):
     return x is not None
 
 # ---------------------------------- Printing ----------------------------------
-def print_verbose(verbose, *args, **kwargs):
+def print_verbose(verbose: bool, *args, **kwargs) -> None:
     if verbose:
         print(*args, **kwargs)
         
@@ -235,6 +256,30 @@ def print_header(
     print_verbose(verbose)
     print_verbose(verbose, s)
     print_verbose(verbose, levels[level] * len(s))
+    
+def shorten_path(path, max_parts=None, max_len=None, prefix='...'):
+    def _slice_path(p, slc):
+        return Path(*Path(p).parts[slc])
+    
+    if max_parts is None:
+        shortened = path
+    else:
+        shortened = _slice_path(path, slice(-max_parts, None))
+        
+    if max_len is None:
+        return shortened
+    else:
+        sep = os.sep
+        prefix = str(prefix) + sep
+        prefix_len = len(prefix)
+        
+        while (
+            len(str(shortened)) + prefix_len > max_len
+            and len(shortened.parts) > 1
+        ):
+            shortened = _slice_path(shortened, slice(1, None))
+        
+        return prefix + str(shortened)
     
 # ---------------------------------- Plotting functions ----------------------------------
 def prepare_fig(
@@ -457,10 +502,36 @@ def shift_array(
     return _shift(a, shifts, axis=0)
 
 # ---------------------------------- Iteration ----------------------------------
+def empty_gen():
+    yield from ()
+
 def append(iterable, value):
-    from itertools import chain
+    yield from iterable
+    yield value
+
+def transpose(iterable):
+    return zip(*iterable)
     
-    return chain(iterable, [value])
+def projection(*indices):
+    def wrapped(*args):
+        return tuple(args[i] for i in indices)
+    return wrapped
+
+def replace(iterable, new_iterable):
+    # Iterates over iterable and new_iterable, yielding only new_iterable values.
+    # This effectively replaces every element in iterable with elements in new_iterable.
+    for _, new_value in zip(iterable, new_iterable):
+        yield new_value
+        
+def drop_last(iterable):
+    for current_value, _ in mit.pairwise(iterable):
+        yield current_value
+        
+def replace_last(iterable, last_value):
+    return append(
+        drop_last(iterable),
+        last_value
+    )
 
 # ---------------------------------- Path ----------------------------------
 def relative_path(origin, destination):
@@ -560,11 +631,23 @@ def dir_as_tree_apply(dir_path, fs, dir_pred=None):
         for path in dir_path.iterdir()
         if path.is_dir() and (dir_pred is None or dir_pred(path))
     }
+    
+def count_file_lines(path):
+    with open(path) as f:
+        return mit.ilen(f)
+
+@contextmanager
+def tempdir(suffix=None, prefix=None, dir=None):
+    dirpath = Path(
+        tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir)
+    ).resolve().absolute()
+
+    try:        
+        yield dirpath
+    finally:
+        shutil.rmtree(dirpath)
 
 # ---------------------------------- Timer ----------------------------------
-from contextlib import contextmanager
-from timeit import default_timer
-
 @contextmanager
 def elapsed_timer():
     # Source: <https://stackoverflow.com/a/61613140/5811400>
@@ -615,10 +698,10 @@ def simple_pprint(self, obj, stream, indent, allowance, context, level):
     # Source: <https://stackoverflow.com/a/52521743/5811400>
     write = stream.write
     
-    cls = obj.__class__
-    write(cls.__name__ + "(")
+    class_name = obj.__class__.__name__
+    write(class_name + "(")
     _format_kwarg_dict_items(
-        self, obj.__dict__.copy().items(), stream, indent + len(cls.__name__), allowance + 1, context, level
+        self, obj.__dict__.copy().items(), stream, indent + len(class_name), allowance + 1, context, level
     )
     write(")")
 
@@ -627,6 +710,7 @@ def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, le
     Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
     '''
     write = stream.write
+    
     indent += self._indent_per_level
     delimnl = ',\n' + ' ' * indent
     last_index = len(items) - 1
@@ -634,8 +718,18 @@ def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, le
         last = i == last_index
         write(key)
         write('=')
-        self._format(ent, stream, indent + len(key) + 1,
-                        allowance if last else 1,
-                        context, level)
+        self._format(
+            ent, stream, indent + len(key) + 1,
+            allowance if last else 1,
+            context, level
+        )
         if not last:
             write(delimnl)
+      
+def simple_pprint_class(cls):
+    pprint.PrettyPrinter._dispatch[cls.__repr__] = simple_pprint
+      
+# ---------------------------------- Collections ----------------------------------
+# class ChainList:
+#     def __init__(self, *lists):
+#         self.lists = 
