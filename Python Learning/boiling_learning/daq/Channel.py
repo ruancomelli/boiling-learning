@@ -11,6 +11,7 @@ from nidaqmx.task import Task
 from nidaqmx.constants import ChannelType as NIChannelType
 
 import boiling_learning as bl
+from boiling_learning.daq.Device import Device
 
 T = TypeVar('T')
 
@@ -35,7 +36,7 @@ class Channel(bl.utils.SimpleRepr, bl.utils.SimpleStr):
 
     def __init__(
         self,
-        device: bl.daq.Device,
+        device: Device,
         name: str = '',
         description: str = '',
         type1: ChannelType = ChannelType.UNDEFINED,
