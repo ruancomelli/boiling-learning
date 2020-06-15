@@ -729,6 +729,18 @@ def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, le
 def simple_pprint_class(cls):
     pprint.PrettyPrinter._dispatch[cls.__repr__] = simple_pprint
       
+# ---------------------------------- Mixins ----------------------------------
+class DictEq:
+    def __eq__(self, other):
+        if not isinstance(other, __class__):
+            return NotImplemented
+        return vars(self) == vars(other)
+
+    def __ne__(self, other):
+        if not isinstance(other, __class__):
+            return NotImplemented
+        return not self.__eq__(other)
+      
 # ---------------------------------- Collections ----------------------------------
 # class ChainList:
 #     def __init__(self, *lists):

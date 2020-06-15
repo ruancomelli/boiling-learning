@@ -6,6 +6,7 @@
   - use the `operator` library;
   - try to remove unnecessary functions;
   - try to remove unnecessary dependencies;
+  - [x] remove `__eq__` in `bl.daq.Device`?
 - [ ] Write unit tests.
 - [ ] Write a config file, so that configurations are not hard-coded in Python, but in a JSON file.
 - [ ] Python Learning: design a preprocessing function that takes a `tf.tensor`. This function should take a batch, preprocess it (possibly using many cores) and then fetch the results. The results should then be saved to disk. Useful links: [TensorFlow guide to data performance](https://www.tensorflow.org/guide/data_performance), [TensorFlow tutorial to image classification](https://www.tensorflow.org/tutorials/images/classification), [TensorFlow tutorial to loading images](https://www.tensorflow.org/tutorials/load_data/images), [TensorFlow guide to building input pipelines](https://www.tensorflow.org/guide/data).

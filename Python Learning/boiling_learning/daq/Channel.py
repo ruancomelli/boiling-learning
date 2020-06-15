@@ -1,9 +1,22 @@
 import enum
+from typing import (
+    List,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+)
+
+from nidaqmx.task import Task
 from nidaqmx.constants import ChannelType as NIChannelType
+
+import boiling_learning as bl
+
+T = TypeVar('T')
 
 ChannelType = enum.Enum('ChannelType', 'UNDEFINED ANALOG COUNTER DIGITAL INPUT OUTPUT')
 
-class Channel:
+class Channel(bl.utils.SimpleRepr, bl.utils.SimpleStr):
     channel_table = {}
 
     exclusive_types = [
@@ -20,35 +33,41 @@ class Channel:
         NIChannelType.COUNTER_OUTPUT: 'co'
     }
 
-    def __init__(self, device, name='', description='', type1=ChannelType.UNDEFINED, type2=ChannelType.UNDEFINED):
+    def __init__(
+        self,
+        device: bl.daq.Channel,
+        name: str = '',
+        description: str = '',
+        type1: ChannelType = ChannelType.UNDEFINED,
+        type2: ChannelType = ChannelType.UNDEFINED
+    ):
         self.device = device
         self.name = name
-        self.desc = description
+        self.description = description
         self.type = (ChannelType.UNDEFINED, ChannelType.UNDEFINED)
         self.set_type(type1, type2)
         self.ni = None
 
-    def __str__(self):
-        return self.path()
+    @property
+    def path(self) -> str:
+        return self.device.path + '/' + self.name
 
-    def path(self):
-        return self.device.path() + '/' + self.name
+    def exists(self, task: Task) -> bool:
+        return (
+            self.device.exists(task)
+            and (
+                self.path in task.channel_names
+                or self.description in task.channel_names
+            )
+        )
 
-    def exists(self, task):
-        return self.device.exists(task) and (self.path() in task.channel_names or self.description() in task.channel_names)
-
-    def description(self, desc=None):
-        if desc is not None:
-            self.desc = desc
-        return self.desc
-
-    def is_type(self, type1, type2=None):
+    def is_type(self, type1: ChannelType, type2: Optional[ChannelType] = None) -> bool:
         if type2 is None:
             return type1 in self.type
         else:
             return self.is_type(type1) and self.is_type(type2)
 
-    def set_type(self, type1, type2=None):
+    def set_type(self, type1: ChannelType, type2: Optional[ChannelType] = None) -> None:
         if type2 is None:
             if type1 == ChannelType.UNDEFINED:
                 self.type = (ChannelType.UNDEFINED, ChannelType.UNDEFINED)
@@ -65,7 +84,8 @@ class Channel:
                 self.set_type(type2)
                 self.set_type(type1)
 
-    def ni_type(self):
+    @property
+    def ni_type(self) -> Optional[NIChannelType]:
         if ChannelType.UNDEFINED not in self.type:
             for ni_channel_type in NIChannelType:
                 if all([t.name in ni_channel_type.name for t in self.type]):
@@ -73,32 +93,37 @@ class Channel:
         else:
             return None
 
-    def is_ni_type(self, ni_channel_type):
+    def is_ni_type(self, ni_channel_type: NIChannelType) -> bool:
         return self.ni_type() is ni_channel_type
 
-    def ni_type_key(self):
+    def ni_type_key(self) -> Optional[str]:
         return Channel.channel_type_keys[self.ni_type()] if self.ni_type() is not None else None
 
-    def add_to_task_table(self, task):
+    def add_to_task_table(self, task: Task) -> None:
         if task.name not in Channel.channel_table:
             Channel.channel_table[task.name] = []
-        Channel.channel_table[task.name].append(self.path())
+        Channel.channel_table[task.name].append(self.path)
 
-    def index_in_table(self, task):
-        return Channel.channel_table[task.name].index(self.path()) if self.path() in Channel.channel_table[task.name] else None
+    def index_in_table(self, task: Task) -> int:
+        return Channel.channel_table[task.name].index(self.path) if self.path in Channel.channel_table[task.name] else None
 
-    def call_ni(self, task, method_name, *args, **kwargs):
+    def call_ni(self, task: Task, method_name: str, *args, **kwargs):
         self.ni = getattr(getattr(task, self.ni_type_key() + '_channels'), method_name)(
-                self.path(), self.description(),
+                self.path, self.description,
                 *args, **kwargs)
         return self.ni
 
-    def add_to_task(self, task, channel_specification, *args, **kwargs):
+    def add_to_task(self, task: Task, channel_specification: str, *args, **kwargs):
         self.call_ni(task, 'add_' + self.ni_type_key() + '_' + channel_specification, *args, **kwargs)
         self.add_to_task_table(task)
         return self.ni
 
-    def read(self, task, readings, *args, dtype=None, **kwargs):
+    def read(
+        self,
+        task: Task,
+        readings: Union[List[float], List[List[float]]],
+        dtype: Optional[Type[T]] = None,
+    ) -> Optional[T]:
         if dtype is None:
             dtype = list
 
