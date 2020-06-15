@@ -47,7 +47,8 @@ assert p == Parameters(params={'a': 1000, 'b': 1, 'd': 2000})
   - [x] check if model path already exists;
   - [x] check if model was already saved, or if it exists only in the table;
 - [ ] Format code in PEP style.
-- [ ] Decide if `Parameters` will supporting forking.
+- [x] DECIDED: it will not. | Decide if `Parameters` will supporting forking.
+- [ ] A `dict` can be constructed via a call `dict(...)` or via the special syntax `{k: v ...}`. Support this in `Parameters`? How?
 - [ ] Use [TensorFlow estimators](https://www.tensorflow.org/guide/estimator)?
 - [x] Allow different batch sizes for different models.
 - [ ] Why do `more_itertools.filter_except` and `more_itertools.map_except` need to do `exceptions = tuple(exceptions)`?

@@ -3,10 +3,7 @@ import pprint
 
 import boiling_learning as bl
 
-class Parameters(MutableMapping, bl.utils.SimpleRepr, bl.utils.SimpleStr):
-    # class Fork(dict):
-    #     pass
-    
+class Parameters(MutableMapping, bl.utils.SimpleRepr, bl.utils.SimpleStr):    
     @staticmethod
     def get_from_set(d, key):
         return {k: d[k] for k in key}
@@ -111,6 +108,9 @@ class Parameters(MutableMapping, bl.utils.SimpleRepr, bl.utils.SimpleStr):
     def __len__(self):
         return self.params.__len__()
     
+    # class Fork(dict):
+    #     pass
+    
     # def fork(self, forker_classes=(Parameters,), forker_markers=(Parameters.Fork,), propagate=True):
     # 	forked = False
     # 	forks = dict()
@@ -137,4 +137,4 @@ class Parameters(MutableMapping, bl.utils.SimpleRepr, bl.utils.SimpleStr):
             
     #     return forks
 
-pprint.PrettyPrinter._dispatch[Parameters.__repr__] = bl.utils.simple_pprint
+bl.utils.simple_pprint_class(Parameters)
