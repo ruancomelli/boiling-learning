@@ -108,6 +108,39 @@ def extract_frames(filepath, outputdir, filename_pattern='frame%d.png', frame_li
         ]
         subprocess.run(command_list)
         
+# Original command: ffmpeg -f concat -safe 0 -i mylist.txt -c copy output.mp4
+# Source: <https://stackoverflow.com/a/11175851/5811400>
+def concat_videos(in_paths, out_path):
+    # TODO: test!
+    
+    in_paths = map(Path, in_paths)
+    out_path = Path(out_path)
+    out_dir = out_path.mkdir(exist_ok=True, parents=True)
+    
+    with bl.utils.tempdir(prefix='_', dir=out_dir) as temp_dir:
+        input_file = temp_dir / 'input.txt'
+        
+        with open(input_file, 'w+') as fp:
+            fp.write(
+                '\n'.join(
+                    f'file {in_path}' for in_path in in_paths
+                )
+            )
+            
+        command_list =  [
+            'ffmpeg',
+            '-f',
+            'concat',
+            '-safe',
+            '0',
+            '-i',
+            f'"{input_file}"',
+            '-c',
+            'copy',
+            f'"{out_path}"'
+        ]
+        subprocess.run(command_list)
+    
     
 # Original code: $ ffmpeg -i input.mp4 -c:a copy -vn -sn output.m4a
 # Source: <https://superuser.com/a/633765>
