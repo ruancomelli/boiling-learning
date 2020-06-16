@@ -1,11 +1,20 @@
 from pathlib import Path
 from json import JSONDecodeError
 import operator
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    Optional,
+    Tuple
+)
+import copy
 
 import parse
 import more_itertools as mit
 
 import boiling_learning as bl
+from boiling_learning.management.Parameters import Parameters
 
 # TODO: check out <https://www.mlflow.org/docs/latest/tracking.html>
 
@@ -65,7 +74,10 @@ class Manager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
             
         return self
 
-    def load_lookup_table(self, raise_if_fails: bool = False):
+    def load_lookup_table(
+        self,
+        raise_if_fails: bool = False
+    ) -> 'Manager':
         if not self.table_path.exists():
             self._initialize_lookup_table()
         try:
@@ -99,6 +111,13 @@ class Manager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
     def contents(self):
         return {
             model_id: self._get_content(model_id)
+            for model_id in self.model_ids
+        }
+        
+    @property
+    def descriptions(self):
+        return {
+            model_id: self._get_description(model_id)
             for model_id in self.model_ids
         }
         
@@ -281,7 +300,28 @@ class Manager(bl.utils.SimpleRepr, bl.utils.SimpleStr):
             if raise_if_load_fails:
                 raise
             return False, None
-    
+        
+    def update_entries(
+        self,
+        updater: Callable[[str, Parameters], Any],
+        model_ids: Optional[Iterable[str]] = None,
+        save: bool = True
+    ) -> None:
+        if model_ids is None:
+            model_ids = self.model_ids
+            
+        self.load_lookup_table()
+        
+        entries = self.entries
+        for model_id in model_ids:
+            old_entry = copy.deepcopy(entries[model_id])
+            new_entry = updater(model_id, old_entry)
+            
+            self.lookup_table[self.data_key][model_id] = new_entry
+        
+        if save:
+            self.save_lookup_table()
+        
     def retrieve_model(
         self,
         content=None,
