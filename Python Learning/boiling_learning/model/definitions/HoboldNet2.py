@@ -1,34 +1,36 @@
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Flatten, Dense, Dropout, Conv2D, MaxPool2D
+from tensorflow.keras.layers import Activation, Input, Flatten, Dense, Dropout, Conv2D, MaxPool2D
 
 import boiling_learning as bl
 from boiling_learning.management import ModelCreator
-
-def is_classification(problem):
-    return problem.lower() in {'classification', 'regime'}
-
-def is_regression(problem):
-    return problem.lower() in {'regression', 'heat flux', 'h', 'power'}
+from boiling_learning.model.definitions.utils import (
+    make_creator_method,
+    ProblemType,
+)
 
 # CNN #2 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.
 def build(
     input_shape,
     dropout_ratio,
-    problem='regression',
+    hidden_layers_policy,
+    output_layer_policy,
+    problem=ProblemType.REGRESSION,
     num_classes=None,
 ):
     input_data = Input(shape=input_shape)
-    x = Conv2D(32, (5, 5), padding='same', activation='relu')(input_data)
-    x = MaxPool2D((2, 2), strides=(2, 2))(x)
-    x = Dropout(dropout_ratio)(x)
-    x = Flatten()(x)
-    x = Dense(200, activation='relu')(x)
-    x = Dropout(dropout_ratio)(x)
-
-    if is_classification(problem):
-        predictions = Dense(num_classes, activation='softmax')(x)
-    elif is_regression(problem):
-        predictions = Dense(1)(x)
+    x = Conv2D(32, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
+    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+    x = Flatten(dtype=hidden_layers_policy)(x)
+    x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+    
+    if ProblemType.get_type(problem) is ProblemType.CLASSIFICATION:
+        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
+        predictions = Activation('softmax', dtype=output_layer_policy)(x)
+    elif ProblemType.get_type(problem) is ProblemType.REGRESSION:
+        x = Dense(1, dtype=hidden_layers_policy)(x)
+        predictions = Activation('linear', dtype=output_layer_policy)(x)
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
@@ -36,56 +38,14 @@ def build(
 
     return model
 
-def creator_method(
-    input_shape,
-    verbose,
-    checkpoint,
-    dropout_ratio,
-    num_classes,
-    problem,
-    compile_setup,
-    fit_setup,
-    fetch,
-):    
-    last_epoch, model = bl.model.restore(**checkpoint)
-    initial_epoch = max(last_epoch, 0)
-    
-    if model is None:        
-        model = build(
-            input_shape,
-            dropout_ratio,
-            problem,
-            num_classes
-        )
-
-        if compile_setup.get('do', False):
-            model.compile(**compile_setup['params'])
-
-    history = None
-    if fit_setup.get('do', False):
-        fit_setup['params']['initial_epoch'] = initial_epoch
-        history = model.fit(**fit_setup['params'])
-
-    available_data = {
-        'model': model,
-        'history': history
-    }
-
-    return {
-        k: available_data[k]
-        for k in fetch
-    }
-
 creator = ModelCreator(
-    creator_method=creator_method,
+    creator_method=make_creator_method(builder=build),
     creator_name='HoboldNet2',
     default_params=dict(
-        input_shape=[224, 224, 1],
-        verbose=0,
+        verbose=2,
         checkpoint={'restore': False},
-        dropout_ratio=0.5,
         num_classes=3,
-        problem='regression',
+        problem=ProblemType.REGRESSION,
         fetch=['model', 'history'],
     ),
     expand_params=True
