@@ -662,6 +662,10 @@ def tempdir(suffix=None, prefix=None, dir=None):
     finally:
         shutil.rmtree(dirpath)
 
+@contextmanager
+def nullcontext(enter_result=None):
+    yield enter_result
+
 # ---------------------------------- Timer ----------------------------------
 @contextmanager
 def elapsed_timer():
