@@ -261,14 +261,14 @@ def shorten_path(path, max_parts=None, max_len=None, prefix='...'):
     def _slice_path(p, slc):
         return Path(*Path(p).parts[slc])
     
+    path = Path(path)
+    
     if max_parts is None:
         shortened = path
     else:
         shortened = _slice_path(path, slice(-max_parts, None))
         
-    if max_len is None:
-        return shortened
-    else:
+    if max_len is not None:
         sep = os.sep
         prefix = str(prefix) + sep
         prefix_len = len(prefix)
@@ -278,7 +278,10 @@ def shorten_path(path, max_parts=None, max_len=None, prefix='...'):
             and len(shortened.parts) > 1
         ):
             shortened = _slice_path(shortened, slice(1, None))
-        
+            
+    if shortened == path:
+        return str(shortened)
+    else:
         return prefix + str(shortened)
     
 # ---------------------------------- Plotting functions ----------------------------------
@@ -745,3 +748,4 @@ class DictEq:
 # class ChainList:
 #     def __init__(self, *lists):
 #         self.lists = 
+
