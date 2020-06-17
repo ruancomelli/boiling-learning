@@ -541,6 +541,18 @@ def relative_path(origin, destination):
     from os.path import relpath
     return relpath(destination, start=origin)
 
+def ensure_absolute(
+        path,
+        root=None
+):
+    path = Path(path)
+    if path.is_absolute():
+        return path
+    elif root is not None:
+        return Path(root) / path
+    else:
+        return path.absolute()
+
 def remove_copy(directory, pattern):
     def remove_copy_idx(path):
         pattern = re.compile('(.*) \([0-9]+\)\.png')
