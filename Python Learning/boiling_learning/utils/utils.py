@@ -765,3 +765,5 @@ class DictEq:
 #     def __init__(self, *lists):
 #         self.lists = 
 
+# ---------------------------------- Typing ----------------------------------
+PathType = Union[str, bytes, os.PathLike]
