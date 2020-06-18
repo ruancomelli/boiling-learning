@@ -91,7 +91,7 @@ class UserPool(Sequence):
             obj[self.server_key] = self.server
         bl.io.save_json(obj, path)
         
-    def _distribute_iterable(self, iterable):
+    def distribute_iterable(self, iterable):
         n_workers = len(self)
 
         return dict(
@@ -102,7 +102,7 @@ class UserPool(Sequence):
         )
 
     def get_iterable(self, iterable):
-        return self._distribute_iterable(iterable)[self.current]
+        return self.distribute_iterable(iterable)[self.current]
     
     def is_manager(self):
         return self.current == self.manager
