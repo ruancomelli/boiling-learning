@@ -77,7 +77,7 @@ assert lower_eq('Hi', 'hi')
 - [ ] Make `cv2` path-like compliant.
 - [ ] Take a look at the relationship between bubble or droplet formation rate and camera acquisition speed.
 - [ ] Divide this TO-DO list into sections. For instance: `Refactoring`, `Additional functionality`, `External dependencies` etc.
-- [ ] Implement a typing helper `Sentinel` which expects a sentinel value called, for instance, `_sentinel`, or another type. Equivalent to `typing.Optional`, but using any other sentinel instead of `None`.
+- [ ] Implement a typing helper `Sentinel` which expects a sentinel value called, for instance, `_sentinel`, or another type. Equivalent to `typing.Optional`, but using any other sentinel instead of `None`. See `typing.Literal` in Python 3.8.
 - [ ] There is a similar underlying logic between `bl.model.definitions.utils.ProblemType` and `bl.model.model.SubsetSplit`. This can be converted to a factory function `make_enum(enum_name, enum_values, conversion_table)`, providing a class equivalent to:
 
 ```python
@@ -114,7 +114,7 @@ assert lower_eq('Hi', 'hi')
   - [ ] Implement droplet/bubble tracking. See what André Provensi texted me.
   - [ ] Can the wet/dry areas ratio be of use to the nets?
   - [ ] Think of cool names for the nets.
-- [ ] Fix model creation in the notebooks
+- [x] Fix model creation in the notebooks
 - [ ] Instead of creating compound objects, define a `metadata` for `Manager`'s entries. So models could look like
 
 ```json
@@ -130,8 +130,8 @@ assert lower_eq('Hi', 'hi')
       },
       "metadata": {
         "path": "case 0/models/1.model",
-        "timestamp": "2020-07-16 17:50:08"
-
+        "timestamp": "2020-07-16 17:50:08",
+        "id": "1.model"
       }
     }
   }
