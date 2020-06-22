@@ -7,7 +7,6 @@ from sklearn.model_selection import train_test_split
 import boiling_learning as bl
 
 _sentinel = object()
-
 class SplitSubset(enum.Enum):
     TRAIN = enum.auto()
     VAL = enum.auto()

@@ -50,7 +50,7 @@ class ArgGenerator:
             self.generate(key)
         return self._fun(self[key])
 
-@bl.utils.constant_callable
+@bl.utils.constant_factory
 def random_coin():
     from random import choice
     

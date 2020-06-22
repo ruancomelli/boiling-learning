@@ -37,7 +37,7 @@ def constant(value, call_value: bool = False) -> Callable:
             return value
     return _constant
 
-def constant_callable(value) -> Callable:
+def constant_factory(value) -> Callable:
     return constant(value, call_value=True)
 
 def comment(
@@ -567,6 +567,12 @@ def remove_copy(directory, pattern):
         success, original_f = remove_copy_idx(f)
         if success and original_f.is_file():
             f.unlink()
+            
+# Source: https://stackoverflow.com/a/34236245/5811400
+def is_parent_dir(parent, subdir):
+    parent = Path(parent).resolve().absolute()
+    subdir = Path(subdir).resolve().absolute()
+    return parent in subdir.parents
 
 # Source: https://stackoverflow.com/a/57892171/5811400
 def rmdir(path, recursive=False, keep=False, missing_ok=False):
@@ -766,4 +772,4 @@ class DictEq:
 #         self.lists = 
 
 # ---------------------------------- Typing ----------------------------------
-PathType = Union[str, bytes, os.PathLike]
+PathType = Union[str, bytes, os.PathLike] # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
