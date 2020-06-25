@@ -39,6 +39,7 @@ from more_itertools import unzip
 from sortedcontainers import SortedSet
 
 from boiling_learning.utils.functional import (
+    identity,
     rpartial
 )
 
@@ -91,7 +92,7 @@ def remove_duplicates(
     elif isinstance(key, dict):
         return mit.unique_everseen(
             iterable,
-            key=lambda elem: key.get(type(elem), elem)
+            key=lambda elem: key.get(type(elem), identity)(elem)
         )
     else:    
         return mit.unique_everseen(
