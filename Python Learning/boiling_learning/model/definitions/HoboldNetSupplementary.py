@@ -23,7 +23,7 @@ def build(
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(500, activation='relu', dtype=hidden_layers_policy)(x)
+    x = Dense(512, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
     
     if ProblemType.get_type(problem) is ProblemType.CLASSIFICATION:
