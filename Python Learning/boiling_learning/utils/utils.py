@@ -8,7 +8,10 @@ from collections import (
 )
 import operator
 from itertools import product
-from functools import wraps
+from functools import (
+    wraps,
+    partial
+)
 from timeit import default_timer
 from typing import (
     Any,
@@ -34,6 +37,10 @@ import matplotlib.pyplot as plt
 import more_itertools as mit
 from more_itertools import unzip
 from sortedcontainers import SortedSet
+
+from boiling_learning.utils.functional import (
+    rpartial
+)
 
 _sentinel = object()
 
@@ -842,5 +849,11 @@ class AutoGenerator:
         return wrapped
 
 
+# ---------------------------------- Operator ----------------------------------
+def contains(elem):
+    '''Return a predicated that tests if a container contains elem.'''
+    return rpartial(operator.contains, elem)
 
 
+def contained(container):
+    return partial(operator.contains, container)
