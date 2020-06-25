@@ -1,17 +1,29 @@
 import os
 import re
 from pathlib import Path
-from collections import ChainMap
+from enum import Enum
+from collections import (
+    ChainMap,
+    defaultdict
+)
 import operator
 from itertools import product
+from functools import wraps
 from timeit import default_timer
 from typing import (
     Any,
     Callable,
+    Container,
     Dict,
+    Hashable,
     Iterable,
+    Iterator,
     List,
-    Union
+    Mapping,
+    Optional,
+    Union,
+    Tuple,
+    Type
 )
 import shutil
 import tempfile
@@ -224,6 +236,20 @@ def map_keys(dct, key_map):
         for k, v in key_map.items()
     }
         
+
+class KeyedDefaultDict(defaultdict):
+    '''
+
+    Source: https://stackoverflow.com/a/2912455/5811400
+    '''
+
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+        else:
+            ret = self[key] = self.default_factory(key)
+            return ret
+
 # ---------------------------------- Operators ----------------------------------
 def is_None(x):
     return x is None
@@ -771,5 +797,50 @@ class DictEq:
 #     def __init__(self, *lists):
 #         self.lists = 
 
+
 # ---------------------------------- Typing ----------------------------------
-PathType = Union[str, bytes, os.PathLike] # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
+# see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
+PathType = Union[str, bytes, os.PathLike]
+PackType = Tuple[tuple, dict]
+
+# ---------------------------------- Argument generator ----------------------------------
+
+
+class ArgGenerator:
+    def __init__(
+            self,
+            generator: Callable[[Hashable], PackType],
+            keep: bool = False,
+    ):
+        self._keep = keep
+        if keep:
+            self._store = KeyedDefaultDict(generator)
+            self._call = self._store.__getitem__
+        else:
+            self._call = generator
+
+    def __call__(self, key: Hashable):
+        return self._call(key)
+
+
+class AutoGenerator:
+    def __init__(
+            self,
+            generator: Callable[[Hashable], PackType],
+            keep: bool = False,
+            key_index: int = 0
+    ):
+        self._arg_gen = ArgGenerator(generator, keep)
+        self._key_index = key_index
+
+    def __call__(self, f: Callable):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            args = list(args)
+            key = args.pop(self._key_index)
+            return self._arg_gen(key)(*args, **kwargs)
+        return wrapped
+
+
+
+
