@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from contextlib import contextmanager
 
 import more_itertools as mit
 
@@ -30,10 +31,10 @@ class UserPool(Sequence):
         workers_key='allowed_users',
         manager_key='manager',
         server_key='server',
+        enabled=True
     ):
-        workers = list(workers)
-        
         if manager is None:
+            workers = mit.peekable(workers)
             manager = workers[0]
         self.manager = manager
         
@@ -46,6 +47,7 @@ class UserPool(Sequence):
         self.workers_key = workers_key
         self.manager_key = manager_key
         self.server_key = server_key
+        self.is_enabled = enabled
         
     def __getitem__(self, key):
         return self.workers.__getitem__(key)
@@ -53,6 +55,26 @@ class UserPool(Sequence):
     def __len__(self):
         return self.workers.__len__()
     
+    def enable(self):
+        self.is_enabled = True
+    
+    def disable(self):
+        self.is_enabled = False
+        
+    @contextmanager
+    def enabled(self):
+        prev_state = self.is_enabled
+        self.enable()
+        yield self
+        self.is_enabled = prev_state
+        
+    @contextmanager
+    def disabled(self):
+        prev_state = self.is_enabled
+        self.disable()
+        yield self
+        self.is_enabled = prev_state
+        
     @property
     def current(self):
         return self._current
@@ -102,7 +124,10 @@ class UserPool(Sequence):
         )
 
     def get_iterable(self, iterable):
-        return self.distribute_iterable(iterable)[self.current]
+        if self.is_enabled:
+            return self.distribute_iterable(iterable)[self.current]
+        else:
+            return iterable
     
     def is_manager(self):
         return self.current == self.manager
