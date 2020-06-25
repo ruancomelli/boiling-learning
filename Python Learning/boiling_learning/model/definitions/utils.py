@@ -1,5 +1,7 @@
 import enum
 
+from boiling_learning.model.model import restore
+
 _sentinel = object()
 
 class ProblemType(enum.Enum):
@@ -44,24 +46,26 @@ def make_creator_method(
 		checkpoint,
 		num_classes,
 		problem,
+		strategy,
 		architecture_setup,
 		compile_setup,
 		fit_setup,
 		fetch,
-	):    
-		last_epoch, model = bl.model.restore(**checkpoint)
+	):
+		last_epoch, model = restore(**checkpoint)
 		initial_epoch = max(last_epoch, 0)
 		
-		if model is None:        
-			model = builder(
-				problem,
-				num_classes,
-				**architecture_setup
-			)
+		if model is None:
+			with strategy.scope():
+				model = builder(
+					problem=problem,
+					num_classes=num_classes,
+					**architecture_setup
+				)
 
-			if compile_setup.get('do', False):
-				compiler(model, **compile_setup['params'])
-				# model.compile(**compile_setup['params'])
+				if compile_setup.get('do', False):
+					compiler(model, **compile_setup['params'])
+					# model.compile(**compile_setup['params'])
 
 		history = None
 		if fit_setup.get('do', False):
