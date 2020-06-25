@@ -13,7 +13,12 @@ from typing import (
 import string
 
 from parse import parse
-from more_itertools import ilen, unzip, peekable
+from more_itertools import (
+    ilen,
+    unzip,
+    peekable,
+    consume
+)
 import cv2
 import numpy as np
 
@@ -31,7 +36,8 @@ def extract_frames(
     fast_frames_count: Optional[bool] = None,
     iterate: bool = False,
     overwrite: bool = False,
-    tmp_dir: Optional[PathType] = None
+    tmp_dir: Optional[PathType] = None,
+    metapath: Optional[PathType] = None
 ) -> None:
     # Original code: $ ffmpeg -i "video.mov" -f image2 "video-frame%05d.png"
     # Source 2: <https://forums.fast.ai/t/extracting-frames-from-video-file-with-ffmpeg/29818>
@@ -53,12 +59,25 @@ def extract_frames(
             and use_frames_count
     ):
         raise ValueError(
-            'when filename_pattern is callable and a frames count mode is used, frames suffixes must be explicitly given as argument.')
+            'when filename_pattern is callable and a frames count mode is used, frames suffixes must be explicitly given as argument.'
+        )
 
-    video_path = bl.utils.ensure_absolute(video_path)
-    outputdir = bl.utils.ensure_absolute(outputdir)
+    video_path = bl.utils.ensure_resolved(video_path)
+    outputdir = bl.utils.ensure_resolved(outputdir)
     bl.utils.print_verbose(
         verbose, f'Extracting: {bl.utils.shorten_path(video_path, max_len=52)} -> {bl.utils.shorten_path(outputdir, max_len=52)}')
+    
+    use_metadata = metapath is not None
+    if use_metadata:
+        metapath = bl.utils.ensure_parent(metapath, root=outputdir)
+        if not metapath.is_file():
+            bl.io.save_json({}, metapath)
+        metadata = bl.io.load_json(metapath)
+        
+        video_frames_key = 'video_frames_count'
+        fast_key = 'fast' if fast_frames_count else 'slow'
+        # extracted_frames_key = 'extracted_frames_count'
+        # tmp_dir_frames_key = 'temporary_dir_frames_count'
 
     if not callable_filename_pattern:
         # try:
@@ -88,27 +107,11 @@ def extract_frames(
     if callable_filename_pattern:
         filename_pattern = bl.utils.functional.compose(
             filename_pattern,
-            functools.partial(bl.utils.ensure_absolute, root=outputdir)
+            functools.partial(bl.utils.ensure_resolved, root=outputdir)
         )  # make sure that filename_pattern outputs absolute paths
 
-    if use_frames_count:
-        def count_frames_in_dir(path: PathType, exclude: Optional[PathType] = None, exclude_count: Optional[int] = None) -> int:
-            path = Path(path)
-            n_frames_in_path = ilen(path.rglob(f'*{frame_suffix}'))
-            if exclude is None:
-                return n_frames_in_path
-            else:
-                exclude = Path(exclude)
-                if bl.utils.is_parent_dir(path, exclude):
-                    if exclude_count is None:
-                        exclude_count = count_frames_in_dir(exclude)
-                    
-                    return n_frames_in_path - exclude_count
-                else:
-                    return n_frames_in_path
-
     if use_persistent_tmp_dir:
-        tmp_dir = bl.utils.ensure_absolute(tmp_dir, root=outputdir)
+        tmp_dir = bl.utils.ensure_resolved(tmp_dir, root=outputdir)
 
         def rm_tmp_dir() -> None:
             bl.utils.print_verbose(verbose, 'Removing temporary folder.')
@@ -122,7 +125,16 @@ def extract_frames(
 
     skip_extraction = False
     if use_frames_count and outputdir.is_dir():
-        video_frames_count = count_frames(video_path, fast=fast_frames_count)
+        video_frames_count = None
+        if use_metadata:
+            video_frames_count = metadata.get(video_frames_key, {}).get(fast_key)            
+            
+        if video_frames_count is None:
+            video_frames_count = count_frames(video_path, fast=fast_frames_count)
+            if use_metadata:
+                metadata.setdefault(video_frames_key, {})[fast_key] = video_frames_count
+                bl.io.save_json(metadata, metapath)
+        
         bl.utils.print_verbose(
             verbose, f'Video frames count: {video_frames_count}')
         
@@ -144,6 +156,8 @@ def extract_frames(
                 rm_tmp_dir()
 
             return
+    else:
+        extracted_frames_count = 0
 
     if not iterate:
         outputdir.mkdir(exist_ok=True, parents=True)
@@ -151,7 +165,10 @@ def extract_frames(
     if iterate:
         bl.utils.print_verbose(verbose, 'Extracting frames iteratively.')
         
-        for index, frame in enumerate(frames(video_path)):
+        indexed_frames = enumerate(frames(video_path))
+        consume(indexed_frames, extracted_frames_count) # skip frames that already exist
+        
+        for index, frame in indexed_frames:
             path = filename_pattern(index)
             bl.utils.print_verbose(verbose_2, f'Frame #{index} -> {bl.utils.shorten_path(path, max_len=60)} ... ', end='')
             
@@ -227,7 +244,7 @@ def extract_frames(
             f'"{video_path}"',
             '-f',
             'image2',
-            f'"{bl.utils.ensure_absolute(filename_pattern, root=outputdir)}"'
+            f'"{bl.utils.ensure_resolved(filename_pattern, root=outputdir)}"'
         ]
 
         bl.utils.print_verbose(verbose, f'Extracting frames with command list = {command_list}')
@@ -322,3 +339,34 @@ def count_frames(video_path: PathType, fast: bool = False) -> int:
             return int(round(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
     else:
         return ilen(frames(video_path))
+
+
+def count_frames_in_dir(
+        path: PathType,
+        recursive: bool = True,
+        exclude_path: Optional[PathType] = None,
+        exclude_count: Optional[Union[int, Callable[[PathType], int]]] = None
+) -> int:
+    path = Path(path)
+    if not path.is_dir():
+        return 0
+    
+    if recursive:
+        globber = path.rglob
+    else:
+        globber = path.glob
+    
+    n_frames_in_path = ilen(globber(f'*{frame_suffix}'))
+    if exclude_path is None:
+        return n_frames_in_path
+    else:
+        exclude_path = Path(exclude_path)
+        if bl.utils.is_parent_dir(path, exclude_path):
+            if exclude_count is None:
+                exclude_count = count_frames_in_dir(exclude_path, recursive=recursive)
+            elif callable(exclude_count):
+                exclude_count = exclude_count(exclude_path)
+            
+            return n_frames_in_path - exclude_count
+        else:
+            return n_frames_in_path
