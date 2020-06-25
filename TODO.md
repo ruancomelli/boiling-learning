@@ -11,7 +11,9 @@
 - [ ] Write a config file, so that configurations are not hard-coded in Python, but in a JSON file.
 - [ ] Python Learning: design a preprocessing function that takes a `tf.tensor`. This function should take a batch, preprocess it (possibly using many cores) and then fetch the results. The results should then be saved to disk. Useful links: [TensorFlow guide to data performance](https://www.tensorflow.org/guide/data_performance), [TensorFlow tutorial to image classification](https://www.tensorflow.org/tutorials/images/classification), [TensorFlow tutorial to loading images](https://www.tensorflow.org/tutorials/load_data/images), [TensorFlow guide to building input pipelines](https://www.tensorflow.org/guide/data).
 - [x] Move library code to a specific module.
-- [ ] Improve the project structure.
+- [ ] Improve the project structure:
+  - [ ] `bl` has its own `utils`. But I believe that every package should have their own utils.
+  - [ ] `bl.utils` could be split into many utilities submodules.
 - [ ] Implement parallelization for `TransformationPipeline`s.
 - [ ] Use type annotations where applicable.
 - [ ] Can wrappers remove code repetition in crop and shift for the `if image is None: image = imread(in_path)` and the `if out_path is not None: imsave(out_path)`?
@@ -131,9 +133,74 @@ assert lower_eq('Hi', 'hi')
       "metadata": {
         "path": "case 0/models/1.model",
         "timestamp": "2020-07-16 17:50:08",
-        "id": "1.model"
+        "id": "1.model",
+        "status": "complete"
       }
     }
   }
 }
 ```
+
+- [ ] Read [this](https://www.wikiwand.com/en/Fraction_of_variance_unexplained). Am I evaluating models correctly?
+- [ ] Include `strategy` as part of a model's description?
+- [ ] Consume video frames that are already extracted in `bl.preprocessing.video.extract_frames`
+- [ ] Refactor `bl.management.Parameters` into `bl.utils.DeepDict` or something else.
+- [ ] `bl.utils.DeepDict` should be refactored. Its internals should look like `deep_path` implemented in the `main_notebook.ipynb` notebook. This means that, internally, this class contains a list in the form:
+
+```python
+[
+  ('a', 'b', 'c', 'd', 'e'),
+  ('a', 'b', 'c', 0, 1),
+  ('x', 0, ['value'])
+]
+```
+
+... or maybe not. Think about it!
+
+- [ ] I think that a class `SyncedDict` would be useful. Maybe it could be a base class, I don't know yet. But we could make it something like:
+
+```python
+AutoJsonSaver = SyncedDict(save=lambda self: bl.io.save_json(self, 'my_json.json'))
+AutoJsonLoader = SyncedDict(load=lambda: bl.io.load_json('my_json.json'))
+AutoSynced = SyncedDict(
+  save=lambda self: bl.io.save_json(self, 'my_json.json'),
+  load=lambda: bl.io.load_json('my_json.json'))
+```
+
+a call to `__getitem__` would first call load, and a call to `__setitem__` or `__delitem__` would automatically call the save. Is this good?
+
+- [ ] Create contexts `bl.utils.worker.UserPool.disabled` and `bl.utils.worker.UserPool.enabled` which satisfy:
+
+```python
+with user_pool.enabled(): # disabled()
+  my_iter = user_pool.get_iterable(range(10))
+```
+
+being equivalent to
+
+```python
+prev_state = user_pool.is_enabled
+user_pool.enable() # disable()
+my_iter = user_pool.get_iterable(range(10))
+user_pool.is_enabled = prev_state
+```
+
+- [ ] Change `bl.utils.worker.UserPool`:
+  - [ ] the `distribute_iterable` method should split the iterable and keep it in a cache. When the user calls a `retrieve` method, then the cache is cleared and the iterable is returned.
+  - [ ] it should be possible to enforce certain items to belong to certain users. For instance:
+
+  ```python
+  >>> user_pool.distribute_iterable([0, 1, 2, 3, 4], {'user2': [5, 6]})
+  >>> print(user_pool.cache)
+  {
+    'user1': [0, 3],
+    'user2': [5, 6, 1],
+    'user3': [2, 4]
+  }
+  >>> my_iter = user_pool.retrieve()
+  [2, 4]
+  ```
+
+  With this structure, it would be possible to do the following: enable GPU acceleration for User 2 only in Google Colab. Assign the models 0-4 to arbitrary users, but ensure that models 5 and 6 (which hipotetically require GPU) are trained by User 2.
+
+- [ ] Implement callbacks for reporting the history and timestamps of a models' training. This would be useful to compare the training of models, in special execution speed (to allow comparison between CPUs versus GPUs or uniform versus mixed precision).
