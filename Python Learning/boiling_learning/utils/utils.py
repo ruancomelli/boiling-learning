@@ -587,6 +587,28 @@ def ensure_absolute(
     else:
         return path.absolute()
 
+
+def ensure_resolved(
+        path,
+        root=None
+):
+    path = Path(path)
+    if root is not None and not path.is_absolute():
+        path = Path(root) / path
+    return path.resolve()
+
+def ensure_dir(path, root=None):
+    path = ensure_resolved(path, root=root)
+    path.mkdir(exist_ok=True, parents=True)
+    return path
+
+
+def ensure_parent(path, root=None):
+    path = ensure_resolved(path, root=root)
+    path.parent.mkdir(exist_ok=True, parents=True)
+    return path
+
+
 def remove_copy(directory, pattern):
     def remove_copy_idx(path):
         pattern = re.compile('(.*) \([0-9]+\)\.png')
