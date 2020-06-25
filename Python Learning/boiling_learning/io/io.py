@@ -5,6 +5,8 @@ import pickle
 import h5py
 from tensorflow.keras.models import load_model
 
+from boiling_learning.utils import nullcontext
+
 def save_serialized(save_map):
     def save(return_dict, path):
         path = Path(path)
@@ -45,11 +47,14 @@ def load_serialized(load_map):
         return loaded
     return load
 
-def load_keras_model(path, **kwargs):
-    return load_model(
-        path,
-        **kwargs
-    )
+def load_keras_model(path, strategy=None, **kwargs):
+    if strategy is None:
+        scope = nullcontext()
+    else:
+        scope = strategy.scope()
+        
+    with scope:
+        return load_model(path, **kwargs)
 
 def load_pkl(path):
     with Path(path).absolute().resolve().open('rb') as file:
