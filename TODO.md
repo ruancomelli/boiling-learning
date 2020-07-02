@@ -144,6 +144,7 @@ assert lower_eq('Hi', 'hi')
 - [ ] Read [this](https://www.wikiwand.com/en/Fraction_of_variance_unexplained). Am I evaluating models correctly?
 - [ ] Include `strategy` as part of a model's description?
 - [ ] Consume video frames that are already extracted in `bl.preprocessing.video.extract_frames`
+- [ ] Separate `bl.preprocessing.video.extract_frames` into smaller functions
 - [ ] Refactor `bl.management.Parameters` into `bl.utils.DeepDict` or something else.
 - [ ] `bl.utils.DeepDict` should be refactored. Its internals should look like `deep_path` implemented in the `main_notebook.ipynb` notebook. This means that, internally, this class contains a list in the form:
 
@@ -201,6 +202,8 @@ user_pool.is_enabled = prev_state
   [2, 4]
   ```
 
-  With this structure, it would be possible to do the following: enable GPU acceleration for User 2 only in Google Colab. Assign the models 0-4 to arbitrary users, but ensure that models 5 and 6 (which hipotetically require GPU) are trained by User 2.
+  With this structure, it would be possible to do the following: enable GPU acceleration for User 2 only in Google Colab. Assign the models 0-4 to arbitrary users, but ensure that models 5 and 6 (which hipothetically require GPU) are trained by User 2.
 
 - [ ] Implement callbacks for reporting the history and timestamps of a models' training. This would be useful to compare the training of models, in special execution speed (to allow comparison between CPUs versus GPUs or uniform versus mixed precision).
+- [ ] See [Netron](https://github.com/lutzroeder/netron) for NN.
+- [ ] Choose a reasonably performing network and train two versions of it: with and without mixed precision. Measure train time and final validation loss. The training should always be performed in the same conditions (i.e. using GPUs and MirroredStrategy), being the application of mixed precision the only difference between the two nets.
