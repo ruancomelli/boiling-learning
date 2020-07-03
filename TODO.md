@@ -188,7 +188,7 @@ user_pool.is_enabled = prev_state
 
 - [ ] Change `bl.utils.worker.UserPool`:
   - [ ] the `distribute_iterable` method should split the iterable and keep it in a cache. When the user calls a `retrieve` method, then the cache is cleared and the iterable is returned.
-  - [ ] it should be possible to enforce certain items to belong to certain users. For instance:
+  - [x] it should be possible to enforce certain items to belong to certain users. For instance:
 
   ```python
   >>> user_pool.distribute_iterable([0, 1, 2, 3, 4], {'user2': [5, 6]})
