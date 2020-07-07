@@ -17,7 +17,7 @@
 - [ ] Implement parallelization for `TransformationPipeline`s.
 - [ ] Use type annotations where applicable.
 - [ ] Can wrappers remove code repetition in crop and shift for the `if image is None: image = imread(in_path)` and the `if out_path is not None: imsave(out_path)`?
-- [ ] Implement general function dispatching?
+- [ ] Implement general function dispatching? See [this](https://docs.python.org/3/library/inspect.html#inspect-signature-object).
 - [ ] Document code.
 - [ ] Check for inconsistent input values in many functions, some of which are marked with a comment like `# TODO: use check_value_match`.
 - [ ] In the `Case` class, many properties can be converted to cached properties. Python 3.8 is be necessary.
@@ -207,3 +207,4 @@ user_pool.is_enabled = prev_state
 - [ ] Implement callbacks for reporting the history and timestamps of a models' training. This would be useful to compare the training of models, in special execution speed (to allow comparison between CPUs versus GPUs or uniform versus mixed precision).
 - [ ] See [Netron](https://github.com/lutzroeder/netron) for NN.
 - [ ] Choose a reasonably performing network and train two versions of it: with and without mixed precision. Measure train time and final validation loss. The training should always be performed in the same conditions (i.e. using GPUs and MirroredStrategy), being the application of mixed precision the only difference between the two nets.
+- [ ] Organize datasets and publish them on [Kaggle](https://www.kaggle.com/ruancomelli).
