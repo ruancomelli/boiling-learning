@@ -144,7 +144,7 @@ assert lower_eq('Hi', 'hi')
 - [ ] Read [this](https://www.wikiwand.com/en/Fraction_of_variance_unexplained). Am I evaluating models correctly?
 - [ ] Include `strategy` as part of a model's description?
 - [ ] Consume video frames that are already extracted in `bl.preprocessing.video.extract_frames`
-- [ ] Separate `bl.preprocessing.video.extract_frames` into smaller functions
+- [x] Separate `bl.preprocessing.video.extract_frames` into smaller functions
 - [ ] Refactor `bl.management.Parameters` into `bl.utils.DeepDict` or something else.
 - [ ] `bl.utils.DeepDict` should be refactored. Its internals should look like `deep_path` implemented in the `main_notebook.ipynb` notebook. This means that, internally, this class contains a list in the form:
 
