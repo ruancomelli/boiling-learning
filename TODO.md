@@ -170,7 +170,7 @@ AutoSynced = SyncedDict(
 
 a call to `__getitem__` would first call load, and a call to `__setitem__` or `__delitem__` would automatically call the save. Is this good?
 
-- [ ] Create contexts `bl.utils.worker.UserPool.disabled` and `bl.utils.worker.UserPool.enabled` which satisfy:
+- [x] Create contexts `bl.utils.worker.UserPool.disabled` and `bl.utils.worker.UserPool.enabled` which satisfy:
 
 ```python
 with user_pool.enabled(): # disabled()
@@ -186,8 +186,8 @@ my_iter = user_pool.get_iterable(range(10))
 user_pool.is_enabled = prev_state
 ```
 
-- [ ] Change `bl.utils.worker.UserPool`:
-  - [ ] the `distribute_iterable` method should split the iterable and keep it in a cache. When the user calls a `retrieve` method, then the cache is cleared and the iterable is returned.
+- [x] Change `bl.utils.worker.UserPool`:
+  - [x] (NO) the `distribute_iterable` method should split the iterable and keep it in a cache. When the user calls a `retrieve` method, then the cache is cleared and the iterable is returned.
   - [x] it should be possible to enforce certain items to belong to certain users. For instance:
 
   ```python
@@ -208,3 +208,7 @@ user_pool.is_enabled = prev_state
 - [ ] See [Netron](https://github.com/lutzroeder/netron) for NN.
 - [ ] Choose a reasonably performing network and train two versions of it: with and without mixed precision. Measure train time and final validation loss. The training should always be performed in the same conditions (i.e. using GPUs and MirroredStrategy), being the application of mixed precision the only difference between the two nets.
 - [ ] Organize datasets and publish them on [Kaggle](https://www.kaggle.com/ruancomelli).
+- [ ] Use Regions of Interest (ROI)? For instance, see [this](https://towardsdatascience.com/understanding-region-of-interest-part-1-roi-pooling-e4f5dd65bb44).
+- [ ] Use narrower visualization windows?
+- [ ] Take a look at [this](https://www.machinecurve.com/index.php/2019/11/13/how-to-use-tensorboard-with-keras/#about-histogram_freq-what-are-weight-histograms), on how to use TensorBoard, and at [TensorFlow's guide](https://www.tensorflow.org/tensorboard/get_started).
+- [ ] Simplify `bl.management.Manager`'s interface. I think it would be simpler to have only a `model_id` function, which returns the ID for a model, and then every other function should accept as input this `id` only.
