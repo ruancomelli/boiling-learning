@@ -213,3 +213,4 @@ user_pool.is_enabled = prev_state
 - [ ] Take a look at [this](https://www.machinecurve.com/index.php/2019/11/13/how-to-use-tensorboard-with-keras/#about-histogram_freq-what-are-weight-histograms), on how to use TensorBoard, and at [TensorFlow's guide](https://www.tensorflow.org/tensorboard/get_started).
 - [ ] Simplify `bl.management.Manager`'s interface. I think it would be simpler to have only a `model_id` function, which returns the ID for a model, and then every other function should accept as input this `id` only.
 - [ ] Add two functions to `bl.management.Manager`: `shared_dir` and `dir`. The first one returns a directory that is shared by all models. The second one returns a directory exclusive to a model.
+- [ ] Allow different predicates in `bl.management.Manager.retrieve_models`: besides `entry_pred`, include `metadata_pred`, `description_pred` and `model_pred`. `model_pred` is applied to the model after it is loaded.
