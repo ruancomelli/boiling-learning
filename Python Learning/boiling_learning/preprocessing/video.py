@@ -41,9 +41,12 @@ def convert_video(
         in_path: PathType,
         out_path: PathType,
         remove_audio: bool = False,
+        fps: Optional[Union[str, int, float]] = None,
         verbose: Union[bool, int] = False,
         overwrite: bool = False,
 ) -> None:
+    # For `fps`, see <https://superuser.com/a/729351>.
+
     in_path = bl.utils.ensure_resolved(in_path)
     out_path = bl.utils.ensure_parent(out_path)
 
@@ -53,16 +56,14 @@ def convert_video(
     if not out_path.is_file():
         command_list = [
             'ffmpeg',
-            '-i',
-            str(in_path),
-            '-vsync',
-            '0'
+            '-i', str(in_path),
+            '-vsync', '0'
         ]
         if remove_audio:
-            command_list += ['-an']
-        command_list += [
-            str(out_path)
-        ]
+            command_list.append('-an')
+        if fps is not None:
+            command_list.extend(['-r', str(fps)])
+        command_list.append(str(out_path))
 
         if verbose:
             print(
@@ -77,6 +78,7 @@ def extract_frames_ffmpeg(
         outputdir: PathType,
         filename_pattern: PathType = 'frame%d.png',
         overwrite: bool = False,
+        fps: Optional[Union[str, int, float]] = None,
         verbose: Union[bool, int] = False,
         # The image2 filter was used to process GOPRO images. Test if it's necessary
         image2filter: bool = False
@@ -93,25 +95,18 @@ def extract_frames_ffmpeg(
         print(
             f'Extracting frames: "{bl.utils.shorten_path(video_path, max_len=40)}" -> "{bl.utils.shorten_path(output_path, max_len=40)}"')
 
+    command_list = [
+        'ffmpeg',
+        '-i', str(video_path)
+    ]
+    if fps is not None:
+        command_list.extend(['-r', str(fps)])
     if image2filter:
-        command_list = [
-            'ffmpeg',
-            '-i',
-            f'{video_path}',
-            '-f',
-            'image2',
-            f'{output_path}'
-        ]
-    else:
-        command_list = [
-            'ffmpeg',
-            '-i',
-            f'{video_path}',
-            f'{output_path}'
-        ]
+        command_list.extend(['-f', 'image2'])
+    command_list.append(str(output_path))
 
     if verbose:
-        print(f'Command list = {command_list}')
+        print('Command list =', command_list)
 
     subprocess.run(command_list)
 
@@ -184,7 +179,8 @@ def extract_frames_iterate(
         raise ValueError(
             'filename_pattern could not be successfully converted to a callable.')
 
-    bl.utils.print_verbose(verbose, 'Extracting frames iteratively.')
+    if verbose:
+        print('Extracting frames iteratively.')
 
     for index, frame in enumerate(frames(video_path)):
         path = filename_pattern(index)
@@ -253,13 +249,11 @@ def extracted_frames_count(
         metadata['extracted'] = tmp_dir_count
         bl.io.save_json(metadata, metadata_path)
 
-    bl.utils.print_verbose(
-        verbose, f'Video frames count: {video_frames_count}')
-    if use_tmp_dir:
-        bl.utils.print_verbose(
-            verbose, f'Frames count in temporary folder: {tmp_dir_count}')
-    bl.utils.print_verbose(
-        verbose, f'Extracted frames count: {extracted_count}')
+    if verbose:
+        print('Video frames count:', video_frames_count)
+        if use_tmp_dir:
+            print('Frames count in temporary folder:', tmp_dir_count)
+        print('Extracted frames count:', extracted_count)
 
     return video_frames_count, tmp_dir_count, extracted_count
 
@@ -301,11 +295,12 @@ def extract_frames(
             tmp_dir = bl.utils.ensure_dir(tmp_dir, root=outputdir)
 
             def rm_tmp_dir() -> None:
-                bl.utils.print_verbose(verbose, 'Removing temporary folder.')
+                if verbose:
+                    print('Removing temporary folder.')
                 bl.utils.rmdir(tmp_dir, recursive=True, missing_ok=True)
 
-            bl.utils.print_verbose(
-                verbose, f'Using persistent temporary folder at {tmp_dir}')
+            if verbose:
+                print('Using persistent temporary folder at', tmp_dir)
 
     use_tmp_dir = not callable(filename_pattern)
     if frame_suffix is None:
@@ -335,7 +330,8 @@ def extract_frames(
     skip_extraction = use_frames_count and extracted_count == video_frames_count
 
     if skip_extraction:
-        bl.utils.print_verbose(verbose, f'Frames already extracted. Skipping.')
+        if verbose:
+            print('Frames already extracted. Skipping.')
         return
 
     if iterate:
@@ -362,8 +358,8 @@ def extract_frames(
             tmp_parser = f'frame{{index:d}}{frame_suffix}'
 
             if skip_tmp_extraction:
-                bl.utils.print_verbose(
-                    verbose, 'Skipping frames extraction to temporary folder.')
+                if verbose:
+                    print('Skipping frames extraction to temporary folder.')
             else:
                 extract_frames_ffmpeg(
                     video_path,
@@ -419,26 +415,23 @@ def concat_videos(
     out_dir = out_path.parent
 
     with bl.utils.tempdir(prefix='_', dir=out_dir) as temp_dir:
-        input_file = temp_dir / 'input.txt'
+        input_file_path = temp_dir / 'input.txt'
 
-        with open(input_file, 'w+') as fp:
+        with open(input_file_path, 'w+') as fp:
             fp.write(
                 '\n'.join(
-                    f'file {in_path}' for in_path in in_paths
+                    f'file {in_path}'
+                    for in_path in in_paths
                 )
             )
 
         command_list = [
             'ffmpeg',
-            '-f',
-            'concat',
-            '-safe',
-            '0',
-            '-i',
-            f'{input_file}',
-            '-c',
-            'copy',
-            f'{out_path}'
+            '-f', 'concat',
+            '-safe', '0',
+            '-i', str(input_file_path),
+            '-c', 'copy',
+            str(out_path)
         ]
         subprocess.run(command_list)
 
@@ -453,13 +446,11 @@ def extract_audio(
 
     command_list = [
         'ffmpeg',
-        '-i',
-        f'{video_path}',
-        '-c:a',
-        'copy',
+        '-i', str(video_path),
+        '-c:a', 'copy',
         '-vn',
         '-sn',
-        f'{out_path}'
+        str(out_path)
     ]
     subprocess.run(command_list)
 
