@@ -214,3 +214,8 @@ user_pool.is_enabled = prev_state
 - [x] Simplify `bl.management.Manager`'s interface. I think it would be simpler to have only a `model_id` function, which returns the ID for a model, and then every other function should accept as input this `id` only.
 - [x] Add two functions to `bl.management.Manager`: `shared_dir` and `dir`. The first one returns a directory that is shared by all models. The second one returns a directory exclusive to a model.
 - [ ] Allow different predicates in `bl.management.Manager.retrieve_models`: besides `entry_pred`, include `metadata_pred`, `description_pred` and `model_pred`. `model_pred` is applied to the model after it is loaded.
+- [ ] Include depth? See
+
+> Elboushaki, A., Hannane, R., Afdel, K., Koutti, L., 2020. MultiD-CNN: A multi-dimensional feature learning approach based on deep convolutional networks for gesture recognition in RGB-D image sequences. Expert Systems with Applications.. doi:10.1016/j.eswa.2019.112829
+
+They have two inputs: a RGB image + a depth, which maps each pixel of an image to a relative distance to the photographer. With a 2D experiment, this would be very important to include a depth map to allow the model to see a different between closer bubbles (that should look bigger) and more distant bubbles (which look smaller).
