@@ -473,39 +473,32 @@ class Manager(
             self,
             entry_pred: Optional[Callable[[Mapping], bool]] = None
     ) -> Iterable[Tuple[str, Any]]:
-        path_key = self.path_key
-        entries = self.entries.items()
-
-        entries = (
-            (model_id, entry)
-            for model_id, entry in entries
-            if path_key in entry
-        )
-
-        if entry_pred is not None:
-            entries = (
-                (model_id, entry)
-                for model_id, entry in entries
+        if entry_pred is None:
+            models = self.entries.keys()
+        else:
+            models = (
+                model_id
+                for model_id, entry in self.entries.items()
                 if entry_pred(entry)
             )
 
-        entries = (
-            (model_id, self._table_path.parent / entry[path_key])
-            for model_id, entry in entries
+        models = (
+            (model_id, self.model_path(model_id))
+            for model_id in models
         )
 
-        entries = (
+        models = (
             (model_id, self._retrieve_model(path, raise_if_load_fails=False))
-            for model_id, path in entries
+            for model_id, path in models
         )
 
-        entries = (
+        models = (
             (model_id, model)
-            for model_id, (success, model) in entries
+            for model_id, (success, model) in models
             if success
         )
 
-        return entries
+        return models
 
     def provide_entry(
             self,

@@ -24,14 +24,17 @@ from typing import (
     List,
     Mapping,
     Optional,
-    Union,
+    Sequence,
     Tuple,
-    Type
+    Type,
+    TypeVar,
+    Union,
 )
 import shutil
 import tempfile
 from contextlib import contextmanager
 import pprint
+import enum
 
 import matplotlib.pyplot as plt
 import more_itertools as mit
@@ -45,8 +48,10 @@ from boiling_learning.utils.functional import (
 
 _sentinel = object()
 
+
 def empty(*args, **kwargs) -> None:
     pass
+
 
 def constant(value, call_value: bool = False) -> Callable:
     if call_value:
@@ -57,28 +62,29 @@ def constant(value, call_value: bool = False) -> Callable:
             return value
     return _constant
 
+
 def constant_factory(value) -> Callable:
     return constant(value, call_value=True)
 
+
 def comment(
-    f: Callable, 
+    f: Callable,
     s: str = '',
     printer: Callable[[str], Any] = print
 ) -> Callable:
-    from functools import wraps
-    
     @wraps(f)
     def wrapped(*args, **kwargs):
         printer(s)
         return f(*args, **kwargs)
     return wrapped
 
+
 def remove_duplicates(
     iterable: Iterable,
     key: Union[None, object, Dict, Callable] = _sentinel
 ) -> Iterable:
     # See <https://more-itertools.readthedocs.io/en/stable/api.html#more_itertools.unique_everseen>
-    
+
     if key is _sentinel:
         # use default optimization
         return remove_duplicates(
@@ -94,13 +100,14 @@ def remove_duplicates(
             iterable,
             key=lambda elem: key.get(type(elem), identity)(elem)
         )
-    else:    
+    else:
         return mit.unique_everseen(
             iterable,
             key=key
         )
 
-def has_duplicates(iterable):
+
+def has_duplicates(iterable: Iterable) -> bool:
     if isinstance(iterable, list):
         iterable_list = iterable
     elif isinstance(iterable, set):
@@ -110,7 +117,8 @@ def has_duplicates(iterable):
 
     return len(iterable_list) != mit.ilen(remove_duplicates(iterable_list))
 
-def missing_ints(ints: Iterable[int]) -> List[int]:
+
+def missing_ints(ints: Iterable[int]) -> Iterable[int]:
     # source: adapted from <https://stackoverflow.com/questions/16974047/efficient-way-to-find-missing-elements-in-an-integer-sequence>
     ints = SortedSet(ints)
     if ints:
@@ -120,22 +128,25 @@ def missing_ints(ints: Iterable[int]) -> List[int]:
     else:
         return empty_gen()
 
-def merge_dicts(*dict_args, latter_precedence=True):
+
+def merge_dicts(*dict_args: Mapping, latter_precedence: bool = True) -> dict:
     if latter_precedence:
         dict_args = reversed(dict_args)
-    
+
     return dict(ChainMap(*dict_args))
 
-def partial_isinstance(type_):
-    def wrapped(x):
+
+def partial_isinstance(type_: Type) -> Callable[[Any], bool]:
+    def wrapped(x) -> bool:
         return isinstance(x, type_)
     return wrapped
 
+
 def alternate_iter(
-    iterables,
-    default_indices=tuple(),
-    skip_repeated=True
-):    
+    iterables: Iterable[Iterable],
+    default_indices: Iterable[int] = tuple(),
+    skip_repeated: bool = True
+) -> Iterator[tuple]:
     '''
         >>> alternate_iter(
             [
@@ -185,7 +196,11 @@ def alternate_iter(
             for item in iterable:
                 yield head + (item,) + tail
 
-def combine_dict(dct, gen=None):
+
+def combine_dict(
+    dct: Mapping[Any, Iterable],
+    gen: Optional[Callable[[list], Iterable[Iterable]]] = None
+) -> Iterator[dict]:
     if gen is None:
         def default_gen(x):
             return product(*x)
@@ -200,21 +215,32 @@ def combine_dict(dct, gen=None):
             zip(keys, combination)
         )
 
-def dict_complement(dict_, keys):
+
+def dict_complement(
+    dict_: Mapping,
+    keys: Container
+) -> dict:
     return {
         key: value
         for key, value in dict_.items()
         if key not in keys
     }
-    
-def dict_product(**kwargs):
+
+
+def dict_product(**kwargs: Mapping) -> Iterator[dict]:
     # source: <https://stackoverflow.com/a/5228294/5811400>
     keys = kwargs.keys()
-    vals = kwargs.values()
-    for instance in product(*vals):
+    values = kwargs.values()
+    for instance in product(*values):
         yield dict(zip(keys, instance))
 
-def extract_value(dicts, key=None, default=_sentinel, many=False):
+
+def extract_value(
+        dicts,
+        key=None,
+        default=_sentinel,
+        many=False
+):
     if many:
         return {
             k: extract_value(dicts, key=k, default=default, many=False)
@@ -226,24 +252,28 @@ def extract_value(dicts, key=None, default=_sentinel, many=False):
             if key in cm:
                 return cm[key]
             else:
-                raise ValueError(f'key {key} was not found in the dictionaries.')
+                raise ValueError(
+                    f'key {key} was not found in the dictionaries.')
         else:
             return cm.get(key, default)
 
+
 def invert_dict(d):
     return dict((v, k) for k, v in d.items())
+
 
 def extract_keys(d, value, cmp=operator.eq):
     for k, v in d.items():
         if cmp(value, v):
             yield k
 
+
 def map_keys(dct, key_map):
     return {
         v: dct[k]
         for k, v in key_map.items()
     }
-        
+
 
 class KeyedDefaultDict(defaultdict):
     '''
@@ -258,17 +288,14 @@ class KeyedDefaultDict(defaultdict):
             ret = self[key] = self.default_factory(key)
             return ret
 
-# ---------------------------------- Operators ----------------------------------
-def is_None(x):
-    return x is None
-def is_not_None(x):
-    return x is not None
-
 # ---------------------------------- Printing ----------------------------------
+
+
 def print_verbose(verbose: bool, *args, **kwargs) -> None:
     if verbose:
         print(*args, **kwargs)
-        
+
+
 def print_header(
     s: str,
     level: int = 0,
@@ -278,7 +305,7 @@ def print_header(
     """Standardized method for printing a section header.
 
     Prints the argument s underlined.
-    
+
     Parameters
     ----------
     s       : string to be printed
@@ -286,48 +313,52 @@ def print_header(
     levels  : iterable of level symbols to choose from
     verbose : verbose mode
     """
-    s = str(s)
-    print_verbose(verbose)
-    print_verbose(verbose, s)
-    print_verbose(verbose, levels[level] * len(s))
-    
+    if verbose:
+        s = str(s)
+        print()
+        print(s)
+        print(levels[level] * len(s))
+
+
 def shorten_path(path, max_parts=None, max_len=None, prefix='...'):
     def _slice_path(p, slc):
         return Path(*Path(p).parts[slc])
-    
+
     path = Path(path)
-    
+
     if max_parts is None:
         shortened = path
     else:
         shortened = _slice_path(path, slice(-max_parts, None))
-        
+
     if max_len is not None:
         sep = os.sep
         prefix = str(prefix) + sep
         prefix_len = len(prefix)
-        
+
         while (
             len(str(shortened)) + prefix_len > max_len
             and len(shortened.parts) > 1
         ):
             shortened = _slice_path(shortened, slice(1, None))
-            
+
     if shortened == path:
         return str(shortened)
     else:
         return prefix + str(shortened)
-    
+
 # ---------------------------------- Plotting functions ----------------------------------
+
+
 def prepare_fig(
-    n_cols: int = None,
-    n_rows: int = None,
-    n_elems: int = None,
-    fig_size=None,
-    subfig_size=None,
-    tight_layout: bool = True):
+        n_cols: int = None,
+        n_rows: int = None,
+        n_elems: int = None,
+        fig_size=None,
+        subfig_size=None,
+        tight_layout: bool = True):
     """Resize figure and calculate the number of rows and columns in the subplot grid.
-    
+
     Parameters
     ----------
     n_cols       : number of columns in the subplot grid
@@ -336,17 +367,19 @@ def prepare_fig(
     fig_size     : total size of the figure
     subfig_size  : total size of each subfigure
     tight_layout : if True, use tight_layout
-    
+
     Notes
     -----
     * only two of the three arguments n_cols, n_rows and n_elems must be given. The other one is calculated.
     * only two of the two arguments fig_size and subfig_size must be computed. The other one is calculated.
     * fig_size and subfig_size can be a pair (width, height) or a string in ['tiny', 'small', 'normal', 'intermediate', 'large', 'big']
-    """                
+    """
     if None not in (fig_size, subfig_size):
-        raise ValueError('incompatible arguments: either figsize or subfig_size must be None')
+        raise ValueError(
+            'incompatible arguments: either figsize or subfig_size must be None')
     if None not in (n_cols, n_rows, n_elems):
-        raise ValueError('incompatible arguments: either n_cols, n_rows or n_elems must be None')
+        raise ValueError(
+            'incompatible arguments: either n_cols, n_rows or n_elems must be None')
 
     grid_size = None
     if None not in (n_cols, n_rows):
@@ -357,7 +390,7 @@ def prepare_fig(
     elif None not in (n_rows, n_elems):
         n_cols = (n_elems-1)//n_rows + 1
         grid_size = (n_rows, n_cols)
-    
+
     def validate(size):
         if size in ['micro']:
             return (2, 1.5)
@@ -371,17 +404,18 @@ def prepare_fig(
             return (18, 15)
         else:
             return size
-        
+
     fig_size = validate(fig_size)
     subfig_size = validate(subfig_size)
-                
+
     if subfig_size:
-        fig_size = (grid_size[1] * subfig_size[0], grid_size[0] * subfig_size[1])
-    
+        fig_size = (grid_size[1] * subfig_size[0],
+                    grid_size[0] * subfig_size[1])
+
     plt.rcParams['figure.figsize'] = fig_size
     if tight_layout:
         plt.tight_layout()
-            
+
     return {
         'fig_size': fig_size,
         'subfig_size': subfig_size,
@@ -391,14 +425,18 @@ def prepare_fig(
         'n_elems': n_elems,
     }
 
+
 def as_json(obj, cls=None):
     from json import loads, dumps
     return loads(dumps(obj, cls=cls))
+
 
 def json_equivalent(lhs, rhs, cls=None):
     return as_json(lhs, cls) == as_json(rhs, cls)
 
 # ---------------------------------- Default parameters ----------------------------------
+
+
 def regularize_default(
     x, cond, default,
     many=False, many_cond=False, many_default=False,
@@ -428,10 +466,11 @@ def regularize_default(
         else:
             return default
 
-def check_value_match(groups, values_dict):    
+
+def check_value_match(groups, values_dict):
     def cond(value):
         return all(value[1][key](v) for key, v in values_dict.items())
-    
+
     try:
         return next(
             filter(cond, enumerate(groups))
@@ -440,6 +479,8 @@ def check_value_match(groups, values_dict):
         raise ValueError(f'there is no support for {values_dict}')
 
 # ---------------------------------- Array operations ----------------------------------
+
+
 def crop_array(
     a,
     lims=None,
@@ -496,7 +537,8 @@ def crop_array(
         return crop_array(a, lims=[(x_min, x_max), (y_min, y_max)])
     elif idx == 2:
         return crop_array(a, lims=[x_lim, y_lim])
-    
+
+
 def shift_array(
     a,
     shifts=None,
@@ -524,10 +566,10 @@ def shift_array(
     )
     if idx == 0:
         return shift(a, shifts=(shift_x, shift_y))
-    
+
     def _shift(a, shifts, axis=0):
         from numpy import roll
-        
+
         if shifts:
             return _shift(
                 roll(a, shifts[0], axis=axis),
@@ -539,31 +581,39 @@ def shift_array(
     return _shift(a, shifts, axis=0)
 
 # ---------------------------------- Iteration ----------------------------------
+
+
 def empty_gen():
     yield from ()
+
 
 def append(iterable, value):
     yield from iterable
     yield value
 
+
 def transpose(iterable):
     return zip(*iterable)
-    
+
+
 def projection(*indices):
     def wrapped(*args):
         return tuple(args[i] for i in indices)
     return wrapped
+
 
 def replace(iterable, new_iterable):
     # Iterates over iterable and new_iterable, yielding only new_iterable values.
     # This effectively replaces every element in iterable with elements in new_iterable.
     for _, new_value in zip(iterable, new_iterable):
         yield new_value
-        
+
+
 def drop_last(iterable):
     for current_value, _ in mit.pairwise(iterable):
         yield current_value
-        
+
+
 def replace_last(iterable, last_value):
     return append(
         drop_last(iterable),
@@ -571,21 +621,11 @@ def replace_last(iterable, last_value):
     )
 
 # ---------------------------------- Path ----------------------------------
+
+
 def relative_path(origin, destination):
     from os.path import relpath
     return relpath(destination, start=origin)
-
-def ensure_absolute(
-        path,
-        root=None
-):
-    path = Path(path)
-    if path.is_absolute():
-        return path
-    elif root is not None:
-        return Path(root) / path
-    else:
-        return path.absolute()
 
 
 def ensure_resolved(
@@ -596,6 +636,7 @@ def ensure_resolved(
     if root is not None and not path.is_absolute():
         path = Path(root) / path
     return path.resolve()
+
 
 def ensure_dir(path, root=None):
     path = ensure_resolved(path, root=root)
@@ -618,28 +659,33 @@ def remove_copy(directory, pattern):
             return (True, path.with_name(name).with_suffix(path.suffix))
         else:
             return (False, None)
-        
+
     for f in Path(directory).glob(pattern):
         success, original_f = remove_copy_idx(f)
         if success and original_f.is_file():
             f.unlink()
-            
+
 # Source: https://stackoverflow.com/a/34236245/5811400
+
+
 def is_parent_dir(parent, subdir):
     parent = Path(parent).resolve().absolute()
     subdir = Path(subdir).resolve().absolute()
     return parent in subdir.parents
 
 # Source: https://stackoverflow.com/a/57892171/5811400
+
+
 def rmdir(path, recursive=False, keep=False, missing_ok=False):
     path = Path(path)
-    
+
     if not path.is_dir():
         if missing_ok:
             return
         else:
-            raise NotADirectoryError(f'path is expected to be a directory when missing_ok={missing_ok}. Got {path}.')
-    
+            raise NotADirectoryError(
+                f'path is expected to be a directory when missing_ok={missing_ok}. Got {path}.')
+
     if recursive:
         for child in path.iterdir():
             if child.is_file():
@@ -650,16 +696,18 @@ def rmdir(path, recursive=False, keep=False, missing_ok=False):
             path.rmdir()
     elif keep:
         ValueError('cannot keep dir when not in recursive mode.')
-              
+
+
 def group_files(path, keyfunc=None):
     if keyfunc is None:
-        keyfunc = lambda x: x.suffix
+        def keyfunc(x): return x.suffix
 
     d = {}
     for p in filter(lambda x: x.is_file(), path.iterdir()):
         d.setdefault(keyfunc(p), []).append(p)
-    return d      
-        
+    return d
+
+
 def mover(
     out_dir,
     up_level: int = 0,
@@ -667,40 +715,44 @@ def mover(
     head_aggregator=None,
     verbose: bool = False
 ):
-    out_dir = Path(out_dir)
-    
+    out_dir = ensure_resolved(out_dir)
+
     def wrapper(in_path):
-        in_path = Path(in_path)
+        in_path = ensure_resolved(in_path)
         head = in_path.parents[up_level]
         tail = in_path.relative_to(head)
-        
+
         if head_aggregator is None:
             out_path = out_dir / tail
         else:
-            out_path = out_dir.with_name(head_aggregator.join([head.name, out_dir.name])) / tail
-        
+            out_path = out_dir.with_name(
+                head_aggregator.join([head.name, out_dir.name])) / tail
+
         if make_dir:
             out_path.parent.mkdir(exist_ok=True, parents=True)
-            
-        print_verbose(verbose, f'mover: up_level={up_level}; make_dir={make_dir}; head_aggregator={head_aggregator}')
-        print_verbose(verbose, in_path)
-        print_verbose(verbose, '>', out_path)
-        
+
+        if verbose:
+            print(f'mover: up_level={up_level}; make_dir={make_dir}; head_aggregator={head_aggregator}')
+            print(f'"{bl.utils.shorten_path(video_path, max_len=40)}" -> "{bl.utils.shorten_path(output_path, max_len=40)}"')
+
         return out_path
-        
+
     return wrapper
+
 
 def dir_as_tree(dir_path, file_pred=None, dir_pred=None):
     ret_list = []
     ret_dict = {}
-    
+
     for path in dir_path.iterdir():
         if path.is_file() and (file_pred is None or file_pred(path)):
             ret_list.append(path)
         elif path.is_dir() and (dir_pred is None or dir_pred(path)):
-            ret_dict[path.name] = dir_as_tree(path, file_pred=file_pred, dir_pred=dir_pred)
-    
+            ret_dict[path.name] = dir_as_tree(
+                path, file_pred=file_pred, dir_pred=dir_pred)
+
     return ret_list, ret_dict
+
 
 def dir_as_tree_apply(dir_path, fs, dir_pred=None):
     return list(f(dir_path) for f in fs), {
@@ -708,10 +760,12 @@ def dir_as_tree_apply(dir_path, fs, dir_pred=None):
         for path in dir_path.iterdir()
         if path.is_dir() and (dir_pred is None or dir_pred(path))
     }
-    
+
+
 def count_file_lines(path):
     with open(path) as f:
         return mit.ilen(f)
+
 
 @contextmanager
 def tempdir(suffix=None, prefix=None, dir=None):
@@ -719,10 +773,11 @@ def tempdir(suffix=None, prefix=None, dir=None):
         tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir)
     ).resolve().absolute()
 
-    try:        
+    try:
         yield dirpath
     finally:
         shutil.rmtree(dirpath)
+
 
 @contextmanager
 def nullcontext(enter_result=None):
@@ -732,18 +787,18 @@ def nullcontext(enter_result=None):
 @contextmanager
 def elapsed_timer():
     # Source: <https://stackoverflow.com/a/61613140/5811400>
-    
+
     start_time = default_timer()
 
     class _Timer:
         @property
         def start(self):
             return start_time
-        
+
         @property
         def end(self):
             return default_timer()
-        
+
         @property
         def duration(self):
             return self.end - self.start
@@ -753,45 +808,54 @@ def elapsed_timer():
     end_time = default_timer()
     _Timer.end = end_time
     _Timer.duration = end_time - start_time
-    
+
 # ---------------------------------- Class printing ----------------------------------
+
+
 class SimpleRepr:
     """A mixin implementing a simple __repr__."""
     # Source: <https://stackoverflow.com/a/44595303/5811400>
+
     def __repr__(self):
         class_name = self.__class__.__name__
         address = id(self) & 0xFFFFFF
-        attrs = ', '.join(f'{key}={value!r}' for key, value in self.__dict__.items())
-        
+        attrs = ', '.join(f'{key}={value!r}' for key,
+                          value in self.__dict__.items())
+
         return f'<{class_name} @{address:x} {attrs}>'
-        
+
+
 class SimpleStr:
     def __str__(self):
         class_name = self.__class__.__name__
-        attrs = ', '.join(f'{key}={value}' for key, value in self.__dict__.items())
-        
+        attrs = ', '.join(f'{key}={value}' for key,
+                          value in self.__dict__.items())
+
         return f'{class_name}({attrs})'
-        
+
+
 def simple_pprint(self, obj, stream, indent, allowance, context, level):
     """
     Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
     """
     # Source: <https://stackoverflow.com/a/52521743/5811400>
     write = stream.write
-    
+
     class_name = obj.__class__.__name__
     write(class_name + "(")
     _format_kwarg_dict_items(
-        self, obj.__dict__.copy().items(), stream, indent + len(class_name), allowance + 1, context, level
+        self, obj.__dict__.copy().items(), stream, indent +
+        len(class_name), allowance + 1, context, level
     )
     write(")")
+
 
 def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, level):
     '''
     Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
     '''
     write = stream.write
-    
+
     indent += self._indent_per_level
     delimnl = ',\n' + ' ' * indent
     last_index = len(items) - 1
@@ -806,11 +870,14 @@ def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, le
         )
         if not last:
             write(delimnl)
-      
+
+
 def simple_pprint_class(cls):
     pprint.PrettyPrinter._dispatch[cls.__repr__] = simple_pprint
-      
+
 # ---------------------------------- Mixins ----------------------------------
+
+
 class DictEq:
     def __eq__(self, other):
         if not isinstance(other, __class__):
@@ -880,3 +947,11 @@ def contains(elem):
 
 def contained(container):
     return partial(operator.contains, container)
+
+
+def is_None(x):
+    return x is None
+
+
+def is_not_None(x):
+    return x is not None

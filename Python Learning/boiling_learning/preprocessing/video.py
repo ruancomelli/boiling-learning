@@ -36,7 +36,6 @@ from boiling_learning.utils import PathType
 # See <https://stackoverflow.com/a/50422454/5811400>
 # >>> ffmpeg -i {video_path} -vsync 0 {output_path}
 
-
 def convert_video(
         in_path: PathType,
         out_path: PathType,
@@ -109,7 +108,7 @@ def extract_frames_ffmpeg(
         print('Command list =', command_list)
 
     subprocess.run(command_list)
-
+    
 
 def make_callable_filename_pattern(
         outputdir: PathType,

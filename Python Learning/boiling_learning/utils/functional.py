@@ -32,16 +32,10 @@ def unpacked(f):
     
     return wrapper    
     
-def compose(*fs, filter_None=False):
+def compose(*fs):
     from functools import reduce
     
     def _compose(f, g):
-        if filter_None:
-            if f is None:
-                f = identity
-            if g is None:
-                g = identity
-        
         def result(x):
             return g(f(x))
         
