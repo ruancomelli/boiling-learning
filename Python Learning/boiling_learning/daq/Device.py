@@ -1,8 +1,12 @@
 from nidaqmx.task import Task
 
-import boiling_learning as bl
+from boiling_learning.utils.utils import (
+    SimpleRepr,
+    SimpleStr,
+    DictEq
+)
 
-class Device(bl.utils.SimpleRepr, bl.utils.SimpleStr, bl.utils.DictEq):
+class Device(SimpleRepr, SimpleStr, DictEq):
     def __init__(self, name: str = ''):
         self.name = name
 

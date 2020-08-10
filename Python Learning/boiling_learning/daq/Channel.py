@@ -95,10 +95,10 @@ class Channel(bl.utils.SimpleRepr, bl.utils.SimpleStr):
             return None
 
     def is_ni_type(self, ni_channel_type: NIChannelType) -> bool:
-        return self.ni_type() is ni_channel_type
+        return self.ni_type is ni_channel_type
 
     def ni_type_key(self) -> Optional[str]:
-        return Channel.channel_type_keys[self.ni_type()] if self.ni_type() is not None else None
+        return Channel.channel_type_keys[self.ni_type] if self.ni_type is not None else None
 
     def add_to_task_table(self, task: Task) -> None:
         if task.name not in Channel.channel_table:
