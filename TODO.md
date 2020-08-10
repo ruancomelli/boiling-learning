@@ -75,7 +75,7 @@ assert lower_eq('Hi', 'hi')
 - [ ] Write READMEs for each package.
 - [ ] Include licenses in each module.
 - [ ] Decide if I'll use MLFlow or similars.
-- [ ] Remove `process_data.py`, taking care to provide its funciontalities elsewhere.
+- [ ] Remove `process_data.py`, taking care to provide its functionalities elsewhere.
 - [ ] Make `cv2` path-like compliant.
 - [ ] Take a look at the relationship between bubble or droplet formation rate and camera acquisition speed.
 - [ ] Divide this TO-DO list into sections. For instance: `Refactoring`, `Additional functionality`, `External dependencies` etc.
@@ -117,7 +117,7 @@ assert lower_eq('Hi', 'hi')
   - [ ] Can the wet/dry areas ratio be of use to the nets?
   - [ ] Think of cool names for the nets.
 - [x] Fix model creation in the notebooks
-- [ ] Instead of creating compound objects, define a `metadata` for `Manager`'s entries. So models could look like
+- [x] Instead of creating compound objects, define a `metadata` for `Manager`'s entries. So models could look like
 
 ```json
 {
@@ -219,3 +219,25 @@ user_pool.is_enabled = prev_state
 > Elboushaki, A., Hannane, R., Afdel, K., Koutti, L., 2020. MultiD-CNN: A multi-dimensional feature learning approach based on deep convolutional networks for gesture recognition in RGB-D image sequences. Expert Systems with Applications.. doi:10.1016/j.eswa.2019.112829
 
 They have two inputs: a RGB image + a depth, which maps each pixel of an image to a relative distance to the photographer. With a 2D experiment, this would be very important to include a depth map to allow the model to see a different between closer bubbles (that should look bigger) and more distant bubbles (which look smaller).
+
+- [ ] Use object detection.
+- [ ] Use transfer learning from one case to another.
+- [ ] Implement a way to measure the training time.
+- [ ] Implement a warm-up: the first epoch of training (after compiling or restoring) should be discarded to avoid including TF warmup in the training time measurement.
+- [ ] Optimize for the activation functions
+- [ ] \[Maybe\] create classes `Option` and `Options` to help defining model parameters and connect to TensorBoard's HParams.
+- [ ] Create a function for flattening `Parameters`'s keys. For instance:
+
+```python
+>>> d = Parameters()
+>>> d[['a', 'b', 'c']] = 10
+>>> d[['a', 'x']] = 'oi'
+>>> d[['z']] = {'^': '^', '9': 89}
+>>> d_flatten = d.flatten_keys(method=lambda prev, key: '.'.join([prev, key]))
+>>> print(d_flatten)
+{
+  'a.b.c': 10,
+  'a.x': 'oi',
+  'z': {'^': '^', '9': 89} # or 'z.^': '^', 'z.9': 89
+}
+```
