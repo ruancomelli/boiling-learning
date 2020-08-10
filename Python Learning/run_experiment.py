@@ -28,7 +28,7 @@ from boiling_learning.daq import Channel, ChannelType, Device
 
 class BoilingSurface:
     def __init__(self, settings):
-        self.name = settings.get('name', None)
+        self.name = settings.get('name')
         self.name = self.name if self.name else None
         
         self.type = settings['type']
@@ -46,7 +46,7 @@ class BoilingSurface:
     @property
     def cross_section_area(self):
         if self.type == 'ribbon':
-            return self.width * self.thickness)
+            return self.width * self.thickness
         elif self.type == 'wire':
             return np.pi * 0.25 * self.diameter**2
         else:
@@ -78,8 +78,7 @@ surface = BoilingSurface(settings['surface'])
 # ribbon or wire?
 wire_diameter = 0.518e-3 # m
 wire_length = 6.5e-2 # m
-# wire_cross_section = np.pi * 0.25 * wire_diameter**2
-# wire_surface_area = np.pi * wire_diameter * wire_length
+wire_cross_section = surface.cross_section_area
 wire_surface_area = surface.surface_area
 
 read_continuously = True
@@ -113,7 +112,7 @@ calibration_filepath = project_home_path / 'Experimental Set Calibration' / 'Pro
 
 # output_dir_pattern = str(python_project_home_path / 'experiments' / r'Experiment %Y-%m-%d %H-%M ({index})')
 output_dir_pattern = str(python_project_home_path / 'experiments' / r'Experiment %Y-%m-%d %H-%M{optional_index}')
-def optional_index_format(counter)
+def optional_index_format(counter):
     return f' ({counter})' if counter != 0 else ''
 # filename_pattern = r'Experiment %H-%M ({index}).csv'
 filename_pattern = r'data.csv'
@@ -182,9 +181,9 @@ def correct_wire_temperature(reference_file):
     mean_wire_temperature = df['Wire Temperature [deg C]'].mean()
 
     return mean_bulk_temperature - mean_wire_temperature
-wire_temperature_correction_reference_file = Path() / 'experiments' / 'Experiment Output 2020-02-14' / 'Experiment 10-03 (0).csv'
+# wire_temperature_correction_reference_file = Path() / 'experiments' / 'Experiment Output 2020-02-14' / 'Experiment 10-03 (0).csv'
 # wire_temperature_correction_reference_file = Path() / 'experiments' / 'Experiment Output 2020-02-18' / 'Experiment 16-44 (0).csv'
-wire_temperature_correction = correct_wire_temperature(wire_temperature_correction_reference_file)
+# wire_temperature_correction = correct_wire_temperature(wire_temperature_correction_reference_file)
 
 # For timestamps: <https://knowledge.ni.com/KnowledgeArticleDetails?id=kA00Z000000kJy2SAE&l=pt-BR>
 
@@ -487,12 +486,12 @@ with open(filepath, 'w', newline='') as output_file, \
         print_if_must(('anything', 'current'), f'>> Current [A]: {current}', conds=[current.size > 0])
         print_if_must(('anything', 'power'), f'>> Power [W]: {power}', conds=[power.size > 0])
         print_if_must(('anything', 'flux'), f'>> Flux [W/m^2]: {flux}', conds=[flux.size > 0])
-        print_if_must(('anything', 'resistance'), f'>> Resistance [Ohm]: {resistance}', conds=[resistance.size > 0])
+        # print_if_must(('anything', 'resistance'), f'>> Resistance [Ohm]: {resistance}', conds=[resistance.size > 0])
         print_if_must(('anything', 'bulk temperature'), f'>> Bulk Temperature [°C]: {rtd_temperature}', conds=[rtd_temperature.size > 0])
         print_if_must(('anything', 'led read state'), f'>> LED: {led_voltage}', conds=[led_voltage.size > 0])
         print_if_must(('anything', 'wire temperature'), f'>> Wire Temperature [°C]: {wire_temperature}', conds=[wire_temperature.size > 0])
-        print_if_must(('anything', 'temperature from resistance'), f'>> Temperature from Resistance [deg C]: {wire_temperature_from_resistance}', conds=[wire_temperature_from_resistance.size > 0])
-        print_if_must(('anything', 'wire temperature corrected'), f'>> Wire Temperature (corrected) [deg C]: {wire_temperature_corrected}', conds=[wire_temperature_corrected.size > 0])
+        # print_if_must(('anything', 'temperature from resistance'), f'>> Temperature from Resistance [deg C]: {wire_temperature_from_resistance}', conds=[wire_temperature_from_resistance.size > 0])
+        # print_if_must(('anything', 'wire temperature corrected'), f'>> Wire Temperature (corrected) [deg C]: {wire_temperature_corrected}', conds=[wire_temperature_corrected.size > 0])
 
 #%%
         # -------------------------------------------------------
