@@ -20,7 +20,7 @@
 - [ ] Implement general function dispatching? See [this](https://docs.python.org/3/library/inspect.html#inspect-signature-object).
 - [ ] Document code.
 - [ ] Check for inconsistent input values in many functions, some of which are marked with a comment like `# TODO: use check_value_match`.
-- [ ] In the `Case` class, many properties can be converted to cached properties. Python 3.8 is be necessary.
+- [ ] In the `ExperimentImages` class, many properties can be converted to cached properties. Python 3.8 is be necessary.
 - [ ] Allow the user to choose if only the train data must be modified `ImageDatasetTransformer`.
 - [ ] Allow dataset augmentation, not only transformation in `ImageDatasetTransformer`.
 - [ ] In `boiling_learning.model.restore`: allow a complete dictionary of important keys, not only epoch. For instance, `keys={'epoch_str': int, 'val_acc': float}`.
