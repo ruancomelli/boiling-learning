@@ -45,6 +45,7 @@ class Manager(
             load_method: Callable[[PathType], Any] = bl.io.load_pkl,
             verbose: VerboseType = False,
             load_table: bool = True,
+            keys_map: Optional[Mapping[str, str]] = None
     ):
         '''
         The Manager's directory is structure like this:
@@ -64,26 +65,36 @@ class Manager(
 
         ```
         {
-            'entries': { # entry_key
-                *model_id*: {
-                   'model': { # data_key: contents
-                       'creator': *creator_name*, # creator_key
-                       'description': *description_dict* # description_key
+            'entries': { // entry_key
+                *elem_id*: {
+                   'model': { // elems_key: contents
+                       'creator': *creator_name*, // creator_key
+                       'description': *description_dict* // description_key
                    }
-                   'metadata': *metadata_dict*  # metadata_key: metadata
+                   'metadata': *metadata_dict*  // metadata_key: metadata
                 }
                 ...
             }
         }
         ```
-
+        
+        Parameters
+        ----------
+        ...
+        keys_map: an object optionally mapping each of the following keys to a string value:
+            - 'entries_key' - defaults to 'entries'
+            - 'elems_key' - defaults to 'model'
+            - 'metadata_key' - defaults to 'metadata'
+            - 'creator_key' - defaults to 'creator'
+            - 'description_key' - defaults to 'parameters'
+            - 'workspace_key' - defaults to 'workspace'
         '''
-        self.entries_key = 'entries'
-        self.contents_key = 'model'
-        self.metadata_key = 'metadata'
-        self.creator_key = 'creator'
-        self.description_key = 'parameters'
-        self._workspace_key = 'workspace'
+        self.entries_key = keys_map.get('entries_key', 'entries')
+        self.elems_key = keys_map.get('elems_key', 'model')
+        self.metadata_key = keys_map.get('metadata_key', 'metadata')
+        self.creator_key = keys_map.get('creator_key', 'creator')
+        self.description_key = keys_map.get('description_key', 'parameters')
+        self.workspace_key = keys_map.get('workspace_key', 'workspace')
 
         self._path = bl.utils.ensure_dir(path)
         self._table_path = self.path / 'lookup_table.json'
@@ -102,16 +113,16 @@ class Manager(
         self._load_method = load_method
         self.verbose = verbose
 
-    def __getitem__(self, model_id: str):
+    def __getitem__(self, elem_id: str):
         self.load_lookup_table()
-        return self._lookup_table.setdefault(self.entries_key, {})[model_id]
+        return self._lookup_table.setdefault(self.entries_key, {})[elem_id]
 
-    def __setitem__(self, model_id: str, entry: Mapping[str, Any]) -> None:
-        self._lookup_table.setdefault(self.entries_key, {})[model_id] = entry
+    def __setitem__(self, elem_id: str, entry: Mapping[str, Any]) -> None:
+        self._lookup_table.setdefault(self.entries_key, {})[elem_id] = entry
         self.save_lookup_table()
 
-    def __delitem__(self, model_id: str) -> None:
-        del self._lookup_table.setdefault(self.entries_key, {})[model_id]
+    def __delitem__(self, elem_id: str) -> None:
+        del self._lookup_table.setdefault(self.entries_key, {})[elem_id]
         self.save_lookup_table()
 
     def __iter__(self) -> Iterator:
@@ -140,14 +151,14 @@ class Manager(
     def shared_dir(self) -> Path:
         return self._shared_dir_path
 
-    def entry_dir(self, model_id: str) -> Path:
-        return bl.utils.ensure_dir(self.entries_dir / model_id)
+    def entry_dir(self, elem_id: str) -> Path:
+        return bl.utils.ensure_dir(self.entries_dir / elem_id)
 
-    def model_path(self, model_id: str) -> Path:
-        return bl.utils.ensure_parent(self.entry_dir(model_id) / self.contents_key)
+    def elem_path(self, elem_id: str) -> Path:
+        return bl.utils.ensure_parent(self.entry_dir(elem_id) / self.elems_key)
 
-    def model_workspace(self, model_id: str) -> Path:
-        return bl.utils.ensure_dir(self.entry_dir(model_id) / self._workspace_key)
+    def elem_workspace(self, elem_id: str) -> Path:
+        return bl.utils.ensure_dir(self.entry_dir(elem_id) / self.workspace_key)
 
     def _initialize_lookup_table(self) -> None:
         self._lookup_table = {
@@ -174,78 +185,78 @@ class Manager(
                 self._initialize_lookup_table()
                 self.load_lookup_table()
 
-    def save_model(self, model, path: PathType) -> None:
+    def save_elem(self, elem, path: PathType) -> None:
         path = bl.utils.ensure_parent(path)
-        self._save_method(model, path)
+        self._save_method(elem, path)
 
-    def load_model(self, path: PathType):
+    def load_elem(self, path: PathType):
         path = bl.utils.ensure_resolved(path)
         return self._load_method(path)
 
     @overload
-    def contents(self, model_id: None) -> dict: ...
+    def contents(self, elem_id: None) -> dict: ...
     @overload
-    def contents(self, model_id: str): ...
+    def contents(self, elem_id: str): ...
 
-    def contents(self, model_id=None):
-        if model_id is None:
+    def contents(self, elem_id=None):
+        if elem_id is None:
             return {
-                model_id: self.contents(model_id)
-                for model_id in self.entries
+                elem_id: self.contents(elem_id)
+                for elem_id in self.entries
             }
         else:
-            return self.entries.get(model_id, {}).get(self.contents_key)
+            return self.entries.get(elem_id, {}).get(self.elems_key)
 
     @overload
-    def metadata(self, model_id: None) -> dict: ...
+    def metadata(self, elem_id: None) -> dict: ...
     @overload
-    def metadata(self, model_id: str): ...
+    def metadata(self, elem_id: str): ...
 
-    def metadata(self, model_id=None):
-        if model_id is None:
+    def metadata(self, elem_id=None):
+        if elem_id is None:
             return {
-                model_id: self.metadata(model_id)
-                for model_id in self.entries
+                elem_id: self.metadata(elem_id)
+                for elem_id in self.entries
             }
         else:
-            return self.entries.get(model_id, {}).get(self.metadata_key, {})
+            return self.entries.get(elem_id, {}).get(self.metadata_key, {})
 
     @overload
-    def model_creator(self, model_id: None) -> dict: ...
+    def elem_creator(self, elem_id: None) -> dict: ...
     @overload
-    def model_creator(self, model_id: str): ...
+    def elem_creator(self, elem_id: str): ...
 
-    def model_creator(self, model_id=None):
-        if model_id is None:
+    def elem_creator(self, elem_id=None):
+        if elem_id is None:
             return {
-                model_id: self.model_creator(model_id)
-                for model_id in self.entries
+                elem_id: self.elem_creator(elem_id)
+                for elem_id in self.entries
             }
         else:
-            return self.contents(model_id).get(self.creator_key)
+            return self.contents(elem_id).get(self.creator_key)
 
     @overload
-    def description(self, model_id: None) -> dict: ...
+    def description(self, elem_id: None) -> dict: ...
     @overload
-    def description(self, model_id: str): ...
+    def description(self, elem_id: str): ...
 
-    def description(self, model_id=None):
-        if model_id is None:
+    def description(self, elem_id=None):
+        if elem_id is None:
             return {
-                model_id: self.description(model_id)
-                for model_id in self.entries
+                elem_id: self.description(elem_id)
+                for elem_id in self.entries
             }
         else:
-            return self.contents(model_id).get(self.description_key, {})
+            return self.contents(elem_id).get(self.description_key, {})
 
-    def _parse_index(self, model_id) -> int:
-        return int(parse.parse(self.id_fmt, model_id)[self.index_key])
+    def _parse_index(self, elem_id) -> int:
+        return int(parse.parse(self.id_fmt, elem_id)[self.index_key])
 
     def _format_index(self, index) -> str:
         return self.id_fmt.format(**{self.index_key: index})
 
-    def new_model_id(self) -> str:
-        '''Return a model id that does not exist yet
+    def new_elem_id(self) -> str:
+        '''Return a elem id that does not exist yet
         '''
         indices = sorted(
             mit.map_except(
@@ -278,7 +289,7 @@ class Manager(
         # support creator type
         elif hasattr(creator, 'creator') and hasattr(creator.creator, 'creator_name'):
             return creator.creator.creator_name
-        elif hasattr(creator, 'creator_name'):  # support model creator
+        elif hasattr(creator, 'creator_name'):  # support elem creator
             return creator.creator_name
         else:
             return str(creator)
@@ -328,16 +339,16 @@ class Manager(
         metadata = self._resolve_metadata(metadata=metadata, path=path)
 
         if path is None:
-            raise TypeError(f'invalid model path: {path}')
+            raise TypeError(f'invalid elem path: {path}')
 
         return {
-            self.contents_key: contents,
+            self.elems_key: contents,
             self.metadata_key: {
                 self.path_key: path
             }
         }
 
-    def model_id(
+    def elem_id(
             self,
             contents: Optional[Mapping] = None,
             description: Optional[Mapping] = None,
@@ -353,17 +364,17 @@ class Manager(
             value=contents,
             cmp=bl.utils.json_equivalent
         )
-        model_id = mit.only(candidates, default=_sentinel)
+        elem_id = mit.only(candidates, default=_sentinel)
 
-        if model_id is not _sentinel:
-            return model_id
+        if elem_id is not _sentinel:
+            return elem_id
         elif missing_ok:
-            return self.new_model_id()
+            return self.new_elem_id()
         else:
             raise ValueError(
-                f'could not find model with the following contents: {contents}')
+                f'could not find elem with the following contents: {contents}')
 
-    def has_model(
+    def has_elem(
             self,
             contents: Optional[Mapping] = None,
             description: Optional[Mapping] = None,
@@ -371,7 +382,7 @@ class Manager(
             creator_name: Optional[str] = None,
     ) -> bool:
         try:
-            return self.model_id(
+            return self.elem_id(
                 contents=contents,
                 description=description,
                 creator=creator,
@@ -381,19 +392,19 @@ class Manager(
         except ValueError:
             return False
 
-    def _repeated_models(self) -> Tuple[Dict[str, List[str]], List[str]]:
+    def _repeated_elems(self) -> Tuple[Dict[str, List[str]], List[str]]:
         all_contents = self.contents().items()
 
         repetition_dict = {
-            model_id: sorted(
+            elem_id: sorted(
                 {
                     other_id
                     for other_id, other_contents in all_contents
-                    if other_id != model_id and bl.utils.json_equivalent(contents, other_contents)
+                    if other_id != elem_id and bl.utils.json_equivalent(contents, other_contents)
                 },
                 key=self._parse_index
             )
-            for model_id, contents in all_contents
+            for elem_id, contents in all_contents
         }
 
         repeated = sorted(
@@ -407,13 +418,13 @@ class Manager(
 
         return repetition_dict, repeated
 
-    def _retrieve_model(
+    def _retrieve_elem(
             self,
             path: PathType,
             raise_if_load_fails: bool
     ) -> Tuple[bool, Any]:
         try:
-            return True, self.load_model(path)
+            return True, self.load_elem(path)
         except tuple(getattr(self._load_method, 'expected_exceptions', (FileNotFoundError, OSError))):
             if self.verbose >= 1:
                 print('Load failed')
@@ -424,25 +435,25 @@ class Manager(
     def update_entries(
             self,
             updater: Callable[[str, Parameters], Any],
-            model_ids: Optional[Iterable[str]] = None,
+            elem_ids: Optional[Iterable[str]] = None,
             save: bool = True
     ) -> None:
-        if model_ids is None:
-            model_ids = self.entries
+        if elem_ids is None:
+            elem_ids = self.entries
 
         self.load_lookup_table()
 
         entries = self.entries
-        for model_id in model_ids:
-            old_entry = copy.deepcopy(entries[model_id])
-            new_entry = updater(model_id, old_entry)
+        for elem_id in elem_ids:
+            old_entry = copy.deepcopy(entries[elem_id])
+            new_entry = updater(elem_id, old_entry)
 
-            self[model_id] = new_entry
+            self[elem_id] = new_entry
 
         if save:
             self.save_lookup_table()
 
-    def retrieve_model(
+    def retrieve_elem(
             self,
             contents: Optional[Mapping] = None,
             description: Optional[Mapping] = None,
@@ -450,10 +461,10 @@ class Manager(
             creator_name: Optional[str] = None,
             raise_if_load_fails: bool = False,
     ) -> Tuple[bool, Any]:
-        if not self.has_model(contents=contents, description=description, creator=creator, creator_name=creator_name):
+        if not self.has_elem(contents=contents, description=description, creator=creator, creator_name=creator_name):
             return False, None
 
-        model_id = self.provide_entry(
+        elem_id = self.provide_entry(
             contents=contents,
             description=description,
             creator=creator,
@@ -462,43 +473,43 @@ class Manager(
             missing_ok=False
         )
 
-        path = self.model_path(model_id)
+        path = self.elem_path(elem_id)
 
-        return self._retrieve_model(
+        return self._retrieve_elem(
             path=path,
             raise_if_load_fails=raise_if_load_fails
         )
 
-    def retrieve_models(
+    def retrieve_elems(
             self,
             entry_pred: Optional[Callable[[Mapping], bool]] = None
     ) -> Iterable[Tuple[str, Any]]:
         if entry_pred is None:
-            models = self.entries.keys()
+            elems = self.entries.keys()
         else:
-            models = (
-                model_id
-                for model_id, entry in self.entries.items()
+            elems = (
+                elem_id
+                for elem_id, entry in self.entries.items()
                 if entry_pred(entry)
             )
 
-        models = (
-            (model_id, self.model_path(model_id))
-            for model_id in models
+        elems = (
+            (elem_id, self.elem_path(elem_id))
+            for elem_id in elems
         )
 
-        models = (
-            (model_id, self._retrieve_model(path, raise_if_load_fails=False))
-            for model_id, path in models
+        elems = (
+            (elem_id, self._retrieve_elem(path, raise_if_load_fails=False))
+            for elem_id, path in elems
         )
 
-        models = (
-            (model_id, model)
-            for model_id, (success, model) in models
+        elems = (
+            (elem_id, elem)
+            for elem_id, (success, elem) in elems
             if success
         )
 
-        return models
+        return elems
 
     def provide_entry(
             self,
@@ -512,24 +523,24 @@ class Manager(
         contents = self._resolve_contents(
             contents=contents, description=description, creator=creator, creator_name=creator_name)
 
-        model_id = self.model_id(
+        elem_id = self.elem_id(
             contents=contents,
             missing_ok=missing_ok
         )
-        path = self.model_path(model_id)
-        model_rel_path = bl.utils.relative_path(self.entries_dir, path)
+        path = self.elem_path(elem_id)
+        elem_rel_path = bl.utils.relative_path(self.entries_dir, path)
 
         entry = self._resolve_entry(
             contents=contents,
-            path=model_rel_path
+            path=elem_rel_path
         )
 
         if include:
-            self[model_id] = entry
+            self[elem_id] = entry
 
-        return model_id
+        return elem_id
 
-    def provide_model(
+    def provide_elem(
             self,
             contents: Optional[Mapping] = None,
             description: Optional[Mapping] = None,
@@ -550,7 +561,7 @@ class Manager(
             bl.utils.print_header('Params', level=1)
             print(params)
 
-        model_id = self.provide_entry(
+        elem_id = self.provide_entry(
             contents=contents,
             description=description,
             creator=creator,
@@ -559,20 +570,20 @@ class Manager(
             missing_ok=True
         )
 
-        path = self.model_path(model_id)
+        path = self.elem_path(elem_id)
 
         if load:
-            success, model = self._retrieve_model(
+            success, elem = self._retrieve_elem(
                 path=path, raise_if_load_fails=raise_if_load_fails)
             if success:
-                return model
+                return elem
 
         if unpack_parameters:
-            model = creator(**params)
+            elem = creator(**params)
         else:
-            model = creator(params)
+            elem = creator(params)
 
         if save:
-            self.save_model(model, path)
+            self.save_elem(elem, path)
 
-        return model
+        return elem
