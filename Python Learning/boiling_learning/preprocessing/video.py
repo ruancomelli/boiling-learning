@@ -7,11 +7,14 @@ from typing import (
     Callable,
     Iterable,
     Iterator,
+    List,
     Optional,
     Union,
     Tuple
 )
 import string
+import operator
+from itertools import accumulate
 
 from parse import parse
 from more_itertools import (
@@ -35,6 +38,7 @@ from boiling_learning.utils import PathType
 # >>> ffmpeg -i {video_path} -f image2 {output_path}
 # See <https://stackoverflow.com/a/50422454/5811400>
 # >>> ffmpeg -i {video_path} -vsync 0 {output_path}
+
 
 def convert_video(
         in_path: PathType,
@@ -108,7 +112,32 @@ def extract_frames_ffmpeg(
         print('Command list =', command_list)
 
     subprocess.run(command_list)
-    
+
+
+def chunked_filename_pattern(
+        chunk_sizes: List[int],
+        chunk_name: str = '{min_index}-{max_index}',
+        filename: PathType = 'frame{index}.png',
+        index_key: str = 'index',
+        min_index_key: str = 'min_index',
+        max_index_key: str = 'max_index'
+) -> Callable[[int], Path]:
+    chunks = accumulate(reversed(chunk_sizes), operator.mul)
+
+    def filename_pattern(index: int) -> Path:
+        from pathlib import Path
+
+        current = Path(filename.format(**{index_key: index}))
+        for chunk_size in chunks:
+            min_index = (index // chunk_size) * chunk_size
+            max_index = min_index + chunk_size - 1
+            current_chunk_name = chunk_name.format(
+                **{min_index_key: min_index, max_index_key: max_index})
+            current = Path(current_chunk_name) / current
+
+        return current
+    return filename_pattern
+
 
 def make_callable_filename_pattern(
         outputdir: PathType,
@@ -205,6 +234,9 @@ def extracted_frames_count(
         tmp_dir: Optional[PathType] = None,
         fast_frames_count: bool = False,
         metadata_path: Optional[PathType] = None,
+        recount_source: bool = False,
+        recount_tmp: bool = False,
+        recount_dest: bool = False,
         verbose: bool = False
 ) -> Tuple[int, Optional[int], int]:
     use_metadata = metadata_path is not None
@@ -216,9 +248,11 @@ def extracted_frames_count(
         metadata_path = bl.utils.ensure_parent(metadata_path, root=outputdir)
         if metadata_path.is_file():
             metadata = bl.io.load_json(metadata_path)
-            video_frames_count = metadata.get('video', {}).get(fast_key)
         else:
             metadata = dict()
+
+    if use_metadata and not recount_source:
+        video_frames_count = metadata.get('video', {}).get(fast_key)
 
     if video_frames_count is None:
         video_frames_count = count_frames(video_path, fast=fast_frames_count)
@@ -230,7 +264,7 @@ def extracted_frames_count(
     tmp_dir_count = None
     if use_tmp_dir:
         rel_tmp_dir = bl.utils.relative_path(outputdir, tmp_dir)
-        if use_metadata:
+        if use_metadata and not recount_tmp:
             tmp_dir_count = metadata.get('tmp_dir', {}).get(rel_tmp_dir)
         if tmp_dir_count is None:
             tmp_dir_count = count_frames_in_dir(tmp_dir)
@@ -238,14 +272,20 @@ def extracted_frames_count(
             metadata.setdefault('tmp_dir', {})[rel_tmp_dir] = tmp_dir_count
             bl.io.save_json(metadata, metadata_path)
 
-        extracted_count = count_frames_in_dir(
-            outputdir, frame_suffix=frame_suffix, exclude=tmp_dir, exclude_count=tmp_dir_count)
-    else:
-        extracted_count = count_frames_in_dir(
-            outputdir, frame_suffix=frame_suffix)
+    extracted_count = None
+    if use_metadata and not recount_dest:
+        extracted_count = metadata.get('extracted')
+
+    if extracted_count is None:
+        if use_tmp_dir:
+            extracted_count = count_frames_in_dir(
+                outputdir, frame_suffix=frame_suffix, exclude=tmp_dir, exclude_count=tmp_dir_count)
+        else:
+            extracted_count = count_frames_in_dir(
+                outputdir, frame_suffix=frame_suffix)
 
     if use_metadata:
-        metadata['extracted'] = tmp_dir_count
+        metadata['extracted'] = extracted_count
         bl.io.save_json(metadata, metadata_path)
 
     if verbose:
@@ -278,7 +318,7 @@ def extract_frames(
     outputdir = bl.utils.ensure_dir(outputdir)
     if verbose:
         print(
-            f'Extracting: {bl.utils.shorten_path(video_path, max_len=52)} -> {bl.utils.shorten_path(outputdir, max_len=52)}')
+            f'Extracting frames: {bl.utils.shorten_path(video_path, max_len=52)} -> {bl.utils.shorten_path(outputdir, max_len=52)}')
     verbose_2 = verbose >= 2
 
     # Check for invalid input
@@ -439,19 +479,33 @@ def concat_videos(
 # Source: <https://superuser.com/a/633765>
 def extract_audio(
         video_path: PathType,
-        out_path: PathType
+        out_path: PathType,
+        overwrite: bool = False,
+        verbose: bool = False
 ) -> None:
     out_path = bl.utils.ensure_parent(out_path)
 
-    command_list = [
-        'ffmpeg',
-        '-i', str(video_path),
-        '-c:a', 'copy',
-        '-vn',
-        '-sn',
-        str(out_path)
-    ]
-    subprocess.run(command_list)
+    if verbose:
+        print(
+            f'Extracting audio: {bl.utils.shorten_path(video_path, max_len=52)} -> {bl.utils.shorten_path(out_path, max_len=52)}')
+
+    if overwrite or not out_path.is_file():
+        bl.utils.print_verbose(
+            verbose, 'Audio does not exist or overwrite mode is on. Extracting...', end=' ')
+
+        command_list = [
+            'ffmpeg',
+            '-i', str(video_path),
+            '-c:a', 'copy',
+            '-vn',
+            '-sn',
+            str(out_path)
+        ]
+        subprocess.run(command_list)
+
+        bl.utils.print_verbose(verbose, f'Done.')
+    elif verbose:
+        print(f'Audio already exists. Skipping proccess.')
 
 
 @contextlib.contextmanager
