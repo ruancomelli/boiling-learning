@@ -1,4 +1,3 @@
-from boiling_learning.management.ExperimentImages import *
 from boiling_learning.management.Mirror import *
 from boiling_learning.management.Manager import *
 from boiling_learning.management.ModelCreator import *
