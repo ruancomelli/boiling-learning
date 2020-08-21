@@ -241,3 +241,32 @@ They have two inputs: a RGB image + a depth, which maps each pixel of an image t
   'z': {'^': '^', '9': 89} # or 'z.^': '^', 'z.9': 89
 }
 ```
+
+- [ ] For many parameters, and above all for setting key names, how about creating a specialized `dataclasses.dataclass`? For instance, instead of:
+```python
+class CSVDataset:
+  def __init__(self, path: Path, features_columns: Optional[List[str]] = None, target_column: str = 'target'):
+    if features_columns is None:
+      features_columns = ['image_path']
+    
+    X = pd.read_csv(path, columns=features_columns + [target_column])
+    self.y = X.pop(target_column)
+    self.X = X
+```
+
+we could write:
+
+```python
+@dataclass(frozen=True)
+class CSVDatasetColumns:
+  features_columns: List[str] = field(default_factory=lambda: ['image_path'])
+  target_column: str = 'target'
+
+class CSVDataset:
+  def __init__(self, path: Path, csv_columns: CSVDatasetColumns = CSVDatasetColumns()):
+    X = pd.read_csv(path, columns=csv_columns.features_columns + [csv_columns.target_column])
+    self.y = X.pop(csv_columns.target_column)
+    self.X = X
+```
+
+It may become a little bit more verbose, but it also isolates the logic of parameters. Also, it avoids using string constants directly in the function signature, delegating this responsibility to a helper class.
