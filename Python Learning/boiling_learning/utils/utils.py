@@ -6,6 +6,9 @@ from collections import (
     ChainMap,
     defaultdict
 )
+from collections.abc import (
+    MutableSet
+)
 import operator
 from itertools import product
 from functools import (
@@ -13,9 +16,11 @@ from functools import (
     partial
 )
 from timeit import default_timer
+import typing
 from typing import (
     Any,
     Callable,
+    Collection,
     Container,
     Dict,
     Hashable,
@@ -29,13 +34,16 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    overload
 )
 import shutil
 import tempfile
 from contextlib import contextmanager
 import pprint
 import enum
+from dataclasses import dataclass
 
+from toolz import functoolz
 import matplotlib.pyplot as plt
 import more_itertools as mit
 from more_itertools import unzip
@@ -46,13 +54,43 @@ from boiling_learning.utils.functional import (
     rpartial
 )
 
-_sentinel = object()
+# ---------------------------------- Typing ----------------------------------
+# see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
+PathType = Union[str, 'os.PathLike[str]']
+PackType = Tuple[tuple, dict]
+VerboseType = Union[bool, int]
 
 
+class _SentinelType(enum.Enum):
+    SENTINEL = enum.auto()
+_sentinel = _SentinelType.SENTINEL
+
+T = TypeVar('T')
+SentinelOptional = Union[_SentinelType, T]
+
+
+# ---------------------------------- Utility functions ----------------------------------
 def empty(*args, **kwargs) -> None:
     pass
 
 
+@overload
+def indexify(arg: Iterable) -> Iterator[int]: ...
+
+
+@overload
+def indexify(arg: Collection) -> range: ...
+
+
+def indexify(arg):
+    try:
+        return range(len(arg))
+    except TypeError:
+        for idx, _ in enumerate(arg):
+            yield idx
+
+
+# TODO: in Python 3.7+, use Literal[True] and Literal[False] to distinguish between the possible input and output types
 def constant(value, call_value: bool = False) -> Callable:
     if call_value:
         def _constant(*args, **kwargs):
@@ -80,9 +118,9 @@ def comment(
 
 
 def remove_duplicates(
-    iterable: Iterable,
+    iterable: Iterable[T],
     key: Union[None, object, Dict, Callable] = _sentinel
-) -> Iterable:
+) -> Iterable[T]:
     # See <https://more-itertools.readthedocs.io/en/stable/api.html#more_itertools.unique_everseen>
 
     if key is _sentinel:
@@ -105,6 +143,51 @@ def remove_duplicates(
             iterable,
             key=key
         )
+
+
+def reorder(
+    iterable: Sequence[T],
+    indices: Iterable[int]
+) -> Iterable[T]:
+    return map(iterable.__getitem__, indices)
+
+
+def argmin(
+    iterable: Iterable
+) -> int:
+    return min(
+        enumerate(iterable),
+        key=operator.itemgetter(1)
+    )[0]
+
+
+def argmax(
+    iterable: Iterable
+) -> int:
+    return max(
+        enumerate(iterable),
+        key=operator.itemgetter(1)
+    )[0]
+
+
+def argsorted(iterable: Iterable) -> Iterable[int]:
+    return map(
+        operator.itemgetter(0),
+        sorted(
+            enumerate(iterable),
+            key=operator.itemgetter(1)
+        )
+    )
+
+
+def multipop(
+    lst: List,
+    indices: Container[int]
+):
+    pop = [lst[i] for i in indices]
+    lst[:] = [v for i, v in enumerate(lst) if i not in indices]
+
+    return pop
 
 
 def has_duplicates(iterable: Iterable) -> bool:
@@ -168,9 +251,10 @@ def alternate_iter(
         (2, 'a', 'beta')]
     '''
     default_indices = tuple(default_indices)
-    default_indices = default_indices + (0,)*(len(iterables) - len(default_indices))
-        
-    if skip_repeated: 
+    default_indices = default_indices + \
+        (0,)*(len(iterables) - len(default_indices))
+
+    if skip_repeated:
         yield tuple(iterable[default_indices[idx]] for idx, iterable in enumerate(iterables))
 
     for iterable_index, iterable in enumerate(iterables):
@@ -183,7 +267,8 @@ def alternate_iter(
         tail = tuple(
             tail[tail_idx]
             for tail, tail_idx in zip(
-                iterables[iterable_index+1:], default_indices[iterable_index+1:]
+                iterables[iterable_index +
+                          1:], default_indices[iterable_index+1:]
             )
         )
         if skip_repeated:
@@ -494,31 +579,31 @@ def crop_array(
     idx = check_value_match(
         [
             dict(
-                lims=is_not_None,
-                x_min=is_None,
-                x_max=is_None,
-                y_min=is_None,
-                y_max=is_None,
-                x_lim=is_None,
-                y_lim=is_None
+                lims=is_not(None),
+                x_min=is_(None),
+                x_max=is_(None),
+                y_min=is_(None),
+                y_max=is_(None),
+                x_lim=is_(None),
+                y_lim=is_(None)
             ),
             dict(
-                lims=is_None,
-                x_min=is_not_None,
-                x_max=is_not_None,
-                y_min=is_not_None,
-                y_max=is_not_None,
-                x_lim=is_None,
-                y_lim=is_None
+                lims=is_(None),
+                x_min=is_not(None),
+                x_max=is_not(None),
+                y_min=is_not(None),
+                y_max=is_not(None),
+                x_lim=is_(None),
+                y_lim=is_(None)
             ),
             dict(
-                lims=is_None,
-                x_min=is_None,
-                x_max=is_None,
-                y_min=is_None,
-                y_max=is_None,
-                x_lim=is_not_None,
-                y_lim=is_not_None
+                lims=is_(None),
+                x_min=is_(None),
+                x_max=is_(None),
+                y_min=is_(None),
+                y_max=is_(None),
+                x_lim=is_not(None),
+                y_lim=is_not(None)
             )
         ],
         dict(
@@ -548,14 +633,14 @@ def shift_array(
     idx = check_value_match(
         [
             {
-                'shifts': is_None,
-                'shift_x': is_not_None,
-                'shift_y': is_not_None,
+                'shifts': is_(None),
+                'shift_x': is_not(None),
+                'shift_y': is_not(None),
             },
             {
-                'shifts': is_not_None,
-                'shift_x': is_None,
-                'shift_y': is_None,
+                'shifts': is_not(None),
+                'shift_x': is_(None),
+                'shift_y': is_(None),
             }
         ],
         {
@@ -629,22 +714,28 @@ def relative_path(origin, destination):
 
 
 def ensure_resolved(
-        path,
-        root=None
-):
+        path: PathType,
+        root: Optional[PathType] = None
+) -> Path:
     path = Path(path)
     if root is not None and not path.is_absolute():
         path = Path(root) / path
     return path.resolve()
 
 
-def ensure_dir(path, root=None):
+def ensure_dir(
+        path: PathType,
+        root: Optional[PathType] = None
+) -> Path:
     path = ensure_resolved(path, root=root)
     path.mkdir(exist_ok=True, parents=True)
     return path
 
 
-def ensure_parent(path, root=None):
+def ensure_parent(
+        path: PathType,
+        root: Optional[PathType] = None
+) -> Path:
     path = ensure_resolved(path, root=root)
     path.parent.mkdir(exist_ok=True, parents=True)
     return path
@@ -668,16 +759,16 @@ def remove_copy(directory, pattern):
 # Source: https://stackoverflow.com/a/34236245/5811400
 
 
-def is_parent_dir(parent, subdir):
-    parent = Path(parent).resolve().absolute()
-    subdir = Path(subdir).resolve().absolute()
+def is_parent_dir(parent: PathType, subdir: PathType) -> bool:
+    parent = ensure_resolved(parent)
+    subdir = ensure_resolved(subdir)
     return parent in subdir.parents
 
 # Source: https://stackoverflow.com/a/57892171/5811400
 
 
 def rmdir(path, recursive=False, keep=False, missing_ok=False):
-    path = Path(path)
+    path = ensure_resolved(path)
 
     if not path.is_dir():
         if missing_ok:
@@ -710,16 +801,31 @@ def group_files(path, keyfunc=None):
 
 def mover(
     out_dir,
+    head: Optional[PathType] = None,
     up_level: int = 0,
     make_dir: bool = True,
     head_aggregator=None,
-    verbose: bool = False
+    verbose: VerboseType = False
 ):
-    out_dir = ensure_resolved(out_dir)
+    if make_dir:
+        out_dir = ensure_dir(out_dir)
+    else:
+        out_dir = ensure_resolved(out_dir)
 
-    def wrapper(in_path):
+    if head is not None and up_level != 0:
+        raise ValueError('when \'head\' is given, up_level must be 0')
+
+    if head is not None:
+        def get_head(in_path):
+            return head
+    else:
+        # up_level is not None
+        def get_head(in_path):
+            return in_path.parents[up_level]
+
+    def wrapper(in_path: PathType):
         in_path = ensure_resolved(in_path)
-        head = in_path.parents[up_level]
+        head = get_head(in_path)
         tail = in_path.relative_to(head)
 
         if head_aggregator is None:
@@ -729,11 +835,10 @@ def mover(
                 head_aggregator.join([head.name, out_dir.name])) / tail
 
         if make_dir:
-            out_path.parent.mkdir(exist_ok=True, parents=True)
+            out_path = ensure_parent(out_path)
 
-        if verbose:
-            print(f'mover: up_level={up_level}; make_dir={make_dir}; head_aggregator={head_aggregator}')
-            print(f'"{bl.utils.shorten_path(video_path, max_len=40)}" -> "{bl.utils.shorten_path(output_path, max_len=40)}"')
+        if verbose >= 2:
+            print(f'{in_path} -> {out_path}')
 
         return out_path
 
@@ -812,28 +917,6 @@ def elapsed_timer():
 # ---------------------------------- Class printing ----------------------------------
 
 
-class SimpleRepr:
-    """A mixin implementing a simple __repr__."""
-    # Source: <https://stackoverflow.com/a/44595303/5811400>
-
-    def __repr__(self):
-        class_name = self.__class__.__name__
-        address = id(self) & 0xFFFFFF
-        attrs = ', '.join(f'{key}={value!r}' for key,
-                          value in self.__dict__.items())
-
-        return f'<{class_name} @{address:x} {attrs}>'
-
-
-class SimpleStr:
-    def __str__(self):
-        class_name = self.__class__.__name__
-        attrs = ', '.join(f'{key}={value}' for key,
-                          value in self.__dict__.items())
-
-        return f'{class_name}({attrs})'
-
-
 def simple_pprint(self, obj, stream, indent, allowance, context, level):
     """
     Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
@@ -878,6 +961,34 @@ def simple_pprint_class(cls):
 # ---------------------------------- Mixins ----------------------------------
 
 
+@dataclass
+class Named(typing.Generic[T]):
+    name: str
+    value: T
+
+
+class SimpleRepr:
+    """A mixin implementing a simple __repr__."""
+    # Source: <https://stackoverflow.com/a/44595303/5811400>
+
+    def __repr__(self) -> str:
+        class_name = self.__class__.__name__
+        address = id(self) & 0xFFFFFF
+        attrs = ', '.join(f'{key}={value!r}' for key,
+                          value in self.__dict__.items())
+
+        return f'<{class_name} @{address:x} {attrs}>'
+
+
+class SimpleStr:
+    def __str__(self) -> str:
+        class_name = self.__class__.__name__
+        attrs = ', '.join(f'{key}={value}' for key,
+                          value in self.__dict__.items())
+
+        return f'{class_name}({attrs})'
+
+
 class DictEq:
     def __eq__(self, other):
         if not isinstance(other, __class__):
@@ -888,17 +999,108 @@ class DictEq:
         if not isinstance(other, __class__):
             return NotImplemented
         return not self.__eq__(other)
-      
+
 # ---------------------------------- Collections ----------------------------------
-# class ChainList:
-#     def __init__(self, *lists):
-#         self.lists = 
 
 
-# ---------------------------------- Typing ----------------------------------
-# see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
-PathType = Union[str, bytes, os.PathLike]
-PackType = Tuple[tuple, dict]
+class Ranges(MutableSet):
+    @staticmethod
+    def to_range(start, stop=None):
+        if stop is None:
+            return range(start, start+1)
+        else:
+            step = 1 if stop >= start else -1
+            return range(start, stop+1, step)
+
+    def __init__(self, ints: Iterable[int]):
+        self.ranges = SortedSet(
+            key=operator.itemgetter(0)
+        )
+
+        # Source: https://stackoverflow.com/a/47642650/5811400
+        for group in mit.consecutive_groups(sorted(ints)):
+            group = list(group)
+            if len(group) == 1:
+                self.ranges.add(self.to_range(group[0]))
+            else:
+                self.ranges.add(self.to_range(group[0], group[-1]))
+
+        self._len = sum(map(len, self.ranges))
+
+    def __contains__(self, elem):
+        return any(
+            map(contains(elem), self.ranges)
+        )
+
+    def __iter__(self):
+        return it.chain.from_iterable(self.ranges)
+
+    def __len__(self):
+        return self._len
+
+    def _merge_ranges(self, idx):
+        self.ranges[idx].stop += len(self.ranges[idx+1])
+        self.remove(idx+1)
+
+    def add(self, elem):
+        if elem not in self:
+            relem = self.to_range(elem)
+            self.ranges.add(relem)
+            idx = self.ranges.index(relem)
+
+            if idx < len(self.ranges)-1 and elem == self.ranges[idx+1][0]-1:
+                self._merge_ranges(idx)
+
+            if idx > 0 and elem == self.ranges[idx-1].stop:
+                self._merge_ranges(idx-1)
+
+    def discard(self, elem):
+        for idx, r in enumerate(self.ranges):
+            if elem in r:
+                break
+        else:
+            raise KeyError(elem)
+
+        if elem == r[0]:
+            self.ranges[idx].start += 1
+        elif elem == r[-1]:
+            self.ranges[idx].stop -= 1
+        else:
+            del self.ranges[idx]
+            self.ranges.add(self.to_range(r[0], elem))
+            self.ranges.add(self.to_range(elem+1, r[-1]))
+
+    def __str__(self):
+        as_str = ', '.join(
+            (f'[{r[0]} {r[-1]}]' if len(r) > 1 else str(r[0]))
+            for r in self.ranges
+        )
+        return f'Ranges({as_str})'
+
+
+# class DateTimeRange(collections.abc.Sequence):
+#     def __init__(
+#         self,
+#         start,
+#         stop,
+#         step
+#     ):
+
+
+# ---------------------------------- Timing ----------------------------------
+
+
+def get_timestamp(fmt='%Y-%m-%dT%H:%M:%SZ'):
+    from datetime import datetime
+
+    return datetime.now().strftime(fmt)
+
+# ---------------------------------- Enum ----------------------------------
+
+
+class NoValueEnum(Enum):
+    def __repr__(self):
+        return '<%s.%s>' % (self.__class__.__name__, self.name)
 
 # ---------------------------------- Argument generator ----------------------------------
 
@@ -946,12 +1148,13 @@ def contains(elem):
 
 
 def contained(container):
-    return partial(operator.contains, container)
+    return container.__contains__
 
 
-def is_None(x):
-    return x is None
+def is_(x) -> Callable[[Any], bool]:
+    return partial(operator.is_, x)
 
-
-def is_not_None(x):
-    return x is not None
+is_not = functoolz.compose(
+    functoolz.complement,
+    is_
+)
