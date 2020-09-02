@@ -2,7 +2,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Activation, Input, Flatten, Dense, Dropout, Conv2D, MaxPool2D
 
 import boiling_learning as bl
-from boiling_learning.management import ModelCreator
+from boiling_learning.management import ElementCreator
 from boiling_learning.model.definitions.utils import (
     make_creator_method,
     ProblemType,
@@ -50,7 +50,7 @@ def build(
 
     return model
 
-creator = ModelCreator(
+creator = ElementCreator(
     creator_method=make_creator_method(builder=build),
     creator_name='KramerNet',
     default_params=dict(
