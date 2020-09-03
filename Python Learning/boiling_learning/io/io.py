@@ -7,6 +7,7 @@ from typing import (
     Mapping,
     TypeVar
 )
+import warnings
 
 import h5py
 from tensorflow.keras.models import load_model
@@ -49,6 +50,12 @@ def save_pkl(obj, path: PathType) -> None:
 def save_json(obj, path: PathType) -> None:
     path = ensure_parent(path)
 
+    if path.suffix != '.json':
+        warnings.warn(
+            f'A JSON file is expected, but *path* ends with "{path.suffix}"',
+            category=warnings.RuntimeWarning
+        )
+
     with path.open('w', encoding='utf-8') as file:
         json.dump(obj, file, indent=4, ensure_ascii=False)
 
@@ -82,7 +89,15 @@ def load_pkl(path: PathType):
 
 
 def load_json(path: PathType):
-    with ensure_resolved(path).open('r', encoding='utf-8') as file:
+    path = ensure_resolved(path)
+
+    if path.suffix != '.json':
+        warnings.warn(
+            f'A JSON file is expected, but *path* ends with "{path.suffix}"',
+            category=warnings.RuntimeWarning
+        )
+
+    with path.open('r', encoding='utf-8') as file:
         return json.load(file)
 
 
