@@ -2,7 +2,9 @@ import enum
 
 from boiling_learning.model.model import restore
 
+
 _sentinel = object()
+
 
 class ProblemType(enum.Enum):
     CLASSIFICATION = enum.auto()
@@ -30,57 +32,60 @@ ProblemType.conversion_table = {
     ProblemType.REGRESSION: {'regression', 'heat flux', 'h', 'power'},
 }
 
+
 def default_compiler(model, **params):
     return model.compile(**params)
-    
+
+
 def default_fitter(model, **params):
     return model.fit(**params)
 
+
 def make_creator_method(
-	    builder,
-		compiler=default_compiler,
-		fitter=default_fitter
+        builder,
+        compiler=default_compiler,
+        fitter=default_fitter
 ):
-	def creator_method(
-		verbose,
-		checkpoint,
-		num_classes,
-		problem,
-		strategy,
-		architecture_setup,
-		compile_setup,
-		fit_setup,
-		fetch,
-	):
-		last_epoch, model = restore(**checkpoint)
-		initial_epoch = max(last_epoch, 0)
-		
-		if model is None:
-			with strategy.scope():
-				model = builder(
-					problem=problem,
-					num_classes=num_classes,
-					**architecture_setup
-				)
+    def creator_method(
+        verbose,
+        checkpoint,
+        num_classes,
+        problem,
+        strategy,
+        architecture_setup,
+        compile_setup,
+        fit_setup,
+        fetch,
+    ):
+        last_epoch, model = restore(**checkpoint)
+        initial_epoch = max(last_epoch, 0)
 
-				if compile_setup.get('do', False):
-					compiler(model, **compile_setup['params'])
-					# model.compile(**compile_setup['params'])
+        if model is None:
+            with strategy.scope():
+                model = builder(
+                    problem=problem,
+                    num_classes=num_classes,
+                    **architecture_setup
+                )
 
-		history = None
-		if fit_setup.get('do', False):
-			fit_setup['params']['initial_epoch'] = initial_epoch
-			history = fitter(model, **fit_setup['params'])
-			# history = model.fit(**fit_setup['params'])
+                if compile_setup.get('do', False):
+                    compiler(model, **compile_setup['params'])
+                    # model.compile(**compile_setup['params'])
 
-		available_data = {
-			'model': model,
-			'history': history
-		}
+        history = None
+        if fit_setup.get('do', False):
+            fit_setup['params']['initial_epoch'] = initial_epoch
+            history = fitter(model, **fit_setup['params'])
+            # history = model.fit(**fit_setup['params'])
 
-		return {
-			k: available_data[k]
-			for k in fetch
-		}
+        available_data = {
+            'model': model,
+            'history': history
+        }
 
-	return creator_method
+        return {
+            k: available_data[k]
+            for k in fetch
+        }
+
+    return creator_method

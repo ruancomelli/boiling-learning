@@ -75,7 +75,7 @@ def empty(*args, **kwargs) -> None:
 
 
 @overload
-def indexify(arg: Iterable) -> Iterator[int]: ...
+def indexify(arg: Iterable) -> Iterable[int]: ...
 
 
 @overload

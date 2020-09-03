@@ -15,11 +15,10 @@ from typing import (
 import pandas as pd
 
 import boiling_learning.utils as bl_utils
-import boiling_learning.io as bl_io
-from boiling_learning.preprocessing import video as bl_preprocessing_video
 from boiling_learning.utils import PathType
+from boiling_learning.preprocessing import video as bl_preprocessing_video
 
-VideoDataType = Dict[str, dict]
+VideoDataType = Dict[str, Any]
 
 
 def read_video_data(
@@ -117,7 +116,9 @@ class ImageData:
     def video_suffix(self, new_suffix: str) -> None:
         if not new_suffix.startswith('.'):
             raise ValueError(
-                'video_suffix is expected to start with a dot (\'.\'), and I don\'t know what do if this is not the case. Sorry, raising.')
+                'video_suffix is expected to start with a dot (\'.\'),'
+                'and I don\'t know what do if this is not the case.'
+                'Sorry, raising.')
 
         self._video_suffix = new_suffix
 
@@ -129,7 +130,9 @@ class ImageData:
     def audio_suffix(self, new_suffix: str) -> None:
         if not new_suffix.startswith('.'):
             raise ValueError(
-                'audio_suffix is expected to start with a dot (\'.\'), and I don\'t know what do if this is not the case. Sorry, raising.')
+                'audio_suffix is expected to start with a dot (\'.\'),'
+                'and I don\'t know what do if this is not the case.'
+                'Sorry, raising.')
 
         self._audio_suffix = new_suffix
 
@@ -141,7 +144,9 @@ class ImageData:
     def frame_suffix(self, new_suffix: str) -> None:
         if not new_suffix.startswith('.'):
             raise ValueError(
-                'frame_suffix is expected to start with a dot (\'.\'), and I don\'t know what do if this is not the case. Sorry, raising.')
+                'frame_suffix is expected to start with a dot (\'.\'),'
+                'and I don\'t know what do if this is not the case.'
+                'Sorry, raising.')
 
         self._frame_suffix = new_suffix
 
@@ -169,19 +174,21 @@ class ImageData:
         return self.frames_path.rglob('*' + self.frame_suffix)
 
     @property
-    def subcases(self) -> Iterable[Path]:
+    def subcases(self) -> Iterable[str]:
         return map(
             operator.attrgetter('stem'),
             self.video_paths
         )
 
+    def subcase_frames_path(self, subcase_name: str) -> Path:
+        return self.frames_path / subcase_name
+
     @property
-    def subcase_frames_dict(self) -> Dict[PathType, Iterable[Path]]:
+    def subcase_frames_dict(self) -> Dict[str, Iterable[Path]]:
         # TODO: use caching
 
         return {
-            subcase: (self.frames_path /
-                      subcase).rglob('*' + self.frame_suffix)
+            subcase: self.subcase_frames_path(subcase).rglob('*' + self.frame_suffix)
             for subcase in self.subcases
         }
 
@@ -230,7 +237,6 @@ class ImageData:
             iterate: bool = True
     ) -> None:
         for subcase, video_path in zip(self.subcases, self.video_paths):
-
             if chunk_sizes is None:
                 filename_pattern = f'{subcase}_frame%d{self.frame_suffix}'
             else:

@@ -15,6 +15,7 @@ from skimage.util import crop as skimage_crop
 #                         raise ValueError('auto_input got conflicting arguments.') # TODO: maybe write a better message?
 #                     kwargs[replaced] = val
 
+
 def crop(
         image=None,
         in_path=None,
@@ -25,11 +26,11 @@ def crop(
         bottom=0,
         left=0,
         right=0
-    ):
+):
     # source: <https://stackoverflow.com/questions/33287613/crop-image-in-skimage>
     # TODO: check_value_match here
-        
-    if crop_tuple is None:        
+
+    if crop_tuple is None:
         if crop_dict is None:
             crop_tuple = (
                 (top, bottom),
@@ -47,13 +48,14 @@ def crop(
 
     if image is None:
         image = imread(in_path)
-        
+
     cropped = skimage_crop(image, crop_tuple)
     if out_path is not None:
         imsave(out_path, cropped)
-        
+
     return cropped
-    
+
+
 def shift(
         image=None,
         in_path=None, out_path=None,
@@ -65,30 +67,31 @@ def shift(
 ):
     # source: <https://stackoverflow.com/questions/47961447/shift-image-in-scikit-image-python>
     # TODO: check_value_match here!
-    
+
     if shifts is None:
         if shift_left is None:
             shift_left = - shift_right
         if shift_up is None:
             shift_up = - shift_down
         shifts = (shift_left, shift_up)
-    
+
     if image is None:
         image = imread(in_path)
-        
+
     transform = AffineTransform(translation=shifts)
     shifted = warp(image, transform, mode='wrap', preserve_range=True)
     shifted = shifted.astype(image.dtype)
-    
+
     if out_path is not None:
         imsave(out_path, shifted)
-        
+
     return shifted
+
 
 def flip(image, horizontal=False, vertical=False):
     # TODO: check_value_match here!
     # TODO: use in_path and out_path?
-    
+
     if horizontal and not vertical:
         return image[:, ::-1, ...]
     elif vertical and not horizontal:
@@ -97,21 +100,23 @@ def flip(image, horizontal=False, vertical=False):
         return image[::-1, ::-1, ...]
     else:
         return image
-    
-def downscale(image, shape): 
+
+
+def downscale(image, shape):
     # TODO: use in_path and out_path?
-    
+
     if isinstance(shape, int):
         if image.ndim == 2:
             shape = (shape, shape)
         else:
             shape = (shape, shape, 1)
     elif isinstance(shape, tuple):
-        shape = shape + (1,)*(img.ndim - len(shape))
-    
+        shape = shape + (1,)*(image.ndim - len(shape))
+
     return downscale_local_mean(image, shape)
-    
-# def grayscale(image, **kwargs): 
+
+# def grayscale(image, **kwargs):
 #     return rgb2gray(image, **kwargs)
+
 
 greyscale = grayscale

@@ -355,11 +355,11 @@ class Manager:
 
         return model
 
-# ModelCreator facilitates the interface between creator functions and the Manager.
+# ElementCreator facilitates the interface between creator functions and the Manager.
 # A creator function is any function that takes parameters (or a dict of parameters) and
 # outputs a model (trained or not, compiled or not) and, possibly, additional values such
 # that training history
-class ModelCreator:
+class ElementCreator:
     def __init__(
         self,
         creator_method,
@@ -1208,7 +1208,7 @@ def creator_method(
     return return_dict
 
 # wrap creator_method
-model_creator = ModelCreator(
+model_creator = ElementCreator(
     creator_method,
     creator_name='model_creator',
     expand_params=True
