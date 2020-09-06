@@ -10,6 +10,7 @@ from collections.abc import (
     MutableSet
 )
 import operator
+import itertools
 from itertools import product
 from functools import (
     wraps,
@@ -41,12 +42,18 @@ import tempfile
 from contextlib import contextmanager
 import pprint
 import enum
+import dataclasses
 from dataclasses import dataclass
 
-from toolz import functoolz
+from toolz import (
+    dicttoolz,
+    functoolz
+)
 import matplotlib.pyplot as plt
 import more_itertools as mit
 from more_itertools import unzip
+from pandas.api.types import union_categoricals
+import pandas as pd
 from sortedcontainers import SortedSet
 
 from boiling_learning.utils.functional import (
@@ -63,8 +70,9 @@ VerboseType = Union[bool, int]
 
 class _SentinelType(enum.Enum):
     SENTINEL = enum.auto()
-_sentinel = _SentinelType.SENTINEL
 
+
+_sentinel = _SentinelType.SENTINEL
 T = TypeVar('T')
 SentinelOptional = Union[_SentinelType, T]
 
@@ -86,23 +94,23 @@ def indexify(arg):
     try:
         return range(len(arg))
     except TypeError:
-        for idx, _ in enumerate(arg):
-            yield idx
+        return map(
+            operator.itemgetter(0),
+            enumerate(arg)
+        )
 
 
 # TODO: in Python 3.7+, use Literal[True] and Literal[False] to distinguish between the possible input and output types
-def constant(value, call_value: bool = False) -> Callable:
-    if call_value:
-        def _constant(*args, **kwargs):
-            return value()
-    else:
-        def _constant(*args, **kwargs):
-            return value
+def constant(value: T) -> Callable[..., T]:
+    def _constant(*args, **kwargs):
+        return value
     return _constant
 
 
-def constant_factory(value) -> Callable:
-    return constant(value, call_value=True)
+def constant_factory(value: Callable[[], T]) -> Callable[..., T]:
+    def _constant(*args, **kwargs):
+        return value()
+    return _constant
 
 
 def comment(
@@ -343,8 +351,57 @@ def extract_value(
             return cm.get(key, default)
 
 
-def invert_dict(d):
-    return dict((v, k) for k, v in d.items())
+def invert_dict(d: Mapping):
+    return dicttoolz.itemmap(reversed, d, factory=type(d))
+
+
+class inclusive_bidict(dict):
+    '''Inclusive bidirectional dictionary.
+
+    Here is a class for a bidirectional dict.
+
+    Note that:
+
+    1) The inverse directory bd.inverse auto-updates itself when the standard dict bd is modified.
+    2) The inverse directory bd.inverse[value] is always a list of key such that bd[key] == value.
+    3) Unlike the bidict module from https://pypi.python.org/pypi/bidict, here we can have 2 keys having same value, this is very important.
+
+    Usage:
+    >>>> bd = inclusive_bidict({'a': 1, 'b': 2})
+    >>>> print(bd)                     # {'a': 1, 'b': 2}
+    >>>> print(bd.inverse)             # {1: ['a'], 2: ['b']}
+    >>>> bd['c'] = 1                   # Now two keys have the same value (= 1)
+    >>>> print(bd)                     # {'a': 1, 'c': 1, 'b': 2}
+    >>>> print(bd.inverse)             # {1: ['a', 'c'], 2: ['b']}
+    >>>> del bd['c']
+    >>>> print(bd)                     # {'a': 1, 'b': 2}
+    >>>> print(bd.inverse)             # {1: ['a'], 2: ['b']}
+    >>>> del bd['a']
+    >>>> print(bd)                     # {'b': 2}
+    >>>> print(bd.inverse)             # {2: ['b']}
+    >>>> bd['b'] = 3
+    >>>> print(bd)                     # {'b': 3}
+    >>>> print(bd.inverse)             # {2: [], 3: ['b']}
+
+    Source: <https://stackoverflow.com/a/21894086/5811400>
+    '''
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.inverse = {}
+        for key, value in self.items():
+            self.inverse.setdefault(value, []).append(key)
+
+    def __setitem__(self, key, value):
+        if key in self:
+            self.inverse[self[key]].remove(key)
+        super().__setitem__(key, value)
+        self.inverse.setdefault(value, []).append(key)
+
+    def __delitem__(self, key):
+        self.inverse.setdefault(self[key], []).remove(key)
+        if self[key] in self.inverse and not self.inverse[self[key]]:
+            del self.inverse[self[key]]
+        super().__delitem__(key)
 
 
 def extract_keys(d, value, cmp=operator.eq):
@@ -372,6 +429,89 @@ class KeyedDefaultDict(defaultdict):
         else:
             ret = self[key] = self.default_factory(key)
             return ret
+
+
+def is_dataclass_instance(obj) -> bool:
+    return dataclasses.is_dataclass(obj) and not isinstance(obj, type)
+
+
+def is_dataclass_class(Type) -> bool:
+    return dataclasses.is_dataclass(Type) and isinstance(Type, type)
+
+
+def dataclass_from_mapping(
+        mapping: Mapping[str, Any],
+        dataclass_factory: Callable[..., T],
+        key_map: Optional[Union[dataclass, Mapping[str, str]]] = None
+) -> T:
+    if not is_dataclass_class(dataclass_factory):
+        raise ValueError('*dataclass_factory* must be a dataclass.')
+
+    dataclass_fields = dataclasses.fields(dataclass_factory)
+
+    if key_map is None:
+        return dataclass_factory(
+            **dicttoolz.keyfilter(
+                dataclass_fields.__contains__,
+                mapping
+            )
+        )
+    else:
+        if is_dataclass_instance(key_map):
+            key_map = dataclasses.asdict(key_map)
+
+        key_map = dicttoolz.keyfilter(
+            dataclass_fields.__contains__,
+            key_map
+        )
+        translator = dicttoolz.itemmap(reversed, key_map).get
+        mapping = {
+            translator(key, key): value
+            for key, value in mapping.items()
+        }
+        return dataclass_from_mapping(
+            mapping,
+            dataclass_factory
+        )
+
+
+def to_parent_dataclass(obj: dataclass, parent_factory: Callable[..., T]) -> T:
+    if not is_dataclass_class(parent_factory):
+        raise ValueError('*parent_factory* must be a dataclass.')
+
+    if not is_dataclass_instance(obj):
+        raise ValueError('*obj* must be a dataclass instance.')
+
+    if not isinstance(obj, parent_factory):
+        raise ValueError('*obj* must be an instance of *parent_factory*.')
+
+    return dataclass_from_mapping(
+        dataclasses.asdict(obj),
+        parent_factory
+    )
+
+
+def concatenate_dataframes(dfs: Iterable[pd.DataFrame]) -> pd.DataFrame:
+    """Concatenate while preserving categorical columns.
+
+    Source: <https://stackoverflow.com/a/57809778/5811400>
+
+    NB: We change the categories in-place for the input dataframes"""
+
+    dfs = tuple(dfs)
+
+    # Iterate on categorical columns common to all dfs
+    for col in set.intersection(*(
+            set(df.select_dtypes(include='category').columns)
+            for df in dfs
+    )):
+        # Generate the union category across dfs for this column
+        uc = union_categoricals(tuple(df[col] for df in dfs))
+        # Change to union category for all dataframes
+        for df in dfs:
+            df[col] = pd.Categorical(df[col].values, categories=uc.categories)
+    return pd.concat(dfs)
+
 
 # ---------------------------------- Printing ----------------------------------
 
@@ -519,151 +659,6 @@ def as_json(obj, cls=None):
 def json_equivalent(lhs, rhs, cls=None):
     return as_json(lhs, cls) == as_json(rhs, cls)
 
-# ---------------------------------- Default parameters ----------------------------------
-
-
-def regularize_default(
-    x, cond, default,
-    many=False, many_cond=False, many_default=False,
-    call_default=False
-):
-    # Manage default arguments and passed parameters
-    from itertools import repeat
-
-    if many:
-        cond = cond if many_cond else repeat(cond)
-        default = default if many_default else repeat(default)
-
-        return (
-            regularize_default(
-                x_, cond_, default_,
-                many=False, many_cond=False, many_default=False,
-                call_default=call_default
-            )
-            for x_, cond_, default_ in zip(x, cond, default)
-        )
-
-    if cond(x):
-        return x
-    else:
-        if call_default:
-            return default()
-        else:
-            return default
-
-
-def check_value_match(groups, values_dict):
-    def cond(value):
-        return all(value[1][key](v) for key, v in values_dict.items())
-
-    try:
-        return next(
-            filter(cond, enumerate(groups))
-        )[0]
-    except StopIteration:
-        raise ValueError(f'there is no support for {values_dict}')
-
-# ---------------------------------- Array operations ----------------------------------
-
-
-def crop_array(
-    a,
-    lims=None,
-    x_min=None,
-    x_max=None,
-    y_min=None,
-    y_max=None,
-    x_lim=None,
-    y_lim=None
-):
-    idx = check_value_match(
-        [
-            dict(
-                lims=is_not(None),
-                x_min=is_(None),
-                x_max=is_(None),
-                y_min=is_(None),
-                y_max=is_(None),
-                x_lim=is_(None),
-                y_lim=is_(None)
-            ),
-            dict(
-                lims=is_(None),
-                x_min=is_not(None),
-                x_max=is_not(None),
-                y_min=is_not(None),
-                y_max=is_not(None),
-                x_lim=is_(None),
-                y_lim=is_(None)
-            ),
-            dict(
-                lims=is_(None),
-                x_min=is_(None),
-                x_max=is_(None),
-                y_min=is_(None),
-                y_max=is_(None),
-                x_lim=is_not(None),
-                y_lim=is_not(None)
-            )
-        ],
-        dict(
-            lims=lims,
-            x_min=x_min,
-            x_max=x_max,
-            y_min=y_min,
-            y_max=y_max,
-            x_lim=x_lim,
-            y_lim=y_lim
-        )
-    )
-    if idx == 0:
-        return a[tuple(slice(*lim) for lim in lims)]
-    elif idx == 1:
-        return crop_array(a, lims=[(x_min, x_max), (y_min, y_max)])
-    elif idx == 2:
-        return crop_array(a, lims=[x_lim, y_lim])
-
-
-def shift_array(
-    a,
-    shifts=None,
-    shift_x=None,
-    shift_y=None
-):
-    idx = check_value_match(
-        [
-            {
-                'shifts': is_(None),
-                'shift_x': is_not(None),
-                'shift_y': is_not(None),
-            },
-            {
-                'shifts': is_not(None),
-                'shift_x': is_(None),
-                'shift_y': is_(None),
-            }
-        ],
-        {
-            'shifts': shifts,
-            'shift_x': shift_x,
-            'shift_y': shift_y
-        }
-    )
-    if idx == 0:
-        return shift(a, shifts=(shift_x, shift_y))
-
-    def _shift(a, shifts, axis=0):
-        from numpy import roll
-
-        if shifts:
-            return _shift(
-                roll(a, shifts[0], axis=axis),
-                shifts[1:],
-                axis+1
-            )
-        else:
-            return a
-    return _shift(a, shifts, axis=0)
 
 # ---------------------------------- Iteration ----------------------------------
 
@@ -756,17 +751,15 @@ def remove_copy(directory, pattern):
         if success and original_f.is_file():
             f.unlink()
 
+
 # Source: https://stackoverflow.com/a/34236245/5811400
-
-
 def is_parent_dir(parent: PathType, subdir: PathType) -> bool:
     parent = ensure_resolved(parent)
     subdir = ensure_resolved(subdir)
     return parent in subdir.parents
 
+
 # Source: https://stackoverflow.com/a/57892171/5811400
-
-
 def rmdir(path, recursive=False, keep=False, missing_ok=False):
     path = ensure_resolved(path)
 
@@ -789,12 +782,9 @@ def rmdir(path, recursive=False, keep=False, missing_ok=False):
         ValueError('cannot keep dir when not in recursive mode.')
 
 
-def group_files(path, keyfunc=None):
-    if keyfunc is None:
-        def keyfunc(x): return x.suffix
-
+def group_files(path, keyfunc=operator.attrgetter('suffix')):
     d = {}
-    for p in filter(lambda x: x.is_file(), path.iterdir()):
+    for p in filter(operator.methodcaller('is_file'), path.iterdir()):
         d.setdefault(keyfunc(p), []).append(p)
     return d
 
@@ -888,6 +878,7 @@ def tempdir(suffix=None, prefix=None, dir=None):
 def nullcontext(enter_result=None):
     yield enter_result
 
+
 # ---------------------------------- Timer ----------------------------------
 @contextmanager
 def elapsed_timer():
@@ -914,9 +905,8 @@ def elapsed_timer():
     _Timer.end = end_time
     _Timer.duration = end_time - start_time
 
+
 # ---------------------------------- Class printing ----------------------------------
-
-
 def simple_pprint(self, obj, stream, indent, allowance, context, level):
     """
     Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
@@ -958,9 +948,8 @@ def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, le
 def simple_pprint_class(cls):
     pprint.PrettyPrinter._dispatch[cls.__repr__] = simple_pprint
 
+
 # ---------------------------------- Mixins ----------------------------------
-
-
 @dataclass
 class Named(typing.Generic[T]):
     name: str
@@ -1000,9 +989,8 @@ class DictEq:
             return NotImplemented
         return not self.__eq__(other)
 
+
 # ---------------------------------- Collections ----------------------------------
-
-
 class Ranges(MutableSet):
     @staticmethod
     def to_range(start, stop=None):
@@ -1033,7 +1021,7 @@ class Ranges(MutableSet):
         )
 
     def __iter__(self):
-        return it.chain.from_iterable(self.ranges)
+        return itertools.chain.from_iterable(self.ranges)
 
     def __len__(self):
         return self._len
@@ -1088,23 +1076,19 @@ class Ranges(MutableSet):
 
 
 # ---------------------------------- Timing ----------------------------------
-
-
 def get_timestamp(fmt='%Y-%m-%dT%H:%M:%SZ'):
     from datetime import datetime
 
     return datetime.now().strftime(fmt)
 
+
 # ---------------------------------- Enum ----------------------------------
-
-
 class NoValueEnum(Enum):
     def __repr__(self):
         return '<%s.%s>' % (self.__class__.__name__, self.name)
 
+
 # ---------------------------------- Argument generator ----------------------------------
-
-
 class ArgGenerator:
     def __init__(
             self,
@@ -1147,12 +1131,9 @@ def contains(elem):
     return rpartial(operator.contains, elem)
 
 
-def contained(container):
-    return container.__contains__
-
-
 def is_(x) -> Callable[[Any], bool]:
     return partial(operator.is_, x)
+
 
 is_not = functoolz.compose(
     functoolz.complement,
