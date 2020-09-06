@@ -270,3 +270,18 @@ class CSVDataset:
 ```
 
 It may become a little bit more verbose, but it also isolates the logic of parameters. Also, it avoids using string constants directly in the function signature, delegating this responsibility to a helper class.
+
+- [ ] Perhaps it would be useful to have a class for automatic descriptions. For instance:
+
+```py
+>>> @autodescribe('Random contraster')
+... def transformer(minval, maxval):
+...  return lambda img: tf.image.random_contrast(img, minval, maxval)
+
+>>> print(describe(transformer(0.2, 8)))
+    'Random contraster(0.2, 8)'
+>>> transformer(0.2, 8)(img)
+    ...
+```
+
+- [ ] Instead of extracting frames, we could iterate over video frames. This would save extraction time, and we would only need to save the final static part of the dataset. **Loose definition:** a *static dataset* is one for which it makes sense saving. For instance, cropping images is a static operation because we know before-hand the interest region. On the other hand, a *dynamic dataset* is one that has to be generated at each call to the train function. For instance, random transformations. A transformation pipeline may have two parts: the first, static one, and the second, dynamic.
