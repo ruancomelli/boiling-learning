@@ -9,14 +9,17 @@ from typing import (
 )
 import warnings
 
+import bidict
 import h5py
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 
 from boiling_learning.utils import (
     PathType,
     nullcontext,
-    ensure_resolved,
-    ensure_parent
+    ensure_dir,
+    ensure_parent,
+    ensure_resolved
 )
 
 T = TypeVar('T')
@@ -35,31 +38,6 @@ def save_serialized(
     return save
 
 
-def save_keras_model(keras_model, path: PathType, **kwargs) -> None:
-    path = ensure_parent(path)
-    keras_model.save(path, **kwargs)
-
-
-def save_pkl(obj, path: PathType) -> None:
-    path = ensure_parent(path)
-
-    with path.open('wb') as file:
-        pickle.dump(obj, file, protocol=pickle.HIGHEST_PROTOCOL)
-
-
-def save_json(obj, path: PathType) -> None:
-    path = ensure_parent(path)
-
-    if path.suffix != '.json':
-        warnings.warn(
-            f'A JSON file is expected, but *path* ends with "{path.suffix}"',
-            category=warnings.RuntimeWarning
-        )
-
-    with path.open('w', encoding='utf-8') as file:
-        json.dump(obj, file, indent=4, ensure_ascii=False)
-
-
 def load_serialized(
         load_map: Mapping[T, LoaderFunction[S]]
 ) -> LoaderFunction[Dict[T, S]]:
@@ -73,6 +51,11 @@ def load_serialized(
     return load
 
 
+def save_keras_model(keras_model, path: PathType, **kwargs) -> None:
+    path = ensure_parent(path)
+    keras_model.save(path, **kwargs)
+
+
 def load_keras_model(path: PathType, strategy=None, **kwargs):
     if strategy is None:
         scope = nullcontext()
@@ -83,9 +66,29 @@ def load_keras_model(path: PathType, strategy=None, **kwargs):
         return load_model(path, **kwargs)
 
 
+def save_pkl(obj, path: PathType) -> None:
+    path = ensure_parent(path)
+
+    with path.open('wb') as file:
+        pickle.dump(obj, file, protocol=pickle.HIGHEST_PROTOCOL)
+
+
 def load_pkl(path: PathType):
     with ensure_resolved(path).open('rb') as file:
         return pickle.load(file)
+
+
+def save_json(obj, path: PathType) -> None:
+    path = ensure_parent(path)
+
+    if path.suffix != '.json':
+        warnings.warn(
+            f'A JSON file is expected, but *path* ends with "{path.suffix}"',
+            category=warnings.RuntimeWarning
+        )
+
+    with path.open('w', encoding='utf-8') as file:
+        json.dump(obj, file, indent=4, ensure_ascii=False)
 
 
 def load_json(path: PathType):
@@ -115,3 +118,65 @@ def loader_hdf5(key: str = '') -> LoaderFunction[Any]:
         with h5py.File(str(path), 'r') as hf:
             return hf.get(key)
     return load_hdf5
+
+
+_tf_dtype_dict = bidict.bidict(
+    (dtype.name, dtype)
+    for dtype in (
+        tf.float16, tf.float32, tf.float64,
+        tf.bfloat16,
+        tf.complex64, tf.complex128,
+        tf.int8, tf.int32, tf.int64,
+        tf.uint8, tf.uint16, tf.uint32, tf.uint64, tf.int16,
+        tf.bool,
+        tf.string,
+        tf.qint8, tf.qint16, tf.qint32, tf.quint8,
+        tf.quint16,
+        tf.resource,
+        tf.variant
+    )
+)
+
+
+def _element_spec_to_list(element_spec):
+    return [
+        {
+            'dtype': _tf_dtype_dict.inverse[type_spec.shape.dtype],
+            'shape': list(type_spec.shape)
+        }
+        for type_spec in element_spec
+    ]
+
+
+def _element_list_to_spec(lst):
+    return tuple(
+        tf.TensorSpec(
+            shape=tuple(dct['shape']),
+            dtype=_tf_dtype_dict[dct['dtype']]
+        )
+        for dct in lst
+    )
+
+
+def save_dataset(dataset, path: PathType):
+    path = ensure_dir(path)
+    dataset_path = path / 'dataset'
+    element_spec_path = path / 'element_spec.json'
+
+    save_json(
+        _element_spec_to_list(dataset.element_spec),
+        element_spec_path
+    )
+
+    tf.data.experimental.save(dataset, dataset_path)
+
+
+def load_dataset(path: PathType):
+    path = ensure_resolved(path)
+    dataset_path = path / 'dataset'
+    element_spec_path = path / 'element_spec.json'
+
+    element_spec_list = load_json(element_spec_path)
+    element_spec = _element_list_to_spec(element_spec_list)
+
+    return tf.data.experimental.load(dataset_path, element_spec)
