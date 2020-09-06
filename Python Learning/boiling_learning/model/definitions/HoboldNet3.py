@@ -1,12 +1,12 @@
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Activation, Input, Flatten, Dense, Dropout, Conv2D, MaxPool2D
 
-import boiling_learning as bl
 from boiling_learning.management import ElementCreator
 from boiling_learning.model.definitions.utils import (
     make_creator_method,
     ProblemType,
 )
+
 
 # CNN #3 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.
 def build(
@@ -25,7 +25,7 @@ def build(
     x = Flatten(dtype=hidden_layers_policy)(x)
     x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
-    
+
     if ProblemType.get_type(problem) is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
@@ -39,9 +39,10 @@ def build(
 
     return model
 
+
 creator = ElementCreator(
-    creator_method=make_creator_method(builder=build),
-    creator_name='HoboldNet3',
+    method=make_creator_method(builder=build),
+    name='HoboldNet3',
     default_params=dict(
         verbose=2,
         checkpoint={'restore': False},

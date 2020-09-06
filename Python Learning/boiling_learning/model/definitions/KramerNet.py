@@ -1,12 +1,12 @@
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Activation, Input, Flatten, Dense, Dropout, Conv2D, MaxPool2D
 
-import boiling_learning as bl
 from boiling_learning.management import ElementCreator
 from boiling_learning.model.definitions.utils import (
     make_creator_method,
     ProblemType,
 )
+
 
 def build(
     input_shape,
@@ -17,22 +17,22 @@ def build(
     num_classes=None,
 ):
     input_data = Input(shape=input_shape)
-    
+
     x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
     x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
-    
+
     x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
     x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
-    
+
     x = Conv2D(128, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
     x = Conv2D(128, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
-    
+
     x = Flatten(dtype=hidden_layers_policy)(x)
     x = Dense(256, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
@@ -50,9 +50,10 @@ def build(
 
     return model
 
+
 creator = ElementCreator(
-    creator_method=make_creator_method(builder=build),
-    creator_name='KramerNet',
+    method=make_creator_method(builder=build),
+    name='KramerNet',
     default_params=dict(
         verbose=2,
         checkpoint={'restore': False},

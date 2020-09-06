@@ -1,12 +1,12 @@
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Activation, Input, Flatten, Dense, Dropout, Conv2D, MaxPool2D
 
-import boiling_learning as bl
 from boiling_learning.management import ElementCreator
 from boiling_learning.model.definitions.utils import (
     make_creator_method,
     ProblemType,
 )
+
 
 # CNN #1 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.
 def build(
@@ -38,9 +38,10 @@ def build(
 
     return model
 
+
 creator = ElementCreator(
-    creator_method=make_creator_method(builder=build),
-    creator_name='HoboldNet1',
+    method=make_creator_method(builder=build),
+    name='HoboldNet1',
     default_params=dict(
         verbose=2,
         checkpoint={'restore': False},
