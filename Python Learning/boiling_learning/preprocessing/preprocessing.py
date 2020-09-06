@@ -2,220 +2,63 @@ from dataclasses import dataclass
 from functools import partial
 import itertools as it
 import operator
+import os
 from pathlib import Path
 from typing import (
-    Optional
+    Any,
+    Callable,
+    Iterable,
+    Optional,
+    TypeVar
 )
 
+import pandas as pd
 import tensorflow as tf
 import more_itertools as mit
+import skimage
 from skimage import img_as_float, img_as_ubyte
 from skimage.io import imread, imsave
-import pandas as pd
-import numpy as np
+from toolz import functoolz
+import scipy
 
-from boiling_learning.utils import PathType
 import boiling_learning.utils as bl_utils
 import boiling_learning.model as bl_model
 import boiling_learning as bl
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
+PathType = bl_utils.PathType
+T = TypeVar('T')
 
 
-class ImageDataset(bl_utils.SimpleRepr, bl_utils.SimpleStr):
-    '''
-    TODO: improve this
-    An ImageDataset is a file CSV in df_path and the correspondent images. The file in df_path contains at least two columns. One of this columns contains file paths, and the other the targets for training, validation or test. This is intended for using flow_from_dataframe. There may be an optional column which specifies if that image belongs to the training, the validation or the test sets.
-    '''
-    @dataclass(frozen=True)
-    class ColumnNames:
-        path: str = 'path'
-        target: str = 'target'
-        set: Optional[str] = None
+def interpolate_timeseries(
+        x_ref,
+        y_ref,
+        x
+):
+    f = scipy.interpolate.interp1d(x_ref, y_ref)
+    return f(x)
 
-    @dataclass(frozen=True)
-    class Keys:
-        train: str = bl_model.SplitSubset.TRAIN.to_str()
-        val: str = bl_model.SplitSubset.VAL.to_str()
-        test: str = bl_model.SplitSubset.TEST.to_str()
 
-    def __init__(
-        self,
-        df_path: PathType,
-        column_names: ColumnNames = ColumnNames(),
-        keys: Keys = Keys(),
-        df: Optional[pd.DataFrame] = None,
-        exist_load: bool = False
-    ):
-        self.df_path = bl_utils.ensure_resolved(df_path)
+def sync_dataframes(
+        source_df: pd.DataFrame,
+        dest_df: pd.DataFrame,
+        source_time_column: Optional[str] = None,
+        dest_time_column: Optional[str] = None
+):   
+    if source_time_column is not None:
+        source_df = source_df.set_index(source_time_column)
+    if not isinstance(source_df.index, pd.DatetimeIndex):
+        raise ValueError('the source DataFrame must have a datetime index. Ensure this or pass a valid column name as input.')
 
-        self.path_column = column_names.path
-        self.target_column = column_names.target
-        self.set_column = column_names.set
-        self.train_key = keys.train
-        self.val_key = keys.val
-        self.test_key = keys.test
+    if dest_time_column is not None:
+        dest_df = dest_df.set_index(dest_time_column)
+    if not isinstance(dest_df.index, pd.DatetimeIndex):
+        raise ValueError('the dest DataFrame must have a datetime index. Ensure this or pass a valid column name as input.')
 
-        if exist_load and self.df_path.is_file():
-            self.load()
-        else:
-            if df is None:
-                df = pd.DataFrame()
-            self.df = df
-
-    def load(self, path=None, cheap=False):
-        if path is None:
-            path = self.df_path
-        else:
-            self.df_path = path
-
-        if cheap:
-            if self.set_column is None:
-                usecols = [self.path_column, self.target_column]
-            else:
-                usecols = [self.path_column,
-                           self.target_column, self.set_column]
-            self.df = pd.read_csv(
-                self.df_path, skipinitialspace=True, usecols=usecols)
-        else:
-            self.df = pd.read_csv(self.df_path, skipinitialspace=True)
-
-        return self
-
-    def save(self, path=None, exist_skip=False):
-        if path is None:
-            path = self.df_path
-        path = Path(path)
-
-        if not (exist_skip and path.is_file()):
-            path.parent.mkdir(exist_ok=True, parents=True)
-            self.df.to_csv(path)
-
-        return self
-
-    def move(self, path, renaming=False, erase=False, exist_skip=False):
-        if erase:
-            old_path = self.df_path
-
-        if renaming:
-            self.df_path = self.df_path.with_name(path)
-        else:
-            self.df_path = Path(path)
-
-        self.save(exist_skip=exist_skip)
-
-        if erase:
-            old_path.unlink(missing_ok=True)
-
-    @property
-    def data(self):
-        return self.df[[self.path_column, self.target_column]]
-
-    @data.setter
-    def data(self, other):
-        self.df[[self.path_column, self.target_column]] = other
-
-    @property
-    def train_data(self):
-        return self.data[self.df[self.set_column] == self.train_key]
-
-    @train_data.setter
-    def train_data(self, other):
-        self.df.loc[self.df[self.set_column] == self.train_key,
-                    [self.path_column, self.target_column]] = other
-
-    @property
-    def val_data(self):
-        return self.data[self.df[self.set_column] == self.val_key]
-
-    @val_data.setter
-    def val_data(self, other):
-        self.df.loc[self.df[self.set_column] == self.val_key,
-                    [self.path_column, self.target_column]] = other
-
-    @property
-    def test_data(self):
-        return self.data[self.df[self.set_column] == self.test_key]
-
-    @test_data.setter
-    def test_data(self, other):
-        self.df.loc[self.df[self.set_column] == self.test_key,
-                    [self.path_column, self.target_column]] = other
-
-    @property
-    def paths(self):
-        return self.df[self.path_column]
-
-    @property
-    def train_paths(self):
-        return self.paths[self.df[self.set_column] == self.train_key]
-
-    @property
-    def val_paths(self):
-        return self.paths[self.df[self.set_column] == self.val_key]
-
-    @property
-    def test_paths(self):
-        return self.paths[self.df[self.set_column] == self.test_key]
-
-    @paths.setter
-    def paths(self, other):
-        self.df[self.path_column] = other
-
-    @property
-    def targets(self):
-        return self.df[self.target_column]
-
-    @targets.setter
-    def targets(self, other):
-        self.df[self.target_column] = other
-
-    def modify_path(self, old_path, new_path, many=False):
-        if many:
-            old_to_new = dict(zip(map(Path, old_path), map(Path, new_path)))
-            self.df[self.path_column] = self.df[self.path_column].apply(
-                lambda y: old_to_new.get(Path(y), y)
-            )
-        else:
-            self.df[self.path_column] = self.df[self.path_column].mask(
-                lambda x: Path(x) == Path(old_path),
-                new_path
-            )
-
-        return self
-
-    def transform_images(self, transformer, **kwargs):
-        # TODO: remove this code duplication
-        # TODO: allow dataset augmentation, not only transformation
-
-        return transformer.transform_images(self.paths, **kwargs)
-
-    def append(self, other):
-        self.append_dataframe(other.df)
-
-        return self
-
-    def append_dataframe(self, df):
-        self.df.append(df, ignore_index=True)
-
-        return self
-
-    def split(self, train_size=None, val_size=None, test_size=None, **options):
-        n_samples = len(self.df.index)
-        indices = np.arange(n_samples, dtype=int)
-
-        indices_train, indices_val, indices_test = bl_model.train_val_test_split(
-            indices, n_samples, train_size=train_size, val_size=val_size, test_size=test_size,
-            **options
-        )
-
-        self.df[self.set_column] = pd.Series(pd.concat((
-            pd.Series(data=self.train_key, index=indices_train),
-            pd.Series(data=self.val_key, index=indices_val),
-            pd.Series(data=self.test_key, index=indices_test)
-        )), dtype='category')
-
-        return self
+    concat = pd.concat([source_df, dest_df]).sort_index()
+    concat = concat.interpolate(method='time', limit_direction='both')
+    concat = concat.loc[dest_df.index]
+    return concat
 
 
 def load_persistent(path, auto_purge=False):
@@ -232,7 +75,7 @@ def load_persistent(path, auto_purge=False):
 
     return bl.management.Persistent(
         path,
-        checker=lambda x: x.is_file(),
+        checker=operator.methodcaller('is_file'),
         reader=imread_as_float,
         writer=imsave_as_ubyte,
         record_paths=True
@@ -241,7 +84,7 @@ def load_persistent(path, auto_purge=False):
 
 class TransformationPipeline:
     def __init__(self, *transformers):
-        self._pipe = bl_utils.packed_functional.compose(*transformers)
+        self._pipe = functoolz.compose(*transformers)
 
     def transform(
         self,
@@ -347,6 +190,174 @@ class ImageDatasetTransformer:
 # TODO: test this
 
 
+class DatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
+    def __init__(
+            self,
+            path_transformers,
+            transformers,
+            loader: Callable[[PathType], Any],
+            saver: Optional[Callable] = None,
+            save_intermediate: bool = True,
+            save_last: bool = True,
+            batch_size: Optional[int] = None
+    ):
+        self.path_transformers = path_transformers
+        self.transformers = transformers
+        self.loader = loader
+        self.saver = saver
+        self.save_intermediate: bool = save_intermediate
+        self.batch_size: Optional[int] = batch_size
+
+    def _load_tensor(self, sources):
+        ds = tf.data.Dataset.from_generator(
+            lambda: map(str, sources),
+            tf.string
+        )
+        ds = ds.map(
+            self.loader,
+            num_parallel_calls=AUTOTUNE
+        )
+        ds = ds.prefetch(AUTOTUNE)
+
+        return ds
+
+    def _save_tensor(self, dests, ds):
+        if self.batch_size is None:
+            for dest, img in zip(dests, ds.as_numpy_iterator()):
+                self.saver(img, dest)
+        else:
+            for dest_chunk, img_chunk in zip(
+                mit.ichunked(dests, self.batch_size),
+                ds.batch(self.batch_size).as_numpy_iterator()
+            ):
+                for dest, img in zip(dest_chunk, img_chunk):
+                    self.saver(img, dest)
+
+    def _full_trajectories(self, sources: Iterable[PathType]):
+        sources = map(Path, sources)
+
+        def trajectory(source):
+            return it.accumulate(
+                # self.path_transformers, # Python 3.8 only
+                mit.prepend(source, self.path_transformers),
+                lambda current_path, path_transformer: path_transformer(
+                    current_path),
+                # initial=source # Python 3.8 only
+            )
+
+        trajs = map(trajectory, sources)
+        trajs = map(list, trajs)
+
+        return trajs
+
+    def _valid_trajectories(self, trajs, erased_marker, cmp_marker=operator.is_):
+        def split_source_dest(traj):
+            traj, erased = mit.partition(
+                partial(cmp_marker, erased_marker),
+                traj
+            )
+            dests, possible_sources = mit.partition(
+                operator.methodcaller('is_file'),
+                traj
+            )
+
+            possible_sources = list(possible_sources)
+            source = possible_sources.pop()
+
+            erased = it.chain(
+                erased,
+                it.repeat(erased_marker, len(possible_sources))
+            )
+
+            return list(erased) + [source] + list(dests)
+
+        trajs = map(split_source_dest, trajs)
+
+        return trajs
+
+    def _step_from_idx(self, trajs, step_idx, erased_marker, cmp_marker=operator.is_):
+        trajs = it.filterfalse(
+            # removes erased trajectories, i.e., the ones that already exist and don't need to be transformed
+            # lambda traj: cmp_marker(traj[step_idx], erased_marker),
+            functoolz.compose(
+                partial(cmp_marker, erased_marker),
+                operator.itemgetter(step_idx)
+            ),
+            trajs
+        )
+        trajs = map(
+            operator.itemgetter(step_idx, step_idx+1),
+            trajs
+        )
+        trajs = mit.peekable(trajs)
+
+        if trajs:
+            sources, dests = mit.unzip(trajs)
+        else:
+            sources = bl_utils.empty_gen()
+            dests = bl_utils.empty_gen()
+
+        return sources, dests
+
+    def transform_paths(self, paths: Iterable[PathType]):
+        return map(
+            functoolz.compose(*self.path_transformers),
+            paths
+        )
+
+    def transform_dataset(self, ds):
+        return ds.map(
+            functoolz.compose(*self.transformers),
+            num_parallel_calls=AUTOTUNE
+        )
+
+    def _transform_images_indirect(self, paths: Iterable[PathType]):
+        erased_marker = None
+        full_trajs = tuple(self._full_trajectories(paths))
+
+        trajs = full_trajs
+        for step_idx, transformer in enumerate(self.transformers):
+            trajs = self._valid_trajectories(
+                trajs, erased_marker=erased_marker)
+            trajs = tuple(trajs)
+            sources, dests = self._step_from_idx(
+                trajs, step_idx, erased_marker=erased_marker)
+
+            ds = self._load_tensor(sources)
+            ds = ds.map(
+                transformer,
+                num_parallel_calls=AUTOTUNE
+            )
+            self._save_tensor(dests, ds)
+
+        final = map(
+            mit.last,
+            full_trajs
+        )
+        ds = self._load_tensor(final)
+
+        return full_trajs, ds
+
+    def _transform_images_direct(self, paths: Iterable[PathType]):
+        paths = tuple(paths)
+        dests = tuple(self.transform_paths(paths))
+
+        ds = self._load_tensor(paths)
+        ds = self.transform_dataset(ds)
+
+        if self.save_last:
+            self._save_tensor(dests, ds)
+
+        full_trajs = tuple(zip(paths, dests))
+        return full_trajs, ds
+
+    def transform_images(self, paths: Iterable[PathType]):
+        if self.save_intermediate:
+            return self._transform_images_indirect(paths)
+        else:
+            return self._transform_images_direct(paths)
+
+
 class ImageDatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
     '''Transforms a sequence of images using a sequence of transformations.
     '''
@@ -359,8 +370,9 @@ class ImageDatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
         loader,
         saver,
         split_id='all',
-        chunk_size=None,
-        chunk_index=None,
+        chunk_index: Optional[int] = None,
+        chunk_size: Optional[int] = None,
+        n_chunks: Optional[int] = None
     ):
         self.path_transformers = path_transformers
         self.transformers = transformers
@@ -370,20 +382,26 @@ class ImageDatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
 
         self.split_id = bl_model.SplitSubset.get_split(split_id)
 
-        if (
-            (chunk_size is None and chunk_index is not None)
-            or (chunk_size is not None and chunk_index is None)
-        ):
+        if (chunk_index is None) ^ ((chunk_size is None) ^ (n_chunks is not None)):
             raise ValueError(
-                'chunk_size and chunk_index must be both None or both integers.')
+                'chunk_index must be passed with either chunk_size or n_chunks, or they all must be omitted.')
 
-        self.chunk_size = chunk_size
-        self.chunk_index = chunk_index
+        if (chunk_size is not None) and (n_chunks is not None):
+            raise ValueError(
+                'either chunk_size or n_chunks (or both) must be None.')
+
+        self.chunk_size: Optional[int] = chunk_size
+        self.chunk_index: Optional[int] = chunk_index
+        self.chunk_index: Optional[int] = chunk_index
 
     def is_using_chunks(self):
         return self.chunk_size is not None
 
-    def _extract_paths(self, img_ds, split_id=None):
+    def _extract_paths(
+            self,
+            img_ds,
+            split_id=None
+    ):
         if split_id is bl_model.SplitSubset.TRAIN:
             df = img_ds.train_paths
         elif split_id is bl_model.SplitSubset.VAL:
@@ -398,13 +416,20 @@ class ImageDatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
 
         return df
 
-    def _get_chunk(self, df):
-        if self.is_using_chunks():
-            chunks = mit.chunked(df, self.chunk_size)
+    def _get_chunk(self, iterable: Iterable[T]) -> Iterable[T]:
+        if self.chunk_size is not None:
+            chunks = mit.ichunked(iterable, self.chunk_size)
             chunk = mit.nth_or_last(chunks, self.chunk_index)
             return chunk
+        elif self.n_chunks is not None:
+            iterable = tuple(iterable)
+            n = len(iterable)
+            idx = self.chunk_index
+            chunk = iterable[idx*n:idx*(n + 1)]
+
+            return chunk
         else:
-            return df
+            return iterable
 
     def _load_tensor(self, sources):
         sources = map(str, sources)
@@ -496,9 +521,8 @@ class ImageDatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
         erased_marker = None
         full_trajs = list(self._full_trajectories(img_ds))
 
+        trajs = full_trajs
         for step_idx, transformer in enumerate(self.transformers):
-            trajs = trajs if step_idx else full_trajs
-
             trajs = self._valid_trajectories(
                 trajs, erased_marker=erased_marker)
             trajs = list(trajs)
@@ -522,5 +546,63 @@ class ImageDatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
         return full_trajs, ds
 
 
-# Message to mateus.stahelin@lepten.ufsc.br
-# Além disso, gostaria de saber se conheces uma solução para o problema que estou tendo, relacionado à mesma questão.Vou explicar o que estou fazendo, e talvez você tenha até uma ideia melhor do que fazer. Eu estou treinando redes neurais na plataforma online Google Colab, que é basicamente um processador de notebooks em Python com acesso direto ao Google Drive e a GPUs. Não é necessário ter nada instalado no computador (além do Google Chrome), nem mesmo o Google Drive. Tudo é feito na nuvem.Um dos obstáculos é que o Google Colab disponibiliza apenas uma quantidade limitada de RAM e processamento para cada usuário (um usuário é definido pela conta de e-mail utilizada). Então o que fiz para paralelizar o trabalho, além de utilizar as GPUs, foi logar no Google Colab em várias páginas do Google Chrome utilizando contas de e-mail diferentes. Por exemplo, em uma página eu entro com a minha conta do laboratório (ruan.comelli@lepten.ufsc.br), e, em outra, com a minha conta pessoal (ruancomelli@gmail.com). No total, estou utilizando 6 contas de e-mail, cada uma treinando uma rede neural diferente. Ao fim do treinamento, eu tenho 6 redes treinadas paralelamente.Os dois problemas que surgiram com isso são:O Google Colab exige que o usuário fique conectado à internet durante a utilização da plataforma. Porém a conexão aqui em casa é ruim e falha sempre. Como resultado, o treinamento das redes é paralisado. Isso me impede de deixá-las treinando durante a noite, por exemplo.Cada página do Google Chrome consome uma quantidade enorme de RAM, e meu computador pessoal não tem capacidade para isso. Quando coloco as redes para treinar, o computador fica inutilizável.Todo o processamento que é feito no Google Colab poderia ser feito localmente, mas isso consumiria muito mais do processamento do computador e exigiria que o meu banco de dados fosse constantemente downloaded e uploaded entre a nuvem e o meu computador.
+def decode_img(img):
+    # convert the compressed string to a 3D uint8 tensor
+    img = tf.image.decode_png(img, channels=1)
+    # Use `convert_image_dtype` to convert to floats in the [0,1] range
+    img = tf.image.convert_image_dtype(img, tf.float32)
+    # resize the image to the desired size
+    # img = tf.image.resize(img, IMG_SHAPE[:2])
+    # img = tf.reshape(img, IMG_SHAPE)
+    return img
+
+
+def process_path(
+    file_path,
+    in_dir=None
+):
+    # from relative to absolute path
+    if in_dir is not None:
+        file_path = str(in_dir) + os.sep + file_path
+
+    # load the raw data from the file as a string
+    img = tf.io.read_file(file_path)
+    # decode data
+    img = decode_img(img)
+    return img
+
+
+@dataclass(frozen=True)
+class SizeSpec:
+    height: int
+    width: int
+
+
+@dataclass(frozen=True)
+class CropSpec:
+    offset_box: SizeSpec
+    size: SizeSpec
+
+
+def simple_image_preprocessor(
+        interest_region: CropSpec,
+        final_size: SizeSpec,
+        downscale_factor: int
+) -> Callable:
+
+    def preprocessor(img):
+        img = tf.image.rgb_to_grayscale(img)
+        img = tf.image.crop_to_bounding_box(
+            img,
+            offset_height=interest_region.offset_box.height,
+            offset_width=interest_region.offset_box.width,
+            target_height=interest_region.size.height,
+            target_width=interest_region.size.width)
+        img = tf.image.random_crop(
+            img, (final_size.height, final_size.width, 1))
+        img = skimage.transform.downscale_local_mean(
+            img, (downscale_factor, downscale_factor, 1))
+
+        return img
+
+    return preprocessor
