@@ -1,6 +1,9 @@
-from pathlib import Path
+import collections
+import copy
+from dataclasses import dataclass
 from json import JSONDecodeError
-import operator
+from pathlib import Path
+import pprint
 from typing import (
     overload,
     Any,
@@ -11,24 +14,27 @@ from typing import (
     List,
     Mapping,
     Optional,
-    Tuple,
-    Union
+    Tuple
 )
-import copy
-import collections
 
 import parse
 import more_itertools as mit
 
 import boiling_learning as bl
+from boiling_learning.utils.utils import (
+    PathType,
+    VerboseType
+)
+from boiling_learning.io.io import (
+    LoaderFunction,
+    SaverFunction
+)
 from boiling_learning.management.Parameters import Parameters
+from boiling_learning.management.ElementCreator import ElementCreator
 
 # TODO: check out <https://www.mlflow.org/docs/latest/tracking.html>
 
 _sentinel = object()
-
-PathType = bl.utils.PathType
-VerboseType = bl.utils.VerboseType
 
 
 class Manager(
@@ -36,16 +42,27 @@ class Manager(
         bl.utils.SimpleStr,
         collections.abc.Mapping
 ):
+    @dataclass(frozen=True)
+    class Keys:
+        entries: str = 'entries'
+        elements: str = 'model'
+        metadata: str = 'metadata'
+        creator: str = 'creator'
+        description: str = 'parameters'
+        workspace: str = 'workspace'
+        path: str = 'path'
+
     def __init__(
             self,
             path: PathType,
             id_fmt: str = '{index}.data',
             index_key: str = 'index',
-            save_method: Callable[[Any, PathType], Any] = bl.io.save_pkl,
-            load_method: Callable[[PathType], Any] = bl.io.load_pkl,
+            save_method: Optional[SaverFunction[Any]] = None,
+            load_method: Optional[LoaderFunction[Any]] = None,
+            creator: Optional[ElementCreator] = None,
             verbose: VerboseType = False,
             load_table: bool = True,
-            keys_map: Optional[Mapping[str, str]] = None
+            keys: Keys = Keys()
     ):
         '''
         The Manager's directory is structure like this:
@@ -77,24 +94,14 @@ class Manager(
             }
         }
         ```
-        
-        Parameters
-        ----------
-        ...
-        keys_map: an object optionally mapping each of the following keys to a string value:
-            - 'entries_key' - defaults to 'entries'
-            - 'elems_key' - defaults to 'model'
-            - 'metadata_key' - defaults to 'metadata'
-            - 'creator_key' - defaults to 'creator'
-            - 'description_key' - defaults to 'parameters'
-            - 'workspace_key' - defaults to 'workspace'
         '''
-        self.entries_key = keys_map.get('entries_key', 'entries')
-        self.elems_key = keys_map.get('elems_key', 'model')
-        self.metadata_key = keys_map.get('metadata_key', 'metadata')
-        self.creator_key = keys_map.get('creator_key', 'creator')
-        self.description_key = keys_map.get('description_key', 'parameters')
-        self.workspace_key = keys_map.get('workspace_key', 'workspace')
+        self.entries_key = keys.entries
+        self.elems_key = keys.elements
+        self.metadata_key = keys.metadata
+        self.creator_key = keys.creator
+        self.description_key = keys.description
+        self.workspace_key = keys.workspace
+        self.path_key = keys.path
 
         self._path = bl.utils.ensure_dir(path)
         self._table_path = self.path / 'lookup_table.json'
@@ -107,10 +114,10 @@ class Manager(
 
         self.id_fmt = id_fmt
         self.index_key = index_key
-        self.path_key = 'path'
 
-        self._save_method = save_method
-        self._load_method = load_method
+        self.save_method: Optional[SaverFunction[Any]] = save_method
+        self.load_method: Optional[LoaderFunction[Any]] = load_method
+        self.creator: Optional[ElementCreator] = creator
         self.verbose = verbose
 
     def __getitem__(self, elem_id: str):
@@ -158,7 +165,9 @@ class Manager(
         return bl.utils.ensure_parent(self.entry_dir(elem_id) / self.elems_key)
 
     def elem_workspace(self, elem_id: str) -> Path:
-        return bl.utils.ensure_dir(self.entry_dir(elem_id) / self.workspace_key)
+        return bl.utils.ensure_dir(
+            self.entry_dir(elem_id) / self.workspace_key
+        )
 
     def _initialize_lookup_table(self) -> None:
         self._lookup_table = {
@@ -186,17 +195,36 @@ class Manager(
                 self.load_lookup_table()
 
     def save_elem(self, elem, path: PathType) -> None:
+        if self.save_method is None:
+            raise ValueError(
+                'this Manager\'s *save_method* is not set.'
+                'Define it in the Manager\'s initialization'
+                'or by defining it as a property.')
+
         path = bl.utils.ensure_parent(path)
-        self._save_method(elem, path)
+        self.save_method(elem, path)
 
     def load_elem(self, path: PathType):
-        path = bl.utils.ensure_resolved(path)
-        return self._load_method(path)
+        if self.load_method is None:
+            raise ValueError(
+                'this Manager\'s *load_method* is not set.'
+                'Define it in the Manager\'s initialization'
+                'or by defining it as a property.')
 
-    @overload
-    def contents(self, elem_id: None) -> dict: ...
-    @overload
-    def contents(self, elem_id: str): ...
+        path = bl.utils.ensure_resolved(path)
+        return self.load_method(path)
+
+    def create_elem(self, params, unpack_parameters: bool):
+        if self.creator is None:
+            raise ValueError(
+                'this Manager\'s *creator* is not set.'
+                'Define it in the Manager\'s initialization'
+                'or by defining it as a property.')
+
+        if unpack_parameters:
+            return self.creator(**params)
+        else:
+            return self.creator(params)
 
     def contents(self, elem_id=None):
         if elem_id is None:
@@ -206,11 +234,6 @@ class Manager(
             }
         else:
             return self.entries.get(elem_id, {}).get(self.elems_key)
-
-    @overload
-    def metadata(self, elem_id: None) -> dict: ...
-    @overload
-    def metadata(self, elem_id: str): ...
 
     def metadata(self, elem_id=None):
         if elem_id is None:
@@ -223,6 +246,7 @@ class Manager(
 
     @overload
     def elem_creator(self, elem_id: None) -> dict: ...
+
     @overload
     def elem_creator(self, elem_id: str): ...
 
@@ -237,6 +261,7 @@ class Manager(
 
     @overload
     def description(self, elem_id: None) -> dict: ...
+    
     @overload
     def description(self, elem_id: str): ...
 
@@ -279,33 +304,27 @@ class Manager(
     def _resolve_creator_name(
             self,
             contents: Optional[Mapping] = None,
-            creator: Optional[Callable] = None,
-            creator_name: Optional[str] = None
+            creator: Optional[ElementCreator] = None
     ) -> str:
-        if creator_name is not None:
-            return creator_name
-        elif contents is not None and self.creator_key in contents:
+        if contents is not None and self.creator_key in contents:
             return contents[self.creator_key]
         # support creator type
-        elif hasattr(creator, 'creator') and hasattr(creator.creator, 'creator_name'):
-            return creator.creator.creator_name
-        elif hasattr(creator, 'creator_name'):  # support elem creator
-            return creator.creator_name
+        elif hasattr(creator, 'name'):  # support elem creator
+            return creator.name
         else:
-            return str(creator)
+            raise ValueError(f'could not deduce creator name from (creator, contents)=({creator},{contents})')
 
     def _resolve_contents(
             self,
             contents: Optional[Mapping] = None,
             description: Optional[Mapping] = None,
-            creator: Optional[Callable] = None,
-            creator_name: Optional[str] = None
+            creator: Optional[ElementCreator] = None
     ) -> Mapping:
         if contents is not None:
             return contents
         else:
             creator_name = self._resolve_creator_name(
-                contents=contents, creator=creator, creator_name=creator_name)
+                contents=contents, creator=creator)
 
             return {
                 self.creator_key: creator_name,
@@ -329,13 +348,12 @@ class Manager(
             self,
             contents: Optional[Mapping] = None,
             description: Optional[Mapping] = None,
-            creator: Optional[Callable] = None,
-            creator_name: Optional[str] = None,
+            creator: Optional[ElementCreator] = None,
             metadata: Optional[Mapping] = None,
             path: Optional[PathType] = None
     ) -> Mapping:
         contents = self._resolve_contents(
-            contents=contents, description=description, creator=creator, creator_name=creator_name)
+            contents=contents, description=description, creator=creator)
         metadata = self._resolve_metadata(metadata=metadata, path=path)
 
         if path is None:
@@ -352,12 +370,11 @@ class Manager(
             self,
             contents: Optional[Mapping] = None,
             description: Optional[Mapping] = None,
-            creator: Optional[Callable] = None,
-            creator_name: Optional[str] = None,
+            creator: Optional[ElementCreator] = None,
             missing_ok: bool = True
     ) -> str:
         contents = self._resolve_contents(
-            contents=contents, description=description, creator=creator, creator_name=creator_name)
+            contents=contents, description=description, creator=creator)
 
         candidates = bl.utils.extract_keys(
             self.contents(),
@@ -378,15 +395,13 @@ class Manager(
             self,
             contents: Optional[Mapping] = None,
             description: Optional[Mapping] = None,
-            creator: Optional[Callable] = None,
-            creator_name: Optional[str] = None,
+            creator: Optional[ElementCreator] = None,
     ) -> bool:
         try:
             return self.elem_id(
                 contents=contents,
                 description=description,
                 creator=creator,
-                creator_name=creator_name,
                 missing_ok=False
             ) in self.entries
         except ValueError:
@@ -425,7 +440,7 @@ class Manager(
     ) -> Tuple[bool, Any]:
         try:
             return True, self.load_elem(path)
-        except tuple(getattr(self._load_method, 'expected_exceptions', (FileNotFoundError, OSError))):
+        except tuple(getattr(self.load_method, 'expected_exceptions', (FileNotFoundError, OSError))):
             if self.verbose >= 1:
                 print('Load failed')
             if raise_if_load_fails:
@@ -457,18 +472,16 @@ class Manager(
             self,
             contents: Optional[Mapping] = None,
             description: Optional[Mapping] = None,
-            creator: Optional[Callable] = None,
-            creator_name: Optional[str] = None,
+            creator: Optional[ElementCreator] = None,
             raise_if_load_fails: bool = False,
     ) -> Tuple[bool, Any]:
-        if not self.has_elem(contents=contents, description=description, creator=creator, creator_name=creator_name):
+        if not self.has_elem(contents=contents, description=description, creator=creator):
             return False, None
 
         elem_id = self.provide_entry(
             contents=contents,
             description=description,
             creator=creator,
-            creator_name=creator_name,
             include=False,
             missing_ok=False
         )
@@ -515,13 +528,12 @@ class Manager(
             self,
             contents: Optional[Mapping] = None,
             description: Optional[Mapping] = None,
-            creator: Optional[Callable] = None,
-            creator_name: Optional[str] = None,
+            creator: Optional[ElementCreator] = None,
             include: bool = False,
             missing_ok: bool = False
     ) -> str:
         contents = self._resolve_contents(
-            contents=contents, description=description, creator=creator, creator_name=creator_name)
+            contents=contents, description=description, creator=creator)
 
         elem_id = self.elem_id(
             contents=contents,
@@ -544,8 +556,7 @@ class Manager(
             self,
             contents: Optional[Mapping] = None,
             description: Optional[Mapping] = None,
-            creator: Optional[Callable] = None,
-            creator_name: Optional[str] = None,
+            creator: Optional[ElementCreator] = None,
             params=None,
             save: bool = False,
             load: bool = False,
@@ -555,17 +566,19 @@ class Manager(
         if params is None:
             params = {}
 
-        if self.verbose >= 2:
+        if creator is not None:
+            self.creator = creator
+
+        if self.verbose:
             bl.utils.print_header('Description', level=1)
-            print(description)
+            pprint.pprint(description)
             bl.utils.print_header('Params', level=1)
-            print(params)
+            pprint.pprint(params)
 
         elem_id = self.provide_entry(
             contents=contents,
             description=description,
             creator=creator,
-            creator_name=creator_name,
             include=True,
             missing_ok=True
         )
@@ -578,10 +591,7 @@ class Manager(
             if success:
                 return elem
 
-        if unpack_parameters:
-            elem = creator(**params)
-        else:
-            elem = creator(params)
+        elem = self.create_elem(params, unpack_parameters)
 
         if save:
             self.save_elem(elem, path)
