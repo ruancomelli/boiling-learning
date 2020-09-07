@@ -9,17 +9,18 @@ from typing import (
 )
 import warnings
 
-import bidict
 import h5py
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
+import boiling_learning.utils as bl_utils
 from boiling_learning.utils import (
     PathType,
     nullcontext,
     ensure_dir,
     ensure_parent,
-    ensure_resolved
+    ensure_resolved,
+    dtypes
 )
 
 T = TypeVar('T')
@@ -120,28 +121,10 @@ def loader_hdf5(key: str = '') -> LoaderFunction[Any]:
     return load_hdf5
 
 
-_tf_dtype_dict = bidict.bidict(
-    (dtype.name, dtype)
-    for dtype in (
-        tf.float16, tf.float32, tf.float64,
-        tf.bfloat16,
-        tf.complex64, tf.complex128,
-        tf.int8, tf.int32, tf.int64,
-        tf.uint8, tf.uint16, tf.uint32, tf.uint64, tf.int16,
-        tf.bool,
-        tf.string,
-        tf.qint8, tf.qint16, tf.qint32, tf.quint8,
-        tf.quint16,
-        tf.resource,
-        tf.variant
-    )
-)
-
-
 def _element_spec_to_list(element_spec):
     return [
         {
-            'dtype': _tf_dtype_dict.inverse[type_spec.shape.dtype],
+            'dtype': bl_utils.dtypes.tf_str_dtype_bidict.inverse[type_spec.shape.dtype],
             'shape': list(type_spec.shape)
         }
         for type_spec in element_spec
@@ -152,7 +135,7 @@ def _element_list_to_spec(lst):
     return tuple(
         tf.TensorSpec(
             shape=tuple(dct['shape']),
-            dtype=_tf_dtype_dict[dct['dtype']]
+            dtype=bl_utils.dtypes.tf_str_dtype_bidict[dct['dtype']]
         )
         for dct in lst
     )
