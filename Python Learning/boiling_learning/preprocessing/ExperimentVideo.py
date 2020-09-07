@@ -4,6 +4,7 @@ import datetime
 import operator
 from pathlib import Path
 from typing import (
+    overload,
     Any,
     Iterable,
     List,
@@ -336,19 +337,24 @@ class ExperimentVideo:
 
         return self.df
 
-    def iterdata(
-            self,
-            select_columns: Optional[List[str]] = None
-    ) -> Iterable[Tuple[np.ndarray, dict]]:
+    @overload
+    def iterdata_from_dataframe(self, select_columns: str) -> Iterable[Tuple[np.ndarray, Any]]: ...
 
+    @overload
+    def iterdata_from_dataframe(self, select_columns: Optional[List[str]]) -> Iterable[Tuple[np.ndarray, dict]]: ...
+
+    def iterdata_from_dataframe(self, select_columns=None):
         df = self.make_dataframe(recalculate=False)
         indices = df[self.column_names.index]
 
+        data = df
         if select_columns is not None:
-            df = df[select_columns]
+            data = data[select_columns]
+            if not isinstance(select_columns, str):
+                data = data.to_dict(orient='records')
 
         with self.frames() as f:
             return zip(
                 map(f.__getitem__, indices),
-                df.to_dict(orient='records')
+                data
             )

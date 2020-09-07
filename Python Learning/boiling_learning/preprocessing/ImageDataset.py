@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import itertools
 import operator
 from pathlib import Path
 import typing
@@ -11,11 +12,13 @@ from typing import (
     List,
     Mapping,
     Optional,
+    Tuple,
     Union
 )
 
-import tensorflow as tf
+import numpy as np
 import pandas as pd
+import tensorflow as tf
 
 from boiling_learning.utils import (PathType, VerboseType)
 import boiling_learning.utils as bl_utils
@@ -251,21 +254,19 @@ class ImageDataset(
 
     @overload
     def modify_path(
-            self,
-            old_path: PathType,
-            new_path: PathType,
-            many: bool # many: Literal[False]
-    ) -> None:
-        ...
+        self,
+        old_path: PathType,
+        new_path: PathType,
+        many: bool # many: Literal[False]
+    ) -> None: ...
 
     @overload
     def modify_path(
-            self,
-            old_path: Iterable[PathType],
-            new_path: Iterable[PathType],
-            many: bool # many: Literal[True]
-    ) -> None:
-        ...
+        self,
+        old_path: Iterable[PathType],
+        new_path: Iterable[PathType],
+        many: bool # many: Literal[True]
+    ) -> None: ...
 
     def modify_path(self, old_path, new_path, many):
         if many:
@@ -293,9 +294,39 @@ class ImageDataset(
 
         return self.df
 
-    def as_tf_dataset(self):
-        # TODO: here
-        pass
+    @overload
+    def iterdata_from_dataframe(self, select_columns: str) -> Iterable[Tuple[np.ndarray, Any]]: ...
+
+    @overload
+    def iterdata_from_dataframe(self, select_columns: Optional[List[str]]) -> Iterable[Tuple[np.ndarray, dict]]: ...
+
+    def iterdata_from_dataframe(self, select_columns=None):
+        return itertools.chain.from_iterable(
+            map(
+                operator.methodcaller('iterdata_from_dataframe', select_columns),
+                self.values()
+            )
+        )
+
+    def as_tf_dataset(
+            self,
+            column_spec: Union[Tuple[str, tf.DType], List[Tuple[str, tf.DType]]]
+    ) -> tf.data.Dataset:
+        if isinstance(column_spec[0], str):
+            select_columns = column_spec[0]
+            type_spec = column_spec[1]
+        else:
+            select_columns = [
+                col_spec[0]
+                for col_spec in column_spec
+            ]
+            type_spec = column_spec
+
+        return tf.data.Dataset.from_generator(
+            self.iterdata_from_dataframe,
+            (tf.float32, type_spec),
+            args=[select_columns]
+        )
 
 
 bl_utils.simple_pprint_class(ImageDataset)
