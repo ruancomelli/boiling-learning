@@ -1,8 +1,17 @@
-from pathlib import Path
+import collections
+from dataclasses import dataclass
 import enum
+from typing import (
+    Iterable,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union
+)
 
 import parse
 from sklearn.model_selection import train_test_split
+import tensorflow as tf
 
 import boiling_learning.utils.utils as bl_utils
 from boiling_learning.utils.utils import PathType
@@ -40,6 +49,23 @@ class SplitSubset(enum.Enum):
 
     def to_str(self):
         return self.name.lower()
+
+
+@dataclass
+class DatasetSplitter:
+    train: Optional[Union[int, float]]
+    test: Optional[Union[int, float]]
+    val: Optional[Union[int, float]] = None
+    n_samples: Optional[int] = None
+
+    # def __post_init__(self):
+    #     if self.n_samples is not None:
+    #         if self.train is not None and 0 < self.train < 1:
+    #             self.train *= self.n_samples
+    #         if self.val is not None and 0 < self.val < 1:
+    #             self.val *= self.n_samples
+    #         if self.test is not None and 0 < self.test < 1:
+    #             self.test *= self.n_samples
 
 
 SplitSubset.FROM_STR = {
@@ -108,6 +134,93 @@ def train_val_test_split(
             )
 
     return train_set, val_set, test_set
+
+
+def tf_concatenate(datasets: Iterable[tf.data.Dataset]) -> tf.data.Dataset:
+    datasets = collections.deque(datasets)
+
+    if not datasets:
+        raise ValueError('argument *datasets* must be a non-empty iterable.')
+
+    ds = datasets.popleft()
+    for dataset in datasets:
+        ds = ds.concatenate(dataset)
+
+    return ds
+
+
+def tf_train_val_test_split(
+        ds: tf.data.Dataset,
+        splits: DatasetSplitter
+) -> Tuple[tf.data.Dataset, Optional[tf.data.Dataset], tf.data.Dataset]:
+    """ #TODO(docstring): describe here
+
+    # Source: <https://stackoverflow.com/a/60503037/5811400>
+
+    The paramenter *splits* is expected to contain only integers, with the possible exception of *val*, which can be *None*.
+
+    This function is deterministic in the sense that it outputs the same splits given the same inputs.
+    Consequently it is safe to be used early in the pipeline to avoid consuming test data.
+    """
+    if not isinstance(splits.train, int) or not isinstance(splits.test, int):
+        raise ValueError(
+            '*splits.train* and *splits.test* must be *int*s.'
+            ' *splits.val* is allowed to be *None*, and in this case no validation set is produced (*None* is returned)')
+
+    def flatten_zip(*ds):
+        if len(ds) == 1:
+            return ds[0]
+        else:
+            return tf.data.Dataset.zip(ds)
+
+    if isinstance(splits.val, int):
+        window_shift = splits.train + splits.val + splits.test
+        ds_train = ds.window(splits.train, window_shift).flat_map(flatten_zip)
+        ds_val = ds.skip(splits.train).window(splits.val, window_shift).flat_map(flatten_zip)
+        ds_test = ds.skip(splits.train + splits.val).window(splits.test, window_shift).flat_map(flatten_zip)
+    else:
+        window_shift = splits.train + splits.test
+        ds_train = ds.window(splits.train, window_shift).flat_map(flatten_zip)
+        ds_test = ds.skip(splits.train).window(splits.test, window_shift).flat_map(flatten_zip)
+        ds_val = None
+
+    return ds_train, ds_val, ds_test
+
+
+def tf_train_val_test_split_concat(
+        datasets: Iterable[tf.data.Dataset],
+        splits: DatasetSplitter
+) -> Tuple[tf.data.Dataset, Optional[tf.data.Dataset], tf.data.Dataset]:
+    """ #TODO(docstring): describe here
+
+    # Source: <https://stackoverflow.com/a/60503037/5811400>
+
+    The paramenter *splits* is expected to contain only integers, with the possible exception of *val*, which can be *None*.
+
+    This function is deterministic in the sense that it outputs the same splits given the same inputs.
+    Consequently it is safe to be used early in the pipeline to avoid consuming test data.
+    """
+    datasets = collections.deque(datasets)
+
+    if not datasets:
+        raise ValueError('argument *datasets* must be a non-empty iterable.')
+
+    ds = datasets.popleft()
+    ds_train, ds_val, ds_test = tf_train_val_test_split(ds, splits)
+
+    if ds_val is None:
+        for ds in datasets:
+            ds_train_, _, ds_test_ = tf_train_val_test_split(ds, splits)
+            ds_train = ds_train.concatenate(ds_train_)
+            ds_test = ds_test.concatenate(ds_test_)
+    else:
+        for ds in datasets:
+            ds_train_, ds_val_, ds_test_ = tf_train_val_test_split(ds, splits)
+            ds_train = ds_train.concatenate(ds_train_)
+            ds_val = ds_val.concatenate(ds_val_)
+            ds_test = ds_test.concatenate(ds_test_)
+
+    return ds_train, ds_val, ds_test
 
 
 def restore(

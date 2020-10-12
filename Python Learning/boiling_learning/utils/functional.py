@@ -1,25 +1,63 @@
-import functools
+from dataclasses import dataclass
 from functools import (
     partial,
-    reduce,
     wraps
 )
 import itertools
 from typing import (
     Any,
     Callable,
-    Dict,
+    Generic,
     Iterable,
     Iterator,
+    Mapping,
+    Sequence,
     Tuple,
-    TypeVar
+    TypeVar,
+    Union
 )
 
+from frozendict import frozendict
 import more_itertools as mit
 
-T = TypeVar('T')
-PackType = Tuple[tuple, Dict[str, Any]]
 
+# TODO: when variadic generics are available, they will be very useful here
+
+
+T = TypeVar('T')
+S = TypeVar('S')
+U = TypeVar('U')
+ArgType = Sequence[T]
+KwargType = Mapping[str, S]
+
+
+@dataclass(frozen=True)
+class Pack(Generic[T, S]):
+    args: ArgType[T] = ()
+    kwargs: KwargType[S] = frozendict()
+
+    # @classmethod
+    # def from_args(cls: Callable[[Sequence[T], Mapping[str, S]], U], *args: T, **kwargs: S) -> U:
+    #     return cls(args, kwargs)
+
+    def __iter__(self) -> Iterator[Union[ArgType[T], KwargType[S]]]:
+        return (self.args, self.kwargs).__iter__()
+
+    def as_pair(self) -> Tuple[tuple, dict]:
+        return (
+            tuple(self.args),
+            dict(self.kwargs)
+        )
+
+    def feed(self, f: Callable[..., U]) -> U:
+        return f(*self.args, **self.kwargs)
+
+    def partial(self, f: Callable[..., U]) -> Callable[..., U]:
+        return partial(
+            f,
+            *self.args,
+            **self.kwargs
+        )
 
     def rpartial(self, f: Callable[..., U]) -> Callable[..., U]:
         return rpartial(
@@ -29,26 +67,24 @@ PackType = Tuple[tuple, Dict[str, Any]]
         )
 
 
-def pack(*args, **kwargs):
-    return args, kwargs
+def pack(*args: T, **kwargs: S) -> Pack[T, S]:
+    return Pack(args, kwargs)
 
 
-def unpack(f, packed_param):
+def unpack(f: Callable[..., U], packed_param: Pack[T, S]) -> U:
     return packed(f)(packed_param)
 
 
-def packed(f):
+def packed(f: Callable[..., U]) -> Callable[[Pack], U]:
     @wraps(f)
-    def wrapper(params):
-        # params[0] == args
-        # params[1] == kwargs
-        return f(*params[0], **params[1])
+    def wrapper(pack: Pack) -> U:
+        return pack.feed(f)
     return wrapper
 
 
-def unpacked(f):
+def unpacked(f: Callable[[Pack[T, S]], U]) -> Callable[..., U]:
     @wraps(f)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: T, **kwargs: S) -> U:
         return f(pack(*args, **kwargs))
 
     return wrapper
@@ -79,7 +115,8 @@ def apply(
 
 def starapply(
         f: Callable[..., Any],
-        arg: Iterable) -> None:
+        arg: Iterable
+) -> None:
     mit.consume(
         itertools.starmap(f, arg)
     )
@@ -87,8 +124,7 @@ def starapply(
 
 def zip_filter(
         f: Callable[..., bool],
-        *args: Iterable,
-        star: bool = False
+        *args: Iterable
 ) -> Iterator:
     yield from (
         tpl
