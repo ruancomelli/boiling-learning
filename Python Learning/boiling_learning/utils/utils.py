@@ -53,7 +53,7 @@ import matplotlib.pyplot as plt
 import more_itertools as mit
 from more_itertools import unzip
 from pandas.api.types import union_categoricals
-import pandas as pd
+import modin.pandas as pd
 from sortedcontainers import SortedSet
 
 from boiling_learning.utils.functional import (

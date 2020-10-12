@@ -16,8 +16,8 @@ from typing import (
     Union
 )
 
+import modin.pandas as pd
 import numpy as np
-import pandas as pd
 import tensorflow as tf
 
 from boiling_learning.utils import (PathType, VerboseType)

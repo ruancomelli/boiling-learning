@@ -1,6 +1,6 @@
 from pathlib import Path
 import numpy as np
-import pandas as pd
+import modin.pandas as pd
 import random
 import functools
 import itertools

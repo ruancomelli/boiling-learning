@@ -12,8 +12,8 @@ from typing import (
     TypeVar
 )
 
-import pandas as pd
-import tensorflow as tf
+import funcy
+import modin.pandas as pd
 import more_itertools as mit
 import skimage
 from skimage import img_as_float, img_as_ubyte

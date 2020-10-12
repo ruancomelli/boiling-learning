@@ -386,7 +386,7 @@ class ElementCreator:
 """### Métricas customizadas"""
 
 import numpy as np
-import pandas as pd
+import modin.pandas as pd
 
 import tensorflow as tf
 import tensorflow.keras.backend as K

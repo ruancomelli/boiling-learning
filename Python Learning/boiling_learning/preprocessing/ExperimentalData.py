@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-import pandas as pd
+import modin.pandas as pd
 
 from boiling_learning.utils import PathType
 import boiling_learning.utils as bl_utils

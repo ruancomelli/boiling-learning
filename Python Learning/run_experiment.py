@@ -15,7 +15,7 @@ from datetime import datetime
 import scipy
 import numpy as np
 import csv
-import pandas as pd
+import modin.pandas as pd
 import time
 import functools
 
