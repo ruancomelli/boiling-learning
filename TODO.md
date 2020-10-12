@@ -9,14 +9,14 @@
   - [x] remove `__eq__` in `bl.daq.Device`?
 - [ ] Write unit tests.
 - [ ] Write a config file, so that configurations are not hard-coded in Python, but in a JSON file.
-- [ ] Python Learning: design a preprocessing function that takes a `tf.tensor`. This function should take a batch, preprocess it (possibly using many cores) and then fetch the results. The results should then be saved to disk. Useful links: [TensorFlow guide to data performance](https://www.tensorflow.org/guide/data_performance), [TensorFlow tutorial to image classification](https://www.tensorflow.org/tutorials/images/classification), [TensorFlow tutorial to loading images](https://www.tensorflow.org/tutorials/load_data/images), [TensorFlow guide to building input pipelines](https://www.tensorflow.org/guide/data).
+- [x] Python Learning: design a preprocessing function that takes a `tf.tensor`. This function should take a batch, preprocess it (possibly using many cores) and then fetch the results. The results should then be saved to disk. Useful links: [TensorFlow guide to data performance](https://www.tensorflow.org/guide/data_performance), [TensorFlow tutorial to image classification](https://www.tensorflow.org/tutorials/images/classification), [TensorFlow tutorial to loading images](https://www.tensorflow.org/tutorials/load_data/images), [TensorFlow guide to building input pipelines](https://www.tensorflow.org/guide/data).
 - [x] Move library code to a specific module.
 - [ ] Improve the project structure:
   - [ ] `bl` has its own `utils`. But I believe that every package should have their own utils.
   - [ ] `bl.utils` could be split into many utilities submodules.
-- [ ] Implement parallelization for `TransformationPipeline`s.
+- [x] Implement parallelization for `TransformationPipeline`s.
 - [ ] Use type annotations where applicable.
-- [ ] Can wrappers remove code repetition in crop and shift for the `if image is None: image = imread(in_path)` and the `if out_path is not None: imsave(out_path)`?
+- [x] (DISCARDED) Can wrappers remove code repetition in crop and shift for the `if image is None: image = imread(in_path)` and the `if out_path is not None: imsave(out_path)`?
 - [ ] Implement general function dispatching? See [this](https://docs.python.org/3/library/inspect.html#inspect-signature-object).
 - [ ] Document code.
 - [ ] Check for inconsistent input values in many functions, some of which are marked with a comment like `# TODO: use check_value_match`.
@@ -50,15 +50,15 @@ assert p == Parameters(params={'a': 1000, 'b': 1, 'd': 2000})
   - [x] retrieve existing model path;
   - [x] check if model path already exists;
   - [x] check if model was already saved, or if it exists only in the table;
-- [ ] Format code in PEP style.
+- [ ] Autoformat code.
 - [x] DECIDED: it will not. | Decide if `Parameters` will supporting forking.
 - [ ] A `dict` can be constructed via a call `dict(...)` or via the special syntax `{k: v ...}`. Support this in `Parameters`? How?
 - [ ] Use [TensorFlow estimators](https://www.tensorflow.org/guide/estimator)?
 - [x] Allow different batch sizes for different models.
 - [ ] Why do `more_itertools.filter_except` and `more_itertools.map_except` need to do `exceptions = tuple(exceptions)`?
-- [ ] Finish step detection analysis.
+- [x] Finish step detection analysis.
 - [ ] Implement a mini-translator: translates from the old-string-format minilanguage to the new format.
-- [ ] Implement a function wrapper that transforms the arguments before forwarding. For instance: 
+- [x] Implement a function wrapper that transforms the arguments before forwarding. For instance:
 
 ```python
 import operator
@@ -68,13 +68,13 @@ assert lower_eq('Hi', 'hi')
 ```
 
 - [ ] Why is there a `more_itertools.prepend`, but not a `more_itertools.append`?
-- [ ] Am I normalizing images correctly? Make sure I am!
+- [x] Am I normalizing images correctly? Make sure I am!
 - [x] Allow better querying of models
 - [ ] Add another key to a model entry: `state`. For now, I can think of four states: `non-existent`, when the index is not in the lookup table; `empty`, models that were only added to the lookup table but didn't start training; `incomplete`, models that started training; `complete`, models that finished training; `aborted`, models that are not good enough, and are not worth training.
-- [ ] Are there better storage methods? For instance, using HDF5 instead of plain .png files? According to [this tutorial](https://realpython.com/storing-images-in-python/), HDF5 is much faster for writing and reading. This would be extremely useful for reading datasets and training. 
+- [ ] Are there better storage methods? For instance, using HDF5 instead of plain .png files? According to [this tutorial](https://realpython.com/storing-images-in-python/), HDF5 is much faster for writing and reading. This would be extremely useful for reading datasets and training.
 - [ ] Write READMEs for each package.
 - [ ] Include licenses in each module.
-- [ ] Decide if I'll use MLFlow or similars.
+- [ ] Decide if I'll use MLFlow or similar.
 - [ ] Remove `process_data.py`, taking care to provide its functionalities elsewhere.
 - [ ] Make `cv2` path-like compliant.
 - [ ] Take a look at the relationship between bubble or droplet formation rate and camera acquisition speed.
@@ -248,7 +248,7 @@ class CSVDataset:
   def __init__(self, path: Path, features_columns: Optional[List[str]] = None, target_column: str = 'target'):
     if features_columns is None:
       features_columns = ['image_path']
-    
+
     X = pd.read_csv(path, columns=features_columns + [target_column])
     self.y = X.pop(target_column)
     self.X = X
