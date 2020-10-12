@@ -21,8 +21,12 @@ T = TypeVar('T')
 PackType = Tuple[tuple, Dict[str, Any]]
 
 
-def identity(arg: T) -> T:
-    return arg
+    def rpartial(self, f: Callable[..., U]) -> Callable[..., U]:
+        return rpartial(
+            f,
+            *self.args,
+            **self.kwargs
+        )
 
 
 def pack(*args, **kwargs):
@@ -59,17 +63,15 @@ def reverse_args(f):
     return wrapper
 
 
-def rpartial(f, *args, **kwargs):
-    return partial(
-        reverse_args(f),
-        *args,
-        **kwargs
-    )
+def rpartial(f: Callable[..., U], *args, **kwargs) -> Callable[..., U]:
+    # source: based on <https://github.com/Suor/funcy/pull/96/commits/0772ccac6803b143d8f54f365080f17a51633891>
+    return lambda *a, **kw: f(*(a + args), **{**kwargs, **kw})
 
 
 def apply(
         f: Callable[..., Any],
-        *args) -> None:
+        *args
+) -> None:
     mit.consume(
         map(f, *args)
     )

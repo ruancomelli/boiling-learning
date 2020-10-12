@@ -9,6 +9,7 @@ from typing import (
 )
 import warnings
 
+import funcy
 import h5py
 import tensorflow as tf
 from tensorflow.keras.models import load_model
@@ -16,7 +17,6 @@ from tensorflow.keras.models import load_model
 import boiling_learning.utils as bl_utils
 from boiling_learning.utils import (
     PathType,
-    nullcontext,
     ensure_dir,
     ensure_parent,
     ensure_resolved,
@@ -59,7 +59,7 @@ def save_keras_model(keras_model, path: PathType, **kwargs) -> None:
 
 def load_keras_model(path: PathType, strategy=None, **kwargs):
     if strategy is None:
-        scope = nullcontext()
+        scope = funcy.nullcontext()
     else:
         scope = strategy.scope()
 

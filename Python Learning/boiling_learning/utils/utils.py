@@ -45,10 +45,7 @@ import enum
 import dataclasses
 from dataclasses import dataclass
 
-from toolz import (
-    dicttoolz,
-    functoolz
-)
+import funcy
 import matplotlib.pyplot as plt
 import more_itertools as mit
 from more_itertools import unzip
@@ -56,10 +53,6 @@ from pandas.api.types import union_categoricals
 import modin.pandas as pd
 from sortedcontainers import SortedSet
 
-from boiling_learning.utils.functional import (
-    identity,
-    rpartial
-)
 
 # ---------------------------------- Typing ----------------------------------
 # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
@@ -144,7 +137,7 @@ def remove_duplicates(
     elif isinstance(key, dict):
         return mit.unique_everseen(
             iterable,
-            key=lambda elem: key.get(type(elem), identity)(elem)
+            key=lambda elem: key.get(type(elem), funcy.identity)(elem)
         )
     else:
         return mit.unique_everseen(
@@ -351,8 +344,8 @@ def extract_value(
             return cm.get(key, default)
 
 
-def invert_dict(d: Mapping):
-    return dicttoolz.itemmap(reversed, d, factory=type(d))
+def invert_dict(d: Mapping) -> dict:
+    return funcy.walk(reversed, dict(d))
 
 
 class inclusive_bidict(dict):
@@ -447,12 +440,15 @@ def dataclass_from_mapping(
     if not is_dataclass_class(dataclass_factory):
         raise ValueError('*dataclass_factory* must be a dataclass.')
 
-    dataclass_fields = dataclasses.fields(dataclass_factory)
+    dataclass_field_names = set(map(
+        operator.attrgetter('name'),
+        dataclasses.fields(dataclass_factory)
+    ))
 
     if key_map is None:
         return dataclass_factory(
-            **dicttoolz.keyfilter(
-                dataclass_fields.__contains__,
+            **funcy.select_keys(
+                dataclass_field_names,
                 mapping
             )
         )
@@ -460,11 +456,11 @@ def dataclass_from_mapping(
         if is_dataclass_instance(key_map):
             key_map = dataclasses.asdict(key_map)
 
-        key_map = dicttoolz.keyfilter(
-            dataclass_fields.__contains__,
+        key_map = funcy.select_keys(
+            dataclass_field_names,
             key_map
         )
-        translator = dicttoolz.itemmap(reversed, key_map).get
+        translator = invert_dict(key_map).get
         mapping = {
             translator(key, key): value
             for key, value in mapping.items()
@@ -1128,7 +1124,7 @@ class AutoGenerator:
 # ---------------------------------- Operator ----------------------------------
 def contains(elem):
     '''Return a predicated that tests if a container contains elem.'''
-    return rpartial(operator.contains, elem)
+    return funcy.rpartial(operator.contains, elem)
 
 
 def is_(x) -> Callable[[Any], bool]:

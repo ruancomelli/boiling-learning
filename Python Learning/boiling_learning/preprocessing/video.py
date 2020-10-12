@@ -14,7 +14,7 @@ import operator
 from itertools import accumulate
 import warnings
 
-from toolz import functoolz
+import funcy
 import parse
 from more_itertools import (
     ilen,
@@ -228,11 +228,11 @@ def make_callable_index_parser(
                 for tup in string.Formatter().parse(index_parser_str)
                 if tup[1] is not None
         }:
-            parser = parse.compile(index_parser_str)
-            index_parser = functoolz.compose(
+            parser = parse.compile(index_parser_str).parse
+            index_parser = funcy.compose(
                 int,
                 operator.itemgetter(index_key),
-                parser.parse,
+                parser,
                 str
             )
             return True, index_parser
