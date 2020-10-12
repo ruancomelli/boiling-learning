@@ -48,13 +48,13 @@
     - thin layers:
       <!-- TODO: here -->
 
-## Wires
+## Sample
 
 ### Wire 1
 
 Wire 1 was used in Experiment 1. Data:
 
-- wire id: #1
+- sample id: #1
 - wire type: NI-80 <!-- TODO: complete this-->
 - diameter: 0.51mm (big) <!-- TODO: complete this-->
 - length: ~7cm <!-- TODO: complete this-->
@@ -66,7 +66,7 @@ In the experiment, there as a T-type thermocouple glued to the wire surface.
 
 Wire 2 was used in Experiment 2. Data:
 
-- wire id: #2
+- sample id: #2
 - wire type: NI-80 <!-- TODO: complete this-->
 - diameter: 0.51mm (big) <!-- TODO: complete this-->
 - length: ~7cm <!-- TODO: complete this-->
@@ -78,13 +78,21 @@ The experiment was executed without sensors.
 
 Wire 3 was used in Experiment 3. Data:
 
-- wire id: #3
+- sample id: #3
 - wire type: NI-80 <!-- TODO: complete this-->
 - diameter: 0.25mm (small) <!-- TODO: complete this-->
 - length: ~7cm <!-- TODO: complete this-->
 - texturing: none. The wire was used as extracted from the coil. No further treatment was applied.
 
 The experiment was executed without sensors.
+
+### Horizontal Ribbon
+
+- sample id: #4
+
+### Vertical Ribbon
+
+- sample id: #5
 
 ## Machine learning
 
