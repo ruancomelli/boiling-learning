@@ -124,6 +124,7 @@ dmypy.json
 .pyre/
 
 # User defined ignores
+Laser Texturing/
 Experimental Set Calibration/Calibration/Calibration Data/
 Experimental Set Control/
 Labview Learning/
