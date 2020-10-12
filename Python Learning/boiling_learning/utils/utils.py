@@ -17,7 +17,6 @@ from functools import (
     partial
 )
 from timeit import default_timer
-import typing
 from typing import (
     Any,
     Callable,
@@ -55,12 +54,6 @@ from sortedcontainers import SortedSet
 
 
 # ---------------------------------- Typing ----------------------------------
-# see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
-PathType = Union[str, 'os.PathLike[str]']
-PackType = Tuple[tuple, dict]
-VerboseType = Union[bool, int]
-
-
 class _SentinelType(enum.Enum):
     SENTINEL = enum.auto()
 
@@ -68,6 +61,12 @@ class _SentinelType(enum.Enum):
 _sentinel = _SentinelType.SENTINEL
 T = TypeVar('T')
 SentinelOptional = Union[_SentinelType, T]
+
+
+# see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
+PathType = Union[str, 'os.PathLike[str]']
+VerboseType = Union[bool, int]
+JSONDataType = Union[None, bool, int, float, str, List['JSONDataType'], Dict[str, 'JSONDataType']]
 
 
 # ---------------------------------- Utility functions ----------------------------------
@@ -147,10 +146,10 @@ def remove_duplicates(
 
 
 def reorder(
-    iterable: Sequence[T],
+    seq: Sequence[T],
     indices: Iterable[int]
 ) -> Iterable[T]:
-    return map(iterable.__getitem__, indices)
+    return map(seq.__getitem__, indices)
 
 
 def argmin(
@@ -208,9 +207,29 @@ def missing_ints(ints: Iterable[int]) -> Iterable[int]:
     if ints:
         start, end = ints[0], ints[-1]
         full = range(start, end + 1)
-        return filter(lambda x: x not in ints, full)
+        return itertools.filterfalse(ints.__contains__, full)
     else:
         return empty_gen()
+
+
+def is_consecutive(
+        ints: Iterable[int],
+        ignore_order: bool = False
+) -> bool:
+    ints = tuple(ints)
+    if not ints:
+        return True
+
+    if ignore_order:
+        # Source: https://stackoverflow.com/a/64177833/5811400
+        r = range(min(ints), max(ints) + 1)
+        return (
+            len(ints) == len(r)
+            and all(map(ints.__contains__, r))
+        )
+    else:
+        r = range(ints[0], ints[-1] + 1)
+        return ints == tuple(r)
 
 
 def merge_dicts(*dict_args: Mapping, latter_precedence: bool = True) -> dict:
@@ -509,9 +528,18 @@ def concatenate_dataframes(dfs: Iterable[pd.DataFrame]) -> pd.DataFrame:
     return pd.concat(dfs)
 
 
+def dataframe_categories_to_int(df: pd.DataFrame, inplace: bool = False) -> pd.DataFrame:
+    # See <https://www.tensorflow.org/tutorials/load_data/pandas_dataframe> for the reasoning behind this
+
+    if not inplace:
+        df = df.copy(deep=True)
+
+    for column in df.select_dtypes(include='category').columns:
+        df[column] = pd.Categorical(list(df[column])).codes
+    return df
+
+
 # ---------------------------------- Printing ----------------------------------
-
-
 def print_verbose(verbose: bool, *args, **kwargs) -> None:
     if verbose:
         print(*args, **kwargs)
@@ -568,16 +596,16 @@ def shorten_path(path, max_parts=None, max_len=None, prefix='...'):
     else:
         return prefix + str(shortened)
 
+
 # ---------------------------------- Plotting functions ----------------------------------
-
-
 def prepare_fig(
-        n_cols: int = None,
-        n_rows: int = None,
-        n_elems: int = None,
-        fig_size=None,
-        subfig_size=None,
-        tight_layout: bool = True):
+        n_cols: Optional[int] = None,
+        n_rows: Optional[int] = None,
+        n_elems: Optional[int] = None,
+        fig_size: Optional[Union[str, Tuple[int, int]]] = None,
+        subfig_size: Optional[Union[str, Tuple[int, int]]] = None,
+        tight_layout: bool = True
+):
     """Resize figure and calculate the number of rows and columns in the subplot grid.
 
     Parameters
@@ -603,25 +631,25 @@ def prepare_fig(
             'incompatible arguments: either n_cols, n_rows or n_elems must be None')
 
     grid_size = None
-    if None not in (n_cols, n_rows):
+    if None not in {n_cols, n_rows}:
         grid_size = (n_rows, n_cols)
-    elif None not in (n_cols, n_elems):
+    elif None not in {n_cols, n_elems}:
         n_rows = (n_elems-1)//n_cols + 1
         grid_size = (n_rows, n_cols)
-    elif None not in (n_rows, n_elems):
+    elif None not in {n_rows, n_elems}:
         n_cols = (n_elems-1)//n_rows + 1
         grid_size = (n_rows, n_cols)
 
     def validate(size):
-        if size in ['micro']:
+        if size in {'micro'}:
             return (2, 1.5)
-        if size in ['tiny']:
+        if size in {'tiny'}:
             return (4, 3)
-        if size in ['small']:
+        if size in {'small'}:
             return (7, 5)
-        elif size in ['normal', 'intermediate']:
+        elif size in {'normal', 'intermediate'}:
             return (9, 7)
-        elif size in ['large', 'big']:
+        elif size in {'large', 'big'}:
             return (18, 15)
         else:
             return size
@@ -647,20 +675,20 @@ def prepare_fig(
     }
 
 
-def as_json(obj, cls=None):
+def as_json(obj, cls: Optional[type] = None):
     from json import loads, dumps
     return loads(dumps(obj, cls=cls))
 
 
-def json_equivalent(lhs, rhs, cls=None):
+def json_equivalent(lhs, rhs, cls: Optional[type] = None) -> bool:
     return as_json(lhs, cls) == as_json(rhs, cls)
 
 
 # ---------------------------------- Iteration ----------------------------------
-
-
 def empty_gen():
-    yield from ()
+    # Source: <https://stackoverflow.com/a/13243870/5811400>
+    return
+    yield
 
 
 def append(iterable, value):
@@ -696,9 +724,8 @@ def replace_last(iterable, last_value):
         last_value
     )
 
+
 # ---------------------------------- Path ----------------------------------
-
-
 def relative_path(origin, destination):
     from os.path import relpath
     return relpath(destination, start=origin)
@@ -941,15 +968,28 @@ def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, le
             write(delimnl)
 
 
-def simple_pprint_class(cls):
+def simple_pprint_class(cls: type):
     pprint.PrettyPrinter._dispatch[cls.__repr__] = simple_pprint
+
+    # Returning the class allows the use of this function as a decorator
+    return cls
 
 
 # ---------------------------------- Mixins ----------------------------------
-@dataclass
-class Named(typing.Generic[T]):
-    name: str
-    value: T
+class NamedMixin:
+    def __init__(self, name, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.name: str = name
+
+
+class FrozenNamedMixin:
+    def __init__(self, name, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._name: str = name
+
+    @property
+    def name(self) -> str:
+        return self._name
 
 
 class SimpleRepr:
@@ -1088,7 +1128,7 @@ class NoValueEnum(Enum):
 class ArgGenerator:
     def __init__(
             self,
-            generator: Callable[[Hashable], PackType],
+            generator: Callable[[Hashable], 'Pack'],
             keep: bool = False,
     ):
         self._keep = keep
@@ -1105,7 +1145,7 @@ class ArgGenerator:
 class AutoGenerator:
     def __init__(
             self,
-            generator: Callable[[Hashable], PackType],
+            generator: Callable[[Hashable], 'Pack'],
             keep: bool = False,
             key_index: int = 0
     ):
@@ -1131,7 +1171,5 @@ def is_(x) -> Callable[[Any], bool]:
     return partial(operator.is_, x)
 
 
-is_not = functoolz.compose(
-    functoolz.complement,
-    is_
-)
+def is_not(x) -> Callable[[Any], bool]:
+    return partial(operator.is_not, x)

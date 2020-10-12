@@ -1,46 +1,33 @@
-from dataclasses import dataclass
+import collections
 import itertools
 import operator
-from pathlib import Path
 import typing
-from typing import (
-    overload,
-    Any,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Tuple,
-    Union
-)
+from contextlib import contextmanager
+from dataclasses import dataclass
+from pathlib import Path
+from typing import (Any, Dict, Iterable, Iterator, List, Mapping, Optional,
+                    Tuple, Type, Union, overload)
 
 import modin.pandas as pd
 import numpy as np
 import tensorflow as tf
 
-from boiling_learning.utils import (PathType, VerboseType)
 import boiling_learning.utils as bl_utils
+from boiling_learning.utils import PathType, VerboseType
 import boiling_learning.io as bl_io
 from boiling_learning.preprocessing.ExperimentVideo import ExperimentVideo
 
-AUTOTUNE = tf.data.experimental.AUTOTUNE
 
-
-class ImageDataset(
-        bl_utils.SimpleRepr,
-        bl_utils.SimpleStr,
-        typing.MutableMapping[str, ExperimentVideo]
-):
+@bl_utils.simple_pprint_class
+class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     '''
     TODO: improve this
     An ImageDataset is a file CSV in df_path and the correspondent images. The file in df_path contains at least two columns. One of this columns contains file paths, and the other the targets for training, validation or test. This is intended for using flow_from_dataframe. There may be an optional column which specifies if that image belongs to the training, the validation or the test sets.
     '''
 
-    VideoData = ExperimentVideo.VideoData
-    DataFrameColumnNames = ExperimentVideo.DataFrameColumnNames
-    DataFrameColumnTypes = ExperimentVideo.DataFrameColumnTypes
+    VideoData: Type[ExperimentVideo.VideoData] = ExperimentVideo.VideoData
+    DataFrameColumnNames: Type[ExperimentVideo.DataFrameColumnNames] = ExperimentVideo.DataFrameColumnNames
+    DataFrameColumnTypes: Type[ExperimentVideo.DataFrameColumnTypes] = ExperimentVideo.DataFrameColumnTypes
 
     @dataclass(frozen=True)
     class VideoDataKeys(ExperimentVideo.VideoDataKeys):
@@ -48,20 +35,20 @@ class ImageDataset(
         ignore: str = 'ignore'
 
     def __init__(
-        self,
-        column_names: DataFrameColumnNames = DataFrameColumnNames(),
-        column_types: DataFrameColumnTypes = DataFrameColumnTypes(),
-        df_path: Optional[PathType] = None,
-        df: Optional[pd.DataFrame] = None,
-        exist_load: bool = False
+            self,
+            name: str,
+            column_names: DataFrameColumnNames = DataFrameColumnNames(),
+            column_types: DataFrameColumnTypes = DataFrameColumnTypes(),
+            df_path: Optional[PathType] = None,
+            exist_load: bool = False
     ):
-        if exist_load and df is not None:
-            raise ValueError(
-                'incompatible parameters: *df* and *exist_load=True*. Omit one of them.')
-
+        self._name: str = name
         self.column_names: self.DataFrameColumnNames = column_names
-        self.column_types = column_types
+        self.column_types: self.DataFrameColumnTypes = column_types
         self._experiment_videos: Dict[str, ExperimentVideo] = {}
+        self._allow_key_overwrite: bool = True
+        self.df: Optional[pd.DataFrame] = None
+        self.ds = None
 
         if df_path is not None:
             df_path = bl_utils.ensure_resolved(df_path)
@@ -69,10 +56,21 @@ class ImageDataset(
 
         if exist_load and self.df_path.is_file():
             self.load()
-        else:
-            if df is None:
-                df = pd.DataFrame()
-            self.df = df
+
+    def __str__(self) -> str:
+        return ''.join([
+            self.__class__.__name__,
+            '(',
+            ', '.join([
+                f'name={self.name}',
+                str(dict(**self))                
+            ]),
+            ')'
+        ])
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     def __getitem__(self, name: str) -> ExperimentVideo:
         return self._experiment_videos.__getitem__(name)
@@ -84,6 +82,9 @@ class ImageDataset(
     ) -> None:
         assert name == experiment_video.name, (
             'setting item must respect the experiment video name.')
+        if not self._allow_key_overwrite and name in self:
+            raise ValueError(
+                f'overwriting existing element with name={name} with overwriting disabled.')
         self._experiment_videos.__setitem__(name, experiment_video)
 
     def __delitem__(self, name: str) -> None:
@@ -95,11 +96,23 @@ class ImageDataset(
     def __len__(self) -> int:
         return self._experiment_videos.__len__()
 
-    def add(self, experiment_video: ExperimentVideo) -> None:
-        self.__setitem__(experiment_video.name, experiment_video)
+    def add(self, *experiment_videos: ExperimentVideo) -> None:
+        for experiment_video in experiment_videos:
+            self.__setitem__(experiment_video.name, experiment_video)
+
+    def union(self, *others: Iterable[ExperimentVideo]) -> None:
+        for other in others:
+            self.add(*other)
 
     def discard(self, experiment_video: ExperimentVideo) -> None:
         self.__delitem__(experiment_video.name)
+
+    @contextmanager
+    def disable_key_overwriting(self) -> Iterator["ImageDataset"]:
+        prev_state = self._allow_key_overwrite
+        self._allow_key_overwrite = False
+        yield self
+        self._allow_key_overwrite = prev_state
 
     def video_paths(self) -> Iterable[Path]:
         return map(
@@ -118,6 +131,10 @@ class ImageDataset(
             operator.attrgetter('frames_path'),
             self.values()
         )
+
+    def open_videos(self) -> None:
+        for ev in self.values():
+            ev.open_video()
 
     def extract_audios(
             self,
@@ -149,21 +166,29 @@ class ImageDataset(
     def set_video_data(
             self,
             video_data: Mapping[str, Union[Mapping[str, Any], VideoData]],
-            keys: ExperimentVideo.VideoDataKeys
+            keys: ExperimentVideo.VideoDataKeys = ExperimentVideo.VideoDataKeys(),
+            remove_absent: bool = False
     ) -> None:
-        common_names = frozenset(video_data) & frozenset(self)
-        for name in common_names:
+        video_data_keys = frozenset(video_data.keys())
+        self_keys = frozenset(self.keys())
+        for name in self_keys & video_data_keys:
             self[name].set_video_data(
                 video_data[name],
                 keys
             )
 
+        if remove_absent:
+            for name in self_keys - video_data_keys:
+                del self[name]
+
     def set_video_data_from_file(
             self,
             data_path: PathType,
             purge: bool = False,
-            keys: VideoDataKeys = VideoDataKeys(),
+            remove_absent: bool = False,
+            keys: VideoDataKeys = VideoDataKeys()
     ) -> None:
+        data_path = bl_utils.ensure_resolved(data_path)
         video_data = bl_io.load_json(data_path)
         purged = not purge
 
@@ -189,7 +214,9 @@ class ImageDataset(
                     if not value.pop(keys.ignore, False)
                 }
 
-            self.set_video_data(video_data, keys)
+            self.set_video_data(video_data, keys, remove_absent=remove_absent)
+        else:
+            raise RuntimeError(f'could not load video data from {data_path}.')
 
     def load(
             self,
@@ -221,6 +248,35 @@ class ImageDataset(
 
         if overwrite or not path.is_file():
             self.df.to_csv(path, index=False)
+
+    def save_dfs(
+            self,
+            overwrite: bool = False
+    ) -> None:
+        bl_utils.functional.apply(
+            operator.methodcaller('save_df', overwrite=overwrite),
+            self.values()
+        )
+
+    def load_dfs(
+            self,
+            columns: Optional[Iterable[str]] = None,
+            overwrite: bool = False,
+            missing_ok: bool = False
+    ) -> None:
+        if columns is not None:
+            columns = tuple(columns)
+
+        bl_utils.functional.apply(
+            operator.methodcaller(
+                'load_df',
+                columns=columns,
+                overwrite=overwrite,
+                missing_ok=missing_ok,
+                inplace=True
+            ),
+            self.values()
+        )
 
     def move(
             self,
@@ -272,7 +328,7 @@ class ImageDataset(
         if many:
             old_to_new = dict(zip(map(Path, old_path), map(Path, new_path)))
             self.paths = self.df[self.column_names.path].apply(
-                lambda y: old_to_new.get(Path(y), y)
+                lambda x: old_to_new.get(Path(x), x)
             )
         else:
             self.paths = self.df[self.column_names.path].mask(
@@ -280,19 +336,27 @@ class ImageDataset(
                 new_path
             )
 
-    def as_dataframe(self) -> pd.DataFrame:
+    def make_dataframe(
+            self,
+            recalculate: bool = False,
+            exist_load: bool = False,
+            enforce_time: bool = False,
+            categories_as_int: bool = False,
+            inplace: bool = True
+    ) -> pd.DataFrame:
         dfs = map(
             operator.methodcaller(
-                'as_dataframe',
-                self.column_names,
-                self.column_types
+                'make_dataframe',
+                recalculate=recalculate,
+                exist_load=exist_load,
+                enforce_time=enforce_time,
+                categories_as_int=categories_as_int,
+                inplace=inplace
             ),
             self.values()
         )
-
-        self.df = bl_utils.concatenate_dataframes(dfs)
-
-        return self.df
+        df = bl_utils.concatenate_dataframes(dfs)
+        return df
 
     @overload
     def iterdata_from_dataframe(self, select_columns: str) -> Iterable[Tuple[np.ndarray, Any]]: ...
@@ -310,23 +374,31 @@ class ImageDataset(
 
     def as_tf_dataset(
             self,
-            column_spec: Union[Tuple[str, tf.DType], List[Tuple[str, tf.DType]]]
+            select_columns: Optional[Union[str, List[str]]] = None,
+            inplace: bool = False
     ) -> tf.data.Dataset:
-        if isinstance(column_spec[0], str):
-            select_columns = column_spec[0]
-            type_spec = column_spec[1]
-        else:
-            select_columns = [
-                col_spec[0]
-                for col_spec in column_spec
-            ]
-            type_spec = column_spec
+        datasets = collections.deque(map(
+            operator.methodcaller('as_tf_dataset', select_columns, inplace=inplace),
+            self.values()
+        ))
 
-        return tf.data.Dataset.from_generator(
-            self.iterdata_from_dataframe,
-            (tf.float32, type_spec),
-            args=[select_columns]
-        )
+        if not datasets:
+            raise ValueError('resulting tensorflow dataset is empty.')
 
+        ds = datasets.popleft()
+        for dataset in datasets:
+            ds = ds.concatenate(dataset)
 
-bl_utils.simple_pprint_class(ImageDataset)
+        if inplace:
+            self.ds = ds
+
+        return ds
+
+    def as_tf_dataset_dict(
+            self,
+            select_columns: Optional[Union[str, List[str]]] = None
+    ) -> Dict[str, tf.data.Dataset]:
+        return {
+            name: experiment_video.as_tf_dataset(select_columns=select_columns)
+            for name, experiment_video in self.items()
+        }

@@ -1,32 +1,139 @@
+from itertools import accumulate
 import json
+import operator
+import os
+from pathlib import Path
 import pickle
+import string
 from typing import (
     Any,
     Callable,
     Dict,
+    Iterable,
     Mapping,
-    TypeVar
+    Optional,
+    Tuple,
+    TypeVar,
+    Union
 )
 import warnings
 
+import cv2
 import funcy
 import h5py
+import numpy as np
+import modin.pandas as pd
 import tensorflow as tf
 from tensorflow.keras.models import load_model
+import yogadl
+import yogadl.storage
 
 import boiling_learning.utils as bl_utils
 from boiling_learning.utils import (
     PathType,
     ensure_dir,
     ensure_parent,
-    ensure_resolved,
-    dtypes
+    ensure_resolved
 )
 
 T = TypeVar('T')
 S = TypeVar('S')
 SaverFunction = Callable[[S, PathType], Any]
 LoaderFunction = Callable[[PathType], S]
+
+
+def chunked_filename_pattern(
+        chunk_sizes: Iterable[int],
+        chunk_name: str = '{min_index}-{max_index}',
+        filename: PathType = 'frame{index}.png',
+        index_key: str = 'index',
+        min_index_key: str = 'min_index',
+        max_index_key: str = 'max_index',
+        root: Optional[PathType] = None
+) -> Callable[[int], Path]:
+    chunks = tuple(accumulate(chunk_sizes, operator.mul))
+    filename_formatter = filename.format
+    chunk_name_formatter = chunk_name.format
+
+    def filename_pattern(index: int) -> Path:
+        current = Path(filename_formatter(**{index_key: index}))
+        for chunk_size in chunks:
+            min_index = (index // chunk_size) * chunk_size
+            max_index = min_index + chunk_size - 1
+            current_chunk_name = chunk_name_formatter(
+                **{min_index_key: min_index, max_index_key: max_index})
+            current = Path(current_chunk_name) / current
+
+        current = bl_utils.ensure_resolved(current, root=root)
+
+        return current
+    return filename_pattern
+
+
+def make_callable_filename_pattern(
+        outputdir: PathType,
+        filename_pattern: Union[PathType, Callable[[int], PathType]],
+        index_key: Optional[str] = None
+) -> Tuple[bool, Callable[[int], Path]]:
+
+    if callable(filename_pattern):
+        def _filename_pattern(index: int) -> Path:
+            return bl_utils.ensure_parent(
+                filename_pattern(index),
+                root=outputdir
+            )
+
+        return True, _filename_pattern
+    else:
+        filename_pattern_str = str(filename_pattern)
+
+        if index_key is not None and index_key in {
+                tup[1]
+                for tup in string.Formatter().parse(filename_pattern_str)
+                if tup[1] is not None
+        }:
+            formatter = filename_pattern_str.format
+
+            def _filename_pattern(index: int) -> Path:
+                return bl_utils.ensure_parent(
+                    formatter(
+                        **{index_key: index}
+                    ),
+                    root=outputdir
+                )
+            return True, _filename_pattern
+
+        else:
+            try:
+                # checks if it is possible to use old-style formatting
+                filename_pattern_str % 0
+            except TypeError:
+                return False, filename_pattern
+
+            def _filename_pattern(index: int) -> Path:
+                return bl_utils.ensure_parent(
+                    filename_pattern_str % index,
+                    root=outputdir
+                )
+
+            return True, _filename_pattern
+
+
+def save_image(
+        image: np.ndarray,
+        path: PathType
+) -> None:
+    cv2.imwrite(
+        str(bl_utils.ensure_parent(path)),
+        image
+    )
+
+
+def load_image(path: PathType, flag: Optional[int] = cv2.IMREAD_COLOR) -> np.ndarray:
+    return cv2.imread(
+        str(bl_utils.ensure_resolved(path)),
+        flag
+    )
 
 
 def save_serialized(
@@ -79,7 +186,7 @@ def load_pkl(path: PathType):
         return pickle.load(file)
 
 
-def save_json(obj, path: PathType) -> None:
+def save_json(obj, path: PathType, cls=None) -> None:
     path = ensure_parent(path)
 
     if path.suffix != '.json':
@@ -89,10 +196,10 @@ def save_json(obj, path: PathType) -> None:
         )
 
     with path.open('w', encoding='utf-8') as file:
-        json.dump(obj, file, indent=4, ensure_ascii=False)
+        json.dump(obj, file, indent=4, ensure_ascii=False, cls=cls)
 
 
-def load_json(path: PathType):
+def load_json(path: PathType, cls=None):
     path = ensure_resolved(path)
 
     if path.suffix != '.json':
@@ -102,7 +209,7 @@ def load_json(path: PathType):
         )
 
     with path.open('r', encoding='utf-8') as file:
-        return json.load(file)
+        return json.load(file, cls=cls)
 
 
 def saver_hdf5(key: str = '') -> SaverFunction[Any]:
@@ -141,13 +248,25 @@ def _element_list_to_spec(lst):
     )
 
 
-def save_dataset(dataset, path: PathType):
+def save_element_spec(elem_spec, path: PathType) -> None:
+    save_json(
+        _element_spec_to_list(elem_spec),
+        path
+    )
+
+
+def load_element_spec(path: PathType):
+    element_spec_list = load_json(path)
+    return _element_list_to_spec(element_spec_list)
+
+
+def save_dataset(dataset, path: PathType) -> None:
     path = ensure_dir(path)
     dataset_path = path / 'dataset'
     element_spec_path = path / 'element_spec.json'
 
-    save_json(
-        _element_spec_to_list(dataset.element_spec),
+    save_element_spec(
+        dataset.element_spec,
         element_spec_path
     )
 
@@ -159,7 +278,134 @@ def load_dataset(path: PathType):
     dataset_path = path / 'dataset'
     element_spec_path = path / 'element_spec.json'
 
-    element_spec_list = load_json(element_spec_path)
-    element_spec = _element_list_to_spec(element_spec_list)
+    element_spec = load_element_spec(element_spec_path)
 
     return tf.data.experimental.load(dataset_path, element_spec)
+
+
+def _default_filename_pattern(name: str, index: int) -> Path:
+    return Path(name + '_' + index + '.png')
+
+
+def save_frames_dataset(
+        dataset: tf.data.Dataset,
+        path: PathType,
+        filename_pattern: Callable[[str, int], Path] = _default_filename_pattern,
+        name_column: str = 'name',
+        index_column: str = 'index'
+) -> None:
+    path = bl_utils.ensure_dir(path)
+    imgs_path = bl_utils.ensure_dir(path / 'images')
+    df_path = path / 'dataframe.csv'
+
+    def _get_path(data):
+        name = data[name_column]
+        index = int(data[index_column])
+
+        return imgs_path / filename_pattern(name, index)
+
+    def _make_series(path, data):
+        return pd.Series(data, name=path)
+
+    df = pd.DataFrame()
+    for img, data in dataset.as_numpy_iterator():
+        img_path = _get_path(data)
+        df = df.append(_make_series(img_path, data))
+        save_image(img, img_path)
+
+    df.to_csv(df_path, header=True, index=True)
+
+
+def decode_img(img, channels: int = 1):
+    # convert the compressed string to a 3D uint8 tensor
+    img = tf.image.decode_png(img, channels=channels)
+    # Use `convert_image_dtype` to convert to floats in the [0,1] range
+    img = tf.image.convert_image_dtype(img, tf.float32)
+    # resize the image to the desired size
+    # img = tf.image.resize(img, IMG_SHAPE[:2])
+    # img = tf.reshape(img, IMG_SHAPE)
+    return img
+
+
+def process_path(
+        file_path,
+        in_dir: Optional[PathType] = None
+):
+    # from relative to absolute path
+    if in_dir is not None:
+        file_path = str(in_dir) + os.sep + file_path
+
+    # load the raw data from the file as a string
+    img = tf.io.read_file(file_path)
+    # decode data
+    img = decode_img(img)
+    return img
+
+
+def load_frames_dataset(
+        path: PathType,
+        shuffle: bool = True
+) -> tf.data.Dataset:
+    path = bl_utils.ensure_resolved(path)
+    df_path = path / 'dataframe.csv'
+    # element_spec_path = path / 'elem_spec.json'
+
+    df = pd.read_csv(df_path, index_col=0)
+    if shuffle:
+        df = df.sample(frac=1)
+    files = list(map(
+        bl_utils.ensure_resolved,
+        df.index
+    ))
+    df = df.reset_index(drop=True)
+
+    ds_img = tf.data.Dataset.from_tensor_slices(files)
+    ds_img = ds_img.map(process_path)
+    ds_data = tf.data.Dataset.from_tensor_slices(
+        df.to_dict('list')
+    )
+    ds = tf.data.Dataset.zip((ds_img, ds_data))
+
+    return ds
+
+
+def save_yogadl(
+        dataset,
+        storage_path: PathType,
+        dataset_id: str,
+        dataset_version: str = '0.0'
+) -> None:
+    storage_path = ensure_dir(storage_path)
+
+    lfs_config = yogadl.storage.LFSConfigurations(str(storage_path))
+    storage = yogadl.storage.LFSStorage(lfs_config)
+    storage.submit(dataset, dataset_id, dataset_version)
+
+
+def load_yogadl(
+        storage_path: PathType,
+        dataset_id: str,
+        dataset_version: str = '0.0',
+        start_offset: int = 0,
+        shuffle: bool = False,
+        skip_shuffle_at_epoch_end: bool = False,
+        shuffle_seed: Optional[int] = None,
+        shard_rank: int = 0,
+        num_shards: int = 1,
+        drop_shard_remainder: bool = False
+) -> tf.data.Dataset:
+    storage_path = ensure_dir(storage_path)
+
+    lfs_config = yogadl.storage.LFSConfigurations(str(storage_path))
+    storage = yogadl.storage.LFSStorage(lfs_config)
+    dataref = storage.fetch(dataset_id, dataset_version)
+    stream = dataref.stream(
+        start_offset=start_offset,
+        shuffle=shuffle,
+        skip_shuffle_at_epoch_end=skip_shuffle_at_epoch_end,
+        shuffle_seed=shuffle_seed,
+        shard_rank=shard_rank,
+        num_shards=num_shards,
+        drop_shard_remainder=drop_shard_remainder
+    )
+    return yogadl.tensorflow.make_tf_dataset(stream)

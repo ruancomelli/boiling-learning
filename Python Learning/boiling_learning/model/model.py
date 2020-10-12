@@ -4,9 +4,12 @@ import enum
 import parse
 from sklearn.model_selection import train_test_split
 
-import boiling_learning as bl
+import boiling_learning.utils.utils as bl_utils
+from boiling_learning.utils.utils import PathType
+import boiling_learning.io.io as bl_io
 
 _sentinel = object()
+T = TypeVar('T')
 
 
 class SplitSubset(enum.Enum):
@@ -108,22 +111,22 @@ def train_val_test_split(
 
 
 def restore(
-    restore=False,
-    path=None,
-    load_method=None,
-    epoch_str='epoch'
-):
+    restore: bool = False,
+    path: Optional[PathType] = None,
+    load_method: bl_io.LoaderFunction[T] = None,
+    epoch_str: str = 'epoch'
+) -> Tuple[int, Optional[T]]:
     last_epoch = -1
     model = None
     if restore:
-        path = Path(path)
+        path = bl_utils.ensure_resolved(path)
         glob_pattern = path.name.replace(f'{{{epoch_str}}}', '*')
         parser = parse.compile(path.name).parse
 
         paths = path.parent.glob(glob_pattern)
         parsed = (parser(path_item.name) for path_item in paths)
         parsed = filter(lambda p: p is not None and epoch_str in p, parsed)
-        epochs = bl.utils.append(
+        epochs = bl_utils.append(
             (int(p[epoch_str]) for p in parsed),
             last_epoch
         )

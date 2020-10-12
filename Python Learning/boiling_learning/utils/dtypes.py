@@ -1,5 +1,10 @@
+from typing import (
+    Mapping,
+    Sequence
+)
+
 import bidict
-import pandas as pd
+import funcy
 import tensorflow as tf
 
 
@@ -21,9 +26,47 @@ tf_str_dtype_bidict = bidict.bidict(
 )
 
 
-pd_tf_dtype_bidict = bidict.bidict({
-    pd.int64: tf.int64,
-    pd.float64: tf.float64,
-    pd.bool: tf.bool,
-    pd.category: tf.string
-})
+def auto_spec(elem):
+    if hasattr(elem, 'dtype'):
+        return elem.dtype
+    else:
+        if isinstance(elem, Sequence):
+            return funcy.walk(auto_spec, elem)
+        elif isinstance(elem, Mapping):
+            return funcy.walk_values(auto_spec, elem)
+        else:
+            return elem.dtype
+
+
+def new_py_function(func, inp, Tout, name=None):
+    # Source: <https://github.com/tensorflow/tensorflow/issues/27679#issuecomment-522578000>
+
+    def _tensor_spec_to_dtype(v):
+        return v.dtype if isinstance(v, tf.TensorSpec) else v
+
+    def _dtype_to_tensor_spec(v):
+        return tf.TensorSpec(None, v) if isinstance(v, tf.dtypes.DType) else v
+
+    def wrapped_func(*flat_inp):
+        reconstructed_inp = tf.nest.pack_sequence_as(
+            inp,
+            flat_inp,
+            expand_composites=True
+        )
+        out = func(*reconstructed_inp)
+        return tf.nest.flatten(out, expand_composites=True)
+
+    flat_Tout = tf.nest.flatten(Tout, expand_composites=True)
+    flat_out = tf.py_function(
+        func=wrapped_func,
+        inp=tf.nest.flatten(inp, expand_composites=True),
+        Tout=[_tensor_spec_to_dtype(v) for v in flat_Tout],
+        name=name
+    )
+    spec_out = tf.nest.map_structure(
+        _dtype_to_tensor_spec,
+        Tout,
+        expand_composites=True
+    )
+    out = tf.nest.pack_sequence_as(spec_out, flat_out, expand_composites=True)
+    return out

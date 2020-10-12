@@ -1,12 +1,14 @@
+from contextlib import contextmanager
 import dataclasses
 from dataclasses import dataclass
-import datetime
 import operator
 from pathlib import Path
 from typing import (
     overload,
     Any,
+    Callable,
     Iterable,
+    Iterator,
     List,
     Mapping,
     Optional,
@@ -15,22 +17,30 @@ from typing import (
     Union
 )
 
-from scipy.interpolate import interp1d
+# import decord
+import funcy
 import numpy as np
 import modin.pandas as pd
 import pims
-from toolz import dicttoolz
+from scipy.interpolate import interp1d
+import tensorflow as tf
 
-from boiling_learning.preprocessing.video import (
-    convert_video,
-    extract_audio,
-    chunked_filename_pattern,
-    extract_frames
-)
 import boiling_learning.utils as bl_utils
 from boiling_learning.utils import (
     PathType,
     VerboseType
+)
+from boiling_learning.io.io import (
+    chunked_filename_pattern
+)
+from boiling_learning.preprocessing.preprocessing import (
+    sync_dataframes
+)
+from boiling_learning.preprocessing.video import (
+    convert_video,
+    extract_audio,
+    extract_frames,
+    frames
 )
 
 
@@ -52,14 +62,14 @@ class ExperimentVideo:
         '''
         categories: Optional[Mapping[str, Any]] = dataclasses.field(default_factory=dict)
         fps: Optional[float] = None
-        ref_frame: Optional[str] = None
+        ref_index: Optional[str] = None
         ref_elapsed_time: Optional[str] = None
 
     @dataclass(frozen=True)
     class VideoDataKeys:
         categories: str = 'categories'
         fps: str = 'fps'
-        ref_frame: str = 'ref_frame'
+        ref_index: str = 'ref_index'
         ref_elapsed_time: str = 'ref_elapsed_time'
 
     @dataclass(frozen=True)
@@ -74,7 +84,7 @@ class ExperimentVideo:
         index = int
         path = str
         name = str
-        elapsed_time = float
+        elapsed_time = 'timedelta64[s]'
         categories = 'category'
 
     def __init__(
@@ -82,22 +92,31 @@ class ExperimentVideo:
             video_path: PathType,
             name: Optional[str] = None,
             frames_dir: Optional[PathType] = None,
-            frames_path: Optional[PathType] = None,
             frames_suffix: str = '.png',
+            frames_path: Optional[PathType] = None,
             audio_dir: Optional[PathType] = None,
-            audio_path: Optional[PathType] = None,
             audio_suffix: str = '.m4a',
+            audio_path: Optional[PathType] = None,
+            df_dir: Optional[PathType] = None,
+            df_suffix: str = '.csv',
+            df_path: Optional[PathType] = None,
             column_names: DataFrameColumnNames = DataFrameColumnNames(),
             column_types: DataFrameColumnTypes = DataFrameColumnTypes()
     ):
         self.video_path: Path = bl_utils.ensure_resolved(video_path)
         self.frames_path: Path
+        self.frames_suffix: str
         self.audio_path: Path
+        self.df_path: Path
         self.data: Optional[self.VideoData] = None
         self._name: str
-        self.column_names = column_names
-        self.column_types = column_types
-        self.df = None
+        self.column_names: self.DataFrameColumnNames = column_names
+        self.column_types: self.DataFrameColumnTypes = column_types
+        self.df: Optional[pd.DataFrame] = None
+        self.ds: Optional[tf.data.Dataset] = None
+        # self.video: Optional[decord.VideoReader] = None
+        self.video: Optional[pims.Video] = None
+        self._is_open_video: bool = False
 
         if name is None:
             self._name = self.video_path.stem
@@ -134,9 +153,54 @@ class ExperimentVideo:
             raise ValueError(
                 'exactly one of (audio_dir, audio_path) must be given.')
 
+        if not df_suffix.startswith('.'):
+            raise ValueError(
+                'argument *df_suffix* must start with a dot \'.\'')
+
+        if (df_dir is None) ^ (df_path is None):
+            self.df_path = (
+                bl_utils.ensure_resolved(df_path)
+                if df_dir is None
+                else (bl_utils.ensure_resolved(df_dir) / self.name).with_suffix(df_suffix)
+            )
+        else:
+            raise ValueError(
+                'exactly one of (df_dir, df_path) must be given.')
+
+    def __str__(self) -> str:
+        return ''.join((
+            self.__class__.__name__,
+            '(',
+            ', '.join((
+                f'name={self.name}',
+                f'video_path={self.video_path}',
+                f'frames_path={self.frames_path}',
+                f'frames_suffix={self.frames_suffix}',
+                f'audio_path={self.audio_path}',
+                f'df_path={self.df_path}',
+                f'data={self.data}',
+                f'column_names={self.column_names}',
+                f'column_types={self.column_types}',
+            )),
+            ')'
+        ))
+
     @property
     def name(self) -> str:
         return self._name
+
+    def open_video(self) -> None:
+        # decord.bridge.set_bridge('tensorflow')
+        if not self._is_open_video:
+            self.video = pims.Video(str(self.video_path))
+            # self.video = decord.VideoReader(str(self.video_path))
+            self._is_open_video = True
+
+    def close_video(self) -> None:
+        if self._is_open_video:
+            self.video.close()
+        self.video = None
+        self._is_open_video = False
 
     def convert_video(
             self,
@@ -146,6 +210,7 @@ class ExperimentVideo:
     ) -> None:
         """Use this function to move or convert video
         """
+        dest_path = bl_utils.ensure_parent(dest_path)
         convert_video(
             self.video_path,
             dest_path,
@@ -208,8 +273,36 @@ class ExperimentVideo:
     def frame_name(self, index: int) -> str:
         return self._frame_name_format().format(index=index)
 
-    def frames(self) -> Sequence[np.ndarray]:
-        return pims.Video(self.video_path)
+    @contextmanager
+    def sequential_frames(self) -> Iterator[Iterable[np.ndarray]]:
+        f = frames(self.video_path)
+        try:
+            yield f
+        finally:
+            f.close()
+
+    @contextmanager
+    def frames(self, auto_open: bool = True) -> Iterator[Optional[Sequence[np.ndarray]]]:
+        if auto_open:
+            self.open_video()
+        yield self.video
+
+    # @contextmanager
+    # def frames(self) -> Iterator[Sequence[np.ndarray]]:
+    #     f = pims.Video(self.video_path)
+    #     try:
+    #         yield f
+    #     finally:
+    #         f.close()
+
+    def frame(self, i: int, auto_open: bool = True) -> np.ndarray:
+        if auto_open:
+            self.open_video()
+        elif not self._is_open_video:
+            raise ValueError('Video is not open. Please *open_video()* before getting frame.')
+        return self.video[i]
+        # with self.frames() as f:
+        #     return f[i]
 
     def glob_frames(self) -> Iterable[Path]:
         return self.frames_path.rglob('*' + self.frames_suffix)
@@ -245,10 +338,6 @@ class ExperimentVideo:
 
         WARNING: if *data_source* contains
         '''
-
-        if self.data is None:
-            raise ValueError('cannot set data while video_data is not set.')
-
         self.make_dataframe(recalculate=False, enforce_time=True)
 
         columns_to_set = tuple(x for x in data_source.columns if x != source_time_column)
@@ -265,12 +354,44 @@ class ExperimentVideo:
 
         return self.df
 
+    def convert_dataframe_type(self, df: pd.DataFrame, categories_as_int: bool = False) -> pd.DataFrame:
+        col_types = funcy.merge(
+            dict.fromkeys(self.data.categories, 'category'),
+            {
+                self.column_names.index: self.column_types.index,
+                self.column_names.path: self.column_types.path,
+                self.column_names.name: self.column_types.name,
+                # self.column_names.elapsed_time: self.column_types.elapsed_time
+                # BUG: including the line above rounds elapsed time, breaking the whole pipeline
+            }
+        )
+        col_types = funcy.select_keys(
+            set(df.columns),
+            col_types
+        )
+        df = df.astype(col_types)
+
+        if df[self.column_names.elapsed_time].dtype.kind == 'm':
+            df[self.column_names.elapsed_time] = df[self.column_names.elapsed_time].dt.total_seconds()
+
+        if categories_as_int:
+            df = bl_utils.dataframe_categories_to_int(df, inplace=True)
+
+        return df
+
     def make_dataframe(
             self,
             recalculate: bool = False,
-            enforce_time: bool = False
+            exist_load: bool = False,
+            enforce_time: bool = False,
+            categories_as_int: bool = False,
+            inplace: bool = True
     ) -> pd.DataFrame:
         if not recalculate and self.df is not None:
+            return self.df
+
+        if exist_load and self.df_path.is_file():
+            self.load_df()
             return self.df
 
         if self.data is None:
@@ -293,15 +414,16 @@ class ExperimentVideo:
             bl_utils.is_not(None),
             (
                 self.data.fps,
-                self.data.ref_frame,
+                self.data.ref_index,
                 self.data.ref_elapsed_time
             )
         )
         if all(available_time_info):
             ref_index = self.data.ref_index
-            delta = datetime.timedelta(seconds=1/self.data.fps)
+            ref_elapsed_time = pd.to_timedelta(self.data.ref_elapsed_time, unit='s')
+            delta = pd.to_timedelta(1/self.data.fps, unit='s')
             elapsed_time_list = [
-                self.data.ref_elapsed_time + delta*(index - ref_index)
+                ref_elapsed_time + delta*(index - ref_index)
                 for index in indices
             ]
 
@@ -319,23 +441,32 @@ class ExperimentVideo:
             data[self.column_names.path] = paths
 
         df = pd.DataFrame(data)
-
-        col_types = bl_utils.merge_dicts(
-            dict.fromkeys(self.data.categories, 'category'),
-            {
-                self.column_names.path: self.column_types.path,
-                self.column_names.name: self.column_types.name,
-                self.column_names.elapsed_time: self.column_types.elapsed_time
-            }
-        )
-        col_types = dicttoolz.keyfilter(
-            set(df.columns).__contains__,
-            col_types
+        df = self.convert_dataframe_type(
+            df,
+            categories_as_int=categories_as_int
         )
 
-        self.df = df.astype(col_types)
+        if inplace:
+            self.df = df
+        return df
 
-        return self.df
+    def sync_time_series(
+            self,
+            source_df: pd.DataFrame,
+            inplace: bool = True
+    ) -> pd.DataFrame:
+        df = self.make_dataframe(recalculate=False, enforce_time=True, inplace=inplace)
+
+        df = sync_dataframes(
+            source_df=source_df,
+            dest_df=df,
+            dest_time_column=self.column_names.elapsed_time
+        )
+
+        if inplace:
+            self.df = df
+
+        return df
 
     @overload
     def iterdata_from_dataframe(self, select_columns: str) -> Iterable[Tuple[np.ndarray, Any]]: ...
@@ -353,8 +484,120 @@ class ExperimentVideo:
             if not isinstance(select_columns, str):
                 data = data.to_dict(orient='records')
 
-        with self.frames() as f:
-            return zip(
-                map(f.__getitem__, indices),
-                data
+        return zip(
+            map(self.frame, indices),
+            data
+        )
+
+    def load_df(
+            self,
+            path: Optional[PathType] = None,
+            columns: Optional[Iterable[str]] = None,
+            overwrite: bool = False,
+            missing_ok: bool = False,
+            inplace: bool = True
+    ) -> Optional[pd.DataFrame]:
+        if not overwrite and self.df is not None:
+            return self.df
+
+        if path is None:
+            path = self.df_path
+        else:
+            self.df_path = bl_utils.ensure_resolved(path)
+
+        if missing_ok and not self.df_path.is_file():
+            return None
+
+        if columns is None:
+            df = pd.read_csv(self.df_path, skipinitialspace=True)
+        else:
+            df = pd.read_csv(
+                self.df_path,
+                skipinitialspace=True,
+                usecols=tuple(columns)
             )
+
+        if inplace:
+            self.df = df
+        return df
+
+    def save_df(
+            self,
+            path: Optional[PathType] = None,
+            overwrite: bool = False
+    ) -> None:
+        if path is None:
+            path = self.df_path
+        path = bl_utils.ensure_parent(path)
+
+        if overwrite or not path.is_file():
+            self.df.to_csv(path, index=False)
+
+    def move_df(
+            self,
+            path: Union[str, bl_utils.PathType],
+            renaming: bool = False,
+            erase_old: bool = False,
+            overwrite: bool = False
+    ) -> None:
+        if erase_old:
+            old_path = self.df_path
+
+        if renaming:
+            self.df_path = self.df_path.with_name(path)
+        else:
+            self.df_path = bl_utils.ensure_resolved(path)
+
+        self.save(overwrite=overwrite)
+
+        if erase_old and old_path.is_file():
+            old_path.unlink()
+        # if erase: # Python 3.8 only
+        #     old_path.unlink(missing_ok=True)
+
+    def as_tf_dataset(
+            self,
+            select_columns: Optional[Union[str, List[str]]] = None,
+            sequential_indices_call: Optional[Callable[['ExperimentVideo'], tf.data.Dataset]] = None,
+            inplace: bool = False
+    ) -> tf.data.Dataset:
+        # See <https://www.tensorflow.org/tutorials/load_data/pandas_dataframe>
+
+        df = self.make_dataframe(recalculate=False)
+        df = self.convert_dataframe_type(df)
+        indices = df[self.column_names.index]
+
+        if sequential_indices_call is not None and bl_utils.is_consecutive(indices):
+            ds_img = sequential_indices_call(self)
+        else:
+            def remapped_frames(indices: Iterable[int]) -> Iterable[tf.Tensor]:
+                frames = map(self.frame, indices)
+                # tf_frames = map(decord.bridge.to_tensorflow, frames)
+                converter = funcy.rpartial(tf.image.convert_image_dtype, tf.float32)
+                # return map(converter, tf_frames)
+                return map(converter, frames)
+
+            ds_img = tf.data.Dataset.from_generator(
+                remapped_frames,
+                tf.float32,
+                args=[indices]
+            )
+
+        if select_columns is not None:
+            df = df[select_columns]
+
+        ds_data = tf.data.Dataset.from_tensor_slices(
+            df.to_dict('list')
+        )
+        ds = tf.data.Dataset.zip((ds_img, ds_data))
+
+        if inplace:
+            self.ds = ds
+
+        return ds
+
+        # return tf.data.Dataset.from_generator(
+        #     self.iterdata_from_dataframe,
+        #     (tf.float32, type_spec),
+        #     args=[select_columns]
+        # )

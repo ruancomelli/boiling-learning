@@ -1,33 +1,39 @@
+from functools import partial
 from typing import (
     Callable,
+    Generic,
     Mapping,
-    Optional
+    Optional,
+    TypeVar
 )
 
 import boiling_learning.utils as bl_utils
 
 
-class ElementCreator:
+T = TypeVar('T')
+
+
+class ElementCreator(
+        bl_utils.FrozenNamedMixin,
+        Generic[T]
+):
+    # TODO: improve type annotation in Python 3.8+ using:
+    #   - expand_params: Literal[True], method: Callable[..., Any]
+    #   - expand_params: Literal[False], method: Callable[[Mapping], Any]
+    # or something like this
     def __init__(
         self,
-        method: Callable,
         name: str,
+        method: Callable[..., T],
         default_params: Optional[dict] = None,
-        expand_params: bool = False,
-        resolver: Optional[Callable[[dict, dict], dict]] = None
+        expand_params: bool = False
     ):
+        super().__init__(name)
+
         self.default_params: dict = default_params if default_params is not None else {}
         self.expand_params: bool = expand_params
-        self.method: Callable = method
-        self.name: str = name
-
-        def default_resolver(default_params, params):
-            return bl_utils.merge_dicts(default_params, params)
-
-        if resolver is None:
-            self.resolver = default_resolver
-        else:
-            self.resolver = resolver
+        self.method: Callable[..., T] = method
+        self.resolve = partial(bl_utils.merge_dicts, default_params)
 
     def __call__(self, params: Optional[Mapping] = None):
         if params is None:
@@ -40,5 +46,19 @@ class ElementCreator:
         else:
             return self.method(resolved_params)
 
-    def resolve(self, params: Mapping):
-        return self.resolver(self.default_params, params)
+
+def make_creator(
+        name: str,
+        default_params: Optional[dict] = None,
+        expand_params: bool = False,
+        resolver: Optional[Callable[[dict, dict], dict]] = None
+):
+    def wrapper(method: Callable):
+        return ElementCreator(
+            method,
+            name,
+            default_params=default_params,
+            expand_params=expand_params,
+            resolver=resolver
+        )
+    return wrapper

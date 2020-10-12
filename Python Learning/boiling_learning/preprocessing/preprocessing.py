@@ -15,18 +15,20 @@ from typing import (
 import funcy
 import modin.pandas as pd
 import more_itertools as mit
+import scipy
 import skimage
 from skimage import img_as_float, img_as_ubyte
 from skimage.io import imread, imsave
-from toolz import functoolz
-import scipy
+import tensorflow as tf
+from tensorflow.data.experimental import AUTOTUNE
 
 import boiling_learning.utils as bl_utils
+from boiling_learning.utils.utils import (
+    PathType
+)
 import boiling_learning.model as bl_model
 import boiling_learning as bl
 
-AUTOTUNE = tf.data.experimental.AUTOTUNE
-PathType = bl_utils.PathType
 T = TypeVar('T')
 
 
@@ -44,24 +46,46 @@ def sync_dataframes(
         dest_df: pd.DataFrame,
         source_time_column: Optional[str] = None,
         dest_time_column: Optional[str] = None
-):   
+) -> pd.DataFrame:
+    allowed_index = (pd.DatetimeIndex, pd.TimedeltaIndex, pd.Float64Index)
+
     if source_time_column is not None:
-        source_df = source_df.set_index(source_time_column)
-    if not isinstance(source_df.index, pd.DatetimeIndex):
-        raise ValueError('the source DataFrame must have a datetime index. Ensure this or pass a valid column name as input.')
+        source_df = source_df.set_index(source_time_column, drop=False)
+    if not isinstance(source_df.index, allowed_index):
+        raise ValueError(
+            f'the source DataFrame index must be one of {allowed_index}.'
+            ' Ensure this or pass a valid column name as input.'
+            f' Got {type(source_df.index)}')
 
     if dest_time_column is not None:
-        dest_df = dest_df.set_index(dest_time_column)
-    if not isinstance(dest_df.index, pd.DatetimeIndex):
-        raise ValueError('the dest DataFrame must have a datetime index. Ensure this or pass a valid column name as input.')
+        dest_df = dest_df.set_index(dest_time_column, drop=False)
+    if not isinstance(dest_df.index, allowed_index):
+        raise ValueError(
+            f'the dest DataFrame index must be one of {allowed_index}.'
+            ' Ensure this or pass a valid column name as input.'
+            f' Got {type(dest_df.index)}')
+
+    if isinstance(source_df.index, pd.TimedeltaIndex):
+        source_df.index = source_df.index.total_seconds()
+
+    if isinstance(dest_df.index, pd.TimedeltaIndex):
+        dest_df.index = dest_df.index.total_seconds()
+
+    if type(source_df.index) is not type(dest_df.index):
+        raise ValueError(
+            f'the source and dest DataFrames indices must be the same type.'
+            f' Got {type(source_df.index)} and {type(dest_df.index)}')
 
     concat = pd.concat([source_df, dest_df]).sort_index()
-    concat = concat.interpolate(method='time', limit_direction='both')
+    if isinstance(source_df.index, pd.Float64Index):
+        concat = concat.interpolate(method='index', limit_direction='both')
+    else:
+        concat = concat.interpolate(method='time', limit_direction='both')
     concat = concat.loc[dest_df.index]
     return concat
 
 
-def load_persistent(path, auto_purge=False):
+def load_persistent(path, auto_purge: bool = False):
     def imread_as_float(path):
         try:
             return img_as_float(imread(path))
@@ -84,7 +108,7 @@ def load_persistent(path, auto_purge=False):
 
 class TransformationPipeline:
     def __init__(self, *transformers):
-        self._pipe = functoolz.compose(*transformers)
+        self._pipe = funcy.rcompose(*transformers)
 
     def transform(
         self,
@@ -279,7 +303,7 @@ class DatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
         trajs = it.filterfalse(
             # removes erased trajectories, i.e., the ones that already exist and don't need to be transformed
             # lambda traj: cmp_marker(traj[step_idx], erased_marker),
-            functoolz.compose(
+            funcy.compose(
                 partial(cmp_marker, erased_marker),
                 operator.itemgetter(step_idx)
             ),
@@ -301,13 +325,13 @@ class DatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
 
     def transform_paths(self, paths: Iterable[PathType]):
         return map(
-            functoolz.compose(*self.path_transformers),
+            funcy.rcompose(*self.path_transformers),
             paths
         )
 
     def transform_dataset(self, ds):
         return ds.map(
-            functoolz.compose(*self.transformers),
+            funcy.rcompose(*self.transformers),
             num_parallel_calls=AUTOTUNE
         )
 
@@ -546,32 +570,6 @@ class ImageDatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
         return full_trajs, ds
 
 
-def decode_img(img):
-    # convert the compressed string to a 3D uint8 tensor
-    img = tf.image.decode_png(img, channels=1)
-    # Use `convert_image_dtype` to convert to floats in the [0,1] range
-    img = tf.image.convert_image_dtype(img, tf.float32)
-    # resize the image to the desired size
-    # img = tf.image.resize(img, IMG_SHAPE[:2])
-    # img = tf.reshape(img, IMG_SHAPE)
-    return img
-
-
-def process_path(
-    file_path,
-    in_dir=None
-):
-    # from relative to absolute path
-    if in_dir is not None:
-        file_path = str(in_dir) + os.sep + file_path
-
-    # load the raw data from the file as a string
-    img = tf.io.read_file(file_path)
-    # decode data
-    img = decode_img(img)
-    return img
-
-
 @dataclass(frozen=True)
 class SizeSpec:
     height: int
@@ -606,3 +604,36 @@ def simple_image_preprocessor(
         return img
 
     return preprocessor
+
+
+def snapshotter(
+        snapshot_folder: PathType,
+        num_shards: Optional[int] = None,
+        shuffle_size: Optional[int] = None
+) -> Callable[[tf.data.Dataset], tf.data.Dataset]:
+    snapshot_folder = bl_utils.ensure_resolved(snapshot_folder)
+
+    if shuffle_size is None:
+        shuffle_size = os.cpu_count()
+
+    if num_shards is None:
+        num_shards = shuffle_size
+
+    def reader_fn(datasets: tf.data.Dataset) -> tf.data.Dataset:
+        # shuffle the datasets splits
+        datasets = datasets.shuffle(shuffle_size)
+        # read datasets in parallel and interleave their elements
+        return datasets.interleave(lambda x: x, num_parallel_calls=AUTOTUNE)
+
+    def op(ds: tf.data.Dataset) -> tf.data.Dataset:
+        ds = ds.enumerate()
+        ds = ds.apply(
+            tf.data.experimental.snapshot(
+                str(snapshot_folder),
+                reader_func=reader_fn,
+                shard_func=lambda idx, value: idx % num_shards
+            )
+        )
+        return ds.map(lambda idx, value: value)
+
+    return op

@@ -11,7 +11,6 @@ from typing import (
 )
 import string
 import operator
-from itertools import accumulate
 import warnings
 
 import funcy
@@ -27,6 +26,9 @@ import boiling_learning as bl
 from boiling_learning.utils import (
     PathType,
     VerboseType
+)
+from boiling_learning.io.io import (
+    make_callable_filename_pattern
 )
 
 
@@ -135,82 +137,6 @@ def extract_frames_ffmpeg(
         print('Command list =', command_list)
 
     subprocess.run(command_list)
-
-
-def chunked_filename_pattern(
-        chunk_sizes: Iterable[int],
-        chunk_name: str = '{min_index}-{max_index}',
-        filename: PathType = 'frame{index}.png',
-        index_key: str = 'index',
-        min_index_key: str = 'min_index',
-        max_index_key: str = 'max_index',
-        root: Optional[PathType] = None
-) -> Callable[[int], Path]:
-    chunks = tuple(accumulate(chunk_sizes, operator.mul))
-
-    def filename_pattern(index: int) -> Path:
-        current = Path(filename.format(**{index_key: index}))
-        for chunk_size in chunks:
-            min_index = (index // chunk_size) * chunk_size
-            max_index = min_index + chunk_size - 1
-            current_chunk_name = chunk_name.format(
-                **{min_index_key: min_index, max_index_key: max_index})
-            current = Path(current_chunk_name) / current
-
-        if root is not None:
-            current = bl.utils.ensure_resolved(current, root=root)
-
-        return current
-    return filename_pattern
-
-
-def make_callable_filename_pattern(
-        outputdir: PathType,
-        filename_pattern: Union[PathType, Callable[[int], PathType]],
-        index_key: Optional[str] = None
-) -> Tuple[bool, Callable[[int], Path]]:
-
-    if callable(filename_pattern):
-        def _filename_pattern(index: int) -> Path:
-            return bl.utils.ensure_parent(
-                filename_pattern(index),
-                root=outputdir
-            )
-
-        return True, _filename_pattern
-    else:
-        filename_pattern_str = str(filename_pattern)
-
-        if index_key is not None and index_key in {
-                tup[1]
-                for tup in string.Formatter().parse(filename_pattern_str)
-                if tup[1] is not None
-        }:
-            formatter = filename_pattern_str.format
-
-            def _filename_pattern(index: int) -> Path:
-                return bl.utils.ensure_parent(
-                    formatter(
-                        **{index_key: index}
-                    ),
-                    root=outputdir
-                )
-            return True, _filename_pattern
-
-        else:
-            try:
-                # checks if it is possible to use old-style formatting
-                filename_pattern_str % 0
-            except TypeError:
-                return False, filename_pattern
-
-            def _filename_pattern(index: int) -> Path:
-                return bl.utils.ensure_parent(
-                    filename_pattern_str % index,
-                    root=outputdir
-                )
-
-            return True, _filename_pattern
 
 
 def make_callable_index_parser(
