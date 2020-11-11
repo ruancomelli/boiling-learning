@@ -1,7 +1,6 @@
 import os
 import re
 from pathlib import Path
-from enum import Enum
 from collections import (
     ChainMap,
     defaultdict
@@ -9,8 +8,8 @@ from collections import (
 from collections.abc import (
     MutableSet
 )
-import operator
-import itertools
+import datetime
+import enum
 from itertools import product
 from functools import (
     wraps,
@@ -791,7 +790,7 @@ def rmdir(path, recursive=False, keep=False, missing_ok=False):
             return
         else:
             raise NotADirectoryError(
-                f'path is expected to be a directory when missing_ok={missing_ok}. Got {path}.')
+                f'path is expected to be a directory when missing_ok={missing_ok}. Got {path}')
 
     if recursive:
         for child in path.iterdir():
@@ -907,26 +906,13 @@ def nullcontext(enter_result=None):
 def elapsed_timer():
     # Source: <https://stackoverflow.com/a/61613140/5811400>
 
-    start_time = default_timer()
-
     class _Timer:
-        @property
-        def start(self):
-            return start_time
+        pass
 
-        @property
-        def end(self):
-            return default_timer()
-
-        @property
-        def duration(self):
-            return self.end - self.start
-
+    _Timer.start = default_timer()
     yield _Timer
-
-    end_time = default_timer()
-    _Timer.end = end_time
-    _Timer.duration = end_time - start_time
+    _Timer.end = default_timer()
+    _Timer.duration = _Timer.end - _Timer.start
 
 
 # ---------------------------------- Class printing ----------------------------------
@@ -940,8 +926,7 @@ def simple_pprint(self, obj, stream, indent, allowance, context, level):
     class_name = obj.__class__.__name__
     write(class_name + "(")
     _format_kwarg_dict_items(
-        self, obj.__dict__.copy().items(), stream, indent +
-        len(class_name), allowance + 1, context, level
+        self, obj.__dict__.copy().items(), stream, indent + len(class_name), allowance + 1, context, level
     )
     write(")")
 
@@ -1113,13 +1098,11 @@ class Ranges(MutableSet):
 
 # ---------------------------------- Timing ----------------------------------
 def get_timestamp(fmt='%Y-%m-%dT%H:%M:%SZ'):
-    from datetime import datetime
-
-    return datetime.now().strftime(fmt)
+    return datetime.datetime.now().strftime(fmt)
 
 
 # ---------------------------------- Enum ----------------------------------
-class NoValueEnum(Enum):
+class NoValueEnum(enum.Enum):
     def __repr__(self):
         return '<%s.%s>' % (self.__class__.__name__, self.name)
 
