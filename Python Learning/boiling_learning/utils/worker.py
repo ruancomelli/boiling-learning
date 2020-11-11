@@ -1,18 +1,16 @@
-from collections.abc import Sequence
 from contextlib import contextmanager
 from typing import (
     Any,
+    Callable,
+    Dict,
     Hashable,
     Iterable,
-    Sequence,
+    Iterator,
     List,
-    Dict,
-    Union,
-    Optional,
-    Callable,
-    Tuple,
     Mapping,
-    Iterator
+    Optional,
+    Sequence,
+    Tuple
 )
 
 import more_itertools as mit
@@ -62,10 +60,7 @@ def distribute_iterable(
     assign_pred: Optional[Callable[[Hashable], bool]] = None,
     assign_iterable: Optional[Iterable] = None
 ) -> Dict[Hashable, List]:
-    if (
-            (assign_pred is not None and assign_iterable is None)
-            or (assign_pred is None and assign_iterable is not None)
-    ):
+    if (assign_pred, assign_iterable).count(None) == 1:
         raise ValueError(
             'either both or none of assign_pred and assign_iterable must be passed as arguments.')
 
@@ -149,14 +144,14 @@ class UserPool(Sequence, SimpleRepr, SimpleStr):
         self.is_enabled = False
 
     @contextmanager
-    def enabled(self) -> Iterator["UserPool"]:
+    def enabled(self) -> Iterator['UserPool']:
         prev_state = self.is_enabled
         self.enable()
         yield self
         self.is_enabled = prev_state
 
     @contextmanager
-    def disabled(self):
+    def disabled(self) -> Iterator['UserPool']:
         prev_state = self.is_enabled
         self.disable()
         yield self
@@ -167,14 +162,14 @@ class UserPool(Sequence, SimpleRepr, SimpleStr):
         return self._current
 
     @current.setter
-    def current(self, current):
+    def current(self, current: Hashable) -> None:
         if current not in self:
             raise ValueError(
                 f'notebook user {current} is not expected. Allowed users are {self.workers}.')
         self._current = current
 
     @property
-    def clients(self):
+    def clients(self) -> List[Hashable]:
         return list(filter(lambda worker: worker != self.manager, self))
 
     @classmethod
@@ -184,7 +179,7 @@ class UserPool(Sequence, SimpleRepr, SimpleStr):
             workers_key: str = 'allowed_users',
             manager_key: str = 'manager',
             server_key: str = 'server'
-    ) -> "UserPool":
+    ) -> 'UserPool':
         config = bl.io.load_json(path)
 
         return cls(
