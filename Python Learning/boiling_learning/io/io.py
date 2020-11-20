@@ -394,7 +394,7 @@ def load_yogadl(
         num_shards: int = 1,
         drop_shard_remainder: bool = False
 ) -> tf.data.Dataset:
-    storage_path = ensure_dir(storage_path)
+    storage_path = ensure_resolved(storage_path)
 
     lfs_config = yogadl.storage.LFSConfigurations(str(storage_path))
     storage = yogadl.storage.LFSStorage(lfs_config)
