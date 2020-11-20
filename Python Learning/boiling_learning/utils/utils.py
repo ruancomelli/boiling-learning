@@ -1,20 +1,26 @@
-import os
-import re
-from pathlib import Path
 from collections import (
     ChainMap,
     defaultdict
 )
-from collections.abc import (
-    MutableSet
-)
+from contextlib import contextmanager
+import dataclasses
+from dataclasses import dataclass
 import datetime
 import enum
-from itertools import product
 from functools import (
     wraps,
     partial
 )
+import itertools
+from itertools import product
+import json
+import operator
+import os
+from pathlib import Path
+import pprint
+import re
+import shutil
+import tempfile
 from timeit import default_timer
 from typing import (
     Any,
@@ -27,29 +33,24 @@ from typing import (
     Iterator,
     List,
     Mapping,
+    MutableSequence,
+    MutableSet,
     Optional,
     Sequence,
     Tuple,
     Type,
     TypeVar,
-    Union,
-    overload
+    Union
 )
-import shutil
-import tempfile
-from contextlib import contextmanager
-import pprint
-import enum
-import dataclasses
-from dataclasses import dataclass
 
 import funcy
 import matplotlib.pyplot as plt
 import more_itertools as mit
 from more_itertools import unzip
-from pandas.api.types import union_categoricals
 import modin.pandas as pd
 from sortedcontainers import SortedSet
+
+from boiling_learning.utils.functional import pack
 
 
 # ---------------------------------- Typing ----------------------------------
@@ -73,29 +74,17 @@ def empty(*args, **kwargs) -> None:
     pass
 
 
-@overload
-def indexify(arg: Iterable) -> Iterable[int]: ...
+# @overload
+# def indexify(arg: Iterable) -> Iterable[int]: ...
 
+# @overload
+# def indexify(arg: Collection) -> range: ...
 
-@overload
-def indexify(arg: Collection) -> range: ...
-
-
-def indexify(arg):
+def indexify(arg: Union[Iterable, Collection]) -> Iterable[int]:
     try:
         return range(len(arg))
     except TypeError:
-        return map(
-            operator.itemgetter(0),
-            enumerate(arg)
-        )
-
-
-# TODO: in Python 3.7+, use Literal[True] and Literal[False] to distinguish between the possible input and output types
-def constant(value: T) -> Callable[..., T]:
-    def _constant(*args, **kwargs):
-        return value
-    return _constant
+        return funcy.walk(0, enumerate(arg))
 
 
 def constant_factory(value: Callable[[], T]) -> Callable[..., T]:
@@ -180,9 +169,9 @@ def argsorted(iterable: Iterable) -> Iterable[int]:
 
 
 def multipop(
-    lst: List,
-    indices: Container[int]
-):
+        lst: MutableSequence[T],
+        indices: Collection[int]
+) -> List[T]:
     pop = [lst[i] for i in indices]
     lst[:] = [v for i, v in enumerate(lst) if i not in indices]
 
@@ -190,14 +179,14 @@ def multipop(
 
 
 def has_duplicates(iterable: Iterable) -> bool:
-    if isinstance(iterable, list):
-        iterable_list = iterable
+    if isinstance(iterable, Sequence):
+        iterable_seq = iterable
     elif isinstance(iterable, set):
         return False
     else:
-        iterable_list = list(iterable)
+        iterable_seq = tuple(iterable)
 
-    return len(iterable_list) != mit.ilen(remove_duplicates(iterable_list))
+    return len(iterable_seq) != mit.ilen(remove_duplicates(iterable_seq))
 
 
 def missing_ints(ints: Iterable[int]) -> Iterable[int]:
@@ -520,7 +509,7 @@ def concatenate_dataframes(dfs: Iterable[pd.DataFrame]) -> pd.DataFrame:
             for df in dfs
     )):
         # Generate the union category across dfs for this column
-        uc = union_categoricals(tuple(df[col] for df in dfs))
+        uc = pd.api.types.union_categoricals(tuple(df[col] for df in dfs))
         # Change to union category for all dataframes
         for df in dfs:
             df[col] = pd.Categorical(df[col].values, categories=uc.categories)
@@ -622,41 +611,37 @@ def prepare_fig(
     * only two of the two arguments fig_size and subfig_size must be computed. The other one is calculated.
     * fig_size and subfig_size can be a pair (width, height) or a string in ['tiny', 'small', 'normal', 'intermediate', 'large', 'big']
     """
-    if None not in (fig_size, subfig_size):
+    if (fig_size, subfig_size).count(None) != 1:
         raise ValueError(
-            'incompatible arguments: either figsize or subfig_size must be None')
-    if None not in (n_cols, n_rows, n_elems):
+            'exactly one of *figsize* and *subfig_size* must be *None*')
+    if (n_cols, n_rows, n_elems).count(None) != 1:
         raise ValueError(
-            'incompatible arguments: either n_cols, n_rows or n_elems must be None')
+            'exactly one of *n_cols*, *n_rows* and *n_elems* must be *None*')
 
-    grid_size = None
-    if None not in {n_cols, n_rows}:
-        grid_size = (n_rows, n_cols)
-    elif None not in {n_cols, n_elems}:
+    if n_rows is None:
         n_rows = (n_elems-1)//n_cols + 1
-        grid_size = (n_rows, n_cols)
-    elif None not in {n_rows, n_elems}:
+    elif n_cols is None:
         n_cols = (n_elems-1)//n_rows + 1
-        grid_size = (n_rows, n_cols)
+    grid_size = (n_rows, n_cols)
 
-    def validate(size):
-        if size in {'micro'}:
+    def validate(size: T) -> Union[T, Tuple[int, int]]:
+        if size in frozenset({'micro'}):
             return (2, 1.5)
-        if size in {'tiny'}:
+        if size in frozenset({'tiny'}):
             return (4, 3)
-        if size in {'small'}:
+        if size in frozenset({'small'}):
             return (7, 5)
-        elif size in {'normal', 'intermediate'}:
+        elif size in frozenset({'normal', 'intermediate'}):
             return (9, 7)
-        elif size in {'large', 'big'}:
+        elif size in frozenset({'large', 'big'}):
             return (18, 15)
         else:
             return size
 
-    fig_size = validate(fig_size)
-    subfig_size = validate(subfig_size)
-
-    if subfig_size:
+    if subfig_size is None:
+        fig_size = validate(fig_size)
+    else:
+        subfig_size = validate(subfig_size)
         fig_size = (grid_size[1] * subfig_size[0],
                     grid_size[0] * subfig_size[1])
 
@@ -674,13 +659,25 @@ def prepare_fig(
     }
 
 
-def as_json(obj, cls: Optional[type] = None):
-    from json import loads, dumps
-    return loads(dumps(obj, cls=cls))
+def json_equivalent(
+        lhs,
+        rhs,
+        encoder: Optional[Type] = None,
+        decoder: Optional[Type] = None,
+        dumps: Callable[[T], str] = json.dumps,
+        loads: Callable[[str], Any] = json.loads
+) -> bool:
+    # ignore parameter *cls* when it is *None*
+    dumps = pack(cls=encoder).omit(is_(None), key='cls').partial(dumps)
+    loads = pack(cls=decoder).omit(is_(None), key='cls').partial(loads)
 
+    lhs_str = dumps(lhs)
+    rhs_str = dumps(rhs)
 
-def json_equivalent(lhs, rhs, cls: Optional[type] = None) -> bool:
-    return as_json(lhs, cls) == as_json(rhs, cls)
+    return (
+        (lhs_str == rhs_str)
+        or (loads(lhs_str) == loads(rhs_str))
+    )
 
 
 # ---------------------------------- Iteration ----------------------------------
@@ -782,7 +779,12 @@ def is_parent_dir(parent: PathType, subdir: PathType) -> bool:
 
 
 # Source: https://stackoverflow.com/a/57892171/5811400
-def rmdir(path, recursive=False, keep=False, missing_ok=False):
+def rmdir(
+        path: PathType,
+        recursive: bool = False,
+        keep: bool = False,
+        missing_ok: bool = False
+):
     path = ensure_resolved(path)
 
     if not path.is_dir():
