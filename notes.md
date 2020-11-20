@@ -55,9 +55,9 @@
 Wire 1 was used in Experiment 1. Data:
 
 - sample id: #1
-- wire type: NI-80 <!-- TODO: complete this-->
-- diameter: 0.51mm (big) <!-- TODO: complete this-->
-- length: ~7cm <!-- TODO: complete this-->
+- code: NI80-020-200
+- diameter: 0.51mm (large)
+- length: 6.5cm
 - texturing: none. The wire was used as extracted from the coil. No further treatment was applied.
 
 In the experiment, there as a T-type thermocouple glued to the wire surface.
@@ -67,9 +67,9 @@ In the experiment, there as a T-type thermocouple glued to the wire surface.
 Wire 2 was used in Experiment 2. Data:
 
 - sample id: #2
-- wire type: NI-80 <!-- TODO: complete this-->
-- diameter: 0.51mm (big) <!-- TODO: complete this-->
-- length: ~7cm <!-- TODO: complete this-->
+- code: NI80-020-200
+- diameter: 0.51mm (large)
+- length: 6.5cm
 - texturing: none. The wire was used as extracted from the coil. No further treatment was applied.
 
 The experiment was executed without sensors.
@@ -79,20 +79,38 @@ The experiment was executed without sensors.
 Wire 3 was used in Experiment 3. Data:
 
 - sample id: #3
-- wire type: NI-80 <!-- TODO: complete this-->
-- diameter: 0.25mm (small) <!-- TODO: complete this-->
-- length: ~7cm <!-- TODO: complete this-->
+- code: NI80-010-200
+- diameter: 0.25mm (small)
+- length: 6.5cm
 - texturing: none. The wire was used as extracted from the coil. No further treatment was applied.
 
 The experiment was executed without sensors.
 
 ### Horizontal Ribbon
 
+Ribbon 1 was used in Experiment 4. Data:
+
 - sample id: #4
+- code: NCRR-17-100
+- width: 1/16in
+- thickness: 0.0031in
+- length: 6.5cm
+- texturing: none. The ribbon was used as extracted from the coil. No further treatment was applied.
+
+The experiment was executed without sensors.
 
 ### Vertical Ribbon
 
+Ribbon 2 was used in Experiment 5. Data:
+
 - sample id: #5
+- code: NCRR-17-100
+- width: 1/16in
+- thickness: 0.0031in
+- length: 6.5cm
+- texturing: none. The ribbon was used as extracted from the coil. No further treatment was applied.
+
+The experiment was executed without sensors.
 
 ## Machine learning
 
