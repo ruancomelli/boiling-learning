@@ -22,6 +22,7 @@ class Case(ImageDataset):
             videos_dir_name: str = 'videos',
             audios_dir_name: str = 'audios',
             frames_dir_name: str = 'frames',
+            frames_tensor_dir_name: str = 'frame_tensors',
             video_suffix: str = '.mp4',
             audio_suffix: str = '.m4a',
             frames_suffix: str = '.png',
@@ -51,6 +52,7 @@ class Case(ImageDataset):
         self.videos_dir = bl_utils.ensure_dir(self.path / videos_dir_name)
         self.audios_dir = bl_utils.ensure_dir(self.path / audios_dir_name)
         self.frames_dir = bl_utils.ensure_dir(self.path / frames_dir_name)
+        self.frames_tensor_dir = bl_utils.ensure_dir(self.path / frames_tensor_dir_name)
 
         super().__init__(
             name=name,
@@ -65,6 +67,7 @@ class Case(ImageDataset):
                     video_path=video_path,
                     frames_dir=self.frames_dir,
                     frames_suffix=frames_suffix,
+                    frames_tensor_dir=self.frames_tensor_dir,
                     audio_dir=self.audios_dir,
                     audio_suffix=audio_suffix,
                     df_dir=self.dataframes_dir,

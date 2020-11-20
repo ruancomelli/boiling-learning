@@ -4,7 +4,6 @@ from dataclasses import dataclass
 import operator
 from pathlib import Path
 from typing import (
-    overload,
     Any,
     Callable,
     Iterable,
@@ -31,7 +30,9 @@ from boiling_learning.utils import (
     VerboseType
 )
 from boiling_learning.io.io import (
-    chunked_filename_pattern
+    chunked_filename_pattern,
+    save_dataset,
+    load_dataset
 )
 from boiling_learning.preprocessing.preprocessing import (
     sync_dataframes
@@ -94,6 +95,8 @@ class ExperimentVideo:
             frames_dir: Optional[PathType] = None,
             frames_suffix: str = '.png',
             frames_path: Optional[PathType] = None,
+            frames_tensor_dir: Optional[PathType] = None,
+            frames_tensor_path: Optional[PathType] = None,
             audio_dir: Optional[PathType] = None,
             audio_suffix: str = '.m4a',
             audio_path: Optional[PathType] = None,
@@ -132,6 +135,16 @@ class ExperimentVideo:
         else:
             raise ValueError(
                 'exactly one of (frames_dir, frames_path) must be given.')
+
+        if (frames_tensor_path is None) ^ (frames_tensor_dir is None):
+            self.frames_tensor_path = (
+                bl_utils.ensure_resolved(frames_tensor_path)
+                if frames_tensor_dir is None
+                else bl_utils.ensure_resolved(frames_tensor_dir) / self.name
+            )
+        else:
+            raise ValueError(
+                'exactly one of (frames_tensor_path, frames_tensor_dir) must be given.')
 
         if frames_suffix.startswith('.'):
             self.frames_suffix = frames_suffix
@@ -468,13 +481,16 @@ class ExperimentVideo:
 
         return df
 
-    @overload
-    def iterdata_from_dataframe(self, select_columns: str) -> Iterable[Tuple[np.ndarray, Any]]: ...
+    # @overload
+    # def iterdata_from_dataframe(self, select_columns: str) -> Iterable[Tuple[np.ndarray, Any]]: ...
 
-    @overload
-    def iterdata_from_dataframe(self, select_columns: Optional[List[str]]) -> Iterable[Tuple[np.ndarray, dict]]: ...
+    # @overload
+    # def iterdata_from_dataframe(self, select_columns: Optional[List[str]]) -> Iterable[Tuple[np.ndarray, dict]]: ...
 
-    def iterdata_from_dataframe(self, select_columns=None):
+    def iterdata_from_dataframe(
+            self,
+            select_columns: Optional[Union[str, List[str]]] = None
+    ) -> Iterable[Tuple[np.ndarray, Any]]:
         df = self.make_dataframe(recalculate=False)
         indices = df[self.column_names.index]
 
@@ -555,37 +571,37 @@ class ExperimentVideo:
         # if erase: # Python 3.8 only
         #     old_path.unlink(missing_ok=True)
 
+    def frames_to_tensor(self, save: bool = False, overwrite: bool = False) -> tf.data.Dataset:
+        if overwrite or not self.frames_tensor_path.is_file():
+            self.open_video()
+            frames = tf.data.Dataset.from_generator(
+                lambda: self.video,
+                tf.float32
+            )
+
+            if save:
+                save_dataset(frames, self.frames_tensor_path)
+
+            return frames
+        else:
+            return load_dataset(self.frames_tensor_path)
+
     def as_tf_dataset(
             self,
             select_columns: Optional[Union[str, List[str]]] = None,
-            sequential_indices_call: Optional[Callable[['ExperimentVideo'], tf.data.Dataset]] = None,
+            save: bool = False,
             inplace: bool = False
     ) -> tf.data.Dataset:
         # See <https://www.tensorflow.org/tutorials/load_data/pandas_dataframe>
 
         df = self.make_dataframe(recalculate=False)
         df = self.convert_dataframe_type(df)
-        indices = df[self.column_names.index]
-
-        if sequential_indices_call is not None and bl_utils.is_consecutive(indices):
-            ds_img = sequential_indices_call(self)
-        else:
-            def remapped_frames(indices: Iterable[int]) -> Iterable[tf.Tensor]:
-                frames = map(self.frame, indices)
-                # tf_frames = map(decord.bridge.to_tensorflow, frames)
-                converter = funcy.rpartial(tf.image.convert_image_dtype, tf.float32)
-                # return map(converter, tf_frames)
-                return map(converter, frames)
-
-            ds_img = tf.data.Dataset.from_generator(
-                remapped_frames,
-                tf.float32,
-                args=[indices]
-            )
+        df = df.sort_values(by=self.column_names.index)
 
         if select_columns is not None:
             df = df[select_columns]
 
+        ds_img = self.frames_to_tensor(overwrite=False, save=save)
         ds_data = tf.data.Dataset.from_tensor_slices(
             df.to_dict('list')
         )
@@ -595,9 +611,3 @@ class ExperimentVideo:
             self.ds = ds
 
         return ds
-
-        # return tf.data.Dataset.from_generator(
-        #     self.iterdata_from_dataframe,
-        #     (tf.float32, type_spec),
-        #     args=[select_columns]
-        # )

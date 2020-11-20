@@ -63,7 +63,10 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             '(',
             ', '.join([
                 f'name={self.name}',
-                str(dict(**self))                
+                f'column_names={self.column_names}',
+                f'column_types={self.column_types}',
+                f'df_path={self.df_path}',
+                f'experiment_videos={tuple(self.keys())}'
             ]),
             ')'
         ])
@@ -135,6 +138,10 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     def open_videos(self) -> None:
         for ev in self.values():
             ev.open_video()
+
+    def frames_to_tensor(self, overwrite: bool = False) -> None:
+        for ev in self.values():
+            ev.frames_to_tensor(overwrite=overwrite)
 
     def extract_audios(
             self,
