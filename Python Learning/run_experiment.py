@@ -1,38 +1,38 @@
+import csv
+from datetime import datetime
+import functools
+import modin.pandas as pd
+import numpy as np
 import os
 from pathlib import Path
+import scipy
+import time
+
+import nidaqmx
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
+
+import boiling_learning as bl
+from boiling_learning.daq import Channel, ChannelType, Device
+
 
 def add_to_system_path(path_to_add, add_if_exists=False):
     str_to_add = str(path_to_add)
     if add_if_exists or (str_to_add not in os.environ['PATH']):
         os.environ['PATH'] += os.pathsep + str_to_add
 
+
 python_project_home_path = Path().absolute().resolve()
 project_home_path = python_project_home_path.parent.resolve()
 
-# defaultdict is a very useful class!!!
-
-from datetime import datetime
-import scipy
-import numpy as np
-import csv
-import modin.pandas as pd
-import time
-import functools
-
-import nidaqmx
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
-
-import boiling_learning as bl
-from boiling_learning.daq import Channel, ChannelType, Device
 
 class BoilingSurface:
     def __init__(self, settings):
         self.name = settings.get('name')
         self.name = self.name if self.name else None
-        
+
         self.type = settings['type']
-        
+
         if self.type == 'ribbon':
             self.length = settings['length']
             self.width = settings['width']
@@ -42,7 +42,7 @@ class BoilingSurface:
             self.diameter = settings['diameter']
         else:
             raise ValueError(f'type {self.type} not supported')
-        
+
     @property
     def cross_section_area(self):
         if self.type == 'ribbon':
@@ -51,7 +51,7 @@ class BoilingSurface:
             return np.pi * 0.25 * self.diameter**2
         else:
             raise ValueError(f'it is not possible to calculate cross section area for surface type {self.type}')
-    
+
     @property
     def surface_area(self):
         if self.type == 'ribbon':
@@ -60,7 +60,7 @@ class BoilingSurface:
             return np.pi * self.length * self.diameter
         else:
             raise ValueError(f'it is not possible to calculate surface area for surface type {self.type}')
-        
+
 
 #%%
 # -------------------------------------------------------
@@ -68,9 +68,10 @@ class BoilingSurface:
 # -------------------------------------------------------
 def read_settings():
     from json import load
-    
+
     with open(python_project_home_path / 'experiment_settings.json') as json_file:
         return load(json_file)
+
 
 settings = read_settings()
 surface = BoilingSurface(settings['surface'])
@@ -161,18 +162,19 @@ reference_resistivity = (
 )
 reference_resistance = reference_resistivity * wire_length / wire_cross_section
 
+
 def calculate_resistance(voltage, current):
     return np.where(np.abs(current) >= 1e-8, np.abs(voltage / current), reference_resistance)
 
-def calculate_temperature(resistance):
-    from scipy import interpolate
 
-    T_to_f = interpolate.interp1d(factor_table['Temperature'], factor_table['Factor'], copy=False, fill_value='extrapolate')
+def calculate_temperature(resistance):
+    T_to_f = scipy.interpolate.interp1d(factor_table['Temperature'], factor_table['Factor'], copy=False, fill_value='extrapolate')
     reference_factor = T_to_f(reference_temperature)
 
     factor = resistance / reference_resistance
-    f_to_T = interpolate.interp1d(factor_table['Factor'], factor_table['Temperature'], copy=False, fill_value='extrapolate')
+    f_to_T = scipy.interpolate.interp1d(factor_table['Factor'], factor_table['Temperature'], copy=False, fill_value='extrapolate')
     return f_to_T(factor)
+
 
 @functools.lru_cache(maxsize=128)
 def correct_wire_temperature(reference_file):
@@ -196,21 +198,21 @@ def format_output_dir(output_dir_pattern):
 
     full_dir_pattern = str(Path() / 'experiments' / datetime.now().strftime(output_dir_pattern))
 
-    def format_time(dirpattern, counter): 
+    def format_time(dirpattern, counter):
         return datetime.now().strftime(
             dirpattern.format(
                 index=counter,
                 optional_index=optional_index_format(counter)
             )
         )
-    def substituted_output_dir(dirpattern, counter): 
+    def substituted_output_dir(dirpattern, counter):
         return Path(format_time(full_dir_pattern, counter))
 
     counter = 0
     if any(key in output_dir_pattern for key in ('{index}', '{optional_index}')):
         while substituted_output_dir(full_dir_pattern, counter).is_dir():
             counter += 1
-        
+
     return format_time(full_dir_pattern, counter)
 
 def format_filename(output_dir, file_pattern):

@@ -7,6 +7,7 @@ import bidict
 import funcy
 import tensorflow as tf
 
+from boiling_learning.utils.functional import map_values
 
 tf_str_dtype_bidict = bidict.bidict(
     (dtype.name, dtype)
@@ -24,6 +25,35 @@ tf_str_dtype_bidict = bidict.bidict(
         tf.variant
     )
 )
+
+
+def encode_element_spec(element_spec):
+    if tf.nest.is_nested(element_spec):
+        return {
+            'nested': True,
+            'contents': map_values(encode_element_spec, element_spec)
+        }
+    else:
+        return {
+            'nested': False,
+            'contents': {
+                'dtype': tf_str_dtype_bidict.inverse[element_spec.dtype],
+                'name': element_spec.name,
+                'shape': element_spec.shape
+            }
+        }
+
+
+def decode_element_spec(obj):
+    nested, contents = obj['nested'], obj['contents']
+    if nested:
+        return map_values(decode_element_spec, contents)
+    else:
+        return tf.TensorSpec(
+            shape=contents['shape'],
+            name=contents['name'],
+            dtype=tf_str_dtype_bidict[contents['dtype']]
+        )
 
 
 def auto_spec(elem):

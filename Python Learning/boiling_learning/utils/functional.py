@@ -86,18 +86,10 @@ class Pack(Generic[T, S]):
         return f(*self.args, **self.kwargs)
 
     def partial(self, f: Callable[..., U]) -> Callable[..., U]:
-        return partial(
-            f,
-            *self.args,
-            **self.kwargs
-        )
+        return partial(f, *self.args, **self.kwargs)
 
     def rpartial(self, f: Callable[..., U]) -> Callable[..., U]:
-        return rpartial(
-            f,
-            *self.args,
-            **self.kwargs
-        )
+        return rpartial(f, *self.args, **self.kwargs)
 
     def omit(
             self,

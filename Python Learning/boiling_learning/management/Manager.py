@@ -43,6 +43,10 @@ from boiling_learning.management.Parameters import Parameters
 
 
 # TODO: check out <https://www.mlflow.org/docs/latest/tracking.html>
+# TODO: maybe include "status" in metadata
+# TODO: maybe include a comment in metadata
+# TODO: improve this... there is a lot of repetition and buggy cases.
+# ? Perhaps a better would be to have only one way to pass a description: through elem_id. No *contents*, just the id...
 
 
 _sentinel = object()
@@ -636,7 +640,7 @@ class Manager(
         )
 
         elems = (
-            (elem_id, self._retrieve_elem(path, raise_if_load_fails=False))
+            (elem_id, self._load_elem(path, raise_if_load_fails=False))
             for elem_id, path in elems
         )
 
@@ -651,9 +655,9 @@ class Manager(
     def provide_entry(
             self,
             contents: Optional[Mapping] = None,
-            creator: Optional[Creator[T]] = None,
+            creator: Optional[Creator[_ElemType]] = None,
             creator_description: Optional[Pack] = None,
-            post_processor: Optional[Transformer[T, S]] = None,
+            post_processor: Optional[Transformer[_ElemType, _PostProcessedElemType]] = None,
             post_processor_description: Optional[Pack] = None,
             include: bool = False,
             missing_ok: bool = False
