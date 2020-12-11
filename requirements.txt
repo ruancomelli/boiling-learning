@@ -1,0 +1,16 @@
+# No counterpart in Conda
+json-tricks>=3.15.4
+tensorflow-gpu>=2.1
+tensorflow-estimator>=2.1
+yogadl
+
+# Required by Google Colab
+bidict
+frozendict
+funcy
+jupyter_http_over_ws
+modin[ray]
+nidaqmx
+parse
+pims
+pint
