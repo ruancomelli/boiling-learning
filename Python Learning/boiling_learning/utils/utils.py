@@ -24,6 +24,7 @@ import tempfile
 from timeit import default_timer
 from typing import (
     Any,
+    AnyStr,
     Callable,
     Collection,
     Container,
@@ -43,6 +44,8 @@ from typing import (
     Union
 )
 
+import decorator
+from frozendict import frozendict
 import funcy
 import matplotlib.pyplot as plt
 import more_itertools as mit
@@ -51,19 +54,22 @@ import modin.pandas as pd
 from sortedcontainers import SortedSet
 from typing_extensions import (
     Protocol,
+    overload
 )
 
 from boiling_learning.utils.functional import pack
+)
 
 
 # ---------------------------------- Typing ----------------------------------
 class _SentinelType(enum.Enum):
-    SENTINEL = enum.auto()
+class _Sentinel(enum.Enum):
+    INSTANCE = enum.auto()
+    @classmethod
+    def get_instance(cls) -> "_Sentinel":
+        return cls.INSTANCE
 
 
-_sentinel = _SentinelType.SENTINEL
-T = TypeVar('T')
-SentinelOptional = Union[_SentinelType, T]
 
 
 # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
@@ -86,8 +92,10 @@ def empty(*args, **kwargs) -> None:
     pass
 
 
-# @overload
-# def indexify(arg: Iterable) -> Iterable[int]: ...
+@overload
+def indexify(arg: Iterable) -> Iterable[int]:
+    ...
+
 
 # @overload
 # def indexify(arg: Collection) -> range: ...
@@ -117,8 +125,26 @@ def comment(
     return wrapped
 
 
+@decorator.dispatch_on('arg')
+def as_immutable(arg):
+    raise NotImplementedError(type(arg))
+
+
+@as_immutable.register(list)
+def _(arg):
+    return tuple(arg)
+
+
+@as_immutable.register(set)
+def _(arg):
+    return frozenset(arg)
+
+
+@as_immutable.register(dict)
+def _(arg):
+
+
 def remove_duplicates(
-    iterable: Iterable[T],
     key: Union[None, object, Dict, Callable] = _sentinel
 ) -> Iterable[T]:
     # See <https://more-itertools.readthedocs.io/en/stable/api.html#more_itertools.unique_everseen>
@@ -146,7 +172,6 @@ def remove_duplicates(
 
 
 def reorder(
-    seq: Sequence[T],
     indices: Iterable[int]
 ) -> Iterable[T]:
     return map(seq.__getitem__, indices)
@@ -181,7 +206,6 @@ def argsorted(iterable: Iterable) -> Iterable[int]:
 
 
 def multipop(
-        lst: MutableSequence[T],
         indices: Collection[int]
 ) -> List[T]:
     pop = [lst[i] for i in indices]
@@ -272,10 +296,9 @@ def alternate_iter(
     '''
     default_indices = tuple(default_indices)
     default_indices = default_indices + \
-        (0,)*(len(iterables) - len(default_indices))
+    default_indices = default_indices + (0,)*(len(iterables) - len(default_indices))
 
     if skip_repeated:
-        yield tuple(iterable[default_indices[idx]] for idx, iterable in enumerate(iterables))
 
     for iterable_index, iterable in enumerate(iterables):
         head = tuple(
@@ -453,15 +476,12 @@ def is_dataclass_class(Type) -> bool:
 
 def dataclass_from_mapping(
         mapping: Mapping[str, Any],
-        dataclass_factory: Callable[..., T],
         key_map: Optional[Union[dataclass, Mapping[str, str]]] = None
 ) -> T:
+) -> _T:
     if not is_dataclass_class(dataclass_factory):
         raise ValueError('*dataclass_factory* must be a dataclass.')
 
-    dataclass_field_names = set(map(
-        operator.attrgetter('name'),
-        dataclasses.fields(dataclass_factory)
     ))
 
     if key_map is None:
@@ -548,7 +568,6 @@ def print_verbose(verbose: bool, *args, **kwargs) -> None:
 def print_header(
     s: str,
     level: int = 0,
-    levels=('#', '=', '-', '~', '^', '*', '+'),
     verbose: bool = True
 ):
     """Standardized method for printing a section header.
@@ -637,13 +656,10 @@ def prepare_fig(
     grid_size = (n_rows, n_cols)
 
     def validate(size: T) -> Union[T, Tuple[int, int]]:
-        if size in frozenset({'micro'}):
+    def validate(size: _T) -> Union[_T, Tuple[int, int]]:
             return (2, 1.5)
-        if size in frozenset({'tiny'}):
             return (4, 3)
-        if size in frozenset({'small'}):
             return (7, 5)
-        elif size in frozenset({'normal', 'intermediate'}):
             return (9, 7)
         elif size in frozenset({'large', 'big'}):
             return (18, 15)
@@ -654,8 +670,6 @@ def prepare_fig(
         fig_size = validate(fig_size)
     else:
         subfig_size = validate(subfig_size)
-        fig_size = (grid_size[1] * subfig_size[0],
-                    grid_size[0] * subfig_size[1])
 
     plt.rcParams['figure.figsize'] = fig_size
     if tight_layout:
@@ -677,6 +691,7 @@ def json_equivalent(
         encoder: Optional[Type] = None,
         decoder: Optional[Type] = None,
         dumps: Callable[[T], str] = json.dumps,
+        dumps: Callable[[_T], str] = json.dumps,
         loads: Callable[[str], Any] = json.loads
 ) -> bool:
     # ignore parameter *cls* when it is *None*
@@ -945,6 +960,31 @@ def simple_pprint(self, obj, stream, indent, allowance, context, level):
     write(")")
 
 
+def simple_pprinter(self, names: Optional[Tuple[str, ...]] = None):
+    def simple_pprint(self, obj, stream, indent, allowance, context, level):
+        """
+        Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
+        """
+        # Source: <https://stackoverflow.com/a/52521743/5811400>
+        write = stream.write
+
+        class_name = obj.__class__.__name__
+        write(class_name + "(")
+
+        if names is None:
+            obj_dict = obj.__dict__.copy().items()
+        else:
+            if len(names) == 0:
+                values = empty_gen()
+            else:
+                values = operator.attrgetter(*names)
+                if len(names == 1):
+                    values = (values,)
+            obj_dict = zip(names, values)
+
+        _format_kwarg_dict_items(
+            self, obj_dict, stream, indent + len(class_name), allowance + 1, context, level
+        )
 def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, level):
     '''
     Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
@@ -1050,8 +1090,6 @@ class Ranges(MutableSet):
 
         self._len = sum(map(len, self.ranges))
 
-    def __contains__(self, elem):
-        return any(
             map(contains(elem), self.ranges)
         )
 
