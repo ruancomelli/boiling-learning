@@ -56,20 +56,28 @@ from typing_extensions import (
     Protocol,
     overload
 )
+import zict
+import zlib
 
-from boiling_learning.utils.functional import pack
+from boiling_learning.utils.functional import (
+    Pack,
+    pack
 )
 
 
 # ---------------------------------- Typing ----------------------------------
-class _SentinelType(enum.Enum):
 class _Sentinel(enum.Enum):
     INSTANCE = enum.auto()
+
     @classmethod
     def get_instance(cls) -> "_Sentinel":
         return cls.INSTANCE
 
 
+_sentinel = _Sentinel.get_instance()
+_T = TypeVar('_T')
+S = TypeVar('S')
+SentinelOptional = Union[_Sentinel, _T]
 
 
 # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
@@ -97,8 +105,10 @@ def indexify(arg: Iterable) -> Iterable[int]:
     ...
 
 
-# @overload
-# def indexify(arg: Collection) -> range: ...
+@overload
+def indexify(arg: Collection) -> range:
+    ...
+
 
 def indexify(arg: Union[Iterable, Collection]) -> Iterable[int]:
     try:
@@ -107,7 +117,7 @@ def indexify(arg: Union[Iterable, Collection]) -> Iterable[int]:
         return funcy.walk(0, enumerate(arg))
 
 
-def constant_factory(value: Callable[[], T]) -> Callable[..., T]:
+def constant_factory(value: Callable[[], _T]) -> Callable[..., _T]:
     def _constant(*args, **kwargs):
         return value()
     return _constant
@@ -142,11 +152,14 @@ def _(arg):
 
 @as_immutable.register(dict)
 def _(arg):
+    return frozendict(arg)
 
 
+# TODO: in the *_sentinel* case, use *key=as_immutable*. Do it and test!
 def remove_duplicates(
+    iterable: Iterable[_T],
     key: Union[None, object, Dict, Callable] = _sentinel
-) -> Iterable[T]:
+) -> Iterable[_T]:
     # See <https://more-itertools.readthedocs.io/en/stable/api.html#more_itertools.unique_everseen>
 
     if key is _sentinel:
@@ -172,8 +185,9 @@ def remove_duplicates(
 
 
 def reorder(
+    seq: Sequence[_T],
     indices: Iterable[int]
-) -> Iterable[T]:
+) -> Iterable[_T]:
     return map(seq.__getitem__, indices)
 
 
@@ -196,8 +210,8 @@ def argmax(
 
 
 def argsorted(iterable: Iterable) -> Iterable[int]:
-    return map(
-        operator.itemgetter(0),
+    return funcy.pluck(
+        0,
         sorted(
             enumerate(iterable),
             key=operator.itemgetter(1)
@@ -206,8 +220,9 @@ def argsorted(iterable: Iterable) -> Iterable[int]:
 
 
 def multipop(
+        lst: MutableSequence[_T],
         indices: Collection[int]
-) -> List[T]:
+) -> List[_T]:
     pop = [lst[i] for i in indices]
     lst[:] = [v for i, v in enumerate(lst) if i not in indices]
 
@@ -249,7 +264,7 @@ def is_consecutive(
         r = range(min(ints), max(ints) + 1)
         return (
             len(ints) == len(r)
-            and all(map(ints.__contains__, r))
+            and funcy.all(ints.__contains__, r)
         )
     else:
         r = range(ints[0], ints[-1] + 1)
@@ -269,13 +284,13 @@ def partial_isinstance(type_: Type) -> Callable[[Any], bool]:
     return wrapped
 
 
-def alternate_iter(
+def one_factor_at_a_time(
     iterables: Iterable[Iterable],
     default_indices: Iterable[int] = tuple(),
     skip_repeated: bool = True
 ) -> Iterator[tuple]:
     '''
-        >>> alternate_iter(
+        >>> one_factor_at_a_time(
             [
                 [1, 2, 3],
                 'rohan',
@@ -295,10 +310,13 @@ def alternate_iter(
         (2, 'a', 'beta')]
     '''
     default_indices = tuple(default_indices)
-    default_indices = default_indices + \
     default_indices = default_indices + (0,)*(len(iterables) - len(default_indices))
 
     if skip_repeated:
+        yield tuple(
+            iterable[default_indices[idx]]
+            for idx, iterable in enumerate(iterables)
+        )
 
     for iterable_index, iterable in enumerate(iterables):
         head = tuple(
@@ -316,9 +334,7 @@ def alternate_iter(
         )
         if skip_repeated:
             for idx, item in enumerate(iterable):
-                if idx == default_indices[iterable_index]:
-                    continue
-                else:
+                if idx != default_indices[iterable_index]:
                     yield head + (item,) + tail
         else:
             for item in iterable:
@@ -476,13 +492,15 @@ def is_dataclass_class(Type) -> bool:
 
 def dataclass_from_mapping(
         mapping: Mapping[str, Any],
+        dataclass_factory: Callable[..., _T],
         key_map: Optional[Union[dataclass, Mapping[str, str]]] = None
-) -> T:
 ) -> _T:
     if not is_dataclass_class(dataclass_factory):
         raise ValueError('*dataclass_factory* must be a dataclass.')
 
-    ))
+    dataclass_field_names = set(
+        funcy.pluck_attr('name', dataclasses.fields(dataclass_factory))
+    )
 
     if key_map is None:
         return dataclass_factory(
@@ -510,7 +528,7 @@ def dataclass_from_mapping(
         )
 
 
-def to_parent_dataclass(obj: dataclass, parent_factory: Callable[..., T]) -> T:
+def to_parent_dataclass(obj: dataclass, parent_factory: Callable[..., _T]) -> _T:
     if not is_dataclass_class(parent_factory):
         raise ValueError('*parent_factory* must be a dataclass.')
 
@@ -568,8 +586,9 @@ def print_verbose(verbose: bool, *args, **kwargs) -> None:
 def print_header(
     s: str,
     level: int = 0,
+    levels: Sequence[str] = ('#', '=', '-', '~', '^', '*', '+'),
     verbose: bool = True
-):
+) -> None:
     """Standardized method for printing a section header.
 
     Prints the argument s underlined.
@@ -624,7 +643,7 @@ def prepare_fig(
         fig_size: Optional[Union[str, Tuple[int, int]]] = None,
         subfig_size: Optional[Union[str, Tuple[int, int]]] = None,
         tight_layout: bool = True
-):
+) -> dict:
     """Resize figure and calculate the number of rows and columns in the subplot grid.
 
     Parameters
@@ -655,13 +674,16 @@ def prepare_fig(
         n_cols = (n_elems-1)//n_rows + 1
     grid_size = (n_rows, n_cols)
 
-    def validate(size: T) -> Union[T, Tuple[int, int]]:
     def validate(size: _T) -> Union[_T, Tuple[int, int]]:
+        if size in {'micro'}:
             return (2, 1.5)
+        if size in {'tiny'}:
             return (4, 3)
+        if size in {'small'}:
             return (7, 5)
+        elif size in {'normal', 'intermediate'}:
             return (9, 7)
-        elif size in frozenset({'large', 'big'}):
+        elif size in {'large', 'big'}:
             return (18, 15)
         else:
             return size
@@ -670,6 +692,10 @@ def prepare_fig(
         fig_size = validate(fig_size)
     else:
         subfig_size = validate(subfig_size)
+        fig_size = (
+            grid_size[1] * subfig_size[0],
+            grid_size[0] * subfig_size[1]
+        )
 
     plt.rcParams['figure.figsize'] = fig_size
     if tight_layout:
@@ -690,13 +716,12 @@ def json_equivalent(
         rhs,
         encoder: Optional[Type] = None,
         decoder: Optional[Type] = None,
-        dumps: Callable[[T], str] = json.dumps,
         dumps: Callable[[_T], str] = json.dumps,
         loads: Callable[[str], Any] = json.loads
 ) -> bool:
     # ignore parameter *cls* when it is *None*
-    dumps = pack(cls=encoder).omit(is_(None), key='cls').partial(dumps)
-    loads = pack(cls=decoder).omit(is_(None), key='cls').partial(loads)
+    dumps = pack(cls=encoder).partial(dumps)
+    loads = pack(cls=decoder).partial(loads)
 
     lhs_str = dumps(lhs)
     rhs_str = dumps(rhs)
@@ -708,18 +733,18 @@ def json_equivalent(
 
 
 # ---------------------------------- Iteration ----------------------------------
-def empty_gen():
+def empty_gen() -> Iterator[None]:
     # Source: <https://stackoverflow.com/a/13243870/5811400>
     return
     yield
 
 
-def append(iterable, value):
+def append(iterable: Iterable[_T], value: S) -> Iterator[Union[_T, S]]:
     yield from iterable
     yield value
 
 
-def transpose(iterable):
+def transpose(iterable: _T) -> Iterable[Tuple[_T, ...]]:
     return zip(*iterable)
 
 
@@ -930,6 +955,22 @@ def nullcontext(enter_result=None):
     yield enter_result
 
 
+def JSONDict(path: PathType, dumps: Callable[[_T], str], loads: Callable[[str], _T]) -> zict.Func:
+    path = ensure_dir(path)
+    file = zict.File(path, mode='a')
+    compress = zict.Func(
+        zlib.compress,
+        zlib.decompress,
+        file
+    )
+    data = zict.Func(
+        lambda obj: dumps(obj).encode('utf-8'),
+        lambda byte_obj: loads(byte_obj.decode('utf-8')),
+        compress
+    )
+    return data
+
+
 # ---------------------------------- Timer ----------------------------------
 @contextmanager
 def elapsed_timer():
@@ -985,6 +1026,10 @@ def simple_pprinter(self, names: Optional[Tuple[str, ...]] = None):
         _format_kwarg_dict_items(
             self, obj_dict, stream, indent + len(class_name), allowance + 1, context, level
         )
+        write(")")
+    return simple_pprint
+
+
 def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, level):
     '''
     Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
@@ -1007,8 +1052,8 @@ def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, le
             write(delimnl)
 
 
-def simple_pprint_class(cls: type):
-    pprint.PrettyPrinter._dispatch[cls.__repr__] = simple_pprint
+def simple_pprint_class(cls: type, *names):
+    pprint.PrettyPrinter._dispatch[cls.__repr__] = simple_pprinter(names)
 
     # Returning the class allows the use of this function as a decorator
     return cls
@@ -1090,8 +1135,8 @@ class Ranges(MutableSet):
 
         self._len = sum(map(len, self.ranges))
 
-            map(contains(elem), self.ranges)
-        )
+    def __contains__(self, elem) -> bool:
+        return funcy.any(contains(elem), self.ranges)
 
     def __iter__(self):
         return itertools.chain.from_iterable(self.ranges)
@@ -1163,7 +1208,7 @@ class NoValueEnum(enum.Enum):
 class ArgGenerator:
     def __init__(
             self,
-            generator: Callable[[Hashable], 'Pack'],
+            generator: Callable[[Hashable], Pack],
             keep: bool = False,
     ):
         self._keep = keep
@@ -1180,7 +1225,7 @@ class ArgGenerator:
 class AutoGenerator:
     def __init__(
             self,
-            generator: Callable[[Hashable], 'Pack'],
+            generator: Callable[[Hashable], Pack],
             keep: bool = False,
             key_index: int = 0
     ):
