@@ -49,6 +49,9 @@ import more_itertools as mit
 from more_itertools import unzip
 import modin.pandas as pd
 from sortedcontainers import SortedSet
+from typing_extensions import (
+    Protocol,
+)
 
 from boiling_learning.utils.functional import pack
 
@@ -64,9 +67,18 @@ SentinelOptional = Union[_SentinelType, T]
 
 
 # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
-PathType = Union[str, 'os.PathLike[str]']
 VerboseType = Union[bool, int]
 JSONDataType = Union[None, bool, int, float, str, List['JSONDataType'], Dict[str, 'JSONDataType']]
+
+
+class PathLike(Protocol[AnyStr]):
+    '''See https://github.com/python/typing/issues/402
+    '''
+    def __fspath__(self) -> AnyStr:
+        ...
+
+
+PathType = Union[str, PathLike[str]]
 
 
 # ---------------------------------- Utility functions ----------------------------------
