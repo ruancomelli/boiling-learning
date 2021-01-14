@@ -2,6 +2,7 @@ import contextlib
 import subprocess
 from pathlib import Path
 from typing import (
+    Any,
     Callable,
     Iterable,
     Iterator,
@@ -564,10 +565,22 @@ def frames(
                     f'failed frame retrieval for video at {video_path}')
 
 
+def opencv_property_getter_from_file(
+        property_code: int
+) -> Callable[[PathType], Any]:
+    def _property_getter(video_path: PathType) -> Any:
+        with open_video(video_path) as cap:
+            return cap.get(property_code)
+    return _property_getter
+
+
+get_frame_count = opencv_property_getter_from_file(cv2.CAP_PROP_FRAME_COUNT)
+get_fps = opencv_property_getter_from_file(cv2.CAP_PROP_FPS)
+
+
 def count_frames(video_path: PathType, fast: bool = False) -> int:
     if fast:
-        with open_video(video_path) as cap:
-            return int(round(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
+        return int(round(get_frame_count(video_path)))
     else:
         return ilen(frames(video_path))
 
