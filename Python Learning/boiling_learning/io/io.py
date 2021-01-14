@@ -1,4 +1,7 @@
+import collections
+from functools import partial
 from itertools import accumulate
+import io as _io
 import json
 import operator
 import os
@@ -12,7 +15,9 @@ from typing import (
     Iterable,
     Mapping,
     Optional,
+    Sequence,
     Tuple,
+    Type,
     TypeVar,
     Union
 )
@@ -21,14 +26,21 @@ import warnings
 import cv2
 import funcy
 import h5py
+import json_tricks
 import numpy as np
 import modin.pandas as pd
 import tensorflow as tf
 from tensorflow.keras.models import load_model
-import yogadl
-import yogadl.storage
+try:
+    # yogadl is an optional dependency
+    # TODO: read <https://stackoverflow.com/a/27361558/5811400>
+    import yogadl
+    import yogadl.storage
+except ImportError:
+    pass # TODO: handle this case
 
 import boiling_learning.utils as bl_utils
+from boiling_learning.utils.functional import pack
 from boiling_learning.utils import (
     PathType,
     ensure_dir,
@@ -40,6 +52,26 @@ T = TypeVar('T')
 S = TypeVar('S')
 SaverFunction = Callable[[S, PathType], Any]
 LoaderFunction = Callable[[PathType], S]
+DatasetTriplet = Tuple[tf.data.Dataset, Optional[tf.data.Dataset], tf.data.Dataset]
+OptionalDatasetTriplet = Tuple[Optional[tf.data.Dataset], Optional[tf.data.Dataset], Optional[tf.data.Dataset]]
+BoolFlagged = Tuple[bool, S]
+BoolFlaggedLoaderFunction = LoaderFunction[BoolFlagged[S]]
+
+
+def add_bool_flag(
+    loader: LoaderFunction[T],
+    expected_exceptions: Union[Exception, Sequence[Exception]] = FileNotFoundError
+) -> BoolFlaggedLoaderFunction[T]:
+    if isinstance(expected_exceptions, Sequence):
+        expected_exceptions = tuple(expected_exceptions)
+
+    def _loader(path: PathType) -> T:
+        try:
+            return True, loader(path)
+        except expected_exceptions:
+            return False, None
+
+    return _loader
 
 
 def chunked_filename_pattern(
@@ -186,30 +218,41 @@ def load_pkl(path: PathType):
         return pickle.load(file)
 
 
-def save_json(obj, path: PathType, cls=None) -> None:
+def save_json(
+        obj: T,
+        path: PathType,
+        dump: Callable[[T, _io.TextIOWrapper], Any] = json.dump,
+        cls: Optional[Type] = None
+) -> None:
     path = ensure_parent(path)
 
     if path.suffix != '.json':
         warnings.warn(
             f'A JSON file is expected, but *path* ends with "{path.suffix}"',
-            category=warnings.RuntimeWarning
+            category=RuntimeWarning
         )
 
+    dump = pack(cls=cls).omit('cls', bl_utils.is_(None)).partial(dump)
     with path.open('w', encoding='utf-8') as file:
-        json.dump(obj, file, indent=4, ensure_ascii=False, cls=cls)
+        dump(obj, file, indent=4, ensure_ascii=False)
 
 
-def load_json(path: PathType, cls=None):
+def load_json(
+        path: PathType,
+        load: Callable[[_io.TextIOWrapper], T] = json.load,
+        cls: Optional[Type] = None
+) -> T:
     path = ensure_resolved(path)
 
     if path.suffix != '.json':
         warnings.warn(
             f'A JSON file is expected, but *path* ends with "{path.suffix}"',
-            category=warnings.RuntimeWarning
+            category=RuntimeWarning
         )
 
+    load = pack(cls=cls).omit('cls', bl_utils.is_(None)).partial(load)
     with path.open('r', encoding='utf-8') as file:
-        return json.load(file, cls=cls)
+        return load(file)
 
 
 def saver_hdf5(key: str = '') -> SaverFunction[Any]:
@@ -228,59 +271,43 @@ def loader_hdf5(key: str = '') -> LoaderFunction[Any]:
     return load_hdf5
 
 
-def _element_spec_to_list(element_spec):
-    return [
-        {
-            'dtype': bl_utils.dtypes.tf_str_dtype_bidict.inverse[type_spec.shape.dtype],
-            'shape': list(type_spec.shape)
-        }
-        for type_spec in element_spec
-    ]
+def save_element_spec(element_spec: tf.TensorSpec, path: PathType) -> None:
+    encoded_element_spec = bl_utils.dtypes.encode_element_spec(element_spec)
+    save_json(encoded_element_spec, path, dump=json_tricks.dump)
 
 
-def _element_list_to_spec(lst):
-    return tuple(
-        tf.TensorSpec(
-            shape=tuple(dct['shape']),
-            dtype=bl_utils.dtypes.tf_str_dtype_bidict[dct['dtype']]
-        )
-        for dct in lst
-    )
+def load_element_spec(path: PathType) -> tf.TensorSpec:
+    encoded_element_spec = load_json(path, load=json_tricks.load)
+    return bl_utils.dtypes.decode_element_spec(encoded_element_spec)
 
 
-def save_element_spec(elem_spec, path: PathType) -> None:
-    save_json(
-        _element_spec_to_list(elem_spec),
-        path
-    )
-
-
-def load_element_spec(path: PathType):
-    element_spec_list = load_json(path)
-    return _element_list_to_spec(element_spec_list)
-
-
-def save_dataset(dataset, path: PathType) -> None:
+def save_dataset(dataset: tf.data.Dataset, path: PathType) -> None:
     path = ensure_dir(path)
-    dataset_path = path / 'dataset'
+    dataset_path = path / 'dataset.tensorflow'
     element_spec_path = path / 'element_spec.json'
 
-    save_element_spec(
-        dataset.element_spec,
-        element_spec_path
-    )
-
-    tf.data.experimental.save(dataset, dataset_path)
+    save_element_spec(dataset.element_spec, element_spec_path)
+    tf.data.experimental.save(dataset, str(dataset_path))
 
 
-def load_dataset(path: PathType):
+def load_dataset(path: PathType) -> tf.data.Dataset:
     path = ensure_resolved(path)
-    dataset_path = path / 'dataset'
+    dataset_path = path / 'dataset.tensorflow'
     element_spec_path = path / 'element_spec.json'
 
     element_spec = load_element_spec(element_spec_path)
 
-    return tf.data.experimental.load(dataset_path, element_spec)
+    def recurse_fix(elem_spec):
+        if isinstance(elem_spec, list):
+            return tuple(map(recurse_fix, elem_spec))
+        elif isinstance(elem_spec, collections.OrderedDict):
+            return dict(funcy.walk_values(recurse_fix, elem_spec))
+        else:
+            return elem_spec
+
+    element_spec = recurse_fix(element_spec)
+
+    return tf.data.experimental.load(str(dataset_path), element_spec)
 
 
 def _default_filename_pattern(name: str, index: int) -> Path:
@@ -299,7 +326,7 @@ def save_frames_dataset(
     df_path = path / 'dataframe.csv'
 
     def _get_path(data):
-        name = data[name_column]
+        name = data[name_column].decode("utf-8")
         index = int(data[index_column])
 
         return imgs_path / filename_pattern(name, index)
@@ -314,6 +341,37 @@ def save_frames_dataset(
         save_image(img, img_path)
 
     df.to_csv(df_path, header=True, index=True)
+
+
+def saver_frames_dataset(
+        filename_pattern: Callable[[str, int], Path] = _default_filename_pattern,
+        chunk_sizes: Optional[Sequence[int]] = (100, 100)
+) -> SaverFunction[DatasetTriplet]:
+    def _saver(
+            ds: DatasetTriplet,
+            path: PathType
+    ) -> None:
+        path = ensure_parent(path)
+        ds_train, ds_val, ds_test = ds
+
+        save_frames_dataset(
+            ds_train,
+            path / 'train',
+            filename_pattern=partial(filename_pattern, chunk_sizes=chunk_sizes)
+        )
+        if ds_val is not None:
+            save_frames_dataset(
+                ds_val,
+                path / 'val',
+                filename_pattern=partial(filename_pattern, chunk_sizes=chunk_sizes)
+            )
+        save_frames_dataset(
+            ds_test,
+            path / 'test',
+            filename_pattern=partial(filename_pattern, chunk_sizes=chunk_sizes)
+        )
+
+    return _saver
 
 
 def decode_img(img, channels: int = 1):
@@ -353,20 +411,68 @@ def load_frames_dataset(
     df = pd.read_csv(df_path, index_col=0)
     if shuffle:
         df = df.sample(frac=1)
-    files = list(map(
-        bl_utils.ensure_resolved,
-        df.index
-    ))
+    files = [
+        str(bl_utils.ensure_resolved(path))
+        for path in df.index
+    ]
     df = df.reset_index(drop=True)
 
     ds_img = tf.data.Dataset.from_tensor_slices(files)
     ds_img = ds_img.map(process_path)
-    ds_data = tf.data.Dataset.from_tensor_slices(
-        df.to_dict('list')
-    )
+    ds_data = tf.data.Dataset.from_tensor_slices(df.to_dict('list'))
     ds = tf.data.Dataset.zip((ds_img, ds_data))
 
     return ds
+
+
+def loader_frames_dataset(
+        path: PathType
+) -> Tuple[bool, Optional[tf.data.Dataset]]:
+    path = bl_utils.ensure_resolved(path)
+
+    try:
+        return True, load_frames_dataset(path, shuffle=True)
+    except FileNotFoundError:
+        return False, None
+
+
+def saver_dataset_triplet(
+        saver: SaverFunction[tf.data.Dataset]
+) -> SaverFunction[DatasetTriplet]:
+    def _saver(
+            ds: DatasetTriplet,
+            path: PathType
+    ) -> None:
+        ds_train, ds_val, ds_test = ds
+
+        path = ensure_dir(path)
+        saver(ds_train, path / 'train')
+        if ds_val is not None:
+            saver(ds_val, path / 'val')
+        saver(ds_test, path / 'test')
+
+    return _saver
+
+
+def loader_dataset_triplet(
+        loader: BoolFlaggedLoaderFunction[Optional[tf.data.Dataset]]
+) -> BoolFlaggedLoaderFunction[OptionalDatasetTriplet]:
+    def _loader(
+            path: PathType
+    ) -> BoolFlagged[OptionalDatasetTriplet]:
+        path = bl_utils.ensure_resolved(path)
+
+        success_train, ds_train = loader(path / 'train')
+        success_val, ds_val = loader(path / 'val')
+        success_test, ds_test = loader(path / 'test')
+
+        success = success_train and success_test
+        if not success_val:
+            ds_val = None
+
+        return success, (ds_train, ds_val, ds_test)
+
+    return _loader
 
 
 def save_yogadl(
@@ -380,6 +486,41 @@ def save_yogadl(
     lfs_config = yogadl.storage.LFSConfigurations(str(storage_path))
     storage = yogadl.storage.LFSStorage(lfs_config)
     storage.submit(dataset, dataset_id, dataset_version)
+
+
+def saver_yogadl(
+        storage_path: PathType,
+        dataset_id: str
+) -> SaverFunction[DatasetTriplet]:
+    storage_path = bl_utils.ensure_resolved(storage_path)
+    id_train = dataset_id + '_train'
+    id_val = dataset_id + '_val'
+    id_test = dataset_id + '_test'
+
+    def _saver(
+            ds: DatasetTriplet,
+            path: Optional[PathType] = None
+    ) -> None:
+        ds_train, ds_val, ds_test = ds
+
+        save_yogadl(
+            ds_train,
+            storage_path=storage_path,
+            dataset_id=id_train
+        )
+        if ds_val is not None:
+            save_yogadl(
+                ds_val,
+                storage_path=storage_path,
+                dataset_id=id_val
+            )
+        save_yogadl(
+            ds_test,
+            storage_path=storage_path,
+            dataset_id=id_test
+        )
+
+    return _saver
 
 
 def load_yogadl(
@@ -409,3 +550,43 @@ def load_yogadl(
         drop_shard_remainder=drop_shard_remainder
     )
     return yogadl.tensorflow.make_tf_dataset(stream)
+
+
+def loader_yogadl(
+        storage_path: PathType,
+        dataset_id: str
+) -> LoaderFunction[DatasetTriplet]:
+    storage_path = bl_utils.ensure_resolved(storage_path)
+    id_train = dataset_id + '_train'
+    id_val = dataset_id + '_val'
+    id_test = dataset_id + '_test'
+
+    def _loader(path: Optional[PathType] = None):
+        try:
+            ds_train = load_yogadl(
+                storage_path=storage_path,
+                dataset_id=id_train
+            )
+        except AssertionError:
+            ds_train = None
+
+        try:
+            ds_val = load_yogadl(
+                storage_path=storage_path,
+                dataset_id=id_val
+            )
+        except AssertionError:
+            ds_val = None
+
+        try:
+            ds_test = load_yogadl(
+                storage_path=storage_path,
+                dataset_id=id_test
+            )
+        except AssertionError:
+            ds_test = None
+
+        success = ds_train is not None and ds_test is not None
+        return success, (ds_train, ds_val, ds_test)
+
+    return _loader
