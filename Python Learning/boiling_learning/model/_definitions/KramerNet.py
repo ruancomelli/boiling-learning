@@ -2,13 +2,12 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Activation, Input, Flatten, Dense, Dropout, Conv2D, MaxPool2D
 
 from boiling_learning.management import ElementCreator
-from boiling_learning.model.definitions.utils import (
+from boiling_learning.model.model import (
     make_creator_method,
     ProblemType,
 )
 
 
-# CNN #3 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.
 def build(
     input_shape,
     dropout_ratio,
@@ -18,12 +17,24 @@ def build(
     num_classes=None,
 ):
     input_data = Input(shape=input_shape)
-    x = Conv2D(32, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
-    x = Conv2D(64, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
+
+    x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
+    x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+
+    x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
+    x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
+    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+
+    x = Conv2D(128, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
+    x = Conv2D(128, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
+    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+
     x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
+    x = Dense(256, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
 
     if ProblemType.get_type(problem) is ProblemType.CLASSIFICATION:
@@ -42,7 +53,7 @@ def build(
 
 creator = ElementCreator(
     method=make_creator_method(builder=build),
-    name='HoboldNet3',
+    name='KramerNet',
     default_params=dict(
         verbose=2,
         checkpoint={'restore': False},

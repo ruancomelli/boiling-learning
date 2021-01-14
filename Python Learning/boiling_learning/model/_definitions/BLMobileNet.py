@@ -1,30 +1,28 @@
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Activation, Input, Flatten, Dense, Dropout, Conv2D, MaxPool2D
+from tensorflow.keras.layers import Activation, Input, Flatten, Dense
+from tensorflow.keras.applications import MobileNetV2
 
 from boiling_learning.management import ElementCreator
-from boiling_learning.model.definitions.utils import (
+from boiling_learning.model.model import (
     make_creator_method,
     ProblemType,
 )
 
-
-# CNN #1 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.
 def build(
     input_shape,
-    dropout_ratio,
     hidden_layers_policy,
     output_layer_policy,
     problem=ProblemType.REGRESSION,
     num_classes=None,
 ):
-    input_data = Input(shape=input_shape)
-    x = Conv2D(16, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
-    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
-    x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
-
+    mobile_net = MobileNetV2(
+        input_shape=input_shape,
+        include_top=False,
+        weights='imagenet',
+        pooling='avg'
+    )
+    x = Dense(256, activation='relu', dtype=hidden_layers_policy)(mobile_net.output)
+    
     if ProblemType.get_type(problem) is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
@@ -34,18 +32,18 @@ def build(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    model = Model(inputs=input_data, outputs=predictions)
+    model = Model(inputs=mobile_net.input, outputs=predictions)
 
     return model
 
 
 creator = ElementCreator(
     method=make_creator_method(builder=build),
-    name='HoboldNet1',
+    name='BLMobileNet',
     default_params=dict(
         verbose=2,
         checkpoint={'restore': False},
-        num_classes=3,
+        num_classes=None,
         problem=ProblemType.REGRESSION,
         fetch=['model', 'history'],
     ),

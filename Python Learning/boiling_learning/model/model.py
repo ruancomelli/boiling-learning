@@ -2,6 +2,9 @@ import collections
 from dataclasses import dataclass
 import enum
 from typing import (
+    Any,
+    Callable,
+    Dict,
     Iterable,
     Optional,
     Tuple,
@@ -9,13 +12,17 @@ from typing import (
     Union
 )
 
+import funcy
 import parse
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 
 import boiling_learning.utils.utils as bl_utils
 from boiling_learning.utils.utils import PathType
+from boiling_learning.utils.functional import Pack
 import boiling_learning.io.io as bl_io
+from boiling_learning.preprocessing.transformers import Creator
+
 
 _sentinel = object()
 T = TypeVar('T')
@@ -221,12 +228,13 @@ def tf_train_val_test_split_concat(
             ds_test = ds_test.concatenate(ds_test_)
 
     return ds_train, ds_val, ds_test
+_ModelType = TypeVar('_ModelType')
 
 
 def restore(
     restore: bool = False,
     path: Optional[PathType] = None,
-    load_method: bl_io.LoaderFunction[T] = None,
+    load_method: Optional[bl_io.LoaderFunction[T]] = None,
     epoch_str: str = 'epoch'
 ) -> Tuple[int, Optional[T]]:
     last_epoch = -1
@@ -250,3 +258,91 @@ def restore(
             model = load_method(path_str)
 
     return last_epoch, model
+
+
+class ProblemType(enum.Enum):
+    CLASSIFICATION = enum.auto()
+    REGRESSION = enum.auto()
+
+    @classmethod
+    def get_type(cls, s, default=_sentinel):
+        if s in cls:
+            return s
+        else:
+            return cls.from_string(s, default=default)
+
+    @classmethod
+    def from_string(cls, s, default=_sentinel):
+        for k, v in cls.conversion_table.items():
+            if s in v:
+                return k
+        if default is _sentinel:
+            raise ValueError(
+                f'string {s} was not found in the conversion table.'
+                f' Available values are {list(cls.conversion_table.values())}.')
+        else:
+            return default
+
+
+ProblemType.conversion_table = {
+    ProblemType.CLASSIFICATION: {'classification', 'regime'},
+    ProblemType.REGRESSION: {'regression', 'heat flux', 'h', 'power'},
+}
+
+
+def default_compiler(model, **params):
+    model.compile(**params)
+    return model
+
+
+def default_fitter(model, **params):
+    return model.fit(**params)
+
+
+def make_creator_method(
+        builder: Callable[..., _ModelType],
+        compiler: Callable[[_ModelType], _ModelType] = default_compiler,
+        fitter: Callable[[_ModelType], Any] = default_fitter
+) -> Callable[..., dict]:
+    def creator_method(
+        verbose,
+        num_classes,
+        problem,
+        strategy,
+        architecture_setup,
+        compile_setup,
+        fit_setup,
+        fetch,
+    ):
+        with strategy.scope():
+            model = builder(
+                problem=problem,
+                num_classes=num_classes,
+                **architecture_setup
+            )
+
+            if compile_setup.get('do', False):
+                model = compiler(model, **compile_setup['params'])
+
+        history = None
+        if fit_setup.get('do', False):
+            history = fitter(model, **fit_setup['params'])
+
+        available_data = {
+            'model': model,
+            'history': history
+        }
+
+        return {
+            k: available_data[k]
+            for k in fetch
+        }
+
+    return creator_method
+
+
+def make_creator(name: str, defaults: Pack = Pack()) -> Callable:
+    return funcy.compose(
+        Creator.make(name, pack=defaults, expand_pack_on_call=True),
+        make_creator_method
+    )
