@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from functools import (
     partial,
     wraps
@@ -7,7 +6,9 @@ import itertools
 from typing import (
     Any,
     Callable,
+    Dict,
     Generic,
+    Hashable,
     Iterable,
     Iterator,
     Mapping,
@@ -44,22 +45,46 @@ def nth_arg(n: int) -> Callable:
     return _nth
 
 
-@dataclass
-class Pack(Generic[T, S]):
-    args: ArgsType[T] = ()
-    kwargs: KwargsType[S] = frozendict()
+class Pack(Hashable, Generic[T, S]):
+    def __init__(self, args: ArgsType[T] = (), kwargs: KwargsType[S] = frozendict()):
+        self._args: Tuple[T] = tuple(args)
+        self._kwargs: KwargsType[S] = frozendict(kwargs)
 
-    def __getitem__(self, idx_or_key: Union[int, str]) -> Union[T, S]:
-        if isinstance(idx_or_key, int):
-            return self.args[idx_or_key]
-        elif isinstance(idx_or_key, str):
-            return self.kwargs[idx_or_key]
+    @property
+    def args(self) -> Tuple[T]:
+        return self._args
+
+    @property
+    def kwargs(self) -> KwargsType[S]:
+        return self._kwargs
+
+    def __bool__(self) -> bool:
+        return bool(self.args) or bool(self.kwargs)
+
+    def __eq__(self, other: 'Pack') -> bool:
+        return id(self) == id(other) or (
+            isinstance(other, self.__class__)
+            and self.args == other.args
+            and self.kwargs == other.kwargs
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.args, self.kwargs))
+
+    def __getitem__(self, loc: Union[int, str]) -> Union[T, S]:
+        if isinstance(loc, int):
+            return self.args[loc]
+        elif isinstance(loc, str):
+            return self.kwargs[loc]
         else:
             raise ValueError(
-                f'*Pack* expects an *int* index or *str* key, but got a {type(idx_or_key)}')
+                f'*Pack* expects an *int* index or *str* key, but got a {type(loc)}')
 
-    def __iter__(self) -> Iterator[Union[ArgsType[T], KwargsType[S]]]:
-        return (self.args, self.kwargs).__iter__()
+    def __iter__(self) -> Iterator[Union[Tuple[T], KwargsType[S]]]:
+        return iter((self.args, self.kwargs))
+
+    def __repr__(self) -> str:
+        return f'Pack(args={self.args}, kwargs={self.kwargs})'
 
     def __str__(self) -> str:
         args2str = ', '.join(map(str, self.args))
@@ -76,11 +101,28 @@ class Pack(Generic[T, S]):
             ')'
         ))
 
-    def as_pair(self) -> Tuple[tuple, dict]:
-        return (
-            tuple(self.args),
-            dict(self.kwargs)
-        )
+    def __json_encode__(self) -> Dict[str, Union[list, dict]]:
+        return {
+            'args': list(self.args),
+            'kwargs': dict(self.kwargs)
+        }
+
+    def __json_decode__(self, **data) -> None:
+        '''Decode JSON object as Pack.
+
+        Expects the object to be in the format *{"args": args, "kwargs": kwargs]*, e.g.:
+        {
+            "my_pack": {
+                "args": [1, 2, "name"],
+                "kwargs": {
+                    "number": 3.14,
+                    "phone": null
+                }
+            }
+        }
+        '''
+        self._args = data['args']
+        self._kwargs = data['kwargs']
 
     def feed(self, f: Callable[..., U]) -> U:
         return f(*self.args, **self.kwargs)
@@ -89,31 +131,37 @@ class Pack(Generic[T, S]):
         return partial(f, *self.args, **self.kwargs)
 
     def rpartial(self, f: Callable[..., U]) -> Callable[..., U]:
-        return rpartial(f, *self.args, **self.kwargs)
+        return funcy.rpartial(f, *self.args, **self.kwargs)
 
     def omit(
             self,
-            pred: Callable[[T], bool],
-            pos: Optional[Union[int, Iterable[int]]] = (),
-            key: Optional[Union[str, Iterable[str]]] = ()
+            loc: Union[int, str, Iterable[Union[int, str]]] = (), # TODO: unify everything here
+            pred: Optional[Callable[[T], bool]] = None
     ) -> 'Pack':
         '''
         p = pack(1, 2, None, 4, None, 6, a='a', b='b', c=None, d='d', e=None, f='f')
-        print(p)
-        p = p.omit(lambda x: x is None, pos=[0, 2], key=['d', 'e'])
-        print(p)
+        p2 = p.omit((0, 2, 'd', 'e'))
+        print(p2) # prints Pack(2, 4, None, 6, a=a, b=b, c=None, f=f)
+        p3 = p.omit((0, 2, 'd', 'e'), lambda x: x is None)
+        print(p3) # prints Pack(1, 2, 4, None, 6, a=a, b=b, c=None, d=d, f=f)
         '''
+        if isinstance(loc, int):
+            pos = frozenset({loc})
+            key = ()
+        elif isinstance(loc, str):
+            pos = frozenset()
+            key = (loc,)
+        else:
+            pos = frozenset(filter(funcy.isa(int), loc))
+            key = tuple(filter(funcy.isa(str), loc))
+
         enumerated_args = tuple(enumerate(self.args))
-        if pos is None:
-            pos = funcy.walk(0, enumerated_args)
-        elif isinstance(pos, int):
-            pos = {pos}
-        pos = frozenset(pos)
         to_remove = funcy.select_keys(
             pos,
             enumerated_args
         )
-        to_remove = funcy.select_values(pred, to_remove)
+        if pred is not None:
+            to_remove = funcy.select_values(pred, to_remove)
         to_remove = frozenset(funcy.walk(0, to_remove))
         args = tuple(funcy.select_keys(
             lambda idx: idx not in to_remove,
@@ -121,16 +169,71 @@ class Pack(Generic[T, S]):
         ))
         args = funcy.walk(1, args)
 
-        if key is None:
-            key = self.kwargs.keys()
-        elif isinstance(key, str):
-            key = (key,)
-        key = tuple(key)
         to_remove = funcy.project(self.kwargs, key)
-        to_remove = funcy.select_values(pred, to_remove)
+        if pred is not None:
+            to_remove = funcy.select_values(pred, to_remove)
         kwargs = funcy.omit(self.kwargs, to_remove.keys())
 
         return Pack(args=args, kwargs=kwargs)
+
+    def _copy(self, new_args, new_kwargs, right: bool = False) -> 'Pack':
+        n_new_args = len(new_args)
+        if right:
+            args = self.args[:-n_new_args] + new_args
+        else:
+            args = new_args + self.args[n_new_args:]
+        kwargs = self.kwargs.copy(**new_kwargs)
+        return Pack(args, kwargs)
+
+    def copy(self, *new_args, **new_kwargs) -> 'Pack':
+        '''
+        p1 = pack(1, 'a', 'Hi', x=0, y='hello')
+        p2 = p1.copy(0, 'b', x='bye', z='byello')
+        print(p2) # prints Pack(0, b, Hi, x=bye, y=hello, z=byello)
+        '''
+        return self._copy(new_args, new_kwargs, right=False)
+
+    def rcopy(self, *new_args, **new_kwargs) -> 'Pack':
+        '''
+        p1 = pack(1, 'a', 'Hi', x=0, y='hello')
+        p2 = p1.rcopy(0, 'b', x='bye', z='byello')
+        print(p2) # prints Pack(1, 0, b, x=bye, y=hello, z=byello)
+        '''
+        return self._copy(new_args, new_kwargs, right=True)
+
+    def _apply(self, fargs, fkwargs, right: bool = False) -> 'Pack':
+        n_fargs = len(fargs)
+        if right:
+            args_to_transform = self.args[-n_fargs:]
+        else:
+            args_to_transform = self.args[:n_fargs]
+
+        new_args = tuple(
+            f(arg) if f is not None else arg
+            for f, arg in zip(fargs, args_to_transform)
+        )
+        new_kwargs = {
+            k: f(self[k])
+            for k, f in fkwargs.items()
+        }
+
+        return self._copy(new_args, new_kwargs, right=right)
+
+    def apply(self, *fargs, **fkwargs) -> 'Pack':
+        '''
+        p1 = pack(1, 'a', 'Hi', x=0, y='hello')
+        p2 = p1.apply(lambda value: value+5, x=len, y=str.upper)
+        print(p2) # prints Pack(5, b, Hi, x=3, y=HELLO, z=byello)
+        '''
+        return self._apply(fargs, fkwargs, right=False)
+
+    def rapply(self, *fargs, **fkwargs) -> 'Pack':
+        '''
+        p1 = pack(1, 'a', 'Hi', x=0, y='hello')
+        p2 = p1.rapply(lambda value: value+5, x=len, y=str.upper)
+        print(p2) # prints Pack(0, b, hi, x=3, y=HELLO, z=byello)
+        '''
+        return self._apply(fargs, fkwargs, right=True)
 
 
 def pack(*args: T, **kwargs: S) -> Pack[T, S]:
@@ -139,6 +242,21 @@ def pack(*args: T, **kwargs: S) -> Pack[T, S]:
 
 def unpack(f: Callable[..., U], packed_param: Pack[T, S]) -> U:
     return packed(f)(packed_param)
+
+
+def pack_combinations(
+        combinator: Callable[..., Iterator],
+        pack: Pack[Sequence, Sequence]
+) -> Iterator[Pack]:
+    keys = tuple(pack.kwargs.keys())
+    values = tuple(pack.kwargs.values())
+    n_args = len(pack.args)
+
+    for combination in combinator(*pack.args, *values):
+        yield Pack(
+            combination[:n_args],
+            funcy.zipdict(keys, combination[n_args:])
+        )
 
 
 def packed(f: Callable[..., U]) -> Callable[[Pack], U]:
@@ -161,11 +279,6 @@ def reverse_args(f):
     def wrapper(*args, **kwargs):
         return f(*reversed(args), **kwargs)
     return wrapper
-
-
-def rpartial(f: Callable[..., U], *args, **kwargs) -> Callable[..., U]:
-    # source: based on <https://github.com/Suor/funcy/pull/96/commits/0772ccac6803b143d8f54f365080f17a51633891>
-    return lambda *a, **kw: f(*(a + args), **{**kwargs, **kw})
 
 
 def apply(
