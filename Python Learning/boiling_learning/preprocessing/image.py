@@ -1,122 +1,177 @@
-from skimage.color import rgb2gray as grayscale
-from skimage.io import imread, imsave
-from skimage.transform import AffineTransform, downscale_local_mean, warp
-from skimage.util import crop as skimage_crop
+from typing import (
+    Any,
+    Iterable,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union
+)
 
-# TODO: finish this?
-# TODO: comment
-# def auto_input(key, pred, input_method, replaced, raise_if_incompatible=True):
-#     def wrapper(f):
-#         def wrapped(*args, **kwargs):
-#             if key in kwargs:
-#                 val = kwargs.pop(key)
-#                 if pred(val):
-#                     if raise_if_incompatible and replaced in kwargs:
-#                         raise ValueError('auto_input got conflicting arguments.') # TODO: maybe write a better message?
-#                     kwargs[replaced] = val
+import numpy as np
+from skimage.transform import AffineTransform, warp
+import tensorflow as tf
+
+T = TypeVar('T')
+ImageType = Any # something convertible to tf.Tensor
+
+
+def _ratio_to_size(image: ImageType, x: Optional[Union[int, float]], axis: int) -> Optional[int]:
+    if isinstance(x, float):
+        return int(x * image.shape[axis])
+    else:
+        return x
 
 
 def crop(
-        image=None,
-        in_path=None,
-        out_path=None,
-        crop_dict=None,
-        crop_tuple=None,
-        top=0,
-        bottom=0,
-        left=0,
-        right=0
-):
-    # source: <https://stackoverflow.com/questions/33287613/crop-image-in-skimage>
-    # TODO: check_value_match here
+        image: ImageType,
+        left: Optional[Union[int, float]] = None,
+        right: Optional[Union[int, float]] = None,
+        top: Optional[Union[int, float]] = None,
+        bottom: Optional[Union[int, float]] = None,
+        height: Optional[Union[int, float]] = None,
+        width: Optional[Union[int, float]] = None
+) -> tf.Tensor:
+    if (left, right, width).count(None) != 1:
+        raise ValueError('exactly one of *left*, *right* and *width* must be None')
+    if (top, bottom, height).count(None) != 1:
+        raise ValueError('exactly one of *top*, *bottom* and *height* must be None')
 
-    if crop_tuple is None:
-        if crop_dict is None:
-            crop_tuple = (
-                (top, bottom),
-                (left, right)
-            )
-        else:
-            crop_tuple = (
-                (crop_dict.get('top', top), crop_dict.get('bottom', bottom)),
-                (crop_dict.get('left', left), crop_dict.get('right', right))
-            )
-        if image.ndim == 3:
-            # compensate in case image is 3D (RGB)
-            crop_tuple += ((0, 0),)
-        return crop(image, in_path, out_path, crop_tuple=crop_tuple)
+    left = _ratio_to_size(image, left, axis=1)
+    right = _ratio_to_size(image, right, axis=1)
+    width = _ratio_to_size(image, width, axis=1)
+    top = _ratio_to_size(image, top, axis=0)
+    bottom = _ratio_to_size(image, bottom, axis=0)
+    height = _ratio_to_size(image, height, axis=0)
 
-    if image is None:
-        image = imread(in_path)
+    if top is None:
+        top = bottom - height
+    if height is None:
+        height = bottom - top
 
-    cropped = skimage_crop(image, crop_tuple)
-    if out_path is not None:
-        imsave(out_path, cropped)
+    if left is None:
+        left = right - width
+    if width is None:
+        width = right - left
 
-    return cropped
+    return tf.image.crop_to_bounding_box(
+        image,
+        offset_height=top,
+        offset_width=left,
+        target_height=height,
+        target_width=width
+    )
+
+
+def shrink(
+        image: ImageType,
+        left: Optional[Union[int, float]] = None,
+        right: Optional[Union[int, float]] = None,
+        top: Optional[Union[int, float]] = None,
+        bottom: Optional[Union[int, float]] = None,
+        height: Optional[Union[int, float]] = None,
+        width: Optional[Union[int, float]] = None
+) -> tf.Tensor:
+    if (left, right, width).count(None) != 1:
+        raise ValueError('exactly one of *left*, *right* and *width* must be None')
+    if (top, bottom, height).count(None) != 1:
+        raise ValueError('exactly one of *top*, *bottom* and *height* must be None')
+
+    left = _ratio_to_size(image, left, axis=1)
+    right = _ratio_to_size(image, right, axis=1)
+    width = _ratio_to_size(image, width, axis=1)
+    top = _ratio_to_size(image, top, axis=0)
+    bottom = _ratio_to_size(image, bottom, axis=0)
+    height = _ratio_to_size(image, height, axis=0)
+
+    if top is None:
+        top = image.shape[0] - (bottom + height)
+    if height is None:
+        height = image.shape[0] - (bottom + top)
+
+    if left is None:
+        left = image.shape[1] - (right + width)
+    if width is None:
+        width = image.shape[1] - (right + left)
+
+    return tf.image.crop_to_bounding_box(
+        image,
+        offset_height=top,
+        offset_width=left,
+        target_height=height,
+        target_width=width
+    )
 
 
 def shift(
-        image=None,
-        in_path=None, out_path=None,
-        shifts=None,
-        shift_left=None,
-        shift_right=None,
-        shift_up=None,
-        shift_down=None
-):
+        image: np.ndarray,
+        shift_left: Optional[Union[int, float]] = None,
+        shift_right: Optional[Union[int, float]] = None,
+        shift_up: Optional[Union[int, float]] = None,
+        shift_down: Optional[Union[int, float]] = None
+) -> np.ndarray:
     # source: <https://stackoverflow.com/questions/47961447/shift-image-in-scikit-image-python>
-    # TODO: check_value_match here!
 
-    if shifts is None:
-        if shift_left is None:
-            shift_left = - shift_right
-        if shift_up is None:
-            shift_up = - shift_down
-        shifts = (shift_left, shift_up)
+    if (shift_left, shift_right).count(None) != 1:
+        raise ValueError('exactly one of *shift_left* and *shift_right* must be None')
+    if (shift_down, shift_up).count(None) != 1:
+        raise ValueError('exactly one of *shift_down* and *shift_up* must be None')
 
-    if image is None:
-        image = imread(in_path)
+    shift_left = _ratio_to_size(image, shift_left, axis=1)
+    shift_right = _ratio_to_size(image, shift_right, axis=1)
+    shift_up = _ratio_to_size(image, shift_up, axis=0)
+    shift_down = _ratio_to_size(image, shift_down, axis=0)
+
+    if shift_left is None:
+        shift_left = -shift_right
+    if shift_up is None:
+        shift_up = -shift_down
+    shifts = (shift_left, shift_up)
 
     transform = AffineTransform(translation=shifts)
     shifted = warp(image, transform, mode='wrap', preserve_range=True)
     shifted = shifted.astype(image.dtype)
 
-    if out_path is not None:
-        imsave(out_path, shifted)
-
     return shifted
 
 
-def flip(image, horizontal=False, vertical=False):
-    # TODO: check_value_match here!
-    # TODO: use in_path and out_path?
+def flip(
+        image: T,
+        horizontal: bool = False,
+        vertical: bool = False
+) -> Union[T, tf.Tensor]:
+    if horizontal:
+        image = tf.image.flip_left_right(image)
+    if vertical:
+        image = tf.image.flip_up_down(image)
 
-    if horizontal and not vertical:
-        return image[:, ::-1, ...]
-    elif vertical and not horizontal:
-        return image[::-1, ...]
-    elif horizontal and vertical:
-        return image[::-1, ::-1, ...]
-    else:
-        return image
-
-
-def downscale(image, shape):
-    # TODO: use in_path and out_path?
-
-    if isinstance(shape, int):
-        if image.ndim == 2:
-            shape = (shape, shape)
-        else:
-            shape = (shape, shape, 1)
-    elif isinstance(shape, tuple):
-        shape = shape + (1,)*(image.ndim - len(shape))
-
-    return downscale_local_mean(image, shape)
-
-# def grayscale(image, **kwargs):
-#     return rgb2gray(image, **kwargs)
+    return image
 
 
-greyscale = grayscale
+def grayscale(image: ImageType) -> tf.Tensor:
+    return tf.image.rgb_to_grayscale(image)
+
+
+def downscale(
+        image: ImageType,
+        factors: Tuple[int, int],
+        antialias: bool = False
+) -> tf.Tensor:
+    sizes = (image.shape[0]//factors[0], image.shape[1]//factors[1])
+    return tf.image.resize(image, sizes, method='bilinear', antialias=antialias)
+
+
+def random_brightness(image: ImageType, min_delta: float, max_delta: float) -> tf.Tensor:
+    delta = tf.random.uniform([], minval=min_delta, maxval=max_delta)
+    return tf.image.adjust_brightness(image, delta)
+
+
+def random_crop(
+        image: ImageType,
+        size: Iterable[Optional[int]],
+        seed=None
+) -> tf.Tensor:
+    size = tuple(
+        dim if dim is not None else img_dim
+        for img_dim, dim in zip(image.shape, size)
+    )
+    return tf.image.random_crop(image, size, seed=seed)
