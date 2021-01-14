@@ -5,7 +5,6 @@ import operator
 from pathlib import Path
 from typing import (
     Any,
-    Callable,
     Iterable,
     Iterator,
     List,
@@ -107,10 +106,11 @@ class ExperimentVideo:
             column_types: DataFrameColumnTypes = DataFrameColumnTypes()
     ):
         self.video_path: Path = bl_utils.ensure_resolved(video_path)
-        self.frames_path: Path
+        self.frames_path: Optional[Path]
         self.frames_suffix: str
-        self.audio_path: Path
-        self.df_path: Path
+        self.audio_path: Optional[Path]
+        self.df_path: Optional[Path]
+        self.frames_tensor_path: Optional[Path]
         self.data: Optional[self.VideoData] = None
         self._name: str
         self.column_names: self.DataFrameColumnNames = column_names
@@ -126,25 +126,33 @@ class ExperimentVideo:
         else:
             self._name = name
 
-        if (frames_dir is None) ^ (frames_path is None):
+        if (frames_dir is not None) and (frames_path is not None):
+            raise ValueError(
+                'at most one of (frames_dir, frames_path) must be given.')
+        else:
             self.frames_path = (
                 bl_utils.ensure_resolved(frames_path)
-                if frames_dir is None
-                else bl_utils.ensure_resolved(frames_dir) / self.name
+                if frames_path is not None
+                else (
+                    bl_utils.ensure_resolved(frames_dir) / self.name
+                    if frames_dir is not None
+                    else None
+                )
             )
-        else:
-            raise ValueError(
-                'exactly one of (frames_dir, frames_path) must be given.')
 
-        if (frames_tensor_path is None) ^ (frames_tensor_dir is None):
+        if (frames_tensor_path is not None) and (frames_tensor_dir is not None):
+            raise ValueError(
+                'at most one of (frames_tensor_path, frames_tensor_dir) must be given.')
+        else:
             self.frames_tensor_path = (
                 bl_utils.ensure_resolved(frames_tensor_path)
-                if frames_tensor_dir is None
-                else bl_utils.ensure_resolved(frames_tensor_dir) / self.name
+                if frames_tensor_path is not None
+                else (
+                    bl_utils.ensure_resolved(frames_tensor_dir) / self.name
+                    if frames_tensor_dir is not None
+                    else None
+                )
             )
-        else:
-            raise ValueError(
-                'exactly one of (frames_tensor_path, frames_tensor_dir) must be given.')
 
         if frames_suffix.startswith('.'):
             self.frames_suffix = frames_suffix
@@ -156,45 +164,60 @@ class ExperimentVideo:
             raise ValueError(
                 'argument *audio_suffix* must start with a dot \'.\'')
 
-        if (audio_dir is None) ^ (audio_path is None):
+        if (audio_dir is not None) and (audio_path is not None):
+            raise ValueError(
+                'at most one of (audio_dir, audio_path) must be given.')
+        else:
             self.audio_path = (
                 bl_utils.ensure_resolved(audio_path)
-                if audio_dir is None
-                else (bl_utils.ensure_resolved(audio_dir) / self.name).with_suffix(audio_suffix)
+                if audio_path is not None
+                else (
+                    (bl_utils.ensure_resolved(audio_dir) / self.name).with_suffix(audio_suffix)
+                    if audio_dir is not None
+                    else None
+                )
             )
-        else:
-            raise ValueError(
-                'exactly one of (audio_dir, audio_path) must be given.')
 
         if not df_suffix.startswith('.'):
             raise ValueError(
                 'argument *df_suffix* must start with a dot \'.\'')
 
-        if (df_dir is None) ^ (df_path is None):
+        if (df_dir is not None) and (df_path is not None):
+            raise ValueError(
+                'at most one of (df_dir, df_path) must be given.')
+        else:
             self.df_path = (
                 bl_utils.ensure_resolved(df_path)
-                if df_dir is None
-                else (bl_utils.ensure_resolved(df_dir) / self.name).with_suffix(df_suffix)
+                if df_path is not None
+                else (
+                    (bl_utils.ensure_resolved(df_dir) / self.name).with_suffix(df_suffix)
+                    if df_dir is not None
+                    else None
+                )
             )
-        else:
-            raise ValueError(
-                'exactly one of (df_dir, df_path) must be given.')
 
     def __str__(self) -> str:
+        kwargs = {
+            'name': self.name,
+            'video_path': self.video_path,
+            'frames_path': self.frames_path,
+            'frames_suffix': self.frames_suffix,
+            'audio_path': self.audio_path,
+            'df_path': self.df_path,
+            'frames_tensor_path': self.frames_tensor_path,
+            'data': self.data,
+            'column_names': self.column_names,
+            'column_types': self.column_types
+        }
+
         return ''.join((
             self.__class__.__name__,
             '(',
-            ', '.join((
-                f'name={self.name}',
-                f'video_path={self.video_path}',
-                f'frames_path={self.frames_path}',
-                f'frames_suffix={self.frames_suffix}',
-                f'audio_path={self.audio_path}',
-                f'df_path={self.df_path}',
-                f'data={self.data}',
-                f'column_names={self.column_names}',
-                f'column_types={self.column_types}',
-            )),
+            ', '.join(
+                f'{k}={v}'
+                for k, v in kwargs.items()
+                if v is not None
+            ),
             ')'
         ))
 
@@ -237,6 +260,9 @@ class ExperimentVideo:
             overwrite: bool = False,
             verbose: VerboseType = False
     ) -> None:
+        if self.audio_path is None:
+            raise ValueError('*audio_path* is not defined yet.')
+
         extract_audio(
             self.video_path,
             self.audio_path,
@@ -252,6 +278,9 @@ class ExperimentVideo:
             overwrite: bool = False,
             verbose: VerboseType = False
     ) -> None:
+        if self.frames_path is None:
+            raise ValueError('*frames_path* is not defined yet.')
+
         filename_pattern = 'frame{index}' + self.frames_suffix
         if prepend_name:
             filename_pattern = '_'.join((self.name, filename_pattern))
@@ -318,6 +347,8 @@ class ExperimentVideo:
         #     return f[i]
 
     def glob_frames(self) -> Iterable[Path]:
+        if self.frames_path is None:
+            raise ValueError('*frames_path* is not defined yet.')
         return self.frames_path.rglob('*' + self.frames_suffix)
 
     def set_video_data(
@@ -400,6 +431,9 @@ class ExperimentVideo:
             categories_as_int: bool = False,
             inplace: bool = True
     ) -> pd.DataFrame:
+        if self.df_path is None:
+            raise ValueError('*df_path* is not defined yet.')
+
         if not recalculate and self.df is not None:
             return self.df
 
@@ -513,6 +547,9 @@ class ExperimentVideo:
             missing_ok: bool = False,
             inplace: bool = True
     ) -> Optional[pd.DataFrame]:
+        if self.df_path is None and path is None:
+            raise ValueError('*df_path* is not defined yet, so *path* must be given as argument.')
+
         if not overwrite and self.df is not None:
             return self.df
 
@@ -542,6 +579,9 @@ class ExperimentVideo:
             path: Optional[PathType] = None,
             overwrite: bool = False
     ) -> None:
+        if self.df_path is None:
+            raise ValueError('*df_path* is not defined yet, so *path* must be given as argument.')
+
         if path is None:
             path = self.df_path
         path = bl_utils.ensure_parent(path)
@@ -556,6 +596,9 @@ class ExperimentVideo:
             erase_old: bool = False,
             overwrite: bool = False
     ) -> None:
+        if self.df_path is None and (erase_old or renaming):
+            raise ValueError('*erase_old* and *renaming* cannot be used if *df_path* is not defined yet.')
+
         if erase_old:
             old_path = self.df_path
 
@@ -572,6 +615,9 @@ class ExperimentVideo:
         #     old_path.unlink(missing_ok=True)
 
     def frames_to_tensor(self, save: bool = False, overwrite: bool = False) -> tf.data.Dataset:
+        if self.frames_tensor_path is None:
+            raise ValueError('*frames_tensor_path* is not defined yet.')
+
         if overwrite or not self.frames_tensor_path.is_file():
             self.open_video()
             frames = tf.data.Dataset.from_generator(
