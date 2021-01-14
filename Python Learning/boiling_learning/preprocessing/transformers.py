@@ -16,7 +16,8 @@ from boiling_learning.utils.dtypes import (
     new_py_function
 )
 from boiling_learning.utils.functional import (
-    Pack
+    Pack,
+    nth_arg
 )
 from boiling_learning.utils.utils import (
     FrozenNamedMixin,
@@ -24,8 +25,11 @@ from boiling_learning.utils.utils import (
     SimpleStr,
     JSONDataType
 )
+# from boiling_learning.io.json_encoders import (
+#     PackEncoder
+# )
 
-
+C = TypeVar('C')
 T = TypeVar('T')
 S = TypeVar('S')
 U = TypeVar('U')
@@ -50,6 +54,12 @@ class Transformer(
 
     def __call__(self, arg: T, *args, **kwargs) -> S:
         return self.transformer(arg, *args, **kwargs)
+
+    @classmethod
+    def make(cls: Callable[..., C], name: str, *args, **kwargs) -> Callable[[Callable], C]:
+        def _make(f: Callable) -> C:
+            return cls(name, f, *args, **kwargs)
+        return _make
 
     def describe(self) -> JSONDataType:
         return {
@@ -88,7 +98,7 @@ class Creator(
     ):
         if expand_pack_on_call:
             def g(pack: Pack, *args, **kwargs) -> S:
-                return f(*pack.args, *args, **pack.kwargs, **kwargs)
+                return f(*(pack.args + args), **{**pack.kwargs, **kwargs})
         else:
             g = f
 
@@ -111,6 +121,12 @@ class ImageTransformer(
             return pair_transformer(*img_data_pair)
 
         super().__init__(name, g, pack=pack)
+
+    def transform_image(self, img: T, *args, **kwargs) -> S:
+        return self((img, None), *args, **kwargs)[0]
+
+    def as_image_transformer(self) -> Transformer[T, S]:
+        return Transformer('_'.join((self.name, 'image_function')), self.transform_image)
 
 
 class ImageDatasetTransformer(
@@ -229,15 +245,15 @@ class DictImageTransformer(
                 f' Got {type(self.packer)}')
 
     def _transformer_factory(self, key: str) -> ImageTransformer[T, U, S]:
-        name = '_'.join([self.name, key])
+        name = '_'.join((self.name, key))
         func, pack = self._resolve_func_and_pack(key)
         return ImageTransformer(name, func, pack)
 
     def __iter__(self) -> Iterator[str]:
-        return self._transformer_mapping.__iter__()
+        return iter(self._transformer_mapping)
 
     def __len__(self) -> int:
-        return self._transformer_mapping.__len__()
+        return len(self._transformer_mapping)
 
     def __getitem__(self, key: str):
         return self._transformer_mapping[key]
@@ -248,3 +264,14 @@ class DictImageTransformer(
             'name': self.name,
             'packer': self.packer if isinstance(self.packer, Mapping) else self.packer.__name__
         }
+
+
+# class PackTransformerEncoder(PackEncoder):
+#     def default(self, obj):
+#         if isinstance(obj, Transformer):
+#             return obj.describe()
+#         # Let the base class default method raise the TypeError
+#         return PackEncoder.default(self, obj)
+
+
+first_argument_transformer = Transformer('first_argument', nth_arg(0))
