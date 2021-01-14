@@ -99,6 +99,38 @@ class Manager(
         KEEP_LAST = enum.auto()
         KEEP_FIRST_LOADED = enum.auto()
         KEEP_LAST_LOADED = enum.auto()
+
+    class Element:
+        # TODO: finish this and replace Manager interface
+        def __init__(
+                self,
+                elem_id: str,
+                path: PathType,
+                load_method: BoolFlaggedLoaderFunction[_ElemType],
+                save_method: SaverFunction[_ElemType]
+        ):
+            self._id: str = elem_id
+            self._is_loaded: bool = False
+            self._path: Path = bl.utils.ensure_resolved(path)
+            self._value: Union[_Sentinel, _ElemType, _PostProcessedElemType]
+
+        @property
+        def id(self) -> str:
+            return self._id
+
+        @property
+        def is_loaded(self) -> bool:
+            return self._is_loaded
+
+        @property
+        def path(self) -> Path:
+            return self._path
+
+        def load(self) -> bool:
+            success, self._value = self.load_method(self.path)
+            self._is_loaded = success
+            return success
+
     def __init__(
             self,
             path: PathType,
