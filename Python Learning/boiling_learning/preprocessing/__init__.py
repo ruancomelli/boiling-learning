@@ -5,3 +5,4 @@ import boiling_learning.preprocessing.video
 from boiling_learning.preprocessing.ExperimentalData import *
 from boiling_learning.preprocessing.Case import *
 from boiling_learning.preprocessing.ImageDataset import *
+import boiling_learning.preprocessing.visualize
