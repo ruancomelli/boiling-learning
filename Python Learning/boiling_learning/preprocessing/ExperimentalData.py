@@ -1,10 +1,41 @@
 from pathlib import Path
-from typing import Optional
+from typing import (
+    Optional
+)
 
+from frozendict import frozendict
 import modin.pandas as pd
 
 from boiling_learning.utils import PathType
 import boiling_learning.utils as bl_utils
+from boiling_learning.utils import geometry
+from boiling_learning.utils.units import unit_registry as ureg
+
+
+SAMPLES = frozendict({
+    1: geometry.Cylinder(
+        length=6.5 * ureg.centimeter,
+        diameter=0.51 * ureg.millimeter
+    ),
+    2: geometry.Cylinder(
+        length=6.5 * ureg.centimeter,
+        diameter=0.51 * ureg.millimeter
+    ),
+    3: geometry.Cylinder(
+        length=6.5 * ureg.centimeter,
+        diameter=0.25 * ureg.millimeter
+    ),
+    4: geometry.RectangularPrism(
+        length=6.5 * ureg.centimeter,
+        width=1/16 * ureg.inch,
+        thickness=0.0031 * ureg.inch
+    ),
+    5: geometry.RectangularPrism(
+        length=6.5 * ureg.centimeter,
+        width=1/16 * ureg.inch,
+        thickness=0.0031 * ureg.inch
+    )
+})
 
 
 class ExperimentalData:
@@ -14,8 +45,8 @@ class ExperimentalData:
             data_path: Optional[PathType] = None,
             description_path: Optional[PathType] = None
     ):
-        if None not in {path, data_path} or all(x is None for x in (path, data_path)):
-            raise ValueError('either path or data_path must be given as parameter, not both.')
+        if (path, data_path).count(None) != 1:
+            raise ValueError('exactly one of path or data_path must be given as parameter.')
 
         self.data_path: Path
         self.description_path: Optional[Path] = None
@@ -37,4 +68,6 @@ class ExperimentalData:
         if not self.data_path.is_file():
             raise ValueError(f'data path is not a valid file. Please pass a valid one as input. Got {self.data_path}')
 
-        return pd.read_csv(self.data_path)
+        df = pd.read_csv(self.data_path)
+
+        return df
