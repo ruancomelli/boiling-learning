@@ -1,12 +1,12 @@
 import copy
 from dataclasses import dataclass
+import enum
 from functools import partial
 import json
 import operator
 import pprint
 from pathlib import Path
 from typing import (
-    overload,
     Any,
     Callable,
     Dict,
@@ -92,6 +92,13 @@ class Manager(
         encoder=bl.io.json_encoders.GenericJSONEncoder,
         decoder=bl.io.json_encoders.GenericJSONDecoder
     )
+
+    class MultipleIdsHandler(enum.Enum):
+        RAISE = enum.auto()
+        KEEP_FIRST = enum.auto()
+        KEEP_LAST = enum.auto()
+        KEEP_FIRST_LOADED = enum.auto()
+        KEEP_LAST_LOADED = enum.auto()
     def __init__(
             self,
             path: PathType,
@@ -512,6 +519,11 @@ class Manager(
             post_processor: Optional[Transformer[_ElemType, _PostProcessedElemType]] = None,
             post_processor_description: Optional[Pack] = None,
             missing_ok: bool = True,
+            multiple_ids_handler: Union[
+                MultipleIdsHandler,
+                Tuple[MultipleIdsHandler, Pack],
+                Callable[[MultipleIdsHandler, Tuple[str]], str]
+            ] = MultipleIdsHandler.RAISE
     ) -> str:
         contents = self._resolve_contents(
             contents=contents,
@@ -519,40 +531,96 @@ class Manager(
             post_processor=post_processor, post_processor_description=post_processor_description
         )
 
-        candidates = bl.utils.extract_keys(
-            self.contents(),
-            value=contents,
-            cmp=partial(bl.utils.json_equivalent, cls=self._json_encoder)
+        elem_id_candidates = tuple(
+            bl.utils.extract_keys(
+                self.contents(),
+                value=contents,
+                cmp=self._description_comparer
+            )
         )
-        elem_id = mit.only(candidates, default=_sentinel)
+        n_candidates = len(elem_id_candidates)
 
-        if elem_id is not _sentinel:
-            return elem_id
-        elif missing_ok:
-            return self.new_elem_id()
+        if n_candidates == 0:
+            if missing_ok:
+                return self.new_elem_id()
+            else:
+                raise ValueError(
+                    f'Could not find elem with the following contents: {contents}')
+        elif n_candidates == 1:
+            return elem_id_candidates[0]
         else:
-            raise ValueError(
-                f'could not find elem with the following contents: {contents}')
-
-    def has_elem(
+            return self._handle_multiple_ids(
+                elem_id_candidates,
+                multiple_ids_handler
+            )
+        
+    def _handle_multiple_ids(
             self,
-            contents: Optional[Mapping] = None,
-            creator: Optional[Creator[T]] = None,
-            creator_description: Optional[Pack] = None,
-            post_processor: Optional[Transformer[T, S]] = None,
-            post_processor_description: Optional[Pack] = None,
-    ) -> bool:
-        try:
-            return self.elem_id(
-                contents=contents,
-                creator=creator,
-                creator_description=creator_description,
-                post_processor=post_processor,
-                post_processor_description=post_processor_description,
-                missing_ok=False
-            ) in self.entries
-        except ValueError:
-            return False
+            elem_id_candidates: Iterable[str],
+            multiple_ids_handler: Union[
+                MultipleIdsHandler,
+                Tuple[MultipleIdsHandler, Pack],
+                Callable[[MultipleIdsHandler, Tuple[str]], str]
+            ]
+    ) -> str:
+        elem_id_candidates = tuple(elem_id_candidates)
+
+        if callable(multiple_ids_handler):
+            return multiple_ids_handler(elem_id_candidates)
+        else:
+            if isinstance(multiple_ids_handler, self.MultipleIdsHandler):
+                handler, parameters = multiple_ids_handler, Pack()
+            elif isinstance(multiple_ids_handler, tuple):
+                handler, parameters = multiple_ids_handler
+
+            remove_entries = parameters.kwargs.get('remove_entries', False)
+            remove_files = parameters.kwargs.get('remove_files', False)
+
+            def _remove(resolved_id, elem_id_candidates) -> None:
+                ids_to_remove = tuple(set(elem_id_candidates) - {resolved_id})
+
+                if remove_files:
+                    for id_to_remove in ids_to_remove:
+                        path = self.elem_path(id_to_remove)
+                        if path.is_file():
+                            print('Removing file', path) # DEBUG
+                            # path.unlink() 
+                        else:
+                            print('Removing dir', path) # DEBUG
+                            # bl_utils.rmdir(path, recursive=True, missing_ok=True, keep=False)
+                if remove_entries:
+                    for id_to_remove in ids_to_remove:
+                        print('Removing entry', id_to_remove) # DEBUG
+                        # del self[id_to_remove]
+
+            if handler is self.MultipleIdsHandler.RAISE and len(elem_id_candidates) > 1:
+                raise ValueError(f'Expected at most one item in iterable, but got {elem_id_candidates}')
+            elif handler in {self.MultipleIdsHandler.KEEP_FIRST, self.MultipleIdsHandler.KEEP_LAST}:
+                resolved_id = sorted(
+                    elem_id_candidates,
+                    reverse=handler is self.MultipleIdsHandler.KEEP_LAST
+                )[0]
+                _remove(resolved_id, elem_id_candidates)
+                return resolved_id
+            elif handler in {self.MultipleIdsHandler.KEEP_FIRST_LOADED, self.MultipleIdsHandler.KEEP_LAST_LOADED}:
+                loader = parameters.kwargs.get('loader', lambda path: self._load_elem(path, raise_if_load_fails=False))
+                loadable_candidates = map(
+                    lambda elem_id: (elem_id, loader(self.elem_path(elem_id))),
+                    elem_id_candidates
+                )
+                loadable_candidates = (
+                    elem_id
+                    for elem_id, (success, _) in loadable_candidates
+                    if success
+                )
+                resolved_id = sorted(
+                    loadable_candidates,
+                    reverse=handler is self.MultipleIdsHandler.KEEP_LAST_LOADED
+                )[0]
+                _remove(resolved_id, elem_id_candidates)
+                return resolved_id
+
+        raise ValueError('invalid *multiple_ids_handler* passed.')
 
     def _repeated_elems(self) -> Tuple[Dict[str, List[str]], List[str]]:
         all_contents = self.contents().items()
@@ -580,19 +648,17 @@ class Manager(
 
         return repetition_dict, repeated
 
-    def _retrieve_elem(
+    def _load_elem(
             self,
             path: PathType,
             raise_if_load_fails: bool
-    ) -> Tuple[bool, T]:
-        try:
-            return True, self.load_elem(path)
-        except tuple(getattr(self.load_method, 'expected_exceptions', (FileNotFoundError, OSError))):
-            if self.verbose >= 1:
-                print('Load failed')
-            if raise_if_load_fails:
-                raise
-            return False, None
+    ) -> Tuple[bool, _ElemType]:
+        success, elem = self.load_elem(path)
+
+        if raise_if_load_fails and not success:
+            raise RuntimeError('loading failed with *raise_if_load_fails*.')
+        else:
+            return success, elem
 
     def update_entries(
             self,
@@ -614,37 +680,6 @@ class Manager(
 
         if save:
             self.save_lookup_table()
-
-    def retrieve_elem(
-            self,
-            contents: Optional[Mapping] = None,
-            creator: Optional[Creator[T]] = None,
-            creator_description: Optional[Pack] = None,
-            post_processor: Optional[Transformer[T, S]] = None,
-            post_processor_description: Pack = Pack(),
-            raise_if_load_fails: bool = False,
-    ) -> Tuple[bool, T]:
-        if not self.has_elem(
-                contents=contents,
-                creator=creator, creator_description=creator_description,
-                post_processor=post_processor, post_processor_description=post_processor_description
-        ):
-            return False, None
-
-        elem_id = self.provide_entry(
-            contents=contents,
-            creator=creator, creator_description=creator_description,
-            post_processor=post_processor, post_processor_description=post_processor_description,
-            include=False,
-            missing_ok=False
-        )
-
-        path = self.elem_path(elem_id)
-
-        return self._retrieve_elem(
-            path=path,
-            raise_if_load_fails=raise_if_load_fails
-        )
 
     def retrieve_elems(
             self,
