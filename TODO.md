@@ -1,6 +1,6 @@
 # TODO List
 
-- [ ] (TEST REQUIRED) Allow the first experimental file to be Experiment HH-MM.txt (without index) in `run_experiment.py`
+- [x] (TEST REQUIRED) Allow the first experimental file to be Experiment HH-MM.txt (without index) in `run_experiment.py`
 - [ ] Refactor code. Ideas:
   - use the `collections` library;
   - use the `operator` library;
@@ -17,7 +17,7 @@
 - [x] Implement parallelization for `TransformationPipeline`s.
 - [ ] Use type annotations where applicable.
 - [x] (DISCARDED) Can wrappers remove code repetition in crop and shift for the `if image is None: image = imread(in_path)` and the `if out_path is not None: imsave(out_path)`?
-- [ ] Implement general function dispatching? See [this](https://docs.python.org/3/library/inspect.html#inspect-signature-object).
+- [x] (NO - SEE `decorator`) Implement general function dispatching? See [this](https://docs.python.org/3/library/inspect.html#inspect-signature-object).
 - [ ] Document code.
 - [ ] Check for inconsistent input values in many functions, some of which are marked with a comment like `# TODO: use check_value_match`.
 - [ ] In the `ExperimentImages` class, many properties can be converted to cached properties. Python 3.8 is be necessary.
@@ -53,7 +53,7 @@ assert p == Parameters(params={'a': 1000, 'b': 1, 'd': 2000})
 - [ ] Autoformat code.
 - [x] DECIDED: it will not. | Decide if `Parameters` will supporting forking.
 - [ ] A `dict` can be constructed via a call `dict(...)` or via the special syntax `{k: v ...}`. Support this in `Parameters`? How?
-- [ ] Use [TensorFlow estimators](https://www.tensorflow.org/guide/estimator)?
+- [x] (NO: currently, the support for parallel processing is limited. Stick to Keras models) Use [TensorFlow estimators](https://www.tensorflow.org/guide/estimator)?
 - [x] Allow different batch sizes for different models.
 - [ ] Why do `more_itertools.filter_except` and `more_itertools.map_except` need to do `exceptions = tuple(exceptions)`?
 - [x] Finish step detection analysis.
@@ -71,11 +71,11 @@ assert lower_eq('Hi', 'hi')
 - [x] Am I normalizing images correctly? Make sure I am!
 - [x] Allow better querying of models
 - [ ] Add another key to a model entry: `state`. For now, I can think of four states: `non-existent`, when the index is not in the lookup table; `empty`, models that were only added to the lookup table but didn't start training; `incomplete`, models that started training; `complete`, models that finished training; `aborted`, models that are not good enough, and are not worth training.
-- [ ] Are there better storage methods? For instance, using HDF5 instead of plain .png files? According to [this tutorial](https://realpython.com/storing-images-in-python/), HDF5 is much faster for writing and reading. This would be extremely useful for reading datasets and training.
+- [x] \[Using TensorFlow tensors and datasets\] Are there better storage methods? For instance, using HDF5 instead of plain .png files? According to [this tutorial](https://realpython.com/storing-images-in-python/), HDF5 is much faster for writing and reading. This would be extremely useful for reading datasets and training.
 - [ ] Write READMEs for each package.
 - [ ] Include licenses in each module.
-- [ ] Decide if I'll use MLFlow or similar.
-- [ ] Remove `process_data.py`, taking care to provide its functionalities elsewhere.
+- [x] \[I will not: there's not enough time nor need for this\] Decide if I'll use MLFlow or similar.
+- [x] Remove `process_data.py`, taking care to provide its functionalities elsewhere.
 - [ ] Make `cv2` path-like compliant.
 - [ ] Take a look at the relationship between bubble or droplet formation rate and camera acquisition speed.
 - [ ] Divide this TO-DO list into sections. For instance: `Refactoring`, `Additional functionality`, `External dependencies` etc.
@@ -158,7 +158,7 @@ assert lower_eq('Hi', 'hi')
 
 ... or maybe not. Think about it!
 
-- [ ] I think that a class `SyncedDict` would be useful. Maybe it could be a base class, I don't know yet. But we could make it something like:
+- [x] \[Partially solved with `zict`\] I think that a class `SyncedDict` would be useful. Maybe it could be a base class, I don't know yet. But we could make it something like:
 
 ```python
 AutoJsonSaver = SyncedDict(save=lambda self: bl.io.save_json(self, 'my_json.json'))
@@ -168,7 +168,7 @@ AutoSynced = SyncedDict(
   load=lambda: bl.io.load_json('my_json.json'))
 ```
 
-a call to `__getitem__` would first call load, and a call to `__setitem__` or `__delitem__` would automatically call the save. Is this good?
+a call to `__getitem__` would first call load, and a call to `__setitem__` or `__delitem__` would automatically call the save. Is this good? Take a look at [`zict`](https://zict.readthedocs.io/en/latest/).
 
 - [x] Create contexts `bl.utils.worker.UserPool.disabled` and `bl.utils.worker.UserPool.enabled` which satisfy:
 
@@ -226,7 +226,7 @@ They have two inputs: a RGB image + a depth, which maps each pixel of an image t
 - [ ] Implement a warm-up: the first epoch of training (after compiling or restoring) should be discarded to avoid including TF warmup in the training time measurement.
 - [ ] Optimize for the activation functions
 - [ ] \[Maybe\] create classes `Option` and `Options` to help defining model parameters and connect to TensorBoard's HParams.
-- [ ] Create a function for flattening `Parameters`'s keys. For instance:
+- [x] Create a function for flattening `Parameters`'s keys. For instance:
 
 ```python
 >>> d = Parameters()
@@ -242,7 +242,17 @@ They have two inputs: a RGB image + a depth, which maps each pixel of an image t
 }
 ```
 
-- [ ] For many parameters, and above all for setting key names, how about creating a specialized `dataclasses.dataclass`? For instance, instead of:
+Solution: use [flatten-dict](https://github.com/ianlini/flatten-dict):
+
+```python
+d_flatten = flattendict(
+    d,
+    reducer='dot',
+    enumerate_types=(list, tuple, bl.utils.functional.Pack)
+)
+```
+
+- [x] For many parameters, and above all for setting key names, how about creating a specialized `dataclasses.dataclass`? For instance, instead of:
 ```python
 class CSVDataset:
   def __init__(self, path: Path, features_columns: Optional[List[str]] = None, target_column: str = 'target'):
@@ -271,7 +281,7 @@ class CSVDataset:
 
 It may become a little bit more verbose, but it also isolates the logic of parameters. Also, it avoids using string constants directly in the function signature, delegating this responsibility to a helper class.
 
-- [ ] Perhaps it would be useful to have a class for automatic descriptions. For instance:
+- [x] (DONE: see `bl.preprocessing.transformers`) Perhaps it would be useful to have a class for automatic descriptions. For instance:
 
 ```py
 >>> @autodescribe('Random contraster')
@@ -284,5 +294,36 @@ It may become a little bit more verbose, but it also isolates the logic of param
     ...
 ```
 
-- [ ] Instead of extracting frames, we could iterate over video frames. This would save extraction time, and we would only need to save the final static part of the dataset. **Loose definition:** a *static dataset* is one for which it makes sense saving. For instance, cropping images is a static operation because we know before-hand the interest region. On the other hand, a *dynamic dataset* is one that has to be generated at each call to the train function. For instance, random transformations. A transformation pipeline may have two parts: the first, static one, and the second, dynamic.
+- [x] Instead of extracting frames, we could iterate over video frames. This would save extraction time, and we would only need to save the final static part of the dataset. **Loose definition:** a *static dataset* is one for which it makes sense saving. For instance, cropping images is a static operation because we know before-hand the interest region. On the other hand, a *dynamic dataset* is one that has to be generated at each call to the train function. For instance, random transformations. A transformation pipeline may have two parts: the first, static one, and the second, dynamic.
 - [x] Make `funcy.rpartial` resemble `functools.partial` so that it accepts `**kwargs`. In fact, the documentation of `functools` provides a recipe for the definition of `partial`, and we can just copy that and reverse the order of some arguments, just like I did in `bl.utils.functional.rpartial`
+- [ ] Define a more standard way to use sentinels. Also, think of a `SentinelOptional`, which is almost like `Optional`, except that it is defined as `Union[_SentinelType, T]`.
+- [ ] Implement [integrated gradients](https://www.tensorflow.org/tutorials/interpretability/integrated_gradients).
+- [ ] Perform the following studies:
+  - [x] Influence of batch size
+  - [x] Learning curve (metric versus dataset size)
+  - [ ] Visualization window size
+  - [x] Direct versus indirect visualization
+  - [ ] How random contrast (and others) affect image variance, and what does this mean in machine learning?
+  - [ ] Train on one set, evaluate on another
+- [ ] Release `Pack` as a standalone package, including functional programming functionality:
+
+```python
+def double(arg):
+  return 2*arg
+
+def is_greater_than(threshold):
+  return lambda arg: arg > threshold
+
+p = Pack('abc', x=3, y=2)
+res = (
+  p # sends p
+  | double # duplicates all values: Pack('aa', 'bb', 'cc', x=6, y=4)
+  | (str.upper, is_greater_than(5)) # applies str.upper to args, is_greater_than(5) to kwargs values
+)
+print(res) # prints Pack('AA', 'BB', 'CC', x=True, y=False)
+```
+
+and think of other things.
+
+- [ ] Study RNNs. Perhaps a network could be fed 3 consecutive images (for instance) to give an output.
+- [ ] Take a look at [this](https://buildmedia.readthedocs.org/media/pdf/ht/latest/ht.pdf): Python library for heat transfer.
