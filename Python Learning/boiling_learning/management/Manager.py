@@ -24,22 +24,27 @@ from typing import (
 import funcy
 import more_itertools as mit
 import parse
+from typing_extensions import (
+    overload
+)
 
 import boiling_learning as bl
-from boiling_learning.utils.functional import (
-    Pack
-)
+from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.utils import (
     # JSONDataType, # TODO: maybe using JSONDataType would be good
     PathType,
-    VerboseType
+    VerboseType,
+    _Sentinel
 )
 from boiling_learning.utils.Parameters import Parameters
 from boiling_learning.io.io import (
-    LoaderFunction,
+    BoolFlaggedLoaderFunction,
     SaverFunction
 )
-from boiling_learning.preprocessing.transformers import Creator, Transformer
+from boiling_learning.preprocessing.transformers import (
+    Creator,
+    Transformer
+)
 
 
 # TODO: check out <https://www.mlflow.org/docs/latest/tracking.html>
@@ -47,23 +52,23 @@ from boiling_learning.preprocessing.transformers import Creator, Transformer
 # TODO: maybe include a comment in metadata
 # TODO: improve this... there is a lot of repetition and buggy cases.
 # ? Perhaps a better would be to have only one way to pass a description: through elem_id. No *contents*, just the id...
+# TODO: standardize "post_processor": sometimes *None* means *None*, other times it means "get the default one"
 
 
-_sentinel = object()
-T = TypeVar('T')
-S = TypeVar('S')
+_sentinel = _Sentinel.get_instance()
+_ElemType = TypeVar('_ElemType')
+_PostProcessedElemType = TypeVar('_PostProcessedElemType')
 
 
 class Manager(
         bl.utils.SimpleRepr,
-        bl.utils.SimpleStr,
         Mapping[str, dict],
-        Generic[T]
+        Generic[_ElemType, _PostProcessedElemType]
 ):
     @dataclass(frozen=True)
     class Keys:
         entries: str = 'entries'
-        elements: str = 'model'
+        elements: str = 'element'
         metadata: str = 'metadata'
         creator: str = 'creator'
         creator_params: str = 'creator_params'
@@ -80,20 +85,28 @@ class Manager(
     #     post_processor: str
     #     post_processor_params: PackType
 
+    _default_table_saver = partial(bl.io.save_json, cls=bl.io.json_encoders.GenericJSONEncoder)
+    _default_table_loader = partial(bl.io.load_json, cls=bl.io.json_encoders.GenericJSONDecoder)
+    _default_description_comparer = partial(
+        bl.utils.json_equivalent,
+        encoder=bl.io.json_encoders.GenericJSONEncoder,
+        decoder=bl.io.json_encoders.GenericJSONDecoder
+    )
     def __init__(
             self,
             path: PathType,
             id_fmt: str = '{index}.data',
             index_key: str = 'index',
-            save_method: Optional[SaverFunction[T]] = None,
-            load_method: Optional[LoaderFunction[T]] = None,
-            creator: Optional[Creator[T]] = None,
-            post_processor: Optional[Transformer[T, S]] = None,
+            save_method: Optional[SaverFunction[_ElemType]] = None,
+            load_method: Optional[BoolFlaggedLoaderFunction[_ElemType]] = None,
+            creator: Optional[Creator[_ElemType]] = None,
+            post_processor: Optional[Transformer[_ElemType, _PostProcessedElemType]] = None,
             verbose: VerboseType = False,
             load_table: bool = True,
-            keys: Keys = Keys(),
-            json_encoder: json.JSONEncoder = json.JSONEncoder,
-            json_decoder: json.JSONDecoder = json.JSONDecoder
+            key_names: Keys = Keys(),
+            table_saver: Callable[[dict, Path], Any] = _default_table_saver,
+            table_loader: Callable[[Path], dict] = _default_table_loader,
+            description_comparer: Callable[[Mapping, Mapping], bool] = _default_description_comparer
     ):
         '''
         The Manager's directory is structure like this:
@@ -115,25 +128,27 @@ class Manager(
         {
             'entries': { // entry_key
                 *elem_id*: {
-                   'model': { // keys.elements: contents
-                       'creator': *creator_name*, // keys.creator
-                       'creator_params': *creator_params* // keys.creator_params
+                   'model': { // key_names.elements: contents
+                       'creator': *creator_name*, // key_names.creator
+                       'creator_params': *creator_params* // key_names.creator_params
                    }
-                   'metadata': *metadata_dict*  // keys.metadata: metadata
+                   'metadata': *metadata_dict*  // key_names.metadata: metadata
                 }
                 ...
             }
         }
         ```
         '''
-        self.keys: self.Keys = keys
+        self.key_names: self.Keys = key_names
         self._path: Path = bl.utils.ensure_dir(path)
         self._table_path: Path = self.path / 'lookup_table.json'
         self._entries_dir_path: Path = bl.utils.ensure_dir(
-            self.path / self.keys.entries)
+            self.path / self.key_names.entries
+        )
         self._shared_dir_path: Path = bl.utils.ensure_dir(self.path / 'shared')
-        self._json_encoder = json_encoder
-        self._json_decoder = json_decoder
+        self._table_saver = table_saver
+        self._table_loader = table_loader
+        self._description_comparer = description_comparer
 
         if load_table:
             self.load_lookup_table()
@@ -153,33 +168,33 @@ class Manager(
             return self.id_fmt.format(**{self.index_key: index})
         self._format_index: Callable[[int], str] = _format_index
 
-        self.save_method: Optional[SaverFunction[T]] = save_method
-        self.load_method: Optional[LoaderFunction[T]] = load_method
-        self.creator: Optional[Creator[T]] = creator
-        self.post_processor: Optional[Transformer[T, S]] = post_processor
+        self.save_method: Optional[SaverFunction[_ElemType]] = save_method
+        self.load_method: Optional[BoolFlaggedLoaderFunction[_ElemType]] = load_method
+        self.creator: Optional[Creator[_ElemType]] = creator
+        self.post_processor: Optional[Transformer[_ElemType, _PostProcessedElemType]] = post_processor
         self.verbose: VerboseType = verbose
 
     def __getitem__(self, elem_id: str):
         self.load_lookup_table()
-        return self._lookup_table.setdefault(self.keys.entries, {})[elem_id]
+        return self._lookup_table.setdefault(self.key_names.entries, {})[elem_id]
 
     def __setitem__(self, elem_id: str, entry: Mapping[str, Any]) -> None:
-        self._lookup_table.setdefault(self.keys.entries, {})[elem_id] = entry
+        self._lookup_table.setdefault(self.key_names.entries, {})[elem_id] = entry
         self.save_lookup_table()
 
     def __delitem__(self, elem_id: str) -> None:
-        del self._lookup_table.setdefault(self.keys.entries, {})[elem_id]
+        del self._lookup_table.setdefault(self.key_names.entries, {})[elem_id]
         self.save_lookup_table()
 
     @property
     def entries(self) -> dict:
-        return dict(self._lookup_table[self.keys.entries])
+        return dict(self._lookup_table[self.key_names.entries])
 
     def __iter__(self) -> Iterator[str]:
-        return self.entries.__iter__()
+        return iter(self.entries)
 
     def __len__(self) -> int:
-        return self.entries.__len__()
+        return len(self.entries)
 
     @property
     def path(self) -> Path:
@@ -201,22 +216,21 @@ class Manager(
         return bl.utils.ensure_dir(self.entries_dir / elem_id)
 
     def elem_path(self, elem_id: str) -> Path:
-        return bl.utils.ensure_parent(self.entry_dir(elem_id) / self.keys.elements)
+        return bl.utils.ensure_parent(self.entry_dir(elem_id) / self.key_names.elements)
 
     def elem_workspace(self, elem_id: str) -> Path:
         return bl.utils.ensure_dir(
-            self.entry_dir(elem_id) / self.keys.workspace
+            self.entry_dir(elem_id) / self.key_names.workspace
         )
 
     def _initialize_lookup_table(self) -> None:
         self._lookup_table = {
-            self.keys.entries: {}
+            self.key_names.entries: {}
         }
         self.save_lookup_table()
 
     def save_lookup_table(self) -> None:
-        bl.io.save_json(self._lookup_table, self._table_path, cls=self._json_encoder)
-        return self
+        self._table_saver(self._lookup_table, self._table_path)
 
     def load_lookup_table(
         self,
@@ -225,7 +239,7 @@ class Manager(
         if not self._table_path.is_file():
             self._initialize_lookup_table()
         try:
-            self._lookup_table = bl.io.load_json(self._table_path, cls=self._json_decoder)
+            self._lookup_table = self._table_loader(self._table_path)
         except (FileNotFoundError, json.JSONDecodeError, OSError):
             if raise_if_fails:
                 raise
@@ -233,22 +247,23 @@ class Manager(
                 self._initialize_lookup_table()
                 self.load_lookup_table()
 
-    def save_elem(self, elem: T, path: PathType) -> None:
+    def save_elem(self, elem: _ElemType, path: PathType) -> None:
         if self.save_method is None:
             raise ValueError(
                 'this Manager\'s *save_method* is not set.'
-                'Define it in the Manager\'s initialization'
-                'or by defining it as a property.')
+                ' Define it in the Manager\'s initialization'
+                ' or by defining it as a property.')
+
 
         path = bl.utils.ensure_parent(path)
         self.save_method(elem, path)
 
-    def load_elem(self, path: PathType) -> T:
+    def load_elem(self, path: PathType) -> Tuple[bool, _ElemType]:
         if self.load_method is None:
             raise ValueError(
                 'this Manager\'s *load_method* is not set.'
-                'Define it in the Manager\'s initialization'
-                'or by defining it as a property.')
+                ' Define it in the Manager\'s initialization'
+                ' or by defining it as a property.')
 
         path = bl.utils.ensure_resolved(path)
         return self.load_method(path)
@@ -295,7 +310,7 @@ class Manager(
                 for elem_id in self.entries
             }
         else:
-            return self.entries.get(elem_id, {}).get(self.keys.elements, {})
+            return self.entries.get(elem_id, {}).get(self.key_names.elements, {})
 
     def metadata(self, elem_id: Optional[str] = None):
         if elem_id is None:
@@ -304,67 +319,75 @@ class Manager(
                 for elem_id in self.entries
             }
         else:
-            return self.entries.get(elem_id, {}).get(self.keys.metadata, {})
+            return self.entries.get(elem_id, {}).get(self.key_names.metadata, {})
 
     @overload
-    def elem_creator(self, elem_id: None) -> dict: ...
+    def elem_creator(self, elem_id: None) -> dict:
+        ...
 
     @overload
-    def elem_creator(self, elem_id: str): ...
+    def elem_creator(self, elem_id: str):
+        ...
 
-    def elem_creator(self, elem_id=None):
+    def elem_creator(self, elem_id: Optional[str] = None):
         if elem_id is None:
             return {
                 elem_id: self.elem_creator(elem_id)
                 for elem_id in self.entries
             }
         else:
-            return self.contents(elem_id).get(self.keys.creator)
+            return self.contents(elem_id).get(self.key_names.creator)
 
     @overload
-    def creator_description(self, elem_id: None) -> dict: ...
+    def creator_description(self, elem_id: None) -> dict:
+        ...
 
     @overload
-    def creator_description(self, elem_id: str): ...
+    def creator_description(self, elem_id: str):
+        ...
 
-    def creator_description(self, elem_id=None):
+    def creator_description(self, elem_id: Optional[str] = None):
         if elem_id is None:
             return {
                 elem_id: self.creator_description(elem_id)
                 for elem_id in self.entries
             }
         else:
-            return self.contents(elem_id).get(self.keys.creator_params, Pack())
+            return self.contents(elem_id).get(self.key_names.creator_params, Pack())
 
     @overload
-    def elem_post_processor(self, elem_id: None) -> dict: ...
+    def elem_post_processor(self, elem_id: None) -> dict:
+        ...
 
     @overload
-    def elem_post_processor(self, elem_id: str): ...
+    def elem_post_processor(self, elem_id: str):
+        ...
 
-    def elem_post_processor(self, elem_id=None):
+    def elem_post_processor(self, elem_id: Optional[str] = None):
         if elem_id is None:
             return {
                 elem_id: self.elem_post_processor(elem_id)
                 for elem_id in self.entries
             }
         else:
-            return self.contents(elem_id).get(self.keys.post_processor)
+            return self.contents(elem_id).get(self.key_names.post_processor)
 
     @overload
-    def post_processor_description(self, elem_id: None) -> dict: ...
+    def post_processor_description(self, elem_id: None) -> dict:
+        ...
 
     @overload
-    def post_processor_description(self, elem_id: str): ...
+    def post_processor_description(self, elem_id: str):
+        ...
 
-    def post_processor_description(self, elem_id=None):
+    def post_processor_description(self, elem_id: Optional[str] = None):
         if elem_id is None:
             return {
                 elem_id: self.post_processor_description(elem_id)
                 for elem_id in self.entries
             }
         else:
-            return self.contents(elem_id).get(self.keys.post_processor_params, Pack())
+            return self.contents(elem_id).get(self.key_names.post_processor_params, Pack())
 
     def new_elem_id(self) -> str:
         '''Return a elem id that does not exist yet
@@ -406,32 +429,35 @@ class Manager(
     def _resolve_contents(
             self,
             contents: Optional[Mapping] = None,
-            creator: Optional[Creator[T]] = None,
+            creator: Optional[Creator[_ElemType]] = None,
             creator_description: Pack = Pack(),
-            post_processor: Optional[Transformer[T, S]] = None,
+            post_processor: Optional[Transformer[_ElemType, _PostProcessedElemType]] = None,
             post_processor_description: Pack = Pack()
     ) -> Dict[str, Union[str, Pack]]:
         if contents is not None:
             return contents
         else:
             creator_name = self._resolve_name(
-                self.keys.creator, contents=contents,
+                self.key_names.creator, contents=contents,
                 obj=creator, default_obj=self.creator
             )
 
-            post_processor_name = self._resolve_name(
-                self.keys.post_processor, contents=contents,
-                obj=post_processor, default_obj=self.post_processor
-            )
+            if post_processor is None:
+                post_processor_name = None
+            else:
+                post_processor_name = self._resolve_name(
+                    self.key_names.post_processor, contents=contents,
+                    obj=post_processor, default_obj=self.post_processor
+                )
 
             return {
-                self.keys.creator: creator_name,
-                self.keys.creator_params: [
+                self.key_names.creator: creator_name,
+                self.key_names.creator_params: [
                     list(creator_description.args),
                     dict(creator_description.kwargs)
                 ],
-                self.keys.post_processor: post_processor_name,
-                self.keys.post_processor_params: [
+                self.key_names.post_processor: post_processor_name,
+                self.key_names.post_processor_params: [
                     list(post_processor_description.args),
                     dict(post_processor_description.kwargs)
                 ],
@@ -448,7 +474,7 @@ class Manager(
 
         if metadata is None:
             return {
-                self.keys.path: path
+                self.key_names.path: path
             }
         else:
             return metadata
@@ -456,9 +482,9 @@ class Manager(
     def _resolve_entry(
             self,
             contents: Optional[Mapping] = None,
-            creator: Optional[Creator[T]] = None,
+            creator: Optional[Creator[_ElemType]] = None,
             creator_description: Optional[Pack] = None,
-            post_processor: Optional[Transformer[T, S]] = None,
+            post_processor: Optional[Transformer[_ElemType, _PostProcessedElemType]] = None,
             post_processor_description: Optional[Pack] = None,
             metadata: Optional[Mapping] = None,
             path: Optional[PathType] = None
@@ -474,18 +500,18 @@ class Manager(
             raise TypeError(f'invalid elem path: {path}')
 
         return {
-            self.keys.elements: contents,
-            self.keys.metadata: metadata
+            self.key_names.elements: contents,
+            self.key_names.metadata: metadata
         }
 
     def elem_id(
             self,
             contents: Optional[Mapping] = None,
-            creator: Optional[Creator[T]] = None,
+            creator: Optional[Creator[_ElemType]] = None,
             creator_description: Optional[Pack] = None,
-            post_processor: Optional[Transformer[T, S]] = None,
+            post_processor: Optional[Transformer[_ElemType, _PostProcessedElemType]] = None,
             post_processor_description: Optional[Pack] = None,
-            missing_ok: bool = True
+            missing_ok: bool = True,
     ) -> str:
         contents = self._resolve_contents(
             contents=contents,
@@ -536,8 +562,7 @@ class Manager(
                 {
                     other_id
                     for other_id, other_contents in all_contents
-                    if other_id != elem_id and bl.utils.json_equivalent(
-                        contents, other_contents, cls=self._json_encoder)
+                    if other_id != elem_id and self._description_comparer(contents, other_contents)
                 },
                 key=self._parse_index
             )
@@ -624,7 +649,7 @@ class Manager(
     def retrieve_elems(
             self,
             entry_pred: Optional[Callable[[Mapping], bool]] = None
-    ) -> Iterable[Tuple[str, T]]:
+    ) -> Iterable[Tuple[str, _ElemType]]:
         if entry_pred is None:
             elems = self.entries.keys()
         else:
@@ -658,7 +683,7 @@ class Manager(
             creator: Optional[Creator[_ElemType]] = None,
             creator_description: Optional[Pack] = None,
             post_processor: Optional[Transformer[_ElemType, _PostProcessedElemType]] = None,
-            post_processor_description: Optional[Pack] = None,
+            post_processor_description: Pack = Pack(),
             include: bool = False,
             missing_ok: bool = False
     ) -> str:
@@ -692,21 +717,24 @@ class Manager(
     def provide_elem(
             self,
             contents: Optional[Mapping] = None,
-            creator: Optional[Creator[T]] = None,
+            creator: Union[object, Creator[_ElemType]] = _sentinel,
             creator_description: Pack = Pack(),
             creator_params: Pack = Pack(),
-            post_processor: Optional[Transformer[T, S]] = None,
+            post_processor: Optional[Union[object, Transformer[_ElemType, _PostProcessedElemType]]] = _sentinel,
             post_processor_description: Pack = Pack(),
             post_processor_params: Pack = Pack(),
-            load: Union[bool, Callable[[], Tuple[bool, T]]] = False,
-            save: Union[bool, Callable[[Union[T, S]], Any]] = False,
+            load: Union[bool, Callable[[], Tuple[bool, _ElemType]]] = False,
+            save: Union[bool, Callable[[Union[_ElemType, _PostProcessedElemType]], Any]] = False,
             raise_if_load_fails: bool = False,
-    ) -> Union[T, S]:
+    ) -> Union[_ElemType, _PostProcessedElemType]:
         """Provide an element.
 
-        If *post_processor* is omitted, will try to use this *Manager*'s default *post_processor*.
-        If *None*, no post processing is done.
+        If *post_processor* is *None*, will try to use this *Manager*'s default *post_processor*.
         """
+        if creator is _sentinel:
+            creator = self.creator
+        if post_processor is _sentinel:
+            post_processor = self.post_processor
 
         elem_id = self.provide_entry(
             contents=contents,
