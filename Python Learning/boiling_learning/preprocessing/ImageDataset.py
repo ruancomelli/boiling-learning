@@ -5,9 +5,22 @@ import typing
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import (Any, Dict, Iterable, Iterator, List, Mapping, Optional,
-                    Tuple, Type, Union, overload)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+    overload
+)
 
+import funcy
 import modin.pandas as pd
 import numpy as np
 import tensorflow as tf
@@ -33,6 +46,11 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     class VideoDataKeys(ExperimentVideo.VideoDataKeys):
         name: str = 'name'
         ignore: str = 'ignore'
+
+    # @dataclass(frozen=True)
+    # class VideoData(ExperimentVideo.VideoData):
+    #     name: str
+    #     ignore: bool = False
 
     def __init__(
             self,
@@ -76,7 +94,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         return self._name
 
     def __getitem__(self, name: str) -> ExperimentVideo:
-        return self._experiment_videos.__getitem__(name)
+        return self._experiment_videos[name]
 
     def __setitem__(
             self,
@@ -88,27 +106,44 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         if not self._allow_key_overwrite and name in self:
             raise ValueError(
                 f'overwriting existing element with name={name} with overwriting disabled.')
-        self._experiment_videos.__setitem__(name, experiment_video)
+        self._experiment_videos[name] = experiment_video
 
     def __delitem__(self, name: str) -> None:
-        self._experiment_videos.__delitem__(name)
+        del self._experiment_videos[name]
 
     def __iter__(self) -> Iterator[ExperimentVideo]:
-        return self._experiment_videos.__iter__()
+        return iter(self._experiment_videos)
 
     def __len__(self) -> int:
-        return self._experiment_videos.__len__()
+        return len(self._experiment_videos)
 
     def add(self, *experiment_videos: ExperimentVideo) -> None:
         for experiment_video in experiment_videos:
-            self.__setitem__(experiment_video.name, experiment_video)
+            self[experiment_video.name] = experiment_video
 
-    def union(self, *others: Iterable[ExperimentVideo]) -> None:
+    def union(self, *others: "ImageDataset") -> None:
         for other in others:
-            self.add(*other)
+            self.add(*other.values())
 
-    def discard(self, experiment_video: ExperimentVideo) -> None:
-        self.__delitem__(experiment_video.name)
+    @classmethod
+    def make_union(
+            cls,
+            *others: "ImageDataset",
+            namer: Callable[[Iterable[str]], str] = '+'.join
+    ) -> "ImageDataset":
+        name = namer(funcy.pluck_attr('name', others))
+        example = others[0]
+        img_ds = ImageDataset(
+            name,
+            example.column_names,
+            example.column_types
+        )
+        img_ds.union(*others)
+        return img_ds
+
+    def discard(self, *experiment_videos: ExperimentVideo) -> None:
+        for experiment_video in experiment_videos:
+            del self[experiment_video.name]
 
     @contextmanager
     def disable_key_overwriting(self) -> Iterator["ImageDataset"]:
