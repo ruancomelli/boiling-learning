@@ -1,9 +1,16 @@
 from collections.abc import MutableMapping
 
-import boiling_learning as bl
+import funcy
+
+from boiling_learning.utils.utils import (
+    SimpleRepr,
+    SimpleStr,
+    simple_pprint_class
+)
 
 
-class Parameters(MutableMapping, bl.utils.SimpleRepr, bl.utils.SimpleStr):
+@simple_pprint_class
+class Parameters(MutableMapping, SimpleRepr, SimpleStr):
     @staticmethod
     def get_from_set(d, key):
         return {k: d[k] for k in key}
@@ -59,14 +66,14 @@ class Parameters(MutableMapping, bl.utils.SimpleRepr, bl.utils.SimpleStr):
         if config is None:
             config = {
                 'get': [
-                    (bl.utils.partial_isinstance(set), Parameters.get_from_set),
-                    (bl.utils.partial_isinstance(list), Parameters.get_from_list),
-                    (bl.utils.partial_isinstance(dict), Parameters.get_from_dict)
+                    (funcy.isa(set), Parameters.get_from_set),
+                    (funcy.isa(list), Parameters.get_from_list),
+                    (funcy.isa(dict), Parameters.get_from_dict)
                 ],
                 'set': [
-                    (bl.utils.partial_isinstance(set), Parameters.set_from_set),
-                    (bl.utils.partial_isinstance(list), Parameters.set_from_list),
-                    (bl.utils.partial_isinstance(dict), Parameters.set_from_dict)
+                    (funcy.isa(set), Parameters.set_from_set),
+                    (funcy.isa(list), Parameters.set_from_list),
+                    (funcy.isa(dict), Parameters.set_from_dict)
                 ]
             }
         self.config = config
@@ -81,13 +88,13 @@ class Parameters(MutableMapping, bl.utils.SimpleRepr, bl.utils.SimpleStr):
         self.config.setdefault('del', []).append((pred, method))
 
     def __getitem__(self, key):
-        for pred, func in self.config.get('get', []):
+        for pred, func in self.config.get('get', ()):
             if pred(key):
                 return func(self, key)
         return self.params.__getitem__(key)
 
     def __setitem__(self, key, value):
-        for pred, func in self.config.get('set', []):
+        for pred, func in self.config.get('set', ()):
             if pred(key):
                 func(self, key, value)
                 return
@@ -95,7 +102,7 @@ class Parameters(MutableMapping, bl.utils.SimpleRepr, bl.utils.SimpleStr):
             self.params.__setitem__(key, value)
 
     def __delitem__(self, key):
-        for pred, func in self.config.get('del', []):
+        for pred, func in self.config.get('del', ()):
             if pred(key):
                 func(self, key)
                 return
@@ -136,6 +143,3 @@ class Parameters(MutableMapping, bl.utils.SimpleRepr, bl.utils.SimpleStr):
     #         forks = self
 
     #     return forks
-
-
-bl.utils.simple_pprint_class(Parameters)

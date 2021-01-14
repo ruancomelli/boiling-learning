@@ -34,12 +34,12 @@ from boiling_learning.utils.utils import (
     PathType,
     VerboseType
 )
+from boiling_learning.utils.Parameters import Parameters
 from boiling_learning.io.io import (
     LoaderFunction,
     SaverFunction
 )
 from boiling_learning.preprocessing.transformers import Creator, Transformer
-from boiling_learning.management.Parameters import Parameters
 
 
 # TODO: check out <https://www.mlflow.org/docs/latest/tracking.html>
