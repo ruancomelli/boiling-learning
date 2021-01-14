@@ -1,5 +1,3 @@
-import collections
-from dataclasses import dataclass
 import enum
 from typing import (
     Any,
@@ -8,13 +6,11 @@ from typing import (
     Iterable,
     Optional,
     Tuple,
-    TypeVar,
-    Union
+    TypeVar
 )
 
 import funcy
 import parse
-from sklearn.model_selection import train_test_split
 import tensorflow as tf
 
 import boiling_learning.utils.utils as bl_utils
@@ -26,208 +22,6 @@ from boiling_learning.preprocessing.transformers import Creator
 
 _sentinel = object()
 T = TypeVar('T')
-
-
-class SplitSubset(enum.Enum):
-    TRAIN = enum.auto()
-    VAL = enum.auto()
-    TRAIN_VAL = enum.auto()
-    TEST = enum.auto()
-    ALL = enum.auto()
-
-    @classmethod
-    def get_split(cls, s, default=_sentinel):
-        if s in cls:
-            return s
-        else:
-            return cls.from_string(s, default=default)
-
-    @classmethod
-    def from_string(cls, s, default=_sentinel):
-        for k, v in cls.FROM_STR.items():
-            if s in v:
-                return k
-        if default is _sentinel:
-            raise ValueError(
-                f'string {s} was not found in the conversion table.'
-                f'Available values are {list(cls.FROM_STR.values())}.')
-        else:
-            return default
-
-    def to_str(self):
-        return self.name.lower()
-
-
-@dataclass
-class DatasetSplitter:
-    train: Optional[Union[int, float]]
-    test: Optional[Union[int, float]]
-    val: Optional[Union[int, float]] = None
-    n_samples: Optional[int] = None
-
-    # def __post_init__(self):
-    #     if self.n_samples is not None:
-    #         if self.train is not None and 0 < self.train < 1:
-    #             self.train *= self.n_samples
-    #         if self.val is not None and 0 < self.val < 1:
-    #             self.val *= self.n_samples
-    #         if self.test is not None and 0 < self.test < 1:
-    #             self.test *= self.n_samples
-
-
-SplitSubset.FROM_STR = {
-    SplitSubset.TRAIN: {'train'},
-    SplitSubset.VAL: {'val', 'validation'},
-    SplitSubset.TRAIN_VAL: set(
-        connector.join(['train', validation_key])
-        for connector in ['_', '_and_']
-        for validation_key in ['val', 'validation']
-    ),
-    SplitSubset.TEST: {'test'},
-    SplitSubset.ALL: {'all'},
-}
-
-
-def train_val_test_split(
-        dataset,
-        n_samples,
-        train_size=None,
-        val_size=None,
-        test_size=None,
-        **options
-):
-    # TODO: this function only accepts one dataset. Allow more.
-    # TODO: this function requires the argument n_samples. Remove this.
-    # TODO: to keep consistency, allow elements from SplitSubset.FROM_STR
-
-    if val_size is None or val_size == 0:
-        train_set, test_set = train_test_split(
-            dataset,
-            train_size=train_size,
-            test_size=test_size,
-            **options
-        )
-        val_set = []
-    else:
-        if 0 < val_size < 1:
-            val_size = int(val_size * n_samples)
-        elif val_size < 0 or val_size > n_samples:
-            raise ValueError(
-                f'invalid val_size {val_size}.'
-                'Expected a float in (0, 1),'
-                f'or a float in [0, n_samples={n_samples}].')
-
-        if train_size is None:
-            train_set, test_set = train_test_split(
-                dataset,
-                test_size=test_size,
-                **options
-            )
-            train_set, val_set = train_test_split(
-                train_set,
-                test_size=val_size,
-                **options
-            )
-        else:
-            train_set, test_set = train_test_split(
-                dataset,
-                train_size=train_size,
-                **options
-            )
-            val_set, test_set = train_test_split(
-                test_set,
-                train_size=val_size,
-                **options
-            )
-
-    return train_set, val_set, test_set
-
-
-def tf_concatenate(datasets: Iterable[tf.data.Dataset]) -> tf.data.Dataset:
-    datasets = collections.deque(datasets)
-
-    if not datasets:
-        raise ValueError('argument *datasets* must be a non-empty iterable.')
-
-    ds = datasets.popleft()
-    for dataset in datasets:
-        ds = ds.concatenate(dataset)
-
-    return ds
-
-
-def tf_train_val_test_split(
-        ds: tf.data.Dataset,
-        splits: DatasetSplitter
-) -> Tuple[tf.data.Dataset, Optional[tf.data.Dataset], tf.data.Dataset]:
-    """ #TODO(docstring): describe here
-
-    # Source: <https://stackoverflow.com/a/60503037/5811400>
-
-    The paramenter *splits* is expected to contain only integers, with the possible exception of *val*, which can be *None*.
-
-    This function is deterministic in the sense that it outputs the same splits given the same inputs.
-    Consequently it is safe to be used early in the pipeline to avoid consuming test data.
-    """
-    if not isinstance(splits.train, int) or not isinstance(splits.test, int):
-        raise ValueError(
-            '*splits.train* and *splits.test* must be *int*s.'
-            ' *splits.val* is allowed to be *None*, and in this case no validation set is produced (*None* is returned)')
-
-    def flatten_zip(*ds):
-        if len(ds) == 1:
-            return ds[0]
-        else:
-            return tf.data.Dataset.zip(ds)
-
-    if isinstance(splits.val, int):
-        window_shift = splits.train + splits.val + splits.test
-        ds_train = ds.window(splits.train, window_shift).flat_map(flatten_zip)
-        ds_val = ds.skip(splits.train).window(splits.val, window_shift).flat_map(flatten_zip)
-        ds_test = ds.skip(splits.train + splits.val).window(splits.test, window_shift).flat_map(flatten_zip)
-    else:
-        window_shift = splits.train + splits.test
-        ds_train = ds.window(splits.train, window_shift).flat_map(flatten_zip)
-        ds_test = ds.skip(splits.train).window(splits.test, window_shift).flat_map(flatten_zip)
-        ds_val = None
-
-    return ds_train, ds_val, ds_test
-
-
-def tf_train_val_test_split_concat(
-        datasets: Iterable[tf.data.Dataset],
-        splits: DatasetSplitter
-) -> Tuple[tf.data.Dataset, Optional[tf.data.Dataset], tf.data.Dataset]:
-    """ #TODO(docstring): describe here
-
-    # Source: <https://stackoverflow.com/a/60503037/5811400>
-
-    The paramenter *splits* is expected to contain only integers, with the possible exception of *val*, which can be *None*.
-
-    This function is deterministic in the sense that it outputs the same splits given the same inputs.
-    Consequently it is safe to be used early in the pipeline to avoid consuming test data.
-    """
-    datasets = collections.deque(datasets)
-
-    if not datasets:
-        raise ValueError('argument *datasets* must be a non-empty iterable.')
-
-    ds = datasets.popleft()
-    ds_train, ds_val, ds_test = tf_train_val_test_split(ds, splits)
-
-    if ds_val is None:
-        for ds in datasets:
-            ds_train_, _, ds_test_ = tf_train_val_test_split(ds, splits)
-            ds_train = ds_train.concatenate(ds_train_)
-            ds_test = ds_test.concatenate(ds_test_)
-    else:
-        for ds in datasets:
-            ds_train_, ds_val_, ds_test_ = tf_train_val_test_split(ds, splits)
-            ds_train = ds_train.concatenate(ds_train_)
-            ds_val = ds_val.concatenate(ds_val_)
-            ds_test = ds_test.concatenate(ds_test_)
-
-    return ds_train, ds_val, ds_test
 _ModelType = TypeVar('_ModelType')
 
 
@@ -346,3 +140,70 @@ def make_creator(name: str, defaults: Pack = Pack()) -> Callable:
         Creator.make(name, pack=defaults, expand_pack_on_call=True),
         make_creator_method
     )
+
+
+def models_from_checkpoints(
+        pattern: PathType,
+        epoch_key: str = 'epoch',
+        load_method: bl_io.LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model
+) -> Dict[int, tf.keras.models.Model]:
+    pattern = bl_utils.ensure_resolved(pattern)
+    filename_pattern = pattern.name
+    glob_pattern = filename_pattern.replace(f'{{{epoch_key}}}', '*')
+    parser = parse.compile(filename_pattern).parse
+
+    paths = pattern.parent.glob(glob_pattern)
+
+    path_dict = {
+        parser(path.name): path
+        for path in paths
+    }
+    path_dict = {
+        int(parsed_obj[epoch_key]): path
+        for parsed_obj, path in path_dict.items()
+        if parsed_obj is not None and epoch_key in parsed_obj
+    }
+
+    model_dict = {
+        epoch: load_method(str(path))
+        for epoch, path in path_dict.items()
+    }
+
+    return model_dict
+
+
+def history_from_checkpoints(
+        ds_val: tf.data.Dataset,
+        pattern: PathType,
+        epoch_key: str = 'epoch',
+        load_method: bl_io.LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model
+) -> Dict[int, Dict[str, float]]:
+    model_dict = models_from_checkpoints(pattern, epoch_key, load_method)
+    history_dict = {
+        epoch: model.evaluate(ds_val, return_dict=True)
+        for epoch, model in model_dict.items()
+    }
+    return history_dict
+
+
+def eval_with(
+        model: tf.keras.models.Model,
+        ds_val: tf.data.Dataset,
+        metrics: Iterable[tf.keras.metrics.Metric],
+        reset_state: bool = True
+) -> Dict[str, float]:
+    metrics = tuple(metrics)
+
+    if reset_state:
+        for metric in metrics:
+            metric.reset_states()
+
+    for metric in metrics:
+        for x, y_true in ds_val:
+            y_pred = model.predict(x, use_multiprocessing=True, workers=-1)
+            metric.update_state(y_true, y_pred)
+
+    return {
+        metric.name: metric.result().numpy()
+        for metric in metrics
+    }
