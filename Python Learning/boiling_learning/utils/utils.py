@@ -1083,8 +1083,10 @@ class SimpleRepr:
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
         address = id(self) & 0xFFFFFF
-        attrs = ', '.join(f'{key}={value!r}' for key,
-                          value in self.__dict__.items())
+        attrs = ', '.join(
+            f'{key}={value!r}'
+            for key, value in self.__dict__.items()
+        )
 
         return f'<{class_name} @{address:x} {attrs}>'
 
@@ -1092,8 +1094,10 @@ class SimpleRepr:
 class SimpleStr:
     def __str__(self) -> str:
         class_name = self.__class__.__name__
-        attrs = ', '.join(f'{key}={value}' for key,
-                          value in self.__dict__.items())
+        attrs = ', '.join(
+            f'{key}={value}'
+            for key, value in self.__dict__.items()
+        )
 
         return f'{class_name}({attrs})'
 
@@ -1194,6 +1198,7 @@ class Ranges(MutableSet):
 
 
 # ---------------------------------- Timing ----------------------------------
+
 def get_timestamp(fmt='%Y-%m-%dT%H:%M:%SZ'):
     return datetime.datetime.now().strftime(fmt)
 

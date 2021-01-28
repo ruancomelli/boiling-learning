@@ -379,7 +379,7 @@ class DynamicUserPool(BaseUserPool):
             return iterable
 
 
-class SequenceDistributor:
+class LFSSequenceDistributor:
     def __init__(
             self,
             path: PathType,

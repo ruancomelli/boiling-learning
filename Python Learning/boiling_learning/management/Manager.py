@@ -550,7 +550,7 @@ class Manager(
                 elem_id_candidates,
                 multiple_ids_handler
             )
-        
+
     def _handle_multiple_ids(
             self,
             elem_id_candidates: Iterable[str],
@@ -581,7 +581,7 @@ class Manager(
                         path = self.elem_path(id_to_remove)
                         if path.is_file():
                             print('Removing file', path) # DEBUG
-                            # path.unlink() 
+                            # path.unlink()
                         else:
                             print('Removing dir', path) # DEBUG
                             # bl_utils.rmdir(path, recursive=True, missing_ok=True, keep=False)

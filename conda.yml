@@ -45,6 +45,8 @@ dependencies:
   - zict
   - zlib
   - typing-extensions
+  - setuptools==52.0.0
+
 
   - jupyter
 
