@@ -304,7 +304,7 @@ It may become a little bit more verbose, but it also isolates the logic of param
   - [ ] Visualization window size
   - [x] Direct versus indirect visualization
   - [ ] How random contrast (and others) affect image variance, and what does this mean in machine learning?
-  - [ ] Train on one set, evaluate on another
+  - [x] Train on one set, evaluate on another
 - [ ] Release `Pack` as a standalone package, including functional programming functionality:
 
 ```python
@@ -327,3 +327,4 @@ and think of other things.
 
 - [ ] Study RNNs. Perhaps a network could be fed 3 consecutive images (for instance) to give an output.
 - [ ] Take a look at [this](https://buildmedia.readthedocs.org/media/pdf/ht/latest/ht.pdf): Python library for heat transfer.
+- [ ] Take a look at [`fastai's fastcore`](https://github.com/fastai/fastcore/tree/master/).
