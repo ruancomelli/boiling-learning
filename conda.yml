@@ -24,7 +24,7 @@ dependencies:
 
   # packages
   - nidaqmx-python
-  - funcy>=1.15
+  - funcy==1.15
   - more-itertools
   - scikit-learn
   - decorator
@@ -41,6 +41,8 @@ dependencies:
   - bokeh
   - bidict
   - pint
+  - requests==2.25.1
+  - setuptools==52.0.0
   - sortedcontainers
   - zict
   - zlib

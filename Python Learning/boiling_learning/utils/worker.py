@@ -1,4 +1,8 @@
 from contextlib import contextmanager
+import datetime
+from pathlib import Path
+import shlex
+import subprocess
 from typing import (
     Any,
     Callable,
@@ -12,11 +16,14 @@ from typing import (
     Sequence,
     Set,
     Tuple,
-    TypeVar
+    TypeVar,
+    Union
 )
 
 import json_tricks
 import more_itertools as mit
+from pkg_resources import resource_filename
+import requests
 import zict
 
 from boiling_learning.utils.utils import (
@@ -24,6 +31,7 @@ from boiling_learning.utils.utils import (
     PathLike,
     empty_gen,
     ensure_dir,
+    ensure_resolved,
     indexify,
     rmdir
 )
@@ -414,3 +422,116 @@ class LFSSequenceDistributor:
             current = self.current(case_name)
             self._set_case(case_name, total_length, current+1)
             yield seq[current]
+
+
+class SequenceDistributorServer:
+    def __init__(
+            self,
+            data_dir: PathLike,
+            port: int = 8000,
+            venv_name: Optional[str] = None
+    ):
+        self.data_dir = ensure_dir(data_dir)
+
+        self._port = port
+        self._venv_name = venv_name
+
+        self._logs_filepath = self.data_dir / 'logs.txt'
+        self._public_url_filepath = self.data_dir / 'url.txt'
+        if self._public_url_filepath.is_file():
+            self._public_url_filepath.unlink()
+
+        self._main_filepath = ensure_resolved(
+            resource_filename(__name__, '_worker_resources/main.py')
+        )
+        self._requirements_filepath = ensure_resolved(
+            resource_filename(__name__, '_worker_resources/requirements.txt')
+        )
+
+    @property
+    def public_url(self) -> Optional[str]:
+        if self._public_url_filepath.is_file():
+            return self._public_url_filepath.read_text()
+        else:
+            return None
+
+    def display_log(self) -> None:
+        if self._logs_filepath.is_file():
+            with open(self._logs_filepath) as logs:
+                print(''.join(logs))
+
+    def _log(self, text: str, end: str = '\n') -> None:
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with self._logs_filepath.open('a') as log:
+            log.write(f'[{now}] {text}{end}')
+
+    def run(self) -> None:
+        if self._venv_name is None:
+            venv_command = ()
+        else:
+            venv_activate_path = Path(self._venv_name, 'bin', 'activate').resolve()
+
+            if not venv_activate_path.is_file():
+                make_venv_command = (f'python -m venv {self._venv_name}',)
+            else:
+                make_venv_command = ()
+
+            venv_command = make_venv_command + (
+                f'source {self._venv_name}/bin/activate',
+            )
+
+        run_python_commands = venv_command + (
+            f'pip install -r "{self._requirements_filepath}"',
+            f'python {self._main_filepath} {self._port} "{self._public_url_filepath}"'
+        )
+
+        for command in run_python_commands:
+            self._log(f'Running: {command}')
+            subprocess.run(shlex.split(command))
+
+        # self.tunnel = ngrok.connect(str(self._port))
+        self._log('Connected.')
+        self._log(f'public url: {self.public_url}')
+
+
+class SequenceDistributorClient:
+    def __init__(self, url: str):
+        self.url: str = url
+
+    def connect(self) -> bool:
+        url = self.url + '/'
+        try:
+            r = requests.get(url)
+            r.raise_for_status()
+            return True
+        except requests.HTTPError:
+            return False
+
+    def assign(self, case_name: str, seq: Union[int, Sequence]) -> Optional[int]:
+        if not isinstance(seq, int):
+            seq = len(seq)
+
+        url = self.url + '/assign'
+        r = requests.get(
+            url,
+            params={'case_name': case_name, 'seq': seq}
+        )
+        r.raise_for_status()
+        try:
+            print(r.json())
+            return r.json()
+        except KeyError:
+            raise RuntimeError(
+                'response does not contain a *index* field'
+            )
+
+    def complete(self, case_name: str, index: int) -> None:
+        url = self.url + '/complete'
+        requests.put(url, data={'case_name': case_name, 'index': index})
+
+    def consume(self, case_name: str, seq: Sequence[_T]) -> Iterator[_T]:
+        index = self.assign(case_name, seq)
+        while index != -1:
+            yield seq[index]
+            self.complete(case_name, index)
+            index = self.assign(case_name, seq)
