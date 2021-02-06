@@ -21,7 +21,7 @@ import zict
 
 from boiling_learning.utils.utils import (
     JSONDict,
-    PathType,
+    PathLike,
     empty_gen,
     ensure_dir,
     indexify,
@@ -199,7 +199,7 @@ class UserPool(BaseUserPool):
     @classmethod
     def from_json(
             cls,
-            path: PathType,
+            path: PathLike,
             workers_key: str = 'allowed_users',
             manager_key: str = 'manager',
             server_key: str = 'server'
@@ -212,7 +212,7 @@ class UserPool(BaseUserPool):
             server=config.get(server_key)
         )
 
-    def to_json(self, path: PathType) -> None:
+    def to_json(self, path: PathLike) -> None:
         obj = {
             self.workers_key: self.workers,
             self.manager_key: self.manager,
@@ -263,7 +263,7 @@ class UserPool(BaseUserPool):
 class DynamicUserPool(BaseUserPool):
     def __init__(
             self,
-            path: PathType,
+            path: PathLike,
             workers: Optional[Iterable] = None,
             overwrite: bool = False,
             reset: bool = False,
@@ -382,7 +382,7 @@ class DynamicUserPool(BaseUserPool):
 class LFSSequenceDistributor:
     def __init__(
             self,
-            path: PathType,
+            path: PathLike,
             reset: bool = False
     ):
         path = ensure_dir(path)

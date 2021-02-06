@@ -23,7 +23,7 @@ from tensorflow.data.experimental import AUTOTUNE
 
 import boiling_learning.utils as bl_utils
 import boiling_learning.utils.mathutils as mathutils
-from boiling_learning.utils.utils import PathType
+from boiling_learning.utils.utils import PathLike
 from boiling_learning.utils.functional import Pack
 from boiling_learning.io.io import DatasetTriplet
 import boiling_learning.preprocessing as bl_preprocessing
@@ -78,7 +78,7 @@ class DatasetSplitter:
                 and 0 <= self.val < 1
                 and 0 < self.test < 1
         ):
-            raise ValueError('it is required that 0 < *train*, *test* < 1 and 0 <= *val* < 1')
+            raise ValueError('it is required that 0 < (*train*, *test*) < 1 and 0 <= *val* < 1')
 
 
 class SplitSubset(enum.Enum):
@@ -272,7 +272,7 @@ def experiment_video_dataset_creator(
         splits: DatasetSplitter,
         data_preprocessors: Sequence[Transformer],
         dataset_size: Optional[int] = None,
-        snapshot_path: Optional[PathType] = None,
+        snapshot_path: Optional[PathLike] = None,
         num_shards: Optional[int] = None
 ):
     ds = experiment_video.as_tf_dataset()
@@ -330,7 +330,7 @@ def dataset_creator(
         splits: DatasetSplitter,
         data_preprocessors: Sequence[Transformer],
         dataset_size: Optional[int] = None,
-        snapshot_path: Optional[PathType] = None,
+        snapshot_path: Optional[PathLike] = None,
         num_shards: Optional[int] = None,
         verbose: int = 0,
         save: bool = True,
@@ -405,7 +405,7 @@ def dataset_creator(
 def dataset_post_processor(
         ds: DatasetTriplet,
         data_augmentors: Sequence[Transformer],
-        cache: Union[bool, PathType] = False,
+        cache: Union[bool, PathLike] = False,
         batch_size: Optional[int] = None,
         prefetch: bool = True,
         shuffle_size: Optional[int] = None,

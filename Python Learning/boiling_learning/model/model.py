@@ -14,7 +14,7 @@ import parse
 import tensorflow as tf
 
 import boiling_learning.utils.utils as bl_utils
-from boiling_learning.utils.utils import PathType
+from boiling_learning.utils.utils import PathLike
 from boiling_learning.utils.functional import Pack
 import boiling_learning.io.io as bl_io
 from boiling_learning.preprocessing.transformers import Creator
@@ -27,7 +27,7 @@ _ModelType = TypeVar('_ModelType')
 
 def restore(
     restore: bool = False,
-    path: Optional[PathType] = None,
+    path: Optional[PathLike] = None,
     load_method: Optional[bl_io.LoaderFunction[T]] = None,
     epoch_str: str = 'epoch'
 ) -> Tuple[int, Optional[T]]:
@@ -143,7 +143,7 @@ def make_creator(name: str, defaults: Pack = Pack()) -> Callable:
 
 
 def models_from_checkpoints(
-        pattern: PathType,
+        pattern: PathLike,
         epoch_key: str = 'epoch',
         load_method: bl_io.LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model
 ) -> Dict[int, tf.keras.models.Model]:
@@ -174,7 +174,7 @@ def models_from_checkpoints(
 
 def history_from_checkpoints(
         ds_val: tf.data.Dataset,
-        pattern: PathType,
+        pattern: PathLike,
         epoch_key: str = 'epoch',
         load_method: bl_io.LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model
 ) -> Dict[int, Dict[str, float]]:

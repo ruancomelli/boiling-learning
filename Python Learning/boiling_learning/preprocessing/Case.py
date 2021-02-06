@@ -3,7 +3,7 @@ from typing import Optional
 import modin.pandas as pd
 
 from boiling_learning.utils import utils as bl_utils
-from boiling_learning.utils.utils import (PathType, VerboseType)
+from boiling_learning.utils.utils import (PathLike, VerboseType)
 from boiling_learning.preprocessing.ExperimentVideo import ExperimentVideo
 from boiling_learning.preprocessing.ImageDataset import ImageDataset
 
@@ -15,7 +15,7 @@ class Case(ImageDataset):
 
     def __init__(
             self,
-            path: PathType,
+            path: PathLike,
             name: Optional[str] = None,
             df_name: str = 'dataset.csv',
             dataframes_dir_name: str = 'dataframes',
@@ -28,7 +28,7 @@ class Case(ImageDataset):
             frames_suffix: str = '.png',
             column_names: DataFrameColumnNames = DataFrameColumnNames(),
             column_types: DataFrameColumnTypes = DataFrameColumnTypes(),
-            video_data_path: Optional[PathType] = None
+            video_data_path: Optional[PathLike] = None
     ):
         if not video_suffix.startswith('.'):
             raise ValueError(
@@ -83,7 +83,7 @@ class Case(ImageDataset):
 
     def set_video_data_from_file(
             self,
-            video_data_path: Optional[PathType] = None,
+            video_data_path: Optional[PathLike] = None,
             purge: bool = False,
             keys: VideoDataKeys = VideoDataKeys(),
             remove_absent: bool = False
@@ -101,7 +101,7 @@ class Case(ImageDataset):
     def convert_videos(
             self,
             new_suffix: str,
-            new_videos_dir: PathType,
+            new_videos_dir: PathLike,
             overwrite: bool = False,
             verbose: VerboseType = False
     ) -> None:

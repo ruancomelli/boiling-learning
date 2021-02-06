@@ -24,7 +24,7 @@ from tensorflow.data.experimental import AUTOTUNE
 
 import boiling_learning.utils as bl_utils
 from boiling_learning.utils.utils import (
-    PathType
+    PathLike
 )
 import boiling_learning.model as bl_model
 import boiling_learning as bl
@@ -220,7 +220,7 @@ class DatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
             self,
             path_transformers,
             transformers,
-            loader: Callable[[PathType], Any],
+            loader: Callable[[PathLike], Any],
             saver: Optional[Callable] = None,
             save_intermediate: bool = True,
             save_last: bool = True,
@@ -258,7 +258,7 @@ class DatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
                 for dest, img in zip(dest_chunk, img_chunk):
                     self.saver(img, dest)
 
-    def _full_trajectories(self, sources: Iterable[PathType]):
+    def _full_trajectories(self, sources: Iterable[PathLike]):
         sources = map(Path, sources)
 
         def trajectory(source):
@@ -324,7 +324,7 @@ class DatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
 
         return sources, dests
 
-    def transform_paths(self, paths: Iterable[PathType]):
+    def transform_paths(self, paths: Iterable[PathLike]):
         return map(
             funcy.rcompose(*self.path_transformers),
             paths
@@ -336,7 +336,7 @@ class DatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
             num_parallel_calls=AUTOTUNE
         )
 
-    def _transform_images_indirect(self, paths: Iterable[PathType]):
+    def _transform_images_indirect(self, paths: Iterable[PathLike]):
         erased_marker = None
         full_trajs = tuple(self._full_trajectories(paths))
 
@@ -363,7 +363,7 @@ class DatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
 
         return full_trajs, ds
 
-    def _transform_images_direct(self, paths: Iterable[PathType]):
+    def _transform_images_direct(self, paths: Iterable[PathLike]):
         paths = tuple(paths)
         dests = tuple(self.transform_paths(paths))
 
@@ -376,7 +376,7 @@ class DatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
         full_trajs = tuple(zip(paths, dests))
         return full_trajs, ds
 
-    def transform_images(self, paths: Iterable[PathType]):
+    def transform_images(self, paths: Iterable[PathLike]):
         if self.save_intermediate:
             return self._transform_images_indirect(paths)
         else:
@@ -608,7 +608,7 @@ def simple_image_preprocessor(
 
 
 def snapshotter(
-        snapshot_folder: PathType,
+        snapshot_folder: PathLike,
         num_shards: Optional[int] = None,
         shuffle_size: Optional[int] = None
 ) -> Callable[[tf.data.Dataset], tf.data.Dataset]:

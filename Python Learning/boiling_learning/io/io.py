@@ -42,7 +42,7 @@ except ImportError:
 import boiling_learning.utils as bl_utils
 from boiling_learning.utils.functional import pack
 from boiling_learning.utils import (
-    PathType,
+    PathLike,
     ensure_dir,
     ensure_parent,
     ensure_resolved
@@ -50,8 +50,8 @@ from boiling_learning.utils import (
 
 T = TypeVar('T')
 S = TypeVar('S')
-SaverFunction = Callable[[S, PathType], Any]
-LoaderFunction = Callable[[PathType], S]
+SaverFunction = Callable[[S, PathLike], Any]
+LoaderFunction = Callable[[PathLike], S]
 DatasetTriplet = Tuple[tf.data.Dataset, Optional[tf.data.Dataset], tf.data.Dataset]
 OptionalDatasetTriplet = Tuple[Optional[tf.data.Dataset], Optional[tf.data.Dataset], Optional[tf.data.Dataset]]
 BoolFlagged = Tuple[bool, S]
@@ -65,7 +65,7 @@ def add_bool_flag(
     if isinstance(expected_exceptions, Sequence):
         expected_exceptions = tuple(expected_exceptions)
 
-    def _loader(path: PathType) -> T:
+    def _loader(path: PathLike) -> T:
         try:
             return True, loader(path)
         except expected_exceptions:
@@ -77,11 +77,11 @@ def add_bool_flag(
 def chunked_filename_pattern(
         chunk_sizes: Iterable[int],
         chunk_name: str = '{min_index}-{max_index}',
-        filename: PathType = 'frame{index}.png',
+        filename: PathLike = 'frame{index}.png',
         index_key: str = 'index',
         min_index_key: str = 'min_index',
         max_index_key: str = 'max_index',
-        root: Optional[PathType] = None
+        root: Optional[PathLike] = None
 ) -> Callable[[int], Path]:
     chunks = tuple(accumulate(chunk_sizes, operator.mul))
     filename_formatter = filename.format
@@ -103,8 +103,8 @@ def chunked_filename_pattern(
 
 
 def make_callable_filename_pattern(
-        outputdir: PathType,
-        filename_pattern: Union[PathType, Callable[[int], PathType]],
+        outputdir: PathLike,
+        filename_pattern: Union[PathLike, Callable[[int], PathLike]],
         index_key: Optional[str] = None
 ) -> Tuple[bool, Callable[[int], Path]]:
 
@@ -153,7 +153,7 @@ def make_callable_filename_pattern(
 
 def save_image(
         image: np.ndarray,
-        path: PathType
+        path: PathLike
 ) -> None:
     cv2.imwrite(
         str(bl_utils.ensure_parent(path)),
@@ -161,7 +161,7 @@ def save_image(
     )
 
 
-def load_image(path: PathType, flag: Optional[int] = cv2.IMREAD_COLOR) -> np.ndarray:
+def load_image(path: PathLike, flag: Optional[int] = cv2.IMREAD_COLOR) -> np.ndarray:
     return cv2.imread(
         str(bl_utils.ensure_resolved(path)),
         flag
@@ -171,7 +171,7 @@ def load_image(path: PathType, flag: Optional[int] = cv2.IMREAD_COLOR) -> np.nda
 def save_serialized(
         save_map: Mapping[T, SaverFunction[S]]
 ) -> SaverFunction[Mapping[T, S]]:
-    def save(return_dict: Mapping[T, S], path: PathType) -> None:
+    def save(return_dict: Mapping[T, S], path: PathLike) -> None:
         path = ensure_parent(path)
         for key, obj in return_dict.items():
             save_map[key](obj, path / key)
@@ -181,7 +181,7 @@ def save_serialized(
 def load_serialized(
         load_map: Mapping[T, LoaderFunction[S]]
 ) -> LoaderFunction[Dict[T, S]]:
-    def load(path: PathType) -> Dict[T, S]:
+    def load(path: PathLike) -> Dict[T, S]:
         path = ensure_resolved(path)
         loaded = {
             key: loader(path / key)
@@ -191,12 +191,12 @@ def load_serialized(
     return load
 
 
-def save_keras_model(keras_model, path: PathType, **kwargs) -> None:
+def save_keras_model(keras_model, path: PathLike, **kwargs) -> None:
     path = ensure_parent(path)
     keras_model.save(path, **kwargs)
 
 
-def load_keras_model(path: PathType, strategy=None, **kwargs):
+def load_keras_model(path: PathLike, strategy=None, **kwargs):
     if strategy is None:
         scope = funcy.nullcontext()
     else:
@@ -206,21 +206,21 @@ def load_keras_model(path: PathType, strategy=None, **kwargs):
         return load_model(path, **kwargs)
 
 
-def save_pkl(obj, path: PathType) -> None:
+def save_pkl(obj, path: PathLike) -> None:
     path = ensure_parent(path)
 
     with path.open('wb') as file:
         pickle.dump(obj, file, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def load_pkl(path: PathType):
+def load_pkl(path: PathLike):
     with ensure_resolved(path).open('rb') as file:
         return pickle.load(file)
 
 
 def save_json(
         obj: T,
-        path: PathType,
+        path: PathLike,
         dump: Callable[[T, _io.TextIOWrapper], Any] = json.dump,
         cls: Optional[Type] = None
 ) -> None:
@@ -238,7 +238,7 @@ def save_json(
 
 
 def load_json(
-        path: PathType,
+        path: PathLike,
         load: Callable[[_io.TextIOWrapper], T] = json.load,
         cls: Optional[Type] = None
 ) -> T:
@@ -256,7 +256,7 @@ def load_json(
 
 
 def saver_hdf5(key: str = '') -> SaverFunction[Any]:
-    def save_hdf5(obj, path: PathType) -> None:
+    def save_hdf5(obj, path: PathLike) -> None:
         path = ensure_parent(path)
         with h5py.File(str(path), 'w') as hf:
             hf.create_dataset(key, data=obj)
@@ -264,24 +264,24 @@ def saver_hdf5(key: str = '') -> SaverFunction[Any]:
 
 
 def loader_hdf5(key: str = '') -> LoaderFunction[Any]:
-    def load_hdf5(path: PathType):
+    def load_hdf5(path: PathLike):
         path = ensure_resolved(path)
         with h5py.File(str(path), 'r') as hf:
             return hf.get(key)
     return load_hdf5
 
 
-def save_element_spec(element_spec: tf.TensorSpec, path: PathType) -> None:
+def save_element_spec(element_spec: tf.TensorSpec, path: PathLike) -> None:
     encoded_element_spec = bl_utils.dtypes.encode_element_spec(element_spec)
     save_json(encoded_element_spec, path, dump=json_tricks.dump)
 
 
-def load_element_spec(path: PathType) -> tf.TensorSpec:
+def load_element_spec(path: PathLike) -> tf.TensorSpec:
     encoded_element_spec = load_json(path, load=json_tricks.load)
     return bl_utils.dtypes.decode_element_spec(encoded_element_spec)
 
 
-def save_dataset(dataset: tf.data.Dataset, path: PathType) -> None:
+def save_dataset(dataset: tf.data.Dataset, path: PathLike) -> None:
     path = ensure_dir(path)
     dataset_path = path / 'dataset.tensorflow'
     element_spec_path = path / 'element_spec.json'
@@ -290,7 +290,7 @@ def save_dataset(dataset: tf.data.Dataset, path: PathType) -> None:
     tf.data.experimental.save(dataset, str(dataset_path))
 
 
-def load_dataset(path: PathType) -> tf.data.Dataset:
+def load_dataset(path: PathLike) -> tf.data.Dataset:
     path = ensure_resolved(path)
     dataset_path = path / 'dataset.tensorflow'
     element_spec_path = path / 'element_spec.json'
@@ -316,7 +316,7 @@ def _default_filename_pattern(name: str, index: int) -> Path:
 
 def save_frames_dataset(
         dataset: tf.data.Dataset,
-        path: PathType,
+        path: PathLike,
         filename_pattern: Callable[[str, int], Path] = _default_filename_pattern,
         name_column: str = 'name',
         index_column: str = 'index'
@@ -349,7 +349,7 @@ def saver_frames_dataset(
 ) -> SaverFunction[DatasetTriplet]:
     def _saver(
             ds: DatasetTriplet,
-            path: PathType
+            path: PathLike
     ) -> None:
         path = ensure_parent(path)
         ds_train, ds_val, ds_test = ds
@@ -387,7 +387,7 @@ def decode_img(img, channels: int = 1):
 
 def process_path(
         file_path,
-        in_dir: Optional[PathType] = None
+        in_dir: Optional[PathLike] = None
 ):
     # from relative to absolute path
     if in_dir is not None:
@@ -401,7 +401,7 @@ def process_path(
 
 
 def load_frames_dataset(
-        path: PathType,
+        path: PathLike,
         shuffle: bool = True
 ) -> tf.data.Dataset:
     path = bl_utils.ensure_resolved(path)
@@ -426,7 +426,7 @@ def load_frames_dataset(
 
 
 def loader_frames_dataset(
-        path: PathType
+        path: PathLike
 ) -> Tuple[bool, Optional[tf.data.Dataset]]:
     path = bl_utils.ensure_resolved(path)
 
@@ -441,7 +441,7 @@ def saver_dataset_triplet(
 ) -> SaverFunction[DatasetTriplet]:
     def _saver(
             ds: DatasetTriplet,
-            path: PathType
+            path: PathLike
     ) -> None:
         ds_train, ds_val, ds_test = ds
 
@@ -458,7 +458,7 @@ def loader_dataset_triplet(
         loader: BoolFlaggedLoaderFunction[Optional[tf.data.Dataset]]
 ) -> BoolFlaggedLoaderFunction[OptionalDatasetTriplet]:
     def _loader(
-            path: PathType
+            path: PathLike
     ) -> BoolFlagged[OptionalDatasetTriplet]:
         path = bl_utils.ensure_resolved(path)
 
@@ -477,7 +477,7 @@ def loader_dataset_triplet(
 
 def save_yogadl(
         dataset,
-        storage_path: PathType,
+        storage_path: PathLike,
         dataset_id: str,
         dataset_version: str = '0.0'
 ) -> None:
@@ -489,7 +489,7 @@ def save_yogadl(
 
 
 def saver_yogadl(
-        storage_path: PathType,
+        storage_path: PathLike,
         dataset_id: str
 ) -> SaverFunction[DatasetTriplet]:
     storage_path = bl_utils.ensure_resolved(storage_path)
@@ -499,7 +499,7 @@ def saver_yogadl(
 
     def _saver(
             ds: DatasetTriplet,
-            path: Optional[PathType] = None
+            path: Optional[PathLike] = None
     ) -> None:
         ds_train, ds_val, ds_test = ds
 
@@ -524,7 +524,7 @@ def saver_yogadl(
 
 
 def load_yogadl(
-        storage_path: PathType,
+        storage_path: PathLike,
         dataset_id: str,
         dataset_version: str = '0.0',
         start_offset: int = 0,
@@ -553,7 +553,7 @@ def load_yogadl(
 
 
 def loader_yogadl(
-        storage_path: PathType,
+        storage_path: PathLike,
         dataset_id: str
 ) -> LoaderFunction[DatasetTriplet]:
     storage_path = bl_utils.ensure_resolved(storage_path)
@@ -561,7 +561,7 @@ def loader_yogadl(
     id_val = dataset_id + '_val'
     id_test = dataset_id + '_test'
 
-    def _loader(path: Optional[PathType] = None):
+    def _loader(path: Optional[PathLike] = None):
         try:
             ds_train = load_yogadl(
                 storage_path=storage_path,

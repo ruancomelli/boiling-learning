@@ -26,7 +26,7 @@ import numpy as np
 import tensorflow as tf
 
 import boiling_learning.utils as bl_utils
-from boiling_learning.utils import PathType, VerboseType
+from boiling_learning.utils import PathLike, VerboseType
 import boiling_learning.io as bl_io
 from boiling_learning.preprocessing.ExperimentVideo import ExperimentVideo
 
@@ -57,7 +57,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             name: str,
             column_names: DataFrameColumnNames = DataFrameColumnNames(),
             column_types: DataFrameColumnTypes = DataFrameColumnTypes(),
-            df_path: Optional[PathType] = None,
+            df_path: Optional[PathLike] = None,
             exist_load: bool = False
     ):
         self._name: str = name
@@ -225,7 +225,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
 
     def set_video_data_from_file(
             self,
-            data_path: PathType,
+            data_path: PathLike,
             purge: bool = False,
             remove_absent: bool = False,
             keys: VideoDataKeys = VideoDataKeys()
@@ -262,7 +262,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
 
     def load(
             self,
-            path: Optional[PathType] = None,
+            path: Optional[PathLike] = None,
             columns: Optional[Iterable[str]] = None
     ) -> None:
         if path is None:
@@ -281,7 +281,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
 
     def save(
             self,
-            path: Optional[PathType] = None,
+            path: Optional[PathLike] = None,
             overwrite: bool = False
     ) -> None:
         if path is None:
@@ -322,7 +322,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
 
     def move(
             self,
-            path: Union[str, bl_utils.PathType],
+            path: Union[str, bl_utils.PathLike],
             renaming: bool = False,
             erase_old: bool = False,
             overwrite: bool = False
@@ -353,16 +353,16 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     @overload
     def modify_path(
         self,
-        old_path: PathType,
-        new_path: PathType,
+        old_path: PathLike,
+        new_path: PathLike,
         many: bool # many: Literal[False]
     ) -> None: ...
 
     @overload
     def modify_path(
         self,
-        old_path: Iterable[PathType],
-        new_path: Iterable[PathType],
+        old_path: Iterable[PathLike],
+        new_path: Iterable[PathLike],
         many: bool # many: Literal[True]
     ) -> None: ...
 

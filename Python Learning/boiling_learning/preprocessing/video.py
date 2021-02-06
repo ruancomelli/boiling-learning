@@ -25,7 +25,7 @@ import numpy as np
 
 import boiling_learning as bl
 from boiling_learning.utils import (
-    PathType,
+    PathLike,
     VerboseType
 )
 from boiling_learning.io.io import (
@@ -34,8 +34,8 @@ from boiling_learning.io.io import (
 
 
 def convert_video(
-        in_path: PathType,
-        out_path: PathType,
+        in_path: PathLike,
+        out_path: PathLike,
         remove_audio: bool = False,
         fps: Optional[Union[str, int, float]] = None,
         verbose: VerboseType = False,
@@ -89,9 +89,9 @@ def convert_video(
 
 
 def extract_frames_ffmpeg(
-        video_path: PathType,
-        outputdir: PathType,
-        filename_pattern: PathType = 'frame%d.png',
+        video_path: PathLike,
+        outputdir: PathLike,
+        filename_pattern: PathLike = 'frame%d.png',
         overwrite: bool = False,
         fps: Optional[Union[str, int, float]] = None,
         verbose: VerboseType = False,
@@ -141,9 +141,9 @@ def extract_frames_ffmpeg(
 
 
 def make_callable_index_parser(
-        index_parser: Union[PathType, Callable[[PathType], int]],
+        index_parser: Union[PathLike, Callable[[PathLike], int]],
         index_key: Optional[str] = None
-) -> Tuple[bool, Callable[[PathType], int]]:
+) -> Tuple[bool, Callable[[PathLike], int]]:
 
     if callable(index_parser):
         return True, index_parser
@@ -182,9 +182,9 @@ def make_callable_index_parser(
 
 
 def extract_frames_iterate(
-        video_path: PathType,
-        outputdir: PathType,
-        filename_pattern: Union[PathType, Callable[[int], PathType]],
+        video_path: PathLike,
+        outputdir: PathLike,
+        filename_pattern: Union[PathLike, Callable[[int], PathLike]],
         overwrite: bool,
         index_key: Optional[str] = None,
         verbose: VerboseType = False
@@ -236,12 +236,12 @@ def extract_frames_iterate(
 
 
 def extracted_frames_count(
-        video_path: PathType,
-        outputdir: PathType,
+        video_path: PathLike,
+        outputdir: PathLike,
         frame_suffix: str,
-        tmp_dir: Optional[PathType] = None,
+        tmp_dir: Optional[PathLike] = None,
         fast_frames_count: bool = False,
-        metadata_path: Optional[PathType] = None,
+        metadata_path: Optional[PathLike] = None,
         recount_source: bool = False,
         recount_tmp: bool = False,
         recount_dest: bool = False,
@@ -314,17 +314,17 @@ def extracted_frames_count(
 
 
 def extract_frames(
-    video_path: PathType,
-    outputdir: PathType,
-    filename_pattern: Union[PathType, Callable[[int], PathType]] = 'frame%d.png',
+    video_path: PathLike,
+    outputdir: PathLike,
+    filename_pattern: Union[PathLike, Callable[[int], PathLike]] = 'frame%d.png',
     index_key: Optional[str] = None,
     frame_suffix: Optional[str] = None,
     verbose: VerboseType = False,
     fast_frames_count: Optional[bool] = None,
     iterate: bool = False,
     overwrite: bool = False,
-    tmp_dir: Optional[PathType] = None,
-    metadata_path: Optional[PathType] = None
+    tmp_dir: Optional[PathLike] = None,
+    metadata_path: Optional[PathLike] = None
 ) -> None:
     # Original code: $ ffmpeg -i "video.mov" -f image2 "video-frame%05d.png"
     # Source 2: <https://forums.fast.ai/t/extracting-frames-from-video-file-with-ffmpeg/29818>
@@ -466,8 +466,8 @@ def extract_frames(
 
 
 def concat_videos(
-        in_paths: Iterable[PathType],
-        out_path: PathType
+        in_paths: Iterable[PathLike],
+        out_path: PathLike
 ) -> None:
     # Original command: ffmpeg -f concat -safe 0 -i mylist.txt -c copy output.mp4
     # Source: <https://stackoverflow.com/a/11175851/5811400>
@@ -502,8 +502,8 @@ def concat_videos(
 # Original code: $ ffmpeg -i input.mp4 -c:a copy -vn -sn output.m4a
 # Source: <https://superuser.com/a/633765>
 def extract_audio(
-        video_path: PathType,
-        out_path: PathType,
+        video_path: PathLike,
+        out_path: PathLike,
         overwrite: bool = False,
         verbose: bool = False
 ) -> None:
@@ -539,7 +539,7 @@ def extract_audio(
 
 
 @contextlib.contextmanager
-def open_video(video_path: PathType) -> Iterator[cv2.VideoCapture]:
+def open_video(video_path: PathLike) -> Iterator[cv2.VideoCapture]:
     video_path = bl.utils.ensure_resolved(video_path)
     cap = cv2.VideoCapture(str(video_path))
 
@@ -550,7 +550,7 @@ def open_video(video_path: PathType) -> Iterator[cv2.VideoCapture]:
 
 
 def frames(
-        video_path: PathType,
+        video_path: PathLike,
         suppress_retrieval_failure: bool = True
 ) -> Iterator[np.ndarray]:
     # Does not work with GOPRO format
@@ -567,8 +567,8 @@ def frames(
 
 def opencv_property_getter_from_file(
         property_code: int
-) -> Callable[[PathType], Any]:
-    def _property_getter(video_path: PathType) -> Any:
+) -> Callable[[PathLike], Any]:
+    def _property_getter(video_path: PathLike) -> Any:
         with open_video(video_path) as cap:
             return cap.get(property_code)
     return _property_getter
@@ -578,7 +578,7 @@ get_frame_count = opencv_property_getter_from_file(cv2.CAP_PROP_FRAME_COUNT)
 get_fps = opencv_property_getter_from_file(cv2.CAP_PROP_FPS)
 
 
-def count_frames(video_path: PathType, fast: bool = False) -> int:
+def count_frames(video_path: PathLike, fast: bool = False) -> int:
     if fast:
         return int(round(get_frame_count(video_path)))
     else:
@@ -586,11 +586,11 @@ def count_frames(video_path: PathType, fast: bool = False) -> int:
 
 
 def count_frames_in_dir(
-        path: PathType,
+        path: PathLike,
         frame_suffix: str,
         recursive: bool = True,
-        exclude_path: Optional[PathType] = None,
-        exclude_count: Optional[Union[int, Callable[[PathType], int]]] = None
+        exclude_path: Optional[PathLike] = None,
+        exclude_count: Optional[Union[int, Callable[[PathLike], int]]] = None
 ) -> int:
     path = bl.utils.ensure_resolved(path)
     if not path.is_dir():
@@ -619,11 +619,11 @@ def count_frames_in_dir(
 
 
 def reorganize_frames(
-        dest_dir: PathType,
-        filename_pattern: Union[PathType, Callable[[int], PathType]],
-        index_parser: Union[PathType, Callable[[str], int]],
-        source_dir: Optional[PathType] = None,
-        source_files: Optional[Iterable[PathType]] = None,
+        dest_dir: PathLike,
+        filename_pattern: Union[PathLike, Callable[[int], PathLike]],
+        index_parser: Union[PathLike, Callable[[str], int]],
+        source_dir: Optional[PathLike] = None,
+        source_files: Optional[Iterable[PathLike]] = None,
         index_key: Optional[str] = None,
         source_suffix: str = '',
         overwrite: bool = False,
@@ -633,7 +633,7 @@ def reorganize_frames(
 
     if source_dir is None and source_files is None:
         raise ValueError(
-            'Either source_dir is a PathType or source_files is an iterable yielding PathType')
+            'Either source_dir is a PathLike or source_files is an iterable yielding PathLike')
 
     if source_suffix and not source_suffix.startswith('.'):
         raise ValueError(

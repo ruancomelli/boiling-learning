@@ -6,7 +6,7 @@ from typing import (
 from frozendict import frozendict
 import modin.pandas as pd
 
-from boiling_learning.utils import PathType
+from boiling_learning.utils import PathLike
 import boiling_learning.utils as bl_utils
 from boiling_learning.utils import geometry
 from boiling_learning.utils.units import unit_registry as ureg
@@ -41,9 +41,9 @@ SAMPLES = frozendict({
 class ExperimentalData:
     def __init__(
             self,
-            path: Optional[PathType] = None,
-            data_path: Optional[PathType] = None,
-            description_path: Optional[PathType] = None
+            path: Optional[PathLike] = None,
+            data_path: Optional[PathLike] = None,
+            description_path: Optional[PathLike] = None
     ):
         if (path, data_path).count(None) != 1:
             raise ValueError('exactly one of path or data_path must be given as parameter.')

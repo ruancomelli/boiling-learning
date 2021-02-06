@@ -32,7 +32,7 @@ import boiling_learning as bl
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.utils import (
     # JSONDataType, # TODO: maybe using JSONDataType would be good
-    PathType,
+    PathLike,
     VerboseType,
     _Sentinel
 )
@@ -105,7 +105,7 @@ class Manager(
         def __init__(
                 self,
                 elem_id: str,
-                path: PathType,
+                path: PathLike,
                 load_method: BoolFlaggedLoaderFunction[_ElemType],
                 save_method: SaverFunction[_ElemType]
         ):
@@ -133,7 +133,7 @@ class Manager(
 
     def __init__(
             self,
-            path: PathType,
+            path: PathLike,
             id_fmt: str = '{index}.data',
             index_key: str = 'index',
             save_method: Optional[SaverFunction[_ElemType]] = None,
@@ -286,7 +286,7 @@ class Manager(
                 self._initialize_lookup_table()
                 self.load_lookup_table()
 
-    def save_elem(self, elem: _ElemType, path: PathType) -> None:
+    def save_elem(self, elem: _ElemType, path: PathLike) -> None:
         if self.save_method is None:
             raise ValueError(
                 'this Manager\'s *save_method* is not set.'
@@ -297,7 +297,7 @@ class Manager(
         path = bl.utils.ensure_parent(path)
         self.save_method(elem, path)
 
-    def load_elem(self, path: PathType) -> Tuple[bool, _ElemType]:
+    def load_elem(self, path: PathLike) -> Tuple[bool, _ElemType]:
         if self.load_method is None:
             raise ValueError(
                 'this Manager\'s *load_method* is not set.'
@@ -470,7 +470,7 @@ class Manager(
     def _resolve_metadata(
             self,
             metadata: Optional[Mapping] = None,
-            path: Optional[PathType] = None
+            path: Optional[PathLike] = None
     ) -> Mapping:
         if metadata is None and path is None:
             raise ValueError(
@@ -491,7 +491,7 @@ class Manager(
             post_processor: Optional[Transformer[_ElemType, _PostProcessedElemType]] = None,
             post_processor_description: Optional[Pack] = None,
             metadata: Optional[Mapping] = None,
-            path: Optional[PathType] = None
+            path: Optional[PathLike] = None
     ) -> Mapping:
         contents = self._resolve_contents(
             contents=contents,
@@ -647,7 +647,7 @@ class Manager(
 
     def _load_elem(
             self,
-            path: PathType,
+            path: PathLike,
             raise_if_load_fails: bool
     ) -> Tuple[bool, _ElemType]:
         success, elem = self.load_elem(path)

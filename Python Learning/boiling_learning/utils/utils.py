@@ -85,14 +85,15 @@ VerboseType = Union[bool, int]
 JSONDataType = Union[None, bool, int, float, str, List['JSONDataType'], Dict[str, 'JSONDataType']]
 
 
-class PathLike(Protocol[AnyStr]):
-    '''See https://github.com/python/typing/issues/402
-    '''
-    def __fspath__(self) -> AnyStr:
-        ...
+# class PathLike(Protocol[AnyStr]):
+#     '''See https://github.com/python/typing/issues/402
+#     '''
+#     def __fspath__(self) -> AnyStr:
+#         ...
 
 
-PathType = Union[str, PathLike[str]]
+# PathLike = Union[str, PathLike[str]]
+PathLike = Union[str, os.PathLike]
 
 
 # ---------------------------------- Utility functions ----------------------------------
@@ -780,8 +781,8 @@ def relative_path(origin, destination):
 
 
 def ensure_resolved(
-        path: PathType,
-        root: Optional[PathType] = None
+        path: PathLike,
+        root: Optional[PathLike] = None
 ) -> Path:
     path = Path(path)
     if root is not None and not path.is_absolute():
@@ -790,8 +791,8 @@ def ensure_resolved(
 
 
 def ensure_dir(
-        path: PathType,
-        root: Optional[PathType] = None
+        path: PathLike,
+        root: Optional[PathLike] = None
 ) -> Path:
     path = ensure_resolved(path, root=root)
     path.mkdir(exist_ok=True, parents=True)
@@ -799,8 +800,8 @@ def ensure_dir(
 
 
 def ensure_parent(
-        path: PathType,
-        root: Optional[PathType] = None
+        path: PathLike,
+        root: Optional[PathLike] = None
 ) -> Path:
     path = ensure_resolved(path, root=root)
     path.parent.mkdir(exist_ok=True, parents=True)
@@ -809,7 +810,7 @@ def ensure_parent(
 
 def remove_copy(directory, pattern):
     def remove_copy_idx(path):
-        pattern = re.compile('(.*) \([0-9]+\)\.png')
+        pattern = re.compile(r'(.*) \([0-9]+\)\.png')
         matches = pattern.match(path.name)
         if matches:
             name = matches[1]
@@ -824,7 +825,7 @@ def remove_copy(directory, pattern):
 
 
 # Source: https://stackoverflow.com/a/34236245/5811400
-def is_parent_dir(parent: PathType, subdir: PathType) -> bool:
+def is_parent_dir(parent: PathLike, subdir: PathLike) -> bool:
     parent = ensure_resolved(parent)
     subdir = ensure_resolved(subdir)
     return parent in subdir.parents
@@ -832,11 +833,11 @@ def is_parent_dir(parent: PathType, subdir: PathType) -> bool:
 
 # Source: https://stackoverflow.com/a/57892171/5811400
 def rmdir(
-        path: PathType,
+        path: PathLike,
         recursive: bool = False,
         keep: bool = False,
         missing_ok: bool = False
-):
+) -> None:
     path = ensure_resolved(path)
 
     if not path.is_dir():
@@ -867,7 +868,7 @@ def group_files(path, keyfunc=operator.attrgetter('suffix')):
 
 def mover(
     out_dir,
-    head: Optional[PathType] = None,
+    head: Optional[PathLike] = None,
     up_level: int = 0,
     make_dir: bool = True,
     head_aggregator=None,
@@ -889,7 +890,7 @@ def mover(
         def get_head(in_path):
             return in_path.parents[up_level]
 
-    def wrapper(in_path: PathType):
+    def wrapper(in_path: PathLike):
         in_path = ensure_resolved(in_path)
         head = get_head(in_path)
         tail = in_path.relative_to(head)
@@ -955,7 +956,7 @@ def nullcontext(enter_result=None):
     yield enter_result
 
 
-def JSONDict(path: PathType, dumps: Callable[[_T], str], loads: Callable[[str], _T]) -> zict.Func:
+def JSONDict(path: PathLike, dumps: Callable[[_T], str], loads: Callable[[str], _T]) -> zict.Func:
     path = ensure_dir(path)
     file = zict.File(path, mode='a')
     compress = zict.Func(

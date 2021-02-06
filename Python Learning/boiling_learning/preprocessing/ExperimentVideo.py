@@ -25,7 +25,7 @@ import tensorflow as tf
 
 import boiling_learning.utils as bl_utils
 from boiling_learning.utils import (
-    PathType,
+    PathLike,
     VerboseType
 )
 from boiling_learning.io.io import (
@@ -89,19 +89,19 @@ class ExperimentVideo:
 
     def __init__(
             self,
-            video_path: PathType,
+            video_path: PathLike,
             name: Optional[str] = None,
-            frames_dir: Optional[PathType] = None,
+            frames_dir: Optional[PathLike] = None,
             frames_suffix: str = '.png',
-            frames_path: Optional[PathType] = None,
-            frames_tensor_dir: Optional[PathType] = None,
-            frames_tensor_path: Optional[PathType] = None,
-            audio_dir: Optional[PathType] = None,
+            frames_path: Optional[PathLike] = None,
+            frames_tensor_dir: Optional[PathLike] = None,
+            frames_tensor_path: Optional[PathLike] = None,
+            audio_dir: Optional[PathLike] = None,
             audio_suffix: str = '.m4a',
-            audio_path: Optional[PathType] = None,
-            df_dir: Optional[PathType] = None,
+            audio_path: Optional[PathLike] = None,
+            df_dir: Optional[PathLike] = None,
             df_suffix: str = '.csv',
-            df_path: Optional[PathType] = None,
+            df_path: Optional[PathLike] = None,
             column_names: DataFrameColumnNames = DataFrameColumnNames(),
             column_types: DataFrameColumnTypes = DataFrameColumnTypes()
     ):
@@ -240,7 +240,7 @@ class ExperimentVideo:
 
     def convert_video(
             self,
-            dest_path: PathType,
+            dest_path: PathLike,
             overwrite: bool = False,
             verbose: VerboseType = False
     ) -> None:
@@ -541,7 +541,7 @@ class ExperimentVideo:
 
     def load_df(
             self,
-            path: Optional[PathType] = None,
+            path: Optional[PathLike] = None,
             columns: Optional[Iterable[str]] = None,
             overwrite: bool = False,
             missing_ok: bool = False,
@@ -576,7 +576,7 @@ class ExperimentVideo:
 
     def save_df(
             self,
-            path: Optional[PathType] = None,
+            path: Optional[PathLike] = None,
             overwrite: bool = False
     ) -> None:
         if self.df_path is None:
@@ -591,7 +591,7 @@ class ExperimentVideo:
 
     def move_df(
             self,
-            path: Union[str, bl_utils.PathType],
+            path: Union[str, bl_utils.PathLike],
             renaming: bool = False,
             erase_old: bool = False,
             overwrite: bool = False
