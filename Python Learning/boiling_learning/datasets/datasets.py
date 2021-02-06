@@ -266,6 +266,44 @@ def tf_train_val_test_split_concat(
     return ds_train, ds_val, ds_test
 
 
+def take(
+        ds: tf.data.Dataset,
+        count: Optional[Union[int, Fraction]],
+        unbatch_dim: Optional[int] = None,
+        unbatch_key: Optional[int] = None
+) -> tf.data.Dataset:
+    if count is None:
+        return ds
+
+    unbatch = unbatch_dim is not None
+
+    if unbatch_key is not None and not unbatch:
+        raise ValueError(
+            '*unbatch_key* must be *None* if not unbatching.'
+            ' Unbatching happens iff *unbatch_dim* is not *None*.'
+        )
+
+    if unbatch:
+        return apply_unbatched(
+            ds,
+            functools.partial(take, count=count, unbatch_dim=None, unbatch_key=None),
+            dim=unbatch_dim,
+            key=unbatch_key
+        )
+
+    if isinstance(count, int):
+        return ds.take(count)
+    elif isinstance(count, Fraction):
+        return tf_train_val_test_split(
+            ds,
+            splits=DatasetSplitter(train=count)
+        )[0]
+    else:
+        raise TypeError(
+            f'*count* must be either *int* or *Fraction*, got {type(count)}.'
+        )
+
+
 @Creator.make('experiment_video_dataset_creator', expand_pack_on_call=True)
 def experiment_video_dataset_creator(
         experiment_video: bl_preprocessing.ExperimentVideo,
