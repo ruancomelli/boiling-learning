@@ -1,6 +1,7 @@
 # No counterpart in Conda
 json-tricks>=3.15.4
 tensorflow-gpu>=2.1
+tensorflow-addons==0.12.1
 tensorflow-estimator>=2.1
 yogadl
 
