@@ -2,6 +2,10 @@
 
 ## Experimental
 
+### RTD Calibration
+
+The RTD was calibrated and the 3rd order calibration coefficients can be found in the file [coefficients.csv](resources/experimental-set-calibration/Processing/coefficients.csv).
+
 ### Wire temperature measurement
 
 - Thermocouple tying: DISCARDED.

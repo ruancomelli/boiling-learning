@@ -109,7 +109,7 @@ sample_period = 1 / sample_rate # s
 sleeping_time = 0.5 * sample_period
 
 write_period = 100
-calibration_filepath = project_home_path / 'Experimental Set Calibration' / 'Processing' / 'coefficients.csv'
+calibration_filepath = project_home_path / 'resources' / 'experimental-set-calibration' / 'Processing' / 'coefficients.csv'
 
 # output_dir_pattern = str(python_project_home_path / 'experiments' / r'Experiment %Y-%m-%d %H-%M ({index})')
 output_dir_pattern = str(python_project_home_path / 'experiments' / r'Experiment %Y-%m-%d %H-%M{optional_index}')
