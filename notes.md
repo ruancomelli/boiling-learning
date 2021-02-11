@@ -2,6 +2,10 @@
 
 ## Experimental
 
+### RTD Calibration
+
+The RTD was calibrated and the 3rd order calibration coefficients can be found in the file [coefficients.csv](resources/experimental-set-calibration/Processing/coefficients.csv).
+
 ### Wire temperature measurement
 
 - Thermocouple tying: DISCARDED.
@@ -47,6 +51,37 @@
       - problem: the observations demonstrate that the tape strongly modifies the heat transfer behavior of the heating wire.
     - thin layers:
       <!-- TODO: here -->
+
+### Surface Roughness
+
+For condensation surfaces:
+
+- Alex:
+  - 220:
+    - Sa = 0.105 um
+    - Sa = 0.0832 um
+    - Sa = 0.096 um
+    - Sa = 0.0864 um
+  - 600:
+    - Sa = 0.00711 um
+    - Sa = 0.00849 um
+    - Sa = 8.05 nm
+    - Sa = 0.0102 um
+  - Polido:
+    - Sa = 1.43 nm
+    - Sa = 0.00192 um
+    - Sa = 1.76 nm
+    - Sa = 3.23 nm
+    - Sa = 1.58 nm
+
+- jones2009:
+  - polished:
+    - Ra = 0.038 um
+  - EDM:
+    - Ra = 1.08 um
+    - Ra = 2.22 um
+    - Ra = 5.89 um
+    - Ra = 10.0 um
 
 ## Sample
 

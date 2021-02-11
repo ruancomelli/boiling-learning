@@ -31,7 +31,7 @@ from boiling_learning.utils.utils import (
     PathLike,
     empty_gen,
     ensure_dir,
-    ensure_resolved,
+    fix_path,
     indexify,
     rmdir
 )
@@ -441,10 +441,10 @@ class SequenceDistributorServer:
         if self._public_url_filepath.is_file():
             self._public_url_filepath.unlink()
 
-        self._main_filepath = ensure_resolved(
+        self._main_filepath = fix_path(
             resource_filename(__name__, '_worker_resources/main.py')
         )
-        self._requirements_filepath = ensure_resolved(
+        self._requirements_filepath = fix_path(
             resource_filename(__name__, '_worker_resources/requirements.txt')
         )
 

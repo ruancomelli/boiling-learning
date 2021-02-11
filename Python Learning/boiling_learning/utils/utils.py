@@ -24,7 +24,6 @@ import tempfile
 from timeit import default_timer
 from typing import (
     Any,
-    AnyStr,
     Callable,
     Collection,
     Container,
@@ -35,7 +34,6 @@ from typing import (
     List,
     Mapping,
     MutableSequence,
-    MutableSet,
     Optional,
     Sequence,
     Tuple,
@@ -53,7 +51,6 @@ from more_itertools import unzip
 import modin.pandas as pd
 from sortedcontainers import SortedSet
 from typing_extensions import (
-    Protocol,
     overload
 )
 import zict
@@ -85,14 +82,6 @@ VerboseType = Union[bool, int]
 JSONDataType = Union[None, bool, int, float, str, List['JSONDataType'], Dict[str, 'JSONDataType']]
 
 
-# class PathLike(Protocol[AnyStr]):
-#     '''See https://github.com/python/typing/issues/402
-#     '''
-#     def __fspath__(self) -> AnyStr:
-#         ...
-
-
-# PathLike = Union[str, PathLike[str]]
 PathLike = Union[str, os.PathLike]
 
 
@@ -970,6 +959,28 @@ def JSONDict(path: PathLike, dumps: Callable[[_T], str], loads: Callable[[str], 
         compress
     )
     return data
+
+
+def fix_path(path: PathLike, substitution_dict: Optional[Dict[str, str]] = None) -> Path:
+    path = ensure_resolved(path)
+    path_str = str(path)
+
+    if substitution_dict is None:
+        substitution_dict = {
+            ' ': '\\ ',
+            '?': '\\?',
+            '&': '\\&',
+            '(': '\\(',
+            ')': '\\)',
+            '*': '\\*',
+            '<': '\\<',
+            '>': '\\>',
+        }
+
+    for orig, dest in substitution_dict.items():
+        path_str = path_str.replace(orig, dest)
+
+    return Path(path_str)
 
 
 # ---------------------------------- Timer ----------------------------------
