@@ -1,8 +1,4 @@
-import os
-import pathlib
 import unittest
-import sys
-from pprint import pprint
 
 import nidaqmx
 
