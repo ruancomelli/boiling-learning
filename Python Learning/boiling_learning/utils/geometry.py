@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import pint
 
+
 @dataclass(frozen=True)
 class Solid:
     surface_area: pint.Quantity = field(init=False)

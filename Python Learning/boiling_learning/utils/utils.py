@@ -26,9 +26,7 @@ from typing import (
     Any,
     Callable,
     Collection,
-    Container,
     Dict,
-    Hashable,
     Iterable,
     Iterator,
     List,
@@ -56,10 +54,7 @@ from typing_extensions import (
 import zict
 import zlib
 
-from boiling_learning.utils.functional import (
-    Pack,
-    pack
-)
+from boiling_learning.utils.functional import pack
 
 
 # ---------------------------------- Typing ----------------------------------
@@ -353,46 +348,12 @@ def combine_dict(
         )
 
 
-def dict_complement(
-    dict_: Mapping,
-    keys: Container
-) -> dict:
-    return {
-        key: value
-        for key, value in dict_.items()
-        if key not in keys
-    }
-
-
 def dict_product(**kwargs: Mapping) -> Iterator[dict]:
     # source: <https://stackoverflow.com/a/5228294/5811400>
     keys = kwargs.keys()
     values = kwargs.values()
     for instance in product(*values):
         yield dict(zip(keys, instance))
-
-
-def extract_value(
-        dicts,
-        key=None,
-        default=_sentinel,
-        many=False
-):
-    if many:
-        return {
-            k: extract_value(dicts, key=k, default=default, many=False)
-            for k in key
-        }
-    else:
-        cm = ChainMap(*dicts)
-        if default is _sentinel:
-            if key in cm:
-                return cm[key]
-            else:
-                raise ValueError(
-                    f'key {key} was not found in the dictionaries.')
-        else:
-            return cm.get(key, default)
 
 
 def invert_dict(d: Mapping) -> dict:
@@ -858,52 +819,6 @@ def group_files(path, keyfunc=operator.attrgetter('suffix')):
     return d
 
 
-def mover(
-    out_dir,
-    head: Optional[PathLike] = None,
-    up_level: int = 0,
-    make_dir: bool = True,
-    head_aggregator=None,
-    verbose: VerboseType = False
-):
-    if make_dir:
-        out_dir = ensure_dir(out_dir)
-    else:
-        out_dir = ensure_resolved(out_dir)
-
-    if head is not None and up_level != 0:
-        raise ValueError('when \'head\' is given, up_level must be 0')
-
-    if head is not None:
-        def get_head(in_path):
-            return head
-    else:
-        # up_level is not None
-        def get_head(in_path):
-            return in_path.parents[up_level]
-
-    def wrapper(in_path: PathLike):
-        in_path = ensure_resolved(in_path)
-        head = get_head(in_path)
-        tail = in_path.relative_to(head)
-
-        if head_aggregator is None:
-            out_path = out_dir / tail
-        else:
-            out_path = out_dir.with_name(
-                head_aggregator.join([head.name, out_dir.name])) / tail
-
-        if make_dir:
-            out_path = ensure_parent(out_path)
-
-        if verbose >= 2:
-            print(f'{in_path} -> {out_path}')
-
-        return out_path
-
-    return wrapper
-
-
 def dir_as_tree(dir_path, file_pred=None, dir_pred=None):
     ret_list = []
     ret_dict = {}
@@ -1016,7 +931,7 @@ def simple_pprint(self, obj, stream, indent, allowance, context, level):
     write(")")
 
 
-def simple_pprinter(self, names: Optional[Tuple[str, ...]] = None):
+def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
     def simple_pprint(self, obj, stream, indent, allowance, context, level):
         """
         Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
@@ -1148,43 +1063,6 @@ def enum_item(enumeration: Type[_EnumType], item: Union[_EnumType, int, str]) ->
         return enumeration(item)
     else:
         return item
-
-
-# ---------------------------------- Argument generator ----------------------------------
-class ArgGenerator:
-    def __init__(
-            self,
-            generator: Callable[[Hashable], Pack],
-            keep: bool = False,
-    ):
-        self._keep = keep
-        if keep:
-            self._store = KeyedDefaultDict(generator)
-            self._call = self._store.__getitem__
-        else:
-            self._call = generator
-
-    def __call__(self, key: Hashable):
-        return self._call(key)
-
-
-class AutoGenerator:
-    def __init__(
-            self,
-            generator: Callable[[Hashable], Pack],
-            keep: bool = False,
-            key_index: int = 0
-    ):
-        self._arg_gen = ArgGenerator(generator, keep)
-        self._key_index = key_index
-
-    def __call__(self, f: Callable):
-        @wraps(f)
-        def wrapped(*args, **kwargs):
-            args = list(args)
-            key = args.pop(self._key_index)
-            return self._arg_gen(key)(*args, **kwargs)
-        return wrapped
 
 
 # ---------------------------------- Operator ----------------------------------

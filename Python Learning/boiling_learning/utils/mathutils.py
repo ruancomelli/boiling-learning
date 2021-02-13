@@ -1,11 +1,12 @@
 from fractions import Fraction
 from functools import reduce
 import math
-from typing import (
-    Tuple
-)
+from typing import Any, Iterable, Tuple
 
 import funcy
+
+
+_sentinel = object()
 
 
 def gcd(*args: int) -> int:
@@ -36,3 +37,23 @@ def proportional_ints(*args: Fraction) -> Tuple[int, ...]:
 
     ints = map(_proportional_int, args)
     return tuple(ints)
+
+
+def minmax(iterable: Iterable, default: Any = _sentinel) -> Tuple[Any, Any]:
+    it = iter(iterable)
+    try:
+        first = next(it)
+    except StopIteration:
+        if default is _sentinel:
+            raise ValueError('got an empty iterable!')
+        else:
+            return (default, default)
+
+    lo, hi = first, first
+    for val in it:
+        if val < lo:
+            lo = val
+        elif hi < val:
+            hi = val
+
+    return lo, hi

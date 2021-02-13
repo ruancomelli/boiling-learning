@@ -9,6 +9,7 @@ import tensorflow as tf
 
 from boiling_learning.utils.functional import map_values
 
+
 tf_str_dtype_bidict = bidict.bidict(
     (dtype.name, dtype)
     for dtype in (
