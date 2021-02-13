@@ -63,6 +63,9 @@ from boiling_learning.utils.functional import (
 
 
 # ---------------------------------- Typing ----------------------------------
+_EnumType = TypeVar('_EnumType', bound=enum.Enum)
+
+
 class _Sentinel(enum.Enum):
     INSTANCE = enum.auto()
 
@@ -1136,6 +1139,15 @@ def get_timestamp(fmt='%Y-%m-%dT%H:%M:%SZ'):
 class NoValueEnum(enum.Enum):
     def __repr__(self):
         return '<%s.%s>' % (self.__class__.__name__, self.name)
+
+
+def enum_item(enumeration: Type[_EnumType], item: Union[_EnumType, int, str]) -> _EnumType:
+    if isinstance(item, str):
+        return enumeration[item]
+    elif isinstance(item, int):
+        return enumeration(item)
+    else:
+        return item
 
 
 # ---------------------------------- Argument generator ----------------------------------
