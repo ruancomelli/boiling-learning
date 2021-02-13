@@ -333,3 +333,4 @@ and think of other things.
 - [ ] Use [`tf.keras.layers.TimeDistributed`](https://www.tensorflow.org/api_docs/python/tf/keras/layers/TimeDistributed) to handle temporal data!
 - [ ] Rescale images before feeding them to the network?
 - [ ] Use [Evidential Deep Learning](https://github.com/aamini/evidential-deep-learning)?
+- [ ] Check [separable convolutions](https://towardsdatascience.com/a-basic-introduction-to-separable-convolutions-b99ec3102728)
