@@ -128,14 +128,14 @@ Laser Texturing/
 Experimental Set Calibration/Calibration/Calibration Data/
 Experimental Set Control/
 Labview Learning/
-Python Learning/_tmp/
-Python Learning/analyses/
-Python Learning/experiments/
-Python Learning/images/
-Python Learning/models/
-Python Learning/selected_experiments/
-Python Learning/testing_process/
-Python Learning/testing_tf_process/
+_tmp/
+analyses/
+experiments/
+images/
+models/
+selected_experiments/
+testing_process/
+testing_tf_process/
 References/
 Surfaces/
 *.ini
