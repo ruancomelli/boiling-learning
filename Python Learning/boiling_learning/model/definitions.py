@@ -55,7 +55,7 @@ def HoboldNet1(
         dropout_ratio: Optional[float],
         hidden_layers_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
         output_layer_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
-        problem: ProblemType = ProblemType.REGRESSION,
+        problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
         num_classes: Optional[int] = None
 ) -> Model:
     '''CNN #1 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.
@@ -68,10 +68,11 @@ def HoboldNet1(
     x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
 
-    if ProblemType.get_type(problem) is ProblemType.CLASSIFICATION:
+    problem = utils.elem_item(ProblemType, problem)
+    if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
-    elif ProblemType.get_type(problem) is ProblemType.REGRESSION:
+    elif problem is ProblemType.REGRESSION:
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
     else:
@@ -96,7 +97,7 @@ def HoboldNet2(
         dropout_ratio: Optional[float],
         hidden_layers_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
         output_layer_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
-        problem: ProblemType = ProblemType.REGRESSION,
+        problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
         num_classes: Optional[int] = None
 ) -> Model:
     '''CNN #2 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.
@@ -109,10 +110,11 @@ def HoboldNet2(
     x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
 
-    if ProblemType.get_type(problem) is ProblemType.CLASSIFICATION:
+    problem = utils.elem_item(ProblemType, problem)
+    if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
-    elif ProblemType.get_type(problem) is ProblemType.REGRESSION:
+    elif problem is ProblemType.REGRESSION:
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
     else:
@@ -137,7 +139,7 @@ def HoboldNet3(
         dropout_ratio: Optional[float],
         hidden_layers_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
         output_layer_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
-        problem: ProblemType = ProblemType.REGRESSION,
+        problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
         num_classes: Optional[int] = None
 ) -> Model:
     '''CNN #3 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.
@@ -151,10 +153,11 @@ def HoboldNet3(
     x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
 
-    if ProblemType.get_type(problem) is ProblemType.CLASSIFICATION:
+    problem = utils.elem_item(ProblemType, problem)
+    if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
-    elif ProblemType.get_type(problem) is ProblemType.REGRESSION:
+    elif problem is ProblemType.REGRESSION:
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
     else:
@@ -179,7 +182,7 @@ def HoboldNetSupplementary(
         dropout_ratio: Optional[float],
         hidden_layers_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
         output_layer_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
-        problem: ProblemType = ProblemType.REGRESSION,
+        problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
         num_classes: Optional[int] = None
 ) -> Model:
     '''See supplementary material for Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning
@@ -193,10 +196,11 @@ def HoboldNetSupplementary(
     x = Dense(512, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
 
-    if ProblemType.get_type(problem) is ProblemType.CLASSIFICATION:
+    problem = utils.elem_item(ProblemType, problem)
+    if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
-    elif ProblemType.get_type(problem) is ProblemType.REGRESSION:
+    elif problem is ProblemType.REGRESSION:
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
     else:
@@ -221,7 +225,7 @@ def KramerNet(
         dropout_ratio: Optional[float],
         hidden_layers_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
         output_layer_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
-        problem: ProblemType = ProblemType.REGRESSION,
+        problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
         num_classes: Optional[int] = None
 ):
     input_data = Input(shape=input_shape)
@@ -245,10 +249,11 @@ def KramerNet(
     x = Dense(256, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
 
-    if ProblemType.get_type(problem) is ProblemType.CLASSIFICATION:
+    problem = utils.elem_item(ProblemType, problem)
+    if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
-    elif ProblemType.get_type(problem) is ProblemType.REGRESSION:
+    elif problem is ProblemType.REGRESSION:
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
     else:

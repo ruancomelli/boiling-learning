@@ -58,31 +58,6 @@ class ProblemType(enum.Enum):
     CLASSIFICATION = enum.auto()
     REGRESSION = enum.auto()
 
-    @classmethod
-    def get_type(cls, s, default=_sentinel):
-        if s in cls:
-            return s
-        else:
-            return cls.from_string(s, default=default)
-
-    @classmethod
-    def from_string(cls, s, default=_sentinel):
-        for k, v in cls.conversion_table.items():
-            if s in v:
-                return k
-        if default is _sentinel:
-            raise ValueError(
-                f'string {s} was not found in the conversion table.'
-                f' Available values are {list(cls.conversion_table.values())}.')
-        else:
-            return default
-
-
-ProblemType.conversion_table = {
-    ProblemType.CLASSIFICATION: {'classification', 'regime'},
-    ProblemType.REGRESSION: {'regression', 'heat flux', 'h', 'power'},
-}
-
 
 def default_compiler(model, **params):
     model.compile(**params)
@@ -99,7 +74,6 @@ def make_creator_method(
         fitter: Callable[[_ModelType], Any] = default_fitter
 ) -> Callable[..., dict]:
     def creator_method(
-        verbose,
         num_classes,
         problem,
         strategy,
@@ -135,7 +109,7 @@ def make_creator_method(
     return creator_method
 
 
-def make_creator(name: str, defaults: Pack = Pack()) -> Callable:
+def make_creator(name: str, defaults: Pack = Pack()) -> Callable[[Callable], Callable]:
     return funcy.compose(
         Creator.make(name, pack=defaults, expand_pack_on_call=True),
         make_creator_method
