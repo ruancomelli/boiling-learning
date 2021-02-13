@@ -4,8 +4,6 @@ from typing import (
     Union
 )
 
-import tensorflow as tf
-from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (
     Activation,
     Conv2D,
@@ -15,6 +13,8 @@ from tensorflow.keras.layers import (
     Input,
     MaxPool2D
 )
+from tensorflow.keras.mixed_precision.experimental import Policy
+from tensorflow.keras.models import Model
 
 from boiling_learning.utils.functional import (
     pack
@@ -52,9 +52,9 @@ def LinearRegression(input_shape: Tuple, **kwargs) -> Model:
 )
 def HoboldNet1(
         input_shape: Tuple,
-        dropout_ratio: Optional[float],
-        hidden_layers_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
-        output_layer_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
+        dropout: Optional[float],
+        hidden_layers_policy: Union[str, Policy],
+        output_layer_policy: Union[str, Policy],
         problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
         num_classes: Optional[int] = None
 ) -> Model:
@@ -63,10 +63,10 @@ def HoboldNet1(
     input_data = Input(shape=input_shape)
     x = Conv2D(16, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
     x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     problem = utils.elem_item(ProblemType, problem)
     if problem is ProblemType.CLASSIFICATION:
@@ -94,9 +94,9 @@ def HoboldNet1(
 )
 def HoboldNet2(
         input_shape: Tuple,
-        dropout_ratio: Optional[float],
-        hidden_layers_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
-        output_layer_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
+        dropout: Optional[float],
+        hidden_layers_policy: Union[str, Policy],
+        output_layer_policy: Union[str, Policy],
         problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
         num_classes: Optional[int] = None
 ) -> Model:
@@ -105,10 +105,10 @@ def HoboldNet2(
     input_data = Input(shape=input_shape)
     x = Conv2D(32, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
     x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     problem = utils.elem_item(ProblemType, problem)
     if problem is ProblemType.CLASSIFICATION:
@@ -136,9 +136,9 @@ def HoboldNet2(
 )
 def HoboldNet3(
         input_shape: Tuple,
-        dropout_ratio: Optional[float],
-        hidden_layers_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
-        output_layer_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
+        dropout: Optional[float],
+        hidden_layers_policy: Union[str, Policy],
+        output_layer_policy: Union[str, Policy],
         problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
         num_classes: Optional[int] = None
 ) -> Model:
@@ -148,10 +148,10 @@ def HoboldNet3(
     x = Conv2D(32, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
     x = Conv2D(64, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
     x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     problem = utils.elem_item(ProblemType, problem)
     if problem is ProblemType.CLASSIFICATION:
@@ -179,9 +179,9 @@ def HoboldNet3(
 )
 def HoboldNetSupplementary(
         input_shape: Tuple,
-        dropout_ratio: Optional[float],
-        hidden_layers_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
-        output_layer_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
+        dropout: Optional[float],
+        hidden_layers_policy: Union[str, Policy],
+        output_layer_policy: Union[str, Policy],
         problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
         num_classes: Optional[int] = None
 ) -> Model:
@@ -191,10 +191,10 @@ def HoboldNetSupplementary(
     x = Conv2D(32, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
     x = Conv2D(64, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
     x = Dense(512, activation='relu', dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     problem = utils.elem_item(ProblemType, problem)
     if problem is ProblemType.CLASSIFICATION:
@@ -222,9 +222,9 @@ def HoboldNetSupplementary(
 )
 def KramerNet(
         input_shape: Tuple,
-        dropout_ratio: Optional[float],
-        hidden_layers_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
-        output_layer_policy: Union[str, tf.keras.mixed_precision.experimental.Policy],
+        dropout: Optional[float],
+        hidden_layers_policy: Union[str, Policy],
+        output_layer_policy: Union[str, Policy],
         problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
         num_classes: Optional[int] = None
 ):
@@ -233,21 +233,21 @@ def KramerNet(
     x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
     x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
     x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     x = Conv2D(128, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
     x = Conv2D(128, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     x = Flatten(dtype=hidden_layers_policy)(x)
     x = Dense(256, activation='relu', dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     problem = utils.elem_item(ProblemType, problem)
     if problem is ProblemType.CLASSIFICATION:
