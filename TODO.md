@@ -327,4 +327,9 @@ and think of other things.
 
 - [ ] Study RNNs. Perhaps a network could be fed 3 consecutive images (for instance) to give an output.
 - [ ] Take a look at [this](https://buildmedia.readthedocs.org/media/pdf/ht/latest/ht.pdf): Python library for heat transfer.
-- [ ] Take a look at [`fastai's fastcore`](https://github.com/fastai/fastcore/tree/master/).
+- [ ] Take a look at [`fastai`'s `fastcore`](https://github.com/fastai/fastcore/tree/master/).
+- [ ] Take a look at [`BubCNN`](https://github.com/Tim-Haas/BubCNN).
+- [ ] Take a look at [this](https://medium.com/smileinnovation/training-neural-network-with-image-sequence-an-example-with-video-as-input-c3407f7a0b0f): use consecutive images for each output.
+- [ ] Use [`tf.keras.layers.TimeDistributed`](https://www.tensorflow.org/api_docs/python/tf/keras/layers/TimeDistributed) to handle temporal data!
+- [ ] Rescale images before feeding them to the network?
+- [ ] Use [Evidential Deep Learning](https://github.com/aamini/evidential-deep-learning)?
