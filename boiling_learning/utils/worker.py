@@ -518,7 +518,6 @@ class SequenceDistributorClient:
         )
         r.raise_for_status()
         try:
-            print(r.json())
             return r.json()
         except KeyError:
             raise RuntimeError(
@@ -531,7 +530,7 @@ class SequenceDistributorClient:
 
     def consume(self, case_name: str, seq: Sequence[_T]) -> Iterator[_T]:
         index = self.assign(case_name, seq)
-        while index != -1:
+        while index is not None:
             yield seq[index]
             self.complete(case_name, index)
             index = self.assign(case_name, seq)
