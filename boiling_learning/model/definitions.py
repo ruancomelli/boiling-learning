@@ -101,7 +101,7 @@ def HoboldNet1(
     x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    problem = utils.elem_item(ProblemType, problem)
+    problem = utils.enum_item(ProblemType, problem)
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
@@ -142,7 +142,7 @@ def HoboldNet2(
     x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    problem = utils.elem_item(ProblemType, problem)
+    problem = utils.enum_item(ProblemType, problem)
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
@@ -184,7 +184,7 @@ def HoboldNet3(
     x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    problem = utils.elem_item(ProblemType, problem)
+    problem = utils.enum_item(ProblemType, problem)
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
@@ -226,7 +226,7 @@ def HoboldNetSupplementary(
     x = Dense(512, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    problem = utils.elem_item(ProblemType, problem)
+    problem = utils.enum_item(ProblemType, problem)
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
@@ -278,7 +278,7 @@ def KramerNet(
     x = Dense(256, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    problem = utils.elem_item(ProblemType, problem)
+    problem = utils.enum_item(ProblemType, problem)
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
@@ -354,7 +354,7 @@ def BoilNet(
     head = Dense(256, activation='relu')(head)
     head = dropouter()(head)
 
-    problem = utils.elem_item(ProblemType, problem)
+    problem = utils.enum_item(ProblemType, problem)
     head_size, activation = {
         ProblemType.CLASSIFICATION: (num_classes, 'softmax'),
         ProblemType.REGRESSION: (1, 'linear'),
