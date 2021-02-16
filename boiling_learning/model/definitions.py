@@ -78,7 +78,6 @@ def LinearRegression(input_shape: Tuple, **kwargs) -> Model:
 @make_creator(
     'HoboldNet1',
     defaults=pack(
-        verbose=2,
         num_classes=3,
         problem=ProblemType.REGRESSION,
         fetch=frozenset({'model', 'history'})
@@ -120,7 +119,6 @@ def HoboldNet1(
 @make_creator(
     'HoboldNet2',
     defaults=pack(
-        verbose=2,
         num_classes=3,
         problem=ProblemType.REGRESSION,
         fetch=frozenset({'model', 'history'}),
@@ -162,7 +160,6 @@ def HoboldNet2(
 @make_creator(
     'HoboldNet3',
     defaults=pack(
-        verbose=2,
         num_classes=3,
         problem=ProblemType.REGRESSION,
         fetch=frozenset({'model', 'history'}),
@@ -205,7 +202,6 @@ def HoboldNet3(
 @make_creator(
     'HoboldNetSupplementary',
     defaults=pack(
-        verbose=2,
         num_classes=3,
         problem=ProblemType.REGRESSION,
         fetch=frozenset({'model', 'history'})
@@ -248,7 +244,6 @@ def HoboldNetSupplementary(
 @make_creator(
     'KramerNet',
     defaults=pack(
-        verbose=2,
         num_classes=3,
         problem=ProblemType.REGRESSION,
         fetch=frozenset({'model', 'history'})
