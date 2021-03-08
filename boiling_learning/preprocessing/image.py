@@ -1,15 +1,8 @@
-from typing import (
-    Any,
-    Iterable,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union
-)
+from typing import Any, Iterable, Optional, Tuple, TypeVar, Union
 
 import numpy as np
-from skimage.transform import AffineTransform, warp
 import tensorflow as tf
+from skimage.transform import AffineTransform, warp
 
 T = TypeVar('T')
 ImageType = Any # something convertible to tf.Tensor

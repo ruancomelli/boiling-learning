@@ -1,24 +1,15 @@
 import enum
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Optional,
-    Tuple,
-    TypeVar
-)
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple, TypeVar
 
 import funcy
 import parse
 import tensorflow as tf
 
-import boiling_learning.utils.utils as bl_utils
-from boiling_learning.utils.utils import PathLike
-from boiling_learning.utils.functional import Pack
 import boiling_learning.io.io as bl_io
+import boiling_learning.utils.utils as bl_utils
 from boiling_learning.preprocessing.transformers import Creator
-
+from boiling_learning.utils.functional import Pack
+from boiling_learning.utils.utils import PathLike
 
 _sentinel = object()
 T = TypeVar('T')

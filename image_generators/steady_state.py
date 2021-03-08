@@ -1,7 +1,7 @@
-import seaborn as sns
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import modin.pandas as pd
+import seaborn as sns
 from pathlib2 import Path
 
 STEADY_STATE_DIR = Path(__file__).parent.parent / 'Selected Experiments'

@@ -2,12 +2,7 @@ import unittest
 
 import nidaqmx
 
-from boiling_learning.daq import (
-    Device,
-    Channel,
-    ChannelType,
-    NIChannelType
-)
+from boiling_learning.daq import Channel, ChannelType, Device, NIChannelType
 
 
 class daq_Device_test(unittest.TestCase):

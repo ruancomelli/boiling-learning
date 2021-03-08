@@ -1,10 +1,9 @@
+import collections
 from pathlib import Path
+
 import parse
 
-import collections
-
 import boiling_learning.utils
-
 
 # class FileList(collections.abc.MutableMapping):
 #     def __init__(

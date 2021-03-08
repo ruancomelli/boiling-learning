@@ -2,7 +2,7 @@ from collections import deque
 from itertools import islice
 
 import numpy as np
-from scipy.fftpack import rfft, irfft
+from scipy.fftpack import irfft, rfft
 from scipy.ndimage.filters import convolve
 
 

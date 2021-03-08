@@ -1,12 +1,10 @@
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Activation, Input, Flatten, Dense
 from tensorflow.keras.applications import MobileNetV2
+from tensorflow.keras.layers import Activation, Dense, Flatten, Input
+from tensorflow.keras.models import Model
 
 from boiling_learning.management import ElementCreator
-from boiling_learning.model.model import (
-    make_creator_method,
-    ProblemType,
-)
+from boiling_learning.model.model import ProblemType, make_creator_method
+
 
 def build(
     input_shape,

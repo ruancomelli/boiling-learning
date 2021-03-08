@@ -18,4 +18,5 @@ x = Mirror({'propagate': True},
 )
 
 import pprint
+
 pprint.pprint(x.mirror)

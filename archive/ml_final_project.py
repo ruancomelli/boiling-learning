@@ -56,6 +56,7 @@ keras_results_path = results_path / 'keras'
 keras_results_path.mkdir(parents=True, exist_ok=True)
 
 import sys
+
 sys.path.append(str(project_path)) # this allows us to import modules defined locally
 
 """## Definições
@@ -171,8 +172,9 @@ def regularize_default(
 
 """### Gerenciador de modelos"""
 
-from pathlib import Path
 import json
+from pathlib import Path
+
 
 # Manager is a class design for automating the process of creating, saving and loading models.
 # By means of the function provide_model, the manager will first check if any models were already
@@ -385,12 +387,10 @@ class ElementCreator:
 
 """### Métricas customizadas"""
 
-import numpy as np
 import modin.pandas as pd
-
+import numpy as np
 import tensorflow as tf
 import tensorflow.keras.backend as K
-
 from tensorflow.python.keras.losses import LossFunctionWrapper
 from tensorflow.python.keras.metrics import MeanMetricWrapper
 
@@ -651,9 +651,9 @@ print(n_labels, 'classes found:', attr_binarizer.classes_)
 """### Data augmentation"""
 
 from ast import literal_eval
-from tensorflow.keras.preprocessing.image import save_img
+
 from sklearn.preprocessing import MultiLabelBinarizer
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.preprocessing.image import ImageDataGenerator, save_img
 
 n_attribute_imgs = int(pd.read_csv(annotations_path / 'list_attr_img.txt', nrows=1, header=None)[0][0])
 column_names = pd.read_csv(annotations_path / 'list_attr_img.txt', skiprows=1, nrows=1, delim_whitespace=True, header=None).values[0]
@@ -1070,24 +1070,19 @@ manager = Manager(
 
 # map strings to objects aiming to facilitate the use o
 
-from tensorflow.keras.applications.xception import Xception
+from tensorflow.keras.applications.densenet import (DenseNet121, DenseNet169,
+                                                    DenseNet201)
+from tensorflow.keras.applications.inception_resnet_v2 import InceptionResNetV2
+from tensorflow.keras.applications.inception_v3 import InceptionV3
+from tensorflow.keras.applications.mobilenet import MobileNet
+from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2
+from tensorflow.keras.applications.nasnet import NASNetLarge, NASNetMobile
+from tensorflow.keras.applications.resnet import ResNet50, ResNet101, ResNet152
+from tensorflow.keras.applications.resnet_v2 import (ResNet50V2, ResNet101V2,
+                                                     ResNet152V2)
 from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.applications.vgg19 import VGG19
-from tensorflow.keras.applications.resnet import ResNet50
-from tensorflow.keras.applications.resnet import ResNet101
-from tensorflow.keras.applications.resnet import ResNet152
-from tensorflow.keras.applications.resnet_v2 import ResNet50V2
-from tensorflow.keras.applications.resnet_v2 import ResNet101V2
-from tensorflow.keras.applications.resnet_v2 import ResNet152V2
-from tensorflow.keras.applications.inception_v3 import InceptionV3
-from tensorflow.keras.applications.inception_resnet_v2 import InceptionResNetV2
-from tensorflow.keras.applications.mobilenet import MobileNet
-from tensorflow.keras.applications.densenet import DenseNet121
-from tensorflow.keras.applications.densenet import DenseNet169
-from tensorflow.keras.applications.densenet import DenseNet201
-from tensorflow.keras.applications.nasnet import NASNetLarge
-from tensorflow.keras.applications.nasnet import NASNetMobile
-from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2
+from tensorflow.keras.applications.xception import Xception
 
 application_dict = {
     'Xception': Xception,
@@ -1110,13 +1105,8 @@ application_dict = {
     'MobileNetV2': MobileNetV2,
 }
 
-from tensorflow.keras.optimizers import SGD
-from tensorflow.keras.optimizers import RMSprop
-from tensorflow.keras.optimizers import Adagrad
-from tensorflow.keras.optimizers import Adadelta
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.optimizers import Adamax
-from tensorflow.keras.optimizers import Nadam
+from tensorflow.keras.optimizers import (SGD, Adadelta, Adagrad, Adam, Adamax,
+                                         Nadam, RMSprop)
 
 optimizer_dict = {
     'SGD': SGD,
@@ -1129,10 +1119,8 @@ optimizer_dict = {
 }
 
 
-from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.callbacks import ReduceLROnPlateau
-from tensorflow.keras.callbacks import TensorBoard
-from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
+                                        ReduceLROnPlateau, TensorBoard)
 
 callback_dict = {
     'ModelCheckpoint': ModelCheckpoint,    
@@ -1141,8 +1129,7 @@ callback_dict = {
     'EarlyStopping': EarlyStopping,
 }
 
-from tensorflow.keras.regularizers import l1
-from tensorflow.keras.regularizers import l2
+from tensorflow.keras.regularizers import l1, l2
 
 regularizer_dict = {
     'l1': l1,

@@ -11,10 +11,10 @@ import zipfile
 from pathlib import Path
 from typing import Optional
 
-from flask import Flask, request, jsonify
 import more_itertools as mit
 import portion as P
 import requests
+from flask import Flask, jsonify, request
 
 
 def _get_command():

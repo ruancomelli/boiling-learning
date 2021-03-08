@@ -1,34 +1,25 @@
-from dataclasses import dataclass
-from functools import partial
 import itertools as it
 import operator
 import os
+from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    Optional,
-    TypeVar
-)
+from typing import Any, Callable, Iterable, Optional, TypeVar
 
 import funcy
 import modin.pandas as pd
 import more_itertools as mit
 import scipy
 import skimage
+import tensorflow as tf
 from skimage import img_as_float, img_as_ubyte
 from skimage.io import imread, imsave
-import tensorflow as tf
 from tensorflow.data.experimental import AUTOTUNE
 
-import boiling_learning.utils as bl_utils
-from boiling_learning.utils.utils import (
-    PathLike
-)
-import boiling_learning.model as bl_model
 import boiling_learning as bl
-
+import boiling_learning.model as bl_model
+import boiling_learning.utils as bl_utils
+from boiling_learning.utils.utils import PathLike
 
 T = TypeVar('T')
 

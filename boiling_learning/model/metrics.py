@@ -4,10 +4,8 @@ import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras.metrics import Metric
 from tensorflow.python.ops import weights_broadcast_ops
-
-from typeguard import typechecked
 from tensorflow_addons.utils.types import AcceptableDTypes
-
+from typeguard import typechecked
 
 VALID_MULTIOUTPUT = frozenset({"raw_values", "uniform_average", "variance_weighted"})
 

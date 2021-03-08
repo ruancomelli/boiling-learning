@@ -1,19 +1,21 @@
 import os
 import sys
+
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 import numpy as np
 import tensorflow as tf
+
 try:
     import keras
 except ImportError:
     from tensorflow import keras
 
-from sklearn.base import BaseEstimator
 from pathlib import Path
 
 import utils
-from ModelManager import ModelManager, ModelCreator
+from ModelManager import ModelCreator, ModelManager
+from sklearn.base import BaseEstimator
 
 manager = ModelManager(models_path=Path(__file__).parent / 'models', file_name_fmt='{index}.model')
 
@@ -128,9 +130,10 @@ class Model(BaseEstimator):
         return y_pred
 
 def polynomial_model(params):
-    from sklearn.preprocessing import PolynomialFeatures
-    from sklearn.pipeline import make_pipeline
     from copy import deepcopy
+
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import PolynomialFeatures
 
     default_params = dict(
         d=2,
@@ -214,9 +217,10 @@ pipe = manager.provide_model(
 # print(pipe)
 
 def polynomial_model2(params):
-    from sklearn.preprocessing import PolynomialFeatures
-    from sklearn.pipeline import make_pipeline
     from copy import deepcopy
+
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import PolynomialFeatures
 
     model = make_pipeline(
         PolynomialFeatures(params['d'], include_bias=False),
@@ -262,8 +266,8 @@ pipe = manager.provide_model(
 # print(pipe)
 
 def polynomial_model3(d, lamb, maxiter, solver, lr, div_tol, fit, **kwargs):
-    from sklearn.preprocessing import PolynomialFeatures
     from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import PolynomialFeatures
 
     model = make_pipeline(
         PolynomialFeatures(d, include_bias=False),

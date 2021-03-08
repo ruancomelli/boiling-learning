@@ -1,5 +1,7 @@
-from parse import parse
 from pprint import pprint
+
+from parse import parse
+
 
 def group_files_move(path, keyfunc, mover_gen):
     from boiling_learning.utils import group_files
@@ -22,6 +24,7 @@ def group_files_move(path, keyfunc, mover_gen):
 # )
 
 import more_itertools as mit
+
 for p in case.frames_path.iterdir():
     if mit.ilen(p.glob('*.png')) != 0:
         print(p)

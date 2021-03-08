@@ -1,15 +1,15 @@
 import csv
-from datetime import datetime
 import functools
-import modin.pandas as pd
-import numpy as np
 import os
-from pathlib import Path
-import scipy
 import time
+from datetime import datetime
+from pathlib import Path
 
+import modin.pandas as pd
 import nidaqmx
+import numpy as np
 import pyqtgraph as pg
+import scipy
 from pyqtgraph.Qt import QtGui
 
 import boiling_learning as bl

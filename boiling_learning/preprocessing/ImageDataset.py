@@ -5,30 +5,18 @@ import typing
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-    overload
-)
+from typing import (Any, Callable, Dict, Iterable, Iterator, List, Mapping,
+                    Optional, Tuple, Type, Union, overload)
 
 import funcy
 import modin.pandas as pd
 import numpy as np
 import tensorflow as tf
 
-import boiling_learning.utils as bl_utils
-from boiling_learning.utils import PathLike, VerboseType
 import boiling_learning.io as bl_io
+import boiling_learning.utils as bl_utils
 from boiling_learning.preprocessing.ExperimentVideo import ExperimentVideo
+from boiling_learning.utils import PathLike, VerboseType
 
 
 @bl_utils.simple_pprint_class

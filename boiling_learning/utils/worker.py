@@ -1,42 +1,21 @@
-from contextlib import contextmanager
 import datetime
-from pathlib import Path
 import shlex
 import subprocess
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Hashable,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    TypeVar,
-    Union
-)
+from contextlib import contextmanager
+from pathlib import Path
+from typing import (Any, Callable, Dict, Hashable, Iterable, Iterator, List,
+                    Mapping, Optional, Sequence, Set, Tuple, TypeVar, Union)
 
 import json_tricks
 import more_itertools as mit
-from pkg_resources import resource_filename
 import requests
 import zict
+from pkg_resources import resource_filename
 
-from boiling_learning.utils.utils import (
-    JSONDict,
-    PathLike,
-    empty_gen,
-    ensure_dir,
-    fix_path,
-    indexify,
-    rmdir
-)
 import boiling_learning as bl
-
+from boiling_learning.utils.utils import (JSONDict, PathLike, empty_gen,
+                                          ensure_dir, fix_path, indexify,
+                                          rmdir)
 
 _T = TypeVar('_T')
 

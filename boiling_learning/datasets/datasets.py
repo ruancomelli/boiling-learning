@@ -1,39 +1,28 @@
 import collections
 import dataclasses
-from dataclasses import dataclass
 import enum
-from fractions import Fraction
 import functools
 import pprint
-from typing import (
-    Callable,
-    Container,
-    Iterable,
-    Optional,
-    Sequence,
-    Union
-)
 import warnings
+from dataclasses import dataclass
+from fractions import Fraction
+from typing import Callable, Container, Iterable, Optional, Sequence, Union
 
 import funcy
 import more_itertools as mit
-from sklearn.model_selection import train_test_split
 import tensorflow as tf
+from sklearn.model_selection import train_test_split
 from tensorflow.data.experimental import AUTOTUNE
 
+import boiling_learning.preprocessing as bl_preprocessing
 import boiling_learning.utils as bl_utils
 import boiling_learning.utils.mathutils as mathutils
-from boiling_learning.utils.utils import PathLike
-from boiling_learning.utils.functional import Pack
 from boiling_learning.io.io import DatasetTriplet
-import boiling_learning.preprocessing as bl_preprocessing
-from boiling_learning.preprocessing.transformers import (
-    Creator,
-    DictImageTransformer,
-    Transformer,
-    # PackTransformerEncoder
-)
 from boiling_learning.management.Manager import Manager
+from boiling_learning.preprocessing.transformers import (  # PackTransformerEncoder
+    Creator, DictImageTransformer, Transformer)
+from boiling_learning.utils.functional import Pack
+from boiling_learning.utils.utils import PathLike
 
 _sentinel = object()
 

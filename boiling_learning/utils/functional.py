@@ -1,28 +1,11 @@
-from functools import (
-    partial,
-    wraps
-)
 import itertools
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    Hashable,
-    Iterable,
-    Iterator,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    TypeVar,
-    Union
-)
+from functools import partial, wraps
+from typing import (Any, Callable, Dict, Generic, Hashable, Iterable, Iterator,
+                    Mapping, Optional, Sequence, Tuple, TypeVar, Union)
 
-from frozendict import frozendict
 import funcy
 import more_itertools as mit
-
+from frozendict import frozendict
 
 # TODO: when variadic generics are available, they will be very useful here
 T = TypeVar('T')

@@ -1,22 +1,19 @@
+import pprint
 from functools import partial
 
 import tensorflow_addons as tfa
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
+                                        ReduceLROnPlateau)
 from tensorflow.keras.models import load_model
+from tensorflow.keras.optimizers import Adam
 
-from boiling_learning import model
-from boiling_learning import management
+from boiling_learning import management, model
 from boiling_learning.management import Mirror
-from boiling_learning.model_definitions import (
-    HoboldNet1,
-    HoboldNet2,
-    HoboldNet3,
-    HoboldNetSupplementary,
-    KramerNet,
-)
+from boiling_learning.model_definitions import (HoboldNet1, HoboldNet2,
+                                                HoboldNet3,
+                                                HoboldNetSupplementary,
+                                                KramerNet)
 
-import pprint
 pp = pprint.PrettyPrinter(indent=4, width=160)
 
 n_train = n_val = 1000

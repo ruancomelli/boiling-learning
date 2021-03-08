@@ -3,7 +3,6 @@ import sys
 
 from boiling_learning.utils.functional import Pack
 
-
 # class PackEncoder(json.JSONEncoder):
 #     def default(self, obj):
 #         if isinstance(obj, Pack):

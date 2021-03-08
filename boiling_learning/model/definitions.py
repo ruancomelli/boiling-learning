@@ -1,39 +1,19 @@
 import enum
 from functools import partial
-from typing import (
-    Optional,
-    Tuple,
-    Union
-)
+from typing import Optional, Tuple, Union
 
 import funcy
-from tensorflow.keras.layers import (
-    Activation,
-    Conv2D,
-    Dense,
-    Dropout,
-    Flatten,
-    GlobalAveragePooling2D,
-    GlobalMaxPooling2D,
-    Input,
-    Lambda,
-    MaxPool2D,
-    SeparableConv2D,
-    SpatialDropout2D,
-    TimeDistributed
-)
+from tensorflow.keras.layers import (Activation, Conv2D, Dense, Dropout,
+                                     Flatten, GlobalAveragePooling2D,
+                                     GlobalMaxPooling2D, Input, Lambda,
+                                     MaxPool2D, SeparableConv2D,
+                                     SpatialDropout2D, TimeDistributed)
 from tensorflow.keras.mixed_precision.experimental import Policy
 from tensorflow.keras.models import Model
 
 import boiling_learning.utils as utils
-from boiling_learning.utils.functional import (
-    pack
-)
-from boiling_learning.model.model import (
-    ProblemType,
-    make_creator
-)
-
+from boiling_learning.model.model import ProblemType, make_creator
+from boiling_learning.utils.functional import pack
 
 # Check this guideline: https://docs.nvidia.com/deeplearning/performance/dl-performance-fully-connected/index.html
 # It includes tips and rules-of-thumb for defining layers.

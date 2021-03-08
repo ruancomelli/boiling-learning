@@ -1,7 +1,7 @@
-from astropy import units as u
-
 import modin.pandas as pd
 import numpy as np
+from astropy import units as u
+
 
 class Empty:
     def __str__(self):

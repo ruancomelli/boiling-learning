@@ -1,10 +1,9 @@
+import math
 from fractions import Fraction
 from functools import reduce
-import math
 from typing import Any, Iterable, Tuple
 
 import funcy
-
 
 _sentinel = object()
 

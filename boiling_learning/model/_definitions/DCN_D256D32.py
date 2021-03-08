@@ -1,11 +1,10 @@
+from tensorflow.keras.layers import (Activation, Conv2D, Dense, Dropout,
+                                     Flatten, Input, MaxPool2D)
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Activation, Input, Flatten, Dense, Dropout, Conv2D, MaxPool2D
 
 from boiling_learning.management import ElementCreator
-from boiling_learning.model.model import (
-    make_creator_method,
-    ProblemType,
-)
+from boiling_learning.model.model import ProblemType, make_creator_method
+
 
 # DCN_D256D32 :: DoubleConvNet with a 256-units-wide Dense layer followed by a 32-units-wide one
 def build(

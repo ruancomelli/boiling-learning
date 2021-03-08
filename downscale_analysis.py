@@ -1,11 +1,13 @@
 from functools import partial
+
 import matplotlib.pyplot as plt
 from more_itertools import first
 from skimage import img_as_float
 from skimage.color import rgb2gray
-from skimage.io import imshow, imread
+from skimage.io import imread, imshow
 
 from boiling_learning.preprocessing.image import crop, downscale
+
 
 def evaluate_downsampling(img, evaluator, downsamplers):
     return [

@@ -2,10 +2,10 @@ from typing import Optional
 
 import modin.pandas as pd
 
-from boiling_learning.utils import utils as bl_utils
-from boiling_learning.utils.utils import (PathLike, VerboseType)
 from boiling_learning.preprocessing.ExperimentVideo import ExperimentVideo
 from boiling_learning.preprocessing.ImageDataset import ImageDataset
+from boiling_learning.utils import utils as bl_utils
+from boiling_learning.utils.utils import PathLike, VerboseType
 
 
 class Case(ImageDataset):

@@ -1,61 +1,38 @@
-from collections import (
-    ChainMap,
-    defaultdict
-)
-from contextlib import contextmanager
 import dataclasses
-from dataclasses import dataclass
 import datetime
 import enum
-from functools import (
-    wraps,
-    partial
-)
 import itertools
-from itertools import product
 import json
 import operator
 import os
-from pathlib import Path
 import pprint
 import re
 import shutil
 import tempfile
+import zlib
+from collections import ChainMap, defaultdict
+from contextlib import contextmanager
+from dataclasses import dataclass
+from functools import partial, wraps
+from itertools import product
+from pathlib import Path
 from timeit import default_timer
-from typing import (
-    Any,
-    Callable,
-    Collection,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    MutableSequence,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TypeVar,
-    Union
-)
+from typing import (Any, Callable, Collection, Dict, Iterable, Iterator, List,
+                    Mapping, MutableSequence, Optional, Sequence, Tuple, Type,
+                    TypeVar, Union)
 
 import decorator
-from frozendict import frozendict
 import funcy
 import matplotlib.pyplot as plt
-import more_itertools as mit
-from more_itertools import unzip
 import modin.pandas as pd
-from sortedcontainers import SortedSet
-from typing_extensions import (
-    overload
-)
+import more_itertools as mit
 import zict
-import zlib
+from frozendict import frozendict
+from more_itertools import unzip
+from sortedcontainers import SortedSet
+from typing_extensions import overload
 
 from boiling_learning.utils.functional import pack
-
 
 # ---------------------------------- Typing ----------------------------------
 _EnumType = TypeVar('_EnumType', bound=enum.Enum)

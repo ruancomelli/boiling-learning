@@ -1,51 +1,28 @@
 from typing import (
-    Any,
-    Callable,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    TypeVar,
-    Union
-)
+    Any, Callable, Iterable, List, Mapping, Optional, Sequence, Tuple, TypeVar,
+    Union)
 
 import bokeh.models
 import bokeh.plotting
-from frozendict import frozendict
 import funcy
-from ipywidgets import (
-    widgets,
-    interact,
-    interactive,
-    fixed,
-    interact_manual,
-    FloatSlider,
-    IntSlider
-)
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib import gridspec
-from matplotlib.colors import NoNorm
 import more_itertools as mit
 import numpy as np
 import tensorflow as tf
+from frozendict import frozendict
+from ipywidgets import (FloatSlider, IntSlider, fixed, interact,
+                        interact_manual, interactive, widgets)
+from matplotlib import gridspec
+from matplotlib.colors import NoNorm
 
 import boiling_learning.utils.utils as bl_utils
-from boiling_learning.utils.Parameters import Parameters
-from boiling_learning.utils.functional import (
-    Pack, pack
-)
-from boiling_learning.preprocessing import (
-    ExperimentVideo,
-    DictImageTransformer,
-    Case,
-    ImageDataset,
-    Transformer,
-    nth_arg
-)
 from boiling_learning.management import Manager
+from boiling_learning.preprocessing import (Case, DictImageTransformer,
+                                            ExperimentVideo, ImageDataset,
+                                            Transformer, nth_arg)
+from boiling_learning.utils.functional import Pack, pack
+from boiling_learning.utils.Parameters import Parameters
 
 T = TypeVar('T')
 ImageType = Any

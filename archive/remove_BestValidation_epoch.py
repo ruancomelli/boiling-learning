@@ -1,4 +1,5 @@
 import parse
+
 pattern = 'BestValidation_epoch{epoch}'
 parser = parse.compile(pattern).parse
 glob_pattern = 'BestValidation_epoch*'

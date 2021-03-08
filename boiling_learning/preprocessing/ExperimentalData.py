@@ -1,16 +1,12 @@
 from pathlib import Path
-from typing import (
-    Optional
-)
+from typing import Optional
 
-from frozendict import frozendict
 import modin.pandas as pd
+from frozendict import frozendict
 
-from boiling_learning.utils import PathLike
 import boiling_learning.utils as bl_utils
-from boiling_learning.utils import geometry
+from boiling_learning.utils import PathLike, geometry
 from boiling_learning.utils.units import unit_registry as ureg
-
 
 SAMPLES = frozendict({
     1: geometry.Cylinder(

@@ -1,36 +1,20 @@
 import contextlib
-import subprocess
-from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    Iterator,
-    Optional,
-    Union,
-    Tuple
-)
-import string
 import operator
+import string
+import subprocess
 import warnings
+from pathlib import Path
+from typing import Any, Callable, Iterable, Iterator, Optional, Tuple, Union
 
-import funcy
-import parse
-from more_itertools import (
-    ilen,
-    peekable
-)
 import cv2
+import funcy
 import numpy as np
+import parse
+from more_itertools import ilen, peekable
 
 import boiling_learning as bl
-from boiling_learning.utils import (
-    PathLike,
-    VerboseType
-)
-from boiling_learning.io.io import (
-    make_callable_filename_pattern
-)
+from boiling_learning.io.io import make_callable_filename_pattern
+from boiling_learning.utils import PathLike, VerboseType
 
 
 def convert_video(

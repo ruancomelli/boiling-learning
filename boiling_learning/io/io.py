@@ -1,36 +1,26 @@
 import collections
-from functools import partial
-from itertools import accumulate
 import io as _io
 import json
 import operator
 import os
-from pathlib import Path
 import pickle
 import string
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TypeVar,
-    Union
-)
 import warnings
+from functools import partial
+from itertools import accumulate
+from pathlib import Path
+from typing import (Any, Callable, Dict, Iterable, Mapping, Optional, Sequence,
+                    Tuple, Type, TypeVar, Union)
 
 import cv2
 import funcy
 import h5py
 import json_tricks
-import numpy as np
 import modin.pandas as pd
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import load_model
+
 try:
     # yogadl is an optional dependency
     # TODO: read <https://stackoverflow.com/a/27361558/5811400>
@@ -40,13 +30,9 @@ except ImportError:
     pass # TODO: handle this case
 
 import boiling_learning.utils as bl_utils
+from boiling_learning.utils import (PathLike, ensure_dir, ensure_parent,
+                                    ensure_resolved)
 from boiling_learning.utils.functional import pack
-from boiling_learning.utils import (
-    PathLike,
-    ensure_dir,
-    ensure_parent,
-    ensure_resolved
-)
 
 T = TypeVar('T')
 S = TypeVar('S')

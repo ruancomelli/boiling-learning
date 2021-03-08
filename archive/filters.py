@@ -1,12 +1,14 @@
+import time
 from pathlib import Path
+
+import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import time
 import scipy
 import scipy.fftpack
 import scipy.ndimage
-import matplotlib
-import matplotlib.pyplot as plt
+
 
 def smooth_fourier(y, min_value=None, max_value=None, min_balance=None, max_balance=None):
     w = scipy.fftpack.rfft(y)

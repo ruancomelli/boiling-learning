@@ -1,14 +1,8 @@
 import enum
-from typing import (
-    List,
-    Optional,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import List, Optional, Type, TypeVar, Union
 
-from nidaqmx.task import Task
 from nidaqmx.constants import ChannelType as NIChannelType
+from nidaqmx.task import Task
 
 import boiling_learning as bl
 from boiling_learning.daq.Device import Device

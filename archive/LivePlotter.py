@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 class LivePlotter:
     def __init__(self, ax=None, *args, pause_time=1.0, **kwargs):
         self.config(*args, **kwargs)

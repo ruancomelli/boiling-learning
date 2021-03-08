@@ -2,11 +2,8 @@ from collections.abc import MutableMapping
 
 import funcy
 
-from boiling_learning.utils.utils import (
-    SimpleRepr,
-    SimpleStr,
-    simple_pprint_class
-)
+from boiling_learning.utils.utils import (SimpleRepr, SimpleStr,
+                                          simple_pprint_class)
 
 
 @simple_pprint_class

@@ -1,6 +1,6 @@
-from sklearn.model_selection import train_test_split
-import numpy as np
 import modin.pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
 
 train_key = 'train'
 test_key = 'test'

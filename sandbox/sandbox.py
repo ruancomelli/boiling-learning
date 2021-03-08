@@ -27,10 +27,10 @@ print(x.value)
 change(x)
 print(x.value)
 
+import datetime
 #%%
 # time and datetime
 import time
-import datetime
 
 now = time.time()
 now_date = datetime.datetime.fromtimestamp(now)
@@ -113,6 +113,7 @@ def relative_path(origin, destination):
     return relpath(destination, start=origin)
 
 from pathlib import Path
+
 origin      = Path('middle-earth/gondor/minas-tirith/castle').resolve()
 destination = Path('middle-earth/gondor/osgiliath/tower').absolute()
 
@@ -145,6 +146,8 @@ print(f'Works: {origin.joinpath(result).resolve() == destination}')
 
 #%%
 import numpy as np
+
+
 def relu(x, grad=False):
     numpy_x= np.array(x)
     if grad:
@@ -195,8 +198,8 @@ try:
     from math import prod
 except ImportError:
     def prod(iterable, start=1.0):
-        from functools import reduce
         import operator
+        from functools import reduce
 
         return start*reduce(operator.mul, iterable, 1)
 

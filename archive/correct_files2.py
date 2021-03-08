@@ -1,5 +1,7 @@
 from parse import parse
+
 import boiling_learning.utils
+
 
 def chunkify(index, chunk_size):
     min_index = (index // chunk_size) * chunk_size

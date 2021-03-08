@@ -1,47 +1,26 @@
-from contextlib import contextmanager
 import dataclasses
-from dataclasses import dataclass
 import operator
+from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
-from typing import (
-    Any,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Union
-)
+from typing import (Any, Iterable, Iterator, List, Mapping, Optional, Sequence,
+                    Tuple, Union)
 
 # import decord
 import funcy
-import numpy as np
 import modin.pandas as pd
+import numpy as np
 import pims
-from scipy.interpolate import interp1d
 import tensorflow as tf
+from scipy.interpolate import interp1d
 
 import boiling_learning.utils as bl_utils
-from boiling_learning.utils import (
-    PathLike,
-    VerboseType
-)
-from boiling_learning.io.io import (
-    chunked_filename_pattern,
-    save_dataset,
-    load_dataset
-)
-from boiling_learning.preprocessing.preprocessing import (
-    sync_dataframes
-)
-from boiling_learning.preprocessing.video import (
-    convert_video,
-    extract_audio,
-    extract_frames,
-    frames
-)
+from boiling_learning.io.io import (chunked_filename_pattern, load_dataset,
+                                    save_dataset)
+from boiling_learning.preprocessing.preprocessing import sync_dataframes
+from boiling_learning.preprocessing.video import (convert_video, extract_audio,
+                                                  extract_frames, frames)
+from boiling_learning.utils import PathLike, VerboseType
 
 
 class ExperimentVideo:
