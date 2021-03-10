@@ -11,20 +11,21 @@ import more_itertools as mit
 import numpy as np
 import tensorflow as tf
 from frozendict import frozendict
-from ipywidgets import (FloatSlider, IntSlider, fixed, interact,
-                        interact_manual, interactive, widgets)
+from ipywidgets import interact, widgets
 from matplotlib import gridspec
 from matplotlib.colors import NoNorm
 
 import boiling_learning.utils.utils as bl_utils
 from boiling_learning.management import Manager
-from boiling_learning.preprocessing import (Case, DictImageTransformer,
-                                            ExperimentVideo, ImageDataset,
-                                            Transformer, nth_arg)
-from boiling_learning.utils.functional import Pack, pack
+from boiling_learning.preprocessing.Case import Case
+from boiling_learning.preprocessing.ExperimentVideo import ExperimentVideo
+from boiling_learning.preprocessing.ImageDataset import ImageDataset
+from boiling_learning.preprocessing.transformers import (DictImageTransformer,
+                                                         Transformer)
+from boiling_learning.utils.functional import Pack, nth_arg, pack
 from boiling_learning.utils.Parameters import Parameters
 
-T = TypeVar('T')
+_T = TypeVar('_T')
 ImageType = Any
 
 DEFAULT_ANNOTATORS = frozendict({
@@ -345,8 +346,8 @@ def visualize_dataset(
         manager: Manager[tf.data.Dataset, tf.data.Dataset],
         case_list: Iterable[Case],
         params: Parameters,
-        load: Union[bool, Callable[[], Tuple[bool, T]]] = False,
-        save: Union[bool, Callable[[Union[T, Any]], Any]] = False,
+        load: Union[bool, Callable[[], Tuple[bool, _T]]] = False,
+        save: Union[bool, Callable[[Union[_T, Any]], Any]] = False,
         n_samples_per_ev: int = 0
 ) -> None:
     # See <https://stackoverflow.com/a/34934631/5811400> for plotting
