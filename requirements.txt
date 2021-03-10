@@ -1,5 +1,5 @@
 typing-extensions==3.7.4.3
-requests==2.25.1
+requests==2.23.0
 bidict==0.21.2
 bokeh==2.3.0
 decorator==4.4.2
