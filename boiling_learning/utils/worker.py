@@ -1,6 +1,7 @@
 import datetime
 import shlex
 import subprocess
+import time
 from contextlib import contextmanager
 from pathlib import Path
 from typing import (Any, Callable, Dict, Hashable, Iterable, Iterator, List,
@@ -14,7 +15,7 @@ from pkg_resources import resource_filename
 
 import boiling_learning as bl
 from boiling_learning.utils.utils import (JSONDict, PathLike, empty_gen,
-                                          ensure_dir, fix_path, indexify,
+                                          ensure_dir, ensure_resolved, fix_path, indexify, print_verbose,
                                           rmdir)
 
 _T = TypeVar('_T')
@@ -476,6 +477,25 @@ class SequenceDistributorServer:
 class SequenceDistributorClient:
     def __init__(self, url: str):
         self.url: str = url
+
+    @classmethod
+    def from_file(
+            path: PathLike,
+            sleep_time: int = 0,
+            verbose: bool = False
+    ) -> 'SequenceDistributorClient':
+        url_path = ensure_resolved(path)
+
+        if sleep_time > 0:
+            while not url_path.is_file():
+                print_verbose(verbose, 'File not found:', url_path)
+                print_verbose(verbose, f'Sleeping for {sleep_time}s')
+                time.sleep(sleep_time)
+
+        url = url_path.read_text()
+
+        return SequenceDistributorClient(url)
+
 
     def connect(self) -> bool:
         url = self.url + '/'
