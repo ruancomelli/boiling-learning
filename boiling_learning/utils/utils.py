@@ -1,3 +1,4 @@
+from boiling_learning.utils.iterutils import flaglast
 import dataclasses
 import datetime
 import enum
@@ -929,7 +930,6 @@ def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
                 if len(names == 1):
                     values = (values,)
             obj_items = zip(names, values)
-        obj_items = tuple(obj_items)
 
         _format_kwarg_dict_items(
             self, obj_items, stream, indent + len(class_name), allowance + 1, context, level
@@ -946,9 +946,7 @@ def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, le
 
     indent += self._indent_per_level
     delimnl = ',\n' + ' ' * indent
-    last_index = len(items) - 1
-    for i, (key, ent) in enumerate(items):
-        last = i == last_index
+    for last, (key, ent) in flaglast(items):
         write(key)
         write('=')
         self._format(
