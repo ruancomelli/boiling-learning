@@ -12,7 +12,7 @@ def flaglast(iterable: Iterable[_T]) -> Iterator[Tuple[bool, _T]]:
         return
 
     for val in it:
-        yield last, False
+        yield False, last
         last = val
 
-    yield last, True
+    yield True, last
