@@ -5,14 +5,15 @@ from typing import (Any, Callable, Dict, Generic, Hashable, Iterable, Iterator,
 
 import funcy
 import more_itertools as mit
-from frozendict import frozendict
+
+from boiling_learning.utils.FrozenDict import FrozenDict
 
 # TODO: when variadic generics are available, they will be very useful here
-T = TypeVar('T')
-S = TypeVar('S')
-U = TypeVar('U')
-ArgsType = Sequence[T]
-KwargsType = Mapping[str, S]
+_T = TypeVar('_T')
+_S = TypeVar('_S')
+_U = TypeVar('_U')
+ArgsType = Sequence[_T]
+KwargsType = Mapping[str, _S]
 
 
 def nth_arg(n: int) -> Callable:
@@ -28,24 +29,28 @@ def nth_arg(n: int) -> Callable:
     return _nth
 
 
-class Pack(Hashable, Generic[T, S]):
-    def __init__(self, args: ArgsType[T] = (), kwargs: KwargsType[S] = frozendict()):
-        self._args: Tuple[T] = tuple(args)
-        self._kwargs: KwargsType[S] = frozendict(kwargs)
+class Pack(Hashable, Generic[_T, _S]):
+    def __init__(
+            self,
+            args: ArgsType[_T] = (),
+            kwargs: KwargsType[_S] = FrozenDict()
+    ) -> None:
+        self._args: Tuple[_T] = tuple(args)
+        self._kwargs: FrozenDict[str, _S] = FrozenDict(kwargs)
 
     @property
-    def args(self) -> Tuple[T]:
+    def args(self) -> Tuple[_T]:
         return self._args
 
     @property
-    def kwargs(self) -> KwargsType[S]:
+    def kwargs(self) -> KwargsType[_S]:
         return self._kwargs
 
     def __bool__(self) -> bool:
         return bool(self.args) or bool(self.kwargs)
 
     def __eq__(self, other: 'Pack') -> bool:
-        return id(self) == id(other) or (
+        return self is other or (
             isinstance(other, self.__class__)
             and self.args == other.args
             and self.kwargs == other.kwargs
@@ -54,7 +59,7 @@ class Pack(Hashable, Generic[T, S]):
     def __hash__(self) -> int:
         return hash((self.args, self.kwargs))
 
-    def __getitem__(self, loc: Union[int, str]) -> Union[T, S]:
+    def __getitem__(self, loc: Union[int, str]) -> Union[_T, _S]:
         if isinstance(loc, int):
             return self.args[loc]
         elif isinstance(loc, str):
@@ -63,7 +68,7 @@ class Pack(Hashable, Generic[T, S]):
             raise ValueError(
                 f'*Pack* expects an *int* index or *str* key, but got a {type(loc)}')
 
-    def __iter__(self) -> Iterator[Union[Tuple[T], KwargsType[S]]]:
+    def __iter__(self) -> Iterator[Union[Tuple[_T], KwargsType[_S]]]:
         return iter((self.args, self.kwargs))
 
     def __repr__(self) -> str:
@@ -107,19 +112,19 @@ class Pack(Hashable, Generic[T, S]):
         self._args = data['args']
         self._kwargs = data['kwargs']
 
-    def feed(self, f: Callable[..., U]) -> U:
+    def feed(self, f: Callable[..., _U]) -> _U:
         return f(*self.args, **self.kwargs)
 
-    def partial(self, f: Callable[..., U]) -> Callable[..., U]:
+    def partial(self, f: Callable[..., _U]) -> Callable[..., _U]:
         return partial(f, *self.args, **self.kwargs)
 
-    def rpartial(self, f: Callable[..., U]) -> Callable[..., U]:
+    def rpartial(self, f: Callable[..., _U]) -> Callable[..., _U]:
         return funcy.rpartial(f, *self.args, **self.kwargs)
 
     def omit(
             self,
             loc: Union[int, str, Iterable[Union[int, str]]] = (), # TODO: unify everything here
-            pred: Optional[Callable[[T], bool]] = None
+            pred: Optional[Callable[[_T], bool]] = None
     ) -> 'Pack':
         '''
         p = pack(1, 2, None, 4, None, 6, a='a', b='b', c=None, d='d', e=None, f='f')
@@ -219,11 +224,11 @@ class Pack(Hashable, Generic[T, S]):
         return self._apply(fargs, fkwargs, right=True)
 
 
-def pack(*args: T, **kwargs: S) -> Pack[T, S]:
+def pack(*args: _T, **kwargs: _S) -> Pack[_T, _S]:
     return Pack(args, frozendict(kwargs))
 
 
-def unpack(f: Callable[..., U], packed_param: Pack[T, S]) -> U:
+def unpack(f: Callable[..., _U], packed_param: Pack[_T, _S]) -> _U:
     return packed(f)(packed_param)
 
 
@@ -242,16 +247,16 @@ def pack_combinations(
         )
 
 
-def packed(f: Callable[..., U]) -> Callable[[Pack], U]:
+def packed(f: Callable[..., _U]) -> Callable[[Pack], _U]:
     @wraps(f)
-    def wrapper(pack: Pack) -> U:
+    def wrapper(pack: Pack) -> _U:
         return pack.feed(f)
     return wrapper
 
 
-def unpacked(f: Callable[[Pack[T, S]], U]) -> Callable[..., U]:
+def unpacked(f: Callable[[Pack[_T, _S]], _U]) -> Callable[..., _U]:
     @wraps(f)
-    def wrapper(*args: T, **kwargs: S) -> U:
+    def wrapper(*args: _T, **kwargs: _S) -> _U:
         return f(pack(*args, **kwargs))
 
     return wrapper
@@ -283,9 +288,9 @@ def starapply(
 
 
 def map_values(
-        f: Callable[[T], S],
-        iterable: Iterable[T]
-) -> Iterable[S]:
+        f: Callable[[_T], _S],
+        iterable: Iterable[_T]
+) -> Iterable[_S]:
     if hasattr(iterable, 'items'):
         return funcy.walk_values(f, iterable)
     else:
