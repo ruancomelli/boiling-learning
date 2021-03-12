@@ -334,3 +334,5 @@ and think of other things.
 - [ ] Rescale images before feeding them to the network?
 - [ ] Use [Evidential Deep Learning](https://github.com/aamini/evidential-deep-learning)?
 - [ ] Check [separable convolutions](https://towardsdatascience.com/a-basic-introduction-to-separable-convolutions-b99ec3102728)
+- [ ] Improve `Pack`, making it more like `Parameters`.
+- [ ] PACK: Packs Are Compact Kids?
