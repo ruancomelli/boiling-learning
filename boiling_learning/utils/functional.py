@@ -113,7 +113,8 @@ class Pack(Hashable, Generic[_T, _S]):
         self._kwargs = data['kwargs']
 
     @classmethod
-    def pack(cls, *args: _T, **kwargs: _S) -> 'Pack[_T, _S]':
+    def pack(*cls_n_args: _T, **kwargs: _S) -> 'Pack[_T, _S]':
+        cls, *args = cls_n_args
         return cls(args, kwargs)
 
     def feed(self, f: Callable[..., _U]) -> _U:
