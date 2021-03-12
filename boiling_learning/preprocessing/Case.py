@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Iterable, Optional
 
 import modin.pandas as pd
 
@@ -28,8 +28,9 @@ class Case(ImageDataset):
             frames_suffix: str = '.png',
             column_names: DataFrameColumnNames = DataFrameColumnNames(),
             column_types: DataFrameColumnTypes = DataFrameColumnTypes(),
-            video_data_path: Optional[PathLike] = None
-    ):
+            video_data_path: Optional[PathLike] = None,
+            tags: Iterable[str] = ()
+    ) -> None:
         if not video_suffix.startswith('.'):
             raise ValueError(
                 'argument *video_suffix* must start with a dot \'.\'')
@@ -58,7 +59,8 @@ class Case(ImageDataset):
             name=name,
             column_names=column_names,
             column_types=column_types,
-            df_path=df_path
+            df_path=df_path,
+            tags=tags
         )
 
         for video_path in self.videos_dir.rglob('*' + video_suffix):

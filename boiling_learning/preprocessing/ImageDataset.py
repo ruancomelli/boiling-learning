@@ -5,16 +5,16 @@ import typing
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import (Any, Callable, Dict, Iterable, Iterator, List, Mapping,
-                    Optional, Tuple, Type, Union, overload)
+from typing import (Any, Callable, Dict, FrozenSet, Iterable, Iterator, List,
+                    Mapping, Optional, Tuple, Type, Union, overload)
 
 import funcy
 import modin.pandas as pd
 import numpy as np
 import tensorflow as tf
 
-import boiling_learning.io as bl_io
 import boiling_learning.utils as bl_utils
+from boiling_learning.io.io import load_json
 from boiling_learning.preprocessing.ExperimentVideo import ExperimentVideo
 from boiling_learning.utils import PathLike, VerboseType
 
@@ -46,7 +46,8 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             column_names: DataFrameColumnNames = DataFrameColumnNames(),
             column_types: DataFrameColumnTypes = DataFrameColumnTypes(),
             df_path: Optional[PathLike] = None,
-            exist_load: bool = False
+            exist_load: bool = False,
+            tags: Iterable[str] = ()
     ):
         self._name: str = name
         self.column_names: self.DataFrameColumnNames = column_names
@@ -55,6 +56,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         self._allow_key_overwrite: bool = True
         self.df: Optional[pd.DataFrame] = None
         self.ds = None
+        self._tags = frozenset(tags)
 
         if df_path is not None:
             df_path = bl_utils.ensure_resolved(df_path)
@@ -80,6 +82,10 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def tags(self) -> FrozenSet[str]:
+        return self._tags
 
     def __getitem__(self, name: str) -> ExperimentVideo:
         return self._experiment_videos[name]
@@ -219,7 +225,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             keys: VideoDataKeys = VideoDataKeys()
     ) -> None:
         data_path = bl_utils.ensure_resolved(data_path)
-        video_data = bl_io.load_json(data_path)
+        video_data = load_json(data_path)
         purged = not purge
 
         if isinstance(video_data, list):
