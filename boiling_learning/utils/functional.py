@@ -112,6 +112,10 @@ class Pack(Hashable, Generic[_T, _S]):
         self._args = data['args']
         self._kwargs = data['kwargs']
 
+    @classmethod
+    def pack(cls, *args: _T, **kwargs: _S) -> 'Pack[_T, _S]':
+        return cls(args, kwargs)
+
     def feed(self, f: Callable[..., _U]) -> _U:
         return f(*self.args, **self.kwargs)
 
@@ -224,8 +228,7 @@ class Pack(Hashable, Generic[_T, _S]):
         return self._apply(fargs, fkwargs, right=True)
 
 
-def pack(*args: _T, **kwargs: _S) -> Pack[_T, _S]:
-    return Pack(args, frozendict(kwargs))
+pack = Pack.pack
 
 
 def unpack(f: Callable[..., _U], packed_param: Pack[_T, _S]) -> _U:
@@ -257,7 +260,7 @@ def packed(f: Callable[..., _U]) -> Callable[[Pack], _U]:
 def unpacked(f: Callable[[Pack[_T, _S]], _U]) -> Callable[..., _U]:
     @wraps(f)
     def wrapper(*args: _T, **kwargs: _S) -> _U:
-        return f(pack(*args, **kwargs))
+        return f(Pack(args, kwargs))
 
     return wrapper
 
