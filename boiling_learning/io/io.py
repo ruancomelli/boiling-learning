@@ -34,24 +34,24 @@ from boiling_learning.utils import (PathLike, ensure_dir, ensure_parent,
                                     ensure_resolved)
 from boiling_learning.utils.functional import pack
 
-T = TypeVar('T')
-S = TypeVar('S')
-SaverFunction = Callable[[S, PathLike], Any]
-LoaderFunction = Callable[[PathLike], S]
+_T = TypeVar('_T')
+_S = TypeVar('_S')
+SaverFunction = Callable[[_S, PathLike], Any]
+LoaderFunction = Callable[[PathLike], _S]
 DatasetTriplet = Tuple[tf.data.Dataset, Optional[tf.data.Dataset], tf.data.Dataset]
 OptionalDatasetTriplet = Tuple[Optional[tf.data.Dataset], Optional[tf.data.Dataset], Optional[tf.data.Dataset]]
-BoolFlagged = Tuple[bool, S]
-BoolFlaggedLoaderFunction = LoaderFunction[BoolFlagged[S]]
+BoolFlagged = Tuple[bool, _S]
+BoolFlaggedLoaderFunction = LoaderFunction[BoolFlagged[_S]]
 
 
 def add_bool_flag(
-    loader: LoaderFunction[T],
+    loader: LoaderFunction[_T],
     expected_exceptions: Union[Exception, Sequence[Exception]] = FileNotFoundError
-) -> BoolFlaggedLoaderFunction[T]:
+) -> BoolFlaggedLoaderFunction[_T]:
     if isinstance(expected_exceptions, Sequence):
         expected_exceptions = tuple(expected_exceptions)
 
-    def _loader(path: PathLike) -> T:
+    def _loader(path: PathLike) -> _T:
         try:
             return True, loader(path)
         except expected_exceptions:
@@ -106,17 +106,15 @@ def make_callable_filename_pattern(
         filename_pattern_str = str(filename_pattern)
 
         if index_key is not None and index_key in {
-                tup[1]
-                for tup in string.Formatter().parse(filename_pattern_str)
-                if tup[1] is not None
+                index
+                for _, index in string.Formatter().parse(filename_pattern_str)
+                if index is not None
         }:
             formatter = filename_pattern_str.format
 
             def _filename_pattern(index: int) -> Path:
                 return bl_utils.ensure_parent(
-                    formatter(
-                        **{index_key: index}
-                    ),
+                    formatter(**{index_key: index}),
                     root=outputdir
                 )
             return True, _filename_pattern
@@ -155,9 +153,9 @@ def load_image(path: PathLike, flag: Optional[int] = cv2.IMREAD_COLOR) -> np.nda
 
 
 def save_serialized(
-        save_map: Mapping[T, SaverFunction[S]]
-) -> SaverFunction[Mapping[T, S]]:
-    def save(return_dict: Mapping[T, S], path: PathLike) -> None:
+        save_map: Mapping[_T, SaverFunction[_S]]
+) -> SaverFunction[Mapping[_T, _S]]:
+    def save(return_dict: Mapping[_T, _S], path: PathLike) -> None:
         path = ensure_parent(path)
         for key, obj in return_dict.items():
             save_map[key](obj, path / key)
@@ -165,9 +163,9 @@ def save_serialized(
 
 
 def load_serialized(
-        load_map: Mapping[T, LoaderFunction[S]]
-) -> LoaderFunction[Dict[T, S]]:
-    def load(path: PathLike) -> Dict[T, S]:
+        load_map: Mapping[_T, LoaderFunction[_S]]
+) -> LoaderFunction[Dict[_T, _S]]:
+    def load(path: PathLike) -> Dict[_T, _S]:
         path = ensure_resolved(path)
         loaded = {
             key: loader(path / key)
@@ -205,9 +203,9 @@ def load_pkl(path: PathLike):
 
 
 def save_json(
-        obj: T,
+        obj: _T,
         path: PathLike,
-        dump: Callable[[T, _io.TextIOWrapper], Any] = json.dump,
+        dump: Callable[[_T, _io.TextIOWrapper], Any] = json.dump,
         cls: Optional[Type] = None
 ) -> None:
     path = ensure_parent(path)
@@ -225,9 +223,9 @@ def save_json(
 
 def load_json(
         path: PathLike,
-        load: Callable[[_io.TextIOWrapper], T] = json.load,
+        load: Callable[[_io.TextIOWrapper], _T] = json.load,
         cls: Optional[Type] = None
-) -> T:
+) -> _T:
     path = ensure_resolved(path)
 
     if path.suffix != '.json':

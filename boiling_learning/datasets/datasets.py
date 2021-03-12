@@ -19,8 +19,11 @@ import boiling_learning.utils as bl_utils
 import boiling_learning.utils.mathutils as mathutils
 from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.management.Manager import Manager
-from boiling_learning.preprocessing.transformers import (  # PackTransformerEncoder
-    Creator, DictImageTransformer, Transformer)
+from boiling_learning.preprocessing.transformers import (
+    Creator,
+    DictImageTransformer,
+    Transformer
+)
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.utils import PathLike
 

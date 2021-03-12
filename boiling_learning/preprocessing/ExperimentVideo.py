@@ -20,7 +20,7 @@ from boiling_learning.io.io import (chunked_filename_pattern, load_dataset,
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
 from boiling_learning.preprocessing.video import (convert_video, extract_audio,
                                                   extract_frames, frames)
-from boiling_learning.utils import PathLike, VerboseType
+from boiling_learning.utils import PathLike, VerboseType, ensure_resolved
 
 
 class ExperimentVideo:
@@ -83,8 +83,8 @@ class ExperimentVideo:
             df_path: Optional[PathLike] = None,
             column_names: DataFrameColumnNames = DataFrameColumnNames(),
             column_types: DataFrameColumnTypes = DataFrameColumnTypes()
-    ):
-        self.video_path: Path = bl_utils.ensure_resolved(video_path)
+    ) -> None:
+        self.video_path: Path = ensure_resolved(video_path)
         self.frames_path: Optional[Path]
         self.frames_suffix: str
         self.audio_path: Optional[Path]
@@ -110,10 +110,10 @@ class ExperimentVideo:
                 'at most one of (frames_dir, frames_path) must be given.')
         else:
             self.frames_path = (
-                bl_utils.ensure_resolved(frames_path)
+                ensure_resolved(frames_path)
                 if frames_path is not None
                 else (
-                    bl_utils.ensure_resolved(frames_dir) / self.name
+                    ensure_resolved(frames_dir) / self.name
                     if frames_dir is not None
                     else None
                 )
@@ -124,10 +124,10 @@ class ExperimentVideo:
                 'at most one of (frames_tensor_path, frames_tensor_dir) must be given.')
         else:
             self.frames_tensor_path = (
-                bl_utils.ensure_resolved(frames_tensor_path)
+                ensure_resolved(frames_tensor_path)
                 if frames_tensor_path is not None
                 else (
-                    bl_utils.ensure_resolved(frames_tensor_dir) / self.name
+                    ensure_resolved(frames_tensor_dir) / self.name
                     if frames_tensor_dir is not None
                     else None
                 )
@@ -148,10 +148,10 @@ class ExperimentVideo:
                 'at most one of (audio_dir, audio_path) must be given.')
         else:
             self.audio_path = (
-                bl_utils.ensure_resolved(audio_path)
+                ensure_resolved(audio_path)
                 if audio_path is not None
                 else (
-                    (bl_utils.ensure_resolved(audio_dir) / self.name).with_suffix(audio_suffix)
+                    (ensure_resolved(audio_dir) / self.name).with_suffix(audio_suffix)
                     if audio_dir is not None
                     else None
                 )
@@ -166,10 +166,10 @@ class ExperimentVideo:
                 'at most one of (df_dir, df_path) must be given.')
         else:
             self.df_path = (
-                bl_utils.ensure_resolved(df_path)
+                ensure_resolved(df_path)
                 if df_path is not None
                 else (
-                    (bl_utils.ensure_resolved(df_dir) / self.name).with_suffix(df_suffix)
+                    (ensure_resolved(df_dir) / self.name).with_suffix(df_suffix)
                     if df_dir is not None
                     else None
                 )
@@ -308,22 +308,12 @@ class ExperimentVideo:
             self.open_video()
         yield self.video
 
-    # @contextmanager
-    # def frames(self) -> Iterator[Sequence[np.ndarray]]:
-    #     f = pims.Video(self.video_path)
-    #     try:
-    #         yield f
-    #     finally:
-    #         f.close()
-
     def frame(self, i: int, auto_open: bool = True) -> np.ndarray:
         if auto_open:
             self.open_video()
         elif not self._is_open_video:
             raise ValueError('Video is not open. Please *open_video()* before getting frame.')
         return self.video[i]
-        # with self.frames() as f:
-        #     return f[i]
 
     def glob_frames(self) -> Iterable[Path]:
         if self.frames_path is None:
@@ -535,7 +525,7 @@ class ExperimentVideo:
         if path is None:
             path = self.df_path
         else:
-            self.df_path = bl_utils.ensure_resolved(path)
+            self.df_path = ensure_resolved(path)
 
         if missing_ok and not self.df_path.is_file():
             return None
@@ -584,7 +574,7 @@ class ExperimentVideo:
         if renaming:
             self.df_path = self.df_path.with_name(path)
         else:
-            self.df_path = bl_utils.ensure_resolved(path)
+            self.df_path = ensure_resolved(path)
 
         self.save(overwrite=overwrite)
 
