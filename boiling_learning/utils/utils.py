@@ -920,7 +920,7 @@ def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
         write(class_name + "(")
 
         if names is None:
-            obj_dict = obj.__dict__.copy().items()
+            obj_items = obj.__dict__.copy().items()
         else:
             if len(names) == 0:
                 values = empty_gen()
@@ -928,10 +928,11 @@ def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
                 values = operator.attrgetter(*names)
                 if len(names == 1):
                     values = (values,)
-            obj_dict = zip(names, values)
+            obj_items = zip(names, values)
+        obj_items = tuple(obj_items)
 
         _format_kwarg_dict_items(
-            self, obj_dict, stream, indent + len(class_name), allowance + 1, context, level
+            self, obj_items, stream, indent + len(class_name), allowance + 1, context, level
         )
         write(")")
     return simple_pprint
