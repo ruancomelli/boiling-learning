@@ -1,11 +1,15 @@
-from typing import Mapping, TypeVar
+from typing import Mapping, Optional, TypeVar, Union
 
 _Key = TypeVar('_Key')
+_OtherKey = TypeVar('_OtherKey')
 _Value = TypeVar('_Value')
+_OtherValue = TypeVar('_OtherValue')
+
 
 class FrozenDict(dict, Mapping[_Key, _Value]):
     '''
     Source: https://stackoverflow.com/questions/2703599/what-would-a-frozen-dict-be
+    Some modifications based on: https://www.python.org/dev/peps/pep-0603/
     '''
     def __init__(self, *args, **kwargs):
         self._hash = None
@@ -27,6 +31,13 @@ class FrozenDict(dict, Mapping[_Key, _Value]):
 
     def _immutable(self, *args, **kws):
         raise TypeError('cannot change object - object is immutable')
+
+    def union(
+            self,
+            mapping: Optional[Mapping[_OtherKey, _OtherValue]],
+            **kw: _OtherValue
+    ) -> 'FrozenDict[Union[str, _Key, _OtherKey], Union[_Value, _OtherValue]]':
+        return FrozenDict({**self, **mapping}, **kw)
 
     __setitem__ = _immutable
     __delitem__ = _immutable

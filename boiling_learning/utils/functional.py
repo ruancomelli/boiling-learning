@@ -175,7 +175,7 @@ class Pack(Hashable, Generic[_T, _S]):
             args = self.args[:-n_new_args] + new_args
         else:
             args = new_args + self.args[n_new_args:]
-        kwargs = self.kwargs.copy(**new_kwargs)
+        kwargs = self.kwargs.union(new_kwargs)
         return Pack(args, kwargs)
 
     def copy(self, *new_args, **new_kwargs) -> 'Pack':
