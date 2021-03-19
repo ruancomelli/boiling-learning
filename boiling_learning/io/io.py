@@ -46,12 +46,12 @@ BoolFlaggedLoaderFunction = LoaderFunction[BoolFlagged[_S]]
 
 def add_bool_flag(
     loader: LoaderFunction[_T],
-    expected_exceptions: Union[Exception, Sequence[Exception]] = FileNotFoundError
-) -> BoolFlaggedLoaderFunction[_T]:
+    expected_exceptions: Union[Type[Exception], Sequence[Type[Exception]]] = FileNotFoundError
+) -> BoolFlaggedLoaderFunction[Optional[_T]]:
     if isinstance(expected_exceptions, Sequence):
         expected_exceptions = tuple(expected_exceptions)
 
-    def _loader(path: PathLike) -> _T:
+    def _loader(path: PathLike) -> BoolFlagged[Optional[_T]]:
         try:
             return True, loader(path)
         except expected_exceptions:
@@ -82,7 +82,7 @@ def chunked_filename_pattern(
                 **{min_index_key: min_index, max_index_key: max_index})
             current = Path(current_chunk_name) / current
 
-        current = bl_utils.ensure_resolved(current, root=root)
+        current = ensure_resolved(current, root=root)
 
         return current
     return filename_pattern
@@ -92,11 +92,11 @@ def make_callable_filename_pattern(
         outputdir: PathLike,
         filename_pattern: Union[PathLike, Callable[[int], PathLike]],
         index_key: Optional[str] = None
-) -> Tuple[bool, Callable[[int], Path]]:
+) -> BoolFlagged[Callable[[int], Path]]:
 
     if callable(filename_pattern):
         def _filename_pattern(index: int) -> Path:
-            return bl_utils.ensure_parent(
+            return ensure_parent(
                 filename_pattern(index),
                 root=outputdir
             )
@@ -113,7 +113,7 @@ def make_callable_filename_pattern(
             formatter = filename_pattern_str.format
 
             def _filename_pattern(index: int) -> Path:
-                return bl_utils.ensure_parent(
+                return ensure_parent(
                     formatter(**{index_key: index}),
                     root=outputdir
                 )
@@ -127,7 +127,7 @@ def make_callable_filename_pattern(
                 return False, filename_pattern
 
             def _filename_pattern(index: int) -> Path:
-                return bl_utils.ensure_parent(
+                return ensure_parent(
                     filename_pattern_str % index,
                     root=outputdir
                 )
@@ -140,14 +140,14 @@ def save_image(
         path: PathLike
 ) -> None:
     cv2.imwrite(
-        str(bl_utils.ensure_parent(path)),
+        str(ensure_parent(path)),
         image
     )
 
 
 def load_image(path: PathLike, flag: Optional[int] = cv2.IMREAD_COLOR) -> np.ndarray:
     return cv2.imread(
-        str(bl_utils.ensure_resolved(path)),
+        str(ensure_resolved(path)),
         flag
     )
 
@@ -305,8 +305,8 @@ def save_frames_dataset(
         name_column: str = 'name',
         index_column: str = 'index'
 ) -> None:
-    path = bl_utils.ensure_dir(path)
-    imgs_path = bl_utils.ensure_dir(path / 'images')
+    path = ensure_dir(path)
+    imgs_path = ensure_dir(path / 'images')
     df_path = path / 'dataframe.csv'
 
     def _get_path(data):
@@ -388,7 +388,7 @@ def load_frames_dataset(
         path: PathLike,
         shuffle: bool = True
 ) -> tf.data.Dataset:
-    path = bl_utils.ensure_resolved(path)
+    path = ensure_resolved(path)
     df_path = path / 'dataframe.csv'
     # element_spec_path = path / 'elem_spec.json'
 
@@ -396,7 +396,7 @@ def load_frames_dataset(
     if shuffle:
         df = df.sample(frac=1)
     files = [
-        str(bl_utils.ensure_resolved(path))
+        str(ensure_resolved(path))
         for path in df.index
     ]
     df = df.reset_index(drop=True)
@@ -411,8 +411,8 @@ def load_frames_dataset(
 
 def loader_frames_dataset(
         path: PathLike
-) -> Tuple[bool, Optional[tf.data.Dataset]]:
-    path = bl_utils.ensure_resolved(path)
+) -> BoolFlagged[Optional[tf.data.Dataset]]:
+    path = ensure_resolved(path)
 
     try:
         return True, load_frames_dataset(path, shuffle=True)
@@ -444,7 +444,7 @@ def loader_dataset_triplet(
     def _loader(
             path: PathLike
     ) -> BoolFlagged[OptionalDatasetTriplet]:
-        path = bl_utils.ensure_resolved(path)
+        path = ensure_resolved(path)
 
         success_train, ds_train = loader(path / 'train')
         success_val, ds_val = loader(path / 'val')
@@ -476,7 +476,7 @@ def saver_yogadl(
         storage_path: PathLike,
         dataset_id: str
 ) -> SaverFunction[DatasetTriplet]:
-    storage_path = bl_utils.ensure_resolved(storage_path)
+    storage_path = ensure_resolved(storage_path)
     id_train = dataset_id + '_train'
     id_val = dataset_id + '_val'
     id_test = dataset_id + '_test'
@@ -540,7 +540,7 @@ def loader_yogadl(
         storage_path: PathLike,
         dataset_id: str
 ) -> LoaderFunction[DatasetTriplet]:
-    storage_path = bl_utils.ensure_resolved(storage_path)
+    storage_path = ensure_resolved(storage_path)
     id_train = dataset_id + '_train'
     id_val = dataset_id + '_val'
     id_test = dataset_id + '_test'
