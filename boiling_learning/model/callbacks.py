@@ -1,9 +1,11 @@
 import datetime
+from typing import Any, Callable, FrozenSet, Optional, Set
 
 import numpy as np
 from tensorflow.keras.callbacks import Callback
 from tensorflow.python.keras import backend as K
 from tensorflow.python.platform import tf_logging as logging
+from typing_extensions import Protocol
 
 
 # Source: <https://stackoverflow.com/q/47731935/5811400>
@@ -85,17 +87,23 @@ class AdditionalValidationSets(Callback):
                 print(f'{validation_set_name}[{values_str}]')
 
 
+class Streamer(Protocol):
+    def __call__(self, arg: Any, end: str = '\n') -> Any:
+        pass
+
+
 class TimePrinter(Callback):
     def __init__(
         self,
-        streamer=print,
-        fmt='%Y-%m-%d %H:%M:%S',
-        when=None,
+        streamer: Streamer = print,
+        fmt: str = '%Y-%m-%d %H:%M:%S',
+        when: Optional[Set[str]] = None
     ):
         super().__init__()
 
-        self.streamer = streamer
-        self.fmt = fmt
+        self.streamer: Streamer = streamer
+        self.fmt: str = fmt
+        self._current_epoch: int = 0
 
         if when is None:
             when = {
@@ -116,7 +124,7 @@ class TimePrinter(Callback):
                 'on_train_begin',
                 'on_train_end',
             }
-        self.when = when
+        self.when: FrozenSet[str] = frozenset(when)
 
     def _str_now(self):
         return datetime.datetime.now().strftime(self.fmt)
@@ -129,13 +137,14 @@ class TimePrinter(Callback):
         if 'on_batch_end' in self.when:
             self.streamer(f' | ending batch at {self._str_now()}')
 
-    def on_epoch_begin(self, *args, **kwargs):
+    def on_epoch_begin(self, epoch: int, *args, **kwargs):
+        self._current_epoch = epoch
         if 'on_epoch_begin' in self.when:
-            self.streamer(f'-- beginning epoch at {self._str_now()}')
+            self.streamer(f'-- beginning epoch {epoch} at {self._str_now()}')
 
-    def on_epoch_end(self, *args, **kwargs):
+    def on_epoch_end(self, epoch: int, *args, **kwargs):
         if 'on_epoch_end' in self.when:
-            self.streamer(f'-- ending epoch at {self._str_now()}')
+            self.streamer(f'-- ending epoch {epoch} at {self._str_now()}')
 
     def on_predict_batch_begin(self, *args, **kwargs):
         if 'on_predict_batch_begin' in self.when:
@@ -169,13 +178,16 @@ class TimePrinter(Callback):
         if 'on_test_end' in self.when:
             self.streamer(f'- ending test at {self._str_now()}')
 
-    def on_train_batch_begin(self, *args, **kwargs):
+    def on_train_batch_begin(self, batch: int, *args, **kwargs):
         if 'on_train_batch_begin' in self.when:
-            self.streamer(f'--- beginning train_batch at {self._str_now()}', end='')
+            self.streamer(
+                f'--- epoch {self._current_epoch}: beginning train_batch {batch} at {self._str_now()}',
+                end=''
+            )
 
-    def on_train_batch_end(self, *args, **kwargs):
+    def on_train_batch_end(self, batch: int, *args, **kwargs):
         if 'on_train_batch_end' in self.when:
-            self.streamer(f' | ending train_batch at {self._str_now()}')
+            self.streamer(f' | ending train_batch {batch} at {self._str_now()}')
 
     def on_train_begin(self, *args, **kwargs):
         if 'on_train_begin' in self.when:
