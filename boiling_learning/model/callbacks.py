@@ -1,11 +1,13 @@
 import datetime
-from typing import Any, Callable, FrozenSet, Optional, Set
+from typing import Any, FrozenSet, Optional, Set
 
 import numpy as np
 from tensorflow.keras.callbacks import Callback
 from tensorflow.python.keras import backend as K
 from tensorflow.python.platform import tf_logging as logging
 from typing_extensions import Protocol
+
+from boiling_learning.utils.utils import PathLike, ensure_parent
 
 
 # Source: <https://stackoverflow.com/q/47731935/5811400>
@@ -327,3 +329,12 @@ class ReduceLROnPlateau(Callback):
 
     def in_cooldown(self):
         return self.cooldown_counter > 0
+
+
+class RegisterEpoch(Callback):
+    def __init__(self, path: PathLike) -> None:
+        self._path = ensure_parent(path)
+
+    def on_epoch_end(self, epoch, logs=None) -> None:
+        self._path.write_text(epoch)
+
