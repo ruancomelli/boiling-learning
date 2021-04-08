@@ -336,3 +336,5 @@ and think of other things.
 - [ ] Check [separable convolutions](https://towardsdatascience.com/a-basic-introduction-to-separable-convolutions-b99ec3102728)
 - [ ] Improve `Pack`, making it more like `Parameters`.
 - [ ] PACK: Packs Are Compact Kids?
+- [ ] [This ideia](https://github.com/kachayev/dataclasses-tensor) looks amazing, maybe use it?
+- [ ] Use [LocallyConnected](https://www.tensorflow.org/api_docs/python/tf/keras/layers/LocallyConnected2D) layers?
