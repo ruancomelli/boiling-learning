@@ -1,3 +1,5 @@
+flake8==3.9.0
+isort[requirements_deprecated_finder]==5.7.0
 pip==21.0.1
 wheel==0.36.2
-isort[requirements_deprecated_finder]==5.7.0
+yapf==0.31.0
