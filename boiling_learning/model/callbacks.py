@@ -1,4 +1,5 @@
 import datetime
+import shutil
 from typing import Any, FrozenSet, Optional, Set
 
 import numpy as np
@@ -7,7 +8,8 @@ from tensorflow.python.keras import backend as K
 from tensorflow.python.platform import tf_logging as logging
 from typing_extensions import Protocol
 
-from boiling_learning.utils.utils import PathLike, ensure_parent
+from boiling_learning.utils.utils import (PathLike, ensure_parent,
+                                          ensure_resolved)
 
 
 # Source: <https://stackoverflow.com/q/47731935/5811400>
@@ -338,3 +340,27 @@ class RegisterEpoch(Callback):
     def on_epoch_end(self, epoch, logs=None) -> None:
         self._path.write_text(epoch)
 
+
+class PeriodicallyMove(Callback):
+    def __init__(
+            self,
+            source: PathLike,
+            dest: PathLike,
+            period: int = 1, # epochs period
+            missing_ok: bool = False
+    ) -> None:
+        if period < 1:
+            raise ValueError('*period* must be >= 1')
+
+        self.source = ensure_resolved(source)
+        self.dest = ensure_parent(dest)
+        self.period = period
+        self._missing_ok = missing_ok
+
+    def on_epoch_end(self, epoch, logs=None) -> None:
+        if epoch % self.period == 0:
+            try:
+                shutil.move(str(self.source), str(self.dest))
+            except FileNotFoundError:
+                if not self._missing_ok:
+                    raise
