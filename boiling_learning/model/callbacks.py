@@ -341,6 +341,25 @@ class RegisterEpoch(Callback):
         self._path.write_text(epoch)
 
 
+class MoveOnTrainBegin(Callback):
+    def __init__(
+            self,
+            source: PathLike,
+            dest: PathLike,
+            missing_ok: bool = False
+    ) -> None:
+        self.source = ensure_resolved(source)
+        self.dest = ensure_parent(dest)
+        self._missing_ok = missing_ok
+
+    def on_train_begin(self, logs=None) -> None:
+        try:
+            shutil.move(str(self.source), str(self.dest))
+        except FileNotFoundError:
+            if not self._missing_ok:
+                raise
+
+
 class PeriodicallyMove(Callback):
     def __init__(
             self,
