@@ -19,7 +19,6 @@ parse==1.19.0
 pims==0.5
 pint==0.16.1
 portion==2.1.5
-scikit-learn==0.24.1
 scipy==1.6.1
 scikit-image==0.18.1
 sortedcontainers==2.3.0
