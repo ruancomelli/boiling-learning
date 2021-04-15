@@ -1,7 +1,7 @@
-import dataclasses
+import dataclassy
 import operator
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclassy import dataclass
 from pathlib import Path
 from typing import (Any, Iterable, Iterator, List, Mapping, Optional, Sequence,
                     Tuple, Union)
@@ -39,7 +39,7 @@ class ExperimentVideo:
         ref_image: [...]. Example: 'GOPR_frame1263.png'
         ref_elapsed_time: [...]. Example: 12103
         '''
-        categories: Optional[Mapping[str, Any]] = dataclasses.field(default_factory=dict)
+        categories: Optional[Mapping[str, Any]] = dataclassy.field(default_factory=dict)
         fps: Optional[float] = None
         ref_index: Optional[str] = None
         ref_elapsed_time: Optional[str] = None

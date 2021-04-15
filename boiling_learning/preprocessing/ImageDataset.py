@@ -3,7 +3,7 @@ import itertools
 import operator
 import typing
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclassy import dataclass
 from pathlib import Path
 from typing import (Any, Callable, Dict, FrozenSet, Iterable, Iterator, List,
                     Mapping, Optional, Tuple, Type, Union, overload)

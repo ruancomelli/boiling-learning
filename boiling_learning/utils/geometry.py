@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclassy import dataclass, field
 
 import numpy as np
 import pint

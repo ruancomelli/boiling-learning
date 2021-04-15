@@ -1,7 +1,7 @@
 from collections import deque
 import enum
 import functools
-from dataclasses import dataclass
+from dataclassy import dataclass
 from fractions import Fraction
 from typing import Callable, Iterable, Optional, Type, TypeVar, Union
 

@@ -1,7 +1,7 @@
 import itertools as it
 import operator
 import os
-from dataclasses import dataclass
+from dataclassy import dataclass
 from functools import partial
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional, TypeVar

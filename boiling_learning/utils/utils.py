@@ -1,5 +1,5 @@
 from boiling_learning.utils.iterutils import flaglast
-import dataclasses
+import dataclassy
 import datetime
 import enum
 import itertools
@@ -13,7 +13,7 @@ import tempfile
 import zlib
 from collections import ChainMap, defaultdict
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclassy import dataclass
 from functools import partial, wraps
 from itertools import product
 from pathlib import Path
@@ -415,11 +415,11 @@ class KeyedDefaultDict(defaultdict):
 
 
 def is_dataclass_instance(obj) -> bool:
-    return dataclasses.is_dataclass(obj) and not isinstance(obj, type)
+    return dataclassy.is_dataclass(obj) and not isinstance(obj, type)
 
 
 def is_dataclass_class(Type) -> bool:
-    return dataclasses.is_dataclass(Type) and isinstance(Type, type)
+    return dataclassy.is_dataclass(Type) and isinstance(Type, type)
 
 
 def dataclass_from_mapping(
@@ -431,7 +431,7 @@ def dataclass_from_mapping(
         raise ValueError('*dataclass_factory* must be a dataclass.')
 
     dataclass_field_names = set(
-        funcy.pluck_attr('name', dataclasses.fields(dataclass_factory))
+        funcy.pluck_attr('name', dataclassy.fields(dataclass_factory))
     )
 
     if key_map is None:
@@ -443,7 +443,7 @@ def dataclass_from_mapping(
         )
     else:
         if is_dataclass_instance(key_map):
-            key_map = dataclasses.asdict(key_map)
+            key_map = dataclassy.as_dict(key_map)
 
         key_map = funcy.select_keys(
             dataclass_field_names,
@@ -471,7 +471,7 @@ def to_parent_dataclass(obj: dataclass, parent_factory: Callable[..., _T]) -> _T
         raise ValueError('*obj* must be an instance of *parent_factory*.')
 
     return dataclass_from_mapping(
-        dataclasses.asdict(obj),
+        dataclassy.as_dict(obj),
         parent_factory
     )
 

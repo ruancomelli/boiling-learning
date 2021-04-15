@@ -2,6 +2,7 @@ typing-extensions==3.7.4.3
 requests==2.23.0
 bidict==0.21.2
 bokeh==2.3.0
+dataclassy==0.8
 decorator==4.4.2
 Flask==1.1.2
 frozendict==1.2

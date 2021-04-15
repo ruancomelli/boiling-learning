@@ -3,7 +3,7 @@ import enum
 import json
 import operator
 import pprint
-from dataclasses import dataclass
+from dataclassy import dataclass
 from functools import partial
 from pathlib import Path
 from typing import (Any, Callable, Dict, Generic, Iterable, Iterator, List,

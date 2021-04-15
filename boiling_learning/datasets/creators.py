@@ -1,4 +1,4 @@
-import dataclasses
+import dataclassy
 import pprint
 import warnings
 from collections import defaultdict
@@ -94,7 +94,7 @@ def dataset_creator(
     experiment_video_dataset_params = bl_utils.Parameters(params=defaultdict(dict))
     experiment_video_dataset_params[['creator', {'desc', 'value'}, 'dataset_size']] = dataset_size
     experiment_video_dataset_params[['creator', {'desc', 'value'}, 'num_shards']] = num_shards
-    experiment_video_dataset_params[['creator', 'desc', 'splits']] = dataclasses.asdict(splits)
+    experiment_video_dataset_params[['creator', 'desc', 'splits']] = dataclassy.as_dict(splits)
     experiment_video_dataset_params[['creator', 'value', 'splits']] = splits
 
     ds_dict = {}
