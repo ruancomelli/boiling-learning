@@ -1,18 +1,20 @@
-import collections
+from collections import deque
 import enum
 import functools
 from dataclasses import dataclass
 from fractions import Fraction
-from typing import Callable, Iterable, Optional, Union
+from typing import Callable, Iterable, Optional, Type, TypeVar, Union
 
 import funcy
 import more_itertools as mit
 import tensorflow as tf
+from frozendict import frozendict
 
 import boiling_learning.utils.mathutils as mathutils
 from boiling_learning.io.io import DatasetTriplet
 
 _sentinel = object()
+_T = TypeVar('_T')
 
 
 @dataclass(frozen=True)
@@ -66,43 +68,59 @@ class SplitSubset(enum.Enum):
     ALL = enum.auto()
 
     @classmethod
-    def get_split(cls, s, default=_sentinel):
+    def get_split(
+            cls: Type[_T],
+            s: str,
+            default=_sentinel
+    ) -> _T:
         if s in cls:
             return s
         else:
             return cls.from_string(s, default=default)
 
     @classmethod
-    def from_string(cls, s, default=_sentinel):
-        for k, v in cls.FROM_STR.items():
-            if s in v:
-                return k
+    def from_string(
+            cls: Type[_T],
+            s: str,
+            default=_sentinel
+    ) -> _T:
         if default is _sentinel:
-            raise ValueError(
-                f'string {s} was not found in the conversion table.'
-                f'Available values are {list(cls.FROM_STR.values())}.')
+            try:
+                return cls.FROM_STR_TABLE[s]
+            except KeyError:
+                raise KeyError(
+                    f'string {s} was not found in the conversion table.'
+                    f'Available values are {tuple(cls.FROM_STR_TABLE.keys())}.'
+                )
         else:
-            return default
+            return cls.FROM_STR_TABLE.get(s, default)
 
     def to_str(self):
         return self.name.lower()
 
 
-SplitSubset.FROM_STR = {
-    SplitSubset.TRAIN: {'train'},
-    SplitSubset.VAL: {'val', 'validation'},
-    SplitSubset.TRAIN_VAL: set(
-        connector.join(['train', validation_key])
-        for connector in ['_', '_and_']
-        for validation_key in ['val', 'validation']
-    ),
-    SplitSubset.TEST: {'test'},
-    SplitSubset.ALL: {'all'},
-}
+SplitSubset.FROM_STR_TABLE = frozendict({
+    key_str: split_subset
+    for keys, split_subset in (
+        (('train',), SplitSubset.TRAIN),
+        (('val', 'validation'), SplitSubset.VAL),
+        (
+            tuple(
+                connector.join(('train', validation_key))
+                for connector in ('_', '_and_')
+                for validation_key in ('val', 'validation')
+            ),
+            SplitSubset.TRAIN_VAL
+        ),
+        (('test',), SplitSubset.TEST),
+        (('all',), SplitSubset.ALL),
+    )
+    for key_str in keys
+})
 
 
 def tf_concatenate(datasets: Iterable[tf.data.Dataset]) -> tf.data.Dataset:
-    datasets = collections.deque(datasets)
+    datasets = deque(datasets)
 
     if not datasets:
         raise ValueError('argument *datasets* must be a non-empty iterable.')
@@ -165,7 +183,7 @@ def tf_train_val_test_split_concat(
     This function is deterministic in the sense that it outputs the same splits given the same inputs.
     Consequently it is safe to be used early in the pipeline to avoid consuming test data.
     """
-    datasets = collections.deque(datasets)
+    datasets = deque(datasets)
 
     if not datasets:
         raise ValueError('argument *datasets* must be a non-empty iterable.')
