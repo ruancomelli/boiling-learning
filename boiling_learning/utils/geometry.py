@@ -1,7 +1,6 @@
-from dataclassy import dataclass, field
-
 import numpy as np
 import pint
+from dataclassy import dataclass, field
 
 
 @dataclass(frozen=True)

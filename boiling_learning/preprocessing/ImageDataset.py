@@ -3,7 +3,6 @@ import itertools
 import operator
 import typing
 from contextlib import contextmanager
-from dataclassy import dataclass
 from pathlib import Path
 from typing import (Any, Callable, Dict, FrozenSet, Iterable, Iterator, List,
                     Mapping, Optional, Tuple, Type, Union, overload)
@@ -12,6 +11,7 @@ import funcy
 import modin.pandas as pd
 import numpy as np
 import tensorflow as tf
+from dataclassy import dataclass
 
 import boiling_learning.utils as bl_utils
 from boiling_learning.io.io import load_json

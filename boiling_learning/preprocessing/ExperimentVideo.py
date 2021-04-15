@@ -1,17 +1,17 @@
-import dataclassy
 import operator
 from contextlib import contextmanager
-from dataclassy import dataclass
 from pathlib import Path
 from typing import (Any, Iterable, Iterator, List, Mapping, Optional, Sequence,
                     Tuple, Union)
 
+import dataclassy
 # import decord
 import funcy
 import modin.pandas as pd
 import numpy as np
 import pims
 import tensorflow as tf
+from dataclassy import dataclass
 from scipy.interpolate import interp1d
 
 import boiling_learning.utils as bl_utils

@@ -3,7 +3,6 @@ import enum
 import json
 import operator
 import pprint
-from dataclassy import dataclass
 from functools import partial
 from pathlib import Path
 from typing import (Any, Callable, Dict, Generic, Iterable, Iterator, List,
@@ -12,6 +11,7 @@ from typing import (Any, Callable, Dict, Generic, Iterable, Iterator, List,
 import funcy
 import more_itertools as mit
 import parse
+from dataclassy import dataclass
 from typing_extensions import overload
 
 import boiling_learning as bl

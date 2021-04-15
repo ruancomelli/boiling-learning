@@ -1,5 +1,3 @@
-from boiling_learning.utils.iterutils import flaglast
-import dataclassy
 import datetime
 import enum
 import itertools
@@ -13,7 +11,6 @@ import tempfile
 import zlib
 from collections import ChainMap, defaultdict
 from contextlib import contextmanager
-from dataclassy import dataclass
 from functools import partial, wraps
 from itertools import product
 from pathlib import Path
@@ -22,18 +19,21 @@ from typing import (Any, Callable, Collection, Dict, Iterable, Iterator, List,
                     Mapping, MutableSequence, Optional, Sequence, Tuple, Type,
                     TypeVar, Union)
 
+import dataclassy
 import decorator
 import funcy
 import matplotlib.pyplot as plt
 import modin.pandas as pd
 import more_itertools as mit
 import zict
+from dataclassy import dataclass
 from frozendict import frozendict
 from more_itertools import unzip
 from sortedcontainers import SortedSet
 from typing_extensions import overload
 
 from boiling_learning.utils.functional import pack
+from boiling_learning.utils.iterutils import flaglast
 
 # ---------------------------------- Typing ----------------------------------
 _EnumType = TypeVar('_EnumType', bound=enum.Enum)

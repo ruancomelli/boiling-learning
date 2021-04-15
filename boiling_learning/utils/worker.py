@@ -15,7 +15,8 @@ from pkg_resources import resource_filename
 
 import boiling_learning as bl
 from boiling_learning.utils.utils import (JSONDict, PathLike, empty_gen,
-                                          ensure_dir, ensure_resolved, fix_path, indexify, print_verbose,
+                                          ensure_dir, ensure_resolved,
+                                          fix_path, indexify, print_verbose,
                                           rmdir)
 
 _T = TypeVar('_T')

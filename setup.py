@@ -1,12 +1,12 @@
 # For instance,
 # pip install -r git+https://github.com/ruancomelli/boiling-learning#egg=boiling-learning[colab,dev]
 
-from pathlib import Path
-from pkg_resources import parse_requirements
 import re
-from setuptools import setup, find_packages
+from pathlib import Path
 from typing import List, Union
 
+from pkg_resources import parse_requirements
+from setuptools import find_packages, setup
 
 project_path = Path(__file__).parent
 

@@ -1,13 +1,13 @@
-from collections import deque
 import enum
 import functools
-from dataclassy import dataclass
+from collections import deque
 from fractions import Fraction
 from typing import Callable, Iterable, Optional, Type, TypeVar, Union
 
 import funcy
 import more_itertools as mit
 import tensorflow as tf
+from dataclassy import dataclass
 from frozendict import frozendict
 
 import boiling_learning.utils.mathutils as mathutils

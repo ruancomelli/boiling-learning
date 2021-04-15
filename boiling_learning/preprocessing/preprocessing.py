@@ -1,7 +1,6 @@
 import itertools as it
 import operator
 import os
-from dataclassy import dataclass
 from functools import partial
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional, TypeVar
@@ -12,6 +11,7 @@ import more_itertools as mit
 import scipy
 import skimage
 import tensorflow as tf
+from dataclassy import dataclass
 from skimage import img_as_float, img_as_ubyte
 from skimage.io import imread, imsave
 from tensorflow.data.experimental import AUTOTUNE

@@ -1,9 +1,9 @@
-import dataclassy
 import pprint
 import warnings
 from collections import defaultdict
 from typing import Container, Optional, Sequence, Union
 
+import dataclassy
 import more_itertools as mit
 from tensorflow.data.experimental import AUTOTUNE
 
