@@ -1,5 +1,5 @@
 from tensorflow.keras.applications import MobileNetV2
-from tensorflow.keras.layers import Activation, Dense, Flatten, Input
+from tensorflow.keras.layers import Activation, Dense
 from tensorflow.keras.models import Model
 
 from boiling_learning.management import ElementCreator

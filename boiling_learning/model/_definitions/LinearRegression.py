@@ -1,7 +1,6 @@
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
 
-from boiling_learning.management import ElementCreator
 from boiling_learning.model.model import make_creator_method
 from boiling_learning.preprocessing.transformers import Creator
 
