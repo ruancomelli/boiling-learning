@@ -9,7 +9,7 @@ from tensorflow.data.experimental import AUTOTUNE
 
 import boiling_learning.preprocessing as bl_preprocessing
 import boiling_learning.utils as bl_utils
-from boiling_learning.datasets.datasets import (DatasetSplitter,
+from boiling_learning.datasets.datasets import (DatasetSplits,
                                                 tf_concatenate,
                                                 tf_train_val_test_split)
 from boiling_learning.io.io import DatasetTriplet
@@ -24,7 +24,7 @@ from boiling_learning.utils.utils import PathLike
 @Creator.make('experiment_video_dataset_creator', expand_pack_on_call=True)
 def experiment_video_dataset_creator(
         experiment_video: bl_preprocessing.ExperimentVideo,
-        splits: DatasetSplitter,
+        splits: DatasetSplits,
         data_preprocessors: Sequence[Transformer],
         dataset_size: Optional[int] = None,
         snapshot_path: Optional[PathLike] = None,
@@ -82,7 +82,7 @@ def experiment_video_dataset_creator(
 def dataset_creator(
         experiment_video_dataset_manager: Manager,
         image_dataset: bl_preprocessing.ImageDataset,
-        splits: DatasetSplitter,
+        splits: DatasetSplits,
         data_preprocessors: Sequence[Transformer],
         dataset_size: Optional[int] = None,
         num_shards: Optional[int] = None,

@@ -18,7 +18,7 @@ _T = TypeVar('_T')
 
 
 @dataclass(frozen=True)
-class DatasetSplitter:
+class DatasetSplits:
     train: Optional[Fraction] = None
     test: Optional[Fraction] = None
     val: Optional[Fraction] = Fraction(0)
@@ -60,7 +60,7 @@ class DatasetSplitter:
             raise ValueError('it is required that 0 < (*train*, *test*) < 1 and 0 <= *val* < 1')
 
 
-class SplitSubset(enum.Enum):
+class Split(enum.Enum):
     TRAIN = enum.auto()
     VAL = enum.auto()
     TRAIN_VAL = enum.auto()
@@ -99,7 +99,7 @@ class SplitSubset(enum.Enum):
         return self.name.lower()
 
 
-SplitSubset.FROM_STR_TABLE = frozendict({
+Split.FROM_STR_TABLE = frozendict({
     key_str: split_subset
     for keys, split_subset in (
         (('train',), SplitSubset.TRAIN),
