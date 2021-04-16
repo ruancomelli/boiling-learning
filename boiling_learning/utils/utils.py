@@ -27,6 +27,7 @@ import modin.pandas as pd
 import more_itertools as mit
 import zict
 from dataclassy import dataclass
+from dataclassy.dataclass import DataClass
 from frozendict import frozendict
 from more_itertools import unzip
 from sortedcontainers import SortedSet
@@ -425,7 +426,7 @@ def is_dataclass_class(Type) -> bool:
 def dataclass_from_mapping(
         mapping: Mapping[str, Any],
         dataclass_factory: Callable[..., _T],
-        key_map: Optional[Union[dataclass, Mapping[str, str]]] = None
+        key_map: Optional[Union[DataClass, Mapping[str, str]]] = None
 ) -> _T:
     if not is_dataclass_class(dataclass_factory):
         raise ValueError('*dataclass_factory* must be a dataclass.')

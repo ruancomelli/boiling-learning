@@ -1,24 +1,24 @@
 import numpy as np
 import pint
-from dataclassy import dataclass, field
+from dataclassy import dataclass
 
 
 @dataclass(frozen=True)
 class Solid:
-    surface_area: pint.Quantity = field(init=False)
-    volume: pint.Quantity = field(init=False)
+    surface_area: pint.Quantity = None
+    volume: pint.Quantity = None
 
 
 @dataclass(frozen=True)
 class Prism(Solid):
     length: pint.Quantity
 
-    cross_section_perimeter: pint.Quantity = field(init=False)
-    cross_section_area: pint.Quantity = field(init=False)
+    cross_section_perimeter: pint.Quantity = None
+    cross_section_area: pint.Quantity = None
 
-    lateral_area: pint.Quantity = field(init=False)
-    surface_area: pint.Quantity = field(init=False)
-    volume: pint.Quantity = field(init=False)
+    lateral_area: pint.Quantity = None
+    surface_area: pint.Quantity = None
+    volume: pint.Quantity = None
 
     def __post_init__(self):
         object.__setattr__(self, 'lateral_area', self.cross_section_perimeter * self.length)

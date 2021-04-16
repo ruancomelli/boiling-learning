@@ -39,7 +39,7 @@ class ExperimentVideo:
         ref_image: [...]. Example: 'GOPR_frame1263.png'
         ref_elapsed_time: [...]. Example: 12103
         '''
-        categories: Optional[Mapping[str, Any]] = dataclassy.field(default_factory=dict)
+        categories: Mapping[str, Any] = {}
         fps: Optional[float] = None
         ref_index: Optional[str] = None
         ref_elapsed_time: Optional[str] = None
