@@ -35,6 +35,8 @@ class Cylinder(Prism):
         self.cross_section_perimeter = np.pi * self.diameter
         self.cross_section_area = np.pi * self.radius**2
 
+        super().__init__()
+
 
 @dataclass(frozen=True)
 class RectangularPrism(Prism):
@@ -44,3 +46,5 @@ class RectangularPrism(Prism):
     def __init__(self) -> None:
         self.cross_section_perimeter = 2*(self.width + self.thickness)
         self.cross_section_area = self.width * self.thickness
+
+        super().__init__()
