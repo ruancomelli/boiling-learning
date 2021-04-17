@@ -23,7 +23,7 @@ class DatasetSplits:
     test: Optional[Fraction] = None
     val: Optional[Fraction] = Fraction(0)
 
-    def __post_init__(self):
+    def __init__(self) -> None:
         splits = (self.train, self.val, self.test)
         n_nones = splits.count(None)
         if n_nones > 1:
@@ -102,18 +102,18 @@ class Split(enum.Enum):
 Split.FROM_STR_TABLE = frozendict({
     key_str: split_subset
     for keys, split_subset in (
-        (('train',), SplitSubset.TRAIN),
-        (('val', 'validation'), SplitSubset.VAL),
+        (('train',), Split.TRAIN),
+        (('val', 'validation'), Split.VAL),
         (
             tuple(
                 connector.join(('train', validation_key))
                 for connector in ('_', '_and_')
                 for validation_key in ('val', 'validation')
             ),
-            SplitSubset.TRAIN_VAL
+            Split.TRAIN_VAL
         ),
-        (('test',), SplitSubset.TEST),
-        (('all',), SplitSubset.ALL),
+        (('test',), Split.TEST),
+        (('all',), Split.ALL),
     )
     for key_str in keys
 })
@@ -134,7 +134,7 @@ def tf_concatenate(datasets: Iterable[tf.data.Dataset]) -> tf.data.Dataset:
 
 def tf_train_val_test_split(
         ds: tf.data.Dataset,
-        splits: DatasetSplitter,
+        splits: DatasetSplits,
         shuffle: bool = False
 ) -> DatasetTriplet:
     """ #TODO(docstring): describe here
@@ -172,7 +172,7 @@ def tf_train_val_test_split(
 
 def tf_train_val_test_split_concat(
         datasets: Iterable[tf.data.Dataset],
-        splits: DatasetSplitter
+        splits: DatasetSplits
 ) -> DatasetTriplet:
     """ #TODO(docstring): describe here
 
@@ -236,7 +236,7 @@ def take(
     elif isinstance(count, Fraction):
         return tf_train_val_test_split(
             ds,
-            splits=DatasetSplitter(train=count)
+            splits=DatasetSplits(train=count)
         )[0]
     else:
         raise TypeError(
@@ -257,11 +257,10 @@ def calculate_batch_size(
 
 def calculate_dataset_size(
         dataset: tf.data.Dataset,
-        dim: int = 0,
-        is_batched: bool = False
+        batched_dim: Optional[int] = None
 ) -> int:
-    if is_batched:
-        batch_size_calculator = functools.partial(calculate_batch_size, dim=dim)
+    if batched_dim is not None:
+        batch_size_calculator = functools.partial(calculate_batch_size, dim=batched_dim)
         return sum(
             map(
                 batch_size_calculator,

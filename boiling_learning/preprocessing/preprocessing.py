@@ -396,7 +396,7 @@ class ImageDatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
         self.loader = loader
         self.saver = saver
 
-        self.split_id = bl_model.SplitSubset.get_split(split_id)
+        self.split_id = bl_model.Split.get_split(split_id)
 
         if (chunk_index is None) ^ ((chunk_size is None) ^ (n_chunks is not None)):
             raise ValueError(
@@ -418,13 +418,13 @@ class ImageDatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
             img_ds,
             split_id=None
     ):
-        if split_id is bl_model.SplitSubset.TRAIN:
+        if split_id is bl_model.Split.TRAIN:
             df = img_ds.train_paths
-        elif split_id is bl_model.SplitSubset.VAL:
+        elif split_id is bl_model.Split.VAL:
             df = img_ds.val_paths
-        elif split_id is bl_model.SplitSubset.TEST:
+        elif split_id is bl_model.Split.TEST:
             df = img_ds.test_paths
-        elif split_id is bl_model.SplitSubset.ALL:
+        elif split_id is bl_model.Split.ALL:
             df = img_ds.paths
         else:
             raise ValueError(f'split_id={split_id} not supported.')
