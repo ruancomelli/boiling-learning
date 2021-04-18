@@ -267,7 +267,7 @@ class CSVDataset:
 we could write:
 
 ```python
-@dataclass(frozen=True)
+@dataclass(frozen=True, kwargs=True)
 class CSVDatasetColumns:
   features_columns: List[str] = field(default_factory=lambda: ['image_path'])
   target_column: str = 'target'

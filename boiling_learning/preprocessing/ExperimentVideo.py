@@ -44,21 +44,21 @@ class ExperimentVideo:
         ref_index: Optional[str] = None
         ref_elapsed_time: Optional[str] = None
 
-    @dataclass(frozen=True)
+    @dataclass(frozen=True, kwargs=True)
     class VideoDataKeys:
         categories: str = 'categories'
         fps: str = 'fps'
         ref_index: str = 'ref_index'
         ref_elapsed_time: str = 'ref_elapsed_time'
 
-    @dataclass(frozen=True)
+    @dataclass(frozen=True, kwargs=True)
     class DataFrameColumnNames:
         index: str = 'index'
         path: Optional[str] = None
         name: str = 'name'
         elapsed_time: str = 'elapsed_time'
 
-    @dataclass(frozen=True)
+    @dataclass(frozen=True, kwargs=True)
     class DataFrameColumnTypes:
         index = int
         path = str

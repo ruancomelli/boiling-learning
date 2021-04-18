@@ -17,7 +17,7 @@ _sentinel = object()
 _T = TypeVar('_T')
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kwargs=True)
 class DatasetSplits:
     train: Optional[Fraction] = None
     test: Optional[Fraction] = None

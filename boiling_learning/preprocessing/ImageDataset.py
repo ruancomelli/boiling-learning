@@ -30,12 +30,12 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     DataFrameColumnNames: Type[ExperimentVideo.DataFrameColumnNames] = ExperimentVideo.DataFrameColumnNames
     DataFrameColumnTypes: Type[ExperimentVideo.DataFrameColumnTypes] = ExperimentVideo.DataFrameColumnTypes
 
-    @dataclass(frozen=True)
+    @dataclass(frozen=True, kwargs=True)
     class VideoDataKeys(ExperimentVideo.VideoDataKeys):
         name: str = 'name'
         ignore: str = 'ignore'
 
-    # @dataclass(frozen=True)
+    # @dataclass(frozen=True, kwargs=True)
     # class VideoData(ExperimentVideo.VideoData):
     #     name: str
     #     ignore: bool = False

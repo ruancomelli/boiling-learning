@@ -40,7 +40,7 @@ class Manager(
         Mapping[str, dict],
         Generic[_ElemType, _PostProcessedElemType]
 ):
-    @dataclass(frozen=True)
+    @dataclass(frozen=True, kwargs=True)
     class Keys:
         entries: str = 'entries'
         elements: str = 'element'
@@ -52,7 +52,7 @@ class Manager(
         workspace: str = 'workspace'
         path: str = 'path'
 
-    # @dataclass(frozen=True)
+    # @dataclass(frozen=True, kwargs=True)
     # class Entry:
     #     # TODO: here
     #     creator: str

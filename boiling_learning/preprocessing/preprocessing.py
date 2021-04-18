@@ -562,13 +562,13 @@ class ImageDatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
         return full_trajs, ds
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kwargs=True)
 class SizeSpec:
     height: int
     width: int
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kwargs=True)
 class CropSpec:
     offset_box: SizeSpec
     size: SizeSpec
