@@ -35,7 +35,6 @@ class Cylinder(Prism):
         self.cross_section_area = np.pi * self.radius**2
 
 
-@dataclass(frozen=True, kwargs=True)
 class RectangularPrism(Prism):
     width: pint.Quantity
     thickness: pint.Quantity
