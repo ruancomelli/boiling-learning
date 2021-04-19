@@ -3,13 +3,13 @@ import pint
 from dataclassy import dataclass
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kwargs=True)
 class Solid:
     surface_area: pint.Quantity = None
     volume: pint.Quantity = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kwargs=True)
 class Prism(Solid):
     length: pint.Quantity
 
@@ -26,7 +26,7 @@ class Prism(Solid):
         self.volume = self.cross_section_area * self.length
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kwargs=True)
 class Cylinder(Prism):
     diameter: pint.Quantity
 
@@ -38,7 +38,7 @@ class Cylinder(Prism):
         super().__init__()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kwargs=True)
 class RectangularPrism(Prism):
     width: pint.Quantity
     thickness: pint.Quantity
