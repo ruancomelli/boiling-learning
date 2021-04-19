@@ -427,9 +427,7 @@ def dataclass_from_mapping(
     if not is_dataclass_class(dataclass_factory):
         raise ValueError('*dataclass_factory* must be a dataclass.')
 
-    dataclass_field_names = set(
-        funcy.pluck_attr('name', dataclassy.fields(dataclass_factory))
-    )
+    dataclass_field_names = frozenset(dataclassy.fields(dataclass_factory))
 
     if key_map is None:
         return dataclass_factory(
