@@ -26,8 +26,8 @@ import matplotlib.pyplot as plt
 import modin.pandas as pd
 import more_itertools as mit
 import zict
-from dataclassy import dataclass
 from dataclassy.dataclass import DataClass
+from dataclassy.functions import is_dataclass, is_dataclass_instance
 from frozendict import frozendict
 from more_itertools import unzip
 from sortedcontainers import SortedSet
@@ -415,12 +415,8 @@ class KeyedDefaultDict(defaultdict):
             return ret
 
 
-def is_dataclass_instance(obj) -> bool:
-    return dataclassy.is_dataclass(obj) and not isinstance(obj, type)
-
-
-def is_dataclass_class(Type) -> bool:
-    return dataclassy.is_dataclass(Type) and isinstance(Type, type)
+def is_dataclass_class(type_) -> bool:
+    return is_dataclass(type_) and not is_dataclass_instance(type_)
 
 
 def dataclass_from_mapping(
@@ -461,19 +457,22 @@ def dataclass_from_mapping(
         )
 
 
-def to_parent_dataclass(obj: dataclass, parent_factory: Callable[..., _T]) -> _T:
-    if not is_dataclass_class(parent_factory):
-        raise ValueError('*parent_factory* must be a dataclass.')
+def to_parent_dataclass(
+        obj: DataClass,
+        parent: Callable[..., DataClass]
+) -> DataClass:
+    if not is_dataclass_class(parent):
+        raise ValueError('*parent* must be a dataclass.')
 
     if not is_dataclass_instance(obj):
         raise ValueError('*obj* must be a dataclass instance.')
 
-    if not isinstance(obj, parent_factory):
-        raise ValueError('*obj* must be an instance of *parent_factory*.')
+    if not isinstance(obj, parent):
+        raise ValueError('*obj* must be an instance of *parent*.')
 
     return dataclass_from_mapping(
         dataclassy.as_dict(obj),
-        parent_factory
+        parent
     )
 
 
