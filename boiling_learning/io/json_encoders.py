@@ -1,7 +1,6 @@
 import json
 import sys
 
-
 # class PackEncoder(json.JSONEncoder):
 #     def default(self, obj):
 #         if isinstance(obj, Pack):

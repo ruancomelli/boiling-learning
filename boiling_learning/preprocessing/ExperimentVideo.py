@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import (Any, Iterable, Iterator, List, Mapping, Optional, Sequence,
                     Tuple, Union)
 
-import dataclassy
 # import decord
 import funcy
 import modin.pandas as pd
