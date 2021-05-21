@@ -24,7 +24,7 @@ ray[default]==1.2.0
 scipy==1.6.1
 scikit-image==0.18.1
 sortedcontainers==2.3.0
-tensorflow==2.4.1
+tensorflow==2.5.0
 tensorflow-addons==0.12.1
 typeguard==2.11.1
 yogadl==0.1.3
