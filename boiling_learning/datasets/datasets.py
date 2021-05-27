@@ -206,6 +206,28 @@ def tf_train_val_test_split_concat(
     return ds_train, ds_val, ds_test
 
 
+def bulk_split(
+        ds: tf.data.Dataset,
+        splits: DatasetSplits,
+        length: Optional[int] = None
+) -> DatasetTriplet:
+    if length is None:
+        length = calculate_dataset_size(ds)
+
+    train_len = int(splits.train * length)
+    val_len = int(splits.val * length)
+    test_len = int(splits.test * length)
+
+    ds_train = ds.take(train_len)
+    if val_len > 0:
+        ds_val = ds.skip(train_len).take(val_len)
+    else:
+        ds_val = None
+    ds_test = ds.skip(train_len + val_len).take(test_len)
+
+    return ds_train, ds_val, ds_test
+
+
 def take(
         ds: tf.data.Dataset,
         count: Optional[Union[int, Fraction]],
