@@ -79,7 +79,7 @@ assert lower_eq('Hi', 'hi')
 - [ ] Make `cv2` path-like compliant.
 - [ ] Take a look at the relationship between bubble or droplet formation rate and camera acquisition speed.
 - [ ] Divide this TO-DO list into sections. For instance: `Refactoring`, `Additional functionality`, `External dependencies` etc.
-- [ ] Implement a typing helper `Sentinel` which expects a sentinel value called, for instance, `_sentinel`, or another type. Equivalent to `typing.Optional`, but using any other sentinel instead of `None`. See `typing.Literal` in Python 3.8.
+- [x] \[No. Take a look at [sentinel package](https://pypi.org/project/sentinel/) or [PEP 0661](https://github.com/taleinat/python-stdlib-sentinels)\] Implement a typing helper `Sentinel` which expects a sentinel value called, for instance, `_sentinel`, or another type. Equivalent to `typing.Optional`, but using any other sentinel instead of `None`. See `typing.Literal` in Python 3.8.
 - [ ] There is a similar underlying logic between `bl.model.definitions.utils.ProblemType` and `bl.model.model.SubsetSplit`. This can be converted to a factory function `make_enum(enum_name, enum_values, conversion_table)`, providing a class equivalent to:
 
 ```python
@@ -338,3 +338,30 @@ and think of other things.
 - [ ] PACK: Packs Are Compact Kids?
 - [ ] [This ideia](https://github.com/kachayev/dataclasses-tensor) looks amazing, maybe use it?
 - [ ] Use [LocallyConnected](https://www.tensorflow.org/api_docs/python/tf/keras/layers/LocallyConnected2D) layers?
+- [ ] Check this post to get some ideas: https://pub.towardsai.net/state-of-the-art-models-in-every-machine-learning-field-2021-c7cf074da8b2
+- [ ] Perhaps objects could be identified by pipelines? Like this:
+```py
+pipe = manager.Pipeline(Creator('five', lambda: 5))
+pipe.append(Transformer('add', lambda x, y: x+y, y=3))
+pipe |= Transformer('multiply', lambda x, y: x*y, y=2)
+
+pprint(pipe.json())
+# [
+#   {
+#     "name": "five",
+#     "params": [[], {}]
+#   },
+#   {
+#     "name": "add",
+#     "params": [[], {"y": 3}]
+#   },
+#   {
+#     "name": "multiply",
+#     "params": [[], {"y": 2}]
+#   }
+# ]
+
+print(pipe())
+# 16
+# because 16 == (5 + 3)*2
+```
