@@ -1,9 +1,9 @@
 from fractions import Fraction
 from boiling_learning.datasets.datasets import DatasetSplits, bulk_split, calculate_dataset_size
-import unittest
 from unittest import TestCase
 
 from tensorflow.data import Dataset
+
 
 class datasets_test(TestCase):
     def test_calculate_size(self):

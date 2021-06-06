@@ -44,7 +44,7 @@ class daq_Device_test(unittest.TestCase):
         self.assertEqual(Device('Dev0'), Device('Dev0'))
 
 
-class daq_Channel_Test(unittest.TestCase):
+class daq_Channel_test(unittest.TestCase):
     def test_init(self):
         ch = Channel(Device('Dev0'), name='ai0', description='My Channel')
         self.assertEqual(ch.name, 'ai0')
