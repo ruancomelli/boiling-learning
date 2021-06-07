@@ -60,12 +60,10 @@ class DatasetSplits:
             raise ValueError('it is required that 0 < (*train*, *test*) < 1 and 0 <= *val* < 1')
 
 
-class Split(enum.Enum):
+class Split(enum.Flag):
     TRAIN = enum.auto()
     VAL = enum.auto()
-    TRAIN_VAL = enum.auto()
     TEST = enum.auto()
-    ALL = enum.auto()
 
     @classmethod
     def get_split(
@@ -110,10 +108,10 @@ Split.FROM_STR_TABLE = frozendict({
                 for connector in ('_', '_and_')
                 for validation_key in ('val', 'validation')
             ),
-            Split.TRAIN_VAL
+            Split.TRAIN | Split.VAL
         ),
         (('test',), Split.TEST),
-        (('all',), Split.ALL),
+        (('all',), Split.TRAIN | Split.VAL | Split.TEST),
     )
     for key_str in keys
 })
