@@ -7,7 +7,7 @@ decorator==4.4.2
 Flask==1.1.2
 frozendict==1.2
 funcy==1.15
-h5py==2.10.0
+h5py>=3,<4
 ipywidgets==7.6.3
 json-tricks==3.15.5
 matplotlib==3.3.4
@@ -24,6 +24,8 @@ portion==2.1.5
 ray==1.2.0
 scipy==1.6.1
 scikit-image==0.18.1
+semver>=2.13,<3
+sentinel==0.3.*
 sortedcontainers==2.3.0
 tensorflow==2.5.0
 tensorflow-addons==0.12.1
