@@ -1,0 +1,76 @@
+name: Release package
+on:
+  push:
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  Build:
+    name: Build package
+
+    runs-on: ubuntu-18.04
+    if: "!contains(github.event.head_commit.message, 'release-skip')"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup python 3.6
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+
+      - name: Install dependencies
+        run : |
+          python -m pip install -U pip wheel
+          pip install flake8 pytest
+          pip install -r requirements.txt
+
+      - name: Install package
+        run: |
+          python setup.py build
+          python setup.py install
+
+      - name: Lint with flake8
+        run : |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      - name: Test with pytest
+        run: |
+          pytest
+
+  Release:
+    name: Create release
+
+    runs-on: ubuntu-latest
+    needs: [Build]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Zip boiling_learning/
+        run: |
+          zip -r boiling_learning.zip boiling_learning
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is auto provided by Actions
+        with:
+          tag_name: ${{ github.ref }} # get tag
+          release_name: Release ${{ github.ref }}
+          body:  ${{ github.event.head_commit.message }} # get commit message
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the step above
+          asset_path: ./boiling_learning.zip
+          asset_name: boiling_learning.zip
+          asset_content_type: application/zip
