@@ -7,12 +7,8 @@ from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
 from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 
-from boiling_learning import management, model
 from boiling_learning.management import Mirror
-from boiling_learning.model_definitions import (HoboldNet1, HoboldNet2,
-                                                HoboldNet3,
-                                                HoboldNetSupplementary,
-                                                KramerNet)
+from boiling_learning.model_definitions import HoboldNet2
 
 pp = pprint.PrettyPrinter(indent=4, width=160)
 

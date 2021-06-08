@@ -1,6 +1,4 @@
-from pprint import pprint
 
-from parse import parse
 
 
 def group_files_move(path, keyfunc, mover_gen):

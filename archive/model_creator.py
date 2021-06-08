@@ -4,12 +4,11 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 import numpy as np
-import tensorflow as tf
 
 try:
-    import keras
+    pass
 except ImportError:
-    from tensorflow import keras
+    pass
 
 from pathlib import Path
 
@@ -217,7 +216,7 @@ pipe = manager.provide_model(
 # print(pipe)
 
 def polynomial_model2(params):
-    from copy import deepcopy
+    pass
 
     from sklearn.pipeline import make_pipeline
     from sklearn.preprocessing import PolynomialFeatures

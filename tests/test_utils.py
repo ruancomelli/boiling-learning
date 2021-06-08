@@ -1,6 +1,7 @@
+from unittest.case import TestCase
+
 from boiling_learning.utils.collections import KeyedSet
 from boiling_learning.utils.utils import indexify
-from unittest.case import TestCase
 
 
 class utils_utils_test(TestCase):

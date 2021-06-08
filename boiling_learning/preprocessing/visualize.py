@@ -1,6 +1,5 @@
-from typing import (
-    Any, Callable, Iterable, List, Mapping, Optional, Sequence, Tuple, TypeVar,
-    Union)
+from typing import (Any, Callable, Iterable, List, Mapping, Optional, Sequence,
+                    Tuple, TypeVar, Union)
 
 import bokeh.models
 import bokeh.plotting
