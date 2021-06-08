@@ -16,6 +16,7 @@ from typing_extensions import overload
 
 import boiling_learning as bl
 from boiling_learning.io.io import BoolFlaggedLoaderFunction, SaverFunction
+from boiling_learning.io.json_encoders import GenericJSONDecoder, GenericJSONEncoder
 from boiling_learning.preprocessing.transformers import Creator, Transformer
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.Parameters import Parameters
@@ -60,12 +61,12 @@ class Manager(
     #     post_processor: str
     #     post_processor_params: PackType
 
-    _default_table_saver = partial(bl.io.save_json, cls=bl.io.json_encoders.GenericJSONEncoder)
-    _default_table_loader = partial(bl.io.load_json, cls=bl.io.json_encoders.GenericJSONDecoder)
+    _default_table_saver = partial(bl.io.save_json, cls=GenericJSONEncoder)
+    _default_table_loader = partial(bl.io.load_json, cls=GenericJSONDecoder)
     _default_description_comparer = partial(
         bl.utils.json_equivalent,
-        encoder=bl.io.json_encoders.GenericJSONEncoder,
-        decoder=bl.io.json_encoders.GenericJSONDecoder
+        encoder=GenericJSONEncoder,
+        decoder=GenericJSONDecoder
     )
 
     class MultipleIdsHandler(enum.Enum):
@@ -75,36 +76,36 @@ class Manager(
         KEEP_FIRST_LOADED = enum.auto()
         KEEP_LAST_LOADED = enum.auto()
 
-    class Element:
-        # TODO: finish this and replace Manager interface
-        def __init__(
-                self,
-                elem_id: str,
-                path: PathLike,
-                load_method: BoolFlaggedLoaderFunction[_ElemType],
-                save_method: SaverFunction[_ElemType]
-        ):
-            self._id: str = elem_id
-            self._is_loaded: bool = False
-            self._path: Path = bl.utils.ensure_resolved(path)
-            self._value: Union[_Sentinel, _ElemType, _PostProcessedElemType]
+    # class Element:
+    #     # TODO: finish this and replace Manager interface
+    #     def __init__(
+    #             self,
+    #             elem_id: str,
+    #             path: PathLike,
+    #             load_method: BoolFlaggedLoaderFunction[_ElemType],
+    #             save_method: SaverFunction[_ElemType]
+    #     ):
+    #         self._id: str = elem_id
+    #         self._is_loaded: bool = False
+    #         self._path: Path = bl.utils.ensure_resolved(path)
+    #         self._value: Union[_Sentinel, _ElemType, _PostProcessedElemType]
 
-        @property
-        def id(self) -> str:
-            return self._id
+    #     @property
+    #     def id(self) -> str:
+    #         return self._id
 
-        @property
-        def is_loaded(self) -> bool:
-            return self._is_loaded
+    #     @property
+    #     def is_loaded(self) -> bool:
+    #         return self._is_loaded
 
-        @property
-        def path(self) -> Path:
-            return self._path
+    #     @property
+    #     def path(self) -> Path:
+    #         return self._path
 
-        def load(self) -> bool:
-            success, self._value = self.load_method(self.path)
-            self._is_loaded = success
-            return success
+    #     def load(self) -> bool:
+    #         success, self._value = self.load_method(self.path)
+    #         self._is_loaded = success
+    #         return success
 
     def __init__(
             self,
@@ -266,8 +267,8 @@ class Manager(
             raise ValueError(
                 'this Manager\'s *save_method* is not set.'
                 ' Define it in the Manager\'s initialization'
-                ' or by defining it as a property.')
-
+                ' or by defining it as a property.'
+            )
 
         path = bl.utils.ensure_parent(path)
         self.save_method(elem, path)
@@ -290,83 +291,6 @@ class Manager(
             }
         else:
             return self.entries.get(elem_id, {}).get(self.key_names.elements, {})
-
-    def metadata(self, elem_id: Optional[str] = None):
-        if elem_id is None:
-            return {
-                elem_id: self.metadata(elem_id)
-                for elem_id in self.entries
-            }
-        else:
-            return self.entries.get(elem_id, {}).get(self.key_names.metadata, {})
-
-    @overload
-    def elem_creator(self, elem_id: None) -> dict:
-        ...
-
-    @overload
-    def elem_creator(self, elem_id: str):
-        ...
-
-    def elem_creator(self, elem_id: Optional[str] = None):
-        if elem_id is None:
-            return {
-                elem_id: self.elem_creator(elem_id)
-                for elem_id in self.entries
-            }
-        else:
-            return self.contents(elem_id).get(self.key_names.creator)
-
-    @overload
-    def creator_description(self, elem_id: None) -> dict:
-        ...
-
-    @overload
-    def creator_description(self, elem_id: str):
-        ...
-
-    def creator_description(self, elem_id: Optional[str] = None):
-        if elem_id is None:
-            return {
-                elem_id: self.creator_description(elem_id)
-                for elem_id in self.entries
-            }
-        else:
-            return self.contents(elem_id).get(self.key_names.creator_params, Pack())
-
-    @overload
-    def elem_post_processor(self, elem_id: None) -> dict:
-        ...
-
-    @overload
-    def elem_post_processor(self, elem_id: str):
-        ...
-
-    def elem_post_processor(self, elem_id: Optional[str] = None):
-        if elem_id is None:
-            return {
-                elem_id: self.elem_post_processor(elem_id)
-                for elem_id in self.entries
-            }
-        else:
-            return self.contents(elem_id).get(self.key_names.post_processor)
-
-    @overload
-    def post_processor_description(self, elem_id: None) -> dict:
-        ...
-
-    @overload
-    def post_processor_description(self, elem_id: str):
-        ...
-
-    def post_processor_description(self, elem_id: Optional[str] = None):
-        if elem_id is None:
-            return {
-                elem_id: self.post_processor_description(elem_id)
-                for elem_id in self.entries
-            }
-        else:
-            return self.contents(elem_id).get(self.key_names.post_processor_params, Pack())
 
     def new_elem_id(self) -> str:
         '''Return a elem id that does not exist yet
@@ -731,7 +655,7 @@ class Manager(
             post_processor: Optional[Union[object, Transformer[_ElemType, _PostProcessedElemType]]] = _sentinel,
             post_processor_description: Pack = Pack(),
             post_processor_params: Pack = Pack(),
-            load: Union[bool, Callable[[], Tuple[bool, _ElemType]]] = False,
+            load: Union[bool, BoolFlaggedLoaderFunction[_ElemType]] = False,
             save: Union[bool, Callable[[Union[_ElemType, _PostProcessedElemType]], Any]] = False,
             raise_if_load_fails: bool = False,
             reload_after_save: bool = False
