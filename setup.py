@@ -1,5 +1,5 @@
 # For instance,
-# pip install -r git+https://github.com/ruancomelli/boiling-learning#egg=boiling-learning[colab,dev]
+# pip install -r git+https://github.com/ruancomelli/boiling-learning#egg=boiling-learning[dev,scripts]
 
 from pathlib import Path
 from typing import List, Union
@@ -20,7 +20,7 @@ REQUIRES = read_lines(project_path / 'requirements.txt')
 
 EXTRAS_REQUIRE = {
     extra: read_lines(project_path / f'requirements-{extra}.txt')
-    for extra in ('colab', 'dev', 'scripts')
+    for extra in ('dev', 'scripts')
 }
 EXTRAS_REQUIRE['all'] = [
     extra_req
