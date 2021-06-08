@@ -365,3 +365,7 @@ print(pipe())
 # 16
 # because 16 == (5 + 3)*2
 ```
+- [ ] try model [optimization](https://www.tensorflow.org/lite/performance/model_optimization).
+- [ ] try pretrained models from [TensorFlow Hub](https://tfhub.dev/tensorflow/collections/lite/task-library/object-detector/1).
+- [ ] try [transfer learning](https://www.tensorflow.org/guide/keras/transfer_learning).
+- [ ] check [TensorFlow tensor slicing](https://www.tensorflow.org/guide/tensor_slicing) for perfect shuffling.
