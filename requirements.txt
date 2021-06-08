@@ -3,7 +3,6 @@ requests~=2.23
 bidict~=0.21
 bokeh~=2.3
 dataclassy~=0.8
-decorator~=4.4
 Flask~=1.1
 frozendict~=1.2
 funcy~=1.15

@@ -20,7 +20,6 @@ from typing import (Any, Callable, Collection, Dict, Iterable, Iterator, List,
                     TypeVar, Union)
 
 import dataclassy
-import decorator
 import funcy
 import matplotlib.pyplot as plt
 import modin.pandas as pd
@@ -30,6 +29,7 @@ from dataclassy.dataclass import DataClass
 from dataclassy.functions import is_dataclass, is_dataclass_instance
 from frozendict import frozendict
 from more_itertools import unzip
+from plum import dispatch
 from sortedcontainers import SortedSet
 from typing_extensions import overload
 
@@ -102,24 +102,19 @@ def comment(
     return wrapped
 
 
-@decorator.dispatch_on('arg')
-def as_immutable(arg):
-    raise NotImplementedError(type(arg))
+@dispatch
+def as_immutable(coll: list):
+    return tuple(coll)
 
 
-@as_immutable.register(list)
-def _(arg):
-    return tuple(arg)
+@dispatch
+def as_immutable(coll: set):
+    return frozenset(coll)
 
 
-@as_immutable.register(set)
-def _(arg):
-    return frozenset(arg)
-
-
-@as_immutable.register(dict)
-def _(arg):
-    return frozendict(arg)
+@dispatch
+def as_immutable(coll: dict):
+    return frozendict(coll)
 
 
 # TODO: in the *_sentinel* case, use *key=as_immutable*. Do it and test!

@@ -26,7 +26,7 @@ from boiling_learning.utils.utils import (  # JSONDataType, # TODO: maybe using 
 # TODO: maybe include "status" in metadata
 # TODO: maybe include a comment in metadata
 # TODO: improve this... there is a lot of repetition and buggy cases.
-# ? Perhaps a better would be to have only one way to pass a description: through elem_id. No *contents*, just the id...
+# ? Perhaps a better idea would be to have only one way to pass a description: through elem_id. No *contents*, just the id...
 # TODO: standardize "post_processor": sometimes *None* means *None*, other times it means "get the default one"
 
 
