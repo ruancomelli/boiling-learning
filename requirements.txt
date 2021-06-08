@@ -20,7 +20,6 @@ pims~=0.5
 pint~=0.16.1
 plum-dispatch~=1.0.0
 portion~=2.1.5
-ray~=1.2
 scipy~=1.5
 scikit-image~=0.17
 semver~=2.13
