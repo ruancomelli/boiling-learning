@@ -1,6 +1,5 @@
-from typing import (
-    Any, Callable, Iterable, List, Mapping, Optional, Sequence, Tuple, TypeVar,
-    Union)
+from typing import (Any, Callable, Iterable, List, Mapping, Optional, Sequence,
+                    Tuple, TypeVar, Union)
 
 import bokeh.models
 import bokeh.plotting
@@ -419,50 +418,54 @@ def visualize_dataset(
                 fig.show()
 
 
-def interact_frames(
-        image_datasets: Sequence[ImageDataset]
-) -> None:
-    image_datasets = tuple(image_datasets)
-    img_ds_options = [(img_ds.name, img_ds) for img_ds in image_datasets]
+# def interact_frames(
+#         image_datasets: Sequence[ImageDataset]
+# ) -> None:
+#     image_datasets = tuple(image_datasets)
+#     img_ds_options = [(img_ds.name, img_ds) for img_ds in image_datasets]
 
-    default_img_ds = img_ds_options[0][1]
-    img_ds_widget = widgets.Dropdown(
-        options=img_ds_options,
-        description='Case name:',
-        value=default_img_ds
-    )
+#     default_img_ds = img_ds_options[0][1]
+#     img_ds_widget = widgets.Dropdown(
+#         options=img_ds_options,
+#         description='Case name:',
+#         value=default_img_ds
+#     )
 
-    experiment_videos_options = [
-        (experiment_video.name, experiment_video)
-        for experiment_video in img_ds_widget.value.values()
-    ]
-    experiment_videos_widget = widgets.Dropdown(
-        options=experiment_videos_options,
-        description='Experiment video:',
-        value=experiment_videos_options[0][1]
-    )
-    def update_videos_list(changes):
-        experiment_videos_widget.options = [
-            (experiment_video.name, experiment_video)
-            for experiment_video in changes['new'].values()
-        ]
-    img_ds_widget.observe(update_videos_list, 'value')
+#     experiment_videos_options = [
+#         (experiment_video.name, experiment_video)
+#         for experiment_video in img_ds_widget.value.values()
+#     ]
+#     experiment_videos_widget = widgets.Dropdown(
+#         options=experiment_videos_options,
+#         description='Experiment video:',
+#         value=experiment_videos_options[0][1]
+#     )
 
-    with experiment_videos_widget.value.frames() as f:
-        index_widget = widgets.IntSlider(
-            value=0,
-            min=0,
-            max=len(f),
-            description='Frame:'
-        )
-    def update_max_index(changes):
-        with changes['new'].frames() as f:
-            index_widget.max = len(f)
-    experiment_videos_widget.observe(update_max_index, 'value')
+#     def update_videos_list(changes):
+#         experiment_videos_widget.options = [
+#             (experiment_video.name, experiment_video)
+#             for experiment_video in changes['new'].values()
+#         ]
 
-    def show_frames(img_ds, ev, idx):
-        frame = skimage.transform.downscale_local_mean(ev.frame(idx), (8, 8, 1))
-        cv2_imshow(frame)
+#     img_ds_widget.observe(update_videos_list, 'value')
 
-    if should_interact_frames:
-        interact(show_frames, img_ds=img_ds_widget, ev=experiment_videos_widget, idx=index_widget)
+#     with experiment_videos_widget.value.frames() as f:
+#         index_widget = widgets.IntSlider(
+#             value=0,
+#             min=0,
+#             max=len(f),
+#             description='Frame:'
+#         )
+
+#     def update_max_index(changes):
+#         with changes['new'].frames() as f:
+#             index_widget.max = len(f)
+
+#     experiment_videos_widget.observe(update_max_index, 'value')
+
+#     def show_frames(img_ds, ev, idx):
+#         frame = skimage.transform.downscale_local_mean(ev.frame(idx), (8, 8, 1))
+#         cv2_imshow(frame)
+
+#     if should_interact_frames:
+#         interact(show_frames, img_ds=img_ds_widget, ev=experiment_videos_widget, idx=index_widget)

@@ -348,7 +348,6 @@ class Manager:
                 return self.load_model(path)
             except (FileNotFoundError, pickle.UnpicklingError, OSError):
                 print('Load failed')
-                pass
 
         model = creator_method(merge_dicts(params, hidden_params))
 

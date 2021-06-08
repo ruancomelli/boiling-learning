@@ -18,7 +18,7 @@ def change_value(x):
     x.value += 1
 
 def change(x):
-    x = X(5)
+    X(5)
 
 x = X(3)
 change_value(x)
@@ -218,7 +218,6 @@ print(
 )
 
 #%%
-import sympy
 
 wire_diameter = 0.518e-3 # m
 wire_length = 6.5e-2 # m
