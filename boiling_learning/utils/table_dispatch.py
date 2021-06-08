@@ -20,8 +20,8 @@ class TableDispatcher:
         try:
             return self._dispatch_table[keys]
         except KeyError as e:
-            if self._dispatch is not None:
-                return self._dispatch
+            if self._default is not None:
+                return self._default
             else:
                 raise DispatchError(
                     'no default callable'
