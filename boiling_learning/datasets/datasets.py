@@ -23,7 +23,7 @@ class DatasetSplits:
     test: Optional[Fraction] = None
     val: Optional[Fraction] = Fraction(0)
 
-    def __init__(self) -> None:
+    def __post_init__(self) -> None:
         splits = (self.train, self.val, self.test)
         n_nones = splits.count(None)
         if n_nones > 1:

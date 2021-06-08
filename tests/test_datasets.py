@@ -15,16 +15,12 @@ class datasets_test(TestCase):
             10
         )
 
-
     def test_bulk_split(self):
         ds = Dataset.range(10)
 
         ds_train, ds_val, ds_test = bulk_split(
             ds,
-            DatasetSplits(
-                train=Fraction(6, 10),
-                val=Fraction(3, 10),
-            )
+            DatasetSplits(train=Fraction(6, 10), val=Fraction(3, 10))
         )
 
         self.assertSequenceEqual(tuple(ds_train), tuple(Dataset.range(6)))
