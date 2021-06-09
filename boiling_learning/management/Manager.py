@@ -649,7 +649,7 @@ class Manager(
             reload_after_save: bool = False
     ) -> Union[_ElemType, _PostProcessedElemType]:
         """Provide an element.
- 
+
         If *post_processor* is *None*, will try to use this *Manager*'s default *post_processor*.
         """
         if creator is _sentinel:

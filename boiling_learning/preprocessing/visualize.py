@@ -10,7 +10,6 @@ import more_itertools as mit
 import numpy as np
 import tensorflow as tf
 from frozendict import frozendict
-from ipywidgets import interact, widgets
 from matplotlib import gridspec
 from matplotlib.colors import NoNorm
 
