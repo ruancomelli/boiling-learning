@@ -12,11 +12,11 @@ import funcy
 import more_itertools as mit
 import parse
 from dataclassy import dataclass
-from typing_extensions import overload
 
 import boiling_learning as bl
 from boiling_learning.io.io import BoolFlaggedLoaderFunction, SaverFunction
-from boiling_learning.io.json_encoders import GenericJSONDecoder, GenericJSONEncoder
+from boiling_learning.io.json_encoders import (GenericJSONDecoder,
+                                               GenericJSONEncoder)
 from boiling_learning.preprocessing.transformers import Creator, Transformer
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.Parameters import Parameters
@@ -52,14 +52,6 @@ class Manager(
         post_processor_params: str = 'post_processor_params'
         workspace: str = 'workspace'
         path: str = 'path'
-
-    # @dataclass(frozen=True, kwargs=True)
-    # class Entry:
-    #     # TODO: here
-    #     creator: str
-    #     creator_params: PackType
-    #     post_processor: str
-    #     post_processor_params: PackType
 
     _default_table_saver = partial(bl.io.save_json, cls=GenericJSONEncoder)
     _default_table_loader = partial(bl.io.load_json, cls=GenericJSONDecoder)
@@ -117,7 +109,6 @@ class Manager(
             creator: Optional[Creator[_ElemType]] = None,
             post_processor: Optional[Transformer[_ElemType, _PostProcessedElemType]] = None,
             verbose: VerboseType = False,
-            load_table: bool = True,
             key_names: Keys = Keys(),
             table_saver: Callable[[dict, Path], Any] = _default_table_saver,
             table_loader: Callable[[Path], dict] = _default_table_loader,
@@ -165,19 +156,16 @@ class Manager(
         self._table_loader = table_loader
         self._description_comparer = description_comparer
 
-        if load_table:
-            self.load_lookup_table()
+        self.load_lookup_table()
 
         self.id_fmt: str = id_fmt
         self.index_key: str = index_key
 
-        self._parse_index: Callable[[str], int] = funcy.compose(
-            int,
+        self._parse_index: Callable[[str], int] = funcy.rcompose(
+            parse.compile(id_fmt).parse,
             operator.itemgetter(index_key),
-            parse.compile(id_fmt).parse
+            int
         )
-        # def _parse_index(self, elem_id) -> int:
-        #     return int(parse.parse(self.id_fmt, elem_id)[self.index_key])
 
         def _format_index(index: int) -> str:
             return self.id_fmt.format(**{self.index_key: index})
@@ -649,10 +637,10 @@ class Manager(
             self,
             elem_id: Optional[str] = None,
             contents: Optional[Mapping] = None,
-            creator: Union[object, Creator[_ElemType]] = _sentinel,
+            creator: Union[_Sentinel, Creator[_ElemType]] = _sentinel,
             creator_description: Pack = Pack(),
             creator_params: Pack = Pack(),
-            post_processor: Optional[Union[object, Transformer[_ElemType, _PostProcessedElemType]]] = _sentinel,
+            post_processor: Optional[Union[_Sentinel, Transformer[_ElemType, _PostProcessedElemType]]] = _sentinel,
             post_processor_description: Pack = Pack(),
             post_processor_params: Pack = Pack(),
             load: Union[bool, BoolFlaggedLoaderFunction[_ElemType]] = False,
@@ -661,7 +649,7 @@ class Manager(
             reload_after_save: bool = False
     ) -> Union[_ElemType, _PostProcessedElemType]:
         """Provide an element.
-
+ 
         If *post_processor* is *None*, will try to use this *Manager*'s default *post_processor*.
         """
         if creator is _sentinel:

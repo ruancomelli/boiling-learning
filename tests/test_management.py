@@ -1,10 +1,10 @@
 from pathlib import Path
-from boiling_learning.io.io import load_json, save_json
-from boiling_learning.utils.functional import Pack
-from boiling_learning.preprocessing.transformers import Creator
 from unittest.case import TestCase
 
+from boiling_learning.io.io import load_json, save_json
 from boiling_learning.management.Manager import Manager
+from boiling_learning.preprocessing.transformers import Creator
+from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.utils import tempdir
 
 

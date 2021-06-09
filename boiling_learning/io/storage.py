@@ -1,5 +1,4 @@
 from importlib import import_module
-import json
 from typing import Any, Dict, TypeVar
 
 from plum import Dispatcher
