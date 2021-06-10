@@ -5,8 +5,12 @@ import funcy
 
 from boiling_learning.utils.dtypes import auto_spec, new_py_function
 from boiling_learning.utils.functional import Pack, nth_arg
-from boiling_learning.utils.utils import (FrozenNamedMixin, JSONDataType,
-                                          KeyedDefaultDict, SimpleStr)
+from boiling_learning.utils.utils import (
+    FrozenNamedMixin,
+    JSONDataType,
+    KeyedDefaultDict,
+    SimpleStr,
+)
 
 # from boiling_learning.io.json_encoders import (
 #     PackEncoder

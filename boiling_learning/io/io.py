@@ -9,8 +9,19 @@ import warnings
 from functools import partial
 from itertools import accumulate
 from pathlib import Path
-from typing import (Any, Callable, Dict, Iterable, Mapping, Optional, Sequence,
-                    Tuple, Type, TypeVar, Union)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import cv2
 import funcy
@@ -30,9 +41,13 @@ except ImportError:
     pass  # TODO: handle this case
 
 import boiling_learning.utils as bl_utils
-from boiling_learning.utils import (PathLike, ensure_dir, ensure_parent,
-                                    ensure_resolved)
-from boiling_learning.utils.functional import pack
+from boiling_learning.utils import (
+    PathLike,
+    ensure_dir,
+    ensure_parent,
+    ensure_resolved,
+)
+from boiling_learning.utils.functional import P
 
 _T = TypeVar('_T')
 _S = TypeVar('_S')
@@ -215,7 +230,7 @@ def save_json(
             category=RuntimeWarning,
         )
 
-    dump = pack(cls=cls).omit('cls', bl_utils.is_(None)).partial(dump)
+    dump = P(cls=cls).omit('cls', bl_utils.is_(None)).partial(dump)
     with path.open('w', encoding='utf-8') as file:
         dump(obj, file, indent=4, ensure_ascii=False)
 
@@ -233,7 +248,7 @@ def load_json(
             category=RuntimeWarning,
         )
 
-    load = pack(cls=cls).omit('cls', bl_utils.is_(None)).partial(load)
+    load = P(cls=cls).omit('cls', bl_utils.is_(None)).partial(load)
     with path.open('r', encoding='utf-8') as file:
         return load(file)
 

@@ -49,7 +49,7 @@ from plum import dispatch
 from sortedcontainers import SortedSet
 from typing_extensions import overload
 
-from boiling_learning.utils.functional import pack
+from boiling_learning.utils.functional import P
 from boiling_learning.utils.iterutils import flaglast
 
 # ---------------------------------- Typing ----------------------------------
@@ -630,8 +630,8 @@ def json_equivalent(
     loads: Callable[[str], Any] = json.loads,
 ) -> bool:
     # ignore parameter *cls* when it is *None*
-    dumps = pack(cls=encoder).partial(dumps)
-    loads = pack(cls=decoder).partial(loads)
+    dumps = P(cls=encoder).partial(dumps)
+    loads = P(cls=decoder).partial(loads)
 
     lhs_str = dumps(lhs)
     rhs_str = dumps(rhs)

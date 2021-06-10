@@ -9,13 +9,18 @@ from tensorflow.data.experimental import AUTOTUNE
 
 import boiling_learning.preprocessing as bl_preprocessing
 import boiling_learning.utils as bl_utils
-from boiling_learning.datasets.datasets import (DatasetSplits, tf_concatenate,
-                                                tf_train_val_test_split)
+from boiling_learning.datasets.datasets import (
+    DatasetSplits,
+    tf_concatenate,
+    tf_train_val_test_split,
+)
 from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.management.Manager import Manager
-from boiling_learning.preprocessing.transformers import (Creator,
-                                                         DictImageTransformer,
-                                                         Transformer)
+from boiling_learning.preprocessing.transformers import (
+    Creator,
+    DictImageTransformer,
+    Transformer,
+)
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.utils import PathLike
 

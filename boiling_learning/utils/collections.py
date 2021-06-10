@@ -1,5 +1,15 @@
-from typing import (Callable, Dict, Generic, Hashable, Iterable, Iterator,
-                    KeysView, MutableSet, TypeVar, ValuesView)
+from typing import (
+    Callable,
+    Dict,
+    Generic,
+    Hashable,
+    Iterable,
+    Iterator,
+    KeysView,
+    MutableSet,
+    TypeVar,
+    ValuesView,
+)
 
 _Key = TypeVar('_Key', bound=Hashable)
 _Value = TypeVar('_Value')

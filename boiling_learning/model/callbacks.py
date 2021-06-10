@@ -8,8 +8,11 @@ from tensorflow.python.keras import backend as K
 from tensorflow.python.platform import tf_logging as logging
 from typing_extensions import Protocol
 
-from boiling_learning.utils.utils import (PathLike, ensure_parent,
-                                          ensure_resolved)
+from boiling_learning.utils.utils import (
+    PathLike,
+    ensure_parent,
+    ensure_resolved,
+)
 
 
 # Source: <https://stackoverflow.com/q/47731935/5811400>

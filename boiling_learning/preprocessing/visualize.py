@@ -1,5 +1,15 @@
-from typing import (Any, Callable, Iterable, List, Mapping, Optional, Sequence,
-                    Tuple, TypeVar, Union)
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import bokeh.models
 import bokeh.plotting
@@ -18,9 +28,11 @@ from boiling_learning.management import Manager
 from boiling_learning.preprocessing.Case import Case
 from boiling_learning.preprocessing.ExperimentVideo import ExperimentVideo
 from boiling_learning.preprocessing.ImageDataset import ImageDataset
-from boiling_learning.preprocessing.transformers import (DictImageTransformer,
-                                                         Transformer)
-from boiling_learning.utils.functional import Pack, nth_arg, pack
+from boiling_learning.preprocessing.transformers import (
+    DictImageTransformer,
+    Transformer,
+)
+from boiling_learning.utils.functional import P, Pack, nth_arg
 from boiling_learning.utils.Parameters import Parameters
 
 _T = TypeVar('_T')
@@ -122,74 +134,74 @@ DEFAULT_VISUALIZERS = frozendict(
             (transformer.transform_image, image, transformer.pack),
         ),
         'random_left_right_flipper': lambda transformer, image: (
-            (_first_arg_getter, image, Pack()),
+            (_first_arg_getter, image, P()),
             (
                 Transformer('left_right_flipper', tf.image.flip_left_right),
                 image,
-                Pack(),
+                P(),
             ),
         ),
         'random_brightness': lambda transformer, image: (
-            (_first_arg_getter, image, Pack()),
+            (_first_arg_getter, image, P()),
             (
                 Transformer(
                     'brightness_adjuster',
                     tf.image.adjust_brightness,
-                    pack=pack(transformer.pack.args[0]),
+                    pack=P(transformer.pack.args[0]),
                 ),
                 image,
-                pack(transformer.pack.args[0]),
+                P(transformer.pack.args[0]),
             ),
             (
                 Transformer(
                     'brightness_adjuster',
                     tf.image.adjust_brightness,
-                    pack=pack(transformer.pack.args[1]),
+                    pack=P(transformer.pack.args[1]),
                 ),
                 image,
-                pack(transformer.pack.args[1]),
+                P(transformer.pack.args[1]),
             ),
         ),
         'random_contrast': lambda transformer, image: (
-            (_first_arg_getter, image, Pack()),
+            (_first_arg_getter, image, P()),
             (
                 Transformer(
                     'contrast_adjuster',
                     tf.image.adjust_contrast,
-                    pack=pack(transformer.pack.args[0]),
+                    pack=P(transformer.pack.args[0]),
                 ),
                 image,
-                pack(transformer.pack.args[0]),
+                P(transformer.pack.args[0]),
             ),
             (
                 Transformer(
                     'contrast_adjuster',
                     tf.image.adjust_contrast,
-                    pack=pack(transformer.pack.args[1]),
+                    pack=P(transformer.pack.args[1]),
                 ),
                 image,
-                pack(transformer.pack.args[1]),
+                P(transformer.pack.args[1]),
             ),
         ),
         'random_quality': lambda transformer, image: (
-            (_first_arg_getter, image, Pack()),
+            (_first_arg_getter, image, P()),
             (
                 Transformer(
                     'jpeg_quality_adjuster',
                     tf.image.adjust_jpeg_quality,
-                    pack=pack(transformer.pack.args[0]),
+                    pack=P(transformer.pack.args[0]),
                 ),
                 image,
-                pack(transformer.pack.args[0]),
+                P(transformer.pack.args[0]),
             ),
             (
                 Transformer(
                     'jpeg_quality_adjuster',
                     tf.image.adjust_jpeg_quality,
-                    pack=pack(transformer.pack.args[1]),
+                    pack=P(transformer.pack.args[1]),
                 ),
                 image,
-                pack(transformer.pack.args[1]),
+                P(transformer.pack.args[1]),
             ),
         ),
     }
@@ -436,12 +448,12 @@ def visualize_dataset(
     # See <https://stackoverflow.com/a/34934631/5811400> for plotting
     def _make_ds(params: Parameters) -> tf.data.Dataset:
         return manager.provide_elem(
-            creator_description=Pack(kwargs=params[['creator', 'desc']]),
-            creator_params=Pack(kwargs=params[['creator', 'value']]),
-            post_processor_description=Pack(
+            creator_description=P(kwargs=params[['creator', 'desc']]),
+            creator_params=P(kwargs=params[['creator', 'value']]),
+            post_processor_description=P(
                 kwargs=params[['post_processor', 'desc']]
             ),
-            post_processor_params=Pack(
+            post_processor_params=P(
                 kwargs=params[['post_processor', 'value']]
             ),
             load=load,

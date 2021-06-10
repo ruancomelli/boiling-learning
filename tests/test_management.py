@@ -4,7 +4,7 @@ from unittest.case import TestCase
 from boiling_learning.io.io import load_json, save_json
 from boiling_learning.management.Manager import Manager
 from boiling_learning.preprocessing.transformers import Creator
-from boiling_learning.utils.functional import Pack
+from boiling_learning.utils.functional import P
 from boiling_learning.utils.utils import tempdir
 
 
@@ -26,7 +26,7 @@ class ManagerTest(TestCase):
             def add(value, added):
                 return value + added
 
-            contents = Pack.pack(value=5)
+            contents = P(value=5)
 
             with self.assertRaises(ValueError):
                 manager.provide_entry(
@@ -42,9 +42,9 @@ class ManagerTest(TestCase):
 
             res = manager.provide_elem(
                 elem_id=elem_id,
-                creator_params=Pack.pack(value=5),
+                creator_params=P(value=5),
                 creator=Creator(
-                    'add', add, Pack.pack(added=3), expand_pack_on_call=True
+                    'add', add, P(added=3), expand_pack_on_call=True
                 ),
                 save=True,
                 load=True,

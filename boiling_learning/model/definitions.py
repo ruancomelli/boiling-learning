@@ -3,17 +3,27 @@ from functools import partial
 from typing import Optional, Tuple, Union
 
 import funcy
-from tensorflow.keras.layers import (Activation, Conv2D, Dense, Dropout,
-                                     Flatten, GlobalAveragePooling2D,
-                                     GlobalMaxPooling2D, Input, Lambda,
-                                     MaxPool2D, SeparableConv2D,
-                                     SpatialDropout2D, TimeDistributed)
+from tensorflow.keras.layers import (
+    Activation,
+    Conv2D,
+    Dense,
+    Dropout,
+    Flatten,
+    GlobalAveragePooling2D,
+    GlobalMaxPooling2D,
+    Input,
+    Lambda,
+    MaxPool2D,
+    SeparableConv2D,
+    SpatialDropout2D,
+    TimeDistributed,
+)
 from tensorflow.keras.mixed_precision.experimental import Policy
 from tensorflow.keras.models import Model
 
 import boiling_learning.utils as utils
 from boiling_learning.model.model import ProblemType, make_creator
-from boiling_learning.utils.functional import pack
+from boiling_learning.utils.functional import P
 
 # Check this guideline: https://docs.nvidia.com/deeplearning/performance/dl-performance-fully-connected/index.html
 # It includes tips and rules-of-thumb for defining layers.
@@ -57,7 +67,7 @@ def LinearRegression(input_shape: Tuple, **kwargs) -> Model:
 
 @make_creator(
     'HoboldNet1',
-    defaults=pack(
+    defaults=P(
         num_classes=3,
         problem=ProblemType.REGRESSION,
         fetch=frozenset({'model', 'history'}),
@@ -103,7 +113,7 @@ def HoboldNet1(
 
 @make_creator(
     'HoboldNet2',
-    defaults=pack(
+    defaults=P(
         num_classes=3,
         problem=ProblemType.REGRESSION,
         fetch=frozenset({'model', 'history'}),
@@ -149,7 +159,7 @@ def HoboldNet2(
 
 @make_creator(
     'HoboldNet3',
-    defaults=pack(
+    defaults=P(
         num_classes=3,
         problem=ProblemType.REGRESSION,
         fetch=frozenset({'model', 'history'}),
@@ -202,7 +212,7 @@ def HoboldNet3(
 
 @make_creator(
     'HoboldNetSupplementary',
-    defaults=pack(
+    defaults=P(
         num_classes=3,
         problem=ProblemType.REGRESSION,
         fetch=frozenset({'model', 'history'}),
@@ -255,7 +265,7 @@ def HoboldNetSupplementary(
 
 @make_creator(
     'KramerNet',
-    defaults=pack(
+    defaults=P(
         num_classes=3,
         problem=ProblemType.REGRESSION,
         fetch=frozenset({'model', 'history'}),

@@ -1,5 +1,12 @@
-from tensorflow.keras.layers import (Activation, Conv2D, Dense, Dropout,
-                                     Flatten, Input, MaxPool2D)
+from tensorflow.keras.layers import (
+    Activation,
+    Conv2D,
+    Dense,
+    Dropout,
+    Flatten,
+    Input,
+    MaxPool2D,
+)
 from tensorflow.keras.models import Model
 
 from boiling_learning.management import ElementCreator

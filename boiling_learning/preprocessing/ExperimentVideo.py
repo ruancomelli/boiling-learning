@@ -1,8 +1,17 @@
 import operator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import (Any, Iterable, Iterator, List, Mapping, Optional, Sequence,
-                    Tuple, Union)
+from typing import (
+    Any,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 # import decord
 import funcy
@@ -14,11 +23,18 @@ from dataclassy import dataclass
 from scipy.interpolate import interp1d
 
 import boiling_learning.utils as bl_utils
-from boiling_learning.io.io import (chunked_filename_pattern, load_dataset,
-                                    save_dataset)
+from boiling_learning.io.io import (
+    chunked_filename_pattern,
+    load_dataset,
+    save_dataset,
+)
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
-from boiling_learning.preprocessing.video import (convert_video, extract_audio,
-                                                  extract_frames, frames)
+from boiling_learning.preprocessing.video import (
+    convert_video,
+    extract_audio,
+    extract_frames,
+    frames,
+)
 from boiling_learning.utils import PathLike, VerboseType, ensure_resolved
 
 

@@ -5,8 +5,20 @@ import operator
 import pprint
 from functools import partial
 from pathlib import Path
-from typing import (Any, Callable, Dict, Generic, Iterable, Iterator, List,
-                    Mapping, Optional, Tuple, TypeVar, Union)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import funcy
 import more_itertools as mit
@@ -15,13 +27,18 @@ from dataclassy import dataclass
 
 import boiling_learning as bl
 from boiling_learning.io.io import BoolFlaggedLoaderFunction, SaverFunction
-from boiling_learning.io.json_encoders import (GenericJSONDecoder,
-                                               GenericJSONEncoder)
+from boiling_learning.io.json_encoders import (
+    GenericJSONDecoder,
+    GenericJSONEncoder,
+)
 from boiling_learning.preprocessing.transformers import Creator, Transformer
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.Parameters import Parameters
 from boiling_learning.utils.utils import (  # JSONDataType, # TODO: maybe using JSONDataType would be good
-    PathLike, VerboseType, _Sentinel)
+    PathLike,
+    VerboseType,
+    _Sentinel,
+)
 
 # TODO: check out <https://www.mlflow.org/docs/latest/tracking.html>
 # TODO: maybe include "status" in metadata
