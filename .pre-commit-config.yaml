@@ -40,8 +40,8 @@ repos:
   - id: flake8
     args: [
       '--count',
-      '--select=E71,E72,E73,E74,E9,F63,F7,F82,F83',
+      '--select=E71,E73,E74,E9,F63,F7,F82,F83',
       '--show-source',
       '--statistics',
-      'boiling_learning/*'
+      'boiling_learning'
     ]
