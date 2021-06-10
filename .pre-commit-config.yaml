@@ -39,9 +39,9 @@ repos:
   hooks:
   - id: flake8
     args: [
-      'boiling_learning/*',
       '--count',
       '--select=E71,E72,E73,E74,E9,F63,F7,F82,F83',
       '--show-source',
-      '--statistics'
+      '--statistics',
+      'boiling_learning/*'
     ]
