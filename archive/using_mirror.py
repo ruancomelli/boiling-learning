@@ -25,7 +25,7 @@ grid_dict = {
 grid = list(
     bl.utils.combine_dict(
         grid_dict,
-        partial(bl.utils.alternate_iter, default_indices=[1, 1, 1, 1])
+        partial(bl.utils.alternate_iter, default_indices=[1, 1, 1, 1]),
     )
 )
 for params in grid:
@@ -39,17 +39,23 @@ for params in grid:
         lr=lr,
     )
     reduce_lr_on_plateau_params = dict(
-        monitor='val_loss', 
+        monitor='val_loss',
         factor=reduce_lr_on_plateau_factor,
         patience=reduce_lr_on_plateau_patience,
-        min_delta=0.0001, min_lr=0, 
-        verbose=1, mode='auto', cooldown=0
+        min_delta=0.0001,
+        min_lr=0,
+        verbose=1,
+        mode='auto',
+        cooldown=0,
     )
     early_stopping_params = dict(
-        monitor='val_loss', 
-        min_delta=0, patience=10, baseline=None,
-        verbose=1, mode='auto',
-        restore_best_weights=True
+        monitor='val_loss',
+        min_delta=0,
+        patience=10,
+        baseline=None,
+        verbose=1,
+        mode='auto',
+        restore_best_weights=True,
     )
     best_validation_callback_file_name = 'BestValidation_epoch{epoch}'
     best_validation_callback_params = dict(
@@ -68,13 +74,10 @@ for params in grid:
         path=last_trained_callback_file_name,
     )
 
-    model_params = Mirror({'propagate': True},
-        fetch=Mirror.Fork(
-            value=['model', 'history']
-        ),
-        verbose=Mirror.Fork(
-            value=1
-        ),
+    model_params = Mirror(
+        {'propagate': True},
+        fetch=Mirror.Fork(value=['model', 'history']),
+        verbose=Mirror.Fork(value=1),
         checkpoint=Mirror.Fork(
             desc=checkpoint_params,
             value=dict(checkpoint_params),
@@ -83,15 +86,14 @@ for params in grid:
         # num_classes=3,
         dropout_ratio=dropout_ratio,
         problem='regression',
-        compile_setup=Mirror({'propagate': True},
+        compile_setup=Mirror(
+            {'propagate': True},
             do=True,
-            params=Mirror({'propagate': True},
+            params=Mirror(
+                {'propagate': True},
                 optimizer=Mirror.Fork(
-                    desc={
-                        'name': 'adam',
-                        'params': optimizer_params
-                    }, 
-                    value=Adam(**optimizer_params)
+                    desc={'name': 'adam', 'params': optimizer_params},
+                    value=Adam(**optimizer_params),
                 ),
                 loss=Mirror.Fork(
                     desc='mean_squared_error',
@@ -106,11 +108,13 @@ for params in grid:
                         tfa.metrics.RSquare('R2'),
                     ]
                 ),
-            )
+            ),
         ),
-        fit_setup=Mirror({'propagate': True},
+        fit_setup=Mirror(
+            {'propagate': True},
             do=True,
-            params=Mirror({'propagate': True},
+            params=Mirror(
+                {'propagate': True},
                 x=Mirror.Fork(
                     desc={
                         'source': Path('my_data') / 'path',
@@ -120,12 +124,10 @@ for params in grid:
                 validation_data=Mirror.Fork(
                     desc={
                         'source': Path('my_data') / 'path',
-                        'val_size': n_val
+                        'val_size': n_val,
                     },
                 ),
-                verbose=Mirror.Fork(
-                    value=2
-                ),
+                verbose=Mirror.Fork(value=2),
                 batch_size=BATCH_SIZE,
                 epochs=100,
                 use_multiprocessing=True,
@@ -134,24 +136,24 @@ for params in grid:
                     desc=[
                         {
                             'name': 'ModelCheckpoint',
-                            'params': best_validation_callback_params
+                            'params': best_validation_callback_params,
                         },
                         {
                             'name': 'ModelCheckpoint',
-                            'params': last_trained_callback_params
+                            'params': last_trained_callback_params,
                         },
                         {
                             'name': 'EarlyStopping',
-                            'params': early_stopping_params
+                            'params': early_stopping_params,
                         },
                         {
                             'name': 'ReduceLROnPlateau',
-                            'params': reduce_lr_on_plateau_params
-                        }
+                            'params': reduce_lr_on_plateau_params,
+                        },
                     ]
-                )
-            )
-        )
+                ),
+            ),
+        ),
     )
     params_desc = model_params['desc']
     params_value = model_params['value']
@@ -159,24 +161,28 @@ for params in grid:
     model_path = Path('my_model') / 'path'
 
     # This part is separated because ModelCheckpoint needs model_path
-    best_validation_callback_path = str(model_path / best_validation_callback_file_name)
-    best_validation_callback = ModelCheckpoint(**bl.utils.merge_dicts(
-        best_validation_callback_params,
-        dict(
-            filepath=best_validation_callback_path,
-            verbose=1
+    best_validation_callback_path = str(
+        model_path / best_validation_callback_file_name
+    )
+    best_validation_callback = ModelCheckpoint(
+        **bl.utils.merge_dicts(
+            best_validation_callback_params,
+            dict(filepath=best_validation_callback_path, verbose=1),
         )
-    ))
-    last_trained_callback_path = str(model_path / last_trained_callback_file_name)
-    last_trained_callback = ModelCheckpoint(**bl.utils.merge_dicts(
-        last_trained_callback_params,
-        dict(
-            filepath=last_trained_callback_path,
-            verbose=1
+    )
+    last_trained_callback_path = str(
+        model_path / last_trained_callback_file_name
+    )
+    last_trained_callback = ModelCheckpoint(
+        **bl.utils.merge_dicts(
+            last_trained_callback_params,
+            dict(filepath=last_trained_callback_path, verbose=1),
         )
-    ))
+    )
     early_stopping_callback = EarlyStopping(**early_stopping_params)
-    reduce_lr_on_plateau_callback = ReduceLROnPlateau(**reduce_lr_on_plateau_params)
+    reduce_lr_on_plateau_callback = ReduceLROnPlateau(
+        **reduce_lr_on_plateau_params
+    )
 
     params_value['fit_setup']['params']['callbacks'] = [
         best_validation_callback,
@@ -184,7 +190,7 @@ for params in grid:
         early_stopping_callback,
         reduce_lr_on_plateau_callback,
     ]
-    
+
     params_value['checkpoint']['path'] = last_trained_callback_path
     params_value['checkpoint']['load_method'] = load_model
 

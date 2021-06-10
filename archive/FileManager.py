@@ -1,6 +1,3 @@
-
-
-
 # class FileList(collections.abc.MutableMapping):
 #     def __init__(
 #         self,
@@ -10,22 +7,22 @@
 #         self.reference_path = Path(reference_path).absolute().resolve()
 #         self.file_name_fmt = file_name_fmt if file_name_fmt is not None else '{index}.data'
 #         self.files = {}
-        
+
 #     def __len__(self):
 #         return len(self.files)
-    
+
 #     def __iter__(self):
 #         return iter(self.files)
-    
+
 #     def __contains__(self, key):
 #         return key in self.files
-    
+
 #     def __delitem__(self, key):
 #         self.pop_file_path(self, key)
-    
+
 #     def __getitem__(self, key):
 #         return self.get_file_path(key)
-    
+
 #     def __setitem__(self, key, item):
 #         self.new_file_path(file_key=key, file_path=item)
 
@@ -44,7 +41,7 @@
 
 #             file_name = self.file_name_fmt.format(index=index)
 #             file_path = self.reference_path / file_name
-            
+
 #         self.files[file_key] = file_path
 
 #         return file_path
@@ -71,11 +68,11 @@
 #             if reference_path is not None
 #             else Path('.')
 #         ).absolute().resolve()
-        
+
 #         self.files = {}
 #         self.file_lists = {}
 
-#     def new_file_path(self, file_key, file_path=None):     
+#     def new_file_path(self, file_key, file_path=None):
 #         file_path = (
 #             file_path
 #             if file_path is not None
@@ -96,8 +93,8 @@
 #             return self.new_file_path(file_key)
 #         else:
 #             return self.get_file_path(file_key)
-        
-        
+
+
 #     def new_file_list(
 #         self,
 #         file_list_name,
@@ -110,7 +107,7 @@
 #             else self.reference_path / file_list_name
 #         ).absolute().resolve()
 #         self.file_lists[file_list_name] = FileList(reference_path, file_name_fmt)
-        
+
 #         return reference_path
 
 #     def get_file_list(self, file_list_name):

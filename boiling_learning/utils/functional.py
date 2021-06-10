@@ -26,14 +26,13 @@ def nth_arg(n: int) -> Callable:
                 f'cannot get the {n}-th argument of a {args_len}-length tuple.'
                 f' Got the following arguments: {args}'
             )
+
     return _nth
 
 
 class Pack(Hashable, Generic[_T, _S]):
     def __init__(
-            self,
-            args: ArgsType[_T] = (),
-            kwargs: KwargsType[_S] = FrozenDict()
+        self, args: ArgsType[_T] = (), kwargs: KwargsType[_S] = FrozenDict()
     ) -> None:
         self._args: Tuple[_T] = tuple(args)
         self._kwargs: FrozenDict[str, _S] = FrozenDict(kwargs)
@@ -66,7 +65,8 @@ class Pack(Hashable, Generic[_T, _S]):
             return self.kwargs[loc]
         else:
             raise ValueError(
-                f'*Pack* expects an *int* index or *str* key, but got a {type(loc)}')
+                f'*Pack* expects an *int* index or *str* key, but got a {type(loc)}'
+            )
 
     def __iter__(self) -> Iterator[Union[Tuple[_T], KwargsType[_S]]]:
         return iter((self.args, self.kwargs))
@@ -77,23 +77,21 @@ class Pack(Hashable, Generic[_T, _S]):
     def __str__(self) -> str:
         args2str = ', '.join(map(str, self.args))
         kwargs2str = ', '.join(
-            f'{key}={value}'
-            for key, value in self.kwargs.items()
+            f'{key}={value}' for key, value in self.kwargs.items()
         )
-        return ''.join((
-            'Pack(',
-            ', '.join(
-                ([args2str] if args2str else [])
-                + ([kwargs2str] if kwargs2str else [])
-            ),
-            ')'
-        ))
+        return ''.join(
+            (
+                'Pack(',
+                ', '.join(
+                    ([args2str] if args2str else [])
+                    + ([kwargs2str] if kwargs2str else [])
+                ),
+                ')',
+            )
+        )
 
     def __json_encode__(self) -> Dict[str, Union[list, dict]]:
-        return {
-            'args': list(self.args),
-            'kwargs': dict(self.kwargs)
-        }
+        return {'args': list(self.args), 'kwargs': dict(self.kwargs)}
 
     def __json_decode__(self, **data) -> None:
         '''Decode JSON object as Pack.
@@ -127,9 +125,11 @@ class Pack(Hashable, Generic[_T, _S]):
         return funcy.rpartial(f, *self.args, **self.kwargs)
 
     def omit(
-            self,
-            loc: Union[int, str, Iterable[Union[int, str]]] = (), # TODO: unify everything here
-            pred: Optional[Callable[[_T], bool]] = None
+        self,
+        loc: Union[
+            int, str, Iterable[Union[int, str]]
+        ] = (),  # TODO: unify everything here
+        pred: Optional[Callable[[_T], bool]] = None,
     ) -> 'Pack':
         '''
         p = pack(1, 2, None, 4, None, 6, a='a', b='b', c=None, d='d', e=None, f='f')
@@ -149,17 +149,15 @@ class Pack(Hashable, Generic[_T, _S]):
             key = tuple(filter(funcy.isa(str), loc))
 
         enumerated_args = tuple(enumerate(self.args))
-        to_remove = funcy.select_keys(
-            pos,
-            enumerated_args
-        )
+        to_remove = funcy.select_keys(pos, enumerated_args)
         if pred is not None:
             to_remove = funcy.select_values(pred, to_remove)
         to_remove = frozenset(funcy.walk(0, to_remove))
-        args = tuple(funcy.select_keys(
-            lambda idx: idx not in to_remove,
-            enumerated_args
-        ))
+        args = tuple(
+            funcy.select_keys(
+                lambda idx: idx not in to_remove, enumerated_args
+            )
+        )
         args = funcy.walk(1, args)
 
         to_remove = funcy.project(self.kwargs, key)
@@ -205,10 +203,7 @@ class Pack(Hashable, Generic[_T, _S]):
             f(arg) if f is not None else arg
             for f, arg in zip(fargs, args_to_transform)
         )
-        new_kwargs = {
-            k: f(self[k])
-            for k, f in fkwargs.items()
-        }
+        new_kwargs = {k: f(self[k]) for k, f in fkwargs.items()}
 
         return self._copy(new_args, new_kwargs, right=right)
 
@@ -237,8 +232,7 @@ def unpack(f: Callable[..., _U], packed_param: Pack[_T, _S]) -> _U:
 
 
 def pack_combinations(
-        combinator: Callable[..., Iterator],
-        pack: Pack[Sequence, Sequence]
+    combinator: Callable[..., Iterator], pack: Pack[Sequence, Sequence]
 ) -> Iterator[Pack]:
     keys = tuple(pack.kwargs.keys())
     values = tuple(pack.kwargs.values())
@@ -246,8 +240,7 @@ def pack_combinations(
 
     for combination in combinator(*pack.args, *values):
         yield Pack(
-            combination[:n_args],
-            funcy.zipdict(keys, combination[n_args:])
+            combination[:n_args], funcy.zipdict(keys, combination[n_args:])
         )
 
 
@@ -255,6 +248,7 @@ def packed(f: Callable[..., _U]) -> Callable[[Pack], _U]:
     @wraps(f)
     def wrapper(pack: Pack) -> _U:
         return pack.feed(f)
+
     return wrapper
 
 
@@ -270,43 +264,24 @@ def reverse_args(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         return f(*reversed(args), **kwargs)
+
     return wrapper
 
 
-def apply(
-        f: Callable[..., Any],
-        *args
-) -> None:
-    mit.consume(
-        map(f, *args)
-    )
+def apply(f: Callable[..., Any], *args) -> None:
+    mit.consume(map(f, *args))
 
 
-def starapply(
-        f: Callable[..., Any],
-        arg: Iterable
-) -> None:
-    mit.consume(
-        itertools.starmap(f, arg)
-    )
+def starapply(f: Callable[..., Any], arg: Iterable) -> None:
+    mit.consume(itertools.starmap(f, arg))
 
 
-def map_values(
-        f: Callable[[_T], _S],
-        iterable: Iterable[_T]
-) -> Iterable[_S]:
+def map_values(f: Callable[[_T], _S], iterable: Iterable[_T]) -> Iterable[_S]:
     if hasattr(iterable, 'items'):
         return funcy.walk_values(f, iterable)
     else:
         return funcy.walk(f, iterable)
 
 
-def zip_filter(
-        f: Callable[..., bool],
-        *args: Iterable
-) -> Iterator:
-    yield from (
-        tpl
-        for tpl in zip(*args)
-        if f(*tpl)
-    )
+def zip_filter(f: Callable[..., bool], *args: Iterable) -> Iterator:
+    yield from (tpl for tpl in zip(*args) if f(*tpl))

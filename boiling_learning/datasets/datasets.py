@@ -27,7 +27,9 @@ class DatasetSplits:
         splits = (self.train, self.val, self.test)
         n_nones = splits.count(None)
         if n_nones > 1:
-            raise ValueError('at most one of *train*, *val* and *test* can be inferred (by passing None)')
+            raise ValueError(
+                'at most one of *train*, *val* and *test* can be inferred (by passing None)'
+            )
 
         if n_nones == 1:
             names = ('train', 'val', 'test')
@@ -40,7 +42,9 @@ class DatasetSplits:
                     if not (0 < others_sum <= 1):
                         raise ValueError(
                             'it is required that 0 < '
-                            + ' + '.join(f'*{other}*' for other in others.keys())
+                            + ' + '.join(
+                                f'*{other}*' for other in others.keys()
+                            )
                             + ' <= 1'
                         )
 
@@ -53,11 +57,11 @@ class DatasetSplits:
             raise ValueError('*train* + *val* + *test* must equal 1')
 
         if not (
-                0 < self.train < 1
-                and 0 <= self.val < 1
-                and 0 < self.test < 1
+            0 < self.train < 1 and 0 <= self.val < 1 and 0 < self.test < 1
         ):
-            raise ValueError('it is required that 0 < (*train*, *test*) < 1 and 0 <= *val* < 1')
+            raise ValueError(
+                'it is required that 0 < (*train*, *test*) < 1 and 0 <= *val* < 1'
+            )
 
 
 class Split(enum.Flag):
@@ -66,22 +70,14 @@ class Split(enum.Flag):
     TEST = enum.auto()
 
     @classmethod
-    def get_split(
-            cls: Type[_T],
-            s: str,
-            default=_sentinel
-    ) -> _T:
+    def get_split(cls: Type[_T], s: str, default=_sentinel) -> _T:
         if s in cls:
             return s
         else:
             return cls.from_string(s, default=default)
 
     @classmethod
-    def from_string(
-            cls: Type[_T],
-            s: str,
-            default=_sentinel
-    ) -> _T:
+    def from_string(cls: Type[_T], s: str, default=_sentinel) -> _T:
         if default is _sentinel:
             try:
                 return cls.FROM_STR_TABLE[s]
@@ -97,24 +93,26 @@ class Split(enum.Flag):
         return self.name.lower()
 
 
-Split.FROM_STR_TABLE = frozendict({
-    key_str: split_subset
-    for keys, split_subset in (
-        (('train',), Split.TRAIN),
-        (('val', 'validation'), Split.VAL),
-        (
-            tuple(
-                connector.join(('train', validation_key))
-                for connector in ('_', '_and_')
-                for validation_key in ('val', 'validation')
+Split.FROM_STR_TABLE = frozendict(
+    {
+        key_str: split_subset
+        for keys, split_subset in (
+            (('train',), Split.TRAIN),
+            (('val', 'validation'), Split.VAL),
+            (
+                tuple(
+                    connector.join(('train', validation_key))
+                    for connector in ('_', '_and_')
+                    for validation_key in ('val', 'validation')
+                ),
+                Split.TRAIN | Split.VAL,
             ),
-            Split.TRAIN | Split.VAL
-        ),
-        (('test',), Split.TEST),
-        (('all',), Split.TRAIN | Split.VAL | Split.TEST),
-    )
-    for key_str in keys
-})
+            (('test',), Split.TEST),
+            (('all',), Split.TRAIN | Split.VAL | Split.TEST),
+        )
+        for key_str in keys
+    }
+)
 
 
 def tf_concatenate(datasets: Iterable[tf.data.Dataset]) -> tf.data.Dataset:
@@ -131,17 +129,16 @@ def tf_concatenate(datasets: Iterable[tf.data.Dataset]) -> tf.data.Dataset:
 
 
 def tf_train_val_test_split(
-        ds: tf.data.Dataset,
-        splits: DatasetSplits,
-        shuffle: bool = False
+    ds: tf.data.Dataset, splits: DatasetSplits, shuffle: bool = False
 ) -> DatasetTriplet:
-    """ #TODO(docstring): describe here
+    """#TODO(docstring): describe here
 
     # Source: <https://stackoverflow.com/a/60503037/5811400>
 
     This function is deterministic in the sense that it outputs the same splits given the same inputs.
     Consequently it is safe to be used early in the pipeline to avoid consuming test data.
     """
+
     def flatten_zip(*ds: tf.data.Dataset) -> tf.data.Dataset:
         if len(ds) == 1:
             return ds[0]
@@ -149,30 +146,45 @@ def tf_train_val_test_split(
             return tf.data.Dataset.zip(ds)
 
     if splits.val == 0:
-        split_train, split_test = mathutils.proportional_ints(splits.train, splits.test)
+        split_train, split_test = mathutils.proportional_ints(
+            splits.train, splits.test
+        )
         window_shift = split_train + split_test
         if shuffle:
             ds = ds.shuffle(window_shift, reshuffle_each_iteration=False)
         ds_train = ds.window(split_train, window_shift).flat_map(flatten_zip)
-        ds_test = ds.skip(split_train).window(split_test, window_shift).flat_map(flatten_zip)
+        ds_test = (
+            ds.skip(split_train)
+            .window(split_test, window_shift)
+            .flat_map(flatten_zip)
+        )
         ds_val = None
     else:
-        split_train, split_val, split_test = mathutils.proportional_ints(splits.train, splits.val, splits.test)
+        split_train, split_val, split_test = mathutils.proportional_ints(
+            splits.train, splits.val, splits.test
+        )
         window_shift = split_train + split_val + split_test
         if shuffle:
             ds = ds.shuffle(window_shift, reshuffle_each_iteration=False)
         ds_train = ds.window(split_train, window_shift).flat_map(flatten_zip)
-        ds_val = ds.skip(split_train).window(split_val, window_shift).flat_map(flatten_zip)
-        ds_test = ds.skip(split_train + split_val).window(split_test, window_shift).flat_map(flatten_zip)
+        ds_val = (
+            ds.skip(split_train)
+            .window(split_val, window_shift)
+            .flat_map(flatten_zip)
+        )
+        ds_test = (
+            ds.skip(split_train + split_val)
+            .window(split_test, window_shift)
+            .flat_map(flatten_zip)
+        )
 
     return ds_train, ds_val, ds_test
 
 
 def tf_train_val_test_split_concat(
-        datasets: Iterable[tf.data.Dataset],
-        splits: DatasetSplits
+    datasets: Iterable[tf.data.Dataset], splits: DatasetSplits
 ) -> DatasetTriplet:
-    """ #TODO(docstring): describe here
+    """#TODO(docstring): describe here
 
     # Source: <https://stackoverflow.com/a/60503037/5811400>
 
@@ -205,9 +217,7 @@ def tf_train_val_test_split_concat(
 
 
 def bulk_split(
-        ds: tf.data.Dataset,
-        splits: DatasetSplits,
-        length: Optional[int] = None
+    ds: tf.data.Dataset, splits: DatasetSplits, length: Optional[int] = None
 ) -> DatasetTriplet:
     if length is None:
         length = calculate_dataset_size(ds)
@@ -227,10 +237,10 @@ def bulk_split(
 
 
 def take(
-        ds: tf.data.Dataset,
-        count: Optional[Union[int, Fraction]],
-        unbatch_dim: Optional[int] = None,
-        unbatch_key: Optional[int] = None
+    ds: tf.data.Dataset,
+    count: Optional[Union[int, Fraction]],
+    unbatch_dim: Optional[int] = None,
+    unbatch_key: Optional[int] = None,
 ) -> tf.data.Dataset:
     if count is None:
         return ds
@@ -246,18 +256,19 @@ def take(
     if unbatch:
         return apply_unbatched(
             ds,
-            functools.partial(take, count=count, unbatch_dim=None, unbatch_key=None),
+            functools.partial(
+                take, count=count, unbatch_dim=None, unbatch_key=None
+            ),
             dim=unbatch_dim,
-            key=unbatch_key
+            key=unbatch_key,
         )
 
     if isinstance(count, int):
         return ds.take(count)
     elif isinstance(count, Fraction):
-        return tf_train_val_test_split(
-            ds,
-            splits=DatasetSplits(train=count)
-        )[0]
+        return tf_train_val_test_split(ds, splits=DatasetSplits(train=count))[
+            0
+        ]
     else:
         raise TypeError(
             f'*count* must be either *int* or *Fraction*, got {type(count)}.'
@@ -265,9 +276,7 @@ def take(
 
 
 def calculate_batch_size(
-        dataset: tf.data.Dataset,
-        dim: int = 0,
-        key: Optional[int] = None
+    dataset: tf.data.Dataset, dim: int = 0, key: Optional[int] = None
 ) -> int:
     elem = mit.first(dataset)
     if key is not None:
@@ -276,17 +285,13 @@ def calculate_batch_size(
 
 
 def calculate_dataset_size(
-        dataset: tf.data.Dataset,
-        batched_dim: Optional[int] = None
+    dataset: tf.data.Dataset, batched_dim: Optional[int] = None
 ) -> int:
     if batched_dim is not None:
-        batch_size_calculator = functools.partial(calculate_batch_size, dim=batched_dim)
-        return sum(
-            map(
-                batch_size_calculator,
-                dataset
-            )
+        batch_size_calculator = functools.partial(
+            calculate_batch_size, dim=batched_dim
         )
+        return sum(map(batch_size_calculator, dataset))
     else:
         try:
             return len(dataset)
@@ -295,38 +300,32 @@ def calculate_dataset_size(
 
 
 def apply_unbatched(
-        dataset: tf.data.Dataset,
-        apply: Callable[[tf.data.Dataset], tf.data.Dataset],
-        dim: int = 0,
-        key: Optional[int] = None
+    dataset: tf.data.Dataset,
+    apply: Callable[[tf.data.Dataset], tf.data.Dataset],
+    dim: int = 0,
+    key: Optional[int] = None,
 ) -> tf.data.Dataset:
     batch_size = calculate_batch_size(dataset, dim=dim, key=key)
     return dataset.unbatch().apply(apply).batch(batch_size)
 
 
 def map_unbatched(
-        dataset: tf.data.Dataset,
-        map_fn: Callable,
-        dim: int = 0,
-        key: Optional[int] = None
+    dataset: tf.data.Dataset,
+    map_fn: Callable,
+    dim: int = 0,
+    key: Optional[int] = None,
 ) -> tf.data.Dataset:
     return apply_unbatched(
-        dataset,
-        lambda ds: ds.map(map_fn),
-        dim=dim,
-        key=key
+        dataset, lambda ds: ds.map(map_fn), dim=dim, key=key
     )
 
 
 def filter_unbatched(
-        dataset: tf.data.Dataset,
-        pred_fn: Callable[..., bool],
-        dim: int = 0,
-        key: Optional[int] = None
+    dataset: tf.data.Dataset,
+    pred_fn: Callable[..., bool],
+    dim: int = 0,
+    key: Optional[int] = None,
 ) -> tf.data.Dataset:
     return apply_unbatched(
-        dataset,
-        lambda ds: ds.filter(pred_fn),
-        dim=dim,
-        key=key
+        dataset, lambda ds: ds.filter(pred_fn), dim=dim, key=key
     )

@@ -20,7 +20,7 @@ def restore(
     restore: bool = False,
     path: Optional[PathLike] = None,
     load_method: Optional[bl_io.LoaderFunction[T]] = None,
-    epoch_str: str = 'epoch'
+    epoch_str: str = 'epoch',
 ) -> Tuple[int, Optional[T]]:
     last_epoch = -1
     model = None
@@ -33,8 +33,7 @@ def restore(
         parsed = (parser(path_item.name) for path_item in paths)
         parsed = filter(lambda p: p is not None and epoch_str in p, parsed)
         epochs = bl_utils.append(
-            (int(p[epoch_str]) for p in parsed),
-            last_epoch
+            (int(p[epoch_str]) for p in parsed), last_epoch
         )
         last_epoch = max(epochs)
 
@@ -60,9 +59,9 @@ def default_fitter(model, **params):
 
 
 def make_creator_method(
-        builder: Callable[..., _ModelType],
-        compiler: Callable[[_ModelType], _ModelType] = default_compiler,
-        fitter: Callable[[_ModelType], Any] = default_fitter
+    builder: Callable[..., _ModelType],
+    compiler: Callable[[_ModelType], _ModelType] = default_compiler,
+    fitter: Callable[[_ModelType], Any] = default_fitter,
 ) -> Callable[..., dict]:
     def creator_method(
         num_classes,
@@ -75,9 +74,7 @@ def make_creator_method(
     ):
         with strategy.scope():
             model = builder(
-                problem=problem,
-                num_classes=num_classes,
-                **architecture_setup
+                problem=problem, num_classes=num_classes, **architecture_setup
             )
 
             if compile_setup.get('do', False):
@@ -87,30 +84,28 @@ def make_creator_method(
         if fit_setup.get('do', False):
             history = fitter(model, **fit_setup['params'])
 
-        available_data = {
-            'model': model,
-            'history': history
-        }
+        available_data = {'model': model, 'history': history}
 
-        return {
-            k: available_data[k]
-            for k in fetch
-        }
+        return {k: available_data[k] for k in fetch}
 
     return creator_method
 
 
-def make_creator(name: str, defaults: Pack = Pack()) -> Callable[[Callable], Callable]:
+def make_creator(
+    name: str, defaults: Pack = Pack()
+) -> Callable[[Callable], Callable]:
     return funcy.compose(
         Creator.make(name, pack=defaults, expand_pack_on_call=True),
-        make_creator_method
+        make_creator_method,
     )
 
 
 def models_from_checkpoints(
-        pattern: PathLike,
-        epoch_key: str = 'epoch',
-        load_method: bl_io.LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model
+    pattern: PathLike,
+    epoch_key: str = 'epoch',
+    load_method: bl_io.LoaderFunction[
+        tf.keras.models.Model
+    ] = tf.keras.models.load_model,
 ) -> Dict[int, tf.keras.models.Model]:
     pattern = bl_utils.ensure_resolved(pattern)
     filename_pattern = pattern.name
@@ -119,10 +114,7 @@ def models_from_checkpoints(
 
     paths = pattern.parent.glob(glob_pattern)
 
-    path_dict = {
-        parser(path.name): path
-        for path in paths
-    }
+    path_dict = {parser(path.name): path for path in paths}
     path_dict = {
         int(parsed_obj[epoch_key]): path
         for parsed_obj, path in path_dict.items()
@@ -130,18 +122,19 @@ def models_from_checkpoints(
     }
 
     model_dict = {
-        epoch: load_method(str(path))
-        for epoch, path in path_dict.items()
+        epoch: load_method(str(path)) for epoch, path in path_dict.items()
     }
 
     return model_dict
 
 
 def history_from_checkpoints(
-        ds_val: tf.data.Dataset,
-        pattern: PathLike,
-        epoch_key: str = 'epoch',
-        load_method: bl_io.LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model
+    ds_val: tf.data.Dataset,
+    pattern: PathLike,
+    epoch_key: str = 'epoch',
+    load_method: bl_io.LoaderFunction[
+        tf.keras.models.Model
+    ] = tf.keras.models.load_model,
 ) -> Dict[int, Dict[str, float]]:
     model_dict = models_from_checkpoints(pattern, epoch_key, load_method)
     history_dict = {
@@ -152,10 +145,10 @@ def history_from_checkpoints(
 
 
 def eval_with(
-        model: tf.keras.models.Model,
-        ds_val: tf.data.Dataset,
-        metrics: Iterable[tf.keras.metrics.Metric],
-        reset_state: bool = True
+    model: tf.keras.models.Model,
+    ds_val: tf.data.Dataset,
+    metrics: Iterable[tf.keras.metrics.Metric],
+    reset_state: bool = True,
 ) -> Dict[str, float]:
     metrics = tuple(metrics)
 
@@ -168,7 +161,4 @@ def eval_with(
             y_pred = model.predict(x, use_multiprocessing=True, workers=-1)
             metric.update_state(y_true, y_pred)
 
-    return {
-        metric.name: metric.result().numpy()
-        for metric in metrics
-    }
+    return {metric.name: metric.result().numpy() for metric in metrics}

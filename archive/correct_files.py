@@ -1,6 +1,3 @@
-
-
-
 def group_files_move(path, keyfunc, mover_gen):
     from boiling_learning.utils import group_files
 
@@ -10,6 +7,7 @@ def group_files_move(path, keyfunc, mover_gen):
         for path in lst:
             new_path = mov(path)
             path.rename(new_path)
+
 
 # pprint(
 #     boiling_learning.utils.group_files(

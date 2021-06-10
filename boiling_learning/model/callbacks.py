@@ -50,7 +50,8 @@ class AdditionalValidationSets(Callback):
         else:
             raise ValueError(
                 'every validation set must be either in the form'
-                ' (data,), (data, name), (x, y, name) or (x, y, sample_weights, name).')
+                ' (data,), (data, name), (x, y, name) or (x, y, sample_weights, name).'
+            )
 
     def on_train_begin(self, logs=None):
         self.epoch = []
@@ -66,14 +67,19 @@ class AdditionalValidationSets(Callback):
 
         # evaluate on the additional validation sets
         for validation_set in self.validation_sets:
-            validation_data, validation_targets, sample_weights, validation_set_name = validation_set
+            (
+                validation_data,
+                validation_targets,
+                sample_weights,
+                validation_set_name,
+            ) = validation_set
 
             results = self.model.evaluate(
                 x=validation_data,
                 y=validation_targets,
                 verbose=self.verbose,
                 sample_weight=sample_weights,
-                batch_size=self.batch_size
+                batch_size=self.batch_size,
             )
 
             names = ['loss'] + [m.name for m in self.model.metrics]
@@ -84,10 +90,12 @@ class AdditionalValidationSets(Callback):
                 self.history.setdefault(full_name, []).append(result)
 
             if self.verbose >= 1:
-                values_str = ' - '.join([
-                    f'{name}: {result}'
-                    for name, result in zip(names, full_results)
-                ])
+                values_str = ' - '.join(
+                    [
+                        f'{name}: {result}'
+                        for name, result in zip(names, full_results)
+                    ]
+                )
                 print(f'{validation_set_name}[{values_str}]')
 
 
@@ -101,7 +109,7 @@ class TimePrinter(Callback):
         self,
         streamer: Streamer = print,
         fmt: str = '%Y-%m-%d %H:%M:%S',
-        when: Optional[Set[str]] = None
+        when: Optional[Set[str]] = None,
     ):
         super().__init__()
 
@@ -152,7 +160,9 @@ class TimePrinter(Callback):
 
     def on_predict_batch_begin(self, *args, **kwargs):
         if 'on_predict_batch_begin' in self.when:
-            self.streamer(f'--- beginning predict_batch at {self._str_now()}', end='')
+            self.streamer(
+                f'--- beginning predict_batch at {self._str_now()}', end=''
+            )
 
     def on_predict_batch_end(self, *args, **kwargs):
         if 'on_predict_batch_end' in self.when:
@@ -168,7 +178,9 @@ class TimePrinter(Callback):
 
     def on_test_batch_begin(self, *args, **kwargs):
         if 'on_test_batch_begin' in self.when:
-            self.streamer(f'--- beginning test_batch at {self._str_now()}', end='')
+            self.streamer(
+                f'--- beginning test_batch at {self._str_now()}', end=''
+            )
 
     def on_test_batch_end(self, *args, **kwargs):
         if 'on_test_batch_end' in self.when:
@@ -186,12 +198,14 @@ class TimePrinter(Callback):
         if 'on_train_batch_begin' in self.when:
             self.streamer(
                 f'--- epoch {self._current_epoch}: beginning train_batch {batch} at {self._str_now()}',
-                end=''
+                end='',
             )
 
     def on_train_batch_end(self, batch: int, *args, **kwargs):
         if 'on_train_batch_end' in self.when:
-            self.streamer(f' | ending train_batch {batch} at {self._str_now()}')
+            self.streamer(
+                f' | ending train_batch {batch} at {self._str_now()}'
+            )
 
     def on_train_begin(self, *args, **kwargs):
         if 'on_train_begin' in self.when:
@@ -236,22 +250,24 @@ class ReduceLROnPlateau(Callback):
     """
 
     def __init__(
-            self,
-            monitor='val_loss',
-            factor=0.1,
-            patience=10,
-            verbose=0,
-            mode='auto',
-            min_delta=1e-4,
-            min_delta_mode='absolute',
-            cooldown=0,
-            min_lr=0
+        self,
+        monitor='val_loss',
+        factor=0.1,
+        patience=10,
+        verbose=0,
+        mode='auto',
+        min_delta=1e-4,
+        min_delta_mode='absolute',
+        cooldown=0,
+        min_lr=0,
     ):
         super(ReduceLROnPlateau, self).__init__()
 
         self.monitor = monitor
         if factor >= 1.0:
-            raise ValueError('ReduceLROnPlateau does not support a factor >= 1.0.')
+            raise ValueError(
+                'ReduceLROnPlateau does not support a factor >= 1.0.'
+            )
         self.factor = factor
         self.min_lr = min_lr
         self.min_delta = min_delta
@@ -267,29 +283,44 @@ class ReduceLROnPlateau(Callback):
         self._reset()
 
     def _reset(self):
-        """Resets wait counter and cooldown counter.
-        """
+        """Resets wait counter and cooldown counter."""
         if self.mode not in {'auto', 'min', 'max'}:
-            logging.warning('Learning rate reduction mode %s is unknown, '
-                            'fallback to auto mode.', self.mode)
+            logging.warning(
+                'Learning rate reduction mode %s is unknown, '
+                'fallback to auto mode.',
+                self.mode,
+            )
             self.mode = 'auto'
 
         if self.min_delta_mode not in {'absolute', 'relative'}:
-            logging.warning('Minimum delta mode %s is unknown, '
-                            'fallback to absolute mode.', self.min_delta_mode)
+            logging.warning(
+                'Minimum delta mode %s is unknown, '
+                'fallback to absolute mode.',
+                self.min_delta_mode,
+            )
             self.min_delta_mode = 'absolute'
 
-        if (self.mode == 'min' or (self.mode == 'auto' and 'acc' not in self.monitor)):
+        if self.mode == 'min' or (
+            self.mode == 'auto' and 'acc' not in self.monitor
+        ):
             if self.min_delta_mode == 'relative':
-                self.monitor_op = lambda current, best: np.less(current, (1 - self.min_delta)*best)
+                self.monitor_op = lambda current, best: np.less(
+                    current, (1 - self.min_delta) * best
+                )
             else:
-                self.monitor_op = lambda current, best: np.less(current, best - self.min_delta)
+                self.monitor_op = lambda current, best: np.less(
+                    current, best - self.min_delta
+                )
             self.best = np.Inf
         else:
             if self.min_delta_mode == 'relative':
-                self.monitor_op = lambda current, best: np.greater(current, (1 + self.min_delta)*best)
+                self.monitor_op = lambda current, best: np.greater(
+                    current, (1 + self.min_delta) * best
+                )
             else:
-                self.monitor_op = lambda current, best: np.greater(current, best + self.min_delta)
+                self.monitor_op = lambda current, best: np.greater(
+                    current, best + self.min_delta
+                )
             self.best = -np.Inf
         self.cooldown_counter = 0
         self.wait = 0
@@ -302,9 +333,12 @@ class ReduceLROnPlateau(Callback):
         logs['lr'] = K.get_value(self.model.optimizer.lr)
         current = logs.get(self.monitor)
         if current is None:
-            logging.warning('Learning rate reduction is conditioned on metric `%s` '
-                            'which is not available. Available metrics are: %s',
-                            self.monitor, ', '.join(logs.keys()))
+            logging.warning(
+                'Learning rate reduction is conditioned on metric `%s` '
+                'which is not available. Available metrics are: %s',
+                self.monitor,
+                ', '.join(logs.keys()),
+            )
 
         else:
             if self.in_cooldown():
@@ -343,10 +377,7 @@ class RegisterEpoch(Callback):
 
 class MoveOnTrainBegin(Callback):
     def __init__(
-            self,
-            source: PathLike,
-            dest: PathLike,
-            missing_ok: bool = False
+        self, source: PathLike, dest: PathLike, missing_ok: bool = False
     ) -> None:
         self.source = ensure_resolved(source)
         self.dest = ensure_parent(dest)
@@ -362,11 +393,11 @@ class MoveOnTrainBegin(Callback):
 
 class PeriodicallyMove(Callback):
     def __init__(
-            self,
-            source: PathLike,
-            dest: PathLike,
-            period: int = 1, # epochs period
-            missing_ok: bool = False
+        self,
+        source: PathLike,
+        dest: PathLike,
+        period: int = 1,  # epochs period
+        missing_ok: bool = False,
     ) -> None:
         if period < 1:
             raise ValueError('*period* must be >= 1')

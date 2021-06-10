@@ -11,6 +11,7 @@ class FrozenDict(dict, Mapping[_Key, _Value]):
     Source: https://stackoverflow.com/questions/2703599/what-would-a-frozen-dict-be
     Some modifications based on: https://www.python.org/dev/peps/pep-0603/
     '''
+
     def __init__(self, *args, **kwargs):
         self._hash = None
         super().__init__(*args, **kwargs)
@@ -33,9 +34,9 @@ class FrozenDict(dict, Mapping[_Key, _Value]):
         raise TypeError('cannot change object - object is immutable')
 
     def union(
-            self,
-            mapping: Optional[Mapping[_OtherKey, _OtherValue]],
-            **kw: _OtherValue
+        self,
+        mapping: Optional[Mapping[_OtherKey, _OtherValue]],
+        **kw: _OtherValue,
     ) -> 'FrozenDict[Union[str, _Key, _OtherKey], Union[_Value, _OtherValue]]':
         return FrozenDict({**self, **mapping}, **kw)
 

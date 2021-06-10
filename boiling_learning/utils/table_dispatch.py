@@ -14,6 +14,7 @@ class TableDispatcher:
         def _dispatcher(call: Callable) -> TableDispatcher:
             self._dispatch_table[keys] = call
             return self
+
         return _dispatcher
 
     def __call__(self, *keys: Hashable):

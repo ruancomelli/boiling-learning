@@ -18,10 +18,7 @@ class ManagerTest(TestCase):
 
         with tempdir() as path:
             manager = Manager(
-                path,
-                load_method=_load_json,
-                save_method=save_json,
-                verbose=2
+                path, load_method=_load_json, save_method=save_json, verbose=2
             )
 
             self.assertEqual(manager.table_path, path / 'lookup_table.json')
@@ -33,50 +30,34 @@ class ManagerTest(TestCase):
 
             with self.assertRaises(ValueError):
                 manager.provide_entry(
-                    contents=contents,
-                    include=False,
-                    missing_ok=False
+                    contents=contents, include=False, missing_ok=False
                 )
 
             with self.assertRaises(ValueError):
                 manager.provide_elem('wololooo')
 
             elem_id = manager.provide_entry(
-                contents=contents,
-                include=True,
-                missing_ok=True
+                contents=contents, include=True, missing_ok=True
             )
 
             res = manager.provide_elem(
                 elem_id=elem_id,
                 creator_params=Pack.pack(value=5),
                 creator=Creator(
-                    'add',
-                    add,
-                    Pack.pack(added=3),
-                    expand_pack_on_call=True
+                    'add', add, Pack.pack(added=3), expand_pack_on_call=True
                 ),
                 save=True,
-                load=True
+                load=True,
             )
 
             self.assertEqual(res, 8)
             self.assertEqual(len(manager), 1)
-            self.assertTupleEqual(
-                tuple(manager),
-                (elem_id,)
-            )
-            self.assertEqual(
-                manager.shared_dir,
-                manager.path / 'shared'
-            )
+            self.assertTupleEqual(tuple(manager), (elem_id,))
+            self.assertEqual(manager.shared_dir, manager.path / 'shared')
             self.assertEqual(
                 manager.elem_workspace(elem_id),
-                manager.entry_dir(elem_id) / 'workspace'
+                manager.entry_dir(elem_id) / 'workspace',
             )
             self.assertDictEqual(
-                dict(manager.retrieve_elems()),
-                {
-                    elem_id: res
-                }
+                dict(manager.retrieve_elems()), {elem_id: res}
             )

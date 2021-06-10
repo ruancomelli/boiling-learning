@@ -31,9 +31,9 @@ class ConvolutionType(enum.Enum):
 
 
 def _apply_policies_to_layers(
-        model: Model,
-        hidden_layers_policy: Union[str, Policy],
-        output_layer_policy: Union[str, Policy],
+    model: Model,
+    hidden_layers_policy: Union[str, Policy],
+    output_layer_policy: Union[str, Policy],
 ) -> Model:
     hidden_layers_policy = Policy(hidden_layers_policy)
     output_layer_policy = Policy(output_layer_policy)
@@ -60,21 +60,26 @@ def LinearRegression(input_shape: Tuple, **kwargs) -> Model:
     defaults=pack(
         num_classes=3,
         problem=ProblemType.REGRESSION,
-        fetch=frozenset({'model', 'history'})
-    )
+        fetch=frozenset({'model', 'history'}),
+    ),
 )
 def HoboldNet1(
-        input_shape: Tuple,
-        dropout: Optional[float],
-        hidden_layers_policy: Union[str, Policy],
-        output_layer_policy: Union[str, Policy],
-        problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
-        num_classes: Optional[int] = None
+    input_shape: Tuple,
+    dropout: Optional[float],
+    hidden_layers_policy: Union[str, Policy],
+    output_layer_policy: Union[str, Policy],
+    problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
+    num_classes: Optional[int] = None,
 ) -> Model:
-    '''CNN #1 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.
-    '''
+    '''CNN #1 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.'''
     input_data = Input(shape=input_shape)
-    x = Conv2D(16, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
+    x = Conv2D(
+        16,
+        (5, 5),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(input_data)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
@@ -102,20 +107,25 @@ def HoboldNet1(
         num_classes=3,
         problem=ProblemType.REGRESSION,
         fetch=frozenset({'model', 'history'}),
-    )
+    ),
 )
 def HoboldNet2(
-        input_shape: Tuple,
-        dropout: Optional[float],
-        hidden_layers_policy: Union[str, Policy],
-        output_layer_policy: Union[str, Policy],
-        problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
-        num_classes: Optional[int] = None
+    input_shape: Tuple,
+    dropout: Optional[float],
+    hidden_layers_policy: Union[str, Policy],
+    output_layer_policy: Union[str, Policy],
+    problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
+    num_classes: Optional[int] = None,
 ) -> Model:
-    '''CNN #2 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.
-    '''
+    '''CNN #2 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.'''
     input_data = Input(shape=input_shape)
-    x = Conv2D(32, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
+    x = Conv2D(
+        32,
+        (5, 5),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(input_data)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
@@ -143,21 +153,32 @@ def HoboldNet2(
         num_classes=3,
         problem=ProblemType.REGRESSION,
         fetch=frozenset({'model', 'history'}),
-    )
+    ),
 )
 def HoboldNet3(
-        input_shape: Tuple,
-        dropout: Optional[float],
-        hidden_layers_policy: Union[str, Policy],
-        output_layer_policy: Union[str, Policy],
-        problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
-        num_classes: Optional[int] = None
+    input_shape: Tuple,
+    dropout: Optional[float],
+    hidden_layers_policy: Union[str, Policy],
+    output_layer_policy: Union[str, Policy],
+    problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
+    num_classes: Optional[int] = None,
 ) -> Model:
-    '''CNN #3 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.
-    '''
+    '''CNN #3 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.'''
     input_data = Input(shape=input_shape)
-    x = Conv2D(32, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
-    x = Conv2D(64, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
+    x = Conv2D(
+        32,
+        (5, 5),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(input_data)
+    x = Conv2D(
+        64,
+        (5, 5),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
@@ -184,22 +205,33 @@ def HoboldNet3(
     defaults=pack(
         num_classes=3,
         problem=ProblemType.REGRESSION,
-        fetch=frozenset({'model', 'history'})
-    )
+        fetch=frozenset({'model', 'history'}),
+    ),
 )
 def HoboldNetSupplementary(
-        input_shape: Tuple,
-        dropout: Optional[float],
-        hidden_layers_policy: Union[str, Policy],
-        output_layer_policy: Union[str, Policy],
-        problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
-        num_classes: Optional[int] = None
+    input_shape: Tuple,
+    dropout: Optional[float],
+    hidden_layers_policy: Union[str, Policy],
+    output_layer_policy: Union[str, Policy],
+    problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
+    num_classes: Optional[int] = None,
 ) -> Model:
-    '''See supplementary material for Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning
-    '''
+    '''See supplementary material for Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning'''
     input_data = Input(shape=input_shape)
-    x = Conv2D(32, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
-    x = Conv2D(64, (5, 5), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
+    x = Conv2D(
+        32,
+        (5, 5),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(input_data)
+    x = Conv2D(
+        64,
+        (5, 5),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
@@ -226,31 +258,67 @@ def HoboldNetSupplementary(
     defaults=pack(
         num_classes=3,
         problem=ProblemType.REGRESSION,
-        fetch=frozenset({'model', 'history'})
-    )
+        fetch=frozenset({'model', 'history'}),
+    ),
 )
 def KramerNet(
-        input_shape: Tuple,
-        dropout: Optional[float],
-        hidden_layers_policy: Union[str, Policy],
-        output_layer_policy: Union[str, Policy],
-        problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
-        num_classes: Optional[int] = None
+    input_shape: Tuple,
+    dropout: Optional[float],
+    hidden_layers_policy: Union[str, Policy],
+    output_layer_policy: Union[str, Policy],
+    problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
+    num_classes: Optional[int] = None,
 ):
     input_data = Input(shape=input_shape)
 
-    x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
-    x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
+    x = Conv2D(
+        64,
+        (3, 3),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(input_data)
+    x = Conv2D(
+        64,
+        (3, 3),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
-    x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
+    x = Conv2D(
+        64,
+        (3, 3),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(input_data)
+    x = Conv2D(
+        64,
+        (3, 3),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    x = Conv2D(128, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
-    x = Conv2D(128, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
+    x = Conv2D(
+        128,
+        (3, 3),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(input_data)
+    x = Conv2D(
+        128,
+        (3, 3),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
@@ -275,16 +343,16 @@ def KramerNet(
 
 @make_creator('BoilNet')
 def BoilNet(
-        image_shape: Tuple[Optional[int], ...],
-        hidden_layers_policy: Union[str, Policy],
-        output_layer_policy: Union[str, Policy],
-        dropout: Optional[float] = None,
-        spatial_dropout: Optional[float] = None,
-        time_window: int = 0,
-        convolution_type: Union[ConvolutionType, str, int] = ConvolutionType.CONV,
-        flattening: Union[FlatteningMode, str, int] = FlatteningMode.FLATTEN,
-        problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
-        num_classes: int = 0
+    image_shape: Tuple[Optional[int], ...],
+    hidden_layers_policy: Union[str, Policy],
+    output_layer_policy: Union[str, Policy],
+    dropout: Optional[float] = None,
+    spatial_dropout: Optional[float] = None,
+    time_window: int = 0,
+    convolution_type: Union[ConvolutionType, str, int] = ConvolutionType.CONV,
+    flattening: Union[FlatteningMode, str, int] = FlatteningMode.FLATTEN,
+    problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
+    num_classes: int = 0,
 ) -> Model:
     if time_window > 0:
         input_shape = (time_window, *image_shape)
@@ -295,7 +363,7 @@ def BoilNet(
     flatten = {
         FlatteningMode.FLATTEN: Flatten,
         FlatteningMode.AVERAGE_POOLING: GlobalAveragePooling2D,
-        FlatteningMode.MAX_POOLING: GlobalMaxPooling2D
+        FlatteningMode.MAX_POOLING: GlobalMaxPooling2D,
     }[flattening]
     flatten = flatten()
 
@@ -314,13 +382,17 @@ def BoilNet(
     convolution_type = utils.enum_item(ConvolutionType, convolution_type)
     conv_layer = {
         ConvolutionType.CONV: Conv2D,
-        ConvolutionType.SEPARABLE_CONV: SeparableConv2D
+        ConvolutionType.SEPARABLE_CONV: SeparableConv2D,
     }[convolution_type]
 
-    conv = distribute(conv_layer(32, (5, 5), padding='same', activation='relu'))(inputs)
+    conv = distribute(
+        conv_layer(32, (5, 5), padding='same', activation='relu')
+    )(inputs)
     conv = distribute(spatial_dropouter())(conv)
     conv = distribute(MaxPool2D((2, 2), strides=(2, 2)))(conv)
-    conv = distribute(conv_layer(64, (5, 5), padding='same', activation='relu'))(conv)
+    conv = distribute(
+        conv_layer(64, (5, 5), padding='same', activation='relu')
+    )(conv)
     conv = distribute(spatial_dropouter())(conv)
     conv = distribute(MaxPool2D((2, 2), strides=(2, 2)))(conv)
     flatten = distribute(flatten)(conv)
@@ -344,9 +416,7 @@ def BoilNet(
     model = Model(inputs=inputs, outputs=outputs)
 
     model = _apply_policies_to_layers(
-        model,
-        hidden_layers_policy,
-        output_layer_policy
+        model, hidden_layers_policy, output_layer_policy
     )
 
     return model

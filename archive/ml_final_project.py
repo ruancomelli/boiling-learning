@@ -32,7 +32,11 @@ drive_path = Path('/content/drive')
 drive.mount(str(drive_path))
 
 # Define paths
-if user in {'ruan.comelli@lepten.ufsc.br', 'ruancomelli@gmail.com', 'rugortal@gmail.com'}:
+if user in {
+    'ruan.comelli@lepten.ufsc.br',
+    'ruancomelli@gmail.com',
+    'rugortal@gmail.com',
+}:
     project_path = (
         drive_path
         / 'My Drive'
@@ -46,33 +50,34 @@ datasets_path = project_path / 'datasets'
 deepfashion_path = datasets_path / 'DeepFashion'
 fashion550k_path = datasets_path / 'Fashion550k'
 
-models_path = project_path / 'models' # path where models are saved to
+models_path = project_path / 'models'  # path where models are saved to
 models_path.mkdir(parents=True, exist_ok=True)
-log_path = project_path / 'log' # path where to export TensorBoard and the like
+log_path = (
+    project_path / 'log'
+)  # path where to export TensorBoard and the like
 log_path.mkdir(parents=True, exist_ok=True)
-results_path = project_path / 'results' # path where the results are stored
+results_path = project_path / 'results'  # path where the results are stored
 results_path.mkdir(parents=True, exist_ok=True)
 keras_results_path = results_path / 'keras'
 keras_results_path.mkdir(parents=True, exist_ok=True)
 
 import sys
 
-sys.path.append(str(project_path)) # this allows us to import modules defined locally
+sys.path.append(
+    str(project_path)
+)  # this allows us to import modules defined locally
 
 """## Definições
 
 ### Impressão e formatação
 """
 
-def print_header(
-    s: str,
-    level: int = 0, 
-    levels=['=', '-', '~', '*']
-):
+
+def print_header(s: str, level: int = 0, levels=['=', '-', '~', '*']):
     """Standardized method for printing a section header.
 
     Prints the argument s underlined.
-    
+
     Parameters
     ----------
     s      : string to be printed
@@ -83,15 +88,22 @@ def print_header(
     print(s)
     print(levels[level] * len(s))
 
+
 """### Caminhos"""
+
 
 def relative_path(origin, destination):
     from os.path import relpath
+
     return relpath(destination, start=origin)
+
 
 """### Containers"""
 
-def missing_elements(int_list): # source: adapted from <https://stackoverflow.com/questions/16974047/efficient-way-to-find-missing-elements-in-an-integer-sequence>
+
+def missing_elements(
+    int_list,
+):  # source: adapted from <https://stackoverflow.com/questions/16974047/efficient-way-to-find-missing-elements-in-an-integer-sequence>
     # find missing elements in a list of integers
     int_list = sorted(int_list)
     if int_list:
@@ -100,7 +112,8 @@ def missing_elements(int_list): # source: adapted from <https://stackoverflow.co
         return sorted(full_list.difference(int_list))
     else:
         return set([])
-    
+
+
 def merge_dicts(*dict_args):
     """
     Given any number of dicts, shallow copy and merge into a new dict,
@@ -111,40 +124,52 @@ def merge_dicts(*dict_args):
         result.update(dictionary)
     return result
 
+
 def extract_value(dicts, key, default_behaviour='value', default=None):
     # extract values from dictionaries using a single key
     if isinstance(dicts, dict):
         dicts = [dicts]
-    
+
     for d in dicts:
         if key in d:
             return d[key]
-        
+
     default_behaviour = default_behaviour.lower()
-        
+
     if default_behaviour == 'value':
         return default
     elif default_behaviour == 'raise':
         raise ValueError(f'key {key} was not found in the dictionaries.')
     else:
-        raise ValueError(f'default_behaviour must be either \'value\' or \'raise\'. Got \'{default_behaviour}\'.')
+        raise ValueError(
+            f'default_behaviour must be either \'value\' or \'raise\'. Got \'{default_behaviour}\'.'
+        )
+
 
 def extract_values(dicts, keys, default_behaviour='value', default=None):
     # extract values from dictionaries using multiple keys
     if isinstance(dicts, dict):
         dicts = [dicts]
-    
+
     return {
-        key: extract_value(dicts, key, default_behaviour='value', default=default)
+        key: extract_value(
+            dicts, key, default_behaviour='value', default=default
+        )
         for key in keys
     }
 
+
 """### Valores *default*"""
 
+
 def regularize_default(
-    x, cond, default,
-    many=False, many_cond=False, many_default=False,
-    call_default=False
+    x,
+    cond,
+    default,
+    many=False,
+    many_cond=False,
+    many_default=False,
+    call_default=False,
 ):
     # Manage default arguments and passed parameters
     from itertools import repeat
@@ -155,9 +180,13 @@ def regularize_default(
 
         return (
             regularize_default(
-                x_, cond_, default_,
-                many=False, many_cond=False, many_default=False,
-                call_default=call_default
+                x_,
+                cond_,
+                default_,
+                many=False,
+                many_cond=False,
+                many_default=False,
+                call_default=call_default,
             )
             for x_, cond_, default_ in zip(x, cond, default)
         )
@@ -169,6 +198,7 @@ def regularize_default(
             return default()
         else:
             return default
+
 
 """### Gerenciador de modelos"""
 
@@ -191,15 +221,17 @@ class Manager:
         creator_method=None,
         creator_name=None,
         save_method=None,
-        load_method=None
+        load_method=None,
     ):
         def default_save_method(model, path):
             import pickle
+
             with path.open('wb') as file:
                 pickle.dump(model, file, protocol=pickle.HIGHEST_PROTOCOL)
 
         def default_load_method(path):
             import pickle
+
             with path.open('rb') as file:
                 return pickle.load(file)
 
@@ -215,7 +247,7 @@ class Manager:
 
         if load_table:
             self.load_lookup_table()
-        
+
         self.file_name_fmt = file_name_fmt
         self.creator_method = creator_method
         self.creator_name = creator_name
@@ -232,21 +264,27 @@ class Manager:
 
     def initialize_lookup_table(self):
         self.table_path.parent.mkdir(parents=True, exist_ok=True)
-        with self.table_path.open('w', encoding=self.encoding) as lookup_table_file:
-            json.dump(dict(files={}), lookup_table_file, indent=4, ensure_ascii=False)
+        with self.table_path.open(
+            'w', encoding=self.encoding
+        ) as lookup_table_file:
+            json.dump(
+                dict(files={}), lookup_table_file, indent=4, ensure_ascii=False
+            )
 
         return self
 
     def load_lookup_table(self):
         if not self.table_path.exists():
             self.initialize_lookup_table()
-        with self.table_path.open('r', encoding=self.encoding) as lookup_table_file:
+        with self.table_path.open(
+            'r', encoding=self.encoding
+        ) as lookup_table_file:
             try:
                 self.lookup_table = json.load(lookup_table_file)
             except json.JSONDecodeError:
                 self.initialize_lookup_table()
                 return self.load_lookup_table()
-        
+
         return self
 
     def save_lookup_table(self, table_path=None):
@@ -255,14 +293,14 @@ class Manager:
 
         with self.table_path.open('w', encoding='utf-8') as lookup_table_file:
             json.dump(self.lookup_table, lookup_table_file, indent=4)
-            
+
         return self
 
     def model_path(self, params, include=True):
         import json
 
         def as_json(obj):
-            return json.loads( json.dumps(obj) )
+            return json.loads(json.dumps(obj))
 
         file_dict = self.lookup_table['files']
         for file_name, content in file_dict.items():
@@ -278,14 +316,14 @@ class Manager:
             file_name = self.file_name_fmt.format(index=index)
 
         file_path = (self.models_path / file_name).resolve().absolute()
-        
+
         key = relative_path(self.table_path.parent, file_path)
 
         if include:
             file_dict[key] = params
 
         self.save_lookup_table()
-        
+
         return file_path
 
     def delete_model(self, params):
@@ -303,7 +341,7 @@ class Manager:
         path.parent.mkdir(parents=True, exist_ok=True)
 
         self.save_method(model, path)
-            
+
         return self
 
     def load_model(self, path):
@@ -316,10 +354,11 @@ class Manager:
         params=None,
         hidden_params=None,
         save: bool = False,
-        load: bool = False):
+        load: bool = False,
+    ):
 
         import pickle
-        
+
         if creator_method is None:
             creator_method = self.creator_method
 
@@ -328,17 +367,17 @@ class Manager:
         if hidden_params is None:
             hidden_params = {}
         if creator_name is None:
-            if hasattr(creator_method, 'creator_name') and creator_method.creator_name is not None:
+            if (
+                hasattr(creator_method, 'creator_name')
+                and creator_method.creator_name is not None
+            ):
                 creator_name = creator_method.creator_name
             elif self.creator_name is not None:
                 creator_name = self.creator_name
             else:
                 creator_name = repr(creator_method)
-        
-        path = self.model_path({
-            'creator': creator_name,
-            'parameters': params
-        })
+
+        path = self.model_path({'creator': creator_name, 'parameters': params})
 
         print(f'Model path = {path}')
 
@@ -356,6 +395,7 @@ class Manager:
 
         return model
 
+
 # ElementCreator facilitates the interface between creator functions and the Manager.
 # A creator function is any function that takes parameters (or a dict of parameters) and
 # outputs a model (trained or not, compiled or not) and, possibly, additional values such
@@ -366,23 +406,26 @@ class ElementCreator:
         creator_method,
         creator_name=None,
         default_params=None,
-        expand_params: bool = False
+        expand_params: bool = False,
     ):
-        self.default_params = default_params if default_params is not None else {}
+        self.default_params = (
+            default_params if default_params is not None else {}
+        )
         self.expand_params = expand_params
         self.creator_method = creator_method
         self.creator_name = creator_name
-        
+
     def __call__(self, params=None):
         if params is None:
             params = {}
-            
+
         params = merge_dicts(self.default_params, params)
-        
+
         if self.expand_params:
             return self.creator_method(**params)
         else:
             return self.creator_method(params)
+
 
 """### Métricas customizadas"""
 
@@ -405,31 +448,40 @@ from tensorflow.python.keras.metrics import MeanMetricWrapper
 # https://stats.stackexchange.com/questions/359909/is-accuracy-an-improper-scoring-rule-in-a-binary-classification-setting
 # https://stackoverflow.com/questions/53354176/how-to-use-f-score-as-error-function-to-train-neural-networks
 
+
 class custom_metrics:
     class probabilistic:
         @staticmethod
         def true_positives(y_true, y_pred):
-            return K.sum(K.cast(y_true*y_pred, 'float'), axis=0)
-        
+            return K.sum(K.cast(y_true * y_pred, 'float'), axis=0)
+
         @staticmethod
         def true_negatives(y_true, y_pred):
-            return K.sum(K.cast((1-y_true)*(1-y_pred), 'float'), axis=0)
-        
+            return K.sum(K.cast((1 - y_true) * (1 - y_pred), 'float'), axis=0)
+
         @staticmethod
         def false_positives(y_true, y_pred):
-            return K.sum(K.cast((1-y_true)*y_pred, 'float'), axis=0)
-        
+            return K.sum(K.cast((1 - y_true) * y_pred, 'float'), axis=0)
+
         @staticmethod
         def false_negatives(y_true, y_pred):
-            return K.sum(K.cast(y_true*(1-y_pred), 'float'), axis=0)
-        
+            return K.sum(K.cast(y_true * (1 - y_pred), 'float'), axis=0)
+
         @staticmethod
         def confusion(y_true, y_pred):
             return {
-                'true_positives': custom_metrics.probabilistic.true_positives(y_true, y_pred),
-                'true_negatives': custom_metrics.probabilistic.true_negatives(y_true, y_pred),
-                'false_positives': custom_metrics.probabilistic.false_positives(y_true, y_pred),
-                'false_negatives': custom_metrics.probabilistic.false_negatives(y_true, y_pred)
+                'true_positives': custom_metrics.probabilistic.true_positives(
+                    y_true, y_pred
+                ),
+                'true_negatives': custom_metrics.probabilistic.true_negatives(
+                    y_true, y_pred
+                ),
+                'false_positives': custom_metrics.probabilistic.false_positives(
+                    y_true, y_pred
+                ),
+                'false_negatives': custom_metrics.probabilistic.false_negatives(
+                    y_true, y_pred
+                ),
             }
 
         def precision(y_true, y_pred):
@@ -443,54 +495,68 @@ class custom_metrics:
             fn = custom_metrics.probabilistic.false_negatives(y_true, y_pred)
 
             return tp / (tp + fn + K.epsilon())
-            
+
         @staticmethod
         def f_score(y_true, y_pred, beta=1.0):
             # Source: https://www.kaggle.com/rejpalcz/best-loss-function-for-f1-score-metric
             p = custom_metrics.probabilistic.precision(y_true, y_pred)
             r = custom_metrics.probabilistic.recall(y_true, y_pred)
 
-            f = (1 + beta**2)*p*r / (p*beta**2 + r + K.epsilon())
+            f = (1 + beta ** 2) * p * r / (p * beta ** 2 + r + K.epsilon())
             f = tf.where(tf.is_nan(f), tf.zeros_like(f), f)
 
             return K.mean(f)
 
         @staticmethod
         def f1_score(y_true, y_pred):
-            return custom_metrics.probabilistic.f_score(y_true, y_pred, beta=1.0)
+            return custom_metrics.probabilistic.f_score(
+                y_true, y_pred, beta=1.0
+            )
 
         @staticmethod
         def f_loss(y_true, y_pred, beta=1.0):
-            return 1 - custom_metrics.probabilistic.f_score(y_true, y_pred, beta)
-            
+            return 1 - custom_metrics.probabilistic.f_score(
+                y_true, y_pred, beta
+            )
+
         @staticmethod
         def f1_loss(y_true, y_pred):
-            return custom_metrics.probabilistic.f_loss(y_true, y_pred, beta=1.0)
+            return custom_metrics.probabilistic.f_loss(
+                y_true, y_pred, beta=1.0
+            )
 
     class classification:
         @staticmethod
         def true_positives(y_true, y_pred):
-            return K.sum(K.round(K.clip(y_true*y_pred, 0, 1)))
+            return K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
 
         @staticmethod
         def true_negatives(y_true, y_pred):
-            return K.sum(K.round(K.clip((1-y_true)*(1-y_pred), 0, 1)))
-            
+            return K.sum(K.round(K.clip((1 - y_true) * (1 - y_pred), 0, 1)))
+
         @staticmethod
         def false_positives(y_true, y_pred):
-            return K.sum(K.round(K.clip((1-y_true)*y_pred, 0, 1)))
-            
+            return K.sum(K.round(K.clip((1 - y_true) * y_pred, 0, 1)))
+
         @staticmethod
         def false_negatives(y_true, y_pred):
-            return K.sum(K.round(K.clip(y_true*(1-y_pred), 0, 1)))
-        
+            return K.sum(K.round(K.clip(y_true * (1 - y_pred), 0, 1)))
+
         @staticmethod
         def confusion(y_true, y_pred):
             return {
-                'true_positives': custom_metrics.classification.true_positives(y_true, y_pred),
-                'true_negatives': custom_metrics.classification.true_negatives(y_true, y_pred),
-                'false_positives': custom_metrics.classification.false_positives(y_true, y_pred),
-                'false_negatives': custom_metrics.classification.false_negatives(y_true, y_pred)
+                'true_positives': custom_metrics.classification.true_positives(
+                    y_true, y_pred
+                ),
+                'true_negatives': custom_metrics.classification.true_negatives(
+                    y_true, y_pred
+                ),
+                'false_positives': custom_metrics.classification.false_positives(
+                    y_true, y_pred
+                ),
+                'false_negatives': custom_metrics.classification.false_negatives(
+                    y_true, y_pred
+                ),
             }
 
         def precision(y_true, y_pred):
@@ -504,82 +570,69 @@ class custom_metrics:
             fn = custom_metrics.classification.false_negatives(y_true, y_pred)
 
             return tp / (tp + fn + K.epsilon())
-            
+
         @staticmethod
         def f_score(y_true, y_pred, beta=1.0):
             # Source: https://www.kaggle.com/rejpalcz/best-loss-function-for-f1-score-metric
             p = custom_metrics.classification.precision(y_true, y_pred)
             r = custom_metrics.classification.recall(y_true, y_pred)
 
-            f = (1 + beta**2)*p*r / (p*beta**2 + r + K.epsilon())
+            f = (1 + beta ** 2) * p * r / (p * beta ** 2 + r + K.epsilon())
             f = tf.where(tf.is_nan(f), tf.zeros_like(f), f)
             return K.mean(f)
 
         @staticmethod
         def f1_score(y_true, y_pred):
-            return custom_metrics.classification.f_score(y_true, y_pred, beta=1.0)
+            return custom_metrics.classification.f_score(
+                y_true, y_pred, beta=1.0
+            )
+
 
 class FScore(MeanMetricWrapper):
-    def __init__(
-        self,
-        beta=1.0,
-        name='f_score',
-        dtype=None
-    ):
+    def __init__(self, beta=1.0, name='f_score', dtype=None):
         from functools import partial
+
         super(FScore, self).__init__(
             partial(custom_metrics.probabilistic.f_score, beta=beta),
             name=name,
-            dtype=dtype
+            dtype=dtype,
         )
         self.beta = beta
+
 
 class F1Score(MeanMetricWrapper):
-    def __init__(
-        self,
-        name='f1_score',
-        dtype=None
-    ):
+    def __init__(self, name='f1_score', dtype=None):
         super(F1Score, self).__init__(
-            custom_metrics.probabilistic.f1_score,
-            name=name,
-            dtype=dtype
+            custom_metrics.probabilistic.f1_score, name=name, dtype=dtype
         )
 
+
 class FLoss(LossFunctionWrapper):
-    def __init__(
-        self,
-        beta=1.0,
-        name='f_loss'
-    ):
+    def __init__(self, beta=1.0, name='f_loss'):
         from functools import partial
+
         super(FLoss, self).__init__(
-            partial(custom_metrics.probabilistic.f_loss, beta=beta),
-            name=name
+            partial(custom_metrics.probabilistic.f_loss, beta=beta), name=name
         )
         self.beta = beta
 
+
 class F1Loss(LossFunctionWrapper):
-    def __init__(
-        self,
-        name='f1_loss'
-    ):
+    def __init__(self, name='f1_loss'):
         super(F1Loss, self).__init__(
-            custom_metrics.probabilistic.f1_loss,
-            name=name
+            custom_metrics.probabilistic.f1_loss, name=name
         )
+
 
 """## Configuração"""
 
 DATA_FORMAT = 'channels_last'
 IMG_SIZE = (224, 224)
 IMG_SHAPE = (
-    IMG_SIZE + (3,)
-    if DATA_FORMAT == 'channels_last'
-    else (3,) + IMG_SIZE
+    IMG_SIZE + (3,) if DATA_FORMAT == 'channels_last' else (3,) + IMG_SIZE
 )
 BATCH_SIZE = 16
-RESCALE = 1./255
+RESCALE = 1.0 / 255
 FILL_MODE = 'nearest'
 
 validate_filenames = True
@@ -597,14 +650,30 @@ fill_aug_imgs = False
 from sklearn.preprocessing import MultiLabelBinarizer
 
 # more paths
-category_attribute_prediction_path = (deepfashion_path / 'Category and Attribute Prediction Benchmark').absolute().resolve()
+category_attribute_prediction_path = (
+    (deepfashion_path / 'Category and Attribute Prediction Benchmark')
+    .absolute()
+    .resolve()
+)
 images_path = (category_attribute_prediction_path / 'Img').absolute().resolve()
-augmented_imgs_path = (category_attribute_prediction_path / 'Img' / 'aug_img').absolute().resolve()
-annotations_path = (category_attribute_prediction_path / 'Anno').absolute().resolve()
-evaluation_path = (category_attribute_prediction_path / 'Eval').absolute().resolve()
+augmented_imgs_path = (
+    (category_attribute_prediction_path / 'Img' / 'aug_img')
+    .absolute()
+    .resolve()
+)
+annotations_path = (
+    (category_attribute_prediction_path / 'Anno').absolute().resolve()
+)
+evaluation_path = (
+    (category_attribute_prediction_path / 'Eval').absolute().resolve()
+)
 
 dataset_anno_path = annotations_path / 'dataset.csv'
-dataset_path = (category_attribute_prediction_path / 'Img' / 'dataset').absolute().resolve()
+dataset_path = (
+    (category_attribute_prediction_path / 'Img' / 'dataset')
+    .absolute()
+    .resolve()
+)
 dataset_path.mkdir(parents=True, exist_ok=True)
 
 # n_categories = int(pd.read_csv(annotations_path / 'list_category_cloth.txt', nrows=1, header=None)[0][0])
@@ -626,18 +695,24 @@ dataset_path.mkdir(parents=True, exist_ok=True)
 #     'category_label': int
 # })
 
-n_attributes = int(pd.read_csv(annotations_path / 'list_attr_cloth.txt', nrows=1, header=None)[0][0])
-attributes = pd.read_csv(annotations_path / 'list_attr_cloth.txt', skiprows=1, delimiter=r"\s\s+", engine='python')
-attributes = attributes.astype({
-    'attribute_name': str,
-    'attribute_type': int
-})
+n_attributes = int(
+    pd.read_csv(
+        annotations_path / 'list_attr_cloth.txt', nrows=1, header=None
+    )[0][0]
+)
+attributes = pd.read_csv(
+    annotations_path / 'list_attr_cloth.txt',
+    skiprows=1,
+    delimiter=r'\s\s+',
+    engine='python',
+)
+attributes = attributes.astype({'attribute_name': str, 'attribute_type': int})
 attribute_types = {
     1: 'texture-related attributes',
     2: 'fabric-related attributes',
     3: 'shape-related attributes',
     4: 'part-related attributes',
-    5: 'style-related attributes'
+    5: 'style-related attributes',
 }
 
 # define the binarizer that maps from a binary representation to lists of strings, each one
@@ -654,8 +729,18 @@ from ast import literal_eval
 from sklearn.preprocessing import MultiLabelBinarizer
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, save_img
 
-n_attribute_imgs = int(pd.read_csv(annotations_path / 'list_attr_img.txt', nrows=1, header=None)[0][0])
-column_names = pd.read_csv(annotations_path / 'list_attr_img.txt', skiprows=1, nrows=1, delim_whitespace=True, header=None).values[0]
+n_attribute_imgs = int(
+    pd.read_csv(annotations_path / 'list_attr_img.txt', nrows=1, header=None)[
+        0
+    ][0]
+)
+column_names = pd.read_csv(
+    annotations_path / 'list_attr_img.txt',
+    skiprows=1,
+    nrows=1,
+    delim_whitespace=True,
+    header=None,
+).values[0]
 
 # due to the time taken by the models to load images from disk and preprocess them,
 # the ideia to augment data previous to everything came up.
@@ -666,12 +751,13 @@ if augment_previously:
         # in this case, images were already preprocessed, and we can load them directly
         print('Trying to read augmented image attributes', end='')
         attribute_aug_imgs = pd.read_csv(attribute_aug_imgs_path)
-        attribute_aug_imgs[column_names[1]] = attribute_aug_imgs[column_names[1]].apply(lambda x: list(y for y in literal_eval(x)))
+        attribute_aug_imgs[column_names[1]] = attribute_aug_imgs[
+            column_names[1]
+        ].apply(lambda x: list(y for y in literal_eval(x)))
 
-        attribute_aug_imgs = attribute_aug_imgs.astype({
-            column_names[0]: str,
-            column_names[1]: object
-        })
+        attribute_aug_imgs = attribute_aug_imgs.astype(
+            {column_names[0]: str, column_names[1]: object}
+        )
 
         print(' - Done')
     except (FileNotFoundError, pd.errors.EmptyDataError):
@@ -682,7 +768,7 @@ if augment_previously:
 
     n_attribute_aug_imgs = len(attribute_aug_imgs.index)
     if fill_aug_imgs:
-        previously_augmented = (n_attribute_aug_imgs == n_attribute_imgs)
+        previously_augmented = n_attribute_aug_imgs == n_attribute_imgs
     else:
         previously_augmented = True
 
@@ -692,41 +778,62 @@ if not augment_previously or not previously_augmented:
         # create a pandas.DataFrame mapping non-augmented images to their y-value in the sparse format
         print('Trying to read image attributes', end='')
         attribute_imgs = pd.read_csv(attribute_imgs_path)
-        attribute_imgs[column_names[1]] = attribute_imgs[column_names[1]].apply(lambda x: list(y for y in literal_eval(x)))
+        attribute_imgs[column_names[1]] = attribute_imgs[
+            column_names[1]
+        ].apply(lambda x: list(y for y in literal_eval(x)))
         print(' - Done')
     except (FileNotFoundError, pd.errors.EmptyDataError):
         # if the previous file does not exist, we need to use the original data, in which the y-values are
         # in binary format (and much more memory consuming)
         print(' - File not found... reading in chunks from bigger file')
-        first_row = pd.read_csv(annotations_path / 'list_attr_img.txt', skiprows=2, nrows=1, delim_whitespace=True, header=None).values[0]
+        first_row = pd.read_csv(
+            annotations_path / 'list_attr_img.txt',
+            skiprows=2,
+            nrows=1,
+            delim_whitespace=True,
+            header=None,
+        ).values[0]
         attribute_imgs = pd.DataFrame(columns=column_names)
-        for i, chunk in enumerate(pd.read_csv(
+        for i, chunk in enumerate(
+            pd.read_csv(
                 annotations_path / 'list_attr_img.txt',
                 skiprows=2,
                 delim_whitespace=True,
                 header=None,
                 chunksize=50000,
                 converters={
-                    col: lambda x: True if x == '1' else False if x == '-1' else x
+                    col: lambda x: True
+                    if x == '1'
+                    else False
+                    if x == '-1'
+                    else x
                     for col in range(1, len(first_row))
-                }
-        )):
+                },
+            )
+        ):
             print(f'Reading chunk #{i}', end='')
 
             chunk = list(chunk.itertuples())
             y_values = [
-                list(
-                    idx
-                    for idx, value in enumerate(row[2:])
-                    if value
-                ) for row in chunk
+                list(idx for idx, value in enumerate(row[2:]) if value)
+                for row in chunk
             ]
-            chunk = pd.DataFrame({
-                column_names[0]: [images_path / row[1] for row in chunk],
-                column_names[1]: [[attributes['attribute_name'][y_] for y_ in y_value] if y_value else ['none'] for y_value in y_values]
-            }, index=[row[0] for row in chunk])
+            chunk = pd.DataFrame(
+                {
+                    column_names[0]: [images_path / row[1] for row in chunk],
+                    column_names[1]: [
+                        [attributes['attribute_name'][y_] for y_ in y_value]
+                        if y_value
+                        else ['none']
+                        for y_value in y_values
+                    ],
+                },
+                index=[row[0] for row in chunk],
+            )
 
-            attribute_imgs = attribute_imgs.append(chunk, verify_integrity=True, sort=False)
+            attribute_imgs = attribute_imgs.append(
+                chunk, verify_integrity=True, sort=False
+            )
 
             print(f' - Done')
         try:
@@ -736,10 +843,9 @@ if not augment_previously or not previously_augmented:
         except PermissionError:
             print(' - Permission denied')
 
-    attribute_imgs = attribute_imgs.astype({
-        column_names[0]: str,
-        column_names[1]: object
-    })
+    attribute_imgs = attribute_imgs.astype(
+        {column_names[0]: str, column_names[1]: object}
+    )
 
 # Binarizer that takes de 'none' class into account
 expanded_attr_binarizer = MultiLabelBinarizer()
@@ -769,7 +875,7 @@ if augment_previously and not previously_augmented:
         validate_filenames=validate_filenames,
         shuffle=False,
         target_size=IMG_SIZE,
-        batch_size=BATCH_SIZE
+        batch_size=BATCH_SIZE,
     )
     counter = n_attribute_aug_imgs
     break_all = False
@@ -778,21 +884,25 @@ if augment_previously and not previously_augmented:
         for idx, (X, y) in enumerate(zip(*batch)):
             y = np.expand_dims(y, axis=0)
             inv_y = expanded_attr_binarizer.inverse_transform(y)
-            
+
             origin = Path(dataframe_iterator.filenames[idx])
-            file_path = augmented_imgs_path / origin.parts[-2] / origin.parts[-1]
-            
-            print(f'Index = {counter}/{n_attribute_imgs} [#{idx} from batch {dataframe_iterator.batch_index}]')
+            file_path = (
+                augmented_imgs_path / origin.parts[-2] / origin.parts[-1]
+            )
+
+            print(
+                f'Index = {counter}/{n_attribute_imgs} [#{idx} from batch {dataframe_iterator.batch_index}]'
+            )
             print(f'Origin = {origin}')
             print(f'y = {inv_y} [path = {file_path}]')
 
             file_path.parent.mkdir(parents=True, exist_ok=True)
             if not file_path.exists():
                 save_img(file_path, X)
-            attribute_aug_imgs = attribute_aug_imgs.append({
-                column_names[0]: str(file_path),
-                column_names[1]: inv_y[0]
-            }, ignore_index=True)
+            attribute_aug_imgs = attribute_aug_imgs.append(
+                {column_names[0]: str(file_path), column_names[1]: inv_y[0]},
+                ignore_index=True,
+            )
 
             counter += 1
             if counter == n_attribute_imgs:
@@ -848,7 +958,7 @@ from sklearn.model_selection import train_test_split
 dataset_size = 10000
 # problem = 'category'
 problem = 'attribute'
-from_file = False # keep it False!
+from_file = False  # keep it False!
 # ==================================
 
 if from_file:
@@ -887,7 +997,7 @@ if from_file and not from_file_success:
         validate_filenames=validate_filenames,
         shuffle=False,
         target_size=IMG_SIZE,
-        batch_size=BATCH_SIZE
+        batch_size=BATCH_SIZE,
     )
 
     counter = 0
@@ -898,11 +1008,13 @@ if from_file and not from_file_success:
         for in_batch_idx, (X, y) in enumerate(zip(*batch)):
             y = np.expand_dims(y, axis=0)
             inv_y = expanded_attr_binarizer.inverse_transform(y)
-            
+
             origin = Path(dataset_iter.filenames[idx])
             file_path = dataset_path / origin.parts[-2] / origin.parts[-1]
-            
-            print(f'Index = {counter}/{len(dataset.index)} [#{in_batch_idx} from batch {dataset_iter.batch_index}]')
+
+            print(
+                f'Index = {counter}/{len(dataset.index)} [#{in_batch_idx} from batch {dataset_iter.batch_index}]'
+            )
             print(f'Origin = {origin}')
             print(f'y = {inv_y} [path = {file_path}]')
 
@@ -924,7 +1036,9 @@ if from_file and not from_file_success:
     dataset[column_names[0]] = dataset[column_names[0]].apply(
         lambda file_path: relative_path(
             images_path,
-            dataset_path / Path(file_path).parts[-2] / Path(file_path).parts[-1]
+            dataset_path
+            / Path(file_path).parts[-2]
+            / Path(file_path).parts[-1],
         )
     )
     dataset.to_csv(dataset_anno_path, index=False)
@@ -933,11 +1047,19 @@ if from_file and not from_file_success:
 val_size = 0.2
 test_size = 0.2
 train_set, test_set = train_test_split(dataset, test_size=test_size)
-train_set, val_set = train_test_split(train_set, test_size=val_size/(1 - test_size))
+train_set, val_set = train_test_split(
+    train_set, test_size=val_size / (1 - test_size)
+)
 
 total = sum(data.shape[0] for data in (train_set, val_set, test_set))
-for name, data in (('Train set', train_set), ('Validation set', val_set), ('Test set', test_set)):
-    print(f'{name} shape: {data.shape} [{100*data.shape[0]/total:.0f}% of data]')
+for name, data in (
+    ('Train set', train_set),
+    ('Validation set', val_set),
+    ('Test set', test_set),
+):
+    print(
+        f'{name} shape: {data.shape} [{100*data.shape[0]/total:.0f}% of data]'
+    )
 
 dataset.info()
 dataset.head()
@@ -974,7 +1096,7 @@ train_gen = train_datagen.flow_from_dataframe(
     class_mode='categorical',
     validate_filenames=validate_filenames,
     target_size=IMG_SIZE,
-    batch_size=BATCH_SIZE
+    batch_size=BATCH_SIZE,
 )
 val_gen = test_datagen.flow_from_dataframe(
     val_set,
@@ -985,7 +1107,7 @@ val_gen = test_datagen.flow_from_dataframe(
     class_mode='categorical',
     validate_filenames=validate_filenames,
     target_size=IMG_SIZE,
-    batch_size=BATCH_SIZE
+    batch_size=BATCH_SIZE,
 )
 test_gen = test_datagen.flow_from_dataframe(
     test_set,
@@ -996,7 +1118,7 @@ test_gen = test_datagen.flow_from_dataframe(
     class_mode='categorical',
     validate_filenames=validate_filenames,
     target_size=IMG_SIZE,
-    batch_size=BATCH_SIZE
+    batch_size=BATCH_SIZE,
 )
 
 """## Modelos
@@ -1006,16 +1128,20 @@ test_gen = test_datagen.flow_from_dataframe(
 
 # define new save and load methods to use with Manager
 
+
 def save_serialized(save_map):
     def save(return_dict, path):
         for key, obj in return_dict.items():
             path_ = path.with_suffix(path.suffix + '.' + key)
 
             save_map[key](obj, path_)
+
     return save
+
 
 def save_keras_model(keras_model, path):
     keras_model.save(str(path.absolute().resolve()))
+
 
 def save_pkl(obj, path):
     import pickle
@@ -1023,10 +1149,9 @@ def save_pkl(obj, path):
     with path.absolute().resolve().open('wb') as file:
         pickle.dump(obj, file, protocol=pickle.HIGHEST_PROTOCOL)
 
-save_map = {
-    'model': save_keras_model,
-    'history': save_pkl
-}
+
+save_map = {'model': save_keras_model, 'history': save_pkl}
+
 
 def load_serialized(load_map):
     def load(path):
@@ -1034,9 +1159,11 @@ def load_serialized(load_map):
         for key, loader in load_map.items():
             path_ = path.with_suffix(path.suffix + '.' + key)
             loaded[key] = loader(path_)
-            
+
         return loaded
+
     return load
+
 
 def load_keras_model(path):
     from tensorflow.keras.models import load_model
@@ -1045,9 +1172,10 @@ def load_keras_model(path):
         str(path.absolute().resolve()),
         custom_objects={
             'F1Score': F1Score,
-            'f1_score': custom_metrics.probabilistic.f1_score
-        }
+            'f1_score': custom_metrics.probabilistic.f1_score,
+        },
     )
+
 
 def load_pkl(path):
     import pickle
@@ -1055,16 +1183,14 @@ def load_pkl(path):
     with path.absolute().resolve().open('rb') as file:
         return pickle.load(file)
 
-load_map = {
-    'model': load_keras_model,
-    'history': load_pkl
-}
+
+load_map = {'model': load_keras_model, 'history': load_pkl}
 
 manager = Manager(
     models_path=models_path,
     file_name_fmt='{index}.model',
     save_method=save_serialized(save_map),
-    load_method=load_serialized(load_map)
+    load_method=load_serialized(load_map),
 )
 
 # map strings to objects aiming to facilitate the use o
@@ -1122,7 +1248,7 @@ from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
                                         ReduceLROnPlateau, TensorBoard)
 
 callback_dict = {
-    'ModelCheckpoint': ModelCheckpoint,    
+    'ModelCheckpoint': ModelCheckpoint,
     'ReduceLROnPlateau': ReduceLROnPlateau,
     'TensorBoard': TensorBoard,
     'EarlyStopping': EarlyStopping,
@@ -1156,7 +1282,7 @@ def creator_method(
     val_gen,
     callback_dict,
     callback_params,
-    fit_params
+    fit_params,
 ):
     model = base_net_dict[base_net](**base_net_params)
 
@@ -1166,7 +1292,7 @@ def creator_method(
     model.compile(
         optimizer,
         loss=loss_dict[loss],
-        metrics=[metrics_dict[name] for name in metrics_names]
+        metrics=[metrics_dict[name] for name in metrics_names],
     )
 
     model.summary()
@@ -1176,33 +1302,32 @@ def creator_method(
         validation_data=val_gen,
         class_weight=merge_dicts(
             {'none': negative_class_weight, n_labels: negative_class_weight},
-            {class_: positive_class_weight for class_ in attr_binarizer.classes_},
-            {class_: positive_class_weight for class_ in range(n_labels)}
+            {
+                class_: positive_class_weight
+                for class_ in attr_binarizer.classes_
+            },
+            {class_: positive_class_weight for class_ in range(n_labels)},
         ),
         callbacks=[
             callback_dict[name](**params)
             for name, params in callback_params.items()
         ],
-        **fit_params
+        **fit_params,
     )
 
-    return_dict = {
-        'model': model,
-        'history': history.history
-    }
+    return_dict = {'model': model, 'history': history.history}
 
     return return_dict
 
+
 # wrap creator_method
 model_creator = ElementCreator(
-    creator_method,
-    creator_name='model_creator',
-    expand_params=True
+    creator_method, creator_name='model_creator', expand_params=True
 )
 
 loss_dict = {
     'binary_crossentropy': 'binary_crossentropy',
-    'f1_loss': F1Loss() #! NOT WORKING !
+    'f1_loss': F1Loss(),  #! NOT WORKING !
 }
 
 # definition of parameters for creating models
@@ -1213,14 +1338,10 @@ params = dict(
         input_shape=IMG_SHAPE,
         include_top=True,
         weights='imagenet',
-        classes=n_labels
+        classes=n_labels,
     ),
     optimizer_name='Adam',
-    optimizer_params=dict(
-        lr=1e-4,
-        beta_1=0.9,
-        beta_2=0.999
-    ),
+    optimizer_params=dict(lr=1e-4, beta_1=0.9, beta_2=0.999),
     loss='binary_crossentropy',
     negative_class_weight=1,
     positive_class_weight=100,
@@ -1228,7 +1349,7 @@ params = dict(
     fit_params=dict(
         epochs=20,
         workers=6,
-    )
+    ),
 )
 
 # load a model if possible. Create it otherwise
@@ -1239,8 +1360,7 @@ return_dict = manager.provide_model(
         base_net_dict=application_dict,
         optimizer_dict=optimizer_dict,
         metrics_dict=dict(
-            accuracy='accuracy',
-            f1_score=custom_metrics.probabilistic.f1_score
+            accuracy='accuracy', f1_score=custom_metrics.probabilistic.f1_score
         ),
         train_gen=train_gen,
         val_gen=val_gen,
@@ -1250,7 +1370,7 @@ return_dict = manager.provide_model(
             'ModelCheckpoint': dict(
                 filepath=str(manager.models_path / 'model'),
                 monitor='val_loss',
-                save_best_only=True
+                save_best_only=True,
             ),
             'ReduceLROnPlateau': dict(
                 monitor='val_loss',
@@ -1260,37 +1380,44 @@ return_dict = manager.provide_model(
                 mode='auto',
                 min_delta=0.0001,
                 cooldown=5,
-                min_lr=1e-6
+                min_lr=1e-6,
             ),
             'EarlyStopping': dict(
                 monitor='val_loss',
                 patience=15,
                 verbose=1,
                 mode='auto',
-                restore_best_weights=True
-            )
+                restore_best_weights=True,
+            ),
         },
     ),
     save=True,
-    load=True
+    load=True,
 )
 
 model = return_dict['model']
 
 counter = 0
 interesting_results = {'excellent': [], 'good': [], 'none': [], 'horrible': []}
-while any([len(interesting_results['excellent']) < 3, len(interesting_results['good']) < 3, len(interesting_results['none']) < 3, len(interesting_results['horrible']) < 3]):
+while any(
+    [
+        len(interesting_results['excellent']) < 3,
+        len(interesting_results['good']) < 3,
+        len(interesting_results['none']) < 3,
+        len(interesting_results['horrible']) < 3,
+    ]
+):
     X_val, y_val = next(val_gen)
     y = model.predict(X_val)
 
     for X_val_, y_val_, y_ in zip(X_val, y_val, y):
-        
+
         X_val_exp = np.array([X_val_])
         y_val_exp = np.array([y_val_])
 
         y_exp = model.predict(X_val_exp)
-        y_exp[y_exp>=0.5] = 1
-        y_exp[y_exp<0.5] = 0
+        y_exp[y_exp >= 0.5] = 1
+        y_exp[y_exp < 0.5] = 0
 
         y_val_exp_t = attr_binarizer.inverse_transform(y_val_exp)
         y_exp_t = attr_binarizer.inverse_transform(y_exp)
@@ -1298,30 +1425,33 @@ while any([len(interesting_results['excellent']) < 3, len(interesting_results['g
         evaluation = model.evaluate(X_val_exp, y_val_exp)
         error_rate = 1 - evaluation[1]
 
-        if y_exp_t == y_val_exp_t and len(interesting_results['excellent']) < 3:
-            interesting_results['excellent'].append({
-                'X_val': X_val_,
-                'y_val': y_val_exp_t[0],
-                'y': y_exp_t[0]
-            })
-        elif (len(y_exp_t[0]) > 0) and all(x in y_val_exp_t[0] for x in y_exp_t[0]) and len(interesting_results['good']) < 3:
-            interesting_results['good'].append({
-                'X_val': X_val_,
-                'y_val': y_val_exp_t[0],
-                'y': y_exp_t[0]
-            })
+        if (
+            y_exp_t == y_val_exp_t
+            and len(interesting_results['excellent']) < 3
+        ):
+            interesting_results['excellent'].append(
+                {'X_val': X_val_, 'y_val': y_val_exp_t[0], 'y': y_exp_t[0]}
+            )
+        elif (
+            (len(y_exp_t[0]) > 0)
+            and all(x in y_val_exp_t[0] for x in y_exp_t[0])
+            and len(interesting_results['good']) < 3
+        ):
+            interesting_results['good'].append(
+                {'X_val': X_val_, 'y_val': y_val_exp_t[0], 'y': y_exp_t[0]}
+            )
         elif len(y_exp_t[0]) == 0 and len(interesting_results['none']) < 3:
-            interesting_results['none'].append({
-                'X_val': X_val_,
-                'y_val': y_val_exp_t[0],
-                'y': y_exp_t[0]
-            })
-        elif (len(y_exp_t[0]) > 0) and (not all(x in y_val_exp_t[0] for x in y_exp_t[0])) and len(interesting_results['horrible']) < 3:
-            interesting_results['horrible'].append({
-                'X_val': X_val_,
-                'y_val': y_val_exp_t[0],
-                'y': y_exp_t[0]
-            })
+            interesting_results['none'].append(
+                {'X_val': X_val_, 'y_val': y_val_exp_t[0], 'y': y_exp_t[0]}
+            )
+        elif (
+            (len(y_exp_t[0]) > 0)
+            and (not all(x in y_val_exp_t[0] for x in y_exp_t[0]))
+            and len(interesting_results['horrible']) < 3
+        ):
+            interesting_results['horrible'].append(
+                {'X_val': X_val_, 'y_val': y_val_exp_t[0], 'y': y_exp_t[0]}
+            )
 
 import matplotlib.pyplot as plt
 
@@ -1342,7 +1472,7 @@ for base_net, epochs, weight, ds_size in product(
     ['VGG16', 'MobileNetV2', 'ResNet50V2'],
     [20, 40, 100],
     [1, 10, 100, 1000],
-    [1000, 5000, 10000, 50000, 100000, 200000]
+    [1000, 5000, 10000, 50000, 100000, 200000],
 ):
     params = dict(
         dataset_size=ds_size,
@@ -1351,14 +1481,10 @@ for base_net, epochs, weight, ds_size in product(
             input_shape=IMG_SHAPE,
             include_top=True,
             weights='imagenet',
-            classes=n_labels
+            classes=n_labels,
         ),
         optimizer_name='Adam',
-        optimizer_params=dict(
-            lr=1e-4,
-            beta_1=0.9,
-            beta_2=0.999
-        ),
+        optimizer_params=dict(lr=1e-4, beta_1=0.9, beta_2=0.999),
         loss='binary_crossentropy',
         negative_class_weight=1,
         # positive_class_weight=100,
@@ -1367,14 +1493,21 @@ for base_net, epochs, weight, ds_size in product(
         fit_params=dict(
             epochs=epochs,
             workers=6,
-        )
+        ),
     )
 
-    results_file_name = filename_format.format(base_net=base_net, epochs=epochs, weight=weight, ds_size=ds_size)
-    path = manager.model_path({'creator': model_creator.creator_name, 'parameters': params}, include=False)
+    results_file_name = filename_format.format(
+        base_net=base_net, epochs=epochs, weight=weight, ds_size=ds_size
+    )
+    path = manager.model_path(
+        {'creator': model_creator.creator_name, 'parameters': params},
+        include=False,
+    )
     history_path = path.with_name(path.name + '.history')
     if history_path.exists():
         print(results_file_name)
 
         hist = load_pkl(history_path)
-        pd.DataFrame(hist).to_csv(keras_results_path / results_file_name, index=False)
+        pd.DataFrame(hist).to_csv(
+            keras_results_path / results_file_name, index=False
+        )

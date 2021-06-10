@@ -10,6 +10,7 @@ try:
 except (nidaqmx.DaqError, nidaqmx._lib.DaqNotFoundError):
     pass
 else:
+
     class daq_Device_test(unittest.TestCase):
         def test_init(self):
             d = Device()
@@ -48,14 +49,15 @@ else:
             self.assertEqual(Device(), Device())
             self.assertEqual(Device('Dev0'), Device('Dev0'))
 
-
     class daq_Channel_test(unittest.TestCase):
         def test_init(self):
             ch = Channel(Device('Dev0'), name='ai0', description='My Channel')
             self.assertEqual(ch.name, 'ai0')
             self.assertEqual(ch.desc, 'My Channel')
             self.assertEqual(ch.device, Device('Dev0'))
-            self.assertEqual(ch.type, (ChannelType.UNDEFINED, ChannelType.UNDEFINED))
+            self.assertEqual(
+                ch.type, (ChannelType.UNDEFINED, ChannelType.UNDEFINED)
+            )
             self.assertIsNone(ch.ni)
 
         def test_path(self):
@@ -74,16 +76,28 @@ else:
                 task.ai_channels.add_ai_voltage_chan('cDAQ1Mod4/ai0')
                 print(task.channel_names)
 
-                self.assertTrue(Channel(Device('cDAQ1Mod4'), 'ai0').exists(task))
-                self.assertFalse(Channel(Device('cDAQ1Mod100'), 'ai3').exists(task))
-                self.assertFalse(Channel(Device('cDAQ1Mod4'), 'ai300').exists(task))
+                self.assertTrue(
+                    Channel(Device('cDAQ1Mod4'), 'ai0').exists(task)
+                )
+                self.assertFalse(
+                    Channel(Device('cDAQ1Mod100'), 'ai3').exists(task)
+                )
+                self.assertFalse(
+                    Channel(Device('cDAQ1Mod4'), 'ai300').exists(task)
+                )
 
         def test_type(self):
             ch = Channel(Device())
             self.assertTrue(ch.is_type(ChannelType.UNDEFINED))
-            self.assertTrue(ch.is_type(ChannelType.UNDEFINED, ChannelType.UNDEFINED))
-            self.assertFalse(ch.is_type(ChannelType.UNDEFINED, ChannelType.INPUT))
-            self.assertFalse(ch.is_type(ChannelType.ANALOG, ChannelType.UNDEFINED))
+            self.assertTrue(
+                ch.is_type(ChannelType.UNDEFINED, ChannelType.UNDEFINED)
+            )
+            self.assertFalse(
+                ch.is_type(ChannelType.UNDEFINED, ChannelType.INPUT)
+            )
+            self.assertFalse(
+                ch.is_type(ChannelType.ANALOG, ChannelType.UNDEFINED)
+            )
             self.assertFalse(ch.is_type(ChannelType.ANALOG, ChannelType.INPUT))
 
             ch = Channel(Device(), type1=ChannelType.ANALOG)
@@ -94,14 +108,18 @@ else:
             self.assertTrue(ch.is_type(ChannelType.ANALOG))
             self.assertFalse(ch.is_type(ChannelType.ANALOG, ChannelType.INPUT))
 
-            ch = Channel(Device(), type1=ChannelType.ANALOG, type2=ChannelType.INPUT)
+            ch = Channel(
+                Device(), type1=ChannelType.ANALOG, type2=ChannelType.INPUT
+            )
             self.assertFalse(ch.is_type(ChannelType.UNDEFINED))
             self.assertTrue(ch.is_type(ChannelType.INPUT))
             self.assertFalse(ch.is_type(ChannelType.DIGITAL))
             self.assertFalse(ch.is_type(ChannelType.OUTPUT))
             self.assertTrue(ch.is_type(ChannelType.ANALOG))
             self.assertTrue(ch.is_type(ChannelType.ANALOG, ChannelType.INPUT))
-            self.assertFalse(ch.is_type(ChannelType.ANALOG, ChannelType.OUTPUT))
+            self.assertFalse(
+                ch.is_type(ChannelType.ANALOG, ChannelType.OUTPUT)
+            )
 
             ch = Channel(Device())
             ch.set_type(ChannelType.ANALOG)
@@ -119,7 +137,9 @@ else:
             self.assertFalse(ch.is_type(ChannelType.OUTPUT))
             self.assertTrue(ch.is_type(ChannelType.ANALOG))
             self.assertTrue(ch.is_type(ChannelType.ANALOG, ChannelType.INPUT))
-            self.assertFalse(ch.is_type(ChannelType.ANALOG, ChannelType.OUTPUT))
+            self.assertFalse(
+                ch.is_type(ChannelType.ANALOG, ChannelType.OUTPUT)
+            )
 
         def test_ni_type(self):
             ch = Channel(Device())
@@ -130,12 +150,16 @@ else:
             self.assertIsNone(ch.ni_type())
             self.assertIsNone(ch.ni_type_key())
 
-            ch = Channel(Device(), type1=ChannelType.ANALOG, type2=ChannelType.INPUT)
+            ch = Channel(
+                Device(), type1=ChannelType.ANALOG, type2=ChannelType.INPUT
+            )
             self.assertEqual(ch.ni_type(), NIChannelType.ANALOG_INPUT)
             self.assertTrue(ch.is_ni_type(NIChannelType.ANALOG_INPUT))
             self.assertFalse(ch.is_ni_type(NIChannelType.ANALOG_OUTPUT))
 
-            ch = Channel(Device(), type1=ChannelType.ANALOG, type2=ChannelType.INPUT)
+            ch = Channel(
+                Device(), type1=ChannelType.ANALOG, type2=ChannelType.INPUT
+            )
             self.assertEqual(ch.ni_type(), NIChannelType.ANALOG_INPUT)
             self.assertTrue(ch.is_ni_type(NIChannelType.ANALOG_INPUT))
             self.assertFalse(ch.is_ni_type(NIChannelType.ANALOG_OUTPUT))
@@ -143,7 +167,9 @@ else:
             self.assertNotEqual(ch.ni_type_key(), 'ao')
 
         def test_task_table(self):
-            with nidaqmx.Task('Task1') as task1, nidaqmx.Task('Task2') as task2:
+            with nidaqmx.Task('Task1') as task1, nidaqmx.Task(
+                'Task2'
+            ) as task2:
                 ch0 = Channel(Device('Dev0'), 'ai0')
                 ch1 = Channel(Device('Dev1'), 'ai3')
 
@@ -158,7 +184,12 @@ else:
 
         def test_add_to_task(self):
             with nidaqmx.Task('Task') as task:
-                ch = Channel(Device('cDAQ1Mod4'), 'ai0', type1=ChannelType.INPUT, type2=ChannelType.ANALOG)
+                ch = Channel(
+                    Device('cDAQ1Mod4'),
+                    'ai0',
+                    type1=ChannelType.INPUT,
+                    type2=ChannelType.ANALOG,
+                )
                 ch.add_to_task(task, 'voltage_chan')
 
                 self.assertTrue(ch.exists(task))

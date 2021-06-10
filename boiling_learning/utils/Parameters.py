@@ -21,10 +21,7 @@ class Parameters(MutableMapping, SimpleRepr, SimpleStr):
 
     @staticmethod
     def get_from_dict(d, key):
-        return {
-            v: d[k]
-            for k, v in key.items()
-        }
+        return {v: d[k] for k, v in key.items()}
 
     @staticmethod
     def set_from_set(d, key, value):
@@ -36,11 +33,7 @@ class Parameters(MutableMapping, SimpleRepr, SimpleStr):
         paths = [[]]
         for k in key:
             if isinstance(k, set):
-                paths = [
-                    sublist + [k_]
-                    for k_ in k
-                    for sublist in paths
-                ]
+                paths = [sublist + [k_] for k_ in k for sublist in paths]
             else:
                 for p in paths:
                     p.append(k)
@@ -65,13 +58,13 @@ class Parameters(MutableMapping, SimpleRepr, SimpleStr):
                 'get': [
                     (funcy.isa(set), Parameters.get_from_set),
                     (funcy.isa(list), Parameters.get_from_list),
-                    (funcy.isa(dict), Parameters.get_from_dict)
+                    (funcy.isa(dict), Parameters.get_from_dict),
                 ],
                 'set': [
                     (funcy.isa(set), Parameters.set_from_set),
                     (funcy.isa(list), Parameters.set_from_list),
-                    (funcy.isa(dict), Parameters.set_from_dict)
-                ]
+                    (funcy.isa(dict), Parameters.set_from_dict),
+                ],
             }
         self.config = config
 

@@ -19,7 +19,7 @@ class Prism(Solid):
 
     def __init__(self) -> None:
         self.lateral_area = self.cross_section_perimeter * self.length
-        self.surface_area = self.lateral_area + 2*self.cross_section_area
+        self.surface_area = self.lateral_area + 2 * self.cross_section_area
         self.volume = self.cross_section_area * self.length
 
 
@@ -32,7 +32,7 @@ class Cylinder(Prism):
     def __init__(self) -> None:
         self.radius = self.diameter / 2
         self.cross_section_perimeter = np.pi * self.diameter
-        self.cross_section_area = np.pi * self.radius**2
+        self.cross_section_area = np.pi * self.radius ** 2
 
 
 class RectangularPrism(Prism):
@@ -43,5 +43,5 @@ class RectangularPrism(Prism):
     cross_section_area: pint.Quantity = None
 
     def __init__(self) -> None:
-        self.cross_section_perimeter = 2*(self.width + self.thickness)
+        self.cross_section_perimeter = 2 * (self.width + self.thickness)
         self.cross_section_area = self.width * self.thickness

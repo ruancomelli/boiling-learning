@@ -7,14 +7,11 @@ _Value = TypeVar('_Value')
 
 class KeyedSet(MutableSet[_Value], Generic[_Key, _Value]):
     def __init__(
-            self,
-            key: Callable[[_Value], _Key],
-            iterable: Iterable[_Value] = ()
+        self, key: Callable[[_Value], _Key], iterable: Iterable[_Value] = ()
     ) -> None:
         self.__key: Callable[[_Value], _Key] = key
         self.__data: Dict[_Key, _Value] = {
-            self.__key(element): element
-            for element in iterable
+            self.__key(element): element for element in iterable
         }
 
     def keys(self) -> KeysView:

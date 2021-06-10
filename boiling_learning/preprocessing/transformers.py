@@ -19,17 +19,8 @@ U = TypeVar('U')
 V = TypeVar('V')
 
 
-class Transformer(
-        FrozenNamedMixin,
-        SimpleStr,
-        Generic[T, S]
-):
-    def __init__(
-            self,
-            name: str,
-            f: Callable[..., S],
-            pack: Pack = Pack()
-    ):
+class Transformer(FrozenNamedMixin, SimpleStr, Generic[T, S]):
+    def __init__(self, name: str, f: Callable[..., S], pack: Pack = Pack()):
         super().__init__(name)
 
         self.pack = pack
@@ -39,49 +30,49 @@ class Transformer(
         return self.transformer(arg, *args, **kwargs)
 
     @classmethod
-    def make(cls: Callable[..., C], name: str, *args, **kwargs) -> Callable[[Callable], C]:
+    def make(
+        cls: Callable[..., C], name: str, *args, **kwargs
+    ) -> Callable[[Callable], C]:
         def _make(f: Callable) -> C:
             return cls(name, f, *args, **kwargs)
+
         return _make
 
     def describe(self) -> JSONDataType:
         return {
             'type': self.__class__.__name__,
             'name': self.name,
-            'pack': self.pack
+            'pack': self.pack,
         }
 
     def as_tf_py_function(self, pack_tuple: bool = False):
         if pack_tuple:
+
             def func(*a):
                 return self(a)
+
         else:
             func = self
 
         def _tf_py_function(*args):
-            return new_py_function(
-                func=func,
-                inp=args,
-                Tout=auto_spec(args)
-            )
+            return new_py_function(func=func, inp=args, Tout=auto_spec(args))
 
         return _tf_py_function
 
 
-class Creator(
-        Transformer[Pack, S],
-        Generic[S]
-):
+class Creator(Transformer[Pack, S], Generic[S]):
     def __init__(
-            self,
-            name: str,
-            f: Callable[..., S],
-            pack: Pack = Pack(),
-            expand_pack_on_call: bool = False
+        self,
+        name: str,
+        f: Callable[..., S],
+        pack: Pack = Pack(),
+        expand_pack_on_call: bool = False,
     ):
         if expand_pack_on_call:
+
             def g(pack: Pack, *args, **kwargs) -> S:
                 return f(*(pack.args + args), **{**pack.kwargs, **kwargs})
+
         else:
             g = f
 
@@ -89,18 +80,13 @@ class Creator(
 
 
 class ImageTransformer(
-        Transformer[Tuple[T, U], Tuple[S, U]],
-        Generic[T, U, S]
+    Transformer[Tuple[T, U], Tuple[S, U]], Generic[T, U, S]
 ):
-    def __init__(
-            self,
-            name: str,
-            f: Callable[..., S],
-            pack: Pack = Pack()
-    ):
+    def __init__(self, name: str, f: Callable[..., S], pack: Pack = Pack()):
         def g(img_data_pair: Tuple[T, U], *args, **kwargs) -> Tuple[S, U]:
             def pair_transformer(img: T, data: U) -> Tuple[S, U]:
                 return f(img, *args, **kwargs), data
+
             return pair_transformer(*img_data_pair)
 
         super().__init__(name, g, pack=pack)
@@ -109,18 +95,19 @@ class ImageTransformer(
         return self((img, None), *args, **kwargs)[0]
 
     def as_image_transformer(self) -> Transformer[T, S]:
-        return Transformer('_'.join((self.name, 'image_function')), self.transform_image)
+        return Transformer(
+            '_'.join((self.name, 'image_function')), self.transform_image
+        )
 
 
 class ImageDatasetTransformer(
-        Transformer[Tuple[T, U], Tuple[S, V]],
-        Generic[T, U, S, V]
+    Transformer[Tuple[T, U], Tuple[S, V]], Generic[T, U, S, V]
 ):
     def __init__(
-            self,
-            name: str,
-            image_transformer: Transformer[T, S],
-            data_transformer: Transformer[U, V]
+        self,
+        name: str,
+        image_transformer: Transformer[T, S],
+        data_transformer: Transformer[U, V],
     ):
         def f(img: T, data: U) -> Tuple[S, V]:
             return image_transformer(img), data_transformer(data)
@@ -129,15 +116,16 @@ class ImageDatasetTransformer(
 
 
 class KeyedImageDatasetTransformer(
-        Transformer[Tuple[T, U], Tuple[Union[T, S], U]],
-        Generic[T, U, S]
+    Transformer[Tuple[T, U], Tuple[Union[T, S], U]], Generic[T, U, S]
 ):
     def __init__(
-            self,
-            name: str,
-            f: Callable[..., S],
-            pack_map: Mapping[Union[None, str], Pack],
-            key_getter: Callable[[U], Union[None, str]] = operator.itemgetter('name')
+        self,
+        name: str,
+        f: Callable[..., S],
+        pack_map: Mapping[Union[None, str], Pack],
+        key_getter: Callable[[U], Union[None, str]] = operator.itemgetter(
+            'name'
+        ),
     ):
         self.pack_map = pack_map
 
@@ -152,9 +140,7 @@ class KeyedImageDatasetTransformer(
         super().__init__(name, g)
 
     def get_image_transformer(
-            self,
-            f: Callable[..., S],
-            key: Union[None, str]
+        self, f: Callable[..., S], key: Union[None, str]
     ) -> Callable[[T], Union[T, S]]:
         if key in self.pack_map:
             pack = self.pack_map[key]
@@ -170,40 +156,31 @@ class KeyedImageDatasetTransformer(
             return funcy.identity
 
     def describe(self) -> JSONDataType:
-        return funcy.merge(
-            super().describe(),
-            {
-                'pack_map': self.pack_map
-            }
-        )
+        return funcy.merge(super().describe(), {'pack_map': self.pack_map})
 
 
 class DictImageTransformer(
-        FrozenNamedMixin,
-        Mapping[
-            str,
-            Transformer[
-                Tuple[T, U],
-                Tuple[Union[T, S], U]
-            ],
-        ],
-        Generic[T, U, S]
+    FrozenNamedMixin,
+    Mapping[
+        str,
+        Transformer[Tuple[T, U], Tuple[Union[T, S], U]],
+    ],
+    Generic[T, U, S],
 ):
     def __init__(
-            self,
-            name: str,
-            f: Callable[..., S],
-            packer: Union[
-                Callable[[str], Pack],
-                Mapping[Union[None, str], Pack]
-            ]
+        self,
+        name: str,
+        f: Callable[..., S],
+        packer: Union[Callable[[str], Pack], Mapping[Union[None, str], Pack]],
     ):
         self.packer = packer
         self._transformer_mapping = KeyedDefaultDict(self._transformer_factory)
         self.func = f
         super().__init__(name)
 
-    def _resolve_func_and_pack(self, key: str) -> Tuple[Callable[[T], S], Pack]:
+    def _resolve_func_and_pack(
+        self, key: str
+    ) -> Tuple[Callable[[T], S], Pack]:
         if isinstance(self.packer, Mapping):
             try:
                 if key in self.packer:
@@ -218,14 +195,16 @@ class DictImageTransformer(
                 raise ValueError(
                     f'Invalid key {key}: corresponding pack was not found.'
                     ' Define a default pack by passing None: default_pack'
-                    ' or None: None to skip missing keys.')
+                    ' or None: None to skip missing keys.'
+                )
 
         elif callable(self.packer):
             return self.func, self.packer(key)
         else:
             raise ValueError(
                 'self.packer must be either a Mapping[Union[None, str], Pack] or a Callable[[str], Pack].'
-                f' Got {type(self.packer)}')
+                f' Got {type(self.packer)}'
+            )
 
     def _transformer_factory(self, key: str) -> ImageTransformer[T, U, S]:
         name = '_'.join((self.name, key))
@@ -245,7 +224,9 @@ class DictImageTransformer(
         return {
             'type': self.__class__.__name__,
             'name': self.name,
-            'packer': self.packer if isinstance(self.packer, Mapping) else self.packer.__name__
+            'packer': self.packer
+            if isinstance(self.packer, Mapping)
+            else self.packer.__name__,
         }
 
 

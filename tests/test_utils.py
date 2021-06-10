@@ -6,10 +6,7 @@ from boiling_learning.utils.utils import indexify
 
 class utils_utils_test(TestCase):
     def test_indexify(self):
-        self.assertEqual(
-            tuple(indexify('abc')),
-            (0, 1, 2)
-        )
+        self.assertEqual(tuple(indexify('abc')), (0, 1, 2))
 
 
 class utils_collections_test(TestCase):

@@ -9,17 +9,29 @@ from boiling_learning.utils.functional import map_values
 tf_str_dtype_bidict = bidict.bidict(
     (dtype.name, dtype)
     for dtype in (
-        tf.float16, tf.float32, tf.float64,
+        tf.float16,
+        tf.float32,
+        tf.float64,
         tf.bfloat16,
-        tf.complex64, tf.complex128,
-        tf.int8, tf.int32, tf.int64,
-        tf.uint8, tf.uint16, tf.uint32, tf.uint64, tf.int16,
+        tf.complex64,
+        tf.complex128,
+        tf.int8,
+        tf.int32,
+        tf.int64,
+        tf.uint8,
+        tf.uint16,
+        tf.uint32,
+        tf.uint64,
+        tf.int16,
         tf.bool,
         tf.string,
-        tf.qint8, tf.qint16, tf.qint32, tf.quint8,
+        tf.qint8,
+        tf.qint16,
+        tf.qint32,
+        tf.quint8,
         tf.quint16,
         tf.resource,
-        tf.variant
+        tf.variant,
     )
 )
 
@@ -28,7 +40,7 @@ def encode_element_spec(element_spec):
     if tf.nest.is_nested(element_spec):
         return {
             'nested': True,
-            'contents': map_values(encode_element_spec, element_spec)
+            'contents': map_values(encode_element_spec, element_spec),
         }
     else:
         return {
@@ -36,8 +48,8 @@ def encode_element_spec(element_spec):
             'contents': {
                 'dtype': tf_str_dtype_bidict.inverse[element_spec.dtype],
                 'name': element_spec.name,
-                'shape': element_spec.shape
-            }
+                'shape': element_spec.shape,
+            },
         }
 
 
@@ -49,7 +61,7 @@ def decode_element_spec(obj):
         return tf.TensorSpec(
             shape=contents['shape'],
             name=contents['name'],
-            dtype=tf_str_dtype_bidict[contents['dtype']]
+            dtype=tf_str_dtype_bidict[contents['dtype']],
         )
 
 
@@ -76,9 +88,7 @@ def new_py_function(func, inp, Tout, name=None):
 
     def wrapped_func(*flat_inp):
         reconstructed_inp = tf.nest.pack_sequence_as(
-            inp,
-            flat_inp,
-            expand_composites=True
+            inp, flat_inp, expand_composites=True
         )
         out = func(*reconstructed_inp)
         return tf.nest.flatten(out, expand_composites=True)
@@ -88,12 +98,10 @@ def new_py_function(func, inp, Tout, name=None):
         func=wrapped_func,
         inp=tf.nest.flatten(inp, expand_composites=True),
         Tout=[_tensor_spec_to_dtype(v) for v in flat_Tout],
-        name=name
+        name=name,
     )
     spec_out = tf.nest.map_structure(
-        _dtype_to_tensor_spec,
-        Tout,
-        expand_composites=True
+        _dtype_to_tensor_spec, Tout, expand_composites=True
     )
     out = tf.nest.pack_sequence_as(spec_out, flat_out, expand_composites=True)
     return out

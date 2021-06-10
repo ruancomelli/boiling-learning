@@ -17,10 +17,12 @@ def build(
         input_shape=input_shape,
         include_top=False,
         weights='imagenet',
-        pooling='avg'
+        pooling='avg',
     )
-    x = Dense(256, activation='relu', dtype=hidden_layers_policy)(mobile_net.output)
-    
+    x = Dense(256, activation='relu', dtype=hidden_layers_policy)(
+        mobile_net.output
+    )
+
     if ProblemType.get_type(problem) is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
@@ -45,5 +47,5 @@ creator = ElementCreator(
         problem=ProblemType.REGRESSION,
         fetch=['model', 'history'],
     ),
-    expand_params=True
+    expand_params=True,
 )

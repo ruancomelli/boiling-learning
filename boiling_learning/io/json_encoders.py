@@ -19,6 +19,7 @@ class GenericJSONEncoder(json.JSONEncoder):
 
     Source: https://gist.github.com/rochacbruno/f4d9a0c9c8f712ec31b993034bc5f5a1
     """
+
     def default(self, obj):
         try:
             return super().default(obj)
@@ -28,7 +29,9 @@ class GenericJSONEncoder(json.JSONEncoder):
                 '__custom__': True,
                 '__module__': cls.__module__,
                 '__name__': cls.__name__,
-                'data': obj.__dict__ if not hasattr(cls, '__json_encode__') else obj.__json_encode__
+                'data': obj.__dict__
+                if not hasattr(cls, '__json_encode__')
+                else obj.__json_encode__,
             }
             return result
 
@@ -43,6 +46,7 @@ class GenericJSONDecoder(json.JSONDecoder):
 
     Source: https://gist.github.com/rochacbruno/f4d9a0c9c8f712ec31b993034bc5f5a1
     """
+
     def decode(self, encoded_str: str):
         result = super().decode(encoded_str)
 
