@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 import enum
 import itertools
@@ -15,9 +17,23 @@ from functools import partial, wraps
 from itertools import product
 from pathlib import Path
 from timeit import default_timer
-from typing import (Any, Callable, Collection, Dict, Iterable, Iterator, List,
-                    Mapping, MutableSequence, Optional, Sequence, Tuple, Type,
-                    TypeVar, Union)
+from typing import (
+    Any,
+    Callable,
+    Collection,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    MutableSequence,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import dataclassy
 import funcy
@@ -44,7 +60,7 @@ class _Sentinel(enum.Enum):
     INSTANCE = enum.auto()
 
     @classmethod
-    def get_instance(cls) -> '_Sentinel':
+    def get_instance(cls) -> _Sentinel:
         return cls.INSTANCE
 
 

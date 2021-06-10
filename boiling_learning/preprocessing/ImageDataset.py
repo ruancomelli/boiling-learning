@@ -1,11 +1,26 @@
+from __future__ import annotations
+
 import collections
 import itertools
 import operator
 import typing
 from contextlib import contextmanager
 from pathlib import Path
-from typing import (Any, Callable, Dict, FrozenSet, Iterable, Iterator, List,
-                    Mapping, Optional, Tuple, Type, Union, overload)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    FrozenSet,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+    overload,
+)
 
 import funcy
 import modin.pandas as pd
@@ -123,16 +138,16 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         for experiment_video in experiment_videos:
             self[experiment_video.name] = experiment_video
 
-    def union(self, *others: 'ImageDataset') -> None:
+    def union(self, *others: ImageDataset) -> None:
         for other in others:
             self.add(*other.values())
 
     @classmethod
     def make_union(
         cls,
-        *others: 'ImageDataset',
+        *others: ImageDataset,
         namer: Callable[[Iterable[str]], str] = '+'.join,
-    ) -> 'ImageDataset':
+    ) -> ImageDataset:
         name = namer(funcy.pluck_attr('name', others))
         example = others[0]
         img_ds = ImageDataset(name, example.column_names, example.column_types)
@@ -144,7 +159,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             del self[experiment_video.name]
 
     @contextmanager
-    def disable_key_overwriting(self) -> Iterator['ImageDataset']:
+    def disable_key_overwriting(self) -> Iterator[ImageDataset]:
         prev_state = self._allow_key_overwrite
         self._allow_key_overwrite = False
         yield self

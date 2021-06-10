@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Mapping, Optional, TypeVar, Union
 
 _Key = TypeVar('_Key')
@@ -37,7 +39,7 @@ class FrozenDict(dict, Mapping[_Key, _Value]):
         self,
         mapping: Optional[Mapping[_OtherKey, _OtherValue]],
         **kw: _OtherValue,
-    ) -> 'FrozenDict[Union[str, _Key, _OtherKey], Union[_Value, _OtherValue]]':
+    ) -> FrozenDict[Union[str, _Key, _OtherKey], Union[_Value, _OtherValue]]:
         return FrozenDict({**self, **mapping}, **kw)
 
     __setitem__ = _immutable

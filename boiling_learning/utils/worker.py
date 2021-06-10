@@ -1,11 +1,27 @@
+from __future__ import annotations
+
 import datetime
 import shlex
 import subprocess
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import (Any, Callable, Dict, Hashable, Iterable, Iterator, List,
-                    Mapping, Optional, Sequence, Set, Tuple, TypeVar, Union)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Hashable,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import json_tricks
 import more_itertools as mit
@@ -14,10 +30,17 @@ import zict
 from pkg_resources import resource_filename
 
 import boiling_learning as bl
-from boiling_learning.utils.utils import (JSONDict, PathLike, empty_gen,
-                                          ensure_dir, ensure_resolved,
-                                          fix_path, indexify, print_verbose,
-                                          rmdir)
+from boiling_learning.utils.utils import (
+    JSONDict,
+    PathLike,
+    empty_gen,
+    ensure_dir,
+    ensure_resolved,
+    fix_path,
+    indexify,
+    print_verbose,
+    rmdir,
+)
 
 _T = TypeVar('_T')
 
@@ -168,7 +191,7 @@ class UserPool(BaseUserPool):
         workers_key: str = 'allowed_users',
         manager_key: str = 'manager',
         server_key: str = 'server',
-    ) -> 'UserPool':
+    ) -> UserPool:
         config = bl.io.load_json(path)
 
         return cls(
@@ -465,7 +488,7 @@ class SequenceDistributorClient:
     @classmethod
     def from_file(
         path: PathLike, sleep_time: int = 0, verbose: bool = False
-    ) -> 'SequenceDistributorClient':
+    ) -> SequenceDistributorClient:
         url_path = ensure_resolved(path)
 
         if sleep_time > 0:
