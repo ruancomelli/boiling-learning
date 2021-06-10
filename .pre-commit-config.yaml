@@ -11,6 +11,10 @@ repos:
       '--remove-duplicate-keys',
       '--remove-unused-variables'
     ]
+- repo: https://github.com/psf/black
+  rev: 21.5b1
+  hooks:
+  - id: black
 - repo: https://github.com/pycqa/isort
   rev: 5.8.0
   hooks:
@@ -25,8 +29,8 @@ repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v4.0.1
   hooks:
-  - id: check-ast
   - id: double-quote-string-fixer
   - id: end-of-file-fixer
   - id: requirements-txt-fixer
   - id: trailing-whitespace
+  - id: check-ast
