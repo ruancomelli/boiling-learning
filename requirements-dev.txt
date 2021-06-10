@@ -4,5 +4,6 @@ coverage~=5.5
 flake8~=3.0
 isort[requirements_deprecated_finder]~=5.7
 pip~=21.0
+pre-commit~=2.13
 wheel~=0.36
 yapf~=0.31

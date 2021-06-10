@@ -1,0 +1,32 @@
+repos:
+- repo: https://github.com/humitos/mirrors-autoflake
+  rev: v1.3
+  hooks:
+  - id: autoflake
+    args: [
+      '--in-place',
+      '--expand-star-imports',
+      '--remove-all-unused-imports',
+      '--ignore-init-module-imports',
+      '--remove-duplicate-keys',
+      '--remove-unused-variables'
+    ]
+- repo: https://github.com/pycqa/isort
+  rev: 5.8.0
+  hooks:
+  - id: isort
+    name: isort (python)
+  - id: isort
+    name: isort (cython)
+    types: [cython]
+  - id: isort
+    name: isort (pyi)
+    types: [pyi]
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.0.1
+  hooks:
+  - id: check-ast
+  - id: double-quote-string-fixer
+  - id: end-of-file-fixer
+  - id: requirements-txt-fixer
+  - id: trailing-whitespace
