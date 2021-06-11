@@ -1,3 +1,4 @@
+import math
 from typing import Any, Iterable, Optional, Tuple, TypeVar, Union
 
 import numpy as np
@@ -159,7 +160,10 @@ def grayscale(image: ImageType) -> tf.Tensor:
 def downscale(
     image: ImageType, factors: Tuple[int, int], antialias: bool = False
 ) -> tf.Tensor:
-    sizes = (image.shape[0] // factors[0], image.shape[1] // factors[1])
+    sizes = (
+        math.ceil(image.shape[0] / factors[0]),
+        math.ceil(image.shape[1] / factors[1]),
+    )
     return tf.image.resize(
         image, sizes, method='bilinear', antialias=antialias
     )

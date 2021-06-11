@@ -115,7 +115,7 @@ Split.FROM_STR_TABLE = frozendict(
 )
 
 
-def tf_concatenate(datasets: Iterable[tf.data.Dataset]) -> tf.data.Dataset:
+def concatenate(datasets: Iterable[tf.data.Dataset]) -> tf.data.Dataset:
     datasets = deque(datasets)
 
     if not datasets:
@@ -128,7 +128,14 @@ def tf_concatenate(datasets: Iterable[tf.data.Dataset]) -> tf.data.Dataset:
     return ds
 
 
-def tf_train_val_test_split(
+def flatten_zip(*ds: tf.data.Dataset) -> tf.data.Dataset:
+    if len(ds) == 1:
+        return ds[0]
+    else:
+        return tf.data.Dataset.zip(ds)
+
+
+def train_val_test_split(
     ds: tf.data.Dataset, splits: DatasetSplits, shuffle: bool = False
 ) -> DatasetTriplet:
     """#TODO(docstring): describe here
@@ -138,12 +145,6 @@ def tf_train_val_test_split(
     This function is deterministic in the sense that it outputs the same splits given the same inputs.
     Consequently it is safe to be used early in the pipeline to avoid consuming test data.
     """
-
-    def flatten_zip(*ds: tf.data.Dataset) -> tf.data.Dataset:
-        if len(ds) == 1:
-            return ds[0]
-        else:
-            return tf.data.Dataset.zip(ds)
 
     if splits.val == 0:
         split_train, split_test = mathutils.proportional_ints(
@@ -181,7 +182,7 @@ def tf_train_val_test_split(
     return ds_train, ds_val, ds_test
 
 
-def tf_train_val_test_split_concat(
+def train_val_test_split_concat(
     datasets: Iterable[tf.data.Dataset], splits: DatasetSplits
 ) -> DatasetTriplet:
     """#TODO(docstring): describe here
@@ -199,16 +200,16 @@ def tf_train_val_test_split_concat(
         raise ValueError('argument *datasets* must be a non-empty iterable.')
 
     ds = datasets.popleft()
-    ds_train, ds_val, ds_test = tf_train_val_test_split(ds, splits)
+    ds_train, ds_val, ds_test = train_val_test_split(ds, splits)
 
     if ds_val is None:
         for ds in datasets:
-            ds_train_, _, ds_test_ = tf_train_val_test_split(ds, splits)
+            ds_train_, _, ds_test_ = train_val_test_split(ds, splits)
             ds_train = ds_train.concatenate(ds_train_)
             ds_test = ds_test.concatenate(ds_test_)
     else:
         for ds in datasets:
-            ds_train_, ds_val_, ds_test_ = tf_train_val_test_split(ds, splits)
+            ds_train_, ds_val_, ds_test_ = train_val_test_split(ds, splits)
             ds_train = ds_train.concatenate(ds_train_)
             ds_val = ds_val.concatenate(ds_val_)
             ds_test = ds_test.concatenate(ds_test_)
@@ -266,9 +267,7 @@ def take(
     if isinstance(count, int):
         return ds.take(count)
     elif isinstance(count, Fraction):
-        return tf_train_val_test_split(ds, splits=DatasetSplits(train=count))[
-            0
-        ]
+        return train_val_test_split(ds, splits=DatasetSplits(train=count))[0]
     else:
         raise TypeError(
             f'*count* must be either *int* or *Fraction*, got {type(count)}.'

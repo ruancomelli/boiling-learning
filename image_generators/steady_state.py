@@ -1,8 +1,9 @@
+from pathlib import Path
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import modin.pandas as pd
 import seaborn as sns
-from pathlib2 import Path
 
 STEADY_STATE_DIR = Path(__file__).parent.parent / 'Selected Experiments'
 STEADY_STATE_PATH = STEADY_STATE_DIR / 'SteadyState.csv'

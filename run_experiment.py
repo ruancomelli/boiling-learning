@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+import matplotlib as mpl
 import modin.pandas as pd
 import nidaqmx
 import numpy as np
@@ -66,7 +67,6 @@ class BoilingSurface:
             )
 
 
-#%%
 # -------------------------------------------------------
 # Settings
 # -------------------------------------------------------
@@ -224,7 +224,6 @@ def correct_wire_temperature(reference_file):
 
 # For timestamps: <https://knowledge.ni.com/KnowledgeArticleDetails?id=kA00Z000000kJy2SAE&l=pt-BR>
 
-#%%
 """
 Support definitions -------------------------------------------------------
 """
@@ -283,7 +282,6 @@ def print_if_must(keys, *args, conds=None, **kwargs):
     bl.utils.print_verbose(cond, *args, **kwargs)
 
 
-#%%
 # -------------------------------------------------------
 # Channel definitions
 # -------------------------------------------------------
@@ -339,7 +337,6 @@ thermocouple_channel = Channel(
     ChannelType.INPUT,
 )
 
-#%%
 """
 Print system information -------------------------------------------------------
 """
@@ -361,7 +358,6 @@ print_if_must(
     ('anything', 'info'), f'> Types in ChannelType: {[x for x in ChannelType]}'
 )
 
-#%%
 """
 Load calibration polynomial -------------------------------------------------------
 """
@@ -374,7 +370,6 @@ with open(calibration_filepath, 'r') as calibration_coefficients_file:
         f'> Calibrated polynomial:\n{calibrated_polynomial}',
     )
 
-#%%
 # -------------------------------------------------------
 # Initialize
 # -------------------------------------------------------
@@ -397,7 +392,6 @@ with open(filepath, 'w', newline='') as output_file, nidaqmx.Task(
 
     output_writer = csv.writer(output_file)
 
-    #%%
     # -------------------------------------------------------
     # Setup channels
     # -------------------------------------------------------
@@ -458,7 +452,6 @@ with open(filepath, 'w', newline='') as output_file, nidaqmx.Task(
         f'experiment samp_clk_rate: {experiment.timing.samp_clk_rate}',
     )
 
-    #%%
     # -------------------------------------------------------
     # Run experiment
     # -------------------------------------------------------
@@ -472,12 +465,10 @@ with open(filepath, 'w', newline='') as output_file, nidaqmx.Task(
         # Header
         # -------------------------------------------------------
         print_if_must(('anything', 'info'), f'> Iteration {iter_count}')
-        #%%
         # -------------------------------------------------------
         # Time measurement
         # -------------------------------------------------------
         elapsed_time = np.array([time.time() - start])
-        #%%
         # -------------------------------------------------------
         # Read data
         # -------------------------------------------------------
@@ -485,7 +476,6 @@ with open(filepath, 'w', newline='') as output_file, nidaqmx.Task(
             number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE
         )
 
-        #%%
         # -------------------------------------------------------
         # Process data
         # -------------------------------------------------------
@@ -524,7 +514,6 @@ with open(filepath, 'w', newline='') as output_file, nidaqmx.Task(
             experiment, readings, dtype=np.array
         )
 
-        #%%
         # -------------------------------------------------------
         # Saving
         # -------------------------------------------------------
@@ -542,7 +531,7 @@ with open(filepath, 'w', newline='') as output_file, nidaqmx.Task(
             # 'Temperature from Resistance [deg C]': wire_temperature_from_resistance,
             # 'Wire Temperature (corrected) [deg C]': wire_temperature_corrected,
         }
-        n_values = min([local.size for local in local_data.values()])
+        n_values = min(local.size for local in local_data.values())
 
         # Time measurement
         if n_values > 1:
@@ -569,6 +558,7 @@ with open(filepath, 'w', newline='') as output_file, nidaqmx.Task(
 
         # TODO: here
         if measure_loop_time:
+            previous_elapsed_time = None
             if first:
                 loop_time = np.zeros(n_values)
             else:
@@ -608,7 +598,6 @@ with open(filepath, 'w', newline='') as output_file, nidaqmx.Task(
             time.sleep(sleeping_time)
             continue
 
-        #%%
         # -------------------------------------------------------
         # Writing to file
         # -------------------------------------------------------
@@ -626,7 +615,6 @@ with open(filepath, 'w', newline='') as output_file, nidaqmx.Task(
 
                 print_if_must(('anything', 'writing'), '>> Done')
 
-        #%%
         """
         Printing -------------------------------------------------------
         """
@@ -670,7 +658,6 @@ with open(filepath, 'w', newline='') as output_file, nidaqmx.Task(
         # print_if_must(('anything', 'temperature from resistance'), f'>> Temperature from Resistance [deg C]: {wire_temperature_from_resistance}', conds=[wire_temperature_from_resistance.size > 0])
         # print_if_must(('anything', 'wire temperature corrected'), f'>> Wire Temperature (corrected) [deg C]: {wire_temperature_corrected}', conds=[wire_temperature_corrected.size > 0])
 
-        #%%
         # -------------------------------------------------------
         # Plotting
         # -------------------------------------------------------
@@ -748,7 +735,6 @@ with open(filepath, 'w', newline='') as output_file, nidaqmx.Task(
 
             QtGui.QApplication.processEvents()
 
-        #%%
         # -------------------------------------------------------
         # Finish iteration
         # -------------------------------------------------------
@@ -764,11 +750,10 @@ if should_plot:
     ##################
 
 
-#%%
 # -------------------------------------------------------
 # Plot Results
 # -------------------------------------------------------
-matplotlib.use('Agg')
+mpl.use('Agg')
 
 # datatype = [
 #     ('index', np.float32),

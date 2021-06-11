@@ -11,8 +11,8 @@ import boiling_learning.preprocessing as bl_preprocessing
 import boiling_learning.utils as bl_utils
 from boiling_learning.datasets.datasets import (
     DatasetSplits,
-    tf_concatenate,
-    tf_train_val_test_split,
+    concatenate,
+    train_val_test_split,
 )
 from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.management.Manager import Manager
@@ -41,7 +41,7 @@ def experiment_video_dataset_creator(
             t.as_tf_py_function(pack_tuple=True), num_parallel_calls=AUTOTUNE
         )
 
-    ds_train, ds_val, ds_test = tf_train_val_test_split(ds, splits)
+    ds_train, ds_val, ds_test = train_val_test_split(ds, splits)
 
     if dataset_size is not None:
         ds_train = ds_train.take(dataset_size)
@@ -53,7 +53,7 @@ def experiment_video_dataset_creator(
         snapshot_path = bl_utils.ensure_dir(snapshot_path)
 
         if dataset_size is not None:
-            num_shards = min([dataset_size, num_shards])
+            num_shards = min(dataset_size, num_shards)
 
         ds_train = ds_train.apply(
             bl_preprocessing.snapshotter(
@@ -175,12 +175,12 @@ def dataset_creator(
         tuple, mit.unzip(ds_dict.values())
     )
 
-    ds_train = tf_concatenate(datasets_train)
+    ds_train = concatenate(datasets_train)
     if None in datasets_val:
         ds_val = None
     else:
-        ds_val = tf_concatenate(datasets_val)
-    ds_test = tf_concatenate(datasets_test)
+        ds_val = concatenate(datasets_val)
+    ds_test = concatenate(datasets_test)
 
     if dataset_size is not None:
         ds_train = ds_train.take(dataset_size)
