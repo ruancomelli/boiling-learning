@@ -9,8 +9,19 @@ import warnings
 from functools import partial
 from itertools import accumulate
 from pathlib import Path
-from typing import (Any, Callable, Dict, Iterable, Mapping, Optional, Sequence,
-                    Tuple, Type, TypeVar, Union)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import cv2
 import funcy
@@ -27,26 +38,38 @@ try:
     import yogadl
     import yogadl.storage
 except ImportError:
-    pass # TODO: handle this case
+    pass  # TODO: handle this case
 
 import boiling_learning.utils as bl_utils
-from boiling_learning.utils import (PathLike, ensure_dir, ensure_parent,
-                                    ensure_resolved)
-from boiling_learning.utils.functional import pack
+from boiling_learning.utils import (
+    PathLike,
+    ensure_dir,
+    ensure_parent,
+    ensure_resolved,
+)
+from boiling_learning.utils.functional import P
 
 _T = TypeVar('_T')
 _S = TypeVar('_S')
 SaverFunction = Callable[[_S, PathLike], Any]
 LoaderFunction = Callable[[PathLike], _S]
-DatasetTriplet = Tuple[tf.data.Dataset, Optional[tf.data.Dataset], tf.data.Dataset]
-OptionalDatasetTriplet = Tuple[Optional[tf.data.Dataset], Optional[tf.data.Dataset], Optional[tf.data.Dataset]]
+DatasetTriplet = Tuple[
+    tf.data.Dataset, Optional[tf.data.Dataset], tf.data.Dataset
+]
+OptionalDatasetTriplet = Tuple[
+    Optional[tf.data.Dataset],
+    Optional[tf.data.Dataset],
+    Optional[tf.data.Dataset],
+]
 BoolFlagged = Tuple[bool, _S]
 BoolFlaggedLoaderFunction = LoaderFunction[BoolFlagged[_S]]
 
 
 def add_bool_flag(
     loader: LoaderFunction[_T],
-    expected_exceptions: Union[Type[Exception], Sequence[Type[Exception]]] = FileNotFoundError
+    expected_exceptions: Union[
+        Type[Exception], Sequence[Type[Exception]]
+    ] = FileNotFoundError,
 ) -> BoolFlaggedLoaderFunction[Optional[_T]]:
     if isinstance(expected_exceptions, Sequence):
         expected_exceptions = tuple(expected_exceptions)
@@ -61,13 +84,13 @@ def add_bool_flag(
 
 
 def chunked_filename_pattern(
-        chunk_sizes: Iterable[int],
-        chunk_name: str = '{min_index}-{max_index}',
-        filename: PathLike = 'frame{index}.png',
-        index_key: str = 'index',
-        min_index_key: str = 'min_index',
-        max_index_key: str = 'max_index',
-        root: Optional[PathLike] = None
+    chunk_sizes: Iterable[int],
+    chunk_name: str = '{min_index}-{max_index}',
+    filename: PathLike = 'frame{index}.png',
+    index_key: str = 'index',
+    min_index_key: str = 'min_index',
+    max_index_key: str = 'max_index',
+    root: Optional[PathLike] = None,
 ) -> Callable[[int], Path]:
     chunks = tuple(accumulate(chunk_sizes, operator.mul))
     filename_formatter = filename.format
@@ -79,44 +102,44 @@ def chunked_filename_pattern(
             min_index = (index // chunk_size) * chunk_size
             max_index = min_index + chunk_size - 1
             current_chunk_name = chunk_name_formatter(
-                **{min_index_key: min_index, max_index_key: max_index})
+                **{min_index_key: min_index, max_index_key: max_index}
+            )
             current = Path(current_chunk_name) / current
 
         current = ensure_resolved(current, root=root)
 
         return current
+
     return filename_pattern
 
 
 def make_callable_filename_pattern(
-        outputdir: PathLike,
-        filename_pattern: Union[PathLike, Callable[[int], PathLike]],
-        index_key: Optional[str] = None
+    outputdir: PathLike,
+    filename_pattern: Union[PathLike, Callable[[int], PathLike]],
+    index_key: Optional[str] = None,
 ) -> BoolFlagged[Callable[[int], Path]]:
 
     if callable(filename_pattern):
+
         def _filename_pattern(index: int) -> Path:
-            return ensure_parent(
-                filename_pattern(index),
-                root=outputdir
-            )
+            return ensure_parent(filename_pattern(index), root=outputdir)
 
         return True, _filename_pattern
     else:
         filename_pattern_str = str(filename_pattern)
 
         if index_key is not None and index_key in {
-                index
-                for _, index in string.Formatter().parse(filename_pattern_str)
-                if index is not None
+            index
+            for _, index in string.Formatter().parse(filename_pattern_str)
+            if index is not None
         }:
             formatter = filename_pattern_str.format
 
             def _filename_pattern(index: int) -> Path:
                 return ensure_parent(
-                    formatter(**{index_key: index}),
-                    root=outputdir
+                    formatter(**{index_key: index}), root=outputdir
                 )
+
             return True, _filename_pattern
 
         else:
@@ -128,50 +151,41 @@ def make_callable_filename_pattern(
 
             def _filename_pattern(index: int) -> Path:
                 return ensure_parent(
-                    filename_pattern_str % index,
-                    root=outputdir
+                    filename_pattern_str % index, root=outputdir
                 )
 
             return True, _filename_pattern
 
 
-def save_image(
-        image: np.ndarray,
-        path: PathLike
-) -> None:
-    cv2.imwrite(
-        str(ensure_parent(path)),
-        image
-    )
+def save_image(image: np.ndarray, path: PathLike) -> None:
+    cv2.imwrite(str(ensure_parent(path)), image)
 
 
-def load_image(path: PathLike, flag: Optional[int] = cv2.IMREAD_COLOR) -> np.ndarray:
-    return cv2.imread(
-        str(ensure_resolved(path)),
-        flag
-    )
+def load_image(
+    path: PathLike, flag: Optional[int] = cv2.IMREAD_COLOR
+) -> np.ndarray:
+    return cv2.imread(str(ensure_resolved(path)), flag)
 
 
 def save_serialized(
-        save_map: Mapping[_T, SaverFunction[_S]]
+    save_map: Mapping[_T, SaverFunction[_S]]
 ) -> SaverFunction[Mapping[_T, _S]]:
     def save(return_dict: Mapping[_T, _S], path: PathLike) -> None:
         path = ensure_parent(path)
         for key, obj in return_dict.items():
             save_map[key](obj, path / key)
+
     return save
 
 
 def load_serialized(
-        load_map: Mapping[_T, LoaderFunction[_S]]
+    load_map: Mapping[_T, LoaderFunction[_S]]
 ) -> LoaderFunction[Dict[_T, _S]]:
     def load(path: PathLike) -> Dict[_T, _S]:
         path = ensure_resolved(path)
-        loaded = {
-            key: loader(path / key)
-            for key, loader in load_map.items()
-        }
+        loaded = {key: loader(path / key) for key, loader in load_map.items()}
         return loaded
+
     return load
 
 
@@ -203,38 +217,38 @@ def load_pkl(path: PathLike):
 
 
 def save_json(
-        obj: _T,
-        path: PathLike,
-        dump: Callable[[_T, _io.TextIOWrapper], Any] = json.dump,
-        cls: Optional[Type] = None
+    obj: _T,
+    path: PathLike,
+    dump: Callable[[_T, _io.TextIOWrapper], Any] = json.dump,
+    cls: Optional[Type] = None,
 ) -> None:
     path = ensure_parent(path)
 
     if path.suffix != '.json':
         warnings.warn(
             f'A JSON file is expected, but *path* ends with "{path.suffix}"',
-            category=RuntimeWarning
+            category=RuntimeWarning,
         )
 
-    dump = pack(cls=cls).omit('cls', bl_utils.is_(None)).partial(dump)
+    dump = P(cls=cls).omit('cls', bl_utils.is_(None)).partial(dump)
     with path.open('w', encoding='utf-8') as file:
         dump(obj, file, indent=4, ensure_ascii=False)
 
 
 def load_json(
-        path: PathLike,
-        load: Callable[[_io.TextIOWrapper], _T] = json.load,
-        cls: Optional[Type] = None
+    path: PathLike,
+    load: Callable[[_io.TextIOWrapper], _T] = json.load,
+    cls: Optional[Type] = None,
 ) -> _T:
     path = ensure_resolved(path)
 
     if path.suffix != '.json':
         warnings.warn(
             f'A JSON file is expected, but *path* ends with "{path.suffix}"',
-            category=RuntimeWarning
+            category=RuntimeWarning,
         )
 
-    load = pack(cls=cls).omit('cls', bl_utils.is_(None)).partial(load)
+    load = P(cls=cls).omit('cls', bl_utils.is_(None)).partial(load)
     with path.open('r', encoding='utf-8') as file:
         return load(file)
 
@@ -244,6 +258,7 @@ def saver_hdf5(key: str = '') -> SaverFunction[Any]:
         path = ensure_parent(path)
         with h5py.File(str(path), 'w') as hf:
             hf.create_dataset(key, data=obj)
+
     return save_hdf5
 
 
@@ -252,6 +267,7 @@ def loader_hdf5(key: str = '') -> LoaderFunction[Any]:
         path = ensure_resolved(path)
         with h5py.File(str(path), 'r') as hf:
             return hf.get(key)
+
     return load_hdf5
 
 
@@ -299,18 +315,18 @@ def _default_filename_pattern(name: str, index: int) -> Path:
 
 
 def save_frames_dataset(
-        dataset: tf.data.Dataset,
-        path: PathLike,
-        filename_pattern: Callable[[str, int], Path] = _default_filename_pattern,
-        name_column: str = 'name',
-        index_column: str = 'index'
+    dataset: tf.data.Dataset,
+    path: PathLike,
+    filename_pattern: Callable[[str, int], Path] = _default_filename_pattern,
+    name_column: str = 'name',
+    index_column: str = 'index',
 ) -> None:
     path = ensure_dir(path)
     imgs_path = ensure_dir(path / 'images')
     df_path = path / 'dataframe.csv'
 
     def _get_path(data):
-        name = data[name_column].decode("utf-8")
+        name = data[name_column].decode('utf-8')
         index = int(data[index_column])
 
         return imgs_path / filename_pattern(name, index)
@@ -328,31 +344,34 @@ def save_frames_dataset(
 
 
 def saver_frames_dataset(
-        filename_pattern: Callable[[str, int], Path] = _default_filename_pattern,
-        chunk_sizes: Optional[Sequence[int]] = (100, 100)
+    filename_pattern: Callable[[str, int], Path] = _default_filename_pattern,
+    chunk_sizes: Optional[Sequence[int]] = (100, 100),
 ) -> SaverFunction[DatasetTriplet]:
-    def _saver(
-            ds: DatasetTriplet,
-            path: PathLike
-    ) -> None:
+    def _saver(ds: DatasetTriplet, path: PathLike) -> None:
         path = ensure_parent(path)
         ds_train, ds_val, ds_test = ds
 
         save_frames_dataset(
             ds_train,
             path / 'train',
-            filename_pattern=partial(filename_pattern, chunk_sizes=chunk_sizes)
+            filename_pattern=partial(
+                filename_pattern, chunk_sizes=chunk_sizes
+            ),
         )
         if ds_val is not None:
             save_frames_dataset(
                 ds_val,
                 path / 'val',
-                filename_pattern=partial(filename_pattern, chunk_sizes=chunk_sizes)
+                filename_pattern=partial(
+                    filename_pattern, chunk_sizes=chunk_sizes
+                ),
             )
         save_frames_dataset(
             ds_test,
             path / 'test',
-            filename_pattern=partial(filename_pattern, chunk_sizes=chunk_sizes)
+            filename_pattern=partial(
+                filename_pattern, chunk_sizes=chunk_sizes
+            ),
         )
 
     return _saver
@@ -369,10 +388,7 @@ def decode_img(img, channels: int = 1):
     return img
 
 
-def process_path(
-        file_path,
-        in_dir: Optional[PathLike] = None
-):
+def process_path(file_path, in_dir: Optional[PathLike] = None):
     # from relative to absolute path
     if in_dir is not None:
         file_path = str(in_dir) + os.sep + file_path
@@ -385,8 +401,7 @@ def process_path(
 
 
 def load_frames_dataset(
-        path: PathLike,
-        shuffle: bool = True
+    path: PathLike, shuffle: bool = True
 ) -> tf.data.Dataset:
     path = ensure_resolved(path)
     df_path = path / 'dataframe.csv'
@@ -395,10 +410,7 @@ def load_frames_dataset(
     df = pd.read_csv(df_path, index_col=0)
     if shuffle:
         df = df.sample(frac=1)
-    files = [
-        str(ensure_resolved(path))
-        for path in df.index
-    ]
+    files = [str(ensure_resolved(path)) for path in df.index]
     df = df.reset_index(drop=True)
 
     ds_img = tf.data.Dataset.from_tensor_slices(files)
@@ -410,7 +422,7 @@ def load_frames_dataset(
 
 
 def loader_frames_dataset(
-        path: PathLike
+    path: PathLike,
 ) -> BoolFlagged[Optional[tf.data.Dataset]]:
     path = ensure_resolved(path)
 
@@ -421,12 +433,9 @@ def loader_frames_dataset(
 
 
 def saver_dataset_triplet(
-        saver: SaverFunction[tf.data.Dataset]
+    saver: SaverFunction[tf.data.Dataset],
 ) -> SaverFunction[DatasetTriplet]:
-    def _saver(
-            ds: DatasetTriplet,
-            path: PathLike
-    ) -> None:
+    def _saver(ds: DatasetTriplet, path: PathLike) -> None:
         ds_train, ds_val, ds_test = ds
 
         path = ensure_dir(path)
@@ -439,11 +448,9 @@ def saver_dataset_triplet(
 
 
 def loader_dataset_triplet(
-        loader: BoolFlaggedLoaderFunction[Optional[tf.data.Dataset]]
+    loader: BoolFlaggedLoaderFunction[Optional[tf.data.Dataset]],
 ) -> BoolFlaggedLoaderFunction[OptionalDatasetTriplet]:
-    def _loader(
-            path: PathLike
-    ) -> BoolFlagged[OptionalDatasetTriplet]:
+    def _loader(path: PathLike) -> BoolFlagged[OptionalDatasetTriplet]:
         path = ensure_resolved(path)
 
         success_train, ds_train = loader(path / 'train')
@@ -460,10 +467,10 @@ def loader_dataset_triplet(
 
 
 def save_yogadl(
-        dataset,
-        storage_path: PathLike,
-        dataset_id: str,
-        dataset_version: str = '0.0'
+    dataset,
+    storage_path: PathLike,
+    dataset_id: str,
+    dataset_version: str = '0.0',
 ) -> None:
     storage_path = ensure_dir(storage_path)
 
@@ -473,51 +480,35 @@ def save_yogadl(
 
 
 def saver_yogadl(
-        storage_path: PathLike,
-        dataset_id: str
+    storage_path: PathLike, dataset_id: str
 ) -> SaverFunction[DatasetTriplet]:
     storage_path = ensure_resolved(storage_path)
     id_train = dataset_id + '_train'
     id_val = dataset_id + '_val'
     id_test = dataset_id + '_test'
 
-    def _saver(
-            ds: DatasetTriplet,
-            path: Optional[PathLike] = None
-    ) -> None:
+    def _saver(ds: DatasetTriplet, path: Optional[PathLike] = None) -> None:
         ds_train, ds_val, ds_test = ds
 
-        save_yogadl(
-            ds_train,
-            storage_path=storage_path,
-            dataset_id=id_train
-        )
+        save_yogadl(ds_train, storage_path=storage_path, dataset_id=id_train)
         if ds_val is not None:
-            save_yogadl(
-                ds_val,
-                storage_path=storage_path,
-                dataset_id=id_val
-            )
-        save_yogadl(
-            ds_test,
-            storage_path=storage_path,
-            dataset_id=id_test
-        )
+            save_yogadl(ds_val, storage_path=storage_path, dataset_id=id_val)
+        save_yogadl(ds_test, storage_path=storage_path, dataset_id=id_test)
 
     return _saver
 
 
 def load_yogadl(
-        storage_path: PathLike,
-        dataset_id: str,
-        dataset_version: str = '0.0',
-        start_offset: int = 0,
-        shuffle: bool = False,
-        skip_shuffle_at_epoch_end: bool = False,
-        shuffle_seed: Optional[int] = None,
-        shard_rank: int = 0,
-        num_shards: int = 1,
-        drop_shard_remainder: bool = False
+    storage_path: PathLike,
+    dataset_id: str,
+    dataset_version: str = '0.0',
+    start_offset: int = 0,
+    shuffle: bool = False,
+    skip_shuffle_at_epoch_end: bool = False,
+    shuffle_seed: Optional[int] = None,
+    shard_rank: int = 0,
+    num_shards: int = 1,
+    drop_shard_remainder: bool = False,
 ) -> tf.data.Dataset:
     storage_path = ensure_resolved(storage_path)
 
@@ -531,14 +522,13 @@ def load_yogadl(
         shuffle_seed=shuffle_seed,
         shard_rank=shard_rank,
         num_shards=num_shards,
-        drop_shard_remainder=drop_shard_remainder
+        drop_shard_remainder=drop_shard_remainder,
     )
     return yogadl.tensorflow.make_tf_dataset(stream)
 
 
 def loader_yogadl(
-        storage_path: PathLike,
-        dataset_id: str
+    storage_path: PathLike, dataset_id: str
 ) -> LoaderFunction[DatasetTriplet]:
     storage_path = ensure_resolved(storage_path)
     id_train = dataset_id + '_train'
@@ -548,24 +538,19 @@ def loader_yogadl(
     def _loader(path: Optional[PathLike] = None):
         try:
             ds_train = load_yogadl(
-                storage_path=storage_path,
-                dataset_id=id_train
+                storage_path=storage_path, dataset_id=id_train
             )
         except AssertionError:
             ds_train = None
 
         try:
-            ds_val = load_yogadl(
-                storage_path=storage_path,
-                dataset_id=id_val
-            )
+            ds_val = load_yogadl(storage_path=storage_path, dataset_id=id_val)
         except AssertionError:
             ds_val = None
 
         try:
             ds_test = load_yogadl(
-                storage_path=storage_path,
-                dataset_id=id_test
+                storage_path=storage_path, dataset_id=id_test
             )
         except AssertionError:
             ds_test = None

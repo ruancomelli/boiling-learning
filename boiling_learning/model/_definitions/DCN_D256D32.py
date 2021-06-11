@@ -1,5 +1,12 @@
-from tensorflow.keras.layers import (Activation, Conv2D, Dense, Dropout,
-                                     Flatten, Input, MaxPool2D)
+from tensorflow.keras.layers import (
+    Activation,
+    Conv2D,
+    Dense,
+    Dropout,
+    Flatten,
+    Input,
+    MaxPool2D,
+)
 from tensorflow.keras.models import Model
 
 from boiling_learning.management import ElementCreator
@@ -17,9 +24,21 @@ def build(
     num_classes=None,
 ):
     input_data = Input(shape=input_shape)
-    x = Conv2D(32, (conv2d_stride, conv2d_stride), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
+    x = Conv2D(
+        32,
+        (conv2d_stride, conv2d_stride),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(input_data)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Conv2D(64, (conv2d_stride, conv2d_stride), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
+    x = Conv2D(
+        64,
+        (conv2d_stride, conv2d_stride),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
@@ -27,7 +46,7 @@ def build(
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
     x = Dense(32, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
-    
+
     if ProblemType.get_type(problem) is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
@@ -41,6 +60,7 @@ def build(
 
     return model
 
+
 creator = ElementCreator(
     method=make_creator_method(builder=build),
     name='SCN_D256',
@@ -51,5 +71,5 @@ creator = ElementCreator(
         problem=ProblemType.REGRESSION,
         fetch=['model', 'history'],
     ),
-    expand_params=True
+    expand_params=True,
 )

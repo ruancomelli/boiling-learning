@@ -1,7 +1,8 @@
 import json
-
-from boiling_learning.io.storage import json_decode, json_deserialize, json_encode, json_serialize
 from unittest import TestCase
+
+from boiling_learning.io.storage import (json_decode, json_deserialize,
+                                         json_encode, json_serialize)
 
 
 class storage_Test(TestCase):
@@ -9,10 +10,7 @@ class storage_Test(TestCase):
         test_list = [
             314159,
             'apple pie tastes good',
-            {
-                'likes dinos': True,
-                'political opinion': None
-            }
+            {'likes dinos': True, 'political opinion': None},
         ]
 
         encoded = json.dumps(json_serialize(test_list))
@@ -24,10 +22,7 @@ class storage_Test(TestCase):
         test_tuple = (
             314159,
             'apple pie tastes good',
-            {
-                'likes dinos': True,
-                'political opinion': None
-            }
+            {'likes dinos': True, 'political opinion': None},
         )
 
         @json_encode.dispatch

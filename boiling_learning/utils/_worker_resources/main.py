@@ -19,32 +19,34 @@ from flask import Flask, jsonify, request
 
 def _get_command():
     system = platform.system()
-    if system == "Darwin":
-        command = "ngrok"
-    elif system == "Windows":
-        command = "ngrok.exe"
-    elif system == "Linux":
-        command = "ngrok"
+    if system == 'Darwin':
+        command = 'ngrok'
+    elif system == 'Windows':
+        command = 'ngrok.exe'
+    elif system == 'Linux':
+        command = 'ngrok'
     else:
-        raise Exception("{system} is not supported".format(system=system))
+        raise Exception('{system} is not supported'.format(system=system))
     return command
 
 
 def _run_ngrok(port):
     command = _get_command()
-    ngrok_path = str(Path(tempfile.gettempdir(), "ngrok"))
+    ngrok_path = str(Path(tempfile.gettempdir(), 'ngrok'))
     _download_ngrok(ngrok_path)
     executable = str(Path(ngrok_path, command))
     os.chmod(executable, 0o777)
     ngrok = subprocess.Popen([executable, 'http', str(port)])
     atexit.register(ngrok.terminate)
-    localhost_url = "http://localhost:4040/api/tunnels"  # Url with tunnel details
+    localhost_url = (
+        'http://localhost:4040/api/tunnels'  # Url with tunnel details
+    )
     time.sleep(1)
     tunnel_url = requests.get(localhost_url).text  # Get the tunnel information
     j = json.loads(tunnel_url)
 
     tunnel_url = j['tunnels'][0]['public_url']  # Do the parsing of the get
-    tunnel_url = tunnel_url.replace("https", "http")
+    tunnel_url = tunnel_url.replace('https', 'http')
     return tunnel_url
 
 
@@ -52,16 +54,18 @@ def _download_ngrok(ngrok_path):
     if Path(ngrok_path).exists():
         return
     system = platform.system()
-    if system == "Darwin":
-        url = "https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-darwin-amd64.zip"
-    elif system == "Windows":
-        url = "https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip"
-    elif system == "Linux":
-        url = "https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip"
+    if system == 'Darwin':
+        url = 'https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-darwin-amd64.zip'
+    elif system == 'Windows':
+        url = 'https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip'
+    elif system == 'Linux':
+        url = (
+            'https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip'
+        )
     else:
         raise Exception('{system} is not supported'.format(system=system))
     download_path = _download_file(url)
-    with zipfile.ZipFile(download_path, "r") as zip_ref:
+    with zipfile.ZipFile(download_path, 'r') as zip_ref:
         zip_ref.extractall(ngrok_path)
 
 
@@ -100,6 +104,7 @@ def run_with_ngrok(app):
         address_path.write_text(ngrok_address)
 
         old_run(*args, **kwargs)
+
     app.run = new_run
 
 
@@ -109,7 +114,7 @@ def discretize_portion(p: P.Interval) -> P.Interval:
             P.OPEN,
             (s.lower - 1 if s.left is P.CLOSED else s.lower),
             (s.upper + 1 if s.right is P.CLOSED else s.upper),
-            P.OPEN
+            P.OPEN,
         )
 
     def second_step(s: P.Interval):
@@ -117,8 +122,9 @@ def discretize_portion(p: P.Interval) -> P.Interval:
             P.CLOSED,
             (s.lower + 1 if s.left is P.OPEN else s.lower),
             (s.upper - 1 if s.right is P.OPEN else s.upper),
-            P.CLOSED
+            P.CLOSED,
         )
+
     if p.empty:
         return p
     else:
@@ -128,7 +134,9 @@ def discretize_portion(p: P.Interval) -> P.Interval:
 class SequenceDistributorCase:
     def __init__(self, name: str, length: int):
         self._name: str = name
-        self._universe: P.Interval = discretize_portion(P.closedopen(0, length))
+        self._universe: P.Interval = discretize_portion(
+            P.closedopen(0, length)
+        )
         self._assigned: P.Interval = P.empty()
         self._completed: P.Interval = P.empty()
 
@@ -150,13 +158,21 @@ class SequenceDistributorCase:
 
     def mark_completed(self, index: int) -> None:
         if index not in self._universe:
-            raise IndexError(f'index {index} is not in the universe {self._universe}')
-        self._completed = discretize_portion(self._completed | P.singleton(index))
+            raise IndexError(
+                f'index {index} is not in the universe {self._universe}'
+            )
+        self._completed = discretize_portion(
+            self._completed | P.singleton(index)
+        )
 
     def interrupt(self, index: int) -> None:
         if index not in self._universe:
-            raise IndexError(f'index {index} is not in the universe {self._universe}')
-        self._assigned = discretize_portion(self._assigned - P.singleton(index))
+            raise IndexError(
+                f'index {index} is not in the universe {self._universe}'
+            )
+        self._assigned = discretize_portion(
+            self._assigned - P.singleton(index)
+        )
 
     def complete(self, index: int) -> None:
         self.interrupt(index)
@@ -164,12 +180,16 @@ class SequenceDistributorCase:
 
     def assign(self) -> Optional[int]:
         index = mit.first(
-            P.iterate(self._universe - (self._assigned | self._completed), step=1),
-            None
+            P.iterate(
+                self._universe - (self._assigned | self._completed), step=1
+            ),
+            None,
         )
 
         if index is not None:
-            self._assigned = discretize_portion(self._assigned | P.singleton(index))
+            self._assigned = discretize_portion(
+                self._assigned | P.singleton(index)
+            )
 
         return index
 
@@ -180,7 +200,7 @@ app = Flask(__name__)
 run_with_ngrok(app)
 
 
-@app.route("/hello")
+@app.route('/hello')
 def hello_world():
     name = request.args.get('name', 'World')
     return '<h1>Hello, {name}!</h1>'.format(name=name)

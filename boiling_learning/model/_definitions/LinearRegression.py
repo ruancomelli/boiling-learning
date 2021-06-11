@@ -16,10 +16,7 @@ def build(
     return model
 
 
-creator = Creator(
-    'LinearRegression',
-    make_creator_method(builder=build)    
-)
+creator = Creator('LinearRegression', make_creator_method(builder=build))
 
 
 # creator = ElementCreator(

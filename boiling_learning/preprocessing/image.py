@@ -5,10 +5,12 @@ import tensorflow as tf
 from skimage.transform import AffineTransform, warp
 
 T = TypeVar('T')
-ImageType = Any # something convertible to tf.Tensor
+ImageType = Any  # something convertible to tf.Tensor
 
 
-def _ratio_to_size(image: ImageType, x: Optional[Union[int, float]], axis: int) -> Optional[int]:
+def _ratio_to_size(
+    image: ImageType, x: Optional[Union[int, float]], axis: int
+) -> Optional[int]:
     if isinstance(x, float):
         return int(x * image.shape[axis])
     else:
@@ -16,18 +18,22 @@ def _ratio_to_size(image: ImageType, x: Optional[Union[int, float]], axis: int) 
 
 
 def crop(
-        image: ImageType,
-        left: Optional[Union[int, float]] = None,
-        right: Optional[Union[int, float]] = None,
-        top: Optional[Union[int, float]] = None,
-        bottom: Optional[Union[int, float]] = None,
-        height: Optional[Union[int, float]] = None,
-        width: Optional[Union[int, float]] = None
+    image: ImageType,
+    left: Optional[Union[int, float]] = None,
+    right: Optional[Union[int, float]] = None,
+    top: Optional[Union[int, float]] = None,
+    bottom: Optional[Union[int, float]] = None,
+    height: Optional[Union[int, float]] = None,
+    width: Optional[Union[int, float]] = None,
 ) -> tf.Tensor:
     if (left, right, width).count(None) != 1:
-        raise ValueError('exactly one of *left*, *right* and *width* must be None')
+        raise ValueError(
+            'exactly one of *left*, *right* and *width* must be None'
+        )
     if (top, bottom, height).count(None) != 1:
-        raise ValueError('exactly one of *top*, *bottom* and *height* must be None')
+        raise ValueError(
+            'exactly one of *top*, *bottom* and *height* must be None'
+        )
 
     left = _ratio_to_size(image, left, axis=1)
     right = _ratio_to_size(image, right, axis=1)
@@ -51,23 +57,27 @@ def crop(
         offset_height=top,
         offset_width=left,
         target_height=height,
-        target_width=width
+        target_width=width,
     )
 
 
 def shrink(
-        image: ImageType,
-        left: Optional[Union[int, float]] = None,
-        right: Optional[Union[int, float]] = None,
-        top: Optional[Union[int, float]] = None,
-        bottom: Optional[Union[int, float]] = None,
-        height: Optional[Union[int, float]] = None,
-        width: Optional[Union[int, float]] = None
+    image: ImageType,
+    left: Optional[Union[int, float]] = None,
+    right: Optional[Union[int, float]] = None,
+    top: Optional[Union[int, float]] = None,
+    bottom: Optional[Union[int, float]] = None,
+    height: Optional[Union[int, float]] = None,
+    width: Optional[Union[int, float]] = None,
 ) -> tf.Tensor:
     if (left, right, width).count(None) != 1:
-        raise ValueError('exactly one of *left*, *right* and *width* must be None')
+        raise ValueError(
+            'exactly one of *left*, *right* and *width* must be None'
+        )
     if (top, bottom, height).count(None) != 1:
-        raise ValueError('exactly one of *top*, *bottom* and *height* must be None')
+        raise ValueError(
+            'exactly one of *top*, *bottom* and *height* must be None'
+        )
 
     left = _ratio_to_size(image, left, axis=1)
     right = _ratio_to_size(image, right, axis=1)
@@ -91,23 +101,27 @@ def shrink(
         offset_height=top,
         offset_width=left,
         target_height=height,
-        target_width=width
+        target_width=width,
     )
 
 
 def shift(
-        image: np.ndarray,
-        shift_left: Optional[Union[int, float]] = None,
-        shift_right: Optional[Union[int, float]] = None,
-        shift_up: Optional[Union[int, float]] = None,
-        shift_down: Optional[Union[int, float]] = None
+    image: np.ndarray,
+    shift_left: Optional[Union[int, float]] = None,
+    shift_right: Optional[Union[int, float]] = None,
+    shift_up: Optional[Union[int, float]] = None,
+    shift_down: Optional[Union[int, float]] = None,
 ) -> np.ndarray:
     # source: <https://stackoverflow.com/questions/47961447/shift-image-in-scikit-image-python>
 
     if (shift_left, shift_right).count(None) != 1:
-        raise ValueError('exactly one of *shift_left* and *shift_right* must be None')
+        raise ValueError(
+            'exactly one of *shift_left* and *shift_right* must be None'
+        )
     if (shift_down, shift_up).count(None) != 1:
-        raise ValueError('exactly one of *shift_down* and *shift_up* must be None')
+        raise ValueError(
+            'exactly one of *shift_down* and *shift_up* must be None'
+        )
 
     shift_left = _ratio_to_size(image, shift_left, axis=1)
     shift_right = _ratio_to_size(image, shift_right, axis=1)
@@ -128,9 +142,7 @@ def shift(
 
 
 def flip(
-        image: T,
-        horizontal: bool = False,
-        vertical: bool = False
+    image: T, horizontal: bool = False, vertical: bool = False
 ) -> Union[T, tf.Tensor]:
     if horizontal:
         image = tf.image.flip_left_right(image)
@@ -145,23 +157,23 @@ def grayscale(image: ImageType) -> tf.Tensor:
 
 
 def downscale(
-        image: ImageType,
-        factors: Tuple[int, int],
-        antialias: bool = False
+    image: ImageType, factors: Tuple[int, int], antialias: bool = False
 ) -> tf.Tensor:
-    sizes = (image.shape[0]//factors[0], image.shape[1]//factors[1])
-    return tf.image.resize(image, sizes, method='bilinear', antialias=antialias)
+    sizes = (image.shape[0] // factors[0], image.shape[1] // factors[1])
+    return tf.image.resize(
+        image, sizes, method='bilinear', antialias=antialias
+    )
 
 
-def random_brightness(image: ImageType, min_delta: float, max_delta: float) -> tf.Tensor:
+def random_brightness(
+    image: ImageType, min_delta: float, max_delta: float
+) -> tf.Tensor:
     delta = tf.random.uniform([], minval=min_delta, maxval=max_delta)
     return tf.image.adjust_brightness(image, delta)
 
 
 def random_crop(
-        image: ImageType,
-        size: Iterable[Optional[int]],
-        seed=None
+    image: ImageType, size: Iterable[Optional[int]], seed=None
 ) -> tf.Tensor:
     size = tuple(
         dim if dim is not None else img_dim

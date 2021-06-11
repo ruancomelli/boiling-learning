@@ -1,11 +1,26 @@
+from __future__ import annotations
+
 import collections
 import itertools
 import operator
 import typing
 from contextlib import contextmanager
 from pathlib import Path
-from typing import (Any, Callable, Dict, FrozenSet, Iterable, Iterator, List,
-                    Mapping, Optional, Tuple, Type, Union, overload)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    FrozenSet,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+    overload,
+)
 
 import funcy
 import modin.pandas as pd
@@ -27,8 +42,12 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     '''
 
     VideoData: Type[ExperimentVideo.VideoData] = ExperimentVideo.VideoData
-    DataFrameColumnNames: Type[ExperimentVideo.DataFrameColumnNames] = ExperimentVideo.DataFrameColumnNames
-    DataFrameColumnTypes: Type[ExperimentVideo.DataFrameColumnTypes] = ExperimentVideo.DataFrameColumnTypes
+    DataFrameColumnNames: Type[
+        ExperimentVideo.DataFrameColumnNames
+    ] = ExperimentVideo.DataFrameColumnNames
+    DataFrameColumnTypes: Type[
+        ExperimentVideo.DataFrameColumnTypes
+    ] = ExperimentVideo.DataFrameColumnTypes
 
     @dataclass(frozen=True, kwargs=True)
     class VideoDataKeys(ExperimentVideo.VideoDataKeys):
@@ -41,13 +60,13 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     #     ignore: bool = False
 
     def __init__(
-            self,
-            name: str,
-            column_names: DataFrameColumnNames = DataFrameColumnNames(),
-            column_types: DataFrameColumnTypes = DataFrameColumnTypes(),
-            df_path: Optional[PathLike] = None,
-            exist_load: bool = False,
-            tags: Iterable[str] = ()
+        self,
+        name: str,
+        column_names: DataFrameColumnNames = DataFrameColumnNames(),
+        column_types: DataFrameColumnTypes = DataFrameColumnTypes(),
+        df_path: Optional[PathLike] = None,
+        exist_load: bool = False,
+        tags: Iterable[str] = (),
     ):
         self._name: str = name
         self.column_names: self.DataFrameColumnNames = column_names
@@ -66,18 +85,22 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             self.load()
 
     def __str__(self) -> str:
-        return ''.join([
-            self.__class__.__name__,
-            '(',
-            ', '.join([
-                f'name={self.name}',
-                f'column_names={self.column_names}',
-                f'column_types={self.column_types}',
-                f'df_path={self.df_path}',
-                f'experiment_videos={tuple(self.keys())}'
-            ]),
-            ')'
-        ])
+        return ''.join(
+            [
+                self.__class__.__name__,
+                '(',
+                ', '.join(
+                    [
+                        f'name={self.name}',
+                        f'column_names={self.column_names}',
+                        f'column_types={self.column_types}',
+                        f'df_path={self.df_path}',
+                        f'experiment_videos={tuple(self.keys())}',
+                    ]
+                ),
+                ')',
+            ]
+        )
 
     @property
     def name(self) -> str:
@@ -91,15 +114,15 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         return self._experiment_videos[name]
 
     def __setitem__(
-            self,
-            name: str,
-            experiment_video: ExperimentVideo
+        self, name: str, experiment_video: ExperimentVideo
     ) -> None:
-        assert name == experiment_video.name, (
-            'setting item must respect the experiment video name.')
+        assert (
+            name == experiment_video.name
+        ), 'setting item must respect the experiment video name.'
         if not self._allow_key_overwrite and name in self:
             raise ValueError(
-                f'overwriting existing element with name={name} with overwriting disabled.')
+                f'overwriting existing element with name={name} with overwriting disabled.'
+            )
         self._experiment_videos[name] = experiment_video
 
     def __delitem__(self, name: str) -> None:
@@ -115,23 +138,19 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         for experiment_video in experiment_videos:
             self[experiment_video.name] = experiment_video
 
-    def union(self, *others: "ImageDataset") -> None:
+    def union(self, *others: ImageDataset) -> None:
         for other in others:
             self.add(*other.values())
 
     @classmethod
     def make_union(
-            cls,
-            *others: "ImageDataset",
-            namer: Callable[[Iterable[str]], str] = '+'.join
-    ) -> "ImageDataset":
+        cls,
+        *others: ImageDataset,
+        namer: Callable[[Iterable[str]], str] = '+'.join,
+    ) -> ImageDataset:
         name = namer(funcy.pluck_attr('name', others))
         example = others[0]
-        img_ds = ImageDataset(
-            name,
-            example.column_names,
-            example.column_types
-        )
+        img_ds = ImageDataset(name, example.column_names, example.column_types)
         img_ds.union(*others)
         return img_ds
 
@@ -140,29 +159,20 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             del self[experiment_video.name]
 
     @contextmanager
-    def disable_key_overwriting(self) -> Iterator["ImageDataset"]:
+    def disable_key_overwriting(self) -> Iterator[ImageDataset]:
         prev_state = self._allow_key_overwrite
         self._allow_key_overwrite = False
         yield self
         self._allow_key_overwrite = prev_state
 
     def video_paths(self) -> Iterable[Path]:
-        return map(
-            operator.attrgetter('video_path'),
-            self.values()
-        )
+        return map(operator.attrgetter('video_path'), self.values())
 
     def audio_paths(self) -> Iterable[Path]:
-        return map(
-            operator.attrgetter('audio_path'),
-            self.values()
-        )
+        return map(operator.attrgetter('audio_path'), self.values())
 
     def frames_paths(self) -> Iterable[Path]:
-        return map(
-            operator.attrgetter('frames_path'),
-            self.values()
-        )
+        return map(operator.attrgetter('frames_path'), self.values())
 
     def open_videos(self) -> None:
         for ev in self.values():
@@ -173,22 +183,19 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             ev.frames_to_tensor(overwrite=overwrite)
 
     def extract_audios(
-            self,
-            overwrite: bool = False,
-            verbose: VerboseType = False
+        self, overwrite: bool = False, verbose: VerboseType = False
     ) -> None:
         for experiment_video in self.values():
             experiment_video.extract_audio(
-                overwrite=overwrite,
-                verbose=verbose
+                overwrite=overwrite, verbose=verbose
             )
 
     def extract_frames(
-            self,
-            overwrite: bool = False,
-            verbose: VerboseType = False,
-            chunk_sizes: Optional[List[int]] = None,
-            iterate: bool = True
+        self,
+        overwrite: bool = False,
+        verbose: VerboseType = False,
+        chunk_sizes: Optional[List[int]] = None,
+        iterate: bool = True,
     ) -> None:
         for experiment_video in self.values():
             experiment_video.extract_frames(
@@ -196,33 +203,30 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
                 prepend_name=True,
                 iterate=iterate,
                 overwrite=overwrite,
-                verbose=verbose
+                verbose=verbose,
             )
 
     def set_video_data(
-            self,
-            video_data: Mapping[str, Union[Mapping[str, Any], VideoData]],
-            keys: ExperimentVideo.VideoDataKeys = ExperimentVideo.VideoDataKeys(),
-            remove_absent: bool = False
+        self,
+        video_data: Mapping[str, Union[Mapping[str, Any], VideoData]],
+        keys: ExperimentVideo.VideoDataKeys = ExperimentVideo.VideoDataKeys(),
+        remove_absent: bool = False,
     ) -> None:
         video_data_keys = frozenset(video_data.keys())
         self_keys = frozenset(self.keys())
         for name in self_keys & video_data_keys:
-            self[name].set_video_data(
-                video_data[name],
-                keys
-            )
+            self[name].set_video_data(video_data[name], keys)
 
         if remove_absent:
             for name in self_keys - video_data_keys:
                 del self[name]
 
     def set_video_data_from_file(
-            self,
-            data_path: PathLike,
-            purge: bool = False,
-            remove_absent: bool = False,
-            keys: VideoDataKeys = VideoDataKeys()
+        self,
+        data_path: PathLike,
+        purge: bool = False,
+        remove_absent: bool = False,
+        keys: VideoDataKeys = VideoDataKeys(),
     ) -> None:
         data_path = bl_utils.ensure_resolved(data_path)
         video_data = load_json(data_path)
@@ -237,10 +241,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
                 ]
                 purged = True
 
-            video_data = {
-                item.pop(keys.name): item
-                for item in video_data
-            }
+            video_data = {item.pop(keys.name): item for item in video_data}
 
         if isinstance(video_data, dict):
             if not purged:
@@ -255,9 +256,9 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             raise RuntimeError(f'could not load video data from {data_path}.')
 
     def load(
-            self,
-            path: Optional[PathLike] = None,
-            columns: Optional[Iterable[str]] = None
+        self,
+        path: Optional[PathLike] = None,
+        columns: Optional[Iterable[str]] = None,
     ) -> None:
         if path is None:
             path = self.df_path
@@ -268,15 +269,11 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             self.df = pd.read_csv(self.df_path, skipinitialspace=True)
         else:
             self.df = pd.read_csv(
-                self.df_path,
-                skipinitialspace=True,
-                usecols=tuple(columns)
+                self.df_path, skipinitialspace=True, usecols=tuple(columns)
             )
 
     def save(
-            self,
-            path: Optional[PathLike] = None,
-            overwrite: bool = False
+        self, path: Optional[PathLike] = None, overwrite: bool = False
     ) -> None:
         if path is None:
             path = self.df_path
@@ -285,20 +282,17 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         if overwrite or not path.is_file():
             self.df.to_csv(path, index=False)
 
-    def save_dfs(
-            self,
-            overwrite: bool = False
-    ) -> None:
+    def save_dfs(self, overwrite: bool = False) -> None:
         bl_utils.functional.apply(
             operator.methodcaller('save_df', overwrite=overwrite),
-            self.values()
+            self.values(),
         )
 
     def load_dfs(
-            self,
-            columns: Optional[Iterable[str]] = None,
-            overwrite: bool = False,
-            missing_ok: bool = False
+        self,
+        columns: Optional[Iterable[str]] = None,
+        overwrite: bool = False,
+        missing_ok: bool = False,
     ) -> None:
         if columns is not None:
             columns = tuple(columns)
@@ -309,17 +303,17 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
                 columns=columns,
                 overwrite=overwrite,
                 missing_ok=missing_ok,
-                inplace=True
+                inplace=True,
             ),
-            self.values()
+            self.values(),
         )
 
     def move(
-            self,
-            path: Union[str, bl_utils.PathLike],
-            renaming: bool = False,
-            erase_old: bool = False,
-            overwrite: bool = False
+        self,
+        path: Union[str, bl_utils.PathLike],
+        renaming: bool = False,
+        erase_old: bool = False,
+        overwrite: bool = False,
     ) -> None:
         if erase_old:
             old_path = self.df_path
@@ -349,16 +343,18 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         self,
         old_path: PathLike,
         new_path: PathLike,
-        many: bool # many: Literal[False]
-    ) -> None: ...
+        many: bool,  # many: Literal[False]
+    ) -> None:
+        ...
 
     @overload
     def modify_path(
         self,
         old_path: Iterable[PathLike],
         new_path: Iterable[PathLike],
-        many: bool # many: Literal[True]
-    ) -> None: ...
+        many: bool,  # many: Literal[True]
+    ) -> None:
+        ...
 
     def modify_path(self, old_path, new_path, many):
         if many:
@@ -368,17 +364,16 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             )
         else:
             self.paths = self.df[self.column_names.path].mask(
-                lambda x: Path(x) == Path(old_path),
-                new_path
+                lambda x: Path(x) == Path(old_path), new_path
             )
 
     def make_dataframe(
-            self,
-            recalculate: bool = False,
-            exist_load: bool = False,
-            enforce_time: bool = False,
-            categories_as_int: bool = False,
-            inplace: bool = True
+        self,
+        recalculate: bool = False,
+        exist_load: bool = False,
+        enforce_time: bool = False,
+        categories_as_int: bool = False,
+        inplace: bool = True,
     ) -> pd.DataFrame:
         dfs = map(
             operator.methodcaller(
@@ -387,36 +382,48 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
                 exist_load=exist_load,
                 enforce_time=enforce_time,
                 categories_as_int=categories_as_int,
-                inplace=inplace
+                inplace=inplace,
             ),
-            self.values()
+            self.values(),
         )
         df = bl_utils.concatenate_dataframes(dfs)
         return df
 
     @overload
-    def iterdata_from_dataframe(self, select_columns: str) -> Iterable[Tuple[np.ndarray, Any]]: ...
+    def iterdata_from_dataframe(
+        self, select_columns: str
+    ) -> Iterable[Tuple[np.ndarray, Any]]:
+        ...
 
     @overload
-    def iterdata_from_dataframe(self, select_columns: Optional[List[str]]) -> Iterable[Tuple[np.ndarray, dict]]: ...
+    def iterdata_from_dataframe(
+        self, select_columns: Optional[List[str]]
+    ) -> Iterable[Tuple[np.ndarray, dict]]:
+        ...
 
     def iterdata_from_dataframe(self, select_columns=None):
         return itertools.chain.from_iterable(
             map(
-                operator.methodcaller('iterdata_from_dataframe', select_columns),
-                self.values()
+                operator.methodcaller(
+                    'iterdata_from_dataframe', select_columns
+                ),
+                self.values(),
             )
         )
 
     def as_tf_dataset(
-            self,
-            select_columns: Optional[Union[str, List[str]]] = None,
-            inplace: bool = False
+        self,
+        select_columns: Optional[Union[str, List[str]]] = None,
+        inplace: bool = False,
     ) -> tf.data.Dataset:
-        datasets = collections.deque(map(
-            operator.methodcaller('as_tf_dataset', select_columns, inplace=inplace),
-            self.values()
-        ))
+        datasets = collections.deque(
+            map(
+                operator.methodcaller(
+                    'as_tf_dataset', select_columns, inplace=inplace
+                ),
+                self.values(),
+            )
+        )
 
         if not datasets:
             raise ValueError('resulting tensorflow dataset is empty.')
@@ -431,8 +438,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         return ds
 
     def as_tf_dataset_dict(
-            self,
-            select_columns: Optional[Union[str, List[str]]] = None
+        self, select_columns: Optional[Union[str, List[str]]] = None
     ) -> Dict[str, tf.data.Dataset]:
         return {
             name: experiment_video.as_tf_dataset(select_columns=select_columns)

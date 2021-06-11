@@ -1,11 +1,27 @@
+from __future__ import annotations
+
 import datetime
 import shlex
 import subprocess
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import (Any, Callable, Dict, Hashable, Iterable, Iterator, List,
-                    Mapping, Optional, Sequence, Set, Tuple, TypeVar, Union)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Hashable,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import json_tricks
 import more_itertools as mit
@@ -14,37 +30,32 @@ import zict
 from pkg_resources import resource_filename
 
 import boiling_learning as bl
-from boiling_learning.utils.utils import (JSONDict, PathLike, empty_gen,
-                                          ensure_dir, ensure_resolved,
-                                          fix_path, indexify, print_verbose,
-                                          rmdir)
+from boiling_learning.utils.utils import (
+    JSONDict,
+    PathLike,
+    empty_gen,
+    ensure_dir,
+    ensure_resolved,
+    fix_path,
+    indexify,
+    print_verbose,
+    rmdir,
+)
 
 _T = TypeVar('_T')
 
 
-def apply_to_obj(
-    tpl: Tuple[
-        Any,
-        str,
-        Iterable,
-        Mapping[str, Any]
-    ]
-):
+def apply_to_obj(tpl: Tuple[Any, str, Iterable, Mapping[str, Any]]):
     if len(tpl) != 4:
         raise ValueError(
-            'expected a tuple in the format (obj, fname, args, kwargs)')
+            'expected a tuple in the format (obj, fname, args, kwargs)'
+        )
 
     obj, fname, args, kwargs = tpl
     return getattr(obj, fname)(*args, **kwargs)
 
 
-def apply_to_f(
-    tpl: Tuple[
-        Callable,
-        Iterable,
-        Mapping[str, Any]
-    ]
-):
+def apply_to_f(tpl: Tuple[Callable, Iterable, Mapping[str, Any]]):
     if len(tpl) != 3:
         raise ValueError('expected a tuple in the format (f, args, kwargs)')
 
@@ -57,36 +68,30 @@ def distribute_iterable(
     iterable: Iterable,
     assignments: Optional[Mapping[Hashable, Iterable]] = None,
     assign_pred: Optional[Callable[[Hashable], bool]] = None,
-    assign_iterable: Optional[Iterable] = None
+    assign_iterable: Optional[Iterable] = None,
 ) -> Dict[Hashable, List]:
     if (assign_pred, assign_iterable).count(None) == 1:
         raise ValueError(
-            'either both or none of assign_pred and assign_iterable must be passed as arguments.')
+            'either both or none of assign_pred and assign_iterable must be passed as arguments.'
+        )
 
     if assign_iterable is not None:
         assignments = distribute_iterable(
             [key for key in keys if assign_pred(key)],
             assign_iterable,
-            assignments
+            assignments,
         )
 
     if assignments is None:
         n_keys = len(keys)
 
-        return dict(
-            zip(
-                keys,
-                map(list, mit.distribute(n_keys, iterable))
-            )
-        )
+        return dict(zip(keys, map(list, mit.distribute(n_keys, iterable))))
     else:
         distributed = bl.utils.merge_dicts(
-            {k: [] for k in keys},
-            {k: list(v) for k, v in assignments.items()}
+            {k: [] for k in keys}, {k: list(v) for k, v in assignments.items()}
         )
         distributed_items = sorted(
-            distributed.items(),
-            key=(lambda pair: len(pair[1]))
+            distributed.items(), key=(lambda pair: len(pair[1]))
         )
 
         n_keys = len(distributed_items)
@@ -101,10 +106,7 @@ def distribute_iterable(
 
 
 class BaseUserPool:
-    def __init__(
-            self,
-            enabled: bool
-    ):
+    def __init__(self, enabled: bool):
         self.is_enabled = enabled
 
     def enable(self) -> None:
@@ -132,15 +134,15 @@ class UserPool(BaseUserPool):
     # See <https://stackoverflow.com/a/23665658/5811400>
 
     def __init__(
-            self,
-            workers: Iterable[Hashable],
-            manager: Optional[Hashable] = None,
-            current: Optional[Hashable] = None,
-            server: Optional[Hashable] = None,
-            workers_key: str = 'allowed_users',
-            manager_key: str = 'manager',
-            server_key: str = 'server',
-            enabled: bool = True
+        self,
+        workers: Iterable[Hashable],
+        manager: Optional[Hashable] = None,
+        current: Optional[Hashable] = None,
+        server: Optional[Hashable] = None,
+        workers_key: str = 'allowed_users',
+        manager_key: str = 'manager',
+        server_key: str = 'server',
+        enabled: bool = True,
     ):
         super().__init__(enabled)
 
@@ -174,31 +176,28 @@ class UserPool(BaseUserPool):
     def current(self, current: Hashable) -> None:
         if current not in self:
             raise ValueError(
-                f'notebook user {current} is not expected. Allowed users are {self.workers}.')
+                f'notebook user {current} is not expected. Allowed users are {self.workers}.'
+            )
         self._current = current
 
     @property
     def clients(self) -> List[Hashable]:
-        return [
-            worker
-            for worker in self
-            if worker != self.manager
-        ]
+        return [worker for worker in self if worker != self.manager]
 
     @classmethod
     def from_json(
-            cls,
-            path: PathLike,
-            workers_key: str = 'allowed_users',
-            manager_key: str = 'manager',
-            server_key: str = 'server'
-    ) -> 'UserPool':
+        cls,
+        path: PathLike,
+        workers_key: str = 'allowed_users',
+        manager_key: str = 'manager',
+        server_key: str = 'server',
+    ) -> UserPool:
         config = bl.io.load_json(path)
 
         return cls(
             workers=config[workers_key],
             manager=config.get(manager_key),
-            server=config.get(server_key)
+            server=config.get(server_key),
         )
 
     def to_json(self, path: PathLike) -> None:
@@ -211,11 +210,11 @@ class UserPool(BaseUserPool):
         bl.io.save_json(obj, path)
 
     def distribute_iterable(
-            self,
-            iterable: Iterable,
-            assignments: Optional[Mapping[Hashable, Iterable]] = None,
-            assign_pred: Optional[Callable[[Hashable], bool]] = None,
-            assign_iterable: Optional[Iterable] = None
+        self,
+        iterable: Iterable,
+        assignments: Optional[Mapping[Hashable, Iterable]] = None,
+        assign_pred: Optional[Callable[[Hashable], bool]] = None,
+        assign_iterable: Optional[Iterable] = None,
     ) -> Mapping[Hashable, Iterable]:
         if assignments is not None:
             user_diff = set(assignments.keys()) - set(self)
@@ -227,13 +226,10 @@ class UserPool(BaseUserPool):
             iterable,
             assignments=assignments,
             assign_pred=assign_pred,
-            assign_iterable=assign_iterable
+            assign_iterable=assign_iterable,
         )
 
-    def get_iterable(
-            self,
-            iterable: Iterable
-    ) -> Iterable:
+    def get_iterable(self, iterable: Iterable) -> Iterable:
         if self.is_enabled:
             return self.distribute_iterable(iterable)[self.current]
         else:
@@ -251,12 +247,12 @@ class UserPool(BaseUserPool):
 
 class DynamicUserPool(BaseUserPool):
     def __init__(
-            self,
-            path: PathLike,
-            workers: Optional[Iterable] = None,
-            overwrite: bool = False,
-            reset: bool = False,
-            enabled: bool = True
+        self,
+        path: PathLike,
+        workers: Optional[Iterable] = None,
+        overwrite: bool = False,
+        reset: bool = False,
+        enabled: bool = True,
     ):
         super().__init__(enabled)
 
@@ -267,8 +263,12 @@ class DynamicUserPool(BaseUserPool):
         self._cases_path = self.path / 'cases'
         self._users_path = self.path / 'users'
 
-        self._data = JSONDict(self._users_path, dumps=json_tricks.dumps, loads=json_tricks.loads)
-        self._cases = JSONDict(self._cases_path, dumps=json_tricks.dumps, loads=json_tricks.loads)
+        self._data = JSONDict(
+            self._users_path, dumps=json_tricks.dumps, loads=json_tricks.loads
+        )
+        self._cases = JSONDict(
+            self._cases_path, dumps=json_tricks.dumps, loads=json_tricks.loads
+        )
         self._current_ticket: Optional[int] = None
 
         if workers is not None:
@@ -278,16 +278,20 @@ class DynamicUserPool(BaseUserPool):
                 self._data['used_tickets'] = set()
 
     def __str__(self) -> str:
-        return ''.join((
-            self.__class__.__name__,
-            '(',
-            ', '.join((
-                f'available_tickets={self.available_tickets()}',
-                f'current_ticket={self.current_ticket()}',
-                f'used_tickets={self.used_tickets()}',
-            )),
-            ')'
-        ))
+        return ''.join(
+            (
+                self.__class__.__name__,
+                '(',
+                ', '.join(
+                    (
+                        f'available_tickets={self.available_tickets()}',
+                        f'current_ticket={self.current_ticket()}',
+                        f'used_tickets={self.used_tickets()}',
+                    )
+                ),
+                ')',
+            )
+        )
 
     def __getitem__(self, key: int) -> Hashable:
         return self.available_tickets()[key]
@@ -323,16 +327,16 @@ class DynamicUserPool(BaseUserPool):
         if case_name not in self._cases:
             self._cases[case_name] = {
                 'available_tickets': self._data['available_tickets'],
-                'used_tickets': self._data['used_tickets']
+                'used_tickets': self._data['used_tickets'],
             }
 
     def distribute_iterable(
-            self,
-            case_name: str,
-            iterable: Iterable,
-            assignments: Optional[Mapping[Hashable, Iterable]] = None,
-            assign_pred: Optional[Callable[[Hashable], bool]] = None,
-            assign_iterable: Optional[Iterable] = None
+        self,
+        case_name: str,
+        iterable: Iterable,
+        assignments: Optional[Mapping[Hashable, Iterable]] = None,
+        assign_pred: Optional[Callable[[Hashable], bool]] = None,
+        assign_iterable: Optional[Iterable] = None,
     ) -> Mapping[Hashable, Iterable]:
         self._open_case(case_name)
 
@@ -346,22 +350,22 @@ class DynamicUserPool(BaseUserPool):
             iterable,
             assignments=assignments,
             assign_pred=assign_pred,
-            assign_iterable=assign_iterable
+            assign_iterable=assign_iterable,
         )
 
-    def get_iterable(
-            self,
-            case_name: str,
-            iterable: Iterable
-    ) -> Iterable:
-        case_dict = JSONDict(self._cases_path, dumps=json_tricks.dumps, loads=json_tricks.loads)
+    def get_iterable(self, case_name: str, iterable: Iterable) -> Iterable:
+        case_dict = JSONDict(
+            self._cases_path, dumps=json_tricks.dumps, loads=json_tricks.loads
+        )
         if case_name not in case_dict:
             case_dict[case_name] = self._data
 
         if self.is_enabled:
             current_ticket = self.current_ticket()
             if current_ticket in self._cases[case_name]['used_tickets']:
-                return self.distribute_iterable(case_name, iterable)[current_ticket]
+                return self.distribute_iterable(case_name, iterable)[
+                    current_ticket
+                ]
             else:
                 return empty_gen()
         else:
@@ -369,25 +373,25 @@ class DynamicUserPool(BaseUserPool):
 
 
 class LFSSequenceDistributor:
-    def __init__(
-            self,
-            path: PathLike,
-            reset: bool = False
-    ):
+    def __init__(self, path: PathLike, reset: bool = False):
         path = ensure_dir(path)
         if reset:
             rmdir(path, recursive=True, missing_ok=True, keep=True)
         self.path = path
-        self._cases = JSONDict(self.path, dumps=json_tricks.dumps, loads=json_tricks.loads)
+        self._cases = JSONDict(
+            self.path, dumps=json_tricks.dumps, loads=json_tricks.loads
+        )
 
     def current(self, case_name: str) -> int:
         return self._cases[case_name]['current']
 
-    def _set_case(self, case_name: str, total_length: int, current: int) -> None:
+    def _set_case(
+        self, case_name: str, total_length: int, current: int
+    ) -> None:
         self._cases[case_name] = {
             'name': case_name,
             'total_length': total_length,
-            'current': current
+            'current': current,
         }
 
     def get(self, case_name: str, seq: Sequence[_T]) -> Iterator[_T]:
@@ -397,20 +401,20 @@ class LFSSequenceDistributor:
             self._set_case(case_name, total_length, 0)
 
         while (
-                self.current(case_name) is None
-                or self.current(case_name) < total_length
+            self.current(case_name) is None
+            or self.current(case_name) < total_length
         ):
             current = self.current(case_name)
-            self._set_case(case_name, total_length, current+1)
+            self._set_case(case_name, total_length, current + 1)
             yield seq[current]
 
 
 class SequenceDistributorServer:
     def __init__(
-            self,
-            data_dir: PathLike,
-            port: int = 8000,
-            venv_name: Optional[str] = None
+        self,
+        data_dir: PathLike,
+        port: int = 8000,
+        venv_name: Optional[str] = None,
     ):
         self.data_dir = ensure_dir(data_dir)
 
@@ -442,7 +446,7 @@ class SequenceDistributorServer:
                 print(''.join(logs))
 
     def _log(self, text: str, end: str = '\n') -> None:
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         with self._logs_filepath.open('a') as log:
             log.write(f'[{now}] {text}{end}')
 
@@ -450,7 +454,9 @@ class SequenceDistributorServer:
         if self._venv_name is None:
             venv_command = ()
         else:
-            venv_activate_path = Path(self._venv_name, 'bin', 'activate').resolve()
+            venv_activate_path = Path(
+                self._venv_name, 'bin', 'activate'
+            ).resolve()
 
             if not venv_activate_path.is_file():
                 make_venv_command = (f'python -m venv {self._venv_name}',)
@@ -463,7 +469,7 @@ class SequenceDistributorServer:
 
         run_python_commands = venv_command + (
             f'pip install -r "{self._requirements_filepath}"',
-            f'python {self._main_filepath} {self._port} "{self._public_url_filepath}"'
+            f'python {self._main_filepath} {self._port} "{self._public_url_filepath}"',
         )
 
         for command in run_python_commands:
@@ -481,10 +487,8 @@ class SequenceDistributorClient:
 
     @classmethod
     def from_file(
-            path: PathLike,
-            sleep_time: int = 0,
-            verbose: bool = False
-    ) -> 'SequenceDistributorClient':
+        path: PathLike, sleep_time: int = 0, verbose: bool = False
+    ) -> SequenceDistributorClient:
         url_path = ensure_resolved(path)
 
         if sleep_time > 0:
@@ -497,7 +501,6 @@ class SequenceDistributorClient:
 
         return SequenceDistributorClient(url)
 
-
     def connect(self) -> bool:
         url = self.url + '/'
         try:
@@ -507,22 +510,19 @@ class SequenceDistributorClient:
         except requests.HTTPError:
             return False
 
-    def assign(self, case_name: str, seq: Union[int, Sequence]) -> Optional[int]:
+    def assign(
+        self, case_name: str, seq: Union[int, Sequence]
+    ) -> Optional[int]:
         if not isinstance(seq, int):
             seq = len(seq)
 
         url = self.url + '/assign'
-        r = requests.get(
-            url,
-            params={'case_name': case_name, 'seq': seq}
-        )
+        r = requests.get(url, params={'case_name': case_name, 'seq': seq})
         r.raise_for_status()
         try:
             return r.json()
         except KeyError:
-            raise RuntimeError(
-                'response does not contain a *index* field'
-            )
+            raise RuntimeError('response does not contain a *index* field')
 
     def complete(self, case_name: str, index: int) -> None:
         url = self.url + '/complete'

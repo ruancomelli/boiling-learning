@@ -1,15 +1,13 @@
 from unittest.case import TestCase
 
 from boiling_learning.utils.collections import KeyedSet
+from boiling_learning.utils.geometry import Cylinder, Prism, RectangularPrism
 from boiling_learning.utils.utils import indexify
 
 
 class utils_utils_test(TestCase):
     def test_indexify(self):
-        self.assertEqual(
-            tuple(indexify('abc')),
-            (0, 1, 2)
-        )
+        self.assertEqual(tuple(indexify('abc')), (0, 1, 2))
 
 
 class utils_collections_test(TestCase):
@@ -29,3 +27,30 @@ class utils_collections_test(TestCase):
 
         keyed_set.discard('hello')
         self.assertNotIn('hello', keyed_set)
+
+
+class geometry_test(TestCase):
+    def test_Prism(self):
+        # consider a triangular prism
+
+        side = 3
+        length = 10
+
+        prism = Prism(
+            cross_section_perimeter=3 * side,
+            cross_section_area=side ** 2 * 3 ** 0.5 / 4,
+            length=length,
+        )
+
+        self.assertAlmostEqual(prism.lateral_area, 90, delta=0.1)
+
+    def test_Cylinder(self):
+        cylinder = Cylinder(length=10, diameter=2)
+
+        self.assertEqual(cylinder.radius, 1)
+
+    def test_RectangularPrism(self):
+        prism = RectangularPrism(width=5, thickness=3, length=10)
+
+        self.assertEqual(prism.cross_section_area, 15)
+        self.assertEqual(prism.cross_section_perimeter, 16)

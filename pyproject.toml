@@ -1,2 +1,11 @@
 [tool.isort]
+profile = "black"
 known_first_party = ["boiling_learning"]
+multi_line_output = 3
+line_length = 79
+
+[tool.black]
+include = '\.pyi?$'
+line-length = 79
+skip-string-normalization = true
+target-version = ['py37']

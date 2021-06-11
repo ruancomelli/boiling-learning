@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 import enum
 import itertools
@@ -15,9 +17,23 @@ from functools import partial, wraps
 from itertools import product
 from pathlib import Path
 from timeit import default_timer
-from typing import (Any, Callable, Collection, Dict, Iterable, Iterator, List,
-                    Mapping, MutableSequence, Optional, Sequence, Tuple, Type,
-                    TypeVar, Union)
+from typing import (
+    Any,
+    Callable,
+    Collection,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    MutableSequence,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import dataclassy
 import funcy
@@ -33,7 +49,7 @@ from plum import dispatch
 from sortedcontainers import SortedSet
 from typing_extensions import overload
 
-from boiling_learning.utils.functional import pack
+from boiling_learning.utils.functional import P
 from boiling_learning.utils.iterutils import flaglast
 
 # ---------------------------------- Typing ----------------------------------
@@ -44,7 +60,7 @@ class _Sentinel(enum.Enum):
     INSTANCE = enum.auto()
 
     @classmethod
-    def get_instance(cls) -> "_Sentinel":
+    def get_instance(cls) -> _Sentinel:
         return cls.INSTANCE
 
 
@@ -56,7 +72,15 @@ SentinelOptional = Union[_Sentinel, _T]
 
 # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
 VerboseType = Union[bool, int]
-JSONDataType = Union[None, bool, int, float, str, List['JSONDataType'], Dict[str, 'JSONDataType']]
+JSONDataType = Union[
+    None,
+    bool,
+    int,
+    float,
+    str,
+    List['JSONDataType'],
+    Dict[str, 'JSONDataType'],
+]
 
 
 PathLike = Union[str, os.PathLike]
@@ -87,18 +111,18 @@ def indexify(arg: Union[Iterable, Collection]) -> Iterable[int]:
 def constant_factory(value: Callable[[], _T]) -> Callable[..., _T]:
     def _constant(*args, **kwargs):
         return value()
+
     return _constant
 
 
 def comment(
-    f: Callable,
-    s: str = '',
-    printer: Callable[[str], Any] = print
+    f: Callable, s: str = '', printer: Callable[[str], Any] = print
 ) -> Callable:
     @wraps(f)
     def wrapped(*args, **kwargs):
         printer(s)
         return f(*args, **kwargs)
+
     return wrapped
 
 
@@ -120,7 +144,7 @@ def as_immutable(coll: dict):
 # TODO: in the *_sentinel* case, use *key=as_immutable*. Do it and test!
 def remove_duplicates(
     iterable: Iterable[_T],
-    key: Union[None, object, Dict, Callable] = _sentinel
+    key: Union[None, object, Dict, Callable] = _sentinel,
 ) -> Iterable[_T]:
     # See <https://more-itertools.readthedocs.io/en/stable/api.html#more_itertools.unique_everseen>
 
@@ -132,59 +156,36 @@ def remove_duplicates(
                 list: tuple,
                 set: frozenset,
                 dict: (lambda elem: frozenset(elem.items())),
-            }
+            },
         )
     elif isinstance(key, dict):
         return mit.unique_everseen(
             iterable,
-            key=lambda elem: key.get(type(elem), funcy.identity)(elem)
+            key=lambda elem: key.get(type(elem), funcy.identity)(elem),
         )
     else:
-        return mit.unique_everseen(
-            iterable,
-            key=key
-        )
+        return mit.unique_everseen(iterable, key=key)
 
 
-def reorder(
-    seq: Sequence[_T],
-    indices: Iterable[int]
-) -> Iterable[_T]:
+def reorder(seq: Sequence[_T], indices: Iterable[int]) -> Iterable[_T]:
     return map(seq.__getitem__, indices)
 
 
-def argmin(
-    iterable: Iterable
-) -> int:
-    return min(
-        enumerate(iterable),
-        key=operator.itemgetter(1)
-    )[0]
+def argmin(iterable: Iterable) -> int:
+    return min(enumerate(iterable), key=operator.itemgetter(1))[0]
 
 
-def argmax(
-    iterable: Iterable
-) -> int:
-    return max(
-        enumerate(iterable),
-        key=operator.itemgetter(1)
-    )[0]
+def argmax(iterable: Iterable) -> int:
+    return max(enumerate(iterable), key=operator.itemgetter(1))[0]
 
 
 def argsorted(iterable: Iterable) -> Iterable[int]:
     return funcy.pluck(
-        0,
-        sorted(
-            enumerate(iterable),
-            key=operator.itemgetter(1)
-        )
+        0, sorted(enumerate(iterable), key=operator.itemgetter(1))
     )
 
 
-def multipop(
-        lst: MutableSequence[_T],
-        indices: Collection[int]
-) -> List[_T]:
+def multipop(lst: MutableSequence[_T], indices: Collection[int]) -> List[_T]:
     pop = [lst[i] for i in indices]
     lst[:] = [v for i, v in enumerate(lst) if i not in indices]
 
@@ -213,10 +214,7 @@ def missing_ints(ints: Iterable[int]) -> Iterable[int]:
         return empty_gen()
 
 
-def is_consecutive(
-        ints: Iterable[int],
-        ignore_order: bool = False
-) -> bool:
+def is_consecutive(ints: Iterable[int], ignore_order: bool = False) -> bool:
     ints = tuple(ints)
     if not ints:
         return True
@@ -224,10 +222,7 @@ def is_consecutive(
     if ignore_order:
         # Source: https://stackoverflow.com/a/64177833/5811400
         r = range(min(ints), max(ints) + 1)
-        return (
-            len(ints) == len(r)
-            and funcy.all(ints.__contains__, r)
-        )
+        return len(ints) == len(r) and funcy.all(ints.__contains__, r)
     else:
         r = range(ints[0], ints[-1] + 1)
         return ints == tuple(r)
@@ -243,36 +238,39 @@ def merge_dicts(*dict_args: Mapping, latter_precedence: bool = True) -> dict:
 def partial_isinstance(type_: Type) -> Callable[[Any], bool]:
     def wrapped(x) -> bool:
         return isinstance(x, type_)
+
     return wrapped
 
 
 def one_factor_at_a_time(
     iterables: Iterable[Iterable],
     default_indices: Iterable[int] = tuple(),
-    skip_repeated: bool = True
+    skip_repeated: bool = True,
 ) -> Iterator[tuple]:
     '''
-        >>> one_factor_at_a_time(
-            [
-                [1, 2, 3],
-                'rohan',
-                ['alpha', 'beta']
-            ],
-            default_indices=[1, 3] # equivalent to default_indices = (1, 3, 0)
-        )
-        [(1, 'a', 'alpha'),
-        (2, 'a', 'alpha'),
-        (3, 'a', 'alpha'),
-        (2, 'r', 'alpha'),
-        (2, 'o', 'alpha'),
-        (2, 'h', 'alpha'),
-        (2, 'a', 'alpha'),
-        (2, 'n', 'alpha'),
-        (2, 'a', 'alpha'),
-        (2, 'a', 'beta')]
+    >>> one_factor_at_a_time(
+        [
+            [1, 2, 3],
+            'rohan',
+            ['alpha', 'beta']
+        ],
+        default_indices=[1, 3] # equivalent to default_indices = (1, 3, 0)
+    )
+    [(1, 'a', 'alpha'),
+    (2, 'a', 'alpha'),
+    (3, 'a', 'alpha'),
+    (2, 'r', 'alpha'),
+    (2, 'o', 'alpha'),
+    (2, 'h', 'alpha'),
+    (2, 'a', 'alpha'),
+    (2, 'n', 'alpha'),
+    (2, 'a', 'alpha'),
+    (2, 'a', 'beta')]
     '''
     default_indices = tuple(default_indices)
-    default_indices = default_indices + (0,)*(len(iterables) - len(default_indices))
+    default_indices = default_indices + (0,) * (
+        len(iterables) - len(default_indices)
+    )
 
     if skip_repeated:
         yield tuple(
@@ -290,8 +288,8 @@ def one_factor_at_a_time(
         tail = tuple(
             tail[tail_idx]
             for tail, tail_idx in zip(
-                iterables[iterable_index +
-                          1:], default_indices[iterable_index+1:]
+                iterables[iterable_index + 1 :],
+                default_indices[iterable_index + 1 :],
             )
         )
         if skip_repeated:
@@ -305,11 +303,13 @@ def one_factor_at_a_time(
 
 def combine_dict(
     dct: Mapping[Any, Iterable],
-    gen: Optional[Callable[[list], Iterable[Iterable]]] = None
+    gen: Optional[Callable[[list], Iterable[Iterable]]] = None,
 ) -> Iterator[dict]:
     if gen is None:
+
         def default_gen(x):
             return product(*x)
+
         gen = default_gen
 
     keys, iterables = unzip(dct.items())
@@ -317,9 +317,7 @@ def combine_dict(
     iterables = list(iterables)
 
     for combination in gen(iterables):
-        yield dict(
-            zip(keys, combination)
-        )
+        yield dict(zip(keys, combination))
 
 
 def dict_product(**kwargs: Mapping) -> Iterator[dict]:
@@ -364,6 +362,7 @@ class inclusive_bidict(dict):
 
     Source: <https://stackoverflow.com/a/21894086/5811400>
     '''
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.inverse = {}
@@ -390,10 +389,7 @@ def extract_keys(d, value, cmp=operator.eq):
 
 
 def map_keys(dct, key_map):
-    return {
-        v: dct[k]
-        for k, v in key_map.items()
-    }
+    return {v: dct[k] for k, v in key_map.items()}
 
 
 class KeyedDefaultDict(defaultdict):
@@ -415,9 +411,9 @@ def is_dataclass_class(type_) -> bool:
 
 
 def dataclass_from_mapping(
-        mapping: Mapping[str, Any],
-        dataclass_factory: Callable[..., _T],
-        key_map: Optional[Union[DataClass, Mapping[str, str]]] = None
+    mapping: Mapping[str, Any],
+    dataclass_factory: Callable[..., _T],
+    key_map: Optional[Union[DataClass, Mapping[str, str]]] = None,
 ) -> _T:
     if not is_dataclass_class(dataclass_factory):
         raise ValueError('*dataclass_factory* must be a dataclass.')
@@ -426,33 +422,22 @@ def dataclass_from_mapping(
 
     if key_map is None:
         return dataclass_factory(
-            **funcy.select_keys(
-                dataclass_field_names,
-                mapping
-            )
+            **funcy.select_keys(dataclass_field_names, mapping)
         )
     else:
         if is_dataclass_instance(key_map):
             key_map = dataclassy.as_dict(key_map)
 
-        key_map = funcy.select_keys(
-            dataclass_field_names,
-            key_map
-        )
+        key_map = funcy.select_keys(dataclass_field_names, key_map)
         translator = invert_dict(key_map).get
         mapping = {
-            translator(key, key): value
-            for key, value in mapping.items()
+            translator(key, key): value for key, value in mapping.items()
         }
-        return dataclass_from_mapping(
-            mapping,
-            dataclass_factory
-        )
+        return dataclass_from_mapping(mapping, dataclass_factory)
 
 
 def to_parent_dataclass(
-        obj: DataClass,
-        parent: Callable[..., DataClass]
+    obj: DataClass, parent: Callable[..., DataClass]
 ) -> DataClass:
     if not is_dataclass_class(parent):
         raise ValueError('*parent* must be a dataclass.')
@@ -463,10 +448,7 @@ def to_parent_dataclass(
     if not isinstance(obj, parent):
         raise ValueError('*obj* must be an instance of *parent*.')
 
-    return dataclass_from_mapping(
-        dataclassy.as_dict(obj),
-        parent
-    )
+    return dataclass_from_mapping(dataclassy.as_dict(obj), parent)
 
 
 def concatenate_dataframes(dfs: Iterable[pd.DataFrame]) -> pd.DataFrame:
@@ -479,10 +461,9 @@ def concatenate_dataframes(dfs: Iterable[pd.DataFrame]) -> pd.DataFrame:
     dfs = tuple(dfs)
 
     # Iterate on categorical columns common to all dfs
-    for col in set.intersection(*(
-            set(df.select_dtypes(include='category').columns)
-            for df in dfs
-    )):
+    for col in set.intersection(
+        *(set(df.select_dtypes(include='category').columns) for df in dfs)
+    ):
         # Generate the union category across dfs for this column
         uc = pd.api.types.union_categoricals(tuple(df[col] for df in dfs))
         # Change to union category for all dataframes
@@ -491,7 +472,9 @@ def concatenate_dataframes(dfs: Iterable[pd.DataFrame]) -> pd.DataFrame:
     return pd.concat(dfs)
 
 
-def dataframe_categories_to_int(df: pd.DataFrame, inplace: bool = False) -> pd.DataFrame:
+def dataframe_categories_to_int(
+    df: pd.DataFrame, inplace: bool = False
+) -> pd.DataFrame:
     # See <https://www.tensorflow.org/tutorials/load_data/pandas_dataframe> for the reasoning behind this
 
     if not inplace:
@@ -512,7 +495,7 @@ def print_header(
     s: str,
     level: int = 0,
     levels: Sequence[str] = ('#', '=', '-', '~', '^', '*', '+'),
-    verbose: bool = True
+    verbose: bool = True,
 ) -> None:
     """Standardized method for printing a section header.
 
@@ -562,12 +545,12 @@ def shorten_path(path, max_parts=None, max_len=None, prefix='...'):
 
 # ---------------------------------- Plotting functions ----------------------------------
 def prepare_fig(
-        n_cols: Optional[int] = None,
-        n_rows: Optional[int] = None,
-        n_elems: Optional[int] = None,
-        fig_size: Optional[Union[str, Tuple[int, int]]] = None,
-        subfig_size: Optional[Union[str, Tuple[int, int]]] = None,
-        tight_layout: bool = True
+    n_cols: Optional[int] = None,
+    n_rows: Optional[int] = None,
+    n_elems: Optional[int] = None,
+    fig_size: Optional[Union[str, Tuple[int, int]]] = None,
+    subfig_size: Optional[Union[str, Tuple[int, int]]] = None,
+    tight_layout: bool = True,
 ) -> dict:
     """Resize figure and calculate the number of rows and columns in the subplot grid.
 
@@ -588,15 +571,17 @@ def prepare_fig(
     """
     if (fig_size, subfig_size).count(None) != 1:
         raise ValueError(
-            'exactly one of *figsize* and *subfig_size* must be *None*')
+            'exactly one of *figsize* and *subfig_size* must be *None*'
+        )
     if (n_cols, n_rows, n_elems).count(None) != 1:
         raise ValueError(
-            'exactly one of *n_cols*, *n_rows* and *n_elems* must be *None*')
+            'exactly one of *n_cols*, *n_rows* and *n_elems* must be *None*'
+        )
 
     if n_rows is None:
-        n_rows = (n_elems-1)//n_cols + 1
+        n_rows = (n_elems - 1) // n_cols + 1
     elif n_cols is None:
-        n_cols = (n_elems-1)//n_rows + 1
+        n_cols = (n_elems - 1) // n_rows + 1
     grid_size = (n_rows, n_cols)
 
     def validate(size: _T) -> Union[_T, Tuple[int, int]]:
@@ -619,7 +604,7 @@ def prepare_fig(
         subfig_size = validate(subfig_size)
         fig_size = (
             grid_size[1] * subfig_size[0],
-            grid_size[0] * subfig_size[1]
+            grid_size[0] * subfig_size[1],
         )
 
     plt.rcParams['figure.figsize'] = fig_size
@@ -637,24 +622,21 @@ def prepare_fig(
 
 
 def json_equivalent(
-        lhs,
-        rhs,
-        encoder: Optional[Type] = None,
-        decoder: Optional[Type] = None,
-        dumps: Callable[[_T], str] = json.dumps,
-        loads: Callable[[str], Any] = json.loads
+    lhs,
+    rhs,
+    encoder: Optional[Type] = None,
+    decoder: Optional[Type] = None,
+    dumps: Callable[[_T], str] = json.dumps,
+    loads: Callable[[str], Any] = json.loads,
 ) -> bool:
     # ignore parameter *cls* when it is *None*
-    dumps = pack(cls=encoder).partial(dumps)
-    loads = pack(cls=decoder).partial(loads)
+    dumps = P(cls=encoder).partial(dumps)
+    loads = P(cls=decoder).partial(loads)
 
     lhs_str = dumps(lhs)
     rhs_str = dumps(rhs)
 
-    return (
-        (lhs_str == rhs_str)
-        or (loads(lhs_str) == loads(rhs_str))
-    )
+    return (lhs_str == rhs_str) or (loads(lhs_str) == loads(rhs_str))
 
 
 # ---------------------------------- Iteration ----------------------------------
@@ -676,6 +658,7 @@ def transpose(iterable: _T) -> Iterable[Tuple[_T, ...]]:
 def projection(*indices):
     def wrapped(*args):
         return tuple(args[i] for i in indices)
+
     return wrapped
 
 
@@ -692,41 +675,30 @@ def drop_last(iterable):
 
 
 def replace_last(iterable, last_value):
-    return append(
-        drop_last(iterable),
-        last_value
-    )
+    return append(drop_last(iterable), last_value)
 
 
 # ---------------------------------- Path ----------------------------------
 def relative_path(origin, destination):
     from os.path import relpath
+
     return relpath(destination, start=origin)
 
 
-def ensure_resolved(
-        path: PathLike,
-        root: Optional[PathLike] = None
-) -> Path:
+def ensure_resolved(path: PathLike, root: Optional[PathLike] = None) -> Path:
     path = Path(path)
     if root is not None and not path.is_absolute():
         path = Path(root) / path
     return path.resolve()
 
 
-def ensure_dir(
-        path: PathLike,
-        root: Optional[PathLike] = None
-) -> Path:
+def ensure_dir(path: PathLike, root: Optional[PathLike] = None) -> Path:
     path = ensure_resolved(path, root=root)
     path.mkdir(exist_ok=True, parents=True)
     return path
 
 
-def ensure_parent(
-        path: PathLike,
-        root: Optional[PathLike] = None
-) -> Path:
+def ensure_parent(path: PathLike, root: Optional[PathLike] = None) -> Path:
     path = ensure_resolved(path, root=root)
     path.parent.mkdir(exist_ok=True, parents=True)
     return path
@@ -757,10 +729,10 @@ def is_parent_dir(parent: PathLike, subdir: PathLike) -> bool:
 
 # Source: https://stackoverflow.com/a/57892171/5811400
 def rmdir(
-        path: PathLike,
-        recursive: bool = False,
-        keep: bool = False,
-        missing_ok: bool = False
+    path: PathLike,
+    recursive: bool = False,
+    keep: bool = False,
+    missing_ok: bool = False,
 ) -> None:
     path = ensure_resolved(path)
 
@@ -769,7 +741,8 @@ def rmdir(
             return
         else:
             raise NotADirectoryError(
-                f'path is expected to be a directory when missing_ok={missing_ok}. Got {path}')
+                f'path is expected to be a directory when missing_ok={missing_ok}. Got {path}'
+            )
 
     if recursive:
         for child in path.iterdir():
@@ -799,7 +772,8 @@ def dir_as_tree(dir_path, file_pred=None, dir_pred=None):
             ret_list.append(path)
         elif path.is_dir() and (dir_pred is None or dir_pred(path)):
             ret_dict[path.name] = dir_as_tree(
-                path, file_pred=file_pred, dir_pred=dir_pred)
+                path, file_pred=file_pred, dir_pred=dir_pred
+            )
 
     return ret_list, ret_dict
 
@@ -819,9 +793,11 @@ def count_file_lines(path):
 
 @contextmanager
 def tempdir(suffix=None, prefix=None, dir=None):
-    dirpath = Path(
-        tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir)
-    ).resolve().absolute()
+    dirpath = (
+        Path(tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir))
+        .resolve()
+        .absolute()
+    )
 
     try:
         yield dirpath
@@ -834,23 +810,23 @@ def nullcontext(enter_result=None):
     yield enter_result
 
 
-def JSONDict(path: PathLike, dumps: Callable[[_T], str], loads: Callable[[str], _T]) -> zict.Func:
+def JSONDict(
+    path: PathLike, dumps: Callable[[_T], str], loads: Callable[[str], _T]
+) -> zict.Func:
     path = ensure_dir(path)
     file = zict.File(path, mode='a')
-    compress = zict.Func(
-        zlib.compress,
-        zlib.decompress,
-        file
-    )
+    compress = zict.Func(zlib.compress, zlib.decompress, file)
     data = zict.Func(
         lambda obj: dumps(obj).encode('utf-8'),
         lambda byte_obj: loads(byte_obj.decode('utf-8')),
-        compress
+        compress,
     )
     return data
 
 
-def fix_path(path: PathLike, substitution_dict: Optional[Dict[str, str]] = None) -> Path:
+def fix_path(
+    path: PathLike, substitution_dict: Optional[Dict[str, str]] = None
+) -> Path:
     path = ensure_resolved(path)
     path_str = str(path)
 
@@ -895,11 +871,17 @@ def simple_pprint(self, obj, stream, indent, allowance, context, level):
     write = stream.write
 
     class_name = obj.__class__.__name__
-    write(class_name + "(")
+    write(class_name + '(')
     _format_kwarg_dict_items(
-        self, obj.__dict__.copy().items(), stream, indent + len(class_name), allowance + 1, context, level
+        self,
+        obj.__dict__.copy().items(),
+        stream,
+        indent + len(class_name),
+        allowance + 1,
+        context,
+        level,
     )
-    write(")")
+    write(')')
 
 
 def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
@@ -911,7 +893,7 @@ def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
         write = stream.write
 
         class_name = obj.__class__.__name__
-        write(class_name + "(")
+        write(class_name + '(')
 
         if names is None:
             obj_items = obj.__dict__.copy().items()
@@ -925,13 +907,22 @@ def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
             obj_items = zip(names, values)
 
         _format_kwarg_dict_items(
-            self, obj_items, stream, indent + len(class_name), allowance + 1, context, level
+            self,
+            obj_items,
+            stream,
+            indent + len(class_name),
+            allowance + 1,
+            context,
+            level,
         )
-        write(")")
+        write(')')
+
     return simple_pprint
 
 
-def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, level):
+def _format_kwarg_dict_items(
+    self, items, stream, indent, allowance, context, level
+):
     '''
     Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
     '''
@@ -943,9 +934,12 @@ def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, le
         write(key)
         write('=')
         self._format(
-            ent, stream, indent + len(key) + 1,
+            ent,
+            stream,
+            indent + len(key) + 1,
             allowance if last else 1,
-            context, level
+            context,
+            level,
         )
         if not last:
             write(delimnl)
@@ -977,14 +971,14 @@ class FrozenNamedMixin:
 
 class SimpleRepr:
     """A mixin implementing a simple __repr__."""
+
     # Source: <https://stackoverflow.com/a/44595303/5811400>
 
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
         address = id(self) & 0xFFFFFF
         attrs = ', '.join(
-            f'{key}={value!r}'
-            for key, value in self.__dict__.items()
+            f'{key}={value!r}' for key, value in self.__dict__.items()
         )
 
         return f'<{class_name} @{address:x} {attrs}>'
@@ -994,8 +988,7 @@ class SimpleStr:
     def __str__(self) -> str:
         class_name = self.__class__.__name__
         attrs = ', '.join(
-            f'{key}={value}'
-            for key, value in self.__dict__.items()
+            f'{key}={value}' for key, value in self.__dict__.items()
         )
 
         return f'{class_name}({attrs})'
@@ -1015,6 +1008,7 @@ class DictEq:
 
 # ---------------------------------- Timing ----------------------------------
 
+
 def get_timestamp(fmt='%Y-%m-%dT%H:%M:%SZ'):
     return datetime.datetime.now().strftime(fmt)
 
@@ -1025,7 +1019,9 @@ class NoValueEnum(enum.Enum):
         return '<%s.%s>' % (self.__class__.__name__, self.name)
 
 
-def enum_item(enumeration: Type[_EnumType], item: Union[_EnumType, int, str]) -> _EnumType:
+def enum_item(
+    enumeration: Type[_EnumType], item: Union[_EnumType, int, str]
+) -> _EnumType:
     if isinstance(item, str):
         return enumeration[item]
     elif isinstance(item, int):

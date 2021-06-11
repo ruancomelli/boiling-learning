@@ -8,6 +8,7 @@ def chunkify(index, chunk_size):
     max_index = min_index + chunk_size - 1
     return min_index, max_index
 
+
 for subcase in case.frames_path.iterdir():
     boiling_learning.utils.print_header(subcase)
     for old_path in subcase.iterdir():

@@ -1,5 +1,12 @@
-from tensorflow.keras.layers import (Activation, Conv2D, Dense, Dropout,
-                                     Flatten, Input, MaxPool2D)
+from tensorflow.keras.layers import (
+    Activation,
+    Conv2D,
+    Dense,
+    Dropout,
+    Flatten,
+    Input,
+    MaxPool2D,
+)
 from tensorflow.keras.models import Model
 
 from boiling_learning.management import ElementCreator
@@ -16,18 +23,54 @@ def build(
 ):
     input_data = Input(shape=input_shape)
 
-    x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
-    x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
+    x = Conv2D(
+        64,
+        (3, 3),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(input_data)
+    x = Conv2D(
+        64,
+        (3, 3),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
 
-    x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
-    x = Conv2D(64, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
+    x = Conv2D(
+        64,
+        (3, 3),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(input_data)
+    x = Conv2D(
+        64,
+        (3, 3),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
 
-    x = Conv2D(128, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(input_data)
-    x = Conv2D(128, (3, 3), padding='same', activation='relu', dtype=hidden_layers_policy)(x)
+    x = Conv2D(
+        128,
+        (3, 3),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(input_data)
+    x = Conv2D(
+        128,
+        (3, 3),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout_ratio, dtype=hidden_layers_policy)(x)
 
@@ -59,5 +102,5 @@ creator = ElementCreator(
         problem=ProblemType.REGRESSION,
         fetch=['model', 'history'],
     ),
-    expand_params=True
+    expand_params=True,
 )

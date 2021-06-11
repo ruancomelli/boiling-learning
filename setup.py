@@ -38,27 +38,17 @@ setup(
     author_email='ruancomelli@gmail.com',
     maintainer='Ruan Cardoso Comelli',
     maintainer_email='ruancomelli@gmail.com',
-
-    description="A project for learning heat flux estimation from boiling images.",
+    description='A project for learning heat flux estimation from boiling images.',
     long_description=README,
-    long_description_content_type="text/markdown",
-
+    long_description_content_type='text/markdown',
     url=f'https://github.com/{author}/{project_name}',
     download_url=f'https://github.com/{author}/{project_name}/dist/{project_name}-{VERSION}.tar.gz',
-
     license='proprietary',
-
-    python_requires='==3.6',
+    python_requires='>=3.7',
     packages=find_packages(),
-
     install_requires=REQUIRES,
     extras_require=EXTRAS_REQUIRE,
-
-    keywords=[
-        'boiling',
-        'cnn',
-        'convolutional-neural-network'
-    ],
+    keywords=['boiling', 'cnn', 'convolutional-neural-network'],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
@@ -67,13 +57,15 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Image Processing',
         'Topic :: Scientific/Engineering :: Image Recognition',
-        'Topic :: Scientific/Engineering :: Physics'
+        'Topic :: Scientific/Engineering :: Physics',
     ],
-
     project_urls={
         'Documentation': f'https://github.com/{author}/{project_name}/blob/main/README.md',
         'Source': f'https://github.com/{author}/{project_name}',

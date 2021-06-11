@@ -1,5 +1,4 @@
 from importlib import import_module
-import json
 from typing import Any, Dict, TypeVar
 
 from plum import Dispatcher
@@ -26,7 +25,7 @@ def json_serialize(obj: Any) -> Dict[str, Any]:
     return {
         'module': type(obj).__module__,
         'type': type(obj).__qualname__,
-        'contents': json_encode(obj)
+        'contents': json_encode(obj),
     }
 
 

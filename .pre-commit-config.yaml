@@ -1,0 +1,47 @@
+repos:
+- repo: https://github.com/humitos/mirrors-autoflake
+  rev: v1.3
+  hooks:
+  - id: autoflake
+    args: [
+      '--in-place',
+      '--expand-star-imports',
+      '--remove-all-unused-imports',
+      '--ignore-init-module-imports',
+      '--remove-duplicate-keys',
+      '--remove-unused-variables'
+    ]
+- repo: https://github.com/psf/black
+  rev: 21.5b1
+  hooks:
+  - id: black
+- repo: https://github.com/pycqa/isort
+  rev: 5.8.0
+  hooks:
+  - id: isort
+    name: isort (python)
+  - id: isort
+    name: isort (cython)
+    types: [cython]
+  - id: isort
+    name: isort (pyi)
+    types: [pyi]
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.0.1
+  hooks:
+  - id: double-quote-string-fixer
+  - id: end-of-file-fixer
+  - id: requirements-txt-fixer
+  - id: trailing-whitespace
+  - id: check-ast
+- repo: https://github.com/pycqa/flake8
+  rev: 3.9.2
+  hooks:
+  - id: flake8
+    args: [
+      '--count',
+      '--select=E71,E73,E74,E9,F63,F7,F82,F83',
+      '--show-source',
+      '--statistics',
+      'boiling_learning'
+    ]

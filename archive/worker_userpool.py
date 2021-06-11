@@ -12,10 +12,10 @@ user_pool = bl.utils.worker.DynamicUserPool(
         'pucacomelli@gmail.com',
         'jmcardoso1944@gmail.com',
         'AZULA',
-        'LEPTEN'
+        'LEPTEN',
     ],
     reset=reset_user_pool,
-    overwrite=overwrite_user_pool_state
+    overwrite=overwrite_user_pool_state,
 )
 user_pool.stamp_ticket()
 

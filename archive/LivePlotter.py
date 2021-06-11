@@ -8,7 +8,7 @@ class LivePlotter:
 
         self.pause_time = 1.0
         self.lines = {}
-        
+
         if ax is None:
             self.fig = plt.figure()
         else:
@@ -22,11 +22,17 @@ class LivePlotter:
         self.kwargs = kwargs
 
     def update_limits(self, x, y):
-        if np.min(x) <= self.ax.get_ylim()[0] or np.max(x) >= self.ax.get_ylim()[1]:
-            self.ax.set_xlim(([np.min(x)-np.std(x), np.max(x)+np.std(x)]))
+        if (
+            np.min(x) <= self.ax.get_ylim()[0]
+            or np.max(x) >= self.ax.get_ylim()[1]
+        ):
+            self.ax.set_xlim(([np.min(x) - np.std(x), np.max(x) + np.std(x)]))
 
-        if np.min(y) <= self.ax.get_ylim()[0] or np.max(y) >= self.ax.get_ylim()[1]:
-            self.ax.set_ylim(([np.min(y)-np.std(y),np.max(y)+np.std(y)]))
+        if (
+            np.min(y) <= self.ax.get_ylim()[0]
+            or np.max(y) >= self.ax.get_ylim()[1]
+        ):
+            self.ax.set_ylim(([np.min(y) - np.std(y), np.max(y) + np.std(y)]))
 
     def update(self, x, y, i=-1):
         # self.ax.plot(x, y, *self.args, **self.kwargs)

@@ -1,5 +1,15 @@
-from typing import (Any, Callable, Iterable, List, Mapping, Optional, Sequence,
-                    Tuple, TypeVar, Union)
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import bokeh.models
 import bokeh.plotting
@@ -10,7 +20,6 @@ import more_itertools as mit
 import numpy as np
 import tensorflow as tf
 from frozendict import frozendict
-from ipywidgets import interact, widgets
 from matplotlib import gridspec
 from matplotlib.colors import NoNorm
 
@@ -19,144 +28,218 @@ from boiling_learning.management import Manager
 from boiling_learning.preprocessing.Case import Case
 from boiling_learning.preprocessing.ExperimentVideo import ExperimentVideo
 from boiling_learning.preprocessing.ImageDataset import ImageDataset
-from boiling_learning.preprocessing.transformers import (DictImageTransformer,
-                                                         Transformer)
-from boiling_learning.utils.functional import Pack, nth_arg, pack
+from boiling_learning.preprocessing.transformers import (
+    DictImageTransformer,
+    Transformer,
+)
+from boiling_learning.utils.functional import P, Pack, nth_arg
 from boiling_learning.utils.Parameters import Parameters
 
 _T = TypeVar('_T')
 ImageType = Any
 
-DEFAULT_ANNOTATORS = frozendict({
-    'grayscaler': None,
-    'normalizer': None,
-    'downscaler': None,
-    'boiling_region_cropper': lambda transformer, image, fig: fig.rect(
-        x=(transformer.pack.kwargs['left'] + transformer.pack.kwargs['right'])/2,
-        y=-(transformer.pack.kwargs['bottom'] + transformer.pack.kwargs['top'])/2,
-        width=transformer.pack.kwargs['right'] - transformer.pack.kwargs['left'],
-        height=transformer.pack.kwargs['bottom'] - transformer.pack.kwargs['top'],
-        fill_alpha=0.3,
-        fill_color='royalblue'
-    ),
-    'visualization_shrinker': lambda transformer, image, fig: fig.rect(
-        x=image.shape[1]/2,
-        y=-image.shape[0] * (1 - transformer.pack.kwargs['bottom'])/2,
-        width=image.shape[1],
-        height=image.shape[0] * (1 - transformer.pack.kwargs['bottom']),
-        fill_alpha=0.3,
-        fill_color='yellow'
-    ),
-    'final_height_shrinker': lambda transformer, image, fig: fig.rect(
-        x=(
-            transformer.pack.kwargs['left']
-            + (
-                image.shape[1]
-                - (transformer.pack.kwargs['right'] + transformer.pack.kwargs['left'])
-            )/2
+DEFAULT_ANNOTATORS = frozendict(
+    {
+        'grayscaler': None,
+        'normalizer': None,
+        'downscaler': None,
+        'boiling_region_cropper': lambda transformer, image, fig: fig.rect(
+            x=(
+                transformer.pack.kwargs['left']
+                + transformer.pack.kwargs['right']
+            )
+            / 2,
+            y=-(
+                transformer.pack.kwargs['bottom']
+                + transformer.pack.kwargs['top']
+            )
+            / 2,
+            width=transformer.pack.kwargs['right']
+            - transformer.pack.kwargs['left'],
+            height=transformer.pack.kwargs['bottom']
+            - transformer.pack.kwargs['top'],
+            fill_alpha=0.3,
+            fill_color='royalblue',
         ),
-        y=-image.shape[0] + transformer.pack.kwargs['bottom'] + transformer.pack.kwargs['height']/2,
-        width=image.shape[1] - (transformer.pack.kwargs['right'] + transformer.pack.kwargs['left']),
-        height=transformer.pack.kwargs['height'],
-        fill_alpha=0.3,
-        fill_color='red'
-    ),
-    'random_cropper': lambda transformer, image, fig: fig.rect(
-        x=image.shape[1]/2,
-        y=-image.shape[0]/2,
-        width=transformer.pack.args[0][1],
-        height=image.shape[0],
-        fill_alpha=0.3,
-        fill_color='green'
-    ),
-    'random_left_right_flipper': None,
-    'random_brightness': None,
-    'random_contrast': None,
-    'random_quality': None
-})
+        'visualization_shrinker': lambda transformer, image, fig: fig.rect(
+            x=image.shape[1] / 2,
+            y=-image.shape[0] * (1 - transformer.pack.kwargs['bottom']) / 2,
+            width=image.shape[1],
+            height=image.shape[0] * (1 - transformer.pack.kwargs['bottom']),
+            fill_alpha=0.3,
+            fill_color='yellow',
+        ),
+        'final_height_shrinker': lambda transformer, image, fig: fig.rect(
+            x=(
+                transformer.pack.kwargs['left']
+                + (
+                    image.shape[1]
+                    - (
+                        transformer.pack.kwargs['right']
+                        + transformer.pack.kwargs['left']
+                    )
+                )
+                / 2
+            ),
+            y=-image.shape[0]
+            + transformer.pack.kwargs['bottom']
+            + transformer.pack.kwargs['height'] / 2,
+            width=image.shape[1]
+            - (
+                transformer.pack.kwargs['right']
+                + transformer.pack.kwargs['left']
+            ),
+            height=transformer.pack.kwargs['height'],
+            fill_alpha=0.3,
+            fill_color='red',
+        ),
+        'random_cropper': lambda transformer, image, fig: fig.rect(
+            x=image.shape[1] / 2,
+            y=-image.shape[0] / 2,
+            width=transformer.pack.args[0][1],
+            height=image.shape[0],
+            fill_alpha=0.3,
+            fill_color='green',
+        ),
+        'random_left_right_flipper': None,
+        'random_brightness': None,
+        'random_contrast': None,
+        'random_quality': None,
+    }
+)
 
 _first_arg_getter = Transformer('first_argument', nth_arg(0))
 
-DEFAULT_VISUALIZERS = frozendict({
-    'grayscaler': lambda transformer, image: ((transformer.transform_image, image, transformer.pack),),
-    'normalizer': lambda transformer, image: ((transformer.transform_image, image, transformer.pack),),
-    'downscaler': lambda transformer, image: ((transformer.transform_image, image, transformer.pack),),
-    'boiling_region_cropper': lambda transformer, image: ((transformer.transform_image, image, transformer.pack),),
-    'visualization_shrinker': lambda transformer, image: ((transformer.transform_image, image, transformer.pack),),
-    'final_height_shrinker': lambda transformer, image: ((transformer.transform_image, image, transformer.pack),),
-    'random_cropper': lambda transformer, image: ((transformer.transform_image, image, transformer.pack),),
-    'random_left_right_flipper': lambda transformer, image: (
-        (_first_arg_getter, image, Pack()),
-        (Transformer('left_right_flipper', tf.image.flip_left_right), image, Pack())
-    ),
-    'random_brightness': lambda transformer, image: (
-        (_first_arg_getter, image, Pack()),
-        (
-            Transformer('brightness_adjuster', tf.image.adjust_brightness, pack=pack(transformer.pack.args[0])),
-            image,
-            pack(transformer.pack.args[0])
+DEFAULT_VISUALIZERS = frozendict(
+    {
+        'grayscaler': lambda transformer, image: (
+            (transformer.transform_image, image, transformer.pack),
         ),
-        (
-            Transformer('brightness_adjuster', tf.image.adjust_brightness, pack=pack(transformer.pack.args[1])),
-            image,
-            pack(transformer.pack.args[1])
-        )
-    ),
-    'random_contrast': lambda transformer, image: (
-        (_first_arg_getter, image, Pack()),
-        (
-            Transformer('contrast_adjuster', tf.image.adjust_contrast, pack=pack(transformer.pack.args[0])),
-            image,
-            pack(transformer.pack.args[0])
+        'normalizer': lambda transformer, image: (
+            (transformer.transform_image, image, transformer.pack),
         ),
-        (
-            Transformer('contrast_adjuster', tf.image.adjust_contrast, pack=pack(transformer.pack.args[1])),
-            image,
-            pack(transformer.pack.args[1])
-        )
-    ),
-    'random_quality': lambda transformer, image: (
-        (_first_arg_getter, image, Pack()),
-        (
-            Transformer('jpeg_quality_adjuster', tf.image.adjust_jpeg_quality, pack=pack(transformer.pack.args[0])),
-            image,
-            pack(transformer.pack.args[0])
+        'downscaler': lambda transformer, image: (
+            (transformer.transform_image, image, transformer.pack),
         ),
-        (
-            Transformer('jpeg_quality_adjuster', tf.image.adjust_jpeg_quality, pack=pack(transformer.pack.args[1])),
-            image,
-            pack(transformer.pack.args[1])
-        )
-    )
-})
+        'boiling_region_cropper': lambda transformer, image: (
+            (transformer.transform_image, image, transformer.pack),
+        ),
+        'visualization_shrinker': lambda transformer, image: (
+            (transformer.transform_image, image, transformer.pack),
+        ),
+        'final_height_shrinker': lambda transformer, image: (
+            (transformer.transform_image, image, transformer.pack),
+        ),
+        'random_cropper': lambda transformer, image: (
+            (transformer.transform_image, image, transformer.pack),
+        ),
+        'random_left_right_flipper': lambda transformer, image: (
+            (_first_arg_getter, image, P()),
+            (
+                Transformer('left_right_flipper', tf.image.flip_left_right),
+                image,
+                P(),
+            ),
+        ),
+        'random_brightness': lambda transformer, image: (
+            (_first_arg_getter, image, P()),
+            (
+                Transformer(
+                    'brightness_adjuster',
+                    tf.image.adjust_brightness,
+                    pack=P(transformer.pack.args[0]),
+                ),
+                image,
+                P(transformer.pack.args[0]),
+            ),
+            (
+                Transformer(
+                    'brightness_adjuster',
+                    tf.image.adjust_brightness,
+                    pack=P(transformer.pack.args[1]),
+                ),
+                image,
+                P(transformer.pack.args[1]),
+            ),
+        ),
+        'random_contrast': lambda transformer, image: (
+            (_first_arg_getter, image, P()),
+            (
+                Transformer(
+                    'contrast_adjuster',
+                    tf.image.adjust_contrast,
+                    pack=P(transformer.pack.args[0]),
+                ),
+                image,
+                P(transformer.pack.args[0]),
+            ),
+            (
+                Transformer(
+                    'contrast_adjuster',
+                    tf.image.adjust_contrast,
+                    pack=P(transformer.pack.args[1]),
+                ),
+                image,
+                P(transformer.pack.args[1]),
+            ),
+        ),
+        'random_quality': lambda transformer, image: (
+            (_first_arg_getter, image, P()),
+            (
+                Transformer(
+                    'jpeg_quality_adjuster',
+                    tf.image.adjust_jpeg_quality,
+                    pack=P(transformer.pack.args[0]),
+                ),
+                image,
+                P(transformer.pack.args[0]),
+            ),
+            (
+                Transformer(
+                    'jpeg_quality_adjuster',
+                    tf.image.adjust_jpeg_quality,
+                    pack=P(transformer.pack.args[1]),
+                ),
+                image,
+                P(transformer.pack.args[1]),
+            ),
+        ),
+    }
+)
 
 
 def visualize_transformations(
-        ev: ExperimentVideo,
-        idx: int,
-        transformers: Sequence[Transformer],
-        method: str,
-        visualizers: Mapping[
+    ev: ExperimentVideo,
+    idx: int,
+    transformers: Sequence[Transformer],
+    method: str,
+    visualizers: Mapping[
+        str,
+        Callable[
+            [Transformer, ImageType],
+            Sequence[Tuple[Transformer, ImageType, Pack]],
+        ],
+    ] = DEFAULT_VISUALIZERS,
+    annotators: Optional[
+        Mapping[
             str,
-            Callable[
-                [Transformer, ImageType],
-                Sequence[Tuple[Transformer, ImageType, Pack]]
-            ]
-        ] = DEFAULT_VISUALIZERS,
-        annotators: Optional[Mapping[
-            str,
-            Optional[Callable[
-                [Transformer, ImageType, bokeh.plotting.Figure],
-                bokeh.plotting.Figure
-            ]]
-        ]] = DEFAULT_ANNOTATORS,
-        plot_original: bool = True,
-        normalize: bool = False
+            Optional[
+                Callable[
+                    [Transformer, ImageType, bokeh.plotting.Figure],
+                    bokeh.plotting.Figure,
+                ]
+            ],
+        ]
+    ] = DEFAULT_ANNOTATORS,
+    plot_original: bool = True,
+    normalize: bool = False,
 ) -> Union[List[mpl.figure.Figure], List[bokeh.plotting.Figure]]:
-    METHODS = frozendict({
-        'plt': _visualize_transformations_plt,
-        'bokeh': _visualize_transformations_bokeh
-    })
+    METHODS = frozendict(
+        {
+            'plt': _visualize_transformations_plt,
+            'bokeh': _visualize_transformations_bokeh,
+        }
+    )
 
     if method in METHODS:
         return METHODS[method](
@@ -166,26 +249,26 @@ def visualize_transformations(
             visualizers=visualizers,
             annotators=annotators,
             plot_original=plot_original,
-            normalize=normalize
+            normalize=normalize,
         )
     else:
         raise ValueError(f'method must be one of {set(METHODS.keys())}')
 
 
 def _visualize_transformations_plt(
-        ev: ExperimentVideo,
-        idx: int,
-        transformers: Sequence[Transformer],
-        visualizers: Mapping[
-            str,
-            Callable[
-                [Transformer, ImageType],
-                Sequence[Tuple[Transformer, ImageType, Pack]]
-            ]
-        ] = DEFAULT_VISUALIZERS,
-        annotators=None,
-        plot_original: bool = True,
-        normalize: bool = False
+    ev: ExperimentVideo,
+    idx: int,
+    transformers: Sequence[Transformer],
+    visualizers: Mapping[
+        str,
+        Callable[
+            [Transformer, ImageType],
+            Sequence[Tuple[Transformer, ImageType, Pack]],
+        ],
+    ] = DEFAULT_VISUALIZERS,
+    annotators=None,
+    plot_original: bool = True,
+    normalize: bool = False,
 ) -> List[mpl.figure.Figure]:
     print('Transformers:', transformers)
 
@@ -207,7 +290,11 @@ def _visualize_transformations_plt(
         ax.set_title(visualization_title)
         figs.append(fig)
 
-    columns = range(1, n_transformers + 1) if plot_original else range(n_transformers)
+    columns = (
+        range(1, n_transformers + 1)
+        if plot_original
+        else range(n_transformers)
+    )
     for column, transformer in zip(columns, transformers):
         transformer_name = transformer.name
         print(transformer_name)
@@ -252,14 +339,15 @@ def _make_fig(image, *args, **kwargs):
     img_height = image.shape[0]
     img_width = image.shape[1]
     p = bokeh.plotting.figure(
-        *args, **kwargs,
+        *args,
+        **kwargs,
         tools=[hover_tool, bokeh.models.tools.CrosshairTool()],
         toolbar_location=None,
         x_range=(0, img_width),
         y_range=(-img_height, 0),
         match_aspect=True,
         plot_height=height,
-        plot_width=height*img_width//img_height,
+        plot_width=height * img_width // img_height,
     )
     image = np.flipud(image)
     p.image(image=[image], x=0, y=-img_height, dw=img_width, dh=img_height)
@@ -280,25 +368,27 @@ def _make_figs(f_img_packs, return_single_image: bool = False):
 
 
 def _visualize_transformations_bokeh(
-        ev: ExperimentVideo,
-        idx: int,
-        transformers: Sequence[Transformer],
-        visualizers: Mapping[
-            str,
+    ev: ExperimentVideo,
+    idx: int,
+    transformers: Sequence[Transformer],
+    visualizers: Mapping[
+        str,
+        Callable[
+            [Transformer, ImageType],
+            Sequence[Tuple[Transformer, ImageType, Pack]],
+        ],
+    ] = DEFAULT_VISUALIZERS,
+    annotators: Mapping[
+        str,
+        Optional[
             Callable[
-                [Transformer, ImageType],
-                Sequence[Tuple[Transformer, ImageType, Pack]]
-            ]
-        ] = DEFAULT_VISUALIZERS,
-        annotators: Mapping[
-            str,
-            Optional[Callable[
                 [Transformer, ImageType, bokeh.plotting.Figure],
-                bokeh.plotting.Figure
-            ]]
-        ] = DEFAULT_ANNOTATORS,
-        plot_original: bool = True,
-        normalize: bool = False
+                bokeh.plotting.Figure,
+            ]
+        ],
+    ] = DEFAULT_ANNOTATORS,
+    plot_original: bool = True,
+    normalize: bool = False,
 ) -> List[bokeh.plotting.Figure]:
     print('Transformers:', transformers)
 
@@ -328,10 +418,16 @@ def _visualize_transformations_bokeh(
             annotator(transformer, image, p)
 
         visualizer = visualizers[transformer_name]
-        p = _make_figs(visualizer(transformer, image), return_single_image=True)
-        p_canvas = bokeh.layouts.column(bokeh.models.Div(text=transformer_name), p)
+        p = _make_figs(
+            visualizer(transformer, image), return_single_image=True
+        )
+        p_canvas = bokeh.layouts.column(
+            bokeh.models.Div(text=transformer_name), p
+        )
         if first and not plot_original:
-            p_canvas = bokeh.layouts.row(bokeh.models.Div(text=visualization_title), p_canvas)
+            p_canvas = bokeh.layouts.row(
+                bokeh.models.Div(text=visualization_title), p_canvas
+            )
             # p.add_layout(Title(text=visualization_title, align='center'), 'left')
 
         image = transformer.transform_image(image)
@@ -342,20 +438,24 @@ def _visualize_transformations_bokeh(
 
 
 def visualize_dataset(
-        manager: Manager[tf.data.Dataset, tf.data.Dataset],
-        case_list: Iterable[Case],
-        params: Parameters,
-        load: Union[bool, Callable[[], Tuple[bool, _T]]] = False,
-        save: Union[bool, Callable[[Union[_T, Any]], Any]] = False,
-        n_samples_per_ev: int = 0
+    manager: Manager[tf.data.Dataset, tf.data.Dataset],
+    case_list: Iterable[Case],
+    params: Parameters,
+    load: Union[bool, Callable[[], Tuple[bool, _T]]] = False,
+    save: Union[bool, Callable[[Union[_T, Any]], Any]] = False,
+    n_samples_per_ev: int = 0,
 ) -> None:
     # See <https://stackoverflow.com/a/34934631/5811400> for plotting
     def _make_ds(params: Parameters) -> tf.data.Dataset:
         return manager.provide_elem(
-            creator_description=Pack(kwargs=params[['creator', 'desc']]),
-            creator_params=Pack(kwargs=params[['creator', 'value']]),
-            post_processor_description=Pack(kwargs=params[['post_processor', 'desc']]),
-            post_processor_params=Pack(kwargs=params[['post_processor', 'value']]),
+            creator_description=P(kwargs=params[['creator', 'desc']]),
+            creator_params=P(kwargs=params[['creator', 'value']]),
+            post_processor_description=P(
+                kwargs=params[['post_processor', 'desc']]
+            ),
+            post_processor_params=P(
+                kwargs=params[['post_processor', 'value']]
+            ),
             load=load,
             save=save,
         )
@@ -369,13 +469,19 @@ def visualize_dataset(
         img_ds_list = []
         for case in case_list:
             for ev in case.values():
-                img_ds = ImageDataset(ev.name, column_names=ev.column_names, column_types=ev.column_types)
+                img_ds = ImageDataset(
+                    ev.name,
+                    column_names=ev.column_names,
+                    column_types=ev.column_types,
+                )
                 img_ds.add(ev)
                 img_ds_list.append(img_ds)
         n_samples = n_samples_per_ev
 
     params[['creator', {'desc', 'value'}, 'dataset_size']] = n_samples
-    fig_spec = bl_utils.prepare_fig(n_cols=3, n_rows=len(img_ds_list), subfig_size='small')
+    fig_spec = bl_utils.prepare_fig(
+        n_cols=3, n_rows=len(img_ds_list), subfig_size='small'
+    )
     fig = plt.figure(figsize=fig_spec['fig_size'])
     outer = gridspec.GridSpec(fig_spec['n_rows'], fig_spec['n_cols'])
     for row, img_ds in enumerate(img_ds_list):
@@ -384,8 +490,10 @@ def visualize_dataset(
 
         ds = _make_ds(params)
         ds_train, ds_val, ds_test = ds
-        for col, (split_name, ds_split) in enumerate(zip(('train', 'val', 'test'), ds)):
-            elem = row*fig_spec['n_cols'] + col
+        for col, (split_name, ds_split) in enumerate(
+            zip(('train', 'val', 'test'), ds)
+        ):
+            elem = row * fig_spec['n_cols'] + col
             inner = gridspec.GridSpecFromSubplotSpec(
                 n_samples,
                 1,
@@ -393,7 +501,9 @@ def visualize_dataset(
                 # wspace=0.1,
                 # hspace=0.1
             )
-            for sample, (img, data) in enumerate(ds_split.take(n_samples).as_numpy_iterator()):
+            for sample, (img, data) in enumerate(
+                ds_split.take(n_samples).as_numpy_iterator()
+            ):
                 ax = plt.Subplot(fig, inner[sample])
                 img = np.squeeze(img)
                 ax.imshow(img, cmap='gray', norm=NoNorm())
@@ -404,15 +514,27 @@ def visualize_dataset(
 
                 if row == 0 and sample == 0:
                     ax.annotate(
-                        split_name, xy=(0.5, 1), xytext=(0, pad),
-                        xycoords='axes fraction', textcoords='offset points',
-                        size='large', ha='center', va='baseline')
+                        split_name,
+                        xy=(0.5, 1),
+                        xytext=(0, pad),
+                        xycoords='axes fraction',
+                        textcoords='offset points',
+                        size='large',
+                        ha='center',
+                        va='baseline',
+                    )
 
                 if col == 0:
                     ax.annotate(
-                        img_ds.name, xy=(0, 0.5), xytext=(-ax.yaxis.labelpad - pad, 0),
-                        xycoords=ax.yaxis.label, textcoords='offset points',
-                        size='large', ha='right', va='center')
+                        img_ds.name,
+                        xy=(0, 0.5),
+                        xytext=(-ax.yaxis.labelpad - pad, 0),
+                        xycoords=ax.yaxis.label,
+                        textcoords='offset points',
+                        size='large',
+                        ha='right',
+                        va='center',
+                    )
 
                 fig.add_subplot(ax)
                 fig.show()
