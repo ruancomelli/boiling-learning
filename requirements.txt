@@ -22,7 +22,7 @@ portion~=2.1.5
 ray==1.2.0
 requests~=2.23
 scikit-image~=0.17
-scipy~=1.5
+scipy~=1.6
 semver~=2.13
 sentinel~=0.3
 sortedcontainers~=2.3.0
