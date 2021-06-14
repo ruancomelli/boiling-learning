@@ -448,8 +448,8 @@ def visualize_dataset(
     # See <https://stackoverflow.com/a/34934631/5811400> for plotting
     def _make_ds(params: Parameters) -> tf.data.Dataset:
         return manager.provide_elem(
-            creator_description=P(kwargs=params[['creator', 'desc']]),
-            creator_params=P(kwargs=params[['creator', 'value']]),
+            creator_description=Pack(kwargs=params[['creator', 'desc']]),
+            creator_params=Pack(kwargs=params[['creator', 'value']]),
             post_processor_description=P(
                 kwargs=params[['post_processor', 'desc']]
             ),
