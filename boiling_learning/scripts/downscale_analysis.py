@@ -76,3 +76,7 @@ def main(
     downscaled = downscale(cropped, final_downscale_factor)
     print('Downscaled shape:', downscaled.shape)
     imshow(downscaled)
+
+
+if __name__ == '__main__':
+    raise RuntimeError('Cannot execute downscale analysis without an image!')

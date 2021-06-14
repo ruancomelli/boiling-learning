@@ -369,3 +369,4 @@ print(pipe())
 - [ ] try pretrained models from [TensorFlow Hub](https://tfhub.dev/tensorflow/collections/lite/task-library/object-detector/1).
 - [ ] try [transfer learning](https://www.tensorflow.org/guide/keras/transfer_learning).
 - [ ] check [TensorFlow tensor slicing](https://www.tensorflow.org/guide/tensor_slicing) for perfect shuffling.
+- [ ] move scripts to `boiling_learning.scripts` subpackage
