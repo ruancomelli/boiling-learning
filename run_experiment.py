@@ -176,11 +176,23 @@ factor_table = pd.DataFrame(
         ],
     }
 )
+f_to_T = scipy.interpolate.interp1d(
+    factor_table['Factor'],
+    factor_table['Temperature'],
+    copy=False,
+    fill_value='extrapolate',
+)
+T_to_f = scipy.interpolate.interp1d(
+    factor_table['Temperature'],
+    factor_table['Factor'],
+    copy=False,
+    fill_value='extrapolate',
+)
 
 reference_temperature = 20  # deg C
-reference_resistivity = (
-    650 * 1.66242611301008e-09  # ohm per circular mil-foot -> ohm meter
-)
+
+# ohm per circular mil-foot -> ohm meter
+reference_resistivity = 650 * 1.66242611301008e-09
 reference_resistance = reference_resistivity * wire_length / wire_cross_section
 
 
@@ -193,16 +205,7 @@ def calculate_resistance(voltage, current):
 
 
 def calculate_temperature(resistance):
-    # T_to_f = scipy.interpolate.interp1d(factor_table['Temperature'], factor_table['Factor'], copy=False, fill_value='extrapolate')
-    # reference_factor = T_to_f(reference_temperature)
-
     factor = resistance / reference_resistance
-    f_to_T = scipy.interpolate.interp1d(
-        factor_table['Factor'],
-        factor_table['Temperature'],
-        copy=False,
-        fill_value='extrapolate',
-    )
     return f_to_T(factor)
 
 
