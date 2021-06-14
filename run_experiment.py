@@ -1,95 +1,44 @@
 import csv
 import functools
-import os
 import time
 from datetime import datetime
 from pathlib import Path
+from typing import Iterable
 
 import matplotlib as mpl
 import modin.pandas as pd
 import nidaqmx
 import numpy as np
 import pyqtgraph as pg
-import scipy
+import scipy.interpolate
 from pyqtgraph.Qt import QtGui
 
-import boiling_learning as bl
 from boiling_learning.daq import Channel, ChannelType, Device
+from boiling_learning.utils.geometry import Cylinder
+from boiling_learning.utils.units import unit_registry as u
+from boiling_learning.utils.utils import (
+    ensure_dir,
+    ensure_parent,
+    print_verbose,
+)
 
-
-def add_to_system_path(path_to_add, add_if_exists=False):
-    str_to_add = str(path_to_add)
-    if add_if_exists or (str_to_add not in os.environ['PATH']):
-        os.environ['PATH'] += os.pathsep + str_to_add
-
-
-python_project_home_path = Path().absolute().resolve()
+python_project_home_path = Path().resolve()
 project_home_path = python_project_home_path.parent.resolve()
-
-
-class BoilingSurface:
-    def __init__(self, settings):
-        self.name = settings.get('name')
-        self.name = self.name if self.name else None
-
-        self.type = settings['type']
-
-        if self.type == 'ribbon':
-            self.length = settings['length']
-            self.width = settings['width']
-            self.thickness = settings['thickness']
-        elif self.type == 'wire':
-            self.length = settings['length']
-            self.diameter = settings['diameter']
-        else:
-            raise ValueError(f'type {self.type} not supported')
-
-    @property
-    def cross_section_area(self):
-        if self.type == 'ribbon':
-            return self.width * self.thickness
-        elif self.type == 'wire':
-            return np.pi * 0.25 * self.diameter ** 2
-        else:
-            raise ValueError(
-                f'it is not possible to calculate cross section area for surface type {self.type}'
-            )
-
-    @property
-    def surface_area(self):
-        if self.type == 'ribbon':
-            return 2 * self.length * (self.width + self.thickness)
-        elif self.type == 'wire':
-            return np.pi * self.length * self.diameter
-        else:
-            raise ValueError(
-                f'it is not possible to calculate surface area for surface type {self.type}'
-            )
 
 
 # -------------------------------------------------------
 # Settings
 # -------------------------------------------------------
-def read_settings():
-    from json import load
-
-    with open(
-        python_project_home_path / 'experiment_settings.json'
-    ) as json_file:
-        return load(json_file)
-
-
-settings = read_settings()
-surface = BoilingSurface(settings['surface'])
+# settings = load_json(python_project_home_path / 'experiment_settings.json')
 
 # ribbon or wire?
-wire_diameter = 0.518e-3  # m
-wire_length = 6.5e-2  # m
-wire_cross_section = surface.cross_section_area
-wire_surface_area = surface.surface_area
+sample = Cylinder(length=6.5 * u.cm, diameter=0.518 * u.mm)
 
 read_continuously = True
 maximum_number_of_iterations = 21
+
+print('Cross section area:', sample.cross_section_area.to_base_units())
+print('Surface area:', sample.surface_area.to_base_units())
 
 must_print = {
     'anything': True,  # Use false to disallow printing at all
@@ -148,19 +97,7 @@ save = False
 # Pairs (T, f) where T is the measured temperature in °C and f is the factor to multiply the wire resistance
 factor_table = pd.DataFrame(
     {
-        'Temperature': [
-            20,
-            93,
-            204,
-            315,
-            427,
-            538,
-            649,
-            760,
-            871,
-            982,
-            1093,
-        ],
+        'Temperature': [20, 93, 204, 315, 427, 538, 649, 760, 871, 982, 1093],
         'Factor': [
             1.000,
             1.016,
@@ -189,11 +126,11 @@ T_to_f = scipy.interpolate.interp1d(
     fill_value='extrapolate',
 )
 
-reference_temperature = 20  # deg C
-
-# ohm per circular mil-foot -> ohm meter
-reference_resistivity = 650 * 1.66242611301008e-09
-reference_resistance = reference_resistivity * wire_length / wire_cross_section
+reference_temperature = u.Quantity(20, u.degC)
+reference_resistivity = 650 * u.ohm * u.cmil / u.foot
+reference_resistance = (
+    reference_resistivity * sample.length / sample.cross_section_area
+)
 
 
 def calculate_resistance(voltage, current):
@@ -236,7 +173,7 @@ def format_output_dir(output_dir_pattern):
     from pathlib import Path
 
     full_dir_pattern = str(
-        Path() / 'experiments' / datetime.now().strftime(output_dir_pattern)
+        Path('experiments', datetime.now().strftime(output_dir_pattern))
     )
 
     def format_time(dirpattern, counter):
@@ -277,12 +214,9 @@ def generate_empty_copy(local_data):
     return dict.fromkeys(local_data, np.array([]))
 
 
-def print_if_must(keys, *args, conds=None, **kwargs):
-    if conds is None:
-        conds = []
-
-    cond = all(must_print.get(key, False) for key in keys) and all(conds)
-    bl.utils.print_verbose(cond, *args, **kwargs)
+def print_if_must(keys, *args, conds: Iterable[bool] = (), **kwargs) -> None:
+    cond = all(conds) and all(must_print.get(key, False) for key in keys)
+    print_verbose(cond, *args, **kwargs)
 
 
 # -------------------------------------------------------
@@ -347,7 +281,7 @@ system = nidaqmx.system.System.local()
 print_if_must(('anything', 'info'), f'> {system.driver_version}')
 print_if_must(
     ('anything', 'info'),
-    f'> Available devices in system.devices: {[x for x in system.devices]}',
+    f'> Available devices in system.devices: {tuple(system.devices)}',
 )
 print_if_must(
     ('anything', 'info'),
@@ -358,7 +292,7 @@ print_if_must(
     f'> DO ports in system.devices: { {x: [y.name for y in x.do_ports] for x in system.devices} }',
 )
 print_if_must(
-    ('anything', 'info'), f'> Types in ChannelType: {[x for x in ChannelType]}'
+    ('anything', 'info'), f'> Types in ChannelType: {tuple(ChannelType)}'
 )
 
 """
@@ -376,23 +310,21 @@ with open(calibration_filepath, 'r') as calibration_coefficients_file:
 # -------------------------------------------------------
 # Initialize
 # -------------------------------------------------------
-output_dir = Path(format_output_dir(output_dir_pattern))
-output_dir.mkdir(parents=True, exist_ok=True)
+output_dir = ensure_dir(format_output_dir(output_dir_pattern))
 filepath = output_dir / format_filename(output_dir, filename_pattern)
+filepath = ensure_parent(filepath)
 print_if_must(('anything', 'info'), f'> File path: {filepath}')
 
 
 if should_plot:
     ### START QtApp #####
-    app = QtGui.QApplication(
-        []
-    )  # see <https://stackoverflow.com/questions/45046239/python-realtime-plot-using-pyqtgraph>
+    app = QtGui.QApplication([])
+    # see <https://stackoverflow.com/questions/45046239/python-realtime-plot-using-pyqtgraph>
     ####################
 
-with open(filepath, 'w', newline='') as output_file, nidaqmx.Task(
+with filepath.open('w', newline='') as output_file, nidaqmx.Task(
     'Experiment'
 ) as experiment:
-
     output_writer = csv.writer(output_file)
 
     # -------------------------------------------------------
@@ -492,10 +424,12 @@ with open(filepath, 'w', newline='') as output_file, nidaqmx.Task(
             np.sum(voltage_readings_values, axis=0)
             if voltage_readings_values.size > 0
             else voltage_readings_values
+        ) * u.V
+        current = (
+            current_channel.read(experiment, readings, dtype=np.array) * u.A
         )
-        current = current_channel.read(experiment, readings, dtype=np.array)
         power = voltage * current
-        flux = power / wire_surface_area
+        flux = power / sample.surface_area
         # resistance = calculate_resistance(voltage, current)
 
         # Thermal data:
@@ -521,11 +455,11 @@ with open(filepath, 'w', newline='') as output_file, nidaqmx.Task(
         # Saving
         # -------------------------------------------------------
         local_data = {
-            'Voltage [V]': voltage,
-            'Current [A]': current,
-            'Power [W]': power,
-            'Flux [W/m^2]': flux,
-            'Flux [W/cm^2]': flux / 100 ** 2,
+            'Voltage [V]': voltage.m_as(u.V),
+            'Current [A]': current.m_as(u.A),
+            'Power [W]': power.m_as(u.W),
+            'Flux [W/m^2]': flux.m_as(u.W / u.m ** 2),
+            'Flux [W/cm^2]': flux.m_as(u.W / u.cm ** 2),
             # 'Resistance [Ohm]': resistance,
             'Bulk Temperature [deg C]': rtd_temperature,
             'LED Voltage [V]': led_voltage,
@@ -777,10 +711,7 @@ datatype = [
 ]
 # datatype = np.float32
 
-filename = (
-    Path() / 'Experiment Output 20-01-2020' / 'Experiment 0 -- 17-56.csv'
-)
-
+# filename = Path('Experiment Output 20-01-2020', 'Experiment 0 -- 17-56.csv')
 # data = np.memmap(filename, datatype, 'r')
 # plt.plot(data['Elapsed time'], data['floatq'], 'r,')
 # plt.grid(True)
