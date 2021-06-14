@@ -1,1 +1,2 @@
-pyqtgraph~=0.11
+PyQt5~=5.15
+pyqtgraph~=0.12
