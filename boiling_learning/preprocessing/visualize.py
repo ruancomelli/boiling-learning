@@ -450,10 +450,10 @@ def visualize_dataset(
         return manager.provide_elem(
             creator_description=Pack(kwargs=params[['creator', 'desc']]),
             creator_params=Pack(kwargs=params[['creator', 'value']]),
-            post_processor_description=P(
+            post_processor_description=Pack(
                 kwargs=params[['post_processor', 'desc']]
             ),
-            post_processor_params=P(
+            post_processor_params=Pack(
                 kwargs=params[['post_processor', 'value']]
             ),
             load=load,
