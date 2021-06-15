@@ -9,3 +9,6 @@ include = '\.pyi?$'
 line-length = 79
 skip-string-normalization = true
 target-version = ['py37']
+
+[tool.mypy]
+plugins = "numpy.typing.mypy_plugin"
