@@ -3,6 +3,7 @@ from typing import Any, Iterable, Optional, Tuple, TypeVar, Union
 
 import numpy as np
 import tensorflow as tf
+from skimage.color import rgb2gray
 from skimage.transform import AffineTransform, warp
 
 T = TypeVar('T')
@@ -16,6 +17,12 @@ def _ratio_to_size(
         return int(x * image.shape[axis])
     else:
         return x
+
+
+def ensure_grayscale(image: ImageType) -> np.ndarray:
+    if image.shape[2] != 1:
+        return rgb2gray(image)
+    return image
 
 
 def crop(

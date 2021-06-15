@@ -5,10 +5,13 @@ from typing import Callable, Iterable
 import matplotlib.pyplot as plt
 import numpy as np
 from skimage import img_as_float
-from skimage.color import rgb2gray
 from skimage.io import imshow
 
-from boiling_learning.preprocessing.image import crop, downscale
+from boiling_learning.preprocessing.image import (
+    crop,
+    downscale,
+    ensure_grayscale,
+)
 
 
 def evaluate_downsampling(
@@ -46,13 +49,13 @@ def main(
         crop, top=600, bottom=230, left=1000, right=1100
     ),
 ) -> None:
-    image = rgb2gray(image)
+    image = ensure_grayscale(image)
     downscale_factors = tuple(downscale_factors)
 
     ev_ds = evaluate_downsampling(
         image,
         img_retained_variance,
-        [partial(downscale, shape=ds) for ds in downscale_factors],
+        [partial(downscale, factor=ds) for ds in downscale_factors],
     )
     print('Downscale factors scores:')
     pprint(dict(zip(downscale_factors, ev_ds)))
