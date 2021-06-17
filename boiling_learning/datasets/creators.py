@@ -240,7 +240,7 @@ def dataset_post_processor(
                     data_augmentor.as_tf_py_function(pack_tuple=True),
                     num_parallel_calls=AUTOTUNE,
                 )
-            ds_test = ds_train.map(
+            ds_test = ds_test.map(
                 data_augmentor.as_tf_py_function(pack_tuple=True),
                 num_parallel_calls=AUTOTUNE,
             )
@@ -263,4 +263,4 @@ def dataset_post_processor(
             ds_val = ds_val.prefetch(AUTOTUNE)
         ds_test = ds_test.prefetch(AUTOTUNE)
 
-    return (ds_train, ds_val, ds_test)
+    return ds_train, ds_val, ds_test
