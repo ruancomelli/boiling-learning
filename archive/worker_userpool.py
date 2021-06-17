@@ -1,32 +1,29 @@
-import time
+from pathlib import Path
 
-worker_config_file_path = boiling_learning_path / '_tmp' / 'dynamic_user_pool'
+import boiling_learning as bl
 
-user_pool = bl.utils.worker.DynamicUserPool(
-    worker_config_file_path,
-    [
-        'ruan.comelli@lepten.ufsc.br',
-        'ruancomelli@gmail.com',
-        'rugortal@gmail.com',
-        'pitycomelli@gmail.com',
-        'pucacomelli@gmail.com',
-        'jmcardoso1944@gmail.com',
-        'AZULA',
-        'LEPTEN',
-    ],
-    reset=reset_user_pool,
-    overwrite=overwrite_user_pool_state,
-)
-user_pool.stamp_ticket()
+boiling_learning_path = Path()
+drive_user: str = 'ruan.comelli@lepten.ufsc.br'
+nb_user: str = 'pucacomelli@gmail.com'
+work_manager: str = 'ruancomelli@gmail.com'
 
-if wait_for_others:
-    time.sleep(60)
+worker_config_file_path = boiling_learning_path / '_tmp' / 'user_pool.json'
 
-gpu_distribution = {
-    'ruan.comelli@lepten.ufsc.br': True,
-    'ruancomelli@gmail.com': True,
-    'rugortal@gmail.com': True,
-    'pitycomelli@gmail.com': True,
-    'pucacomelli@gmail.com': True,
-}
-has_gpu = gpu_distribution.__getitem__
+if nb_user == work_manager:
+    user_pool = bl.utils.worker.UserPool(
+        [
+            'ruan.comelli@lepten.ufsc.br',
+            'ruancomelli@gmail.com',
+            'rugortal@gmail.com',
+            'pitycomelli@gmail.com',
+            'pucacomelli@gmail.com',
+            # 'brunghah@gmail.com',
+        ],
+        manager=work_manager,
+        current=nb_user,
+        server=drive_user,
+    )
+    user_pool.to_json(worker_config_file_path)
+
+user_pool = bl.utils.worker.UserPool.from_json(worker_config_file_path)
+user_pool.current = nb_user

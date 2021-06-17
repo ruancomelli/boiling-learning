@@ -1,4 +1,9 @@
 import time
+from pathlib import Path
+
+import boiling_learning as bl
+
+boiling_learning_path = Path()
 
 url_path = boiling_learning_path / '_tmp' / 'url.txt'
 
