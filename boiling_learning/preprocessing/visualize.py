@@ -497,12 +497,10 @@ def visualize_dataset(
                 n_samples,
                 1,
                 subplot_spec=outer[elem],
-                # wspace=0.1,
-                # hspace=0.1
             )
-            for sample, (img, _) in enumerate(
-                ds_split.take(n_samples).as_numpy_iterator()
-            ):
+            for sample, (img, _) in enumerate(ds_split.take(n_samples)):
+                img = tf.image.convert_image_dtype(img, tf.uint8)
+
                 ax = plt.Subplot(fig, inner[sample])
                 img = np.squeeze(img)
                 ax.imshow(img, cmap='gray', norm=NoNorm())
