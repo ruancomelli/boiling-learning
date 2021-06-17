@@ -616,6 +616,11 @@ class ExperimentVideo:
                 lambda: self.video, tf.float32
             )
 
+            # normalize frames to TF's standard: `pims.Video` returns frames
+            # with float datatype, but scaled from 0 to 255 whereas TF expects
+            # those floating point types to be between 0 and 1
+            frames = frames.map(lambda frame: frame / 255)
+
             if save:
                 save_dataset(frames, self.frames_tensor_path)
 
