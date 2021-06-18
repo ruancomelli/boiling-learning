@@ -370,3 +370,8 @@ print(pipe())
 - [ ] try [transfer learning](https://www.tensorflow.org/guide/keras/transfer_learning).
 - [ ] check [TensorFlow tensor slicing](https://www.tensorflow.org/guide/tensor_slicing) for perfect shuffling.
 - [ ] move scripts to `boiling_learning.scripts` subpackage
+- [ ] try to fix the [RSquare](https://www.tensorflow.org/addons/api_docs/python/tfa/metrics/RSquare) metric
+- [ ] implement [structural similarity](https://scikit-image.org/docs/dev/api/skimage.metrics.html#skimage.metrics.structural_similarity). Check the papers[(1)](https://ece.uwaterloo.ca/~z70wang/publications/ssim.pdf), [(2)](https://click.endnote.com/viewer?doi=10.1007/s10043-009-0119-z&route=2), [(3)](https://www.sciencedirect.com/science/article/pii/S0047259X06002016), [(4)](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=1284395&casa_token=9dJeuWLuFmUAAAAA:J9E9XP0EJerPQXoMVDOqMmpZ_tYsTy4Ig8LgUKjVBD17awcC4aAMEufCS2APZj9BmmUmbWjDk6U&tag=1). There is also a tutorial in [PythonMachineLearning](https://pythonmachinelearning.pro/structural-similarity-tutorial/).
+- [ ] check [Sample Correlation Coefficient](https://www.sciencedirect.com/topics/mathematics/sample-correlation-coefficient).
+- [ ] use [ONNX format](https://onnx.ai/index.html), [simplifier](https://github.com/daquexian/onnx-simplifier) and [optimizer](https://github.com/onnx/optimizer)?
+- [ ] take a look at the beautiful [ConvLSTM2D](https://www.tensorflow.org/api_docs/python/tf/keras/layers/ConvLSTM2D) for timeseries of images!
