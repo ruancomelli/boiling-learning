@@ -2,6 +2,7 @@ from unittest.case import TestCase
 
 from boiling_learning.utils.collections import KeyedSet
 from boiling_learning.utils.geometry import Cylinder, Prism, RectangularPrism
+from boiling_learning.utils.Parameters import Parameters
 from boiling_learning.utils.utils import indexify
 
 
@@ -54,3 +55,16 @@ class geometry_test(TestCase):
 
         self.assertEqual(prism.cross_section_area, 15)
         self.assertEqual(prism.cross_section_perimeter, 16)
+
+
+class Parameters_test(TestCase):
+    def test_flat(self):
+        p = Parameters()
+
+        self.assertNotIn('a', p)
+        with self.assertRaises(KeyError):
+            p['a']
+
+        p['a'] = 0
+        self.assertIn('a', p)
+        self.assertEqual(p['a'], 0)
