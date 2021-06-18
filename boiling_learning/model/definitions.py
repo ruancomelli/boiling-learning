@@ -13,6 +13,8 @@ from tensorflow.keras.layers import (
     GlobalMaxPooling2D,
     Input,
     Lambda,
+    Layer,
+    LayerNormalization,
     MaxPool2D,
     SeparableConv2D,
     SpatialDropout2D,
@@ -80,16 +82,20 @@ def HoboldNet1(
     output_layer_policy: Union[str, Policy],
     problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
+    normalize_images: bool = False,
 ) -> Model:
     '''CNN #1 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.'''
     input_data = Input(shape=input_shape)
+    x = input_data  # start "current layer" as the input layer
+    if normalize_images:
+        x = LayerNormalization()(x)
     x = Conv2D(
         16,
         (5, 5),
         padding='same',
         activation='relu',
         dtype=hidden_layers_policy,
-    )(input_data)
+    )(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
@@ -126,16 +132,20 @@ def HoboldNet2(
     output_layer_policy: Union[str, Policy],
     problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
+    normalize_images: bool = False,
 ) -> Model:
     '''CNN #2 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.'''
     input_data = Input(shape=input_shape)
+    x = input_data  # start "current layer" as the input layer
+    if normalize_images:
+        x = LayerNormalization()(x)
     x = Conv2D(
         32,
         (5, 5),
         padding='same',
         activation='relu',
         dtype=hidden_layers_policy,
-    )(input_data)
+    )(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
@@ -172,16 +182,20 @@ def HoboldNet3(
     output_layer_policy: Union[str, Policy],
     problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
+    normalize_images: bool = False,
 ) -> Model:
     '''CNN #3 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.'''
     input_data = Input(shape=input_shape)
+    x = input_data  # start "current layer" as the input layer
+    if normalize_images:
+        x = LayerNormalization()(x)
     x = Conv2D(
         32,
         (5, 5),
         padding='same',
         activation='relu',
         dtype=hidden_layers_policy,
-    )(input_data)
+    )(x)
     x = Conv2D(
         64,
         (5, 5),
@@ -225,16 +239,20 @@ def HoboldNetSupplementary(
     output_layer_policy: Union[str, Policy],
     problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
+    normalize_images: bool = False,
 ) -> Model:
     '''See supplementary material for Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning'''
     input_data = Input(shape=input_shape)
+    x = input_data  # start "current layer" as the input layer
+    if normalize_images:
+        x = LayerNormalization()(x)
     x = Conv2D(
         32,
         (5, 5),
         padding='same',
         activation='relu',
         dtype=hidden_layers_policy,
-    )(input_data)
+    )(x)
     x = Conv2D(
         64,
         (5, 5),
@@ -363,6 +381,7 @@ def BoilNet(
     flattening: Union[FlatteningMode, str, int] = FlatteningMode.FLATTEN,
     problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
     num_classes: int = 0,
+    normalize_images: bool = False,
 ) -> Model:
     if time_window > 0:
         input_shape = (time_window, *image_shape)
@@ -379,6 +398,11 @@ def BoilNet(
 
     inputs = Input(shape=input_shape)
 
+    if normalize_images:
+        normalized = LayerNormalization()(inputs)
+    else:
+        normalized = inputs
+
     if time_window > 0:
         distribute = TimeDistributed
     else:
@@ -387,7 +411,7 @@ def BoilNet(
     if spatial_dropout is not None:
         spatial_dropouter = partial(SpatialDropout2D, spatial_dropout)
     else:
-        spatial_dropouter = funcy.constantly(Lambda(funcy.identity))
+        spatial_dropouter = funcy.constantly(Layer())
 
     convolution_type = utils.enum_item(ConvolutionType, convolution_type)
     conv_layer = {
@@ -397,7 +421,7 @@ def BoilNet(
 
     conv = distribute(
         conv_layer(32, (5, 5), padding='same', activation='relu')
-    )(inputs)
+    )(normalized)
     conv = distribute(spatial_dropouter())(conv)
     conv = distribute(MaxPool2D((2, 2), strides=(2, 2)))(conv)
     conv = distribute(
