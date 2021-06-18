@@ -34,10 +34,11 @@ from boiling_learning.io.json_encoders import (
 from boiling_learning.preprocessing.transformers import Creator, Transformer
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.Parameters import Parameters
-from boiling_learning.utils.utils import (  # JSONDataType, # TODO: maybe using JSONDataType would be good
+from boiling_learning.utils.utils import (  # JSONDataType,; TODO: maybe using JSONDataType would be a good idea
     PathLike,
     VerboseType,
     _Sentinel,
+    print_verbose,
 )
 
 # TODO: check out <https://www.mlflow.org/docs/latest/tracking.html>
@@ -46,7 +47,6 @@ from boiling_learning.utils.utils import (  # JSONDataType, # TODO: maybe using 
 # TODO: improve this... there is a lot of repetition and buggy cases.
 # ? Perhaps a better idea would be to have only one way to pass a description: through elem_id. No *contents*, just the id...
 # TODO: standardize "post_processor": sometimes *None* means *None*, other times it means "get the default one"
-
 
 _sentinel = _Sentinel.get_instance()
 _ElemType = TypeVar('_ElemType')
@@ -326,6 +326,13 @@ class Manager(
             index = 0
 
         return self._format_index(index)
+
+    def _print(self, verbosity: VerboseType, *args, **kwargs) -> None:
+        print_verbose(verbosity <= self.verbose, *args, **kwargs)
+
+    def _pprint(self, verbosity: VerboseType, *args, **kwargs) -> None:
+        if verbosity <= self.verbose:
+            pprint.pprint(*args, **kwargs)
 
     def _resolve_name(
         self,
@@ -661,9 +668,8 @@ class Manager(
             post_processor_description=post_processor_description,
         )
 
-        if self.verbose >= 2:
-            print('Providing entry for contents:')
-            pprint.pprint(contents)
+        self._print(2, 'Providing entry for contents:')
+        self._pprint(2, contents)
 
         elem_id = self.elem_id(contents=contents, missing_ok=missing_ok)
         path = self.elem_path(elem_id)
@@ -717,8 +723,7 @@ class Manager(
         elif elem_id not in self:
             raise ValueError(f'passed a non-existing id explicitly: {elem_id}')
 
-        if self.verbose:
-            print('Providing element', elem_id)
+        self._print(1, 'Providing element', elem_id)
 
         if post_processor is not None:
             contents = self.contents(elem_id)
@@ -738,8 +743,8 @@ class Manager(
                 reload_after_save=reload_after_save,
             )
 
-            if self.verbose:
-                print('Post-processing', elem_id)
+            self._print(1, 'Post-processing', elem_id)
+
             elem = post_processor(
                 elem,
                 *post_processor_params.args,
@@ -753,14 +758,14 @@ class Manager(
                 elem_id: str, path: Path, raise_if_load_fails: bool
             ) -> _ElemType:
                 if callable(load):
-                    if self.verbose:
-                        print('Trying to load', elem_id, 'using custom loader')
+                    self._print(
+                        1, 'Trying to load', elem_id, 'using custom loader'
+                    )
                     success, elem = load(path)
                 else:
-                    if self.verbose:
-                        print(
-                            'Trying to load', elem_id, 'using default loader'
-                        )
+                    self._print(
+                        1, 'Trying to load', elem_id, 'using default loader'
+                    )
                     success, elem = self._load_elem(
                         path=path, raise_if_load_fails=raise_if_load_fails
                     )
@@ -774,8 +779,7 @@ class Manager(
 
             path = self.elem_path(elem_id)
 
-            if self.verbose:
-                print('Element', elem_id, 'assigned to', path)
+            self._print(1, 'Element', elem_id, 'assigned to', path)
 
             success = False
             if must_load:
@@ -784,24 +788,23 @@ class Manager(
                 )
 
             if not success:
-                if self.verbose:
-                    print('Couldn\'t load', elem_id)
-                    print('Creating', elem_id)
+                self._print(1, 'Couldn\'t load', elem_id)
+                self._print(1, 'Creating', elem_id)
+
                 elem = creator(creator_params)
 
                 if must_save:
                     if callable(save):
-                        if self.verbose:
-                            print('Saving', elem_id, 'using custom saver')
+                        self._print(1, 'Saving', elem_id, 'using custom saver')
                         save(elem, path)
                     else:
-                        if self.verbose:
-                            print('Saving', elem_id, 'using default saver')
+                        self._print(
+                            1, 'Saving', elem_id, 'using default saver'
+                        )
                         self.save_elem(elem, path)
 
                     if reload_after_save:
-                        if self.verbose:
-                            print('Reloading', elem_id)
+                        self._print(1, 'Reloading', elem_id)
                         success, elem = _load(
                             elem_id, path, raise_if_load_fails=True
                         )
