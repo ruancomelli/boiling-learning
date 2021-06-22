@@ -3,7 +3,7 @@ Boiling Learning
 
 # About
 
-Project developed by me, [Ruan Comelli](https://github.com/ruancomelli) at [UFSC (Federal University of Santa Catarina)](https://ufsc.br/) in order to obtain a Master's degree in Mechanical Engineering.
+Project developed by me, [Ruan Comelli](https://github.com/ruancomelli), at [UFSC (Federal University of Santa Catarina)](https://ufsc.br/) in order to obtain a Master's degree in Mechanical Engineering.
 
 # Versioning
 
