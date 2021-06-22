@@ -75,7 +75,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         self._allow_key_overwrite: bool = True
         self.df: Optional[pd.DataFrame] = None
         self.ds = None
-        self._tags = frozenset(tags)
+        self._tags: FrozenSet[str] = frozenset(tags)
 
         if df_path is not None:
             df_path = bl_utils.ensure_resolved(df_path)
@@ -116,12 +116,16 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     def __setitem__(
         self, name: str, experiment_video: ExperimentVideo
     ) -> None:
-        assert (
-            name == experiment_video.name
-        ), 'setting item must respect the experiment video name.'
+        if name != experiment_video.name:
+            raise ValueError(
+                'there is no support for setting an ExperimentVideo with'
+                f' a different name. Got *name={name}*,'
+                f' but *ev.name={experiment_video.name}*'
+            )
         if not self._allow_key_overwrite and name in self:
             raise ValueError(
-                f'overwriting existing element with name={name} with overwriting disabled.'
+                f'overwriting existing element with name={name}'
+                ' with overwriting disabled is not allowed.'
             )
         self._experiment_videos[name] = experiment_video
 
@@ -146,9 +150,9 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     def make_union(
         cls,
         *others: ImageDataset,
-        namer: Callable[[Iterable[str]], str] = '+'.join,
+        namer: Callable[[List[str]], str] = '+'.join,
     ) -> ImageDataset:
-        name = namer(funcy.pluck_attr('name', others))
+        name = namer(funcy.lpluck_attr('name', others))
         example = others[0]
         img_ds = ImageDataset(name, example.column_names, example.column_types)
         img_ds.union(*others)
@@ -166,13 +170,13 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         self._allow_key_overwrite = prev_state
 
     def video_paths(self) -> Iterable[Path]:
-        return map(operator.attrgetter('video_path'), self.values())
+        return funcy.pluck_attr('video_path', self.values())
 
     def audio_paths(self) -> Iterable[Path]:
-        return map(operator.attrgetter('audio_path'), self.values())
+        return funcy.pluck_attr('audio_path', self.values())
 
     def frames_paths(self) -> Iterable[Path]:
-        return map(operator.attrgetter('frames_path'), self.values())
+        return funcy.pluck_attr('frames_path', self.values())
 
     def open_videos(self) -> None:
         for ev in self.values():
