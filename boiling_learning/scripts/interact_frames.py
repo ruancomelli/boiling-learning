@@ -5,7 +5,8 @@ import numpy as np
 from ipywidgets import interact, widgets
 from skimage.transform import downscale_local_mean as downscale
 
-from boiling_learning.preprocessing import Case
+from boiling_learning.preprocessing import ImageDataset
+from boiling_learning.preprocessing.ExperimentVideo import ExperimentVideo
 
 
 def _make_show_frame_function(
@@ -18,18 +19,20 @@ def _make_show_frame_function(
     return _imshow
 
 
-def _interact_boiling_frames(
-    cases: Tuple[Case, ...], imshow: Callable[[np.ndarray], Any]
+def _interact_dataset_frames(
+    datasets: Tuple[ImageDataset, ...], imshow: Callable[[np.ndarray], Any]
 ) -> None:
-    cases_options = [(case.name, case) for case in cases]
-    default_case = cases_options[0][1]
-    cases_widget = widgets.Dropdown(
-        options=cases_options, description='Case name:', value=default_case
+    datasets_options = [(dataset.name, dataset) for dataset in datasets]
+    default_dataset = datasets_options[0][1]
+    datasets_widget = widgets.Dropdown(
+        options=datasets_options,
+        description='Dataset name:',
+        value=default_dataset,
     )
 
     experiment_videos_options = [
         (experiment_video.name, experiment_video)
-        for experiment_video in cases_widget.value.values()
+        for experiment_video in datasets_widget.value.values()
     ]
     experiment_videos_widget = widgets.Dropdown(
         options=experiment_videos_options,
@@ -43,7 +46,7 @@ def _interact_boiling_frames(
             for experiment_video in changes['new'].values()
         ]
 
-    cases_widget.observe(update_videos_list, 'value')
+    datasets_widget.observe(update_videos_list, 'value')
 
     with experiment_videos_widget.value.frames() as f:
         index_widget = widgets.IntSlider(
@@ -56,28 +59,21 @@ def _interact_boiling_frames(
 
     experiment_videos_widget.observe(update_max_index, 'value')
 
-    def show_frames(case, ev, idx):
+    def show_frames(dataset: ImageDataset, ev: ExperimentVideo, idx: int):
         imshow(ev.frame(idx))
 
     interact(
         show_frames,
-        case=cases_widget,
+        dataset=datasets_widget,
         ev=experiment_videos_widget,
         idx=index_widget,
     )
 
 
 def main(
-    cases: Iterable[Case],
-    colab_backend: bool = False,
-    physics: str = 'boiling',
+    datasets: Iterable[ImageDataset], colab_backend: bool = False
 ) -> None:
-    cases = tuple(cases)
-
-    if physics not in {'boiling', 'condensation'}:
-        raise ValueError(
-            '*physics* must be either "boiling" or "condensation"'
-        )
+    datasets = tuple(datasets)
 
     imshow_imported: bool = False
     if colab_backend:
@@ -94,10 +90,7 @@ def main(
     imshow = _make_show_frame_function(cv2_imshow)
 
     with warnings.catch_warnings():
-        if physics == 'boiling':
-            _interact_boiling_frames(cases, imshow)
-        else:
-            raise ValueError(f'physics=="{physics}" is not supported yet.')
+        _interact_dataset_frames(datasets, imshow)
 
 
 if __name__ == '__main__':
