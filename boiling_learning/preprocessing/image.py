@@ -293,22 +293,27 @@ def retained_variance(ref: np.ndarray, image: np.ndarray) -> float:
 
 
 def shannon_cross_entropy(
-    ref: np.ndarray, image: np.ndarray, nbins: int = 100
+    ref: np.ndarray, image: np.ndarray, nbins: int = 100, epsilon: float = 1e-9
 ) -> float:
     ref, image = reshape_to_largest(ref, image)
+    ref = np.squeeze(ref)
+    image = np.squeeze(image)
 
-    ref_histogram, _ = histogram(ref, nbins=nbins)
-    img_histogram, _ = histogram(image, nbins=nbins)
+    ref_histogram, _ = histogram(ref, nbins=nbins, normalize=True)
+    img_histogram, _ = histogram(image, nbins=nbins, normalize=True)
+
+    ref_histogram = np.clip(ref_histogram, epsilon, 1 - epsilon)
+    img_histogram = np.clip(img_histogram, epsilon, 1 - epsilon)
 
     return -float(np.sum(ref_histogram * np.log(img_histogram)))
 
 
 def shannon_cross_entropy_ratio(
-    ref: np.ndarray, image: np.ndarray, nbins: int = 100
+    ref: np.ndarray, image: np.ndarray, nbins: int = 100, epsilon: float = 1e-9
 ) -> float:
     return shannon_cross_entropy(
-        ref, image, nbins=nbins
-    ) / shannon_cross_entropy(ref, ref, nbins=nbins)
+        ref, image, nbins=nbins, epsilon=epsilon
+    ) / shannon_cross_entropy(ref, ref, nbins=nbins, epsilon=epsilon)
 
 
 def shannon_entropy_ratio(ref: np.ndarray, image: np.ndarray) -> float:
