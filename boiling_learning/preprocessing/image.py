@@ -295,6 +295,8 @@ def retained_variance(ref: np.ndarray, image: np.ndarray) -> float:
 def shannon_cross_entropy(
     ref: np.ndarray, image: np.ndarray, nbins: int = 100
 ) -> float:
+    ref, image = reshape_to_largest(ref, image)
+
     ref_histogram, _ = histogram(ref, nbins=nbins)
     img_histogram, _ = histogram(image, nbins=nbins)
 
