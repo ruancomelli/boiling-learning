@@ -3,8 +3,9 @@ from typing import Any, Iterable, Optional, Tuple, TypeVar, Union
 
 import numpy as np
 import tensorflow as tf
+from scipy.stats import entropy
 from skimage.color import rgb2gray
-from skimage.transform import AffineTransform, warp
+from skimage.transform import AffineTransform, resize, warp
 
 T = TypeVar('T')
 ImageType = Any  # something convertible to tf.Tensor
@@ -191,3 +192,69 @@ def random_crop(
         for img_dim, dim in zip(image.shape, size)
     )
     return tf.image.random_crop(image, size, seed=seed)
+
+
+def normalized_mutual_information(
+    image0: np.ndarray, image1: np.ndarray, bins: int = 100
+) -> float:
+    r"""Compute the normalized mutual information (NMI).
+
+    Source code: https://github.com/scikit-image/scikit-image/blob/8db28f027729a045de1b54b599338d1804a461b3/skimage/metrics/simple_metrics.py#L193-L261
+
+    The normalized mutual information of :math:`A` and :math:`B` is given by::
+    ..math::
+        Y(A, B) = \frac{H(A) + H(B)}{H(A, B)}
+    where :math:`H(X) := - \sum_{x \in X}{x \log x}` is the entropy.
+    It was proposed to be useful in registering images by Colin Studholme and
+    colleagues [1]_. It ranges from 0 (perfectly uncorrelated image values)
+    to 1 (perfectly correlated image values, whether positively or negatively).
+    Parameters
+    ----------
+    image0, image1 : ndarray
+        Images to be compared. The two input images must have the same number
+        of dimensions.
+    bins : int or sequence of int, optional
+        The number of bins along each axis of the joint histogram.
+    Returns
+    -------
+    nmi : float
+        The normalized mutual information between the two arrays, computed at
+        the granularity given by ``bins``. Higher NMI implies more similar
+        input images.
+    Raises
+    ------
+    ValueError
+        If the images don't have the same number of dimensions.
+    Notes
+    -----
+    If the two input images are not the same shape, the smaller image is
+    resized to match the larger one.
+    References
+    ----------
+    .. [1] C. Studholme, D.L.G. Hill, & D.J. Hawkes (1999). An overlap
+           invariant entropy measure of 3D medical image alignment.
+           Pattern Recognition 32(1):71-86
+           :DOI:`10.1016/S0031-3203(98)00091-0`
+    """
+    if image0.ndim != image1.ndim:
+        raise ValueError(
+            'NMI requires images of same number of dimensions. '
+            f'Got {image0.ndim}D for `image0` and {image1.ndim}D for `image1`.'
+        )
+
+    if image0.shape != image1.shape:
+        max_shape = np.maximum(image0.shape, image1.shape)
+        image0 = resize(image0, max_shape)
+        image1 = resize(image1, max_shape)
+
+    hist, _ = np.histogramdd(
+        [np.reshape(image0, -1), np.reshape(image1, -1)],
+        bins=bins,
+        density=True,
+    )
+
+    H0 = entropy(np.sum(hist, axis=0))
+    H1 = entropy(np.sum(hist, axis=1))
+    H01 = entropy(np.reshape(hist, -1))
+
+    return (H0 + H1) / H01 - 1
