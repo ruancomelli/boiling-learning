@@ -5,10 +5,23 @@ import numpy as np
 import tensorflow as tf
 from scipy.stats import entropy
 from skimage.color import rgb2gray
+from skimage.exposure import histogram
+from skimage.measure import shannon_entropy
+from skimage.metrics import structural_similarity as ssim
 from skimage.transform import AffineTransform, resize, warp
 
 T = TypeVar('T')
 ImageType = Any  # something convertible to tf.Tensor
+
+
+def reshape_to_largest(
+    image0: np.ndarray, image1: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
+    if image0.shape != image1.shape:
+        max_shape = np.maximum(image0.shape, image1.shape)
+        image0 = resize(image0, max_shape)
+        image1 = resize(image1, max_shape)
+    return image0, image1
 
 
 def _ratio_to_size(
@@ -242,10 +255,7 @@ def normalized_mutual_information(
             f'Got {image0.ndim}D for `image0` and {image1.ndim}D for `image1`.'
         )
 
-    if image0.shape != image1.shape:
-        max_shape = np.maximum(image0.shape, image1.shape)
-        image0 = resize(image0, max_shape)
-        image1 = resize(image1, max_shape)
+    image0, image1 = reshape_to_largest(image0, image1)
 
     hist, _ = np.histogramdd(
         [np.reshape(image0, -1), np.reshape(image1, -1)],
@@ -258,3 +268,46 @@ def normalized_mutual_information(
     H01 = entropy(np.reshape(hist, -1))
 
     return (H0 + H1) / H01 - 1
+
+
+def structural_similarity_ratio(ref: np.ndarray, image: np.ndarray) -> float:
+    # see
+    # <https://www.wikiwand.com/en/Structural_similarity#/Application_of_the_formula>
+    WINDOW_SIZE: int = 11
+
+    ref, image = reshape_to_largest(ref, image)
+    ref = np.squeeze(ref)
+    image = np.squeeze(image)
+
+    return ssim(ref, image, win_size=WINDOW_SIZE) / ssim(
+        ref, ref, win_size=WINDOW_SIZE
+    )
+
+
+def _image_variance(image: np.ndarray) -> float:
+    return float(np.var(image, axis=(0, 1)))
+
+
+def retained_variance(ref: np.ndarray, image: np.ndarray) -> float:
+    return _image_variance(image) / _image_variance(ref)
+
+
+def shannon_cross_entropy(
+    ref: np.ndarray, image: np.ndarray, nbins: int = 100
+) -> float:
+    ref_histogram, _ = histogram(ref, nbins=nbins)
+    img_histogram, _ = histogram(image, nbins=nbins)
+
+    return -float(np.sum(ref_histogram * np.log(img_histogram)))
+
+
+def shannon_cross_entropy_ratio(
+    ref: np.ndarray, image: np.ndarray, nbins: int = 100
+) -> float:
+    return shannon_cross_entropy(
+        ref, image, nbins=nbins
+    ) / shannon_cross_entropy(ref, ref, nbins=nbins)
+
+
+def shannon_entropy_ratio(ref: np.ndarray, image: np.ndarray) -> float:
+    return shannon_entropy(image) / shannon_entropy(ref)
