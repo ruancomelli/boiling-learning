@@ -1,84 +1,74 @@
 from functools import partial
-from pprint import pprint
-from typing import Callable, Iterable
+from typing import Callable, Dict, Iterable, List
 
 import matplotlib.pyplot as plt
 import numpy as np
-from skimage import img_as_float
-from skimage.io import imshow
 
-from boiling_learning.preprocessing.image import (
-    crop,
-    downscale,
-    ensure_grayscale,
-)
+from boiling_learning.preprocessing.image import downscale as tf_downscale
+from boiling_learning.preprocessing.image import ensure_grayscale
 
 
 def evaluate_downsampling(
-    img: np.ndarray,
+    ref: np.ndarray,
     evaluator: Callable[[np.ndarray, np.ndarray], float],
     downsamplers: Iterable[Callable[[np.ndarray], np.ndarray]],
-):
-    return [evaluator(img, downsampler(img)) for downsampler in downsamplers]
+) -> List[float]:
+    pairs = ((ref, downsampler(ref)) for downsampler in downsamplers)
+    evaluations = (evaluator(ref, image) for ref, image in pairs)
+
+    return list(evaluations)
 
 
-def img_variance(img: np.ndarray) -> float:
-    return float(np.var(img, axis=(0, 1)))
-
-
-def img_retained_variance(ref: np.ndarray, img: np.ndarray) -> float:
-    return img_variance(img) / img_variance(ref)
-
-
-def img_shannon_cross_entropy(ref: np.ndarray, img: np.ndarray) -> float:
-    pass
-
-
-def img_shannon_cross_entropy_ratio(ref: np.ndarray, img: np.ndarray) -> float:
-    return float(
-        img_shannon_cross_entropy(ref, img)
-        / img_shannon_cross_entropy(ref, ref)
-    )
+def downscale(image: np.ndarray, factor: int) -> np.ndarray:
+    return tf_downscale(image, factors=(factor, factor)).numpy()
 
 
 def main(
     image: np.ndarray,
-    downscale_factors: Iterable[int] = range(1, 11),
+    metrics: Dict[str, Callable[[np.ndarray, np.ndarray], float]],
+    downscale_factors: Iterable[int] = (),
     final_downscale_factor: int = 5,
-    cropper: Callable[[np.ndarray], np.ndarray] = partial(
-        crop, top=600, bottom=230, left=1000, right=1100
-    ),
 ) -> None:
     image = ensure_grayscale(image)
-    downscale_factors = tuple(downscale_factors)
-
-    ev_ds = evaluate_downsampling(
-        image,
-        img_retained_variance,
-        [partial(downscale, factor=ds) for ds in downscale_factors],
+    downscale_factors = sorted(
+        frozenset(downscale_factors) | {1, final_downscale_factor}
     )
-    print('Downscale factors scores:')
-    pprint(dict(zip(downscale_factors, ev_ds)))
+
+    for name, scorer in metrics.items():
+        ev_ds = evaluate_downsampling(
+            image,
+            scorer,
+            [partial(downscale, factor=ds) for ds in downscale_factors],
+        )
+
+        evaluations = dict(zip(downscale_factors, ev_ds))
+        original_evaluation = evaluations[1]
+        final_evaluation = evaluations[final_downscale_factor]
+
+        fig, ax = plt.subplots()
+        ax.plot(downscale_factors, ev_ds)
+        ax.axvline(final_downscale_factor, linestyle='--', color='k')
+        ax.set_title(
+            f'{name} ({final_downscale_factor} -> {final_evaluation / original_evaluation:.0%})'
+        )
+        ax.set_xscale('log')
+
+        fig.show()
 
     # ------------------------------------------
     # PART 2
     # ------------------------------------------
-    plt.subplot(1, 3, 1)
+    fig = plt.figure()
+    fig.suptitle(f'Downscale factor: {final_downscale_factor}')
 
-    imshow(image)
+    ax = fig.add_subplot(1, 3, 1)
+    ax.imshow(image, cmap='gray')
+    ax.set_title(str(np.squeeze(image).shape))
 
-    plt.subplot(1, 3, 2)
-
-    cropped = cropper(image)
-    print('Cropped shape:', cropped.shape)
-    imshow(cropped)
-
-    plt.subplot(1, 3, 3)
-
-    cropped = img_as_float(cropped)
-    downscaled = downscale(cropped, final_downscale_factor)
-    print('Downscaled shape:', downscaled.shape)
-    imshow(downscaled)
+    ax = fig.add_subplot(1, 3, 2)
+    downscaled = downscale(image, factor=final_downscale_factor)
+    ax.imshow(downscaled, cmap='gray')
+    ax.set_title(str(np.squeeze(downscaled).shape))
 
 
 if __name__ == '__main__':
