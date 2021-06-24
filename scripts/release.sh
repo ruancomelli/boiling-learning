@@ -1,1 +1,1 @@
-bumpversion $1 && git push && git push --tags
+# bumpversion $1 && git push && git push --tags
