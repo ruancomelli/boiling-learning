@@ -284,12 +284,12 @@ def structural_similarity_ratio(ref: np.ndarray, image: np.ndarray) -> float:
     )
 
 
-def _image_variance(image: np.ndarray) -> float:
+def variance(image: np.ndarray) -> float:
     return float(np.var(image, axis=(0, 1)))
 
 
 def retained_variance(ref: np.ndarray, image: np.ndarray) -> float:
-    return _image_variance(image) / _image_variance(ref)
+    return variance(image) / variance(ref)
 
 
 def shannon_cross_entropy(
