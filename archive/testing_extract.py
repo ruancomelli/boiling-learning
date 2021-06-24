@@ -1,4 +1,8 @@
+from pathlib import Path
+
 import boiling_learning.utils
+
+project_path = Path()
 
 filepath = project_path / 'cases' / 'case 1' / 'videos' / 'GOPR2850.MP4'
 outputdir = project_path / 'testing_extract'

@@ -1,14 +1,20 @@
 import pprint
 from functools import partial
+from pathlib import Path
 
+import tensorflow as tf
 import tensorflow_addons as tfa
-from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
-                                        ReduceLROnPlateau)
+from tensorflow.keras.callbacks import (
+    EarlyStopping,
+    ModelCheckpoint,
+    ReduceLROnPlateau,
+)
 from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 
+import boiling_learning as bl
 from boiling_learning.management import Mirror
-from boiling_learning.model_definitions import HoboldNet2
+from boiling_learning.model.definitions import HoboldNet2
 
 pp = pprint.PrettyPrinter(indent=4, width=160)
 

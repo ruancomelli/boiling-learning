@@ -1,3 +1,10 @@
+import more_itertools as mit
+
+from boiling_learning.preprocessing import Case
+
+case = Case()
+
+
 def group_files_move(path, keyfunc, mover_gen):
     from boiling_learning.utils import group_files
 
@@ -19,7 +26,6 @@ def group_files_move(path, keyfunc, mover_gen):
 #     )
 # )
 
-import more_itertools as mit
 
 for p in case.frames_path.iterdir():
     if mit.ilen(p.glob('*.png')) != 0:
