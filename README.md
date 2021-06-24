@@ -1,14 +1,113 @@
 Boiling Learning
 ===
 
-# About
+About
+---
 
 Project developed by me, [Ruan Comelli](https://github.com/ruancomelli), at [UFSC (Federal University of Santa Catarina)](https://ufsc.br/) in order to obtain a Master's degree in Mechanical Engineering.
 
-# Versioning
+This project has evolved a lot since its beginning, so please be kind when judging it. In particular, much of the CI scripts were developed only after a good portion of the core functionality was already implemented.
+
+If you are curious about the evolution of this project, take a look at the [changelog](CHANGELOG.md).
+
+Versioning
+---
 
 This project uses [semantic versioning](https://semver.org/) with an additional convention: since we are still in initial development, the major version is zero: `v0.y.z`; number `y` will be incremented whenever backward incompatible changes are introduced to the API (thus `y` plays the role of the major version for stable APIs), whereas number `z` will be incremented for bug fixes, backward compatible changes, deprecations etc. (this way, `z` combines stable APIs' minor and patch version numbers).
 
-# Upcoming
+Installation
+---
+
+First of all, thank you for your interest in this project!
+
+To install Boiling Learning in your local machine, first clone it from this repository:
+```sh
+git clone https://github.com/ruancomelli/boiling-learning.git
+```
+and then move to your new local repository:
+```sh
+cd boiling-learning
+```
+
+When you're there, make sure that you start a new [virtual environment](https://docs.python.org/3/tutorial/venv.html) to encapsulate the packages you are about to install:
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+If everything runs smoothly, you can just install the Boiling Learning's requirements:
+```sh
+pip install -r requirements.txt
+```
+
+If you also wish to execute the provided [Python scripts](boiling_learning/scripts), install the scripts requirements:
+```sh
+pip install -r requirements-dev.txt
+```
+
+To install Boiling Learning, run:
+```
+python setup.py install
+```
+
+Now we're all set to start learning phase change using neural nets!
+
+Contributing
+---
+
+### Setting up your local environment
+
+To set up your local environment for development, first follow the steps outlined in [Installation](#installation).
+
+After everything is installed correctly, install the development requirements:
+```sh
+pip install -r requirements-dev.txt
+```
+
+Then install the [pre-commit](https://pre-commit.com/) git hooks:
+```sh
+pre-commit install
+```
+
+### Making changes
+
+For now, there isn't really a standard for making changes. Try to stick to the pattern you see in the code you are writing.
+
+When you're done with your changes, and before committing anything, make sure that you didn't break already implemented functionality by running the tests. Tests can be executed with:
+```sh
+python -m unittest tests/test_*
+```
+
+Code coverage can be easily inspected with the script [`coverage.sh`](scripts/coverage.sh):
+```sh
+. ./scripts/coverage.sh
+```
+
+### Committing
+
+After you make and stage your changes, instead of running `git commit`, use the standardized committing script [`commit.sh`](scripts/commit.sh), which uses [Commitizen](https://github.com/commitizen-tools/commitizen):
+```sh
+. ./scripts/commit.sh
+```
+
+### Releasing new versions
+
+If you are a maintainer and you wish to bump the project's version, please run our [release script](scripts/release.sh):
+```sh
+. ./scripts/release.sh
+```
+
+This uses [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and [Semantic Versioning](https://semver.org/) to decide which version to bump the project to. If you are unhappy with this, you can manually decide which version number to increment:
+```sh
+. ./scripts/release.sh --increment [MAJOR|MINOR|PATCH]
+```
+
+The release scripts forwards all arguments to [Commitizen's bump command](https://github.com/commitizen-tools/commitizen/blob/master/docs/bump.md), so anything they accept works here as well. In particular, another thing you may wish to do is to bump a prerelease version:
+```sh
+. ./scripts/release.sh --prerelease [alpha|beta|rc]
+```
+
+Upcoming
+---
 
 - Improved README.
