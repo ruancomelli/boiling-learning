@@ -1,1 +1,1 @@
-# bumpversion $1 && git push && git push --tags
+cz bump $@ && git push && git push --tags

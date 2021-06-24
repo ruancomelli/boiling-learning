@@ -1,3 +1,9 @@
+## v0.3.1 (2021-06-24)
+
+### Fix
+
+- **git**: restage files after pre-commit fixes
+
 ## v0.3.0 (2021-06-24)
 
 ### Refactor
