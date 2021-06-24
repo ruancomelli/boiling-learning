@@ -19,16 +19,63 @@ Projeto final da disciplina [EEL7513-09202|EEL7514-08235|EEL510417-41000056ME/DO
 
 ## Inicialização
 """
+import itertools
+import json
+import sys
+from ast import literal_eval
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import modin.pandas as pd
+import numpy as np
+import tensorflow as tf
+import tensorflow.keras.backend as K
+from google.colab import drive
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MultiLabelBinarizer
+from tensorflow.keras.applications.densenet import (
+    DenseNet121,
+    DenseNet169,
+    DenseNet201,
+)
+from tensorflow.keras.applications.inception_resnet_v2 import InceptionResNetV2
+from tensorflow.keras.applications.inception_v3 import InceptionV3
+from tensorflow.keras.applications.mobilenet import MobileNet
+from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2
+from tensorflow.keras.applications.nasnet import NASNetLarge, NASNetMobile
+from tensorflow.keras.applications.resnet import ResNet50, ResNet101, ResNet152
+from tensorflow.keras.applications.resnet_v2 import (
+    ResNet50V2,
+    ResNet101V2,
+    ResNet152V2,
+)
+from tensorflow.keras.applications.vgg16 import VGG16
+from tensorflow.keras.applications.vgg19 import VGG19
+from tensorflow.keras.applications.xception import Xception
+from tensorflow.keras.callbacks import (
+    EarlyStopping,
+    ModelCheckpoint,
+    ReduceLROnPlateau,
+    TensorBoard,
+)
+from tensorflow.keras.optimizers import (
+    SGD,
+    Adadelta,
+    Adagrad,
+    Adam,
+    Adamax,
+    Nadam,
+    RMSprop,
+)
+from tensorflow.keras.preprocessing.image import ImageDataGenerator, save_img
+from tensorflow.keras.regularizers import l1, l2
+from tensorflow.python.keras.losses import LossFunctionWrapper
+from tensorflow.python.keras.metrics import MeanMetricWrapper
 
 user = 'ruan.comelli@lepten.ufsc.br'
 
 # Mount Google Drive
-from pathlib import Path
-
-from google.colab import drive
-
 drive_path = Path('/content/drive')
-
 drive.mount(str(drive_path))
 
 # Define paths
@@ -60,8 +107,6 @@ results_path = project_path / 'results'  # path where the results are stored
 results_path.mkdir(parents=True, exist_ok=True)
 keras_results_path = results_path / 'keras'
 keras_results_path.mkdir(parents=True, exist_ok=True)
-
-import sys
 
 sys.path.append(
     str(project_path)
@@ -201,15 +246,12 @@ def regularize_default(
 
 
 """### Gerenciador de modelos"""
-
-import json
-from pathlib import Path
-
-
 # Manager is a class design for automating the process of creating, saving and loading models.
 # By means of the function provide_model, the manager will first check if any models were already
 # created and trained using the given parameters. If so, the model is not retrained, but only loaded
 # from disk.
+
+
 class Manager:
     def __init__(
         self,
@@ -428,14 +470,6 @@ class ElementCreator:
 
 
 """### Métricas customizadas"""
-
-import modin.pandas as pd
-import numpy as np
-import tensorflow as tf
-import tensorflow.keras.backend as K
-from tensorflow.python.keras.losses import LossFunctionWrapper
-from tensorflow.python.keras.metrics import MeanMetricWrapper
-
 # References:
 # https://stackoverflow.com/questions/49007163/keras-get-true-negative-from-y-true-and-y-pred
 # https://stackoverflow.com/questions/38036588/tensorflow-with-gpu-and-cuda-v5-5
@@ -647,33 +681,21 @@ fill_aug_imgs = False
 ### Importar dados
 """
 
-from sklearn.preprocessing import MultiLabelBinarizer
-
 # more paths
 category_attribute_prediction_path = (
-    (deepfashion_path / 'Category and Attribute Prediction Benchmark')
-    .absolute()
-    .resolve()
-)
-images_path = (category_attribute_prediction_path / 'Img').absolute().resolve()
+    deepfashion_path / 'Category and Attribute Prediction Benchmark'
+).resolve()
+images_path = (category_attribute_prediction_path / 'Img').resolve()
 augmented_imgs_path = (
-    (category_attribute_prediction_path / 'Img' / 'aug_img')
-    .absolute()
-    .resolve()
-)
-annotations_path = (
-    (category_attribute_prediction_path / 'Anno').absolute().resolve()
-)
-evaluation_path = (
-    (category_attribute_prediction_path / 'Eval').absolute().resolve()
-)
+    category_attribute_prediction_path / 'Img' / 'aug_img'
+).resolve()
+annotations_path = (category_attribute_prediction_path / 'Anno').resolve()
+evaluation_path = (category_attribute_prediction_path / 'Eval').resolve()
 
 dataset_anno_path = annotations_path / 'dataset.csv'
 dataset_path = (
-    (category_attribute_prediction_path / 'Img' / 'dataset')
-    .absolute()
-    .resolve()
-)
+    category_attribute_prediction_path / 'Img' / 'dataset'
+).resolve()
 dataset_path.mkdir(parents=True, exist_ok=True)
 
 # n_categories = int(pd.read_csv(annotations_path / 'list_category_cloth.txt', nrows=1, header=None)[0][0])
@@ -723,12 +745,6 @@ n_labels = attr_binarizer.classes_.size
 print(n_labels, 'classes found:', attr_binarizer.classes_)
 
 """### Data augmentation"""
-
-from ast import literal_eval
-
-from sklearn.preprocessing import MultiLabelBinarizer
-from tensorflow.keras.preprocessing.image import ImageDataGenerator, save_img
-
 n_attribute_imgs = int(
     pd.read_csv(annotations_path / 'list_attr_img.txt', nrows=1, header=None)[
         0
@@ -835,7 +851,7 @@ if not augment_previously or not previously_augmented:
                 chunk, verify_integrity=True, sort=False
             )
 
-            print(f' - Done')
+            print(' - Done')
         try:
             print('Trying to write attribute images', end='')
             attribute_imgs.to_csv(attribute_imgs_path, index=False)
@@ -951,9 +967,6 @@ if previously_augmented:
 
 ### Geração do conjunto de dados
 """
-
-from sklearn.model_selection import train_test_split
-
 # Setup ============================
 dataset_size = 10000
 # problem = 'category'
@@ -975,10 +988,11 @@ if (not from_file) or (not from_file_success):
         else:
             dataset = attribute_imgs
     elif problem == 'category':
-        if previously_augmented:
-            dataset = category_aug_imgs
-        else:
-            dataset = category_imgs
+        # if previously_augmented:
+        #     dataset = category_aug_imgs
+        # else:
+        #     dataset = category_imgs
+        raise ValueError('there is no support for problem "category"')
 
     dataset, _ = train_test_split(dataset, train_size=dataset_size)
 
@@ -1140,13 +1154,13 @@ def save_serialized(save_map):
 
 
 def save_keras_model(keras_model, path):
-    keras_model.save(str(path.absolute().resolve()))
+    keras_model.save(str(path.resolve()))
 
 
 def save_pkl(obj, path):
     import pickle
 
-    with path.absolute().resolve().open('wb') as file:
+    with path.resolve().open('wb') as file:
         pickle.dump(obj, file, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -1169,7 +1183,7 @@ def load_keras_model(path):
     from tensorflow.keras.models import load_model
 
     return load_model(
-        str(path.absolute().resolve()),
+        str(path.resolve()),
         custom_objects={
             'F1Score': F1Score,
             'f1_score': custom_metrics.probabilistic.f1_score,
@@ -1180,7 +1194,7 @@ def load_keras_model(path):
 def load_pkl(path):
     import pickle
 
-    with path.absolute().resolve().open('rb') as file:
+    with path.resolve().open('rb') as file:
         return pickle.load(file)
 
 
@@ -1194,21 +1208,6 @@ manager = Manager(
 )
 
 # map strings to objects aiming to facilitate the use o
-
-from tensorflow.keras.applications.densenet import (DenseNet121, DenseNet169,
-                                                    DenseNet201)
-from tensorflow.keras.applications.inception_resnet_v2 import InceptionResNetV2
-from tensorflow.keras.applications.inception_v3 import InceptionV3
-from tensorflow.keras.applications.mobilenet import MobileNet
-from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2
-from tensorflow.keras.applications.nasnet import NASNetLarge, NASNetMobile
-from tensorflow.keras.applications.resnet import ResNet50, ResNet101, ResNet152
-from tensorflow.keras.applications.resnet_v2 import (ResNet50V2, ResNet101V2,
-                                                     ResNet152V2)
-from tensorflow.keras.applications.vgg16 import VGG16
-from tensorflow.keras.applications.vgg19 import VGG19
-from tensorflow.keras.applications.xception import Xception
-
 application_dict = {
     'Xception': Xception,
     'VGG16': VGG16,
@@ -1230,9 +1229,6 @@ application_dict = {
     'MobileNetV2': MobileNetV2,
 }
 
-from tensorflow.keras.optimizers import (SGD, Adadelta, Adagrad, Adam, Adamax,
-                                         Nadam, RMSprop)
-
 optimizer_dict = {
     'SGD': SGD,
     'RMSprop': RMSprop,
@@ -1243,18 +1239,12 @@ optimizer_dict = {
     'Nadam': Nadam,
 }
 
-
-from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
-                                        ReduceLROnPlateau, TensorBoard)
-
 callback_dict = {
     'ModelCheckpoint': ModelCheckpoint,
     'ReduceLROnPlateau': ReduceLROnPlateau,
     'TensorBoard': TensorBoard,
     'EarlyStopping': EarlyStopping,
 }
-
-from tensorflow.keras.regularizers import l1, l2
 
 regularizer_dict = {
     'l1': l1,
@@ -1264,6 +1254,8 @@ regularizer_dict = {
 """### Treinamento"""
 
 # creator method: creates a model, compiles it and fits it, return (model, history)
+
+
 def creator_method(
     dataset_size,
     base_net,
@@ -1327,7 +1319,7 @@ model_creator = ElementCreator(
 
 loss_dict = {
     'binary_crossentropy': 'binary_crossentropy',
-    'f1_loss': F1Loss(),  #! NOT WORKING !
+    'f1_loss': F1Loss(),  # ! NOT WORKING !
 }
 
 # definition of parameters for creating models
@@ -1452,9 +1444,6 @@ while any(
             interesting_results['horrible'].append(
                 {'X_val': X_val_, 'y_val': y_val_exp_t[0], 'y': y_exp_t[0]}
             )
-
-import matplotlib.pyplot as plt
-
 for key, values in interesting_results.items():
     print_header(key, level=0)
     for idx, value in enumerate(values):
@@ -1464,11 +1453,8 @@ for key, values in interesting_results.items():
         print(f'predicted = {value["y"]}')
 
 """### Resultados"""
-
-from itertools import product
-
 filename_format = '{base_net}_e{epochs:d}_w{weight:d}_ds{ds_size:d}.csv'
-for base_net, epochs, weight, ds_size in product(
+for base_net, epochs, weight, ds_size in itertools.product(
     ['VGG16', 'MobileNetV2', 'ResNet50V2'],
     [20, 40, 100],
     [1, 10, 100, 1000],
