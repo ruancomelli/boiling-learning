@@ -1,8 +1,12 @@
 import json
 from unittest import TestCase
 
-from boiling_learning.io.storage import (json_decode, json_deserialize,
-                                         json_encode, json_serialize)
+from boiling_learning.io.storage import (
+    json_decode,
+    json_deserialize,
+    json_encode,
+    json_serialize,
+)
 
 
 class storage_Test(TestCase):
