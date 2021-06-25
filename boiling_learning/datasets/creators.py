@@ -1,7 +1,7 @@
 import pprint
 import warnings
 from collections import defaultdict
-from typing import Container, Optional, Sequence, Union
+from typing import Container, Iterable, Optional, Sequence, Union
 
 import dataclassy
 import more_itertools as mit
@@ -11,6 +11,7 @@ import boiling_learning.preprocessing as bl_preprocessing
 import boiling_learning.utils as bl_utils
 from boiling_learning.datasets.datasets import (
     DatasetSplits,
+    apply_transformers,
     concatenate,
     train_val_test_split,
 )
@@ -29,17 +30,15 @@ from boiling_learning.utils.utils import PathLike
 def experiment_video_dataset_creator(
     experiment_video: bl_preprocessing.ExperimentVideo,
     splits: DatasetSplits,
-    data_preprocessors: Sequence[Transformer],
+    data_preprocessors: Iterable[Transformer],
     dataset_size: Optional[int] = None,
     snapshot_path: Optional[PathLike] = None,
     num_shards: Optional[int] = None,
 ):
-    ds = experiment_video.as_tf_dataset()
+    data_preprocessors = tuple(data_preprocessors)
 
-    for t in data_preprocessors:
-        ds = ds.map(
-            t.as_tf_py_function(pack_tuple=True), num_parallel_calls=AUTOTUNE
-        )
+    ds = experiment_video.as_tf_dataset()
+    ds = apply_transformers(ds, data_preprocessors)
 
     ds_train, ds_val, ds_test = train_val_test_split(ds, splits)
 
@@ -194,7 +193,7 @@ def dataset_creator(
 @Transformer.make('dataset_post_processor')
 def dataset_post_processor(
     ds: DatasetTriplet,
-    data_augmentors: Sequence[Transformer],
+    data_augmentors: Iterable[Transformer],
     cache: Union[bool, PathLike] = False,
     batch_size: Optional[int] = None,
     prefetch: bool = True,
@@ -204,6 +203,8 @@ def dataset_post_processor(
     take: Optional[int] = None,
     verbose: bool = False,
 ):
+    data_augmentors = tuple(data_augmentors)
+
     if verbose:
         print('>>>> Datasets:', ds)
         print('>>>> Data augmentors:', data_augmentors)
@@ -228,22 +229,20 @@ def dataset_post_processor(
             ds_val = ds_val.cache(str(cache / 'val'))
         ds_test = ds_test.cache(str(cache / 'test'))
 
-    for data_augmentor in data_augmentors:
-        ds_train = ds_train.map(
-            data_augmentor.as_tf_py_function(pack_tuple=True),
-            num_parallel_calls=AUTOTUNE,
-        )
+    ds_train = apply_transformers(ds_train, data_augmentors)
 
-        if augment_test or data_augmentor.name in force_test_augmentors:
-            if ds_val is not None:
-                ds_val = ds_val.map(
-                    data_augmentor.as_tf_py_function(pack_tuple=True),
-                    num_parallel_calls=AUTOTUNE,
-                )
-            ds_test = ds_test.map(
-                data_augmentor.as_tf_py_function(pack_tuple=True),
-                num_parallel_calls=AUTOTUNE,
-            )
+    test_augmentors = (
+        data_augmentors
+        if augment_test
+        else tuple(
+            data_augmentor
+            for data_augmentor in data_augmentors
+            if data_augmentor.name in force_test_augmentors
+        )
+    )
+    if ds_val is not None:
+        ds_val = apply_transformers(ds_val, test_augmentors)
+    ds_test = apply_transformers(ds_test, test_augmentors)
 
     if shuffle_size is not None:
         ds_train = ds_train.shuffle(shuffle_size)

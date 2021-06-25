@@ -9,9 +9,11 @@ import more_itertools as mit
 import tensorflow as tf
 from dataclassy import dataclass
 from frozendict import frozendict
+from tensorflow.data.experimental import AUTOTUNE
 
 import boiling_learning.utils.mathutils as mathutils
 from boiling_learning.io.io import DatasetTriplet
+from boiling_learning.preprocessing.transformers import Transformer
 
 _sentinel = object()
 _T = TypeVar('_T')
@@ -328,3 +330,14 @@ def filter_unbatched(
     return apply_unbatched(
         dataset, lambda ds: ds.filter(pred_fn), dim=dim, key=key
     )
+
+
+def apply_transformers(
+    ds: tf.data.Dataset, transformers: Iterable[Transformer]
+) -> tf.data.Dataset:
+    for transformer in transformers:
+        ds = ds.map(
+            transformer.as_tf_py_function(pack_tuple=True),
+            num_parallel_calls=AUTOTUNE,
+        )
+    return ds
