@@ -1,3 +1,9 @@
+## v0.3.2 (2021-06-25)
+
+### Refactor
+
+- **datasets**: implement function for applying transformers to a dataset
+
 ## v0.3.1 (2021-06-24)
 
 ### Fix
