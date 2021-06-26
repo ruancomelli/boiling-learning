@@ -22,4 +22,5 @@ version_files = [
 ]
 
 [tool.commitizen.customize]
+bump_pattern = "^(break|new|fix|hotfix)"
 bump_map = {break = "MINOR", new = "PATCH", fix = "PATCH", hotfix = "PATCH"}
