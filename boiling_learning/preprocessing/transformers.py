@@ -1,5 +1,14 @@
 import operator
-from typing import Callable, Generic, Iterator, Mapping, Tuple, TypeVar, Union
+from typing import (
+    Callable,
+    Generic,
+    Iterator,
+    Mapping,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import funcy
 
@@ -126,12 +135,10 @@ class KeyedImageDatasetTransformer(
         self,
         name: str,
         f: Callable[..., S],
-        pack_map: Mapping[Union[None, str], Pack],
-        key_getter: Callable[[U], Union[None, str]] = operator.itemgetter(
-            'name'
-        ),
+        packer: Union[Callable[[str], Pack], Mapping[Optional[str], Pack]],
+        key_getter: Callable[[U], Optional[str]] = operator.itemgetter('name'),
     ):
-        self.pack_map = pack_map
+        self.packer = packer
 
         def g(img_data_pair: Tuple[T, U], *args, **kwargs) -> Tuple[S, U]:
             def mapped_f(img: T, data: U) -> Tuple[Union[T, S], U]:
@@ -144,15 +151,20 @@ class KeyedImageDatasetTransformer(
         super().__init__(name, g)
 
     def get_image_transformer(
-        self, f: Callable[..., S], key: Union[None, str]
+        self, f: Callable[..., S], key: Optional[str]
     ) -> Callable[[T], Union[T, S]]:
-        if key in self.pack_map:
-            pack = self.pack_map[key]
+        if callable(self.packer):
+            pack = self.packer(key)
             img_f = pack.rpartial(f)
 
             return img_f
-        elif None in self.pack_map:
-            pack = self.pack_map[None]
+        if key in self.packer:
+            pack = self.packer[key]
+            img_f = pack.rpartial(f)
+
+            return img_f
+        elif None in self.packer:
+            pack = self.packer[None]
             img_f = pack.rpartial(f)
 
             return img_f
@@ -160,7 +172,7 @@ class KeyedImageDatasetTransformer(
             return funcy.identity
 
     def describe(self) -> JSONDataType:
-        return funcy.merge(super().describe(), {'pack_map': self.pack_map})
+        return funcy.merge(super().describe(), {'packer': self.packer})
 
 
 class DictImageTransformer(
@@ -175,7 +187,7 @@ class DictImageTransformer(
         self,
         name: str,
         f: Callable[..., S],
-        packer: Union[Callable[[str], Pack], Mapping[Union[None, str], Pack]],
+        packer: Union[Callable[[str], Pack], Mapping[Optional[str], Pack]],
     ):
         self.packer = packer
         self._transformer_mapping = KeyedDefaultDict(self._transformer_factory)
@@ -206,8 +218,9 @@ class DictImageTransformer(
             return self.func, self.packer(key)
         else:
             raise ValueError(
-                'self.packer must be either a Mapping[Union[None, str], Pack] or a Callable[[str], Pack].'
-                f' Got {type(self.packer)}'
+                'self.packer must be either a Mapping[Optional[str], Pack] '
+                'or a Callable[[str], Pack]. '
+                f'Got {type(self.packer)}'
             )
 
     def _transformer_factory(self, key: str) -> ImageTransformer[T, U, S]:
