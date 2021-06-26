@@ -1,3 +1,9 @@
+## v0.3.3 (2021-06-26)
+
+### Fix
+
+- **git**: fix bug in commitizen configuration that still allowed the MAJOR version to increase
+
 ## v0.3.2 (2021-06-25)
 
 ### Refactor

@@ -1,3 +1,3 @@
 pre-commit run
 git update-index --again
-cz commit
+pre-commit run && cz commit
