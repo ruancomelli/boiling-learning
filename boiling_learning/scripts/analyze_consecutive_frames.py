@@ -12,6 +12,7 @@ def main(
     timeshifts: Iterable[int],
     metrics: Dict[str, Callable[[np.ndarray, np.ndarray], float]],
     final_timeshift: int = 1,
+    xscale: str = 'linear',
 ) -> None:
     frames = list(map(np.squeeze, map(ensure_grayscale, frames)))
 
@@ -34,7 +35,7 @@ def main(
         ax.set_title(
             f'{name} ({final_timeshift} -> {final_evaluation / original_evaluation:.0%})'
         )
-        ax.set_xscale('log')
+        ax.set_xscale(xscale)
 
         fig.show()
 

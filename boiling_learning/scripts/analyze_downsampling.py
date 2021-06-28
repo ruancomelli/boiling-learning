@@ -28,6 +28,7 @@ def main(
     metrics: Dict[str, Callable[[np.ndarray, np.ndarray], float]],
     downscale_factors: Iterable[int] = (),
     final_downscale_factor: int = 5,
+    xscale: str = 'log',
 ) -> None:
     image = ensure_grayscale(image)
     downscale_factors = sorted(
@@ -51,7 +52,7 @@ def main(
         ax.set_title(
             f'{name} ({final_downscale_factor} -> {final_evaluation / original_evaluation:.0%})'
         )
-        ax.set_xscale('log')
+        ax.set_xscale(xscale)
 
         fig.show()
 
