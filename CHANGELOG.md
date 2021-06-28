@@ -1,3 +1,9 @@
+## v0.3.4 (2021-06-28)
+
+### Feat
+
+- **scripts**: accept a *xscale* parameter in analyses scripts
+
 ## v0.3.3 (2021-06-28)
 
 ### Feat
