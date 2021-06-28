@@ -1,4 +1,12 @@
-## v0.3.3 (2021-06-26)
+## v0.3.3 (2021-06-28)
+
+### Feat
+
+- **transformers**: refactor KeyedImageDatasetTransformer for better compatibility with DictImageTransformer
+
+### BREAKING CHANGE
+
+- KeyedImageDatasetTransformer parameter *pack_map* renamed to *packer*
 
 ### Fix
 
