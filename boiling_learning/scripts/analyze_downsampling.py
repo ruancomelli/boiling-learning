@@ -1,3 +1,4 @@
+import math
 from functools import partial
 from typing import Callable, Dict, Iterable, List
 
@@ -47,12 +48,17 @@ def main(
         final_evaluation = evaluations[final_downscale_factor]
 
         fig, ax = plt.subplots()
-        ax.plot(downscale_factors, ev_ds)
-        ax.axvline(final_downscale_factor, linestyle='--', color='k')
+        ax.plot(downscale_factors, ev_ds, 'k.')
+        ax.plot([1], [original_evaluation], 'r.')
+        ax.axvline(final_downscale_factor, linestyle='--', color='gray')
         ax.set_title(
             f'{name} ({final_downscale_factor} -> {final_evaluation / original_evaluation:.0%})'
         )
         ax.set_xscale(xscale)
+        ax.set_xlabel('Downsampling factor')
+
+        bottom, top = ax.get_ylim()
+        ax.set_ylim(0, math.ceil(top))
 
         fig.show()
 

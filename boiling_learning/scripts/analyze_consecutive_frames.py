@@ -1,3 +1,4 @@
+import math
 from functools import partial
 from typing import Callable, Dict, Iterable, List
 
@@ -30,12 +31,19 @@ def main(
         final_evaluation = evaluations_dict[final_timeshift]
 
         fig, ax = plt.subplots()
-        ax.plot(timeshifts, evaluations)
-        ax.axvline(final_timeshift, linestyle='--', color='k')
+        ax.plot(timeshifts, evaluations, 'k.')
+        ax.plot([0], [original_evaluation], 'r.')
+        ax.axhline(original_evaluation, linestyle='--', color='gray')
+
+        ax.set_xlabel('Frame #')
+
         ax.set_title(
-            f'{name} ({final_timeshift} -> {final_evaluation / original_evaluation:.0%})'
+            f'{name} (Frame #{final_timeshift} = {final_evaluation / original_evaluation:.0%})'
         )
         ax.set_xscale(xscale)
+
+        _, top = ax.get_ylim()
+        ax.set_ylim(0, math.ceil(top))
 
         fig.show()
 
@@ -46,11 +54,11 @@ def main(
 
     ax = fig.add_subplot(1, 3, 1)
     ax.imshow(ref, cmap='gray')
-    ax.set_title('$t=0$')
+    ax.set_title('Frame #0')
 
     ax = fig.add_subplot(1, 3, 2)
     ax.imshow(frames[final_timeshift], cmap='gray')
-    ax.set_title(f'$t={final_timeshift}\\Delta t$')
+    ax.set_title(f'Frame #{final_timeshift}')
 
 
 if __name__ == '__main__':
