@@ -1,3 +1,9 @@
+## v0.3.5 (2021-06-30)
+
+### Refactor
+
+- **scripts**: improve output from consecutive frames and downsampling analysis scripts
+
 ## v0.3.4 (2021-06-28)
 
 ### Feat
