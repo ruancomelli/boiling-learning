@@ -1,3 +1,9 @@
+## v0.4.0 (2021-07-05)
+
+### Feat
+
+- **models**: add a LinearModel creator for easier baseline model instantiation
+
 ## v0.3.5 (2021-06-30)
 
 ### Refactor
