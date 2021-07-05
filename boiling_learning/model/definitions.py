@@ -3,6 +3,7 @@ from functools import partial
 from typing import Optional, Tuple, Union
 
 import funcy
+from tensorflow.keras.experimental import LinearModel as _LinearModel
 from tensorflow.keras.layers import (
     Activation,
     Conv2D,
@@ -454,3 +455,6 @@ def BoilNet(
     )
 
     return model
+
+
+LinearModel = make_creator('LinearModel')(_LinearModel)
