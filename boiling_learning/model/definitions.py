@@ -457,4 +457,27 @@ def BoilNet(
     return model
 
 
-LinearModel = make_creator('LinearModel')(_LinearModel)
+@make_creator('LinearModel')
+def LinearModel(
+    input_shape: Tuple,
+    dropout: Optional[float],
+    hidden_layers_policy: Union[str, Policy],
+    output_layer_policy: Union[str, Policy],
+    problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
+    num_classes: Optional[int] = None,
+    normalize_images: bool = False,
+) -> Model:
+    input_data = Input(shape=input_shape)
+    x = input_data  # start "current layer" as the input layer
+    if normalize_images:
+        x = LayerNormalization()(x)
+
+    problem = utils.enum_item(ProblemType, problem)
+    if problem is not ProblemType.REGRESSION:
+        raise ValueError(f'unsupported problem type: \"{problem}\"')
+
+    predictions = _LinearModel()(x)
+
+    model = Model(inputs=input_data, outputs=predictions)
+
+    return model
