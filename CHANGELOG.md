@@ -1,3 +1,9 @@
+## v0.5.2 (2021-07-06)
+
+### Feat
+
+- **models**: make `problem` case-insensitive in `LinearModel`
+
 ## v0.5.1 (2021-07-06)
 
 ### Fix
