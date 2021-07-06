@@ -1,1 +1,1 @@
-pre-commit run && cz bump $@ && git push && git push --tags
+pre-commit run && cz bump --increment $(. ./scripts/adapt_increment.sh) $@ && git push && git push --tags
