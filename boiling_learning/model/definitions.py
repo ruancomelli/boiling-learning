@@ -472,7 +472,7 @@ def LinearModel(
     if normalize_images:
         x = LayerNormalization()(x)
 
-    problem = utils.enum_item(ProblemType, problem)
+    problem = utils.enum_item(ProblemType, problem.upper())
     if problem is not ProblemType.REGRESSION:
         raise ValueError(f'unsupported problem type: \"{problem}\"')
 
