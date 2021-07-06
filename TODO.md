@@ -375,3 +375,4 @@ print(pipe())
 - [ ] check [Sample Correlation Coefficient](https://www.sciencedirect.com/topics/mathematics/sample-correlation-coefficient).
 - [ ] use [ONNX format](https://onnx.ai/index.html), [simplifier](https://github.com/daquexian/onnx-simplifier) and [optimizer](https://github.com/onnx/optimizer)?
 - [ ] take a look at the beautiful [ConvLSTM2D](https://www.tensorflow.org/api_docs/python/tf/keras/layers/ConvLSTM2D) for timeseries of images!
+- [ ] replace `Manager.lookup_table` with a [`TinyDB`](https://tinydb.readthedocs.io/en/latest/) instance.

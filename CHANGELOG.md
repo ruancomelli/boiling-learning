@@ -1,3 +1,9 @@
+## v0.5.1 (2021-07-06)
+
+### Fix
+
+- **models**: accept the same arguments in `LinearModel` that we accept in the other models
+
 ## v0.5.0 (2021-07-05)
 
 ## v0.4.0 (2021-07-05)
