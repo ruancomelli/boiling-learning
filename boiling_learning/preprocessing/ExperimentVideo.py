@@ -409,10 +409,13 @@ class ExperimentVideo:
         col_types = funcy.select_keys(set(df.columns), col_types)
         df = df.astype(col_types)
 
-        if df[self.column_names.elapsed_time].dtype.kind == 'm':
-            df[self.column_names.elapsed_time] = df[
-                self.column_names.elapsed_time
-            ].dt.total_seconds()
+        try:
+            if df[self.column_names.elapsed_time].dtype.kind == 'm':
+                df[self.column_names.elapsed_time] = df[
+                    self.column_names.elapsed_time
+                ].dt.total_seconds()
+        except KeyError:
+            pass
 
         if categories_as_int:
             df = bl_utils.dataframe_categories_to_int(df, inplace=True)
