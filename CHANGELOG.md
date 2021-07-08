@@ -1,3 +1,9 @@
+## v0.5.3 (2021-07-08)
+
+### Fix
+
+- **preprocessing**: fix dataframe type conversion when elapsed time column is absent
+
 ## v0.5.2 (2021-07-06)
 
 ### Feat
