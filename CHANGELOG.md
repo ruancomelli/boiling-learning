@@ -1,3 +1,13 @@
+## v0.7.0 (2021-07-08)
+
+### Fix
+
+- **visualization**: rename visualizer "boiling_region_cropper" as "region_cropper" to allow different use cases
+
+### BREAKING CHANGE
+
+- Transformers named "boiling_region_cropper" are no longer accepted. Please rename them as "region_cropper".
+
 ## v0.6.0 (2021-07-08)
 
 ### Fix
