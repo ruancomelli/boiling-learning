@@ -121,7 +121,7 @@ DEFAULT_VISUALIZERS = frozendict(
         'downscaler': lambda transformer, image: (
             (transformer.transform_image, image, transformer.pack),
         ),
-        'boiling_region_cropper': lambda transformer, image: (
+        'region_cropper': lambda transformer, image: (
             (transformer.transform_image, image, transformer.pack),
         ),
         'visualization_shrinker': lambda transformer, image: (
