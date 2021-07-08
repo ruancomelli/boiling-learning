@@ -43,7 +43,7 @@ DEFAULT_ANNOTATORS = frozendict(
         'grayscaler': None,
         'normalizer': None,
         'downscaler': None,
-        'boiling_region_cropper': lambda transformer, image, fig: fig.rect(
+        'region_cropper': lambda transformer, image, fig: fig.rect(
             x=(
                 transformer.pack.kwargs['left']
                 + transformer.pack.kwargs['right']
