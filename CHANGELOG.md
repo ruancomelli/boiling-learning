@@ -1,3 +1,13 @@
+## v0.6.0 (2021-07-08)
+
+### Fix
+
+- **visualization**: rename annotator "boiling_region_cropper" as "region_cropper" to semantically allow non-boiling transformers
+
+### BREAKING CHANGE
+
+- `DictImageTransformer`s named "boiling_region_cropper" are no longer accepted by visualization functions since they now lack annotators. Please rename them as "region_cropper" to get identical functionality as before.
+
 ## v0.5.3 (2021-07-08)
 
 ### Fix
