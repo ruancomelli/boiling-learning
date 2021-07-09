@@ -1,3 +1,9 @@
+## v0.7.1 (2021-07-09)
+
+### Fix
+
+- **visualization**: fix Bokeh visualization when inputs are tensors
+
 ## v0.7.0 (2021-07-08)
 
 ### Fix
