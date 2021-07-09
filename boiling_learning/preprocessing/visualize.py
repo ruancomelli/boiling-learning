@@ -241,7 +241,7 @@ def visualize_transformations(
         }
     )
 
-    if method in METHODS:
+    try:
         return METHODS[method](
             ev=ev,
             idx=idx,
@@ -251,8 +251,8 @@ def visualize_transformations(
             plot_original=plot_original,
             normalize=normalize,
         )
-    else:
-        raise ValueError(f'method must be one of {set(METHODS.keys())}')
+    except KeyError as e:
+        raise ValueError(f'method must be one of {set(METHODS.keys())}') from e
 
 
 def _visualize_transformations_plt(
@@ -355,9 +355,14 @@ def _make_fig(image, *args, **kwargs):
     return p
 
 
+def _tensor_to_image(tensor: tf.Tensor) -> np.ndarray:
+    return np.squeeze(tensor.numpy())
+
+
 def _make_figs(f_img_packs, return_single_image: bool = False):
+
     figs = [
-        _make_fig(f(img), y_axis_label=str(pack))
+        _make_fig(_tensor_to_image(f(img)), y_axis_label=str(pack))
         for f, img, pack in f_img_packs
     ]
 
