@@ -274,9 +274,9 @@ def _visualize_transformations_plt(
 
     visualization_title = f'{ev.name}[{idx}]'
     image = ev.frame(idx)
+
     if normalize:
         image = image / 255
-    n_transformers = len(transformers)
 
     print('Original image shape:', image.shape)
 
@@ -290,12 +290,7 @@ def _visualize_transformations_plt(
         ax.set_title(visualization_title)
         figs.append(fig)
 
-    columns = (
-        range(1, n_transformers + 1)
-        if plot_original
-        else range(n_transformers)
-    )
-    for column, transformer in zip(columns, transformers):
+    for transformer in transformers:
         transformer_name = transformer.name
         print(transformer_name)
         if isinstance(transformer, DictImageTransformer):
@@ -433,10 +428,8 @@ def _visualize_transformations_bokeh(
             p_canvas = bokeh.layouts.row(
                 bokeh.models.Div(text=visualization_title), p_canvas
             )
-            # p.add_layout(Title(text=visualization_title, align='center'), 'left')
 
         image = transformer.transform_image(image)
-        # ps.append(p)
         ps.append(p_canvas)
 
     return ps
