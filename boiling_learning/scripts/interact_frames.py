@@ -48,19 +48,20 @@ def _interact_dataset_frames(
 
     datasets_widget.observe(update_videos_list, 'value')
 
-    with experiment_videos_widget.value.frames() as f:
-        index_widget = widgets.IntSlider(
-            value=0, min=0, max=len(f), description='Frame:'
-        )
+    index_widget = widgets.IntSlider(
+        value=0,
+        min=0,
+        max=len(experiment_videos_widget.value),
+        description='Frame:',
+    )
 
     def update_max_index(changes):
-        with changes['new'].frames() as f:
-            index_widget.max = len(f)
+        index_widget.max = len(changes['new'])
 
     experiment_videos_widget.observe(update_max_index, 'value')
 
     def show_frames(dataset: ImageDataset, ev: ExperimentVideo, idx: int):
-        imshow(ev.frame(idx))
+        imshow(ev[idx])
 
     interact(
         show_frames,

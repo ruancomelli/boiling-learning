@@ -273,7 +273,7 @@ def _visualize_transformations_plt(
     print('Transformers:', transformers)
 
     visualization_title = f'{ev.name}[{idx}]'
-    image = ev.frame(idx)
+    image = ev[idx]
 
     if normalize:
         image = image / 255
@@ -393,7 +393,7 @@ def _visualize_transformations_bokeh(
     print('Transformers:', transformers)
 
     visualization_title = f'{ev.name}[{idx}]'
-    image = ev.frame(idx)
+    image = ev[idx]
     if normalize:
         image = image / 255
 

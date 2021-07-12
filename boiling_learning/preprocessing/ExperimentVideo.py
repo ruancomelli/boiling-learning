@@ -1,5 +1,4 @@
 import operator
-from contextlib import contextmanager
 from pathlib import Path
 from typing import (
     Any,
@@ -38,7 +37,7 @@ from boiling_learning.preprocessing.video import (
 from boiling_learning.utils import PathLike, VerboseType, ensure_resolved
 
 
-class ExperimentVideo:
+class ExperimentVideo(Sequence[np.ndarray]):
     @dataclass
     class VideoData:
         '''Class for video data representation.
@@ -115,6 +114,8 @@ class ExperimentVideo:
         # self.video: Optional[decord.VideoReader] = None
         self.video: Optional[pims.Video] = None
         self._is_open_video: bool = False
+        self.start: int = 0
+        self.end: int = 0
 
         if name is None:
             self._name = self.video_path.stem
@@ -227,6 +228,25 @@ class ExperimentVideo:
             )
         )
 
+    def __len__(self) -> int:
+        self.open_video()
+        return self.end - self.start
+
+    def __getitem__(self, index: int) -> np.ndarray:
+        self.open_video()
+
+        length = len(self)
+
+        if index >= length:
+            raise IndexError(f'index must be less than {length}')
+
+        absolute_index = self.start + index
+
+        # normalize frames to TF's standard: `pims.Video` returns frames
+        # with float datatype, but scaled from 0 to 255 whereas TF expects
+        # those floating point types to be between 0 and 1
+        return self.video[absolute_index] / 255
+
     @property
     def name(self) -> str:
         return self._name
@@ -236,6 +256,7 @@ class ExperimentVideo:
         if not self._is_open_video:
             self.video = pims.Video(str(self.video_path))
             # self.video = decord.VideoReader(str(self.video_path))
+            self.end = len(self.video)
             self._is_open_video = True
 
     def close_video(self) -> None:
@@ -314,31 +335,6 @@ class ExperimentVideo:
 
     def frame_name(self, index: int) -> str:
         return self._frame_name_format().format(index=index)
-
-    @contextmanager
-    def sequential_frames(self) -> Iterator[Iterable[np.ndarray]]:
-        f = frames(self.video_path)
-        try:
-            yield f
-        finally:
-            f.close()
-
-    @contextmanager
-    def frames(
-        self, auto_open: bool = True
-    ) -> Iterator[Optional[Sequence[np.ndarray]]]:
-        if auto_open:
-            self.open_video()
-        yield self.video
-
-    def frame(self, i: int, auto_open: bool = True) -> np.ndarray:
-        if auto_open:
-            self.open_video()
-        elif not self._is_open_video:
-            raise ValueError(
-                'Video is not open. Please *open_video()* before getting frame.'
-            )
-        return self.video[i]
 
     def glob_frames(self) -> Iterable[Path]:
         if self.frames_path is None:
@@ -445,8 +441,7 @@ class ExperimentVideo:
                 'cannot convert to DataFrame. Video data must be previously set.'
             )
 
-        with self.frames() as f:
-            indices = range(len(f))
+        indices = range(len(self))
 
         data = bl_utils.merge_dicts(
             {
@@ -528,7 +523,7 @@ class ExperimentVideo:
             if not isinstance(select_columns, str):
                 data = data.to_dict(orient='records')
 
-        return zip(map(self.frame, indices), data)
+        return zip(map(self.__getitem__, indices), data)
 
     def load_df(
         self,
@@ -614,15 +609,7 @@ class ExperimentVideo:
             raise ValueError('*frames_tensor_path* is not defined yet.')
 
         if overwrite or not self.frames_tensor_path.is_file():
-            self.open_video()
-            frames = tf.data.Dataset.from_generator(
-                lambda: self.video, tf.float32
-            )
-
-            # normalize frames to TF's standard: `pims.Video` returns frames
-            # with float datatype, but scaled from 0 to 255 whereas TF expects
-            # those floating point types to be between 0 and 1
-            frames = frames.map(lambda frame: frame / 255)
+            frames = tf.data.Dataset.from_generator(lambda: self, tf.float32)
 
             if save:
                 save_dataset(frames, self.frames_tensor_path)
