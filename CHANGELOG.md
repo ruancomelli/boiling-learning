@@ -1,3 +1,17 @@
+## v0.8.0 (2021-07-12)
+
+### Feat
+
+- **preprocessing**: make `ExperimentVideo`s into `Sequence`s of frames
+
+### BREAKING CHANGE
+
+- Previous frame access methods were removed: `.frame()`, `.frames()` and `.sequential_frames()`
+
+### Refactor
+
+- **visualization**: simplify visualization function
+
 ## v0.7.1 (2021-07-09)
 
 ### Fix
