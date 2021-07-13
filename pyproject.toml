@@ -20,3 +20,10 @@ version = "0.8.0"
 version_files = [
 	"VERSION",
 ]
+
+[tool.unimport]
+gitignore = true
+ignore_init = true
+include_star_import = true
+remove = true
+requirements = true

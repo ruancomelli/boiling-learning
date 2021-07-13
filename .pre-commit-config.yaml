@@ -1,6 +1,6 @@
 repos:
 - repo: https://github.com/humitos/mirrors-autoflake
-  rev: v1.3
+  rev: v1.1
   hooks:
   - id: autoflake
     args: [
@@ -11,12 +11,18 @@ repos:
       '--remove-duplicate-keys',
       '--remove-unused-variables'
     ]
+- repo: https://github.com/hakancelik96/unimport
+  rev: 0.8.3
+  hooks:
+  - id: unimport
+    args:
+      [--remove, --requirements, --include-star-import, --ignore-init, --gitignore]
 - repo: https://github.com/psf/black
-  rev: 21.5b1
+  rev: 21.6b0
   hooks:
   - id: black
 - repo: https://github.com/pycqa/isort
-  rev: 5.8.0
+  rev: 5.9.2
   hooks:
   - id: isort
     name: isort (python)
