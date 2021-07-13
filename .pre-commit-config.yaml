@@ -6,8 +6,6 @@ repos:
     args: [
       '--in-place',
       '--expand-star-imports',
-      '--remove-all-unused-imports',
-      '--ignore-init-module-imports',
       '--remove-duplicate-keys',
       '--remove-unused-variables'
     ]
