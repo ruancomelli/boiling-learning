@@ -14,7 +14,7 @@ repos:
   hooks:
   - id: unimport
     args:
-      [--remove, --requirements, --include-star-import, --ignore-init, --gitignore]
+      [--remove, --include-star-import, --ignore-init, --gitignore]
 - repo: https://github.com/psf/black
   rev: 21.6b0
   hooks:
