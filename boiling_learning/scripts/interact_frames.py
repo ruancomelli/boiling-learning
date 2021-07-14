@@ -55,12 +55,12 @@ def _interact_dataset_frames(
     index_widget = widgets.IntSlider(
         value=0,
         min=0,
-        max=len(experiment_videos_widget.value),
+        max=len(experiment_videos_widget.value) - 1,
         description='Frame:',
     )
 
     def update_max_index(changes):
-        index_widget.max = len(changes['new'])
+        index_widget.max = len(changes['new']) - 1
 
     experiment_videos_widget.observe(update_max_index, 'value')
 
