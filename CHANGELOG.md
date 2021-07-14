@@ -1,3 +1,17 @@
+## v0.9.0 (2021-07-14)
+
+### Fix
+
+- **preprocessing**: remove competitive behaviour between `ExperimentVideo.open_video` and `ExperimentVideo.data.setter` when defining the end index
+
+### Refactor
+
+- **management**: remove unused `Persistent` functionality
+
+### BREAKING CHANGE
+
+- Classes `Persistent` and `PersistentTransformer` are no longer defined
+
 ## v0.8.2 (2021-07-13)
 
 ### Fix
