@@ -122,7 +122,7 @@ class ExperimentVideo(Sequence[np.ndarray]):
         self.video: Optional[pims.Video] = None
         self._is_open_video: bool = False
         self.start: int = 0
-        self.end: int = 0
+        self.end: Optional[int] = None
 
         if name is None:
             self._name = self.video_path.stem
@@ -283,7 +283,8 @@ class ExperimentVideo(Sequence[np.ndarray]):
         if not self._is_open_video:
             self.video = pims.Video(str(self.video_path))
             # self.video = decord.VideoReader(str(self.video_path))
-            self.end = len(self.video)
+            if self.end is None:
+                self.end = len(self.video)
             self._is_open_video = True
 
     def close_video(self) -> None:
