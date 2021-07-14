@@ -1,9 +1,10 @@
+import math
 import operator
+from datetime import timedelta
 from pathlib import Path
 from typing import (
     Any,
     Iterable,
-    Iterator,
     List,
     Mapping,
     Optional,
@@ -32,7 +33,6 @@ from boiling_learning.preprocessing.video import (
     convert_video,
     extract_audio,
     extract_frames,
-    frames,
 )
 from boiling_learning.utils import PathLike, VerboseType, ensure_resolved
 
@@ -50,14 +50,18 @@ class ExperimentVideo(Sequence[np.ndarray]):
                 'nominal_power': 85
             }
         fps: [...]. Example: 30
-        ref_image: [...]. Example: 'GOPR_frame1263.png'
+        ref_index: [...]. Example: 155
         ref_elapsed_time: [...]. Example: 12103
         '''
 
         categories: Mapping[str, Any] = {}
         fps: Optional[float] = None
-        ref_index: Optional[str] = None
-        ref_elapsed_time: Optional[str] = None
+        ref_index: Optional[int] = None
+        ref_elapsed_time: Optional[timedelta] = None
+        start_elapsed_time: Optional[timedelta] = None
+        start_index: Optional[int] = None
+        end_elapsed_time: Optional[timedelta] = None
+        end_index: Optional[int] = None
 
     @dataclass(frozen=True, kwargs=True)
     class VideoDataKeys:
@@ -65,6 +69,10 @@ class ExperimentVideo(Sequence[np.ndarray]):
         fps: str = 'fps'
         ref_index: str = 'ref_index'
         ref_elapsed_time: str = 'ref_elapsed_time'
+        start_elapsed_time: str = 'start_elapsed_time'
+        start_index: str = 'start_index'
+        end_elapsed_time: str = 'end_elapsed_time'
+        end_index: str = 'end_index'
 
     @dataclass(frozen=True, kwargs=True)
     class DataFrameColumnNames:
@@ -105,7 +113,7 @@ class ExperimentVideo(Sequence[np.ndarray]):
         self.audio_path: Optional[Path]
         self.df_path: Optional[Path]
         self.frames_tensor_path: Optional[Path]
-        self.data: Optional[self.VideoData] = None
+        self._data: Optional[self.VideoData] = None
         self._name: str
         self.column_names: self.DataFrameColumnNames = column_names
         self.column_types: self.DataFrameColumnTypes = column_types
@@ -250,6 +258,28 @@ class ExperimentVideo(Sequence[np.ndarray]):
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def data(self) -> Optional[VideoData]:
+        return self._data
+
+    @data.setter
+    def data(self, data: VideoData) -> None:
+        self._data = data
+
+        if data.start_index is not None:
+            self.start = data.start_index
+        elif data.start_elapsed_time is not None:
+            self.start = math.round(
+                data.start_elapsed_time.total_seconds() * data.fps
+            )
+
+        if data.end_index is not None:
+            self.end = data.end_index
+        elif data.end_elapsed_time is not None:
+            self.end = math.round(
+                data.end_elapsed_time.total_seconds() * data.fps
+            )
 
     def open_video(self) -> None:
         # decord.bridge.set_bridge('tensorflow')
@@ -504,12 +534,6 @@ class ExperimentVideo(Sequence[np.ndarray]):
             self.df = df
 
         return df
-
-    # @overload
-    # def iterdata_from_dataframe(self, select_columns: str) -> Iterable[Tuple[np.ndarray, Any]]: ...
-
-    # @overload
-    # def iterdata_from_dataframe(self, select_columns: Optional[List[str]]) -> Iterable[Tuple[np.ndarray, dict]]: ...
 
     def iterdata_from_dataframe(
         self, select_columns: Optional[Union[str, List[str]]] = None
