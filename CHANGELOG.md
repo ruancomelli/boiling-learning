@@ -1,3 +1,9 @@
+## v0.8.2 (2021-07-13)
+
+### Fix
+
+- **preprocessing**: use built-in `round` instead of trying (and failing) to import from `math`
+
 ## v0.8.1 (2021-07-13)
 
 ### Feat
