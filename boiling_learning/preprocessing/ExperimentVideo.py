@@ -1,4 +1,3 @@
-import math
 import operator
 from datetime import timedelta
 from pathlib import Path
@@ -270,16 +269,14 @@ class ExperimentVideo(Sequence[np.ndarray]):
         if data.start_index is not None:
             self.start = data.start_index
         elif data.start_elapsed_time is not None:
-            self.start = math.round(
+            self.start = round(
                 data.start_elapsed_time.total_seconds() * data.fps
             )
 
         if data.end_index is not None:
             self.end = data.end_index
         elif data.end_elapsed_time is not None:
-            self.end = math.round(
-                data.end_elapsed_time.total_seconds() * data.fps
-            )
+            self.end = round(data.end_elapsed_time.total_seconds() * data.fps)
 
     def open_video(self) -> None:
         # decord.bridge.set_bridge('tensorflow')
