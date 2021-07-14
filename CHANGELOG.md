@@ -1,3 +1,9 @@
+## v0.9.2 (2021-07-14)
+
+### Fix
+
+- **visualization**: avoid `IndexError`s when interacting frames by correctly limiting the frames `IntSlider` widget
+
 ## v0.9.1 (2021-07-14)
 
 ### Fix
