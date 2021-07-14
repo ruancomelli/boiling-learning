@@ -1,3 +1,9 @@
+## v0.8.1 (2021-07-13)
+
+### Feat
+
+- **preprocessing**: allow setting experiment video `start` and `end` in `VideoData`
+
 ## v0.8.0 (2021-07-12)
 
 ### Feat
