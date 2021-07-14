@@ -1,3 +1,13 @@
+## v0.9.1 (2021-07-14)
+
+### Fix
+
+- **visualization**: fix image scaling when forwarding them to `cv2.imshow`
+
+### Refactor
+
+- **preprocessing**: remove old commented code from `ExperimentVideo` source file
+
 ## v0.9.0 (2021-07-14)
 
 ### Fix
