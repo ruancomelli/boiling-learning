@@ -12,7 +12,6 @@ from typing import (
     Union,
 )
 
-# import decord
 import funcy
 import modin.pandas as pd
 import numpy as np
@@ -118,7 +117,6 @@ class ExperimentVideo(Sequence[np.ndarray]):
         self.column_types: self.DataFrameColumnTypes = column_types
         self.df: Optional[pd.DataFrame] = None
         self.ds: Optional[tf.data.Dataset] = None
-        # self.video: Optional[decord.VideoReader] = None
         self.video: Optional[pims.Video] = None
         self._is_open_video: bool = False
         self.start: int = 0
@@ -279,12 +277,12 @@ class ExperimentVideo(Sequence[np.ndarray]):
             self.end = round(data.end_elapsed_time.total_seconds() * data.fps)
 
     def open_video(self) -> None:
-        # decord.bridge.set_bridge('tensorflow')
         if not self._is_open_video:
             self.video = pims.Video(str(self.video_path))
-            # self.video = decord.VideoReader(str(self.video_path))
+
             if self.end is None:
                 self.end = len(self.video)
+
             self._is_open_video = True
 
     def close_video(self) -> None:
@@ -606,7 +604,8 @@ class ExperimentVideo(Sequence[np.ndarray]):
     ) -> None:
         if self.df_path is None and (erase_old or renaming):
             raise ValueError(
-                '*erase_old* and *renaming* cannot be used if *df_path* is not defined yet.'
+                '*erase_old* and *renaming* cannot be used '
+                'if *df_path* is not defined yet.'
             )
 
         if erase_old:
