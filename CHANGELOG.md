@@ -1,3 +1,9 @@
+## v0.9.4 (2021-07-20)
+
+### Feat
+
+- **scripts**: add script for loading a video dataset tree in the form case:subcase:test:video
+
 ## v0.9.3 (2021-07-20)
 
 ### Feat
