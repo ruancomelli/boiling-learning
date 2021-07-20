@@ -1,3 +1,11 @@
+## v0.9.5 (2021-07-20)
+
+### Feat
+
+- **scripts**: define script for setting video data for condensation datasets
+- **scripts**: define `set_boiling_cases_data` script for adding video data to boiling cases
+- **scripts**: add default error when trying to execute `load_cases` and `load_dataset_tree` as standalone scripts
+
 ## v0.9.4 (2021-07-20)
 
 ### Feat
