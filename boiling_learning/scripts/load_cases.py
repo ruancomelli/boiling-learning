@@ -54,5 +54,5 @@ def main(
 
 if __name__ == '__main__':
     raise RuntimeError(
-        '*interact_frames* cannot be executed as a standalone script yet.'
+        '*load_cases* cannot be executed as a standalone script yet.'
     )
