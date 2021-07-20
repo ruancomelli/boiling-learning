@@ -1,3 +1,13 @@
+## v0.9.3 (2021-07-20)
+
+### Feat
+
+- **scripts**: define script for loading cases
+
+### Refactor
+
+- pre-import common subpackages directly on the package's __init__ file
+
 ## v0.9.2 (2021-07-14)
 
 ### Fix

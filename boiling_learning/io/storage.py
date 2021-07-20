@@ -1,11 +1,10 @@
 from importlib import import_module
-from typing import Any, Dict, TypeVar
+from typing import Any, Dict
 
 from plum import Dispatcher
 
 from boiling_learning.utils.table_dispatch import table_dispatch
 
-_T = TypeVar('_T')
 dispatch = Dispatcher()
 
 
