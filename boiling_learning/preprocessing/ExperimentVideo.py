@@ -626,18 +626,26 @@ class ExperimentVideo(Sequence[np.ndarray]):
     def frames_to_tensor(
         self, save: bool = False, overwrite: bool = False
     ) -> tf.data.Dataset:
-        if self.frames_tensor_path is None:
-            raise ValueError('*frames_tensor_path* is not defined yet.')
+        if self.frames_tensor_path is None and (save or overwrite):
+            raise ValueError(
+                '`frames_tensor_path` is not defined yet. '
+                'Please define it or pass both '
+                '`save=False` and `overwrite=False`.'
+            )
 
-        if overwrite or not self.frames_tensor_path.is_file():
-            frames = tf.data.Dataset.from_generator(lambda: self, tf.float32)
-
-            if save:
-                save_dataset(frames, self.frames_tensor_path)
-
-            return frames
-        else:
+        if (
+            self.frames_tensor_path is not None
+            and self.frames_tensor_path.is_file()
+            and not overwrite
+        ):
             return load_dataset(self.frames_tensor_path)
+
+        frames = tf.data.Dataset.from_generator(lambda: self, tf.float32)
+
+        if save:
+            save_dataset(frames, self.frames_tensor_path)
+
+        return frames
 
     def as_tf_dataset(
         self,
