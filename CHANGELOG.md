@@ -1,3 +1,9 @@
+## v0.9.6 (2021-07-22)
+
+### Fix
+
+- **preprocessing**: allow omitting `frames_tensor_path` when converting `ExperimentVideo`s to datasets without saving
+
 ## v0.9.5 (2021-07-20)
 
 ### Feat
