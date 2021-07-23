@@ -58,6 +58,7 @@ def main(
             s=25,
             label='target',
         )
+        ax.legend()
         ax.set_title(
             f'{name} ({final_downscale_factor} -> {final_evaluation / original_evaluation:.0%})'
         )
