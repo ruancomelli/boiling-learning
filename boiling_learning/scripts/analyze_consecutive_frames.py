@@ -1,6 +1,6 @@
 import math
-from functools import partial
-from typing import Callable, Dict, Iterable, List
+from operator import itemgetter
+from typing import Callable, Dict, FrozenSet, Iterable, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,31 +9,40 @@ from boiling_learning.preprocessing.image import ensure_grayscale
 
 
 def main(
-    frames: Iterable[np.ndarray],
+    frames: Iterable[Tuple[int, np.ndarray]],
     timeshifts: Iterable[int],
     metrics: Dict[str, Callable[[np.ndarray, np.ndarray], float]],
     final_timeshift: int = 1,
     xscale: str = 'linear',
 ) -> None:
-    frames = list(map(np.squeeze, map(ensure_grayscale, frames)))
+    timeshifts: FrozenSet[int] = frozenset(timeshifts) | {0, final_timeshift}
+
+    frames = ((index, frame) for index, frame in frames if index in timeshifts)
+    frames = (
+        (index, np.squeeze(ensure_grayscale(frame))) for index, frame in frames
+    )
+    frames = sorted(frames, key=itemgetter(0))
+    frames: Dict[int, np.ndarray] = dict(frames)
 
     ref: np.ndarray = frames[0]
-    timeshifts: List[int] = sorted(
-        frozenset(timeshifts) | {0, final_timeshift}
-    )
-    timeshifted: List[np.ndarray] = list(map(frames.__getitem__, timeshifts))
+    final: np.ndarray = frames[final_timeshift]
 
     for name, scorer in metrics.items():
-        evaluations = list(map(partial(scorer, ref), timeshifted))
+        evaluations = {
+            index: scorer(ref, frame) for index, frame in frames.items()
+        }
 
-        evaluations_dict = dict(zip(timeshifts, evaluations))
-        original_evaluation = evaluations_dict[0]
-        final_evaluation = evaluations_dict[final_timeshift]
+        original_evaluation = evaluations[0]
+        final_evaluation = evaluations[final_timeshift]
 
         fig, ax = plt.subplots()
-        ax.plot(timeshifts, evaluations, 'k.')
-        ax.plot([0], [original_evaluation], 'r.')
         ax.axhline(original_evaluation, linestyle='--', color='gray')
+        ax.scatter(evaluations.keys(), evaluations.values(), color='k', s=15)
+        ax.scatter(0, original_evaluation, color='r', label='reference', s=25)
+        ax.scatter(
+            final_timeshift, final_evaluation, color='b', label='final', s=25
+        )
+        ax.legend()
 
         ax.set_xlabel('Frame #')
 
@@ -42,7 +51,9 @@ def main(
         )
         ax.set_xscale(xscale)
 
+        _, right = ax.get_xlim()
         _, top = ax.get_ylim()
+        ax.set_xlim(0, right)
         ax.set_ylim(0, math.ceil(top))
 
         fig.show()
@@ -52,12 +63,12 @@ def main(
     # ------------------------------------------
     fig = plt.figure()
 
-    ax = fig.add_subplot(1, 3, 1)
+    ax = fig.add_subplot(1, 2, 1)
     ax.imshow(ref, cmap='gray')
     ax.set_title('Frame #0')
 
-    ax = fig.add_subplot(1, 3, 2)
-    ax.imshow(frames[final_timeshift], cmap='gray')
+    ax = fig.add_subplot(1, 2, 2)
+    ax.imshow(final, cmap='gray')
     ax.set_title(f'Frame #{final_timeshift}')
 
 
