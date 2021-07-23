@@ -14,6 +14,7 @@ def main(
     metrics: Dict[str, Callable[[np.ndarray, np.ndarray], float]],
     final_timeshift: int = 1,
     xscale: str = 'linear',
+    figsize: Tuple[int, int] = (7, 5),
 ) -> None:
     timeshifts: FrozenSet[int] = frozenset(timeshifts) | {0, final_timeshift}
 
@@ -35,12 +36,11 @@ def main(
         original_evaluation = evaluations[0]
         final_evaluation = evaluations[final_timeshift]
 
-        fig, ax = plt.subplots()
-        ax.axhline(original_evaluation, linestyle='--', color='gray')
+        fig, ax = plt.subplots(figsize=figsize)
         ax.scatter(evaluations.keys(), evaluations.values(), color='k', s=15)
         ax.scatter(0, original_evaluation, color='r', label='reference', s=25)
         ax.scatter(
-            final_timeshift, final_evaluation, color='b', label='final', s=25
+            final_timeshift, final_evaluation, color='b', label='target', s=25
         )
         ax.legend()
 
@@ -51,10 +51,11 @@ def main(
         )
         ax.set_xscale(xscale)
 
-        _, right = ax.get_xlim()
+        # _, right = ax.get_xlim()
         _, top = ax.get_ylim()
-        ax.set_xlim(0, right)
+        # ax.set_xlim(0, right)
         ax.set_ylim(0, math.ceil(top))
+        ax.grid(which='both', axis='both', alpha=0.5)
 
         fig.show()
 
