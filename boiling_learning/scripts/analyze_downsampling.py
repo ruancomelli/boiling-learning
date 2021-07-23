@@ -58,16 +58,19 @@ def main(
             s=25,
             label='target',
         )
+
         ax.legend()
+        ax.set_xlabel('Downsampling factor')
         ax.set_title(
             f'{name} ({final_downscale_factor} -> {final_evaluation / original_evaluation:.0%})'
         )
+
         ax.set_xscale(xscale)
-        ax.set_xlabel('Downsampling factor')
-        ax.grid(which='both', axis='both', alpha=0.5)
 
         _, top = ax.get_ylim()
         ax.set_ylim(0, math.ceil(top))
+
+        ax.grid(which='both', axis='both', alpha=0.5)
 
         fig.show()
 
