@@ -1,6 +1,6 @@
 import math
 from functools import partial
-from typing import Callable, Dict, Iterable, List
+from typing import Callable, Dict, Iterable, List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,6 +30,7 @@ def main(
     downscale_factors: Iterable[int] = (),
     final_downscale_factor: int = 5,
     xscale: str = 'log',
+    figsize: Tuple[int, int] = (7, 5),
 ) -> None:
     image = ensure_grayscale(image)
     downscale_factors = sorted(
@@ -47,17 +48,24 @@ def main(
         original_evaluation = evaluations[1]
         final_evaluation = evaluations[final_downscale_factor]
 
-        fig, ax = plt.subplots()
-        ax.plot(downscale_factors, ev_ds, 'k.')
-        ax.plot([1], [original_evaluation], 'r.')
-        ax.axvline(final_downscale_factor, linestyle='--', color='gray')
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.scatter(downscale_factors, ev_ds, color='k', s=15)
+        ax.scatter(1, original_evaluation, color='r', s=25, label='reference')
+        ax.scatter(
+            final_downscale_factor,
+            final_evaluation,
+            color='b',
+            s=25,
+            label='target',
+        )
         ax.set_title(
             f'{name} ({final_downscale_factor} -> {final_evaluation / original_evaluation:.0%})'
         )
         ax.set_xscale(xscale)
         ax.set_xlabel('Downsampling factor')
+        ax.grid(which='both', axis='both', alpha=0.5)
 
-        bottom, top = ax.get_ylim()
+        _, top = ax.get_ylim()
         ax.set_ylim(0, math.ceil(top))
 
         fig.show()
@@ -68,11 +76,11 @@ def main(
     fig = plt.figure()
     fig.suptitle(f'Downscale factor: {final_downscale_factor}')
 
-    ax = fig.add_subplot(1, 3, 1)
+    ax = fig.add_subplot(1, 2, 1)
     ax.imshow(image, cmap='gray')
     ax.set_title(str(np.squeeze(image).shape))
 
-    ax = fig.add_subplot(1, 3, 2)
+    ax = fig.add_subplot(1, 2, 2)
     downscaled = downscale(image, factor=final_downscale_factor)
     ax.imshow(downscaled, cmap='gray')
     ax.set_title(str(np.squeeze(downscaled).shape))
