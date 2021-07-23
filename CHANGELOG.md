@@ -1,3 +1,19 @@
+## v0.10.0 (2021-07-23)
+
+### Feat
+
+- **scripts**: accept `figsize` parameter to configure figure size directly in consecutive frames analysis
+- **scripts**: accept custom frames indexing in consecutive frames analysis
+
+### Refactor
+
+- **scripts**: add legend to downsampling analysis plots
+- **scripts**: improve downsampling evaluation script with a better plot and more customization options
+
+### BREAKING CHANGE
+
+- The argument `frames` is now an iterable of tuples `(index, frame)` instead of being simply an iterable of frames. Code using previous versions can be updated by replacing `main(frames, ...)` with `main(enumerate(frames), ...)`.
+
 ## v0.9.6 (2021-07-22)
 
 ### Fix
