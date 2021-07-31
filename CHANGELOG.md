@@ -1,3 +1,16 @@
+## v0.10.1 (2021-07-31)
+
+### Feat
+
+- **scripts**: add script for making boiling dataset preprocessors and data augmentors
+- **scripts**: implement script for creating preprocessors and data augmentors for condensation datasets
+- **scripts**: add script for programmatically making datasets
+- **scripts**: add script for programmatically creating, compiling and fitting models
+
+### Refactor
+
+- **scripts**: add a custom runtime error to `make_condensation_processors` in case users try to execute it as a standalone script
+
 ## v0.10.0 (2021-07-23)
 
 ### Feat
