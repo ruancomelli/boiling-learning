@@ -16,7 +16,7 @@ from boiling_learning.preprocessing.transformers import (
 from boiling_learning.utils.functional import P
 
 
-def make_condensation_processors(
+def main(
     downscale_factor: int = 5, height: int = 8 * 12, width: int = 8 * 12
 ) -> Tuple[List[Transformer], List[Transformer]]:
     preprocessors = [
@@ -185,3 +185,9 @@ def make_condensation_processors(
     ]
 
     return preprocessors, augmentors
+
+
+if __name__ == '__main__':
+    raise RuntimeError(
+        '*make_condensation_processors* cannot be executed as a standalone script yet.'
+    )
