@@ -1,3 +1,13 @@
+## v0.11.0 (2021-08-01)
+
+### Fix
+
+- **scripts**: rename main function in `make_boiling_processors` as `main`
+
+### BREAKING CHANGE
+
+- The function `make_boiling_processors` was renamed as `main`.
+
 ## v0.10.1 (2021-07-31)
 
 ### Feat
