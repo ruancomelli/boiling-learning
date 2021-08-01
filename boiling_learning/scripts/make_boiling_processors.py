@@ -17,7 +17,7 @@ from boiling_learning.preprocessing.transformers import (
 from boiling_learning.utils.functional import P
 
 
-def make_boiling_processors(
+def main(
     direct_visualization: bool = True,
     downscale_factor: int = 5,
     direct_height: int = 180,
