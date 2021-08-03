@@ -9,7 +9,7 @@ import more_itertools as mit
 import tensorflow as tf
 from dataclassy import dataclass
 from frozendict import frozendict
-from tensorflow.data.experimental import AUTOTUNE
+from tensorflow.data import AUTOTUNE
 
 import boiling_learning.utils.mathutils as mathutils
 from boiling_learning.io.io import DatasetTriplet
@@ -80,16 +80,16 @@ class Split(enum.Flag):
 
     @classmethod
     def from_string(cls: Type[_T], s: str, default=_sentinel) -> _T:
-        if default is _sentinel:
-            try:
-                return cls.FROM_STR_TABLE[s]
-            except KeyError:
-                raise KeyError(
-                    f'string {s} was not found in the conversion table.'
-                    f'Available values are {tuple(cls.FROM_STR_TABLE.keys())}.'
-                )
-        else:
+        if default is not _sentinel:
             return cls.FROM_STR_TABLE.get(s, default)
+
+        try:
+            return cls.FROM_STR_TABLE[s]
+        except KeyError:
+            raise KeyError(
+                f'string {s} was not found in the conversion table.'
+                f'Available values are {tuple(cls.FROM_STR_TABLE.keys())}.'
+            )
 
     def to_str(self):
         return self.name.lower()
@@ -230,10 +230,7 @@ def bulk_split(
     test_len = int(splits.test * length)
 
     ds_train = ds.take(train_len)
-    if val_len > 0:
-        ds_val = ds.skip(train_len).take(val_len)
-    else:
-        ds_val = None
+    ds_val = ds.skip(train_len).take(val_len) if val_len > 0 else None
     ds_test = ds.skip(train_len + val_len).take(test_len)
 
     return ds_train, ds_val, ds_test

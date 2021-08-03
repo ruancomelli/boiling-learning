@@ -14,7 +14,7 @@ import tensorflow as tf
 from dataclassy import dataclass
 from skimage import img_as_float, img_as_ubyte
 from skimage.io import imread, imsave
-from tensorflow.data.experimental import AUTOTUNE
+from tensorflow.data import AUTOTUNE
 
 import boiling_learning as bl
 import boiling_learning.model as bl_model

@@ -5,7 +5,7 @@ from typing import Container, Iterable, Optional, Sequence, Union
 
 import dataclassy
 import more_itertools as mit
-from tensorflow.data.experimental import AUTOTUNE
+from tensorflow.data import AUTOTUNE
 
 import boiling_learning.preprocessing as bl_preprocessing
 import boiling_learning.utils as bl_utils
