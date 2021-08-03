@@ -49,7 +49,7 @@ pip install -r requirements.txt
 
 If you also wish to execute the provided [Python scripts](boiling_learning/scripts), install the scripts requirements:
 ```sh
-pip install -r requirements-dev.txt
+pip install -r requirements-scripts.txt
 ```
 
 To install Boiling Learning, run:
