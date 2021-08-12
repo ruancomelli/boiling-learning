@@ -72,11 +72,14 @@ def main(
     ds_train = _take(ds_train, take_train)
     ds_val = _take(ds_val, take_val)
 
-    ds_train = ds_train.map(lambda img, data: (img, data[target]))
-    ds_val = ds_val.map(lambda img, data: (img, data[target]))
+    def _get_target_pair(img, data):
+        return img, data[target]
+
+    ds_train = ds_train.map(_get_target_pair)
+    ds_val = ds_val.map(_get_target_pair)
 
     additional_val_sets = tuple(
-        (additional_val_set.map(lambda img, data: (img, data[target])), name)
+        (additional_val_set.map(_get_target_pair), name)
         for name, additional_val_set in additional_val_sets.items()
     )
 
