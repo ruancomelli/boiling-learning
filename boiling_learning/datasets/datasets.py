@@ -237,40 +237,20 @@ def bulk_split(
 
 
 def take(
-    ds: tf.data.Dataset,
-    count: Optional[Union[int, Fraction]],
-    unbatch_dim: Optional[int] = None,
-    unbatch_key: Optional[int] = None,
+    ds: tf.data.Dataset, count: Optional[Union[int, Fraction]]
 ) -> tf.data.Dataset:
     if count is None:
         return ds
 
-    unbatch = unbatch_dim is not None
-
-    if unbatch_key is not None and not unbatch:
-        raise ValueError(
-            '*unbatch_key* must be *None* if not unbatching.'
-            ' Unbatching happens iff *unbatch_dim* is not *None*.'
-        )
-
-    if unbatch:
-        return apply_unbatched(
-            ds,
-            functools.partial(
-                take, count=count, unbatch_dim=None, unbatch_key=None
-            ),
-            dim=unbatch_dim,
-            key=unbatch_key,
-        )
-
     if isinstance(count, int):
         return ds.take(count)
-    elif isinstance(count, Fraction):
+
+    if isinstance(count, Fraction):
         return train_val_test_split(ds, splits=DatasetSplits(train=count))[0]
-    else:
-        raise TypeError(
-            f'*count* must be either *int* or *Fraction*, got {type(count)}.'
-        )
+
+    raise TypeError(
+        f'*count* must be either an *int* or a *Fraction*, got {type(count)}.'
+    )
 
 
 def calculate_batch_size(
@@ -307,6 +287,13 @@ def apply_unbatched(
     return dataset.unbatch().apply(apply).batch(batch_size)
 
 
+def apply_flattened(
+    dataset: tf.data.Dataset,
+    apply: Callable[[tf.data.Dataset], tf.data.Dataset],
+) -> tf.data.Dataset:
+    return apply_unbatched(dataset, apply, dim=0, key=0)
+
+
 def map_unbatched(
     dataset: tf.data.Dataset,
     map_fn: Callable,
@@ -318,6 +305,12 @@ def map_unbatched(
     )
 
 
+def map_flattened(
+    dataset: tf.data.Dataset, map_fn: Callable
+) -> tf.data.Dataset:
+    return map_unbatched(dataset, map_fn, dim=0, key=0)
+
+
 def filter_unbatched(
     dataset: tf.data.Dataset,
     pred_fn: Callable[..., bool],
@@ -327,6 +320,13 @@ def filter_unbatched(
     return apply_unbatched(
         dataset, lambda ds: ds.filter(pred_fn), dim=dim, key=key
     )
+
+
+def filter_flattened(
+    dataset: tf.data.Dataset,
+    pred_fn: Callable[..., bool],
+) -> tf.data.Dataset:
+    return filter_unbatched(dataset, pred_fn, dim=0, key=0)
 
 
 def apply_transformers(
