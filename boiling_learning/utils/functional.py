@@ -208,10 +208,10 @@ class Pack(Hashable, Generic[_T, _S]):
 
     def _apply(self, fargs, fkwargs, right: bool = False) -> Pack:
         n_fargs = len(fargs)
-        if right:
-            args_to_transform = self.args[-n_fargs:]
-        else:
-            args_to_transform = self.args[:n_fargs]
+
+        args_to_transform = (
+            self.args[-n_fargs:] if right else self.args[:n_fargs]
+        )
 
         new_args = tuple(
             f(arg) if f is not None else arg

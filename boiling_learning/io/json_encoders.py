@@ -25,7 +25,7 @@ class GenericJSONEncoder(json.JSONEncoder):
             return super().default(obj)
         except TypeError:
             cls = type(obj)
-            result = {
+            return {
                 '__custom__': True,
                 '__module__': cls.__module__,
                 '__name__': cls.__name__,
@@ -33,7 +33,6 @@ class GenericJSONEncoder(json.JSONEncoder):
                 if not hasattr(cls, '__json_encode__')
                 else obj.__json_encode__,
             }
-            return result
 
 
 class GenericJSONDecoder(json.JSONDecoder):
@@ -61,7 +60,7 @@ class GenericJSONDecoder(json.JSONDecoder):
 
         if hasattr(cls, '__json_decode__'):
             return cls.__json_decode__(**result['data'])
-        else:
-            instance = cls.__new__(cls)
-            instance.__dict__.update(result['data'])
-            return instance
+
+        instance = cls.__new__(cls)
+        instance.__dict__.update(result['data'])
+        return instance

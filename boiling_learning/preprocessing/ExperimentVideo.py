@@ -122,10 +122,7 @@ class ExperimentVideo(Sequence[np.ndarray]):
         self.start: int = 0
         self.end: Optional[int] = None
 
-        if name is None:
-            self._name = self.video_path.stem
-        else:
-            self._name = name
+        self._name = name if name is not None else self.video_path.stem
 
         if (frames_dir is not None) and (frames_path is not None):
             raise ValueError(

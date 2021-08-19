@@ -23,8 +23,7 @@ def _reduce_average(
         weights * input_tensor, axis=axis, keepdims=keepdims
     )
     sum_of_weights = tf.reduce_sum(weights, axis=axis, keepdims=keepdims)
-    average = weighted_sum / sum_of_weights
-    return average
+    return weighted_sum / sum_of_weights
 
 
 class RSquare(Metric):

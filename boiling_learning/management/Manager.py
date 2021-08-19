@@ -271,9 +271,9 @@ class Manager(
         except (FileNotFoundError, json.JSONDecodeError, OSError):
             if raise_if_fails:
                 raise
-            else:
-                self._initialize_lookup_table()
-                self.load_lookup_table()
+
+            self._initialize_lookup_table()
+            self.load_lookup_table()
 
     def save_elem(self, elem: _ElemType, path: PathLike) -> None:
         if self.save_method is None:
@@ -364,36 +364,36 @@ class Manager(
     ) -> Dict[str, Union[str, Pack]]:
         if contents is not None:
             return contents
+
+        creator_name = self._resolve_name(
+            self.key_names.creator,
+            contents=contents,
+            obj=creator,
+            default_obj=self.creator,
+        )
+
+        if post_processor is None:
+            post_processor_name = None
         else:
-            creator_name = self._resolve_name(
-                self.key_names.creator,
+            post_processor_name = self._resolve_name(
+                self.key_names.post_processor,
                 contents=contents,
-                obj=creator,
-                default_obj=self.creator,
+                obj=post_processor,
+                default_obj=self.post_processor,
             )
 
-            if post_processor is None:
-                post_processor_name = None
-            else:
-                post_processor_name = self._resolve_name(
-                    self.key_names.post_processor,
-                    contents=contents,
-                    obj=post_processor,
-                    default_obj=self.post_processor,
-                )
-
-            return {
-                self.key_names.creator: creator_name,
-                self.key_names.creator_params: [
-                    list(creator_description.args),
-                    dict(creator_description.kwargs),
-                ],
-                self.key_names.post_processor: post_processor_name,
-                self.key_names.post_processor_params: [
-                    list(post_processor_description.args),
-                    dict(post_processor_description.kwargs),
-                ],
-            }
+        return {
+            self.key_names.creator: creator_name,
+            self.key_names.creator_params: [
+                list(creator_description.args),
+                dict(creator_description.kwargs),
+            ],
+            self.key_names.post_processor: post_processor_name,
+            self.key_names.post_processor_params: [
+                list(post_processor_description.args),
+                dict(post_processor_description.kwargs),
+            ],
+        }
 
     def _resolve_metadata(
         self,

@@ -83,22 +83,21 @@ class Channel(bl.utils.SimpleRepr, bl.utils.SimpleStr):
                             for i in range(len(self.type))
                         )
 
+        elif type2 != ChannelType.UNDEFINED:
+            self.set_type(type1)
+            self.set_type(type2)
         else:
-            if type2 != ChannelType.UNDEFINED:
-                self.set_type(type1)
-                self.set_type(type2)
-            else:
-                self.set_type(type2)
-                self.set_type(type1)
+            self.set_type(type2)
+            self.set_type(type1)
 
     @property
     def ni_type(self) -> Optional[NIChannelType]:
-        if ChannelType.UNDEFINED not in self.type:
-            for ni_channel_type in NIChannelType:
-                if all([t.name in ni_channel_type.name for t in self.type]):
-                    return ni_channel_type
-        else:
+        if ChannelType.UNDEFINED in self.type:
             return None
+
+        for ni_channel_type in NIChannelType:
+            if all(t.name in ni_channel_type.name for t in self.type):
+                return ni_channel_type
 
     def is_ni_type(self, ni_channel_type: NIChannelType) -> bool:
         return self.ni_type is ni_channel_type

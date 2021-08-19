@@ -1,14 +1,11 @@
 from collections import defaultdict
 from functools import partial
-from pathlib import Path
-from typing import Container, Optional, Sequence, Tuple
+from typing import Container, Optional, Sequence
 
 import dataclassy
 import funcy
-import more_itertools as mit
 
-from boiling_learning.datasets import DatasetSplits, DatasetTriplet
-from boiling_learning.io import load_json, save_json
+from boiling_learning.datasets import DatasetSplits
 from boiling_learning.io.io import (
     add_bool_flag,
     load_dataset,
@@ -21,7 +18,6 @@ from boiling_learning.io.io import (
 from boiling_learning.management import Manager
 from boiling_learning.preprocessing import ImageDataset
 from boiling_learning.preprocessing.transformers import Transformer
-from boiling_learning.utils import ensure_dir
 from boiling_learning.utils.functional import P, Pack
 from boiling_learning.utils.Parameters import Parameters
 
@@ -43,34 +39,6 @@ def main(
     verbose: int = False,
     augmentors_to_force: Container[str] = frozenset({'random_cropper'}),
 ):
-    def saver(ds: DatasetTriplet, path: Optional[Path] = None) -> None:
-        success_path = ensure_dir(path) / 'success.json'
-
-        if verbose:
-            print('Saving to:', success_path)
-
-        if success_path.is_file():
-            if verbose:
-                print('Is file:', success_path)
-            json_data = load_json(success_path)
-            if verbose:
-                print('File contents:', json_data)
-            success = json_data.get('success', False)
-        else:
-            success = False
-            if verbose:
-                print('File not found:', success_path)
-
-        if not success:
-            save_json({'success': False}, success_path)
-            for split in ds:
-                if ds is not None:
-                    mit.consume(split.as_numpy_iterator())
-            save_json({'success': True}, success_path)
-
-    def loader(path: Optional[Path] = None) -> Tuple[bool, None]:
-        return False, None
-
     if not augment_train:
         augmentors = [
             data_augmentor

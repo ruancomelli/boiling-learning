@@ -155,21 +155,20 @@ class KeyedImageDatasetTransformer(
     ) -> Callable[[T], Union[T, S]]:
         if callable(self.packer):
             pack = self.packer(key)
-            img_f = pack.rpartial(f)
+            return pack.rpartial(f)
 
-            return img_f
         if key in self.packer:
-            pack = self.packer[key]
-            img_f = pack.rpartial(f)
+            return self._get_partial_transformer(f, key)
 
-            return img_f
-        elif None in self.packer:
-            pack = self.packer[None]
-            img_f = pack.rpartial(f)
+        if None in self.packer:
+            return self._get_partial_transformer(f, None)
 
-            return img_f
-        else:
-            return funcy.identity
+        return funcy.identity
+
+    def _get_partial_transformer(
+        self, f: Callable[..., S], key: Optional[str]
+    ) -> Callable[[T], S]:
+        return self.packer[key].rpartial(f)
 
     def describe(self) -> JSONDataType:
         return funcy.merge(super().describe(), {'packer': self.packer})
@@ -201,18 +200,19 @@ class DictImageTransformer(
             try:
                 if key in self.packer:
                     return self.func, self.packer[key]
+
+                pack = self.packer[None]
+
+                if pack is None:
+                    return funcy.identity, Pack()
                 else:
-                    pack = self.packer[None]
-                    if pack is None:
-                        return funcy.identity, Pack()
-                    else:
-                        return self.func, pack
-            except KeyError:
+                    return self.func, pack
+            except KeyError as e:
                 raise ValueError(
                     f'Invalid key {key}: corresponding pack was not found.'
                     ' Define a default pack by passing None: default_pack'
                     ' or None: None to skip missing keys.'
-                )
+                ) from e
 
         elif callable(self.packer):
             return self.func, self.packer(key)

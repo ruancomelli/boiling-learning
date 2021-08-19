@@ -74,6 +74,4 @@ class ExperimentalData:
                 f'data path is not a valid file. Please pass a valid one as input. Got {self.data_path}'
             )
 
-        df = pd.read_csv(self.data_path)
-
-        return df
+        return pd.read_csv(self.data_path)

@@ -175,10 +175,7 @@ def dataset_creator(
     )
 
     ds_train = concatenate(datasets_train)
-    if None in datasets_val:
-        ds_val = None
-    else:
-        ds_val = concatenate(datasets_val)
+    ds_val = concatenate(datasets_val) if None not in datasets_val else None
     ds_test = concatenate(datasets_test)
 
     if dataset_size is not None:

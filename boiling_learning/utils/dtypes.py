@@ -68,13 +68,14 @@ def decode_element_spec(obj):
 def auto_spec(elem):
     if hasattr(elem, 'dtype'):
         return elem.dtype
-    else:
-        if isinstance(elem, Sequence):
-            return funcy.walk(auto_spec, elem)
-        elif isinstance(elem, Mapping):
-            return funcy.walk_values(auto_spec, elem)
-        else:
-            return elem.dtype
+
+    if isinstance(elem, Sequence):
+        return funcy.walk(auto_spec, elem)
+
+    if isinstance(elem, Mapping):
+        return funcy.walk_values(auto_spec, elem)
+
+    return elem.dtype
 
 
 def new_py_function(func, inp, Tout, name=None):

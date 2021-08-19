@@ -102,6 +102,7 @@ def distribute_iterable(
             if pos == n_keys or len(distributed_items[pos][1]) > level:
                 level += 1
                 pos = 0
+
         return dict(distributed_items)
 
 
@@ -360,16 +361,16 @@ class DynamicUserPool(BaseUserPool):
         if case_name not in case_dict:
             case_dict[case_name] = self._data
 
-        if self.is_enabled:
-            current_ticket = self.current_ticket()
-            if current_ticket in self._cases[case_name]['used_tickets']:
-                return self.distribute_iterable(case_name, iterable)[
-                    current_ticket
-                ]
-            else:
-                return empty_gen()
-        else:
+        if not self.is_enabled:
             return iterable
+
+        current_ticket = self.current_ticket()
+
+        return (
+            self.distribute_iterable(case_name, iterable)[current_ticket]
+            if current_ticket in self._cases[case_name]['used_tickets']
+            else empty_gen()
+        )
 
 
 class LFSSequenceDistributor:

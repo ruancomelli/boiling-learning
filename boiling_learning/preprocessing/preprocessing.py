@@ -139,9 +139,10 @@ class TransformationPipeline:
             mapper = map(transformer, X)
             if should_fetch:
                 return list(mapper)
-            else:
-                mit.consume(mapper)
-                return self
+
+            mit.consume(mapper)
+
+            return self
         else:
             if should_fetch:
                 if callable(fetch):
@@ -419,17 +420,15 @@ class ImageDatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
     def _get_chunk(self, iterable: Iterable[T]) -> Iterable[T]:
         if self.chunk_size is not None:
             chunks = mit.ichunked(iterable, self.chunk_size)
-            chunk = mit.nth_or_last(chunks, self.chunk_index)
-            return chunk
-        elif self.n_chunks is not None:
+            return mit.nth_or_last(chunks, self.chunk_index)
+
+        if self.n_chunks is not None:
             iterable = tuple(iterable)
             n = len(iterable)
             idx = self.chunk_index
-            chunk = iterable[idx * n : idx * (n + 1)]
+            return iterable[idx * n : idx * (n + 1)]
 
-            return chunk
-        else:
-            return iterable
+        return iterable
 
     def _load_tensor(self, sources):
         sources = map(str, sources)

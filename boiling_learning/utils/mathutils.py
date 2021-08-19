@@ -9,22 +9,20 @@ _sentinel = object()
 
 
 def gcd(*args: int) -> int:
-    _gcd = math.gcd
-
     if len(args) < 2:
         raise TypeError('*gcd* requires 2 or more arguments.')
-    else:
-        return reduce(_gcd, args)
+
+    return reduce(math.gcd, args)
 
 
 def lcm(*args: int) -> int:
+    if len(args) < 2:
+        raise TypeError('*lcm* requires 2 or more arguments.')
+
     def _lcm(x, y):
         return abs(x * y) // gcd(x, y)
 
-    if len(args) < 2:
-        raise TypeError('*lcm* requires 2 or more arguments.')
-    else:
-        return reduce(_lcm, args)
+    return reduce(_lcm, args)
 
 
 def proportional_ints(*args: Fraction) -> Tuple[int, ...]:
@@ -42,11 +40,11 @@ def minmax(iterable: Iterable, default: Any = _sentinel) -> Tuple[Any, Any]:
     it = iter(iterable)
     try:
         first = next(it)
-    except StopIteration:
+    except StopIteration as e:
         if default is _sentinel:
-            raise ValueError('got an empty iterable!')
-        else:
-            return (default, default)
+            raise ValueError('got an empty iterable!') from e
+
+        return (default, default)
 
     lo, hi = first, first
     for val in it:

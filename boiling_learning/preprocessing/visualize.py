@@ -309,10 +309,9 @@ def _visualize_transformations_plt(
             img_to_show = np.squeeze(f(image))
             xlabel = f'shape={img_to_show.shape} minmax=({img_to_show.min()}, {img_to_show.max()})'
             print(xlabel)
-            if len(img_to_show.shape) == 3:
-                cmap = None
-            else:
-                cmap = 'gray'
+
+            cmap = None if len(img_to_show.shape) == 3 else 'gray'
+
             ax.imshow(img_to_show, cmap=cmap, norm=NoNorm())
             ax.set_title(f'{transformer_name}({pack_})')
             ax.set_xlabel(xlabel)

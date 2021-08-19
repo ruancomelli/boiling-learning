@@ -6,6 +6,7 @@ import os
 import pickle
 import string
 import warnings
+from contextlib import nullcontext
 from functools import partial
 from itertools import accumulate
 from pathlib import Path
@@ -183,8 +184,7 @@ def load_serialized(
 ) -> LoaderFunction[Dict[_T, _S]]:
     def load(path: PathLike) -> Dict[_T, _S]:
         path = ensure_resolved(path)
-        loaded = {key: loader(path / key) for key, loader in load_map.items()}
-        return loaded
+        return {key: loader(path / key) for key, loader in load_map.items()}
 
     return load
 
@@ -195,11 +195,7 @@ def save_keras_model(keras_model, path: PathLike, **kwargs) -> None:
 
 
 def load_keras_model(path: PathLike, strategy=None, **kwargs):
-    if strategy is None:
-        scope = funcy.nullcontext()
-    else:
-        scope = strategy.scope()
-
+    scope = strategy.scope() if strategy is not None else nullcontext()
     with scope:
         return load_model(path, **kwargs)
 
@@ -416,9 +412,7 @@ def load_frames_dataset(
     ds_img = tf.data.Dataset.from_tensor_slices(files)
     ds_img = ds_img.map(process_path)
     ds_data = tf.data.Dataset.from_tensor_slices(df.to_dict('list'))
-    ds = tf.data.Dataset.zip((ds_img, ds_data))
-
-    return ds
+    return tf.data.Dataset.zip((ds_img, ds_data))
 
 
 def loader_frames_dataset(

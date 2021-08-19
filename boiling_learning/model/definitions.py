@@ -63,9 +63,7 @@ def LinearRegression(input_shape: Tuple, **kwargs) -> Model:
     input_data = Input(shape=input_shape)
     predictions = Dense(1, activation='linear')(input_data)
 
-    model = Model(inputs=input_data, outputs=predictions)
-
-    return model
+    return Model(inputs=input_data, outputs=predictions)
 
 
 @make_creator(
@@ -113,9 +111,7 @@ def HoboldNet1(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    model = Model(inputs=input_data, outputs=predictions)
-
-    return model
+    return Model(inputs=input_data, outputs=predictions)
 
 
 @make_creator(
@@ -163,9 +159,7 @@ def HoboldNet2(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    model = Model(inputs=input_data, outputs=predictions)
-
-    return model
+    return Model(inputs=input_data, outputs=predictions)
 
 
 @make_creator(
@@ -220,9 +214,7 @@ def HoboldNet3(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    model = Model(inputs=input_data, outputs=predictions)
-
-    return model
+    return Model(inputs=input_data, outputs=predictions)
 
 
 @make_creator(
@@ -277,9 +269,7 @@ def HoboldNetSupplementary(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    model = Model(inputs=input_data, outputs=predictions)
-
-    return model
+    return Model(inputs=input_data, outputs=predictions)
 
 
 @make_creator(
@@ -365,9 +355,7 @@ def KramerNet(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    model = Model(inputs=input_data, outputs=predictions)
-
-    return model
+    return Model(inputs=input_data, outputs=predictions)
 
 
 @make_creator('BoilNet')
@@ -384,11 +372,9 @@ def BoilNet(
     num_classes: int = 0,
     normalize_images: bool = False,
 ) -> Model:
-    if time_window > 0:
-        input_shape = (time_window, *image_shape)
-    else:
-        input_shape = image_shape
-
+    input_shape = (
+        (time_window, *image_shape) if time_window > 0 else image_shape
+    )
     flattening = utils.enum_item(FlatteningMode, flattening)
     flatten = {
         FlatteningMode.FLATTEN: Flatten,
@@ -399,16 +385,8 @@ def BoilNet(
 
     inputs = Input(shape=input_shape)
 
-    if normalize_images:
-        normalized = LayerNormalization()(inputs)
-    else:
-        normalized = inputs
-
-    if time_window > 0:
-        distribute = TimeDistributed
-    else:
-        distribute = funcy.identity
-
+    normalized = LayerNormalization()(inputs) if normalize_images else inputs
+    distribute = TimeDistributed if time_window > 0 else funcy.identity
     if spatial_dropout is not None:
         spatial_dropouter = partial(SpatialDropout2D, spatial_dropout)
     else:
@@ -478,6 +456,4 @@ def LinearModel(
 
     predictions = _LinearModel()(x)
 
-    model = Model(inputs=input_data, outputs=predictions)
-
-    return model
+    return Model(inputs=input_data, outputs=predictions)

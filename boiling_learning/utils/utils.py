@@ -401,9 +401,9 @@ class KeyedDefaultDict(defaultdict):
     def __missing__(self, key):
         if self.default_factory is None:
             raise KeyError(key)
-        else:
-            ret = self[key] = self.default_factory(key)
-            return ret
+
+        ret = self[key] = self.default_factory(key)
+        return ret
 
 
 def is_dataclass_class(type_) -> bool:
@@ -424,16 +424,14 @@ def dataclass_from_mapping(
         return dataclass_factory(
             **funcy.select_keys(dataclass_field_names, mapping)
         )
-    else:
-        if is_dataclass_instance(key_map):
-            key_map = dataclassy.as_dict(key_map)
 
-        key_map = funcy.select_keys(dataclass_field_names, key_map)
-        translator = invert_dict(key_map).get
-        mapping = {
-            translator(key, key): value for key, value in mapping.items()
-        }
-        return dataclass_from_mapping(mapping, dataclass_factory)
+    if is_dataclass_instance(key_map):
+        key_map = dataclassy.as_dict(key_map)
+
+    key_map = funcy.select_keys(dataclass_field_names, key_map)
+    translator = invert_dict(key_map).get
+    mapping = {translator(key, key): value for key, value in mapping.items()}
+    return dataclass_from_mapping(mapping, dataclass_factory)
 
 
 def to_parent_dataclass(
@@ -779,7 +777,7 @@ def dir_as_tree(dir_path, file_pred=None, dir_pred=None):
 
 
 def dir_as_tree_apply(dir_path, fs, dir_pred=None):
-    return list(f(dir_path) for f in fs), {
+    return [f(dir_path) for f in fs], {
         path.name: dir_as_tree_apply(path, fs, dir_pred=dir_pred)
         for path in dir_path.iterdir()
         if path.is_dir() and (dir_pred is None or dir_pred(path))
@@ -805,23 +803,18 @@ def tempdir(suffix=None, prefix=None, dir=None):
         shutil.rmtree(dirpath)
 
 
-@contextmanager
-def nullcontext(enter_result=None):
-    yield enter_result
-
-
 def JSONDict(
     path: PathLike, dumps: Callable[[_T], str], loads: Callable[[str], _T]
 ) -> zict.Func:
     path = ensure_dir(path)
     file = zict.File(path, mode='a')
     compress = zict.Func(zlib.compress, zlib.decompress, file)
-    data = zict.Func(
+
+    return zict.Func(
         lambda obj: dumps(obj).encode('utf-8'),
         lambda byte_obj: loads(byte_obj.decode('utf-8')),
         compress,
     )
-    return data
 
 
 def fix_path(

@@ -122,38 +122,21 @@ def make_callable_index_parser(
     index_parser: Union[PathLike, Callable[[PathLike], int]],
     index_key: Optional[str] = None,
 ) -> Tuple[bool, Callable[[PathLike], int]]:
-
-    if callable(index_parser):
-        return True, index_parser
-    else:
+    if not callable(index_parser):
         index_parser_str = str(index_parser)
 
-        if index_key is not None and index_key in {
+        if index_key is None or index_key not in {
             tup[1]
             for tup in string.Formatter().parse(index_parser_str)
             if tup[1] is not None
         }:
-            parser = parse.compile(index_parser_str).parse
-            index_parser = funcy.compose(
-                int, operator.itemgetter(index_key), parser, str
-            )
-            return True, index_parser
-        else:
             return False, index_parser
-            # raise ValueError('index_parser must be either a callable or a str-convertible value. The resulting str must contain index_key as a key for parsing.')
 
-            # try:
-            #     index_parser_str % 0  # checks if it is possible to use old-style formatting
-            # except TypeError:
-            #     return False, index_parser
-
-            # def _filename_pattern(index: int) -> Path:
-            #     return bl.utils.ensure_parent(
-            #         index_parser_str % index,
-            #         root=inputdir
-            #     )
-
-            # return True, _filename_pattern
+        parser = parse.compile(index_parser_str).parse
+        index_parser = funcy.compose(
+            int, operator.itemgetter(index_key), parser, str
+        )
+    return True, index_parser
 
 
 def extract_frames_iterate(
@@ -235,11 +218,9 @@ def extracted_frames_count(
     video_frames_count = None
     if use_metadata:
         metadata_path = bl.utils.ensure_parent(metadata_path, root=outputdir)
-        if metadata_path.is_file():
-            metadata = bl.io.load_json(metadata_path)
-        else:
-            metadata = dict()
-
+        metadata = (
+            bl.io.load_json(metadata_path) if metadata_path.is_file() else {}
+        )
     if use_metadata and not recount_source:
         video_frames_count = metadata.get('video', {}).get(fast_key)
 
@@ -397,7 +378,7 @@ def extract_frames(
         )
     elif use_tmp_dir:
         if use_persistent_tmp_dir:
-            cm = bl.utils.nullcontext(tmp_dir)
+            cm = contextlib.nullcontext(tmp_dir)
         else:
             cm = bl.utils.tempdir(prefix='_', dir=outputdir)
 
@@ -535,9 +516,9 @@ def extract_audio(
         ]
         subprocess.run(command_list)
 
-        bl.utils.print_verbose(verbose, f'Done.')
+        bl.utils.print_verbose(verbose, 'Done.')
     elif verbose:
-        print(f'Audio already exists. Skipping proccess.')
+        print('Audio already exists. Skipping proccess.')
 
 
 @contextlib.contextmanager
@@ -596,30 +577,29 @@ def count_frames_in_dir(
     exclude_count: Optional[Union[int, Callable[[PathLike], int]]] = None,
 ) -> int:
     path = bl.utils.ensure_resolved(path)
+
     if not path.is_dir():
         return 0
 
-    if recursive:
-        globber = path.rglob
-    else:
-        globber = path.glob
-
+    globber = path.rglob if recursive else path.glob
     n_frames_in_path = ilen(globber(f'*{frame_suffix}'))
+
     if exclude_path is None:
         return n_frames_in_path
-    else:
-        exclude_path = bl.utils.ensure_resolved(exclude_path)
-        if bl.utils.is_parent_dir(path, exclude_path):
-            if exclude_count is None:
-                exclude_count = count_frames_in_dir(
-                    exclude_path, frame_suffix, recursive=recursive
-                )
-            elif callable(exclude_count):
-                exclude_count = exclude_count(exclude_path)
 
-            return n_frames_in_path - exclude_count
-        else:
-            return n_frames_in_path
+    exclude_path = bl.utils.ensure_resolved(exclude_path)
+
+    if not bl.utils.is_parent_dir(path, exclude_path):
+        return n_frames_in_path
+
+    if exclude_count is None:
+        exclude_count = count_frames_in_dir(
+            exclude_path, frame_suffix, recursive=recursive
+        )
+    elif callable(exclude_count):
+        exclude_count = exclude_count(exclude_path)
+
+    return n_frames_in_path - exclude_count
 
 
 def reorganize_frames(

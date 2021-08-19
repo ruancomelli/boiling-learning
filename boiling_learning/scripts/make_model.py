@@ -7,12 +7,8 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from tensorflow.keras.optimizers import Adam
 
-from boiling_learning.datasets import (
-    DatasetSplits,
-    apply_unbatched,
-    calculate_dataset_size,
-    train_val_test_split,
-)
+from boiling_learning.datasets import calculate_dataset_size, take
+from boiling_learning.datasets.datasets import apply_flattened
 from boiling_learning.management import Manager, Parameters
 from boiling_learning.model.callbacks import (
     AdditionalValidationSets,
@@ -21,6 +17,16 @@ from boiling_learning.model.callbacks import (
 )
 from boiling_learning.utils import ensure_dir, ensure_parent, merge_dicts
 from boiling_learning.utils.functional import P, Pack
+
+
+def _take(
+    ds: tf.data.Dataset, count: Optional[Union[int, float, Fraction]]
+) -> tf.data.Dataset:
+    if isinstance(count, float):
+        dataset_size = calculate_dataset_size(ds, batched_dim=0)
+        count = int(count * dataset_size)
+
+    return apply_flattened(ds, lambda _ds: take(_ds, count))
 
 
 def main(
@@ -47,28 +53,6 @@ def main(
     hidden_layers_policy,
     output_layer_policy,
 ):
-    def _take(ds, take):
-        if take is None:
-            return ds
-
-        if isinstance(take, float):
-            dataset_size = calculate_dataset_size(ds, batched_dim=0)
-            take = int(take * dataset_size)
-
-        if isinstance(take, int):
-            return apply_unbatched(
-                ds, lambda _ds: _ds.take(take), dim=0, key=0
-            )
-        elif isinstance(take, Fraction):
-            return apply_unbatched(
-                ds,
-                lambda _ds: train_val_test_split(
-                    _ds, splits=DatasetSplits(train=take), shuffle=False
-                )[0],
-                dim=0,
-                key=0,
-            )
-
     ds_train = _take(ds_train, take_train)
     ds_val = _take(ds_val, take_val)
 

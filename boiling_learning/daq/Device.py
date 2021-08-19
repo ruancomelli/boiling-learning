@@ -12,4 +12,4 @@ class Device(SimpleRepr, SimpleStr, DictEq):
         return self.name
 
     def exists(self, task: Task) -> bool:
-        return self.path in set(device.name for device in task.devices)
+        return self.path in {device.name for device in task.devices}

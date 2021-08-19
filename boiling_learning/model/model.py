@@ -121,11 +121,7 @@ def models_from_checkpoints(
         if parsed_obj is not None and epoch_key in parsed_obj
     }
 
-    model_dict = {
-        epoch: load_method(str(path)) for epoch, path in path_dict.items()
-    }
-
-    return model_dict
+    return {epoch: load_method(str(path)) for epoch, path in path_dict.items()}
 
 
 def history_from_checkpoints(
@@ -137,11 +133,10 @@ def history_from_checkpoints(
     ] = tf.keras.models.load_model,
 ) -> Dict[int, Dict[str, float]]:
     model_dict = models_from_checkpoints(pattern, epoch_key, load_method)
-    history_dict = {
+    return {
         epoch: model.evaluate(ds_val, return_dict=True)
         for epoch, model in model_dict.items()
     }
-    return history_dict
 
 
 def eval_with(

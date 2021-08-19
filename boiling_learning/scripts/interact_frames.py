@@ -1,4 +1,5 @@
 import warnings
+from contextlib import suppress
 from typing import Any, Callable, Iterable, Tuple
 
 import funcy
@@ -82,12 +83,10 @@ def main(
 
     imshow_imported: bool = False
     if colab_backend:
-        try:
+        with suppress(ImportError):
             from google.colab.patches import cv2_imshow as imshow
 
             imshow_imported = True
-        except (ImportError, ModuleNotFoundError):
-            pass
 
     if not imshow_imported:
         from cv2 import imshow
