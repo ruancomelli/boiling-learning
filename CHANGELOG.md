@@ -1,3 +1,9 @@
+## v0.11.2 (2021-08-19)
+
+### Feat
+
+- **management**: add utility functions for easier object persistance
+
 ## v0.11.1 (2021-08-19)
 
 ### Refactor
