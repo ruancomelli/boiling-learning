@@ -1,3 +1,15 @@
+## v0.11.1 (2021-08-19)
+
+### Refactor
+
+- simplify code by using Sourcery's suggestions and removing unused functionality
+- **scripts**: extract target getting functionality as a function
+- import TensorFlow's `AUTOTUNE` from `tensorflow.data` instead of from the experimental module
+
+### Feat
+
+- **datasets**: add `*_flattened` functions, which are shorthand versions of their `*_unbatched` counterparts when the batching key is zero
+
 ## v0.11.0 (2021-08-01)
 
 ### Fix
