@@ -7,15 +7,16 @@ import json
 import operator
 import os
 import pprint
+import random
 import re
-import shutil
-import tempfile
+import string
 import zlib
 from collections import ChainMap, defaultdict
 from contextlib import contextmanager
 from functools import partial, wraps
 from itertools import product
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from timeit import default_timer
 from typing import (
     Any,
@@ -789,18 +790,35 @@ def count_file_lines(path):
         return mit.ilen(f)
 
 
-@contextmanager
-def tempdir(suffix=None, prefix=None, dir=None):
-    dirpath = (
-        Path(tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir))
-        .resolve()
-        .absolute()
-    )
+def generate_string(
+    length: int = 6, chars: Sequence[str] = string.ascii_lowercase
+) -> str:
+    '''source: <https://stackoverflow.com/a/2257449/5811400>'''
+    return ''.join(random.choices(chars, k=length))
 
-    try:
-        yield dirpath
-    finally:
-        shutil.rmtree(dirpath)
+
+@contextmanager
+def tempdir(
+    suffix: Optional[str] = None,
+    prefix: Optional[str] = None,
+    dir: Optional[PathLike] = None,
+) -> Iterator[Path]:
+    if dir is not None:
+        dir = ensure_resolved(dir)
+
+    with TemporaryDirectory(suffix=suffix, prefix=prefix, dir=dir) as dirpath:
+        yield ensure_resolved(dirpath)
+
+
+@contextmanager
+def tempfilepath(suffix: Optional[str] = None) -> Iterator[Path]:
+    with tempdir() as dirpath:
+        filepath: Path = dirpath / generate_string()
+
+        if suffix is not None:
+            filepath = filepath.with_suffix(suffix)
+
+        yield filepath
 
 
 def JSONDict(
