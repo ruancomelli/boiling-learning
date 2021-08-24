@@ -1,11 +1,21 @@
 from pathlib import Path
 from unittest.case import TestCase
 
+from tinydb import TinyDB
+
 from boiling_learning.io.io import load_json, save_json
+from boiling_learning.management.allocators import TableAllocator
+from boiling_learning.management.cacher import cache
 from boiling_learning.management.Manager import Manager
+from boiling_learning.management.persister import (
+    FilePersister,
+    FileProvider,
+    Persister,
+    Provider,
+)
 from boiling_learning.preprocessing.transformers import Creator
 from boiling_learning.utils.functional import P
-from boiling_learning.utils.utils import tempdir
+from boiling_learning.utils.utils import tempdir, tempfilepath
 
 
 class ManagerTest(TestCase):
@@ -61,3 +71,114 @@ class ManagerTest(TestCase):
             self.assertDictEqual(
                 dict(manager.retrieve_elems()), {elem_id: res}
             )
+
+
+class PersisterTest(TestCase):
+    def test_Persister(self):
+        VALUE = 'hello'
+        persister = Persister(save_json, load_json)
+
+        with tempfilepath() as filepath:
+            persister.save(VALUE, filepath)
+            self.assertEqual(persister.load(filepath), VALUE)
+
+    def test_FileManager(self):
+        VALUE = 3
+        persister = Persister(save_json, load_json)
+
+        with tempfilepath() as filepath:
+            file_manager = FilePersister(filepath, persister)
+
+            file_manager.save(VALUE)
+            self.assertEqual(file_manager.load(), VALUE)
+
+    def test_Provider(self):
+        MISSING = 0
+        provider = Provider(
+            saver=save_json,
+            loader=load_json,
+            creator=lambda: MISSING,
+        )
+
+        with tempfilepath() as filepath:
+            VALUE = 3
+            provider.save(VALUE, filepath)
+            self.assertTrue(filepath.is_file())
+            self.assertEqual(provider.provide(filepath), VALUE)
+
+        self.assertFalse(filepath.is_file())
+        self.assertEqual(provider.provide(filepath), MISSING)
+
+    def test_FileProvider(self):
+        MISSING = 0
+        provider = Provider(
+            saver=save_json,
+            loader=load_json,
+            creator=lambda: MISSING,
+        )
+
+        with tempfilepath() as filepath:
+            provider = FileProvider(filepath, provider)
+
+            VALUE = 3
+            provider.save(VALUE)
+            self.assertTrue(filepath.is_file())
+            self.assertEqual(provider.provide(), VALUE)
+
+        self.assertFalse(filepath.is_file())
+        self.assertEqual(provider.provide(), MISSING)
+
+
+class AllocatorsTest(TestCase):
+    def test_TableAllocator(self) -> None:
+        with tempdir() as directory:
+            db = TinyDB(directory / 'db.json')
+            allocator = TableAllocator(directory / 'allocator', db)
+
+            p1 = P(3.14, 0, name='pi')
+            p2 = P('hello')
+
+            self.assertEqual(allocator(p1), allocator(p1))
+            self.assertNotEqual(allocator(p1), allocator(p2))
+
+
+class CacherTest(TestCase):
+    def test_cache(self) -> None:
+        with tempdir() as directory:
+            db = TinyDB(directory / 'db.json')
+            allocator = TableAllocator(directory / 'allocator', db)
+
+            history = []
+
+            def side_effect(number: float, name: str) -> None:
+                history.append((number, name))
+
+            @cache(allocator=allocator, saver=save_json, loader=load_json)
+            def func(number: float, name: str) -> dict:
+                side_effect(number, name)
+                return {'number': number, 'name': name}
+
+            self.assertListEqual(history, [])
+
+            self.assertDictEqual(
+                func(3.14, 'pi'), {'number': 3.14, 'name': 'pi'}
+            )
+            self.assertListEqual(history, [(3.14, 'pi')])
+
+            self.assertDictEqual(
+                func(3.14, 'pi'), {'number': 3.14, 'name': 'pi'}
+            )
+            self.assertListEqual(history, [(3.14, 'pi')])
+
+            self.assertDictEqual(
+                func(0.0, 'zero'), {'number': 0.0, 'name': 'zero'}
+            )
+            self.assertListEqual(history, [(3.14, 'pi'), (0.0, 'zero')])
+
+            self.assertDictEqual(
+                func(3.14, 'pi'), {'number': 3.14, 'name': 'pi'}
+            )
+            self.assertDictEqual(
+                func(0.0, 'zero'), {'number': 0.0, 'name': 'zero'}
+            )
+            self.assertListEqual(history, [(3.14, 'pi'), (0.0, 'zero')])

@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Callable, Generic, Iterable, Tuple, TypeVar, Union
 
 from boiling_learning.io.io import LoaderFunction, PathLike, SaverFunction
-from boiling_learning.utils.utils import ensure_parent
+from boiling_learning.utils.utils import ensure_parent, ensure_resolved
 
 _T = TypeVar('_T')
 CreatorFunction = Callable[[], _T]
@@ -17,13 +17,13 @@ class Persister(Generic[_T]):
         self.loader: LoaderFunction[_T] = loader
 
     def save(self, obj: _T, filepath: PathLike) -> None:
-        self.saver(obj, filepath)
+        self.saver(obj, ensure_resolved(filepath))
 
     def load(self, filepath: PathLike) -> _T:
-        return self.loader(filepath)
+        return self.loader(ensure_resolved(filepath))
 
 
-class FileManager(Generic[_T]):
+class FilePersister(Generic[_T]):
     def __init__(self, filepath: PathLike, persister: Persister[_T]) -> None:
         self.path: Path = ensure_parent(filepath)
         self.persister: Persister = persister
@@ -35,27 +35,50 @@ class FileManager(Generic[_T]):
         return self.persister.load(self.path)
 
 
-class Provider(FileManager[_T]):
+class Provider(Persister[_T]):
     def __init__(
         self,
-        filepath: PathLike,
-        persister: Persister[_T],
+        saver: SaverFunction[_T],
+        loader: LoaderFunction[_T],
         creator: CreatorFunction[_T],
-        exceptions: Union[Exception, Iterable[Exception]] = (),
+        exceptions: Union[Exception, Iterable[Exception]] = (
+            FileNotFoundError,
+            NotADirectoryError,
+        ),
+        autosave: bool = True,
     ) -> None:
-        super().__init__(filepath, persister)
+        super().__init__(saver, loader)
 
-        if isinstance(exceptions, Exception):
-            exceptions = (exceptions,)
-        else:
-            exceptions = tuple(exceptions)
+        exceptions = (
+            (exceptions,)
+            if isinstance(exceptions, Exception)
+            else tuple(exceptions)
+        )
 
         self.creator: CreatorFunction[_T] = creator
         self.exceptions: Tuple[Exception, ...] = exceptions
+        self.autosave: bool = autosave
+
+    def provide(self, filepath: PathLike) -> _T:
+        filepath: Path = ensure_resolved(filepath)
+
+        if filepath.exists():
+            with suppress(*self.exceptions):
+                return self.load(filepath)
+
+        obj: _T = self.creator()
+
+        if self.autosave:
+            self.save(obj, filepath)
+
+        return obj
+
+
+class FileProvider(FilePersister[_T]):
+    def __init__(self, filepath: PathLike, provider: Provider[_T]) -> None:
+        super().__init__(filepath, provider)
+
+        self.provider: Provider[_T] = provider
 
     def provide(self) -> _T:
-        if self.path.exists():
-            with suppress(*self.exceptions):
-                return self.load()
-
-        return self.creator()
+        return self.provider.provide(self.path)
