@@ -1,3 +1,19 @@
+## v0.12.1 (2021-08-24)
+
+### Fix
+
+- **io**: fix dispatching bug in JSON (de)serialization and its coupling with table dispatching
+
+### Feat
+
+- **management**: implement disk caching function based on allocators and providers
+- **datasets**: add functions for calculating dataset stats and prediction metrics
+- **utils**: implement a function for generating context-managed temporary file paths
+
+### Refactor
+
+- **io**: separate JSON encode and decode functions into different methods
+
 ## v0.12.0 (2021-08-19)
 
 ## v0.11.2 (2021-08-19)
