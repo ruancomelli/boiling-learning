@@ -18,6 +18,11 @@ def json_encode(obj: None) -> None:
 
 
 @json_encode.dispatch
+def json_encode(obj: bool) -> bool:
+    return obj
+
+
+@json_encode.dispatch
 def json_encode(obj: int) -> int:
     return obj
 
@@ -55,44 +60,55 @@ def json_encode(obj: Pack) -> list:
 json_decode = table_dispatch()
 
 
-def json_decode(obj: Any) -> Any:
-    # default implementation: return object unmodified
-    return obj
-
-
 @json_decode.dispatch(None)
+@json_decode.dispatch(bool)
 @json_decode.dispatch(int)
 @json_decode.dispatch(float)
 @json_decode.dispatch(str)
-def json_decode(obj: _T) -> _T:
+def _json_decode(obj: _T) -> _T:
     return obj
 
 
 @json_decode.dispatch(list)
-def json_decode(obj: List[JSONDataType]) -> list:
+def _json_decode_list(obj: List[JSONDataType]) -> list:
     return list(map(json_deserialize, obj))
 
 
 @json_decode.dispatch(tuple)
-def json_decode(obj: List[JSONDataType]) -> tuple:
+def _json_decode_tuple(obj: List[JSONDataType]) -> tuple:
     return tuple(map(json_deserialize, obj))
 
 
+@json_decode.dispatch(dict)
+def _json_decode_dict(obj: Dict[str, JSONDataType]) -> dict:
+    return {key: json_deserialize(value) for key, value in obj.items()}
+
+
 @json_decode.dispatch(Pack)
-def json_decode(obj: JSONDataType) -> Pack:
+def _json_decode_Pack(obj: JSONDataType) -> Pack:
     args, kwargs = obj
     return Pack(json_deserialize(args), json_deserialize(kwargs))
 
 
+@dispatch
 def json_serialize(obj: Any) -> Dict[str, Any]:
     return {
-        'module': type(obj).__module__,
-        'type': type(obj).__qualname__,
+        'type': f'{type(obj).__module__}.{type(obj).__qualname__}',
         'contents': json_encode(obj),
     }
 
 
+@json_serialize.dispatch
+def json_serialize(obj: None) -> Dict[str, Any]:
+    return {'type': None, 'contents': json_encode(obj)}
+
+
 def json_deserialize(obj: Dict[str, Any]) -> Any:
-    module = import_module(obj['module'])
-    obj_type = getattr(module, obj['type'])
-    return json_decode(obj_type)(obj['contents'])
+    obj_type = obj['type']
+
+    if obj_type is not None:
+        modulepath, typename = obj_type.rsplit('.', maxsplit=1)
+        module = import_module(modulepath)
+        obj_type = getattr(module, typename)
+
+    return json_decode[obj_type](obj['contents'])
