@@ -6,8 +6,8 @@ class DispatchError(Exception):
 
 
 class TableDispatcher:
-    def __init__(self, call: Optional[Callable] = None):
-        self._default: Optional[Callable] = call
+    def __init__(self, default: Optional[Callable] = None):
+        self._default: Optional[Callable] = default
         self._dispatch_table: Dict[Tuple[Hashable, ...], Callable] = {}
 
     def dispatch(self, *keys: Hashable):
