@@ -47,10 +47,7 @@ def represents_float(key, decimal_separator='.'):
 
 
 def represents_float_list(keys, decimal_separator='.'):
-    for key in keys:
-        if not represents_float(key, decimal_separator):
-            return False
-    return True
+    return all(represents_float(key, decimal_separator) for key in keys)
 
 
 def split_file(spamreader, decimal_separator):

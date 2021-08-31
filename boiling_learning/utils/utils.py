@@ -642,7 +642,6 @@ def json_equivalent(
 def empty_gen() -> Iterator[None]:
     # Source: <https://stackoverflow.com/a/13243870/5811400>
     return
-    yield
 
 
 def append(iterable: Iterable[_T], value: S) -> Iterator[Union[_T, S]]:

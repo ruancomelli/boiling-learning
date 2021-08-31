@@ -32,9 +32,7 @@ def build(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    model = Model(inputs=mobile_net.input, outputs=predictions)
-
-    return model
+    return Model(inputs=mobile_net.input, outputs=predictions)
 
 
 creator = ElementCreator(

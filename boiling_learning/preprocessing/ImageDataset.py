@@ -390,8 +390,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             ),
             self.values(),
         )
-        df = bl_utils.concatenate_dataframes(dfs)
-        return df
+        return bl_utils.concatenate_dataframes(dfs)
 
     @overload
     def iterdata_from_dataframe(

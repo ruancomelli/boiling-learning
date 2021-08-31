@@ -34,13 +34,15 @@ grid = list(
         partial(bl.utils.alternate_iter, default_indices=[1, 1, 1, 1]),
     )
 )
+model_type = HoboldNet2
+best_validation_callback_file_name = 'BestValidation_epoch{epoch}'
+last_trained_callback_file_name = 'LastTrained_epoch{epoch}'
 for params in grid:
     lr = params['lr']
     reduce_lr_on_plateau_factor = params['reduce_lr_on_plateau_factor']
     reduce_lr_on_plateau_patience = params['reduce_lr_on_plateau_patience']
     dropout_ratio = params['dropout_ratio']
 
-    model_type = HoboldNet2
     optimizer_params = dict(
         lr=lr,
     )
@@ -63,13 +65,11 @@ for params in grid:
         mode='auto',
         restore_best_weights=True,
     )
-    best_validation_callback_file_name = 'BestValidation_epoch{epoch}'
     best_validation_callback_params = dict(
         filepath=best_validation_callback_file_name,
         save_best_only=True,
         monitor='val_loss',
     )
-    last_trained_callback_file_name = 'LastTrained_epoch{epoch}'
     last_trained_callback_params = dict(
         filepath=last_trained_callback_file_name,
         save_best_only=False,

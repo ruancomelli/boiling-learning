@@ -94,11 +94,10 @@ class AdditionalValidationSets(Callback):
 
             if self.verbose >= 1:
                 values_str = ' - '.join(
-                    [
-                        f'{name}: {result}'
-                        for name, result in zip(names, full_results)
-                    ]
+                    f'{name}: {result}'
+                    for name, result in zip(names, full_results)
                 )
+
                 print(f'{validation_set_name}[{values_str}]')
 
 

@@ -238,11 +238,10 @@ def regularize_default(
 
     if cond(x):
         return x
+    if call_default:
+        return default()
     else:
-        if call_default:
-            return default()
-        else:
-            return default
+        return default
 
 
 """### Gerenciador de modelos"""
@@ -660,6 +659,7 @@ class F1Loss(LossFunctionWrapper):
 
 """## Configuração"""
 
+
 DATA_FORMAT = 'channels_last'
 IMG_SIZE = (224, 224)
 IMG_SHAPE = (
@@ -983,10 +983,7 @@ if from_file:
 
 if (not from_file) or (not from_file_success):
     if problem == 'attribute':
-        if previously_augmented:
-            dataset = attribute_aug_imgs
-        else:
-            dataset = attribute_imgs
+        dataset = attribute_aug_imgs if previously_augmented else attribute_imgs
     elif problem == 'category':
         # if previously_augmented:
         #     dataset = category_aug_imgs

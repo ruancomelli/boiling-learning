@@ -40,7 +40,7 @@ class Mirror:
         self.contents = kwargs
         self.forks = dict()
         self.forked = False
-        self.default = dict()
+        self.default = {}
         self.split()
 
     def __str__(self):

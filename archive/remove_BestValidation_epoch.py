@@ -19,7 +19,7 @@ for path in manager.models_path.iterdir():
             ]
             to_keep_epochs = parser(to_keep.name)
             to_keep_epochs = int(to_keep_epochs['epoch'])
-            if not all(x < to_keep_epochs for x in to_erase_epochs):
+            if any(x >= to_keep_epochs for x in to_erase_epochs):
                 raise ValueError('order was not preserved')
             for p in to_erase:
                 print(f'Erasing {p}')

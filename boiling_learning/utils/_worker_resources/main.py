@@ -214,9 +214,9 @@ def home():
 @app.route('/assign', methods=['GET'])
 def assign():
     case_name = request.args['case_name']
-    seq_len = int(request.args['seq'])
-
     if case_name not in s:
+        seq_len = int(request.args['seq'])
+
         s[case_name] = SequenceDistributorCase(case_name, seq_len)
 
     return jsonify(s[case_name].assign())
