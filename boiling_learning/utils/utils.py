@@ -67,6 +67,8 @@ class _Sentinel(enum.Enum):
 
 _sentinel = _Sentinel.get_instance()
 _T = TypeVar('_T')
+_Key = TypeVar('_Key')
+_Value = TypeVar('_Value')
 S = TypeVar('S')
 SentinelOptional = Union[_Sentinel, _T]
 
@@ -383,9 +385,15 @@ class inclusive_bidict(dict):
         super().__delitem__(key)
 
 
-def extract_keys(d, value, cmp=operator.eq):
+def extract_keys(
+    d: Mapping[_Key, _Value],
+    value: _T,
+    cmp: Callable[[_T, _Value], bool] = operator.eq,
+) -> Iterator[_Key]:
+    comparer: Callable[[_Value], bool] = partial(cmp, value)
+
     for k, v in d.items():
-        if cmp(value, v):
+        if comparer(v):
             yield k
 
 
@@ -407,7 +415,7 @@ class KeyedDefaultDict(defaultdict):
         return ret
 
 
-def is_dataclass_class(type_) -> bool:
+def is_dataclass_class(type_: Any) -> bool:
     return is_dataclass(type_) and not is_dataclass_instance(type_)
 
 
