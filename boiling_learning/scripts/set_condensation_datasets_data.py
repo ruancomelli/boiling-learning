@@ -5,10 +5,14 @@ from typing import Dict, Iterable, Optional
 import parse
 import yaml
 
+from boiling_learning.io.io import load_json, save_json
+from boiling_learning.management.allocators import default_table_allocator
+from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.ExperimentVideo import ExperimentVideo
 from boiling_learning.preprocessing.ImageDataset import ImageDataset
 from boiling_learning.preprocessing.video import get_fps
 from boiling_learning.utils.utils import (
+    KeyedDefaultDict,
     PathLike,
     ensure_resolved,
     print_header,
@@ -36,18 +40,43 @@ def _parse_timedelta(s: Optional[str]) -> Optional[timedelta]:
 def main(
     datasets: Iterable[ImageDataset],
     dataspecpath: PathLike,
-    verbose: bool = False,
+    verbose: int = 0,
+    fps_cache_path: Optional[PathLike] = None,
 ) -> Dict[str, ImageDataset]:
     dataspecpath = ensure_resolved(dataspecpath)
     dataspec = yaml.safe_load(dataspecpath.read_text())
 
-    datasets_dict = {}
+    if fps_cache_path is not None:
+
+        def verbose_save(obj, path):
+            print('Saving...')
+            print('> obj:', obj)
+            print('> path:', path)
+            return save_json(obj, path)
+
+        def verbose_load(obj, path):
+            print('Loading from', path)
+            return load_json(path)
+
+        fps_cache_path = ensure_resolved(fps_cache_path)
+        allocator = default_table_allocator(fps_cache_path)
+        cacher = cache(allocator, saver=verbose_save, loader=verbose_load)
+        fps_getter = cacher(get_fps)
+    else:
+        fps_getter = get_fps
+
+    datasets_dict = KeyedDefaultDict(ImageDataset)
     for dataset in datasets:
+        print_verbose(verbose >= 2, f'Reading dataset {dataset.name}')
+
         for ev_name, ev in dataset.items():
             case, subcase, test_name, video_name = ev_name.split(':')
 
             # TODO: add average mass rate to categories?
 
+            print_verbose(
+                verbose >= 2, f'Setting categories for EV "{ev_name}"'
+            )
             if case == 'stainless steel' and subcase == 'polished':
                 # those are the standard conditions for polished SS
                 # temperatures are in Celsius
@@ -81,9 +110,17 @@ def main(
                 test_name
             ]['videos'][video_name + '.mp4']
 
+            print_verbose(verbose >= 2, f'Getting FPS for EV "{ev_name}"')
+
+            fps = fps_getter(ev.video_path)
+
+            print_verbose(
+                verbose >= 2, f'Getting video data for EV "{ev_name}"'
+            )
+
             videodata = ExperimentVideo.VideoData(
                 categories=categories,
-                fps=get_fps(ev.video_path),
+                fps=fps,
                 # since there is no syncing between video and experimental data here,
                 # we simply set the first frame as the reference
                 ref_index=0,
@@ -91,15 +128,17 @@ def main(
                 start_elapsed_time=_parse_timedelta(videospec['start']),
                 end_elapsed_time=_parse_timedelta(videospec['end']),
             )
+
+            print_verbose(
+                verbose >= 2, f'Setting video data for EV "{ev_name}"'
+            )
             ev.set_video_data(videodata)
             print_verbose(
                 verbose, f'{ev_name} -> [{ev.start}, {ev.end}) :: {categories}'
             )
 
             dataset_name = ':'.join((case, subcase))
-            datasets_dict.setdefault(
-                dataset_name, ImageDataset(dataset_name)
-            ).add(ev)
+            datasets_dict[dataset_name].add(ev)
 
     for dataset in datasets_dict.values():
         if verbose:

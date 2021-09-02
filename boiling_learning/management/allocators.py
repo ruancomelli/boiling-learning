@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Callable
 
+from tinydb import TinyDB
 from tinydb.table import Table
 
 from boiling_learning.io.storage import json_serialize
@@ -8,6 +9,7 @@ from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.utils import (
     JSONDataType,
     PathLike,
+    ensure_dir,
     ensure_parent,
     ensure_resolved,
 )
@@ -39,3 +41,13 @@ class TableAllocator:
         serialized: JSONDataType = self.serializer(pack)
         doc_id: int = self._provide(serialized)
         return self._doc_path(doc_id)
+
+
+def default_table_allocator(root: PathLike) -> TableAllocator:
+    root = ensure_dir(root)
+    datapath = ensure_dir(root / 'data')
+    dbpath = root / 'db.json'
+
+    db = TinyDB(str(dbpath))
+
+    return TableAllocator(datapath, db)
