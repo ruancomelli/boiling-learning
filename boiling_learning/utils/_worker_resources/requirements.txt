@@ -1,6 +1,0 @@
-eventlet==0.31.0
-flask==1.1.2
-gunicorn==19.5.0
-more-itertools==8.6.0
-portion==2.1.4
-werkzeug==1.0.0
