@@ -38,9 +38,9 @@ class Mirror:
     def __init__(self, config_params, **kwargs):
         self.config = config_params
         self.contents = kwargs
-        self.forks = dict()
+        self.forks = {}
         self.forked = False
-        self.default = dict()
+        self.default = {}
         self.split()
 
     def __str__(self):

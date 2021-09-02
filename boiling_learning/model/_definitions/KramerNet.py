@@ -20,7 +20,7 @@ def build(
     output_layer_policy,
     problem=ProblemType.REGRESSION,
     num_classes=None,
-):
+) -> Model:
     input_data = Input(shape=input_shape)
 
     x = Conv2D(
@@ -87,9 +87,7 @@ def build(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    model = Model(inputs=input_data, outputs=predictions)
-
-    return model
+    return Model(inputs=input_data, outputs=predictions)
 
 
 creator = ElementCreator(

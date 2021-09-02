@@ -114,7 +114,7 @@ class Channel(bl.utils.SimpleRepr, bl.utils.SimpleStr):
             Channel.channel_table[task.name] = []
         Channel.channel_table[task.name].append(self.path)
 
-    def index_in_table(self, task: Task) -> int:
+    def index_in_table(self, task: Task) -> Optional[int]:
         return (
             Channel.channel_table[task.name].index(self.path)
             if self.path in Channel.channel_table[task.name]

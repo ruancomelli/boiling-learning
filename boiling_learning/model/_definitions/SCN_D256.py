@@ -46,9 +46,7 @@ def build(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    model = Model(inputs=input_data, outputs=predictions)
-
-    return model
+    return Model(inputs=input_data, outputs=predictions)
 
 
 creator = ElementCreator(

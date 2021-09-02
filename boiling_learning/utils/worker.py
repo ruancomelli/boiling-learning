@@ -84,26 +84,25 @@ def distribute_iterable(
 
     if assignments is None:
         n_keys = len(keys)
-
         return dict(zip(keys, map(list, mit.distribute(n_keys, iterable))))
-    else:
-        distributed = bl.utils.merge_dicts(
-            {k: [] for k in keys}, {k: list(v) for k, v in assignments.items()}
-        )
-        distributed_items = sorted(
-            distributed.items(), key=(lambda pair: len(pair[1]))
-        )
 
-        n_keys = len(distributed_items)
-        level, pos = 0, 0
-        for item in iterable:
-            distributed_items[pos][1].append(item)
-            pos += 1
-            if pos == n_keys or len(distributed_items[pos][1]) > level:
-                level += 1
-                pos = 0
+    distributed = bl.utils.merge_dicts(
+        {k: [] for k in keys}, {k: list(v) for k, v in assignments.items()}
+    )
+    distributed_items = sorted(
+        distributed.items(), key=(lambda pair: len(pair[1]))
+    )
 
-        return dict(distributed_items)
+    n_keys = len(distributed_items)
+    level, pos = 0, 0
+    for item in iterable:
+        distributed_items[pos][1].append(item)
+        pos += 1
+        if pos == n_keys or len(distributed_items[pos][1]) > level:
+            level += 1
+            pos = 0
+
+    return dict(distributed_items)
 
 
 class BaseUserPool:

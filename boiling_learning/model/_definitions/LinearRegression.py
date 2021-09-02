@@ -7,13 +7,11 @@ from boiling_learning.preprocessing.transformers import Creator
 
 def build(
     input_shape,
-):
+) -> Model:
     input_data = Input(shape=input_shape)
     predictions = Dense(1, activation='linear')(input_data)
 
-    model = Model(inputs=input_data, outputs=predictions)
-
-    return model
+    return Model(inputs=input_data, outputs=predictions)
 
 
 creator = Creator('LinearRegression', make_creator_method(builder=build))
