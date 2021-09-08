@@ -1,6 +1,9 @@
 import datetime
+import enum
 import shutil
-from typing import Any, FrozenSet, Optional, Set
+from collections import defaultdict
+from pathlib import Path
+from typing import Any, DefaultDict, Dict, FrozenSet, Optional, Set
 
 import numpy as np
 from tensorflow.keras.callbacks import Callback
@@ -8,6 +11,7 @@ from tensorflow.python.keras import backend as K
 from tensorflow.python.platform import tf_logging as logging
 from typing_extensions import Protocol
 
+from boiling_learning.io.io import load_json, save_json
 from boiling_learning.utils.utils import (
     PathLike,
     ensure_parent,
@@ -416,3 +420,26 @@ class PeriodicallyMove(Callback):
             except FileNotFoundError:
                 if not self._missing_ok:
                     raise
+
+
+class SaveHistoryMode(enum.Enum):
+    APPEND = enum.auto()
+    OVERWRITE = enum.auto()
+
+
+class SaveHistory(Callback):
+    def __init__(self, path: PathLike, mode: SaveHistoryMode) -> None:
+        self.path: Path = ensure_parent(path)
+
+        self.history: DefaultDict[str, list] = defaultdict(list)
+
+        if mode is SaveHistoryMode.APPEND and self.path.is_file():
+            self.history.update(load_json(self.path))
+
+    def _append_to_history(self, logs: Dict[str, Any]) -> None:
+        for key, value in logs.items():
+            self.history[key].append(value)
+
+    def on_epoch_end(self, epoch: int, logs: Dict[str, Any]):
+        self._append_to_history(logs)
+        save_json(self.history, self.path)
