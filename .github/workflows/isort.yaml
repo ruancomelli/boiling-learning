@@ -10,11 +10,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
       
     - name: Run isort
-      uses: olance/isort-action@v1.0.0
-      with:
-        args: .
+      uses: isort/isort-action@v0.1.0
       
     - name: Commit changes
       run: |
