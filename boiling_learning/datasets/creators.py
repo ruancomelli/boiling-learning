@@ -1,6 +1,7 @@
 import pprint
 import warnings
 from collections import defaultdict
+from fractions import Fraction
 from typing import Container, Iterable, Optional, Sequence, Union
 
 import dataclassy
@@ -13,6 +14,7 @@ from boiling_learning.datasets.datasets import (
     DatasetSplits,
     apply_transformers,
     concatenate,
+    take,
     train_val_test_split,
 )
 from boiling_learning.io.io import DatasetTriplet
@@ -31,7 +33,7 @@ def experiment_video_dataset_creator(
     experiment_video: bl_preprocessing.ExperimentVideo,
     splits: DatasetSplits,
     data_preprocessors: Iterable[Transformer],
-    dataset_size: Optional[int] = None,
+    dataset_size: Optional[Union[int, Fraction]] = None,
     snapshot_path: Optional[PathLike] = None,
     num_shards: Optional[int] = None,
 ):
@@ -42,11 +44,10 @@ def experiment_video_dataset_creator(
 
     ds_train, ds_val, ds_test = train_val_test_split(ds, splits)
 
-    if dataset_size is not None:
-        ds_train = ds_train.take(dataset_size)
-        if ds_val is not None:
-            ds_val = ds_val.take(dataset_size)
-        ds_test = ds_test.take(dataset_size)
+    ds_train = take(ds_train, dataset_size)
+    if ds_val is not None:
+        ds_val = take(ds_val, dataset_size)
+    ds_test = take(ds_test, dataset_size)
 
     if snapshot_path is not None:
         snapshot_path = bl_utils.ensure_dir(snapshot_path)
@@ -86,7 +87,7 @@ def dataset_creator(
     image_dataset: bl_preprocessing.ImageDataset,
     splits: DatasetSplits,
     data_preprocessors: Sequence[Transformer],
-    dataset_size: Optional[int] = None,
+    dataset_size: Optional[Union[int, Fraction]] = None,
     num_shards: Optional[int] = None,
     verbose: int = 0,
     save: bool = True,
@@ -178,7 +179,7 @@ def dataset_creator(
     ds_val = concatenate(datasets_val) if None not in datasets_val else None
     ds_test = concatenate(datasets_test)
 
-    if dataset_size is not None:
+    if isinstance(dataset_size, int):
         ds_train = ds_train.take(dataset_size)
         if ds_val is not None:
             ds_val = ds_val.take(dataset_size)
