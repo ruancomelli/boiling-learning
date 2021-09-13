@@ -54,7 +54,7 @@ def main(
             print('> path:', path)
             return save_json(obj, path)
 
-        def verbose_load(obj, path):
+        def verbose_load(path):
             print('Loading from', path)
             return load_json(path)
 
