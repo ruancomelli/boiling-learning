@@ -1,4 +1,5 @@
 from importlib import import_module
+from pathlib import Path
 from typing import Any, Dict, List, TypeVar
 
 from plum import Dispatcher
@@ -57,6 +58,11 @@ def json_encode(obj: Pack) -> list:
     return [json_serialize(obj.args), json_serialize(dict(obj.kwargs))]
 
 
+@json_encode.dispatch
+def json_encode(obj: Path) -> str:
+    return str(obj)
+
+
 json_decode = table_dispatch()
 
 
@@ -88,6 +94,11 @@ def _json_decode_dict(obj: Dict[str, JSONDataType]) -> dict:
 def _json_decode_Pack(obj: JSONDataType) -> Pack:
     args, kwargs = obj
     return Pack(json_deserialize(args), json_deserialize(kwargs))
+
+
+@json_decode.dispatch(Path)
+def _json_decode_Pack(obj: JSONDataType) -> Pack:
+    return Path(obj)
 
 
 @dispatch
