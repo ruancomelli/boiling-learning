@@ -6,6 +6,7 @@ from tinydb import TinyDB
 from boiling_learning.io.io import load_json, save_json
 from boiling_learning.management.allocators import TableAllocator
 from boiling_learning.management.cacher import cache
+from boiling_learning.management.Lazy import Lazy
 from boiling_learning.management.Manager import Manager
 from boiling_learning.management.persister import (
     FilePersister,
@@ -182,3 +183,21 @@ class CacherTest(TestCase):
                 func(0.0, 'zero'), {'number': 0.0, 'name': 'zero'}
             )
             self.assertListEqual(history, [(3.14, 'pi'), (0.0, 'zero')])
+
+
+class LazyTest(TestCase):
+    def test_Lazy(self) -> None:
+        history = []
+
+        def creator() -> int:
+            history.append(0)  # simulate a side-effect
+            return 0
+
+        self.assertListEqual(history, [])
+        lazy_number = Lazy(creator)
+        self.assertListEqual(history, [])
+        self.assertEqual(lazy_number.value, 0)
+        self.assertListEqual(history, [0])
+
+        lazy_number = Lazy.from_value(1)
+        self.assertEqual(lazy_number.value, 1)

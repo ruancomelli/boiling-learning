@@ -8,6 +8,7 @@ h5py~=3.0
 importlib-metadata~=4.5
 ipywidgets~=7.6
 json-tricks~=3.15
+lazy~=1.4
 matplotlib~=3.3
 modin[ray]~=0.8.3
 more-itertools~=8.7.0
