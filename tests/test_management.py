@@ -6,7 +6,7 @@ from tinydb import TinyDB
 from boiling_learning.io.io import load_json, save_json
 from boiling_learning.management.allocators import TableAllocator
 from boiling_learning.management.cacher import cache
-from boiling_learning.management.Lazy import Lazy
+from boiling_learning.management.lazy import Lazy, LazyCallable
 from boiling_learning.management.Manager import Manager
 from boiling_learning.management.persister import (
     FilePersister,
@@ -201,3 +201,21 @@ class LazyTest(TestCase):
 
         lazy_number = Lazy.from_value(1)
         self.assertEqual(lazy_number.value, 1)
+
+    def test_LazyCallable(self) -> None:
+        history = []
+
+        def add(left, right):
+            addition = left + right
+            history.append(addition)  # simulate a side-effect
+            return addition
+
+        lazy_add = LazyCallable(add)
+
+        self.assertListEqual(history, [])
+
+        result = lazy_add(1, 2)
+        self.assertListEqual(history, [])
+
+        self.assertEqual(result.value, 3)
+        self.assertListEqual(history, [3])
