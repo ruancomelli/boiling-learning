@@ -1,6 +1,9 @@
-from typing import Any
+from typing import Any, Tuple, TypeVar
 
 import typeguard
+
+_T = TypeVar('_T')
+Many = Tuple[_T, ...]
 
 
 def typechecks(obj, type_) -> bool:

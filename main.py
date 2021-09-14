@@ -3,6 +3,7 @@ from functools import partial
 from pathlib import Path
 from typing import Dict
 
+import funcy
 import json_tricks
 import tensorflow as tf
 import tensorflow_addons as tfa
@@ -16,6 +17,7 @@ from boiling_learning.datasets.creators import (
 )
 from boiling_learning.management import Manager
 from boiling_learning.model.definitions import HoboldNet3
+from boiling_learning.preprocessing.Case import Case
 from boiling_learning.preprocessing.ImageDataset import ImageDataset
 from boiling_learning.scripts import (
     load_cases,
@@ -27,7 +29,7 @@ from boiling_learning.scripts import (
     set_boiling_cases_data,
     set_condensation_datasets_data,
 )
-from boiling_learning.utils.typeutils import typename
+from boiling_learning.utils.typeutils import Many, typename
 from boiling_learning.utils.utils import ensure_resolved, print_header
 
 print_header('Initializing script')
@@ -96,12 +98,16 @@ strategy = tf.distribute.MirroredStrategy(
 strategy_name = typename(strategy)
 print('Using distribute strategy:', strategy_name)
 
+boiling_cases_names: Many[str] = tuple(f'case {idx+1}' for idx in range(5))
+boiling_cases_names_timed: Many[str] = tuple(
+    funcy.without(boiling_cases_names, 'case 1')
+)
 
 print_header('Preparing datasets')
 print_header('Loading cases', level=1)
 print('Loading boiling cases from', boiling_cases_path)
-boiling_cases = load_cases.main(
-    (boiling_cases_path / f'case {idx}' for idx in (1, 2, 3, 4, 5)),
+boiling_cases: Many[Case] = load_cases.main(
+    (boiling_cases_path / case_name for case_name in boiling_cases_names),
     video_suffix='.MP4',
     options=load_cases.Options(
         convert_videos=OPTIONS['convert_videos'],
@@ -111,7 +117,28 @@ boiling_cases = load_cases.main(
     ),
     verbose=False,
 )
-boiling_cases_timed = [case for case in boiling_cases if case.name != 'case 1']
+boiling_cases_timed: Many[Case] = tuple(
+    case for case in boiling_cases if case.name in boiling_cases_names_timed
+)
+
+boiling_experiments_path: Path = boiling_learning_path / 'experiments'
+boiling_experiments_map: Dict[str, Path] = {
+    'case 1': boiling_experiments_path
+    / 'Experiment 2020-08-03 16-19'
+    / 'data.csv',
+    'case 2': boiling_experiments_path
+    / 'Experiment 2020-08-05 14-15'
+    / 'data.csv',
+    'case 3': boiling_experiments_path
+    / 'Experiment 2020-08-05 17-02'
+    / 'data.csv',
+    'case 4': boiling_experiments_path
+    / 'Experiment 2020-08-28 15-28'
+    / 'data.csv',
+    'case 5': boiling_experiments_path
+    / 'Experiment 2020-09-10 13-53'
+    / 'data.csv',
+}
 
 print('Loading condensation cases from', condensation_cases_path)
 condensation_datasets = load_dataset_tree.main(
@@ -125,27 +152,10 @@ condensation_datasets = load_dataset_tree.main(
 )
 
 print_header('Setting up video data', level=1)
-boiling_experiments_path = boiling_learning_path / 'experiments'
 print('Setting boiling data from experiments path:', boiling_experiments_path)
 set_boiling_cases_data.main(
     boiling_cases_timed,
-    case_experiment_map={
-        'case 1': boiling_experiments_path
-        / 'Experiment 2020-08-03 16-19'
-        / 'data.csv',
-        'case 2': boiling_experiments_path
-        / 'Experiment 2020-08-05 14-15'
-        / 'data.csv',
-        'case 3': boiling_experiments_path
-        / 'Experiment 2020-08-05 17-02'
-        / 'data.csv',
-        'case 4': boiling_experiments_path
-        / 'Experiment 2020-08-28 15-28'
-        / 'data.csv',
-        'case 5': boiling_experiments_path
-        / 'Experiment 2020-09-10 13-53'
-        / 'data.csv',
-    },
+    case_experiment_map=boiling_experiments_map,
     verbose=True,
 )
 
@@ -252,8 +262,6 @@ model_manager = Manager(
 experiment_video_dataset_manager.verbose = 2
 dataset_manager.verbose = 2
 
-assert False, 'STOP!'
-
 dataset_id, (ds_train, ds_val, ds_test) = make_dataset.main(
     experiment_video_dataset_manager=experiment_video_dataset_manager,
     dataset_manager=dataset_manager,
@@ -276,9 +284,10 @@ dataset_id, (ds_train, ds_val, ds_test) = make_dataset.main(
 
 ds_val_gt10 = bl.datasets.apply_unbatched(
     ds_val,
-    lambda ds: ds.take(
-        12614
-    ),  # this quantity is defined on "Visualization-based nucleate boiling heat flux quantification using machine learning"
+    # the following quantity is defined on
+    # "Visualization-based nucleate boiling heat flux quantification
+    # using machine learning"
+    lambda ds: ds.take(12614),
     dim=0,
     key=0,
 )
@@ -306,9 +315,11 @@ model_id, model_dict = make_model.main(
     reduce_lr_on_plateau_patience=None,
     early_stopping_patience=10,
     dropout_ratio=0.5,
-    batch_size=256,
+    batch_size=128,
     missing_ok=True,
     include=True,
     hidden_layers_policy='mixed_float16',
     output_layer_policy='float32',
 )
+
+print(model_dict)

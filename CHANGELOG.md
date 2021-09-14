@@ -1,3 +1,25 @@
+## v0.13.0 (2021-09-13)
+
+### Fix
+
+- **commitizen**: fix broken release pipeline
+- **scripts**: fix `verbose_load` parameters in scripts
+
+### Feat
+
+- **datasets**: accept `Fraction`al dataset sizes in experiment video creators
+- **datasets**: accept `Fraction`al dataset sizes in dataset creators
+- **management**: add JSON cacher for easier caching of simple types
+- **io**: implement JSON encoding and decoding for `pathlib.Path`s
+- **models**: add callback for saving and restoring history at each epoch
+- **scripts**: define global script for running the entire code
+
+### Refactor
+
+- **utils**: improve typing in `utils` module
+- improve code typing and formatting
+- **workers**: remove unused Flask server/client functionality
+
 ## v0.12.1 (2021-08-24)
 
 ### Fix
