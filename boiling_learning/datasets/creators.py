@@ -13,6 +13,7 @@ import boiling_learning.utils as bl_utils
 from boiling_learning.datasets.datasets import (
     DatasetSplits,
     apply_transformers,
+    calculate_dataset_size,
     concatenate,
     take,
     train_val_test_split,
@@ -52,8 +53,10 @@ def experiment_video_dataset_creator(
     if snapshot_path is not None:
         snapshot_path = bl_utils.ensure_dir(snapshot_path)
 
-        if dataset_size is not None:
+        if isinstance(dataset_size, int):
             num_shards = min(dataset_size, num_shards)
+        elif isinstance(dataset_size, Fraction):
+            num_shards = min(calculate_dataset_size(ds), num_shards)
 
         ds_train = ds_train.apply(
             bl_preprocessing.snapshotter(

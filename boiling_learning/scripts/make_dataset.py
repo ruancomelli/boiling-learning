@@ -1,6 +1,7 @@
 from collections import defaultdict
+from fractions import Fraction
 from functools import partial
-from typing import Container, Optional, Sequence
+from typing import Container, Optional, Sequence, Union
 
 import dataclassy
 import funcy
@@ -33,7 +34,7 @@ def main(
     shuffle: bool = True,
     shuffle_size: Optional[int] = None,
     batch_size: Optional[int] = None,
-    take: Optional[int] = None,
+    take: Optional[Union[int, Fraction]] = None,
     augment_train: bool = True,
     augment_test: bool = True,
     verbose: int = False,
