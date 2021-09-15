@@ -121,7 +121,7 @@ class Case(ImageDataset):
 
         new_videos_dir = bl_utils.ensure_dir(new_videos_dir, root=self.path)
         for element_video in self.values():
-            tail = element_video.video_path.relative_to(self.videos_dir)
+            tail = element_video.path.relative_to(self.videos_dir)
             dest_path = (new_videos_dir / tail).with_suffix(new_suffix)
             element_video.convert_video(
                 dest_path, overwrite=overwrite, verbose=verbose

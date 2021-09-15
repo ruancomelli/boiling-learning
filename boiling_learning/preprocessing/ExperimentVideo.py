@@ -1,21 +1,11 @@
 import operator
 from datetime import timedelta
 from pathlib import Path
-from typing import (
-    Any,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union
 
 import funcy
 import modin.pandas as pd
 import numpy as np
-import pims
 import tensorflow as tf
 from dataclassy import dataclass
 from scipy.interpolate import interp1d
@@ -27,6 +17,7 @@ from boiling_learning.io.io import (
     save_dataset,
 )
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
+from boiling_learning.preprocessing.Video import Video
 from boiling_learning.preprocessing.video import (
     convert_video,
     extract_audio,
@@ -35,7 +26,7 @@ from boiling_learning.preprocessing.video import (
 from boiling_learning.utils import PathLike, VerboseType, ensure_resolved
 
 
-class ExperimentVideo(Sequence[np.ndarray]):
+class ExperimentVideo(Video):
     @dataclass
     class VideoData:
         '''Class for video data representation.
@@ -105,7 +96,8 @@ class ExperimentVideo(Sequence[np.ndarray]):
         column_names: DataFrameColumnNames = DataFrameColumnNames(),
         column_types: DataFrameColumnTypes = DataFrameColumnTypes(),
     ) -> None:
-        self.video_path: Path = ensure_resolved(video_path)
+        super().__init__(video_path)
+
         self.frames_path: Optional[Path]
         self.frames_suffix: str
         self.audio_path: Optional[Path]
@@ -117,48 +109,28 @@ class ExperimentVideo(Sequence[np.ndarray]):
         self.column_types: self.DataFrameColumnTypes = column_types
         self.df: Optional[pd.DataFrame] = None
         self.ds: Optional[tf.data.Dataset] = None
-        self.video: Optional[pims.Video] = None
-        self._is_open_video: bool = False
-        self.start: int = 0
-        self.end: Optional[int] = None
+        self._name: str = name if name is not None else self.path.stem
 
-        self._name = name if name is not None else self.video_path.stem
-
-        if (frames_dir is not None) and (frames_path is not None):
+        if None not in {frames_dir, frames_path}:
             raise ValueError(
-                'at most one of (frames_dir, frames_path) must be given.'
-            )
-        else:
-            self.frames_path = (
-                ensure_resolved(frames_path)
-                if frames_path is not None
-                else (
-                    ensure_resolved(frames_dir) / self.name
-                    if frames_dir is not None
-                    else None
-                )
+                'at most one of (*frames_dir*, *frames_path*) must be given.'
             )
 
-        if (frames_tensor_path is not None) and (
-            frames_tensor_dir is not None
-        ):
+        if None not in {frames_tensor_path, frames_tensor_dir}:
             raise ValueError(
-                'at most one of (frames_tensor_path, frames_tensor_dir) must be given.'
-            )
-        else:
-            self.frames_tensor_path = (
-                ensure_resolved(frames_tensor_path)
-                if frames_tensor_path is not None
-                else (
-                    ensure_resolved(frames_tensor_dir) / self.name
-                    if frames_tensor_dir is not None
-                    else None
-                )
+                'at most one of (*frames_tensor_path*, *frames_tensor_dir*) '
+                'must be given.'
             )
 
-        if frames_suffix.startswith('.'):
-            self.frames_suffix = frames_suffix
-        else:
+        if None not in {audio_dir, audio_path}:
+            raise ValueError(
+                'at most one of (*audio_dir*, *audio_path*) must be given.'
+            )
+
+        if None not in {df_dir, df_path}:
+            raise ValueError('at most one of (df_dir, df_path) must be given.')
+
+        if not frames_suffix.startswith('.'):
             raise ValueError(
                 'argument *frames_suffix* must start with a dot \'.\''
             )
@@ -168,47 +140,59 @@ class ExperimentVideo(Sequence[np.ndarray]):
                 'argument *audio_suffix* must start with a dot \'.\''
             )
 
-        if (audio_dir is not None) and (audio_path is not None):
-            raise ValueError(
-                'at most one of (audio_dir, audio_path) must be given.'
-            )
-        else:
-            self.audio_path = (
-                ensure_resolved(audio_path)
-                if audio_path is not None
-                else (
-                    (ensure_resolved(audio_dir) / self.name).with_suffix(
-                        audio_suffix
-                    )
-                    if audio_dir is not None
-                    else None
-                )
-            )
-
         if not df_suffix.startswith('.'):
             raise ValueError(
                 'argument *df_suffix* must start with a dot \'.\''
             )
 
-        if (df_dir is not None) and (df_path is not None):
-            raise ValueError('at most one of (df_dir, df_path) must be given.')
-        else:
-            self.df_path = (
-                ensure_resolved(df_path)
-                if df_path is not None
-                else (
-                    (ensure_resolved(df_dir) / self.name).with_suffix(
-                        df_suffix
-                    )
-                    if df_dir is not None
-                    else None
-                )
+        self.frames_path: Optional[Path] = (
+            ensure_resolved(frames_path)
+            if frames_path is not None
+            else (
+                ensure_resolved(frames_dir) / self.name
+                if frames_dir is not None
+                else None
             )
+        )
+
+        self.frames_tensor_path: Optional[Path] = (
+            ensure_resolved(frames_tensor_path)
+            if frames_tensor_path is not None
+            else (
+                ensure_resolved(frames_tensor_dir) / self.name
+                if frames_tensor_dir is not None
+                else None
+            )
+        )
+
+        self.frames_suffix: str = frames_suffix
+
+        self.audio_path: Optional[Path] = (
+            ensure_resolved(audio_path)
+            if audio_path is not None
+            else (
+                (ensure_resolved(audio_dir) / self.name).with_suffix(
+                    audio_suffix
+                )
+                if audio_dir is not None
+                else None
+            )
+        )
+
+        self.df_path: Optional[Path] = (
+            ensure_resolved(df_path)
+            if df_path is not None
+            else (
+                (ensure_resolved(df_dir) / self.name).with_suffix(df_suffix)
+                if df_dir is not None
+                else None
+            )
+        )
 
     def __str__(self) -> str:
         kwargs = {
             'name': self.name,
-            'video_path': self.video_path,
+            'video_path': self.path,
             'frames_path': self.frames_path,
             'frames_suffix': self.frames_suffix,
             'audio_path': self.audio_path,
@@ -229,25 +213,6 @@ class ExperimentVideo(Sequence[np.ndarray]):
                 ')',
             )
         )
-
-    def __len__(self) -> int:
-        self.open_video()
-        return self.end - self.start
-
-    def __getitem__(self, index: int) -> np.ndarray:
-        self.open_video()
-
-        length = len(self)
-
-        if index >= length:
-            raise IndexError(f'index must be less than {length}')
-
-        absolute_index = self.start + index
-
-        # normalize frames to TF's standard: `pims.Video` returns frames
-        # with float datatype, but scaled from 0 to 255 whereas TF expects
-        # those floating point types to be between 0 and 1
-        return self.video[absolute_index] / 255
 
     @property
     def name(self) -> str:
@@ -273,21 +238,6 @@ class ExperimentVideo(Sequence[np.ndarray]):
         elif data.end_elapsed_time is not None:
             self.end = round(data.end_elapsed_time.total_seconds() * data.fps)
 
-    def open_video(self) -> None:
-        if not self._is_open_video:
-            self.video = pims.Video(str(self.video_path))
-
-            if self.end is None:
-                self.end = len(self.video)
-
-            self._is_open_video = True
-
-    def close_video(self) -> None:
-        if self._is_open_video:
-            self.video.close()
-        self.video = None
-        self._is_open_video = False
-
     def convert_video(
         self,
         dest_path: PathLike,
@@ -297,9 +247,9 @@ class ExperimentVideo(Sequence[np.ndarray]):
         """Use this function to move or convert video"""
         dest_path = bl_utils.ensure_parent(dest_path)
         convert_video(
-            self.video_path, dest_path, overwrite=overwrite, verbose=verbose
+            self.path, dest_path, overwrite=overwrite, verbose=verbose
         )
-        self.video_path = dest_path
+        self.path = dest_path
 
     def extract_audio(
         self, overwrite: bool = False, verbose: VerboseType = False
@@ -308,7 +258,7 @@ class ExperimentVideo(Sequence[np.ndarray]):
             raise ValueError('*audio_path* is not defined yet.')
 
         extract_audio(
-            self.video_path,
+            self.path,
             self.audio_path,
             overwrite=overwrite,
             verbose=verbose,
@@ -337,7 +287,7 @@ class ExperimentVideo(Sequence[np.ndarray]):
             )
 
         extract_frames(
-            self.video_path,
+            self.path,
             outputdir=self.frames_path,
             filename_pattern=filename_pattern,
             frame_suffix=self.frames_suffix,
