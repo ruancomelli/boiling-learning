@@ -3,7 +3,9 @@ from __future__ import annotations
 from functools import partial
 from typing import Any, Callable, Generic, TypeVar
 
-from lazy import lazy
+from lazy import lazy as lazy_property
+
+__all__ = ('Lazy', 'LazyCallable', 'lazy_property')
 
 _T = TypeVar('_T')
 
@@ -12,7 +14,7 @@ class Lazy(Generic[_T]):
     def __init__(self, creator: Callable[[], _T]) -> None:
         self._creator: Callable[[], _T] = creator
 
-    @lazy
+    @lazy_property
     def value(self) -> _T:
         return self._creator()
 

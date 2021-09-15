@@ -2,6 +2,7 @@ from unittest.case import TestCase
 
 from boiling_learning.utils.collections import KeyedSet
 from boiling_learning.utils.geometry import Cylinder, Prism, RectangularPrism
+from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.Parameters import Parameters
 from boiling_learning.utils.utils import indexify
 
@@ -68,3 +69,39 @@ class Parameters_test(TestCase):
         p['a'] = 0
         self.assertIn('a', p)
         self.assertEqual(p['a'], 0)
+
+
+class LazyTest(TestCase):
+    def test_Lazy(self) -> None:
+        history = []
+
+        def creator() -> int:
+            history.append(0)  # simulate a side-effect
+            return 0
+
+        self.assertListEqual(history, [])
+        lazy_number = Lazy(creator)
+        self.assertListEqual(history, [])
+        self.assertEqual(lazy_number.value, 0)
+        self.assertListEqual(history, [0])
+
+        lazy_number = Lazy.from_value(1)
+        self.assertEqual(lazy_number.value, 1)
+
+    def test_LazyCallable(self) -> None:
+        history = []
+
+        def add(left, right):
+            addition = left + right
+            history.append(addition)  # simulate a side-effect
+            return addition
+
+        lazy_add = LazyCallable(add)
+
+        self.assertListEqual(history, [])
+
+        result = lazy_add(1, 2)
+        self.assertListEqual(history, [])
+
+        self.assertEqual(result.value, 3)
+        self.assertListEqual(history, [3])
