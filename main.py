@@ -1,7 +1,7 @@
 from fractions import Fraction
 from functools import partial
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 import funcy
 import json_tricks
@@ -29,6 +29,7 @@ from boiling_learning.scripts import (
     set_boiling_cases_data,
     set_condensation_datasets_data,
 )
+from boiling_learning.utils.lazy import Lazy
 from boiling_learning.utils.typeutils import Many, typename
 from boiling_learning.utils.utils import ensure_resolved, print_header
 
@@ -52,13 +53,13 @@ print_header('Options', level=1)
 for option, value in OPTIONS.items():
     print(f'{option}: {value}')
 
-config = dict(dotenv_values('.env'))
-google_drive_path = ensure_resolved(config['GOOGLE_DRIVE_PATH'])
-projects_path = google_drive_path / 'Projects'
-boiling_learning_path = projects_path / 'boiling-learning'
-boiling_cases_path = boiling_learning_path / 'cases'
-condensation_learning_path = projects_path / 'condensation-learning'
-condensation_cases_path = condensation_learning_path / 'data'
+config: dict = dict(dotenv_values('.env'))
+google_drive_path: Path = ensure_resolved(config['GOOGLE_DRIVE_PATH'])
+projects_path: Path = google_drive_path / 'Projects'
+boiling_learning_path: Path = projects_path / 'boiling-learning'
+boiling_cases_path: Path = boiling_learning_path / 'cases'
+condensation_learning_path: Path = projects_path / 'condensation-learning'
+condensation_cases_path: Path = condensation_learning_path / 'data'
 
 print_header('Important paths', level=1)
 for path_name, path in (
@@ -78,8 +79,8 @@ print_header('Checking CPUs and GPUs', level=1)
 # See <https://www.tensorflow.org/xla/tutorials/autoclustering_xla>
 tf.config.optimizer.set_jit(True)  # Enable XLA.
 
-cpus = tf.config.list_physical_devices('CPU')
-gpus = tf.config.list_physical_devices('GPU')
+cpus: List[str] = tf.config.list_physical_devices('CPU')
+gpus: List[str] = tf.config.list_physical_devices('GPU')
 
 print('Available CPUs:', cpus)
 print('Available GPUs:', gpus)
@@ -90,12 +91,12 @@ if not gpus:
 for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
 
-strategy = tf.distribute.MirroredStrategy(
+strategy: tf.distribute.Strategy = tf.distribute.MirroredStrategy(
     cross_device_ops=tf.distribute.NcclAllReduce(
         num_packs=0
     )  # trying to reduce memory usage
 )
-strategy_name = typename(strategy)
+strategy_name: str = typename(strategy)
 print('Using distribute strategy:', strategy_name)
 
 boiling_cases_names: Many[str] = tuple(f'case {idx+1}' for idx in range(5))
@@ -106,7 +107,7 @@ boiling_cases_names_timed: Many[str] = tuple(
 print_header('Preparing datasets')
 print_header('Loading cases', level=1)
 print('Loading boiling cases from', boiling_cases_path)
-boiling_cases: Many[Case] = load_cases.main(
+boiling_cases: Lazy[Many[Case]] = load_cases.main(
     (boiling_cases_path / case_name for case_name in boiling_cases_names),
     video_suffix='.MP4',
     options=load_cases.Options(

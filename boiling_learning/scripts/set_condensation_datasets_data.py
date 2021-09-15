@@ -112,7 +112,7 @@ def main(
 
             print_verbose(verbose >= 2, f'Getting FPS for EV "{ev_name}"')
 
-            fps = fps_getter(ev.video_path)
+            fps = fps_getter(ev.path)
 
             print_verbose(
                 verbose >= 2, f'Getting video data for EV "{ev_name}"'

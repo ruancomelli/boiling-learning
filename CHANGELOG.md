@@ -1,3 +1,15 @@
+## v0.13.1 (2021-09-14)
+
+### Refactor
+
+- **preprocessing**: move video functionality to its own class, out of `ExperimentVideo`
+- **management**: move lazy functionality from management to utils subpackage
+
+### Feat
+
+- **management**: define `LazyCallable`s that return `Lazy` results
+- **management**: add a `Lazy` class for lazily-evaluated objects
+
 ## v0.13.0 (2021-09-13)
 
 ### Fix
