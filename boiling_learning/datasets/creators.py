@@ -21,15 +21,16 @@ from boiling_learning.datasets.datasets import (
 from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.management.Manager import Manager
 from boiling_learning.preprocessing.transformers import (
-    Creator,
     DictImageTransformer,
     Transformer,
+    creator,
+    transformer,
 )
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.utils import PathLike
 
 
-@Creator.make('experiment_video_dataset_creator', expand_pack_on_call=True)
+@creator(expand_pack_on_call=True)
 def experiment_video_dataset_creator(
     experiment_video: bl_preprocessing.ExperimentVideo,
     splits: DatasetSplits,
@@ -84,7 +85,7 @@ def experiment_video_dataset_creator(
     return (ds_train, ds_val, ds_test)
 
 
-@Creator.make('dataset_creator', expand_pack_on_call=True)
+@creator(expand_pack_on_call=True)
 def dataset_creator(
     experiment_video_dataset_manager: Manager,
     image_dataset: bl_preprocessing.ImageDataset,
@@ -191,7 +192,7 @@ def dataset_creator(
     return (ds_train, ds_val, ds_test)
 
 
-@Transformer.make('dataset_post_processor')
+@transformer()
 def dataset_post_processor(
     ds: DatasetTriplet,
     data_augmentors: Iterable[Transformer],

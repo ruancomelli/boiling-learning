@@ -256,3 +256,19 @@ class DictImageTransformer(
 
 
 first_argument_transformer = Transformer('first_argument', nth_arg(0))
+
+
+def transformer(*args, **kwargs) -> Callable[[Callable], Transformer]:
+    def decorator(f: Callable) -> Transformer:
+        maker = Transformer.make(f.__name__, *args, **kwargs)
+        return maker(f)
+
+    return decorator
+
+
+def creator(*args, **kwargs) -> Callable[[Callable[..., S]], Creator[S]]:
+    def decorator(f: Callable[..., S]) -> Creator[S]:
+        maker = Creator.make(f.__name__, *args, **kwargs)
+        return maker(f)
+
+    return decorator
