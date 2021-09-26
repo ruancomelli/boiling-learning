@@ -184,10 +184,9 @@ def dataset_creator(
     ds_test = concatenate(datasets_test)
 
     if isinstance(dataset_size, int):
-        ds_train = ds_train.take(dataset_size)
-        if ds_val is not None:
-            ds_val = ds_val.take(dataset_size)
-        ds_test = ds_test.take(dataset_size)
+        ds_train = take(ds_train, dataset_size)
+        ds_val = take(ds_val, dataset_size)
+        ds_test = take(ds_test, dataset_size)
 
     return (ds_train, ds_val, ds_test)
 
@@ -242,8 +241,7 @@ def dataset_post_processor(
             if data_augmentor.name in force_test_augmentors
         )
     )
-    if ds_val is not None:
-        ds_val = apply_transformers(ds_val, test_augmentors)
+    ds_val = apply_transformers(ds_val, test_augmentors)
     ds_test = apply_transformers(ds_test, test_augmentors)
 
     if shuffle_size is not None:

@@ -1,5 +1,4 @@
 import enum
-import functools
 from collections import deque
 from fractions import Fraction
 from typing import Callable, Iterable, Optional, Type, TypeVar, Union
@@ -8,6 +7,7 @@ import funcy
 import more_itertools as mit
 import tensorflow as tf
 from dataclassy import dataclass
+from decorator import decorator
 from frozendict import frozendict
 from tensorflow.data import AUTOTUNE
 
@@ -115,6 +115,36 @@ Split.FROM_STR_TABLE = frozendict(
         for key_str in keys
     }
 )
+
+
+@decorator
+def none_aware(
+    f: Callable[..., _T], ds: Optional[tf.data.Dataset], *args, **kwargs
+) -> Optional[_T]:
+    '''
+    Takes a function which requires a tf.data.Dataset as first argument
+    and outputs another function which accepts *None* instead of a dataset,
+    making it aware of *None* datasets. In this case, *None* is silently
+    return without errors.
+
+    For example:
+    >>> ds = tf.data.Dataset.range(10)
+    >>> def take(ds: tf.data.Dataset, count: int) -> tf.data.Dataset:
+    ...     return ds.take(count)
+    >>> list(take(ds, 2).as_numpy_iterator())
+    [0, 1]
+    >>> ds_val = take(None, 2)
+    Traceback (most recent call last):
+     ...
+    AttributeError: 'NoneType' object has no attribute 'take'
+    >>> safe_take = none_aware(take)
+    >>> safe_take(None)
+    None
+    '''
+    if ds is None:
+        return None
+    else:
+        return f(ds, *args, **kwargs)
 
 
 def concatenate(datasets: Iterable[tf.data.Dataset]) -> tf.data.Dataset:
@@ -236,6 +266,7 @@ def bulk_split(
     return ds_train, ds_val, ds_test
 
 
+@none_aware
 def take(
     ds: tf.data.Dataset, count: Optional[Union[int, Fraction]]
 ) -> tf.data.Dataset:
@@ -266,15 +297,14 @@ def calculate_dataset_size(
     dataset: tf.data.Dataset, batched_dim: Optional[int] = None
 ) -> int:
     if batched_dim is not None:
-        batch_size_calculator = functools.partial(
-            calculate_batch_size, dim=batched_dim
+        return sum(
+            calculate_batch_size(batch, dim=batched_dim) for batch in dataset
         )
-        return sum(map(batch_size_calculator, dataset))
-    else:
-        try:
-            return len(dataset)
-        except TypeError:
-            return mit.ilen(dataset)
+
+    try:
+        return len(dataset)
+    except TypeError:
+        return mit.ilen(dataset)
 
 
 def apply_unbatched(
@@ -329,6 +359,7 @@ def filter_flattened(
     return filter_unbatched(dataset, pred_fn, dim=0, key=0)
 
 
+@none_aware
 def apply_transformers(
     ds: tf.data.Dataset, transformers: Iterable[Transformer]
 ) -> tf.data.Dataset:
@@ -338,3 +369,11 @@ def apply_transformers(
             num_parallel_calls=AUTOTUNE,
         )
     return ds
+
+
+def features(ds: tf.data.Dataset) -> tf.data.Dataset:
+    return ds.map(lambda x, y: x)
+
+
+def targets(ds: tf.data.Dataset) -> tf.data.Dataset:
+    return ds.map(lambda x, y: y)
