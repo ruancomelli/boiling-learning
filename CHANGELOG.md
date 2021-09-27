@@ -1,3 +1,9 @@
+## v0.13.4 (2021-09-26)
+
+### Feat
+
+- **lazy**: implement right composition between lazy and regular callables
+
 ## v0.13.3 (2021-09-26)
 
 ### Feat
