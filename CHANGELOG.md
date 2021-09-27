@@ -1,3 +1,11 @@
+## v0.13.2 (2021-09-26)
+
+### Feat
+
+- **pack**: implement `Pack` partial application using the matrix multiplication operator `@`
+- **datasets**: provide decorator for silencing errors when functions are passed `None`s instead of datasets
+- **transformers**: add shortcut decorators `creator` and `transformer`
+
 ## v0.13.1 (2021-09-14)
 
 ### Refactor

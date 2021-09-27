@@ -457,3 +457,9 @@ def LinearModel(
     predictions = _LinearModel()(x)
 
     return Model(inputs=input_data, outputs=predictions)
+
+
+# fazer erro em função do y: ver se para maiores ys o erro vai subindo ou diminuindo
+# quem sabe fazer 3 ou mais modelos, um especializado para cada região de y; e quem sabe usar um classificador pra escolher qual estimador não ajude muito
+# focar na arquitetura da rede, que é mais importante do que hiperparâmetros
+# otimizar as convolucionais pode ser mais importante do que otimizar as fully-connected

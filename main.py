@@ -57,17 +57,21 @@ config: dict = dict(dotenv_values('.env'))
 google_drive_path: Path = ensure_resolved(config['GOOGLE_DRIVE_PATH'])
 projects_path: Path = google_drive_path / 'Projects'
 boiling_learning_path: Path = projects_path / 'boiling-learning'
+boiling_experiments_path: Path = boiling_learning_path / 'experiments'
 boiling_cases_path: Path = boiling_learning_path / 'cases'
 condensation_learning_path: Path = projects_path / 'condensation-learning'
 condensation_cases_path: Path = condensation_learning_path / 'data'
+analyses_path: Path = boiling_learning_path / 'analyses'
 
 print_header('Important paths', level=1)
 for path_name, path in (
     ('Google Drive', google_drive_path),
     ('Boiling learning', boiling_learning_path),
     ('Boiling cases', boiling_cases_path),
+    ('Boiling experiments', boiling_experiments_path),
     ('Contensation learning', condensation_learning_path),
     ('Contensation cases', condensation_cases_path),
+    ('Analyses', analyses_path),
 ):
     if not path.exists():
         raise RuntimeError(f'path to "{path_name}" does not exist: {path}')
@@ -92,9 +96,8 @@ for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
 
 strategy: tf.distribute.Strategy = tf.distribute.MirroredStrategy(
-    cross_device_ops=tf.distribute.NcclAllReduce(
-        num_packs=0
-    )  # trying to reduce memory usage
+    # trying to reduce memory usage
+    cross_device_ops=tf.distribute.NcclAllReduce(num_packs=0)
 )
 strategy_name: str = typename(strategy)
 print('Using distribute strategy:', strategy_name)
@@ -122,7 +125,6 @@ boiling_cases_timed: Many[Case] = tuple(
     case for case in boiling_cases if case.name in boiling_cases_names_timed
 )
 
-boiling_experiments_path: Path = boiling_learning_path / 'experiments'
 boiling_experiments_map: Dict[str, Path] = {
     'case 1': boiling_experiments_path
     / 'Experiment 2020-08-03 16-19'
@@ -213,10 +215,7 @@ load_map = {
 }
 
 experiment_video_dataset_manager = Manager(
-    path=boiling_learning_path
-    / 'analyses'
-    / 'datasets'
-    / 'boiling_experiment_video_datasets',
+    path=analyses_path / 'datasets' / 'boiling_experiment_video_datasets',
     id_fmt='experiment video dataset {index}',
     index_key='index',
     creator=experiment_video_dataset_creator,
@@ -233,7 +232,7 @@ experiment_video_dataset_manager = Manager(
 )
 
 dataset_manager = Manager(
-    path=boiling_learning_path / 'analyses' / 'datasets' / 'boiling_datasets',
+    path=analyses_path / 'datasets' / 'boiling_datasets',
     id_fmt='dataset {index}',
     index_key='index',
     creator=dataset_creator,
@@ -246,7 +245,7 @@ dataset_manager = Manager(
 )
 
 model_manager = Manager(
-    path=boiling_learning_path / 'analyses' / 'models' / 'trained_models',
+    path=analyses_path / 'models' / 'trained_models',
     id_fmt='{index}.model',
     index_key='index',
     save_method=bl.io.save_serialized(save_map),

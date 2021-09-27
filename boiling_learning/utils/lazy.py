@@ -15,8 +15,11 @@ class Lazy(Generic[_T]):
         self._creator: Callable[[], _T] = creator
 
     @lazy_property
-    def value(self) -> _T:
+    def __value(self) -> _T:
         return self._creator()
+
+    def __call__(self) -> _T:
+        return self.__value
 
     @classmethod
     def from_value(self, value: _T) -> Lazy[_T]:
@@ -29,3 +32,6 @@ class LazyCallable(Generic[_T]):
 
     def __call__(self, *args: Any, **kwargs: Any) -> Lazy[_T]:
         return Lazy(partial(self._call, *args, **kwargs))
+
+
+lazy_callable = LazyCallable
