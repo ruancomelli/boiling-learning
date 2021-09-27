@@ -3,11 +3,13 @@ from __future__ import annotations
 from functools import partial
 from typing import Any, Callable, Generic, TypeVar
 
+import funcy
 from lazy import lazy as lazy_property
 
-__all__ = ('Lazy', 'LazyCallable', 'lazy_property')
+__all__ = ('Lazy', 'LazyCallable', 'lazy_property', 'lazy_callable')
 
 _T = TypeVar('_T')
+_S = TypeVar('_S')
 
 
 class Lazy(Generic[_T]):
@@ -32,6 +34,11 @@ class LazyCallable(Generic[_T]):
 
     def __call__(self, *args: Any, **kwargs: Any) -> Lazy[_T]:
         return Lazy(partial(self._call, *args, **kwargs))
+
+    def __rmatmul__(self, other: Callable[[_T], _S]) -> LazyCallable[_S]:
+        if callable(other):
+            return LazyCallable(funcy.compose(other, self._call))
+        return NotImplemented
 
 
 lazy_callable = LazyCallable
