@@ -1,3 +1,10 @@
+## v0.13.3 (2021-09-26)
+
+### Feat
+
+- **scripts**: accept verbosity flag in `connect_gpus` script and add check for NVIDIA output
+- **scripts**: add script for connecting with GPUs
+
 ## v0.13.2 (2021-09-26)
 
 ### Feat
