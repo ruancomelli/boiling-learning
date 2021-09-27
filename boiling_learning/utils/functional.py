@@ -138,6 +138,18 @@ class Pack(Hashable, Generic[_T, _S]):
     def rpartial(self, f: Callable[..., _U]) -> Callable[..., _U]:
         return funcy.rpartial(f, *self.args, **self.kwargs)
 
+    def __matmul__(self, other: Callable[..., _U]) -> Callable[..., _U]:
+        if callable(other):
+            return self.partial(other)
+        else:
+            return NotImplemented
+
+    def __rmatmul__(self, other: Callable[..., _U]) -> Callable[..., _U]:
+        if callable(other):
+            return self.rpartial(other)
+        else:
+            return NotImplemented
+
     def omit(
         self,
         loc: Union[
