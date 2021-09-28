@@ -1,7 +1,7 @@
 import enum
 from collections import deque
 from fractions import Fraction
-from typing import Callable, Iterable, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Iterable, Optional, Type, TypeVar, Union
 
 import funcy
 import more_itertools as mit
@@ -375,5 +375,8 @@ def features(ds: tf.data.Dataset) -> tf.data.Dataset:
     return ds.map(lambda x, y: x)
 
 
-def targets(ds: tf.data.Dataset) -> tf.data.Dataset:
-    return ds.map(lambda x, y: y)
+def targets(ds: tf.data.Dataset, key: Any = _sentinel) -> tf.data.Dataset:
+    if key is _sentinel:
+        return ds.map(lambda x, y: y)
+    else:
+        return ds.map(lambda x, y: y[key])

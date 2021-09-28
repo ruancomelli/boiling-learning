@@ -9,10 +9,7 @@ from boiling_learning.utils.utils import ensure_resolved
 
 
 class Video(Sequence[np.ndarray]):
-    def __init__(
-        self,
-        path: PathLike,
-    ) -> None:
+    def __init__(self, path: PathLike) -> None:
         self.path: Path = ensure_resolved(path)
 
         self.video: Optional[pims.Video] = None
