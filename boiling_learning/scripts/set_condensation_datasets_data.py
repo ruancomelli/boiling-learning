@@ -1,9 +1,15 @@
 import re
+import time
 from datetime import timedelta
 from typing import Dict, Iterable, Optional
 
+import gspread
+import modin.pandas as pd
 import parse
 import yaml
+from dataclassy import dataclass
+from oauth2client.client import GoogleCredentials
+from sklearn.linear_model import LinearRegression
 
 from boiling_learning.io.io import load_json, save_json
 from boiling_learning.management.allocators import default_table_allocator
@@ -37,9 +43,63 @@ def _parse_timedelta(s: Optional[str]) -> Optional[timedelta]:
     )
 
 
+def dataframes_from_gspread(
+    spreadsheet_name: str, credentials: Optional[GoogleCredentials] = None
+) -> Dict[str, pd.DataFrame]:
+    if credentials is None:
+        credentials = GoogleCredentials.get_application_default()
+
+    gc = gspread.authorize(credentials)
+    spreadsheet: gspread.Spreadsheet = gc.open(spreadsheet_name)
+
+    return {
+        worksheet.title: pd.DataFrame(worksheet.get_all_values())
+        for worksheet in spreadsheet.worksheets()
+    }
+
+
+def _parse_mass_timeseries(
+    dfs: Dict[str, pd.DataFrame], case: str, subcase: str, test: str
+) -> pd.DataFrame:
+    df = dfs[case]
+    df = df.loc[:, (df.loc[0] == subcase) & (df.loc[1] == test)][2:]
+    df, df.columns = df[1:], df.iloc[0]
+
+    df['datetime'] = pd.to_datetime(
+        df.pop('date').astype(str) + ' ' + df.pop('time').astype(str)
+    )
+    datetime_secs = df.datetime.apply(lambda dt: time.mktime(dt.timetuple()))
+    df['elapsed_time'] = datetime_secs - datetime_secs.min()
+    mass = pd.to_numeric(df.pop('mass [g]').str.replace(',', '.'))
+    df['mass'] = mass - mass.min()
+
+    return df
+
+
+@dataclass
+class LinearRegressionCoefficients:
+    coef: float
+    intercept: float
+
+
+def linear_regression(
+    df: pd.DataFrame, x_column: str, y_column: str
+) -> LinearRegressionCoefficients:
+    X = df[x_column].values.reshape(-1, 1)
+    y = df[y_column].values.reshape(-1, 1)
+    linear_regressor = LinearRegression()
+    linear_regressor.fit(X, y)
+
+    return LinearRegressionCoefficients(
+        coef=float(linear_regressor.coef_.squeeze()),
+        intercept=float(linear_regressor.intercept_.squeeze()),
+    )
+
+
 def main(
     datasets: Iterable[ImageDataset],
     dataspecpath: PathLike,
+    spreadsheet_name: Optional[str] = None,
     verbose: int = 0,
     fps_cache_path: Optional[PathLike] = None,
 ) -> Dict[str, ImageDataset]:
@@ -169,6 +229,32 @@ def main(
                     )
 
             dataset.save_dfs(overwrite=False)
+
+    if spreadsheet_name is not None:
+        MASS_COLUMN: str = 'mass_rate'
+        mass_data: Optional[Dict[str, pd.DataFrame]] = None
+
+        for dataset in datasets_dict.values():
+            changed: bool = False
+
+            for ev in dataset.values():
+                if MASS_COLUMN in ev.df.columns:
+                    continue
+
+                changed = True
+
+                if mass_data is None and spreadsheet_name is not None:
+                    mass_data = dataframes_from_gspread(spreadsheet_name)
+
+                case_name, subcase_name, test_name, _ = ev.name.split(':')
+                df = _parse_mass_timeseries(
+                    mass_data, case_name, subcase_name, test_name
+                )
+                coefs = linear_regression(df, 'elapsed_time', 'mass')
+                ev.df[MASS_COLUMN] = coefs.coef
+
+            if changed:
+                dataset.save_dfs(overwrite=True)
 
     print_verbose(verbose, 'Condensation datasets dict:')
     for ds_name, ds in datasets_dict.items():
