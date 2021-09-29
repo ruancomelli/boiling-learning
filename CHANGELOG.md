@@ -1,3 +1,10 @@
+## v0.13.5 (2021-09-29)
+
+### Feat
+
+- **scripts**: include mass rate information in condensation data
+- **datasets**: accept optional key in `datasets.targets` function
+
 ## v0.13.4 (2021-09-26)
 
 ### Feat
