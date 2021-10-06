@@ -1,7 +1,16 @@
 import enum
 from collections import deque
 from fractions import Fraction
-from typing import Any, Callable, Iterable, Optional, Type, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    List,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import funcy
 import more_itertools as mit
@@ -13,6 +22,7 @@ from tensorflow.data import AUTOTUNE
 
 import boiling_learning.utils.mathutils as mathutils
 from boiling_learning.io.io import DatasetTriplet
+from boiling_learning.preprocessing import ExperimentVideo
 from boiling_learning.preprocessing.transformers import Transformer
 
 _sentinel = object()
@@ -380,3 +390,14 @@ def targets(ds: tf.data.Dataset, key: Any = _sentinel) -> tf.data.Dataset:
         return ds.map(lambda x, y: y)
     else:
         return ds.map(lambda x, y: y[key])
+
+
+def experiment_video_to_sequential_dataset_triplet(
+    ev: ExperimentVideo,
+    splits: DatasetSplits,
+    select_columns: Optional[Union[str, List[str]]] = None,
+    inplace: bool = False,
+) -> DatasetTriplet:
+    ds = ev.as_tf_dataset(select_columns=select_columns, inplace=inplace)
+
+    return bulk_split(ds, splits, length=len(ev))
