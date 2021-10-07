@@ -33,14 +33,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
-try:
-    # yogadl is an optional dependency
-    # TODO: read <https://stackoverflow.com/a/27361558/5811400>
-    import yogadl
-    import yogadl.storage
-except ImportError:
-    pass  # TODO: handle this case
-
 import boiling_learning.utils as bl_utils
 from boiling_learning.utils import (
     PathLike,
@@ -49,6 +41,15 @@ from boiling_learning.utils import (
     ensure_resolved,
 )
 from boiling_learning.utils.functional import P
+
+try:
+    # yogadl is an optional dependency
+    # TODO: read <https://stackoverflow.com/a/27361558/5811400>
+    import yogadl
+    import yogadl.storage
+except ImportError:
+    pass  # TODO: handle this case
+
 
 _T = TypeVar('_T')
 _S = TypeVar('_S')

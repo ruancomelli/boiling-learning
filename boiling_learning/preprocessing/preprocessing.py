@@ -591,12 +591,10 @@ def snapshotter(
 
     def op(ds: tf.data.Dataset) -> tf.data.Dataset:
         ds = ds.enumerate()
-        ds = ds.apply(
-            tf.data.experimental.snapshot(
-                str(snapshot_folder),
-                reader_func=reader_fn,
-                shard_func=lambda idx, value: idx % num_shards,
-            )
+        ds = ds.snapshot(
+            str(snapshot_folder),
+            reader_func=reader_fn,
+            shard_func=lambda idx, value: idx % num_shards,
         )
         return ds.map(lambda idx, value: value)
 

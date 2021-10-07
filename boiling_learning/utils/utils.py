@@ -347,21 +347,31 @@ class inclusive_bidict(dict):
     3) Unlike the bidict module from https://pypi.python.org/pypi/bidict, here we can have 2 keys having same value, this is very important.
 
     Usage:
-    >>>> bd = inclusive_bidict({'a': 1, 'b': 2})
-    >>>> print(bd)                     # {'a': 1, 'b': 2}
-    >>>> print(bd.inverse)             # {1: ['a'], 2: ['b']}
-    >>>> bd['c'] = 1                   # Now two keys have the same value (= 1)
-    >>>> print(bd)                     # {'a': 1, 'c': 1, 'b': 2}
-    >>>> print(bd.inverse)             # {1: ['a', 'c'], 2: ['b']}
-    >>>> del bd['c']
-    >>>> print(bd)                     # {'a': 1, 'b': 2}
-    >>>> print(bd.inverse)             # {1: ['a'], 2: ['b']}
-    >>>> del bd['a']
-    >>>> print(bd)                     # {'b': 2}
-    >>>> print(bd.inverse)             # {2: ['b']}
-    >>>> bd['b'] = 3
-    >>>> print(bd)                     # {'b': 3}
-    >>>> print(bd.inverse)             # {2: [], 3: ['b']}
+    >>> bd = inclusive_bidict({'a': 1, 'b': 2})
+    >>> bd
+    {'a': 1, 'b': 2}
+    >>> bd.inverse
+    {1: ['a'], 2: ['b']}
+    >>> bd['c'] = 1 # Now two keys have the same value (= 1)
+    >>> bd
+    {'a': 1, 'c': 1, 'b': 2}
+    >>> bd.inverse
+    {1: ['a', 'c'], 2: ['b']}
+    >>> del bd['c']
+    >>> bd
+    {'a': 1, 'b': 2}
+    >>> bd.inverse
+    {1: ['a'], 2: ['b']}
+    >>> del bd['a']
+    >>> bd)
+    {'b': 2}
+    >>> bd.inverse)
+    {2: ['b']}
+    >>> bd['b'] = 3
+    >>> bd)
+    {'b': 3}
+    >>> bd.inverse
+    {2: [], 3: ['b']}
 
     Source: <https://stackoverflow.com/a/21894086/5811400>
     '''

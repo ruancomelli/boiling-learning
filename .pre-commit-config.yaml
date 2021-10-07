@@ -58,7 +58,6 @@ repos:
   - id: requirements-txt-fixer
   - id: trailing-whitespace
   - id: check-ast
-  - id: name-tests-test
 - repo: https://github.com/pycqa/flake8
   rev: 3.9.2
   hooks:

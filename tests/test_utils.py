@@ -82,11 +82,11 @@ class LazyTest(TestCase):
         self.assertListEqual(history, [])
         lazy_number = Lazy(creator)
         self.assertListEqual(history, [])
-        self.assertEqual(lazy_number.value, 0)
+        self.assertEqual(lazy_number(), 0)
         self.assertListEqual(history, [0])
 
         lazy_number = Lazy.from_value(1)
-        self.assertEqual(lazy_number.value, 1)
+        self.assertEqual(lazy_number(), 1)
 
     def test_LazyCallable(self) -> None:
         history = []
@@ -103,5 +103,5 @@ class LazyTest(TestCase):
         result = lazy_add(1, 2)
         self.assertListEqual(history, [])
 
-        self.assertEqual(result.value, 3)
+        self.assertEqual(result(), 3)
         self.assertListEqual(history, [3])

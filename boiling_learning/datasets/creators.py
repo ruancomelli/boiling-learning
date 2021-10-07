@@ -47,8 +47,7 @@ def experiment_video_dataset_creator(
     ds_train, ds_val, ds_test = train_val_test_split(ds, splits)
 
     ds_train = take(ds_train, dataset_size)
-    if ds_val is not None:
-        ds_val = take(ds_val, dataset_size)
+    ds_val = take(ds_val, dataset_size)
     ds_test = take(ds_test, dataset_size)
 
     if snapshot_path is not None:
@@ -207,8 +206,8 @@ def dataset_post_processor(
     data_augmentors = tuple(data_augmentors)
 
     if verbose:
-        print('>>>> Datasets:', ds)
-        print('>>>> Data augmentors:', data_augmentors)
+        print('>>> Datasets:', ds)
+        print('>>> Data augmentors:', data_augmentors)
 
     ds_train, ds_val, ds_test = ds
     if take is not None:
