@@ -97,7 +97,7 @@ def _json_decode_Pack(obj: JSONDataType) -> Pack:
 
 
 @json_decode.dispatch(Path)
-def _json_decode_Pack(obj: JSONDataType) -> Pack:
+def _json_decode_Path(obj: JSONDataType) -> Path:
     return Path(obj)
 
 
