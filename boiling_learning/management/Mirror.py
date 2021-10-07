@@ -1,35 +1,42 @@
 class Mirror:
     '''
     >>> params = Mirror({'propagate': True},
-        shared='this will be shared between value and desc',
-        value_only=Mirror.Fork(
-            value='this will be present only in the value fork'
-        ),
-        desc_only=Mirror.Fork(
-            desc='this will be present only in the desc fork'
-        ),
-        diff=Mirror.Fork(
-            desc='this goes to desc',
-            value='this goes to value'
-        ),
-        deep=Mirror({'propagate': True},
-            also_value=Mirror.Fork(
-                value='this also goes to value'
-            ),
-            another_diff=Mirror.Fork(
-                desc='this also goes to desc',
-                value='this also goes to value'
-            ),
-            also_shared='this goes to both'
-        )
-    )
-    >>> assert params['desc']['shared'] == params['value']['shared']
-    >>> assert params['value']['value_only'] == 'this will be present only in the value fork'
-    >>> assert 'value_only' not in params['desc']
-    >>> assert params['desc']['diff'] == 'this goes to desc'
-    >>> assert params['value']['diff'] == 'this goes to value'
-    >>> assert params['desc']['deep']['another_diff'] == 'this also goes to desc'
-    >>> assert params['value']['deep']['another_diff'] == 'this also goes to value'
+    ...     shared='this will be shared between value and desc',
+    ...     value_only=Mirror.Fork(
+    ...         value='this will be present only in the value fork'
+    ...     ),
+    ...     desc_only=Mirror.Fork(
+    ...         desc='this will be present only in the desc fork'
+    ...     ),
+    ...     diff=Mirror.Fork(
+    ...         desc='this goes to desc',
+    ...         value='this goes to value'
+    ...     ),
+    ...     deep=Mirror({'propagate': True},
+    ...         also_value=Mirror.Fork(
+    ...             value='this also goes to value'
+    ...         ),
+    ...         another_diff=Mirror.Fork(
+    ...             desc='this also goes to desc',
+    ...             value='this also goes to value'
+    ...         ),
+    ...         also_shared='this goes to both'
+    ...     )
+    ... )
+    >>> params['desc']['shared'] == params['value']['shared']
+    True
+    >>> params['value']['value_only']
+    'this will be present only in the value fork'
+    >>> 'value_only' in params['desc']
+    False
+    >>> params['desc']['diff']
+    'this goes to desc'
+    >>> params['value']['diff']
+    'this goes to value'
+    >>> params['desc']['deep']['another_diff']
+    'this also goes to desc'
+    >>> params['value']['deep']['another_diff']
+    'this also goes to value'
     '''
 
     class Fork(dict):

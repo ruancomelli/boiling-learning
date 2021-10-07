@@ -251,24 +251,15 @@ def one_factor_at_a_time(
     skip_repeated: bool = True,
 ) -> Iterator[tuple]:
     '''
-    >>> one_factor_at_a_time(
-        [
-            [1, 2, 3],
-            'rohan',
-            ['alpha', 'beta']
-        ],
-        default_indices=[1, 3] # equivalent to default_indices = (1, 3, 0)
-    )
-    [(1, 'a', 'alpha'),
-    (2, 'a', 'alpha'),
-    (3, 'a', 'alpha'),
-    (2, 'r', 'alpha'),
-    (2, 'o', 'alpha'),
-    (2, 'h', 'alpha'),
-    (2, 'a', 'alpha'),
-    (2, 'n', 'alpha'),
-    (2, 'a', 'alpha'),
-    (2, 'a', 'beta')]
+    >>> list(one_factor_at_a_time(
+    ...     [
+    ...         [1, 2, 3],
+    ...         'rohan',
+    ...         ['alpha', 'beta']
+    ...     ],
+    ...     default_indices=[1, 3] # equivalent to default_indices = (1, 3, 0)
+    ... ))
+    [(2, 'a', 'alpha'), (1, 'a', 'alpha'), (3, 'a', 'alpha'), (2, 'r', 'alpha'), (2, 'o', 'alpha'), (2, 'h', 'alpha'), (2, 'n', 'alpha'), (2, 'a', 'beta')]
     '''
     default_indices = tuple(default_indices)
     default_indices = default_indices + (0,) * (
@@ -354,7 +345,7 @@ class inclusive_bidict(dict):
     {1: ['a'], 2: ['b']}
     >>> bd['c'] = 1 # Now two keys have the same value (= 1)
     >>> bd
-    {'a': 1, 'c': 1, 'b': 2}
+    {'a': 1, 'b': 2, 'c': 1}
     >>> bd.inverse
     {1: ['a', 'c'], 2: ['b']}
     >>> del bd['c']
@@ -363,12 +354,12 @@ class inclusive_bidict(dict):
     >>> bd.inverse
     {1: ['a'], 2: ['b']}
     >>> del bd['a']
-    >>> bd)
+    >>> bd
     {'b': 2}
-    >>> bd.inverse)
+    >>> bd.inverse
     {2: ['b']}
     >>> bd['b'] = 3
-    >>> bd)
+    >>> bd
     {'b': 3}
     >>> bd.inverse
     {2: [], 3: ['b']}

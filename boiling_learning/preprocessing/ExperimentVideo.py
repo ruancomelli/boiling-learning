@@ -328,12 +328,14 @@ class ExperimentVideo(Video):
         '''Define data (other than the ones specified as video data) from a source *data_source*
 
         Example usage:
-        >>> data_source = pd.read_csv('my_data.csv')
-        >>> time_column, hf_column, temperature_column = 'time', 'heat_flux', 'temperature'
-        >>> ev.set_data(
+        ```
+        data_source = pd.read_csv('my_data.csv')
+        time_column, hf_column, temperature_column = 'time', 'heat_flux', 'temperature'
+        ev.set_data(
             data_source[[time_column, hf_column, temperature_column]],
             source_time_column=time_column
         )
+        ```
 
         WARNING: if *data_source* contains
         '''
