@@ -6,6 +6,13 @@ line_length = 79
 float_to_top = true
 remove_redundant_aliases = true
 
+[tool.unimport]
+gitignore = true
+ignore_init = true
+include_star_import = true
+remove = true
+requirements = true
+
 [tool.black]
 include = '\.py|\.pyi|\.ipynb$'
 line-length = 79
@@ -17,20 +24,20 @@ follow_imports = "normal"
 ignore_missing_imports = true
 strict = true
 warn_unused_configs = true
-plugins = ["numpy.typing.mypy_plugin", "tinydb.mypy_plugin", "dataclassy.mypy"]
+plugins = [
+	"numpy.typing.mypy_plugin",
+	"tinydb.mypy_plugin",
+	"dataclassy.mypy"
+]
 
 [tool.commitizen]
 tag_format = "v$major.$minor.$patch$prerelease"
 update_changelog_on_bump = true
 version = "0.13.5"
-version_files = ["VERSION"]
-
-[tool.unimport]
-gitignore = true
-ignore_init = true
-include_star_import = true
-remove = true
-requirements = true
+version_files = [
+	"VERSION",
+	"pyproject.toml:version"
+]
 
 [tool.poetry]
 name = "boiling-learning"
@@ -114,9 +121,9 @@ unimport = "0.9.2"
 pylint = "^2.10.2"
 mypy = "^0.910"
 
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/python-poetry/poetry/issues"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.urls]
-"Bug Tracker" = "https://github.com/python-poetry/poetry/issues"
