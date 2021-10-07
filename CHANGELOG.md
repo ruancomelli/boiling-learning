@@ -1,3 +1,25 @@
+## v0.14.0 (2021-10-07)
+
+### Feat
+
+- **model**: add utility modules for operating with and evaluating models
+- **datasets**: define function for bulk-splitting experiment videos
+
+### Fix
+
+- **io**: fix return type from `json_decode(<Path>)`
+
+### Refactor
+
+- **scripts**: move optional imports out of function definition and into the module scope
+- **preprocessing**: remove unused `save` parameter in `ExperimentVideo.frames_to_tensor`
+- **model-definitions**: comment out old model definitions
+
+### BREAKING CHANGE
+
+- Removed parameter `save` from `ExperimentVideo.frames_to_tensor`.
+- BREAKING CHANGE: old models are no longer available through boiling_learning.model._definitions.<model name>
+
 ## v0.13.5 (2021-09-29)
 
 ### Feat
