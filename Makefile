@@ -1,8 +1,10 @@
 .PROJECT = boiling_learning
-.AUTOFLAKE = $(shell autoflake --in-place --recursive --expand-star-imports --remove-duplicate-keys --remove-unused-variables --remove-all-unused-imports --ignore-init-module-imports $(.PROJECT) tests)
-.UNIMPORT = $(shell unimport --remove --gitignore --ignore-init --include-star-import $(.PROJECT) tests)
-.BLACK = $(shell black $(.PROJECT) tests)
-.ISORT = $(shell isort $(.PROJECT) tests)
+.TESTS_FOLDER = tests
+
+.AUTOFLAKE = $(shell autoflake --in-place --recursive --expand-star-imports --remove-duplicate-keys --remove-unused-variables --remove-all-unused-imports --ignore-init-module-imports $(.PROJECT) $(.TESTS_FOLDER))
+.UNIMPORT = $(shell unimport --remove --gitignore --ignore-init --include-star-import $(.PROJECT) $(.TESTS_FOLDER))
+.BLACK = $(shell black $(.PROJECT) $(.TESTS_FOLDER))
+.ISORT = $(shell isort $(.PROJECT) $(.TESTS_FOLDER))
 .REFACTOR = $(foreach command,.AUTOFLAKE .UNIMPORT .BLACK .ISORT,$(call $(command)))
 
 .READD = $(shell git update-index --again)
@@ -16,12 +18,13 @@ init:
 
 .PHONY: coverage
 coverage:
-	@coverage run --source=$(.PROJECT)/ -m pytest tests/
+	@coverage run --source=$(.PROJECT)/ -m pytest $(.TESTS_FOLDER)
 	@coverage report -m
 
 .PHONY: test
 test:
-	@pytest --doctest-modules $(.PROJECT) tests
+	@pytest --doctest-modules $(.PROJECT)
+	@pytest $(.TESTS_FOLDER)
 
 .PHONY: tox
 tox:
