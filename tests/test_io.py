@@ -2,11 +2,22 @@ import json
 from unittest import TestCase
 
 from boiling_learning.io.storage import (
+    JSONDataType,
     json_decode,
     json_deserialize,
     json_encode,
     json_serialize,
 )
+
+
+@json_encode.dispatch
+def _json_encode(obj: tuple) -> list:
+    return list(obj)
+
+
+@json_decode.dispatch(tuple)
+def _json_decode(obj: JSONDataType) -> tuple:
+    return tuple(obj)
 
 
 class storage_Test(TestCase):
@@ -28,14 +39,6 @@ class storage_Test(TestCase):
             'apple pie tastes good',
             {'likes dinos': True, 'political opinion': None},
         )
-
-        @json_encode.dispatch
-        def _json_encode(obj: tuple):
-            return list(obj)
-
-        @json_decode.dispatch(tuple)
-        def _json_decode(obj):
-            return tuple(obj)
 
         encoded = json.dumps(json_serialize(test_tuple))
         decoded = json_deserialize(json.loads(encoded))
