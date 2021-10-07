@@ -1,5 +1,4 @@
 import warnings
-from contextlib import suppress
 from typing import Any, Callable, Iterable, Tuple
 
 import funcy
@@ -9,6 +8,16 @@ from skimage.transform import downscale_local_mean as downscale
 
 from boiling_learning.preprocessing import ImageDataset
 from boiling_learning.preprocessing.ExperimentVideo import ExperimentVideo
+
+try:
+    from google.colab.patches import cv2_imshow as google_colab_imshow
+except ImportError:
+    google_colab_imshow = None
+
+try:
+    from cv2 import cv_imshow
+except ImportError:
+    cv_imshow = None
 
 
 def _make_show_frame_function(
@@ -81,15 +90,11 @@ def main(
 ) -> None:
     datasets = tuple(datasets)
 
-    imshow_imported: bool = False
-    if colab_backend:
-        with suppress(ImportError):
-            from google.colab.patches import cv2_imshow as imshow
-
-            imshow_imported = True
-
-    if not imshow_imported:
-        from cv2 import imshow
+    imshow = (
+        google_colab_imshow
+        if colab_backend and google_colab_imshow is not None
+        else cv_imshow
+    )
 
     # rescale images since float images are considered to be in [0, 1]
     # but cv2_imshow expects them to be [0, 255]
