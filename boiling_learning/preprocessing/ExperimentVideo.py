@@ -11,11 +11,7 @@ from dataclassy import dataclass
 from scipy.interpolate import interp1d
 
 import boiling_learning.utils as bl_utils
-from boiling_learning.io.io import (
-    chunked_filename_pattern,
-    load_dataset,
-    save_dataset,
-)
+from boiling_learning.io.io import chunked_filename_pattern, load_dataset
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
 from boiling_learning.preprocessing.Video import Video
 from boiling_learning.preprocessing.video import (
@@ -332,9 +328,9 @@ class ExperimentVideo(Video):
         '''Define data (other than the ones specified as video data) from a source *data_source*
 
         Example usage:
-        >>>> data_source = pd.read_csv('my_data.csv')
-        >>>> time_column, hf_column, temperature_column = 'time', 'heat_flux', 'temperature'
-        >>>> ev.set_data(
+        >>> data_source = pd.read_csv('my_data.csv')
+        >>> time_column, hf_column, temperature_column = 'time', 'heat_flux', 'temperature'
+        >>> ev.set_data(
             data_source[[time_column, hf_column, temperature_column]],
             source_time_column=time_column
         )
@@ -570,14 +566,11 @@ class ExperimentVideo(Video):
         # if erase: # Python 3.8 only
         #     old_path.unlink(missing_ok=True)
 
-    def frames_to_tensor(
-        self, save: bool = False, overwrite: bool = False
-    ) -> tf.data.Dataset:
-        if self.frames_tensor_path is None and (save or overwrite):
+    def frames_to_tensor(self, overwrite: bool = False) -> tf.data.Dataset:
+        if self.frames_tensor_path is None and overwrite:
             raise ValueError(
                 '`frames_tensor_path` is not defined yet. '
-                'Please define it or pass both '
-                '`save=False` and `overwrite=False`.'
+                'Please define it or pass `overwrite=False`.'
             )
 
         if (
@@ -587,17 +580,11 @@ class ExperimentVideo(Video):
         ):
             return load_dataset(self.frames_tensor_path)
 
-        frames = tf.data.Dataset.from_generator(lambda: self, tf.float32)
-
-        if save:
-            save_dataset(frames, self.frames_tensor_path)
-
-        return frames
+        return tf.data.Dataset.from_generator(lambda: self, tf.float32)
 
     def as_tf_dataset(
         self,
         select_columns: Optional[Union[str, List[str]]] = None,
-        save: bool = False,
         inplace: bool = False,
     ) -> tf.data.Dataset:
         # See <https://www.tensorflow.org/tutorials/load_data/pandas_dataframe>
@@ -609,7 +596,7 @@ class ExperimentVideo(Video):
         if select_columns is not None:
             df = df[select_columns]
 
-        ds_img = self.frames_to_tensor(overwrite=False, save=save)
+        ds_img = self.frames_to_tensor(overwrite=False)
         ds_data = tf.data.Dataset.from_tensor_slices(df.to_dict('list'))
         ds = tf.data.Dataset.zip((ds_img, ds_data))
 
