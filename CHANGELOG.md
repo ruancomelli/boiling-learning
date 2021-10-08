@@ -1,3 +1,9 @@
+## v0.14.1 (2021-10-07)
+
+### Refactor
+
+- **flake8**: move `flake8` configuration to `tox.ini` and delete old `setup.cfg` file
+
 ## v0.14.0 (2021-10-07)
 
 ### Feat
