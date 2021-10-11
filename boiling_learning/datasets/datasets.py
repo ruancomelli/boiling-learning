@@ -318,6 +318,8 @@ def bulk_split(
     return ds_train, ds_val, ds_test
 
 
+@triplet_aware
+@none_aware
 def take(
     ds: tf.data.Dataset, count: Optional[Union[int, Fraction]]
 ) -> tf.data.Dataset:
@@ -335,6 +337,8 @@ def take(
     )
 
 
+@triplet_aware
+@none_aware
 def calculate_batch_size(
     dataset: tf.data.Dataset, dim: int = 0, key: Optional[int] = None
 ) -> int:
@@ -344,6 +348,8 @@ def calculate_batch_size(
     return elem.shape[dim]
 
 
+@triplet_aware
+@none_aware
 def calculate_dataset_size(
     dataset: tf.data.Dataset, batched_dim: Optional[int] = None
 ) -> int:
@@ -358,6 +364,8 @@ def calculate_dataset_size(
         return mit.ilen(dataset)
 
 
+@triplet_aware
+@none_aware
 def apply_unbatched(
     dataset: tf.data.Dataset,
     apply: Callable[[tf.data.Dataset], tf.data.Dataset],
@@ -368,6 +376,8 @@ def apply_unbatched(
     return dataset.unbatch().apply(apply).batch(batch_size)
 
 
+@triplet_aware
+@none_aware
 def apply_flattened(
     dataset: tf.data.Dataset,
     apply: Callable[[tf.data.Dataset], tf.data.Dataset],
@@ -375,6 +385,8 @@ def apply_flattened(
     return apply_unbatched(dataset, apply, dim=0, key=0)
 
 
+@triplet_aware
+@none_aware
 def map_unbatched(
     dataset: tf.data.Dataset,
     map_fn: Callable,
@@ -386,12 +398,16 @@ def map_unbatched(
     )
 
 
+@triplet_aware
+@none_aware
 def map_flattened(
     dataset: tf.data.Dataset, map_fn: Callable
 ) -> tf.data.Dataset:
     return map_unbatched(dataset, map_fn, dim=0, key=0)
 
 
+@triplet_aware
+@none_aware
 def filter_unbatched(
     dataset: tf.data.Dataset,
     pred_fn: Callable[..., bool],
@@ -403,6 +419,8 @@ def filter_unbatched(
     )
 
 
+@triplet_aware
+@none_aware
 def filter_flattened(
     dataset: tf.data.Dataset,
     pred_fn: Callable[..., bool],
@@ -410,6 +428,7 @@ def filter_flattened(
     return filter_unbatched(dataset, pred_fn, dim=0, key=0)
 
 
+@triplet_aware
 @none_aware
 def apply_transformers(
     ds: tf.data.Dataset, transformers: Iterable[Transformer]
@@ -422,10 +441,14 @@ def apply_transformers(
     return ds
 
 
+@triplet_aware
+@none_aware
 def features(ds: tf.data.Dataset) -> tf.data.Dataset:
     return ds.map(lambda x, y: x)
 
 
+@triplet_aware
+@none_aware
 def targets(ds: tf.data.Dataset, key: Any = _sentinel) -> tf.data.Dataset:
     if key is _sentinel:
         return ds.map(lambda x, y: y)
