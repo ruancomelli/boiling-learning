@@ -7,6 +7,7 @@ from typing import (
     Iterable,
     List,
     Optional,
+    Tuple,
     Type,
     TypeVar,
     Union,
@@ -18,6 +19,7 @@ import tensorflow as tf
 from dataclassy import dataclass
 from decorator import decorator
 from frozendict import frozendict
+from funcy.funcs import rpartial
 from tensorflow.data import AUTOTUNE
 
 import boiling_learning.utils.mathutils as mathutils
@@ -133,9 +135,9 @@ def none_aware(
 ) -> Optional[_T]:
     '''
     Takes a function which requires a tf.data.Dataset as first argument
-    and outputs another function which accepts *None* instead of a dataset,
-    making it aware of *None* datasets. In this case, *None* is silently
-    return without errors.
+    and outputs another function which also accepts *None* instead of a
+    dataset, making it aware of *None* datasets. In this case, *None* is
+    silently returned without errors.
 
     For example:
     >>> ds = tf.data.Dataset.range(10)
@@ -155,6 +157,46 @@ def none_aware(
         return None
     else:
         return f(ds, *args, **kwargs)
+
+
+@decorator
+def triplet_aware(
+    f: Callable[..., _T],
+    ds: Union[tf.data.Dataset, DatasetTriplet],
+    *args,
+    **kwargs,
+) -> Union[_T, Tuple[_T, _T, _T]]:
+    '''
+    Takes a function which requires a tf.data.Dataset as first argument
+    and outputs another function which also accepts a `DatasetTriplet` instead
+    of a dataset, making it aware of dataset triplets. In this case, the
+    original function is applied once for each subset (train/val/test) and the
+    three return values are returned as a tuple.
+
+    For example:
+    >>> ds_train = tf.data.Dataset.range(60)
+    >>> ds_val = tf.data.Dataset.range(60, 80)
+    >>> ds_test = tf.data.Dataset.range(80, 100)
+    >>> @triplet_aware
+    ... def take(ds: tf.data.Dataset, count: int) -> tf.data.Dataset:
+    ...     return ds.take(count)
+    >>> list(take(ds_train, 2).as_numpy_iterator())
+    [0, 1]
+    >>> ds_train, ds_val, ds_test = take((ds_train, ds_val, ds_test), 3)
+    >>> list(ds_train.as_numpy_iterator())
+    [0, 1, 2]
+    >>> list(ds_val.as_numpy_iterator())
+    [60, 61, 62]
+    >>> list(ds_test.as_numpy_iterator())
+    [80, 81, 82]
+    '''
+    partialized = rpartial(f, *args, **kwargs)
+
+    if isinstance(ds, tf.data.Dataset):
+        return partialized(ds)
+
+    ds_train, ds_val, ds_test = ds
+    return partialized(ds_train), partialized(ds_val), partialized(ds_test)
 
 
 def concatenate(datasets: Iterable[tf.data.Dataset]) -> tf.data.Dataset:
@@ -276,7 +318,6 @@ def bulk_split(
     return ds_train, ds_val, ds_test
 
 
-@none_aware
 def take(
     ds: tf.data.Dataset, count: Optional[Union[int, Fraction]]
 ) -> tf.data.Dataset:
