@@ -113,7 +113,7 @@ def dataset_creator(
 
     ds_dict = {}
     for name, ev in image_dataset.items():
-        data_preprocessors = [
+        _data_preprocessors = [
             data_preprocessor[name]
             if isinstance(data_preprocessor, DictImageTransformer)
             else data_preprocessor
@@ -129,11 +129,11 @@ def dataset_creator(
             ['creator', 'desc', 'data_preprocessors']
         ] = [
             data_preprocessor.describe()
-            for data_preprocessor in data_preprocessors
+            for data_preprocessor in _data_preprocessors
         ]
         experiment_video_dataset_params[
             ['creator', 'value', 'data_preprocessors']
-        ] = data_preprocessors
+        ] = _data_preprocessors
         dataset_id = experiment_video_dataset_manager.provide_entry(
             creator_description=Pack(
                 kwargs=experiment_video_dataset_params[['creator', 'desc']]
