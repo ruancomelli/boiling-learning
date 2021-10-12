@@ -8,18 +8,18 @@ import dataclassy
 import more_itertools as mit
 from tensorflow.data import AUTOTUNE
 
-import boiling_learning.preprocessing as bl_preprocessing
-import boiling_learning.utils as bl_utils
 from boiling_learning.datasets.datasets import (
     DatasetSplits,
     apply_transformers,
-    calculate_dataset_size,
     concatenate,
+    experiment_video_to_dataset_triplet,
     take,
-    train_val_test_split,
 )
 from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.management.Manager import Manager
+from boiling_learning.preprocessing.experiment_video import ExperimentVideo
+from boiling_learning.preprocessing.ImageDataset import ImageDataset
+from boiling_learning.preprocessing.preprocessing import snapshotter
 from boiling_learning.preprocessing.transformers import (
     DictImageTransformer,
     Transformer,
@@ -27,39 +27,40 @@ from boiling_learning.preprocessing.transformers import (
     transformer,
 )
 from boiling_learning.utils.functional import Pack
-from boiling_learning.utils.utils import PathLike
+from boiling_learning.utils.Parameters import Parameters
+from boiling_learning.utils.utils import PathLike, elapsed_timer, ensure_dir
 
 
 @creator(expand_pack_on_call=True)
 def experiment_video_dataset_creator(
-    experiment_video: bl_preprocessing.ExperimentVideo,
+    experiment_video: ExperimentVideo,
     splits: DatasetSplits,
     data_preprocessors: Iterable[Transformer],
     dataset_size: Optional[Union[int, Fraction]] = None,
     snapshot_path: Optional[PathLike] = None,
     num_shards: Optional[int] = None,
 ) -> DatasetTriplet:
+    ds_triplet = experiment_video_to_dataset_triplet(
+        experiment_video, splits=splits, dataset_size=dataset_size
+    )
+
     data_preprocessors = tuple(data_preprocessors)
+    ds_triplet = apply_transformers(ds_triplet, data_preprocessors)
 
-    ds = experiment_video.as_tf_dataset()
-    ds = apply_transformers(ds, data_preprocessors)
-
-    ds_train, ds_val, ds_test = train_val_test_split(ds, splits)
-
-    ds_train = take(ds_train, dataset_size)
-    ds_val = take(ds_val, dataset_size)
-    ds_test = take(ds_test, dataset_size)
+    ds_train, ds_val, ds_test = ds_triplet
 
     if snapshot_path is not None:
-        snapshot_path = bl_utils.ensure_dir(snapshot_path)
+        snapshot_path = ensure_dir(snapshot_path)
 
         if isinstance(dataset_size, int):
             num_shards = min(dataset_size, num_shards)
         elif isinstance(dataset_size, Fraction):
-            num_shards = min(calculate_dataset_size(ds), num_shards)
+            num_shards = min(
+                int(dataset_size * len(experiment_video)), num_shards
+            )
 
         ds_train = ds_train.apply(
-            bl_preprocessing.snapshotter(
+            snapshotter(
                 snapshot_path / 'train',
                 num_shards=num_shards,
                 shuffle_size=num_shards,
@@ -67,27 +68,27 @@ def experiment_video_dataset_creator(
         )
         if ds_val is not None:
             ds_val = ds_val.apply(
-                bl_preprocessing.snapshotter(
+                snapshotter(
                     snapshot_path / 'val',
                     num_shards=num_shards,
                     shuffle_size=num_shards,
                 )
             )
         ds_test = ds_test.apply(
-            bl_preprocessing.snapshotter(
+            snapshotter(
                 snapshot_path / 'test',
                 num_shards=num_shards,
                 shuffle_size=num_shards,
             )
         )
 
-    return (ds_train, ds_val, ds_test)
+    return ds_train, ds_val, ds_test
 
 
 @creator(expand_pack_on_call=True)
 def dataset_creator(
     experiment_video_dataset_manager: Manager,
-    image_dataset: bl_preprocessing.ImageDataset,
+    image_dataset: ImageDataset,
     splits: DatasetSplits,
     data_preprocessors: Sequence[Transformer],
     dataset_size: Optional[Union[int, Fraction]] = None,
@@ -97,9 +98,7 @@ def dataset_creator(
     load: bool = True,
     reload_after_save: bool = False,
 ):
-    experiment_video_dataset_params = bl_utils.Parameters(
-        params=defaultdict(dict)
-    )
+    experiment_video_dataset_params = Parameters(params=defaultdict(dict))
     experiment_video_dataset_params[
         ['creator', {'desc', 'value'}, 'dataset_size']
     ] = dataset_size
@@ -152,7 +151,7 @@ def dataset_creator(
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', category=ResourceWarning)
 
-            with bl_utils.elapsed_timer() as timer:
+            with elapsed_timer() as timer:
                 ds_dict[name] = experiment_video_dataset_manager.provide_elem(
                     creator_description=Pack(
                         kwargs=experiment_video_dataset_params[
@@ -223,7 +222,7 @@ def dataset_post_processor(
                 ds_val = ds_val.cache()
             ds_test = ds_test.cache()
     else:
-        cache = bl_utils.ensure_dir(cache)
+        cache = ensure_dir(cache)
         ds_train = ds_train.cache(str(cache / 'train'))
         if ds_val is not None:
             ds_val = ds_val.cache(str(cache / 'val'))

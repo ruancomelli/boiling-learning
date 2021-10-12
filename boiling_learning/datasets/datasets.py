@@ -1,6 +1,8 @@
 import enum
+import random
 from collections import deque
 from fractions import Fraction
+from functools import partial
 from typing import (
     Any,
     Callable,
@@ -25,9 +27,12 @@ from tensorflow.data import AUTOTUNE
 
 import boiling_learning.utils.mathutils as mathutils
 from boiling_learning.io.io import DatasetTriplet
-from boiling_learning.preprocessing import ExperimentVideo
+from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.utils.dtypes import auto_spec
+from boiling_learning.utils.iterutils import (
+    distance_maximized_evenly_spaced_indices,
+)
 
 _sentinel = object()
 _T = TypeVar('_T')
@@ -86,24 +91,24 @@ class Split(enum.Flag):
     TEST = enum.auto()
 
     @classmethod
-    def get_split(cls: Type[_T], s: str, default=_sentinel) -> _T:
+    def get_split(cls: Type[_T], s: str, default: Any = _sentinel) -> _T:
         if s in cls:
             return s
         else:
             return cls.from_string(s, default=default)
 
     @classmethod
-    def from_string(cls: Type[_T], s: str, default=_sentinel) -> _T:
+    def from_string(cls: Type[_T], s: str, default: Any = _sentinel) -> _T:
         if default is not _sentinel:
             return cls.FROM_STR_TABLE.get(s, default)
 
         try:
             return cls.FROM_STR_TABLE[s]
-        except KeyError:
+        except KeyError as e:
             raise KeyError(
                 f'string {s} was not found in the conversion table.'
                 f'Available values are {tuple(cls.FROM_STR_TABLE.keys())}.'
-            )
+            ) from e
 
     def to_str(self):
         return self.name.lower()
@@ -143,7 +148,10 @@ def split_sizes(
 
 @decorator
 def none_aware(
-    f: Callable[..., _T], ds: Optional[tf.data.Dataset], *args, **kwargs
+    f: Callable[..., _T],
+    ds: Optional[tf.data.Dataset],
+    *args: Any,
+    **kwargs: Any,
 ) -> Optional[_T]:
     '''
     Takes a function which requires a tf.data.Dataset as first argument
@@ -175,8 +183,8 @@ def none_aware(
 def triplet_aware(
     f: Callable[..., _T],
     ds: Union[tf.data.Dataset, DatasetTriplet],
-    *args,
-    **kwargs,
+    *args: Any,
+    **kwargs: Any,
 ) -> Union[_T, Tuple[_T, _T, _T]]:
     '''
     Takes a function which requires a tf.data.Dataset as first argument
@@ -202,7 +210,7 @@ def triplet_aware(
     >>> list(ds_test.as_numpy_iterator())
     [80, 81, 82]
     '''
-    partialized = rpartial(f, *args, **kwargs)
+    partialized: Callable[[tf.data.Dataset], _T] = rpartial(f, *args, **kwargs)
 
     if isinstance(ds, tf.data.Dataset):
         return partialized(ds)
@@ -468,12 +476,91 @@ def targets(ds: tf.data.Dataset, key: Any = _sentinel) -> tf.data.Dataset:
         return ds.map(lambda x, y: y[key])
 
 
-def slicerator_to_dataset(slicerator: Slicerator) -> tf.data.Dataset:
+def preprocess_slicerator(
+    slicerator: Slicerator,
+    *,
+    take: Optional[Union[int, Fraction]] = None,
+    shuffle: bool = False,
+) -> Slicerator:
+    total: int = len(slicerator)
+
+    if isinstance(take, Fraction):
+        take = int(take * total)
+
+    if isinstance(take, int):
+        keep_indices = distance_maximized_evenly_spaced_indices(
+            total=total, count=take
+        )
+        slicerator = slicerator[keep_indices]
+
+    if shuffle:
+        indices = range(total)
+        shuffled_indices = random.sample(indices, k=total)
+        slicerator = slicerator[shuffled_indices]
+
+    return slicerator
+
+
+def _slicerator_to_dataset(slicerator: Slicerator) -> tf.data.Dataset:
     sample = slicerator[0]
     typespec = auto_spec(sample)
 
     return tf.data.Dataset.from_generator(
         lambda: slicerator, output_signature=typespec
+    )
+
+
+def slicerator_to_dataset(
+    slicerator: Slicerator,
+    *,
+    dataset_size: Optional[Union[int, Fraction]] = None,
+    shuffle: bool = False,
+) -> tf.data.Dataset:
+    slicerator = preprocess_slicerator(
+        slicerator, take=dataset_size, shuffle=shuffle
+    )
+    return _slicerator_to_dataset(slicerator)
+
+
+def slicerator_to_dataset_triplet(
+    slicerator: Slicerator,
+    splits: DatasetSplits,
+    *,
+    dataset_size: Optional[Union[int, Fraction]] = None,
+    shuffle: bool = False,
+) -> DatasetTriplet:
+    train_size, val_size, _ = split_sizes(splits, len(slicerator))
+
+    train_set = slicerator[:train_size]
+    val_set = (
+        slicerator[train_size : train_size + val_size]
+        if val_size > 0
+        else None
+    )
+    test_set = slicerator[train_size + val_size :]
+
+    _slicerator_to_dataset = partial(
+        slicerator_to_dataset, dataset_size=dataset_size, shuffle=shuffle
+    )
+
+    return (
+        _slicerator_to_dataset(train_set),
+        _slicerator_to_dataset(val_set) if val_set is not None else None,
+        _slicerator_to_dataset(test_set),
+    )
+
+
+def experiment_video_to_dataset_triplet(
+    ev: ExperimentVideo,
+    splits: DatasetSplits,
+    *,
+    select_columns: Optional[Union[str, List[str]]] = None,
+    dataset_size: Optional[Union[int, Fraction]] = None,
+    shuffle: bool = False,
+) -> DatasetTriplet:
+    pairs = ev.as_pairs(select_columns=select_columns)
+    return slicerator_to_dataset_triplet(
+        pairs, splits, dataset_size=dataset_size, shuffle=shuffle
     )
 
 

@@ -30,7 +30,7 @@ from dataclassy import dataclass
 
 import boiling_learning.utils as bl_utils
 from boiling_learning.io.io import load_json
-from boiling_learning.preprocessing.ExperimentVideo import ExperimentVideo
+from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.utils import PathLike, VerboseType
 
 

@@ -7,7 +7,7 @@ from ipywidgets import interact, widgets
 from skimage.transform import downscale_local_mean as downscale
 
 from boiling_learning.preprocessing import ImageDataset
-from boiling_learning.preprocessing.ExperimentVideo import ExperimentVideo
+from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 
 try:
     from google.colab.patches import cv2_imshow as google_colab_imshow

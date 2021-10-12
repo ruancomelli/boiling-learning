@@ -26,7 +26,7 @@ from matplotlib.colors import NoNorm
 import boiling_learning.utils.utils as bl_utils
 from boiling_learning.management import Manager
 from boiling_learning.preprocessing.Case import Case
-from boiling_learning.preprocessing.ExperimentVideo import ExperimentVideo
+from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.ImageDataset import ImageDataset
 from boiling_learning.preprocessing.transformers import (
     DictImageTransformer,
