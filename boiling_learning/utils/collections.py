@@ -1,3 +1,4 @@
+from contextlib import suppress
 from typing import (
     Callable,
     Dict,
@@ -43,10 +44,8 @@ class KeyedSet(MutableSet[_Value], Generic[_Key, _Value]):
         del self[self.__key(element)]
 
     def discard(self, element: _Value) -> None:
-        try:
+        with suppress(KeyError):
             self.remove(element)
-        except KeyError:
-            pass
 
     # TODO: implement other operations as in the standard docs:
     # <https://docs.python.org/3/library/stdtypes.html#set-types-set-frozenset>
@@ -60,8 +59,8 @@ class KeyedSet(MutableSet[_Value], Generic[_Key, _Value]):
     def __delitem__(self, key: _Key) -> None:
         del self.__data[key]
 
-    def keys(self) -> KeysView:
+    def keys(self) -> KeysView[_Key]:
         return self.__data.keys()
 
-    def values(self) -> ValuesView:
+    def values(self) -> ValuesView[_Value]:
         return self.__data.values()

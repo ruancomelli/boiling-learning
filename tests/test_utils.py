@@ -2,6 +2,11 @@ from unittest.case import TestCase
 
 from boiling_learning.utils.collections import KeyedSet
 from boiling_learning.utils.geometry import Cylinder, Prism, RectangularPrism
+from boiling_learning.utils.iterutils import (
+    EvenlySpacedGoal,
+    evenly_spaced_indices,
+    evenly_spaced_indices_mask,
+)
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.Parameters import Parameters
 from boiling_learning.utils.utils import indexify
@@ -91,7 +96,7 @@ class LazyTest(TestCase):
     def test_LazyCallable(self) -> None:
         history = []
 
-        def add(left, right):
+        def add(left: int, right: int) -> int:
             addition = left + right
             history.append(addition)  # simulate a side-effect
             return addition
@@ -105,3 +110,108 @@ class LazyTest(TestCase):
 
         self.assertEqual(result(), 3)
         self.assertListEqual(history, [3])
+
+
+class iterutils_test(TestCase):
+    def test_evenly_spaced_indices(self) -> None:
+        self.assertListEqual(
+            evenly_spaced_indices(10, 0, goal=EvenlySpacedGoal.SPREAD), []
+        )
+        self.assertListEqual(
+            evenly_spaced_indices(10, 1, goal=EvenlySpacedGoal.SPREAD), [5]
+        )
+        self.assertListEqual(
+            evenly_spaced_indices(10, 2, goal=EvenlySpacedGoal.SPREAD), [3, 7]
+        )
+        self.assertListEqual(
+            evenly_spaced_indices(10, 3, goal=EvenlySpacedGoal.SPREAD),
+            [2, 5, 8],
+        )
+        self.assertListEqual(
+            evenly_spaced_indices(10, 5, goal=EvenlySpacedGoal.SPREAD),
+            [2, 3, 5, 7, 8],
+        )
+        self.assertListEqual(
+            evenly_spaced_indices(10, 10, goal=EvenlySpacedGoal.SPREAD),
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        )
+
+        for total, count in ((10, 6), (100, 70), (100, 5)):
+            with self.subTest('General properties', total=total, count=count):
+                for goal in EvenlySpacedGoal:
+                    self.assertListEqual(
+                        evenly_spaced_indices(total, 0, goal=goal), []
+                    )
+
+                    with self.assertRaises(ValueError):
+                        evenly_spaced_indices(total, total + 1, goal=goal)
+
+    def test_evenly_spaced_indices_mask(self) -> None:
+        self.assertListEqual(
+            evenly_spaced_indices_mask(10, 0, goal=EvenlySpacedGoal.DISTANCE),
+            [
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+            ],
+        )
+        self.assertListEqual(
+            evenly_spaced_indices_mask(10, 1, goal=EvenlySpacedGoal.DISTANCE),
+            [
+                False,
+                False,
+                False,
+                False,
+                False,
+                True,
+                False,
+                False,
+                False,
+                False,
+            ],
+        )
+        self.assertListEqual(
+            evenly_spaced_indices_mask(10, 2, goal=EvenlySpacedGoal.DISTANCE),
+            [
+                True,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                True,
+            ],
+        )
+        self.assertListEqual(
+            evenly_spaced_indices_mask(10, 3, goal=EvenlySpacedGoal.DISTANCE),
+            [
+                True,
+                False,
+                False,
+                False,
+                True,
+                False,
+                False,
+                False,
+                False,
+                True,
+            ],
+        )
+        self.assertListEqual(
+            evenly_spaced_indices_mask(10, 5, goal=EvenlySpacedGoal.DISTANCE),
+            [True, False, True, False, True, False, False, True, False, True],
+        )
+        self.assertListEqual(
+            evenly_spaced_indices_mask(10, 10, goal=EvenlySpacedGoal.DISTANCE),
+            [True, True, True, True, True, True, True, True, True, True],
+        )
