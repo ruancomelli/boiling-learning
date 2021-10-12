@@ -38,7 +38,7 @@ def experiment_video_dataset_creator(
     dataset_size: Optional[Union[int, Fraction]] = None,
     snapshot_path: Optional[PathLike] = None,
     num_shards: Optional[int] = None,
-):
+) -> DatasetTriplet:
     data_preprocessors = tuple(data_preprocessors)
 
     ds = experiment_video.as_tf_dataset()

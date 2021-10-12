@@ -25,7 +25,7 @@ ignore_missing_imports = true
 strict = true
 warn_unused_configs = true
 plugins = [
-	"numpy.typing.mypy_plugin",
+	# "numpy.typing.mypy_plugin",
 	"tinydb.mypy_plugin",
 	"dataclassy.mypy"
 ]
@@ -106,6 +106,7 @@ zict = "^2.0"
 modin = {extras = ["ray"], version = "^0.11.1"}
 seaborn = "^0.11.2"
 tensorflow = "^2.6.0"
+slicerator = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 autoflake = "1.4"

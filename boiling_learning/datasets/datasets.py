@@ -20,12 +20,14 @@ from dataclassy import dataclass
 from decorator import decorator
 from frozendict import frozendict
 from funcy.funcs import rpartial
+from slicerator import Slicerator
 from tensorflow.data import AUTOTUNE
 
 import boiling_learning.utils.mathutils as mathutils
 from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.preprocessing import ExperimentVideo
 from boiling_learning.preprocessing.transformers import Transformer
+from boiling_learning.utils.dtypes import auto_spec
 
 _sentinel = object()
 _T = TypeVar('_T')
@@ -127,6 +129,16 @@ Split.FROM_STR_TABLE = frozendict(
         for key_str in keys
     }
 )
+
+
+def split_sizes(
+    splits: DatasetSplits, total_length: int
+) -> Tuple[int, int, int]:
+    return (
+        int(splits.train * total_length),
+        int(splits.val * total_length),
+        int(splits.test * total_length),
+    )
 
 
 @decorator
@@ -454,6 +466,15 @@ def targets(ds: tf.data.Dataset, key: Any = _sentinel) -> tf.data.Dataset:
         return ds.map(lambda x, y: y)
     else:
         return ds.map(lambda x, y: y[key])
+
+
+def slicerator_to_dataset(slicerator: Slicerator) -> tf.data.Dataset:
+    sample = slicerator[0]
+    typespec = auto_spec(sample)
+
+    return tf.data.Dataset.from_generator(
+        lambda: slicerator, output_signature=typespec
+    )
 
 
 def experiment_video_to_sequential_dataset_triplet(

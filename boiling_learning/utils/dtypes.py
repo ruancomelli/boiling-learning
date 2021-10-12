@@ -1,12 +1,24 @@
-from typing import Mapping, Sequence
+from functools import partial
+from typing import Hashable, List, Mapping, Tuple, TypeVar, Union
 
-import bidict
 import funcy
 import tensorflow as tf
+from bidict import bidict
+from tensorflow.types.experimental import TensorLike
 
 from boiling_learning.utils.functional import map_values
 
-tf_str_dtype_bidict = bidict.bidict(
+_T = TypeVar('_T')
+NestedStructure = Union[
+    _T,
+    List['NestedStructure[_T]'],
+    Tuple['NestedStructure[_T]', ...],
+    Mapping[Hashable, 'NestedStructure[_T]'],
+]
+NestedTypeSpec = NestedStructure[tf.TypeSpec]
+NestedTensorLike = NestedStructure[TensorLike]
+
+tf_str_dtype_bidict = bidict(
     (dtype.name, dtype)
     for dtype in (
         tf.float16,
@@ -55,27 +67,30 @@ def encode_element_spec(element_spec):
 
 def decode_element_spec(obj):
     nested, contents = obj['nested'], obj['contents']
+
     if nested:
         return map_values(decode_element_spec, contents)
-    else:
-        return tf.TensorSpec(
-            shape=contents['shape'],
-            name=contents['name'],
-            dtype=tf_str_dtype_bidict[contents['dtype']],
-        )
+
+    return tf.TensorSpec(
+        shape=contents['shape'],
+        name=contents['name'],
+        dtype=tf_str_dtype_bidict[contents['dtype']],
+    )
 
 
-def auto_spec(elem):
-    if hasattr(elem, 'dtype'):
-        return elem.dtype
+def auto_spec(elem: NestedTensorLike) -> NestedTypeSpec:
+    try:
+        return tf.type_spec_from_value(elem)
+    except TypeError:
+        if isinstance(elem, (list, tuple)):
+            print('>>>> Is a Sequence')
+            return funcy.walk(partial(auto_spec), elem)
 
-    if isinstance(elem, Sequence):
-        return funcy.walk(auto_spec, elem)
+        if isinstance(elem, Mapping):
+            print('>>>> Is a Mapping')
+            return funcy.walk_values(partial(auto_spec), elem)
 
-    if isinstance(elem, Mapping):
-        return funcy.walk_values(auto_spec, elem)
-
-    return elem.dtype
+        raise
 
 
 def new_py_function(func, inp, Tout, name=None):

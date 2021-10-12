@@ -1,7 +1,7 @@
 import operator
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union
 
 import funcy
 import modin.pandas as pd
@@ -9,6 +9,7 @@ import numpy as np
 import tensorflow as tf
 from dataclassy import dataclass
 from scipy.interpolate import interp1d
+from slicerator import Slicerator
 
 import boiling_learning.utils as bl_utils
 from boiling_learning.io.io import chunked_filename_pattern, load_dataset
@@ -20,6 +21,7 @@ from boiling_learning.preprocessing.video import (
     extract_frames,
 )
 from boiling_learning.utils import PathLike, VerboseType, ensure_resolved
+from boiling_learning.utils.dtypes import auto_spec
 
 
 class ExperimentVideo(Video):
@@ -584,13 +586,9 @@ class ExperimentVideo(Video):
 
         return tf.data.Dataset.from_generator(lambda: self, tf.float32)
 
-    def as_tf_dataset(
-        self,
-        select_columns: Optional[Union[str, List[str]]] = None,
-        inplace: bool = False,
-    ) -> tf.data.Dataset:
-        # See <https://www.tensorflow.org/tutorials/load_data/pandas_dataframe>
-
+    def as_pairs(
+        self, select_columns: Optional[Union[str, List[str]]] = None
+    ) -> Slicerator:
         df = self.make_dataframe(recalculate=False)
         df = self.convert_dataframe_type(df)
         df = df.sort_values(by=self.column_names.index)
@@ -598,9 +596,26 @@ class ExperimentVideo(Video):
         if select_columns is not None:
             df = df[select_columns]
 
-        ds_img = self.frames_to_tensor(overwrite=False)
-        ds_data = tf.data.Dataset.from_tensor_slices(df.to_dict('list'))
-        ds = tf.data.Dataset.zip((ds_img, ds_data))
+        targets = df.to_dict('list')
+
+        def get_item(i: int) -> Tuple[np.ndarray, Dict[str, Any]]:
+            return self[i], targets[i]
+
+        return Slicerator.from_func(get_item, length=len(self))
+
+    def as_tf_dataset(
+        self,
+        select_columns: Optional[Union[str, List[str]]] = None,
+        inplace: bool = False,
+    ) -> tf.data.Dataset:
+        # See <https://www.tensorflow.org/tutorials/load_data/pandas_dataframe>
+
+        pairs = self.as_pairs(select_columns)
+        type_spec = auto_spec(pairs[0])
+
+        ds = tf.data.Dataset.from_generator(
+            lambda: pairs, output_signature=type_spec
+        )
 
         if inplace:
             self.ds = ds
