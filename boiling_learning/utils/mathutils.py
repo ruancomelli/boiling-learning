@@ -1,11 +1,22 @@
+import enum
 import math
 from fractions import Fraction
 from functools import reduce
-from typing import Any, Iterable, Tuple
+from typing import Iterable, Tuple, TypeVar, Union, overload
 
 import funcy
 
-_sentinel = object()
+from boiling_learning.utils.typeutils import SupportsLessThanT
+
+_T = TypeVar('_T')
+_U = TypeVar('_U')
+
+
+class _SentinelType(enum.Enum):
+    INSTANCE = enum.auto()
+
+
+_sentinel = _SentinelType.INSTANCE
 
 
 def gcd(*args: int) -> int:
@@ -19,7 +30,7 @@ def lcm(*args: int) -> int:
     if len(args) < 2:
         raise TypeError('*lcm* requires 2 or more arguments.')
 
-    def _lcm(x, y):
+    def _lcm(x: int, y: int) -> int:
         return abs(x * y) // gcd(x, y)
 
     return reduce(_lcm, args)
@@ -36,7 +47,24 @@ def proportional_ints(*args: Fraction) -> Tuple[int, ...]:
     return tuple(ints)
 
 
-def minmax(iterable: Iterable, default: Any = _sentinel) -> Tuple[Any, Any]:
+@overload
+def minmax(
+    iterable: Iterable[SupportsLessThanT],
+) -> Tuple[SupportsLessThanT, SupportsLessThanT]:
+    ...
+
+
+@overload
+def minmax(
+    iterable: Iterable[SupportsLessThanT], default: _U
+) -> Tuple[Union[SupportsLessThanT, _U], Union[SupportsLessThanT, _U]]:
+    ...
+
+
+def minmax(
+    iterable: Iterable[SupportsLessThanT],
+    default: Union[_SentinelType, _U] = _sentinel,
+) -> Tuple[Union[SupportsLessThanT, _U], Union[SupportsLessThanT, _U]]:
     it = iter(iterable)
     try:
         first = next(it)
