@@ -1,3 +1,21 @@
+## v0.14.4 (2021-10-12)
+
+### Refactor
+
+- **datasets**: utilize slicerators instead of datasets in the early setup of experiment video datasets for blazingly fast computations
+- **mathutils**: improve type annotation in `mathutils` module
+
+### Fix
+
+- **dataset-creators**: fix bug in `dataset_creator`
+
+### Feat
+
+- **iterutils**: add functions to get indices or masks of evenly spaced items
+- **experiment-video**: add `slicerator` functionality to `ExperimentVideo`s for lazy slicing
+- **datasets**: make dataset functions `None`- and `DatasetTriplet`-aware
+- **datasets**: add `triplet_aware` decorator to make single-dataset functions accept dataset triplets
+
 ## v0.14.3 (2021-10-08)
 
 ## v0.14.2 (2021-10-08)
