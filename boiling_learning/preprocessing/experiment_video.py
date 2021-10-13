@@ -547,7 +547,6 @@ class ExperimentVideo(Video):
         path: Union[str, bl_utils.PathLike],
         renaming: bool = False,
         erase_old: bool = False,
-        overwrite: bool = False,
     ) -> None:
         if self.df_path is None and (erase_old or renaming):
             raise ValueError(
@@ -562,8 +561,6 @@ class ExperimentVideo(Video):
             self.df_path = self.df_path.with_name(path)
         else:
             self.df_path = ensure_resolved(path)
-
-        self.save(overwrite=overwrite)
 
         if erase_old and old_path.is_file():
             old_path.unlink()
