@@ -1,4 +1,3 @@
-import enum
 import random
 from collections import deque
 from fractions import Fraction
@@ -10,7 +9,6 @@ from typing import (
     List,
     Optional,
     Tuple,
-    Type,
     TypeVar,
     Union,
 )
@@ -20,7 +18,6 @@ import more_itertools as mit
 import tensorflow as tf
 from dataclassy import dataclass
 from decorator import decorator
-from frozendict import frozendict
 from funcy.funcs import rpartial
 from slicerator import Slicerator
 from tensorflow.data import AUTOTUNE
@@ -83,57 +80,6 @@ class DatasetSplits:
             raise ValueError(
                 'it is required that 0 < (*train*, *test*) < 1 and 0 <= *val* < 1'
             )
-
-
-class Split(enum.Flag):
-    TRAIN = enum.auto()
-    VAL = enum.auto()
-    TEST = enum.auto()
-
-    @classmethod
-    def get_split(cls: Type[_T], s: str, default: Any = _sentinel) -> _T:
-        if s in cls:
-            return s
-        else:
-            return cls.from_string(s, default=default)
-
-    @classmethod
-    def from_string(cls: Type[_T], s: str, default: Any = _sentinel) -> _T:
-        if default is not _sentinel:
-            return cls.FROM_STR_TABLE.get(s, default)
-
-        try:
-            return cls.FROM_STR_TABLE[s]
-        except KeyError as e:
-            raise KeyError(
-                f'string {s} was not found in the conversion table.'
-                f'Available values are {tuple(cls.FROM_STR_TABLE.keys())}.'
-            ) from e
-
-    def to_str(self):
-        return self.name.lower()
-
-
-Split.FROM_STR_TABLE = frozendict(
-    {
-        key_str: split_subset
-        for keys, split_subset in (
-            (('train',), Split.TRAIN),
-            (('val', 'validation'), Split.VAL),
-            (
-                tuple(
-                    connector.join(('train', validation_key))
-                    for connector in ('_', '_and_')
-                    for validation_key in ('val', 'validation')
-                ),
-                Split.TRAIN | Split.VAL,
-            ),
-            (('test',), Split.TEST),
-            (('all',), Split.TRAIN | Split.VAL | Split.TEST),
-        )
-        for key_str in keys
-    }
-)
 
 
 def split_sizes(
