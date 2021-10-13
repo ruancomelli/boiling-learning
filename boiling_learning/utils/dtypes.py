@@ -83,11 +83,9 @@ def auto_spec(elem: NestedTensorLike) -> NestedTypeSpec:
         return tf.type_spec_from_value(elem)
     except TypeError:
         if isinstance(elem, (list, tuple)):
-            print('>>>> Is a Sequence')
             return funcy.walk(partial(auto_spec), elem)
 
         if isinstance(elem, Mapping):
-            print('>>>> Is a Mapping')
             return funcy.walk_values(partial(auto_spec), elem)
 
         raise
