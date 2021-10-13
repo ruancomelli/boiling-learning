@@ -596,7 +596,7 @@ class ExperimentVideo(Video):
         if select_columns is not None:
             df = df[select_columns]
 
-        targets = df.to_dict('list')
+        targets = df.to_dict('records')
 
         def get_item(i: int) -> Tuple[np.ndarray, Dict[str, Any]]:
             return self[i], targets[i]
