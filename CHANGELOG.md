@@ -1,3 +1,9 @@
+## v0.14.5 (2021-10-12)
+
+### Fix
+
+- **experiment-video**: fix experimental dataframe conversion to records list in `ExperimentVideo.as_pairs`
+
 ## v0.14.4 (2021-10-12)
 
 ### Refactor
