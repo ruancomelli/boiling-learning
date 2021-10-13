@@ -55,6 +55,7 @@ from boiling_learning.utils.iterutils import flaglast
 
 # ---------------------------------- Typing ----------------------------------
 _EnumType = TypeVar('_EnumType', bound=enum.Enum)
+_TypeT = TypeVar('_TypeT', bound=Type)
 
 
 class _Sentinel(enum.Enum):
@@ -964,7 +965,7 @@ def _format_kwarg_dict_items(
             write(delimnl)
 
 
-def simple_pprint_class(cls: type, *names):
+def simple_pprint_class(cls: _TypeT, *names: str) -> _TypeT:
     pprint.PrettyPrinter._dispatch[cls.__repr__] = simple_pprinter(names)
 
     # Returning the class allows the use of this function as a decorator
