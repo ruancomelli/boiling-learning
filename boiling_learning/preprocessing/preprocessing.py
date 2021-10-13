@@ -304,8 +304,8 @@ class DatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
         if trajs:
             sources, dests = mit.unzip(trajs)
         else:
-            sources = bl_utils.empty_gen()
-            dests = bl_utils.empty_gen()
+            sources = ()
+            dests = ()
 
         return sources, dests
 
@@ -504,8 +504,8 @@ class ImageDatasetTransformerTF(bl_utils.SimpleRepr, bl_utils.SimpleStr):
         if trajs:
             sources, dests = mit.unzip(trajs)
         else:
-            sources = bl_utils.empty_gen()
-            dests = bl_utils.empty_gen()
+            sources = ()
+            dests = ()
 
         return sources, dests
 

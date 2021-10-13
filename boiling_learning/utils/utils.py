@@ -215,7 +215,7 @@ def missing_ints(ints: Iterable[int]) -> Iterable[int]:
         full = range(start, end + 1)
         return itertools.filterfalse(ints.__contains__, full)
     else:
-        return empty_gen()
+        return ()
 
 
 def is_consecutive(ints: Iterable[int], ignore_order: bool = False) -> bool:
@@ -649,11 +649,6 @@ def json_equivalent(
 
 
 # ---------------------------------- Iteration ----------------------------------
-def empty_gen() -> Tuple[()]:
-    # Source: <https://stackoverflow.com/a/13243870/5811400>
-    return ()
-
-
 def append(iterable: Iterable[_T], value: S) -> Iterator[Union[_T, S]]:
     yield from iterable
     yield value
@@ -919,7 +914,7 @@ def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
             obj_items = obj.__dict__.copy().items()
         else:
             if len(names) == 0:
-                values = empty_gen()
+                values = ()
             else:
                 values = operator.attrgetter(*names)
                 if len(names == 1):
