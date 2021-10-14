@@ -15,6 +15,7 @@ from typing import (
 
 import funcy
 import more_itertools as mit
+import numpy as np
 import tensorflow as tf
 from dataclassy import dataclass
 from decorator import decorator
@@ -500,11 +501,15 @@ def experiment_video_to_dataset_triplet(
     ev: ExperimentVideo,
     splits: DatasetSplits,
     *,
+    image_preprocessor: Optional[Callable[[np.ndarray], np.ndarray]] = None,
     select_columns: Optional[Union[str, List[str]]] = None,
     dataset_size: Optional[Union[int, Fraction]] = None,
     shuffle: bool = False,
 ) -> DatasetTriplet:
-    pairs = ev.as_pairs(select_columns=select_columns)
+    pairs = ev.as_pairs(
+        image_preprocessor=image_preprocessor, select_columns=select_columns
+    )
+
     return slicerator_to_dataset_triplet(
         pairs, splits, dataset_size=dataset_size, shuffle=shuffle
     )

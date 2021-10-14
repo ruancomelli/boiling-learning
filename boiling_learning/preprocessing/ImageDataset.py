@@ -394,21 +394,21 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
 
     @overload
     def iterdata_from_dataframe(
-        self, select_columns: str
+        self, *, select_columns: str
     ) -> Iterable[Tuple[np.ndarray, Any]]:
         ...
 
     @overload
     def iterdata_from_dataframe(
-        self, select_columns: Optional[List[str]]
+        self, *, select_columns: Optional[List[str]]
     ) -> Iterable[Tuple[np.ndarray, dict]]:
         ...
 
-    def iterdata_from_dataframe(self, select_columns=None):
+    def iterdata_from_dataframe(self, *, select_columns=None):
         return itertools.chain.from_iterable(
             map(
                 operator.methodcaller(
-                    'iterdata_from_dataframe', select_columns
+                    'iterdata_from_dataframe', select_columns=select_columns
                 ),
                 self.values(),
             )
@@ -416,13 +416,16 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
 
     def as_tf_dataset(
         self,
+        *,
         select_columns: Optional[Union[str, List[str]]] = None,
         inplace: bool = False,
     ) -> tf.data.Dataset:
         datasets = collections.deque(
             map(
                 operator.methodcaller(
-                    'as_tf_dataset', select_columns, inplace=inplace
+                    'as_tf_dataset',
+                    select_columns=select_columns,
+                    inplace=inplace,
                 ),
                 self.values(),
             )
@@ -441,7 +444,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         return ds
 
     def as_tf_dataset_dict(
-        self, select_columns: Optional[Union[str, List[str]]] = None
+        self, *, select_columns: Optional[Union[str, List[str]]] = None
     ) -> Dict[str, tf.data.Dataset]:
         return {
             name: experiment_video.as_tf_dataset(select_columns=select_columns)

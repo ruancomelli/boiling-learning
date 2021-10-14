@@ -1,7 +1,17 @@
 import operator
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import funcy
 import modin.pandas as pd
@@ -479,7 +489,7 @@ class ExperimentVideo(Video):
         return df
 
     def iterdata_from_dataframe(
-        self, select_columns: Optional[Union[str, List[str]]] = None
+        self, *, select_columns: Optional[Union[str, List[str]]] = None
     ) -> Iterable[Tuple[np.ndarray, Any]]:
         df = self.make_dataframe(recalculate=False)
         indices = df[self.column_names.index]
@@ -584,7 +594,12 @@ class ExperimentVideo(Video):
         return tf.data.Dataset.from_generator(lambda: self, tf.float32)
 
     def as_pairs(
-        self, select_columns: Optional[Union[str, List[str]]] = None
+        self,
+        *,
+        image_preprocessor: Optional[
+            Callable[[np.ndarray], np.ndarray]
+        ] = None,
+        select_columns: Optional[Union[str, List[str]]] = None,
     ) -> Slicerator[Tuple[np.ndarray, Dict[str, Any]]]:
         df = self.make_dataframe(recalculate=False)
         df = self.convert_dataframe_type(df)
@@ -595,19 +610,27 @@ class ExperimentVideo(Video):
 
         targets = df.to_dict('records')
 
-        def get_item(i: int) -> Tuple[np.ndarray, Dict[str, Any]]:
-            return self[i], targets[i]
+        if image_preprocessor is not None:
+
+            def get_item(i: int) -> Tuple[np.ndarray, Dict[str, Any]]:
+                return image_preprocessor(self[i]), targets[i]
+
+        else:
+
+            def get_item(i: int) -> Tuple[np.ndarray, Dict[str, Any]]:
+                return self[i], targets[i]
 
         return Slicerator.from_func(get_item, length=len(self))
 
     def as_tf_dataset(
         self,
+        *,
         select_columns: Optional[Union[str, List[str]]] = None,
         inplace: bool = False,
     ) -> tf.data.Dataset:
         # See <https://www.tensorflow.org/tutorials/load_data/pandas_dataframe>
 
-        pairs = self.as_pairs(select_columns)
+        pairs = self.as_pairs(select_columns=select_columns)
         type_spec = auto_spec(pairs[0])
 
         ds = tf.data.Dataset.from_generator(
