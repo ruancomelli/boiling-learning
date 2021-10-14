@@ -1,10 +1,11 @@
 .PROJECT = boiling_learning
 .TESTS_FOLDER = tests
+.STUBS_FOLDER = typings
 
-.AUTOFLAKE = $(shell autoflake --in-place --recursive --expand-star-imports --remove-duplicate-keys --remove-unused-variables --remove-all-unused-imports --ignore-init-module-imports $(.PROJECT) $(.TESTS_FOLDER))
-.UNIMPORT = $(shell unimport --remove --gitignore --ignore-init --include-star-import $(.PROJECT) $(.TESTS_FOLDER))
-.BLACK = $(shell black $(.PROJECT) $(.TESTS_FOLDER))
-.ISORT = $(shell isort $(.PROJECT) $(.TESTS_FOLDER))
+.AUTOFLAKE = $(shell autoflake --in-place --recursive --expand-star-imports --remove-duplicate-keys --remove-unused-variables --remove-all-unused-imports --ignore-init-module-imports $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
+.UNIMPORT = $(shell unimport --remove --gitignore --ignore-init --include-star-import $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
+.BLACK = $(shell black $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
+.ISORT = $(shell isort $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
 .REFACTOR = $(foreach command,.AUTOFLAKE .UNIMPORT .BLACK .ISORT,$(call $(command)))
 
 .READD = $(shell git update-index --again)
