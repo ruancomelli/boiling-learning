@@ -1,3 +1,28 @@
+## v0.15.0 (2021-10-14)
+
+### Feat
+
+- **preprocessing/experiment-video**: accept optional `image_preprocessor` parameter in `ExperimentVideo.as_pairs` to transform images before producing a `Slicerator`
+- **typings**: include partial type stubs folder for `slicerator` dependency
+
+### Refactor
+
+- **typing**: add type annotation to `Slicerator`s all over the project
+- **datasets/datasets**: remove no-longer-used `Split` class
+- **preprocessing/preprocessing**: remove no-longer-used old code for transforming datasets
+- **utils/utils**: replace seemingly useless `empty_gen` function with an empty tuple `()`
+- **utils/dtypes**: remove unused `print` statements from `auto_spec`
+- **utils/dtypes**: remove unused `print` statements from `auto_spec`
+
+### BREAKING CHANGE
+
+- class `Split` is no longer available.
+- Old classes for transforming datasets are not available anymore.
+
+### Fix
+
+- **preprocessing/experiment-video**: remove calls to no-longer-existant `ExperimentVideo.save` method
+
 ## v0.14.5 (2021-10-12)
 
 ### Fix
