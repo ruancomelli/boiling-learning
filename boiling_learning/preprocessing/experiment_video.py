@@ -585,7 +585,7 @@ class ExperimentVideo(Video):
 
     def as_pairs(
         self, select_columns: Optional[Union[str, List[str]]] = None
-    ) -> Slicerator:
+    ) -> Slicerator[Tuple[np.ndarray, Dict[str, Any]]]:
         df = self.make_dataframe(recalculate=False)
         df = self.convert_dataframe_type(df)
         df = df.sort_values(by=self.column_names.index)

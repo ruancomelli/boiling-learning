@@ -20,6 +20,7 @@ from typing import (
 from typing_extensions import Protocol
 
 _T = TypeVar('_T')
+_U = TypeVar('_U')
 _T_co = TypeVar('_T_co', covariant=True)
 
 class SupportsGetItemByIndex(Protocol[_T_co]):
@@ -53,16 +54,16 @@ class Slicerator(Generic[_T]):
     @classmethod
     def from_func(
         cls,
-        func: Callable[[int], _T],
+        func: Callable[[int], _U],
         length: int,
-        propagate_atters: Optional[List[str]],
-    ) -> Slicerator[_T]: ...
+        propagate_atters: Optional[List[str]] = None,
+    ) -> Slicerator[_U]: ...
     @classmethod
     def from_class(
         cls,
-        some_class: Type[Sequence[_T]],
+        some_class: Type[Sequence[_U]],
         propagate_attrs: Optional[List[str]] = None,
-    ) -> Type[Slicerator[_T]]: ...
+    ) -> Type[Slicerator[_U]]: ...
     def __repr__(self) -> str: ...
     @property
     def indices(self) -> Iterable[int]: ...

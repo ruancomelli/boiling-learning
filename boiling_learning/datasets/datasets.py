@@ -423,11 +423,11 @@ def targets(ds: tf.data.Dataset, key: Any = _sentinel) -> tf.data.Dataset:
 
 
 def preprocess_slicerator(
-    slicerator: Slicerator,
+    slicerator: Slicerator[_T],
     *,
     take: Optional[Union[int, Fraction]] = None,
     shuffle: bool = False,
-) -> Slicerator:
+) -> Slicerator[_T]:
     total: int = len(slicerator)
 
     if isinstance(take, Fraction):
@@ -447,7 +447,7 @@ def preprocess_slicerator(
     return slicerator
 
 
-def _slicerator_to_dataset(slicerator: Slicerator) -> tf.data.Dataset:
+def _slicerator_to_dataset(slicerator: Slicerator[Any]) -> tf.data.Dataset:
     sample = slicerator[0]
     typespec = auto_spec(sample)
 
@@ -457,7 +457,7 @@ def _slicerator_to_dataset(slicerator: Slicerator) -> tf.data.Dataset:
 
 
 def slicerator_to_dataset(
-    slicerator: Slicerator,
+    slicerator: Slicerator[Any],
     *,
     dataset_size: Optional[Union[int, Fraction]] = None,
     shuffle: bool = False,
@@ -469,7 +469,7 @@ def slicerator_to_dataset(
 
 
 def slicerator_to_dataset_triplet(
-    slicerator: Slicerator,
+    slicerator: Slicerator[Any],
     splits: DatasetSplits,
     *,
     dataset_size: Optional[Union[int, Fraction]] = None,
