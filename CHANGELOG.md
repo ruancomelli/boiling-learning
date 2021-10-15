@@ -1,3 +1,9 @@
+## v0.15.1 (2021-10-14)
+
+### Fix
+
+- **utils/slicerators**: create custom generic `Slicerator`
+
 ## v0.15.0 (2021-10-14)
 
 ### Feat
