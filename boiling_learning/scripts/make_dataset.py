@@ -8,6 +8,8 @@ import funcy
 
 from boiling_learning.datasets import DatasetSplits
 from boiling_learning.io.io import (
+    DatasetTriplet,
+    SaverFunction,
     add_bool_flag,
     load_dataset,
     load_yogadl,
@@ -39,6 +41,9 @@ def main(
     augment_test: bool = True,
     verbose: int = False,
     augmentors_to_force: Container[str] = frozenset({'random_cropper'}),
+    experiment_video_saver: SaverFunction[
+        DatasetTriplet
+    ] = saver_dataset_triplet(save_dataset),
 ):
     if not augment_train:
         augmentors = [
@@ -91,9 +96,7 @@ def main(
         'name': 'bl.io.save_dataset',
         'params': P(),
     }
-    dataset_params[['creator', 'value', 'save']] = saver_dataset_triplet(
-        save_dataset
-    )
+    dataset_params[['creator', 'value', 'save']] = experiment_video_saver
     dataset_params[['creator', 'desc', 'load']] = {
         'name': 'bl.io.load_dataset',
         'params': P(),
