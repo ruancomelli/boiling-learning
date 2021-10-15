@@ -26,7 +26,13 @@ import parse
 from dataclassy import dataclass
 
 import boiling_learning as bl
-from boiling_learning.io.io import BoolFlaggedLoaderFunction, SaverFunction
+from boiling_learning.io.io import (
+    BoolFlagged,
+    BoolFlaggedLoaderFunction,
+    SaverFunction,
+    load_json,
+    save_json,
+)
 from boiling_learning.io.json_encoders import (
     GenericJSONDecoder,
     GenericJSONEncoder,
@@ -36,8 +42,10 @@ from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.Parameters import Parameters
 from boiling_learning.utils.utils import (  # JSONDataType,; TODO: maybe using JSONDataType would be a good idea
     PathLike,
+    SimpleRepr,
     VerboseType,
     _Sentinel,
+    json_equivalent,
     print_verbose,
 )
 
@@ -52,10 +60,16 @@ _sentinel = _Sentinel.get_instance()
 _ElemType = TypeVar('_ElemType')
 _PostProcessedElemType = TypeVar('_PostProcessedElemType')
 
+_default_table_saver = partial(save_json, cls=GenericJSONEncoder)
+_default_table_loader = partial(load_json, cls=GenericJSONDecoder)
+_default_description_comparer = partial(
+    json_equivalent, encoder=GenericJSONEncoder, decoder=GenericJSONDecoder
+)
+
 
 class Manager(
-    bl.utils.SimpleRepr,
-    Mapping[str, dict],
+    SimpleRepr,
+    Mapping[str, Dict[str, Any]],
     Generic[_ElemType, _PostProcessedElemType],
 ):
     @dataclass(frozen=True, kwargs=True)
@@ -69,14 +83,6 @@ class Manager(
         post_processor_params: str = 'post_processor_params'
         workspace: str = 'workspace'
         path: str = 'path'
-
-    _default_table_saver = partial(bl.io.save_json, cls=GenericJSONEncoder)
-    _default_table_loader = partial(bl.io.load_json, cls=GenericJSONDecoder)
-    _default_description_comparer = partial(
-        bl.utils.json_equivalent,
-        encoder=GenericJSONEncoder,
-        decoder=GenericJSONDecoder,
-    )
 
     class MultipleIdsHandler(enum.Enum):
         RAISE = enum.auto()
@@ -129,10 +135,12 @@ class Manager(
         ] = None,
         verbose: VerboseType = False,
         key_names: Keys = Keys(),
-        table_saver: Callable[[dict, Path], Any] = _default_table_saver,
-        table_loader: Callable[[Path], dict] = _default_table_loader,
+        table_saver: Callable[
+            [Dict[str, Any], Path], Any
+        ] = _default_table_saver,
+        table_loader: Callable[[Path], Dict[str, Any]] = _default_table_loader,
         description_comparer: Callable[
-            [Mapping, Mapping], bool
+            [Mapping[str, Any], Mapping[str, Any]], bool
         ] = _default_description_comparer,
     ):
         '''
@@ -176,6 +184,7 @@ class Manager(
         self._table_saver = table_saver
         self._table_loader = table_loader
         self._description_comparer = description_comparer
+        self._lookup_table: Optional[Dict[str, dict]] = None
 
         self.load_lookup_table()
 
@@ -286,7 +295,7 @@ class Manager(
         path = bl.utils.ensure_parent(path)
         self.save_method(elem, path)
 
-    def load_elem(self, path: PathLike) -> Tuple[bool, _ElemType]:
+    def load_elem(self, path: PathLike) -> BoolFlagged[_ElemType]:
         if self.load_method is None:
             raise ValueError(
                 'this Manager\'s *load_method* is not set.'
@@ -497,75 +506,72 @@ class Manager(
 
         if callable(multiple_ids_handler):
             return multiple_ids_handler(elem_id_candidates)
-        else:
-            if isinstance(multiple_ids_handler, self.MultipleIdsHandler):
-                handler, parameters = multiple_ids_handler, Pack()
-            elif isinstance(multiple_ids_handler, tuple):
-                handler, parameters = multiple_ids_handler
 
-            remove_entries = parameters.kwargs.get('remove_entries', False)
-            remove_files = parameters.kwargs.get('remove_files', False)
+        if isinstance(multiple_ids_handler, self.MultipleIdsHandler):
+            handler, parameters = multiple_ids_handler, Pack()
+        elif isinstance(multiple_ids_handler, tuple):
+            handler, parameters = multiple_ids_handler
 
-            def _remove(resolved_id, elem_id_candidates) -> None:
-                ids_to_remove = tuple(set(elem_id_candidates) - {resolved_id})
+        remove_entries = parameters.kwargs.get('remove_entries', False)
+        remove_files = parameters.kwargs.get('remove_files', False)
 
-                if remove_files:
-                    for id_to_remove in ids_to_remove:
-                        path = self.elem_path(id_to_remove)
-                        if path.is_file():
-                            print('Removing file', path)  # DEBUG
-                            # path.unlink()
-                        else:
-                            print('Removing dir', path)  # DEBUG
-                            # bl_utils.rmdir(path, recursive=True, missing_ok=True, keep=False)
-                if remove_entries:
-                    for id_to_remove in ids_to_remove:
-                        print('Removing entry', id_to_remove)  # DEBUG
-                        # del self[id_to_remove]
+        def _remove(resolved_id, elem_id_candidates) -> None:
+            ids_to_remove = tuple(set(elem_id_candidates) - {resolved_id})
 
-            if (
-                handler is self.MultipleIdsHandler.RAISE
-                and len(elem_id_candidates) > 1
-            ):
-                raise ValueError(
-                    f'Expected at most one item in iterable, but got {elem_id_candidates}'
-                )
-            elif handler in {
-                self.MultipleIdsHandler.KEEP_FIRST,
-                self.MultipleIdsHandler.KEEP_LAST,
-            }:
-                resolved_id = sorted(
-                    elem_id_candidates,
-                    reverse=handler is self.MultipleIdsHandler.KEEP_LAST,
-                )[0]
-                _remove(resolved_id, elem_id_candidates)
-                return resolved_id
-            elif handler in {
-                self.MultipleIdsHandler.KEEP_FIRST_LOADED,
-                self.MultipleIdsHandler.KEEP_LAST_LOADED,
-            }:
-                loader = parameters.kwargs.get(
-                    'loader',
-                    lambda path: self._load_elem(
-                        path, raise_if_load_fails=False
-                    ),
-                )
-                loadable_candidates = map(
-                    lambda elem_id: (elem_id, loader(self.elem_path(elem_id))),
-                    elem_id_candidates,
-                )
-                loadable_candidates = (
-                    elem_id
-                    for elem_id, (success, _) in loadable_candidates
-                    if success
-                )
-                resolved_id = sorted(
-                    loadable_candidates,
-                    reverse=handler
-                    is self.MultipleIdsHandler.KEEP_LAST_LOADED,
-                )[0]
-                _remove(resolved_id, elem_id_candidates)
-                return resolved_id
+            if remove_files:
+                for id_to_remove in ids_to_remove:
+                    path = self.elem_path(id_to_remove)
+                    if path.is_file():
+                        print('Removing file', path)  # DEBUG
+                        # path.unlink()
+                    else:
+                        print('Removing dir', path)  # DEBUG
+                        # bl_utils.rmdir(path, recursive=True, missing_ok=True, keep=False)
+            if remove_entries:
+                for id_to_remove in ids_to_remove:
+                    print('Removing entry', id_to_remove)  # DEBUG
+                    # del self[id_to_remove]
+
+        if (
+            handler is self.MultipleIdsHandler.RAISE
+            and len(elem_id_candidates) > 1
+        ):
+            raise ValueError(
+                f'Expected at most one item in iterable, but got {elem_id_candidates}'
+            )
+        elif handler in {
+            self.MultipleIdsHandler.KEEP_FIRST,
+            self.MultipleIdsHandler.KEEP_LAST,
+        }:
+            resolved_id = sorted(
+                elem_id_candidates,
+                reverse=handler is self.MultipleIdsHandler.KEEP_LAST,
+            )[0]
+            _remove(resolved_id, elem_id_candidates)
+            return resolved_id
+        elif handler in {
+            self.MultipleIdsHandler.KEEP_FIRST_LOADED,
+            self.MultipleIdsHandler.KEEP_LAST_LOADED,
+        }:
+            loader = parameters.kwargs.get(
+                'loader',
+                lambda path: self._load_elem(path, raise_if_load_fails=False),
+            )
+            loadable_candidates = map(
+                lambda elem_id: (elem_id, loader(self.elem_path(elem_id))),
+                elem_id_candidates,
+            )
+            loadable_candidates = (
+                elem_id
+                for elem_id, (success, _) in loadable_candidates
+                if success
+            )
+            resolved_id = sorted(
+                loadable_candidates,
+                reverse=handler is self.MultipleIdsHandler.KEEP_LAST_LOADED,
+            )[0]
+            _remove(resolved_id, elem_id_candidates)
+            return resolved_id
 
         raise ValueError('invalid *multiple_ids_handler* passed.')
 
@@ -594,7 +600,7 @@ class Manager(
 
     def _load_elem(
         self, path: PathLike, raise_if_load_fails: bool
-    ) -> Tuple[bool, _ElemType]:
+    ) -> BoolFlagged[_ElemType]:
         success, elem = self.load_elem(path)
 
         if raise_if_load_fails and not success:
@@ -756,7 +762,7 @@ class Manager(
 
             def _load(
                 elem_id: str, path: Path, raise_if_load_fails: bool
-            ) -> _ElemType:
+            ) -> BoolFlagged[_ElemType]:
                 if callable(load):
                     self._print(
                         1, 'Trying to load', elem_id, 'using custom loader'
