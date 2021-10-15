@@ -1,3 +1,13 @@
+## v0.15.2 (2021-10-15)
+
+### Feat
+
+- **scripts/make-dataset**: accept an optional custom experiment video dataset saver function in `make_dataset` script
+
+### Refactor
+
+- **management/Manager**: improve some parts of the code in `Manager.py` and fix some typing issues
+
 ## v0.15.1 (2021-10-14)
 
 ### Fix
