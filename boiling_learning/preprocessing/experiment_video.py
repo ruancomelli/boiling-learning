@@ -19,7 +19,6 @@ import numpy as np
 import tensorflow as tf
 from dataclassy import dataclass
 from scipy.interpolate import interp1d
-from slicerator import Slicerator
 
 import boiling_learning.utils as bl_utils
 from boiling_learning.io.io import chunked_filename_pattern, load_dataset
@@ -32,6 +31,7 @@ from boiling_learning.preprocessing.video import (
 )
 from boiling_learning.utils import PathLike, VerboseType, ensure_resolved
 from boiling_learning.utils.dtypes import auto_spec
+from boiling_learning.utils.slicerators import Slicerator
 
 
 class ExperimentVideo(Video):

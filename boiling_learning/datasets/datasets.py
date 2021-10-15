@@ -20,7 +20,6 @@ import tensorflow as tf
 from dataclassy import dataclass
 from decorator import decorator
 from funcy.funcs import rpartial
-from slicerator import Slicerator
 from tensorflow.data import AUTOTUNE
 
 import boiling_learning.utils.mathutils as mathutils
@@ -31,6 +30,7 @@ from boiling_learning.utils.dtypes import auto_spec
 from boiling_learning.utils.iterutils import (
     distance_maximized_evenly_spaced_indices,
 )
+from boiling_learning.utils.slicerators import Slicerator
 
 _sentinel = object()
 _T = TypeVar('_T')
