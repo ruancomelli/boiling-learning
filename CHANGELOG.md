@@ -1,3 +1,9 @@
+## v0.15.3 (2021-10-16)
+
+### Feat
+
+- **preprocessing/image**: automatically convert image-like input to float64 `tf.Tensor`s in image manipulation functions
+
 ## v0.15.2 (2021-10-15)
 
 ### Feat
