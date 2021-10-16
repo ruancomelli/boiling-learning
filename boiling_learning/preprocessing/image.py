@@ -1,8 +1,9 @@
 import math
-from typing import Any, Iterable, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, Union
 
 import numpy as np
 import tensorflow as tf
+from decorator import decorator
 from scipy.stats import entropy
 from skimage.color import rgb2gray
 from skimage.exposure import histogram
@@ -10,8 +11,10 @@ from skimage.measure import shannon_entropy
 from skimage.metrics import structural_similarity as ssim
 from skimage.transform import AffineTransform, resize, warp
 
-T = TypeVar('T')
-ImageType = Any  # something convertible to tf.Tensor
+_T = TypeVar('_T')
+# something convertible to tf.Tensor
+ImageType = tf.types.experimental.TensorLike
+CallableT = TypeVar('CallableT', bound=Callable[..., Any])
 
 
 def reshape_to_largest(
@@ -33,12 +36,28 @@ def _ratio_to_size(
         return x
 
 
+def autocast(dtype: tf.DType) -> Callable[[CallableT], CallableT]:
+    @decorator
+    def _autocast(
+        f: Callable[..., _T],
+        image: ImageType,
+        *args: Any,
+        **kwargs: Any,
+    ) -> _T:
+        image = tf.convert_to_tensor(image)
+        image = tf.cast(image, dtype=dtype)
+        return f(image, *args, **kwargs)
+
+    return _autocast
+
+
 def ensure_grayscale(image: ImageType) -> np.ndarray:
     if image.shape[2] != 1:
         return rgb2gray(image)
     return image
 
 
+@autocast(tf.float64)
 def crop(
     image: ImageType,
     left: Optional[Union[int, float]] = None,
@@ -83,6 +102,7 @@ def crop(
     )
 
 
+@autocast(tf.float64)
 def shrink(
     image: ImageType,
     left: Optional[Union[int, float]] = None,
@@ -163,9 +183,10 @@ def shift(
     return shifted
 
 
+@autocast(tf.float64)
 def flip(
-    image: T, horizontal: bool = False, vertical: bool = False
-) -> Union[T, tf.Tensor]:
+    image: _T, horizontal: bool = False, vertical: bool = False
+) -> Union[_T, tf.Tensor]:
     if horizontal:
         image = tf.image.flip_left_right(image)
     if vertical:
@@ -174,10 +195,12 @@ def flip(
     return image
 
 
+@autocast(tf.float64)
 def grayscale(image: ImageType) -> tf.Tensor:
     return tf.image.rgb_to_grayscale(image)
 
 
+@autocast(tf.float64)
 def downscale(
     image: ImageType, factors: Tuple[int, int], antialias: bool = False
 ) -> tf.Tensor:
@@ -190,6 +213,7 @@ def downscale(
     )
 
 
+@autocast(tf.float64)
 def random_brightness(
     image: ImageType, min_delta: float, max_delta: float
 ) -> tf.Tensor:
@@ -197,6 +221,7 @@ def random_brightness(
     return tf.image.adjust_brightness(image, delta)
 
 
+@autocast(tf.float64)
 def random_crop(
     image: ImageType, size: Iterable[Optional[int]], seed=None
 ) -> tf.Tensor:
