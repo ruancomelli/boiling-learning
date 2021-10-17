@@ -1,3 +1,9 @@
+## v0.15.4 (2021-10-17)
+
+### Fix
+
+- **preprocessing/image**: change autocast dtypes to float32 everywhere except `downscale`, for which we keep float64
+
 ## v0.15.3 (2021-10-16)
 
 ### Feat
