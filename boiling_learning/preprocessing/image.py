@@ -36,6 +36,15 @@ def _ratio_to_size(
         return x
 
 
+def ensure_tensor(
+    image: ImageType, *, dtype: Optional[tf.DType] = None
+) -> tf.Tensor:
+    image = tf.convert_to_tensor(image)
+    if dtype is not None:
+        image = tf.cast(image, dtype=dtype)
+    return image
+
+
 def autocast(dtype: tf.DType) -> Callable[[CallableT], CallableT]:
     @decorator
     def _autocast(
@@ -44,9 +53,7 @@ def autocast(dtype: tf.DType) -> Callable[[CallableT], CallableT]:
         *args: Any,
         **kwargs: Any,
     ) -> _T:
-        image = tf.convert_to_tensor(image)
-        image = tf.cast(image, dtype=dtype)
-        return f(image, *args, **kwargs)
+        return f(ensure_tensor(image, dtype=dtype), *args, **kwargs)
 
     return _autocast
 
@@ -57,7 +64,7 @@ def ensure_grayscale(image: ImageType) -> np.ndarray:
     return image
 
 
-@autocast(tf.float64)
+@autocast(tf.float32)
 def crop(
     image: ImageType,
     left: Optional[Union[int, float]] = None,
@@ -102,7 +109,7 @@ def crop(
     )
 
 
-@autocast(tf.float64)
+@autocast(tf.float32)
 def shrink(
     image: ImageType,
     left: Optional[Union[int, float]] = None,
@@ -183,7 +190,7 @@ def shift(
     return shifted
 
 
-@autocast(tf.float64)
+@autocast(tf.float32)
 def flip(
     image: _T, horizontal: bool = False, vertical: bool = False
 ) -> Union[_T, tf.Tensor]:
@@ -195,7 +202,7 @@ def flip(
     return image
 
 
-@autocast(tf.float64)
+@autocast(tf.float32)
 def grayscale(image: ImageType) -> tf.Tensor:
     return tf.image.rgb_to_grayscale(image)
 
@@ -213,7 +220,7 @@ def downscale(
     )
 
 
-@autocast(tf.float64)
+@autocast(tf.float32)
 def random_brightness(
     image: ImageType, min_delta: float, max_delta: float
 ) -> tf.Tensor:
@@ -221,7 +228,7 @@ def random_brightness(
     return tf.image.adjust_brightness(image, delta)
 
 
-@autocast(tf.float64)
+@autocast(tf.float32)
 def random_crop(
     image: ImageType, size: Iterable[Optional[int]], seed=None
 ) -> tf.Tensor:
