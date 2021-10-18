@@ -1,3 +1,9 @@
+## v0.15.5 (2021-10-18)
+
+### Fix
+
+- **preprocessing/image**: change required dtype for `crop` from float32 to float64
+
 ## v0.15.4 (2021-10-17)
 
 ### Fix
