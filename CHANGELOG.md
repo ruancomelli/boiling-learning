@@ -1,3 +1,9 @@
+## v0.15.7 (2021-10-18)
+
+### Fix
+
+- **utils/dtypes**: capture `AttributeErrors` in `auto_dtype`
+
 ## v0.15.6 (2021-10-18)
 
 ### Fix
