@@ -1,3 +1,18 @@
+## v0.15.6 (2021-10-18)
+
+### Fix
+
+- **utils/dtypes**: define new `auto_dtype` function, an equivalent to `auto_spec` specialized for dtypes
+- **preprocessing/transformers**: replace `auto_spec` with `auto_dtype` in transformer `as_tf_py_function` method for backward compatibility
+
+### Feat
+
+- **datasets/sliceable**: define sliceable datasets based on slicerators and almost compatible with TensorFlow datasets
+
+### Refactor
+
+- **utils/dtypes**: improve type annotations in `utils.dtypes` module
+
 ## v0.15.5 (2021-10-18)
 
 ### Fix

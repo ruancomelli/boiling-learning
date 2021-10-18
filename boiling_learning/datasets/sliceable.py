@@ -5,6 +5,7 @@ from operator import itemgetter
 from typing import (
     Any,
     Callable,
+    Dict,
     Generic,
     Iterable,
     Iterator,
@@ -17,6 +18,7 @@ from typing import (
 )
 
 import more_itertools as mit
+import numpy as np
 import tensorflow as tf
 from slicerator import pipeline
 
@@ -298,3 +300,8 @@ class SupervisedSliceableDataset(
             return predicate(pair[1])
 
         return self.filter(_filter_func)
+
+
+ImageSliceableDataset = SupervisedSliceableDataset[np.ndarray, _Y]
+AnnotatedImageSliceableDataset = ImageSliceableDataset[Dict[str, Any]]
+RegressionImageSliceableDataset = ImageSliceableDataset[float]
