@@ -96,6 +96,13 @@ def auto_spec(elem: NestedTensorLike) -> NestedTypeSpec:
         return map_values(auto_spec, elem)
 
 
+def auto_dtype(elem: NestedTensorLike) -> NestedStructure[tf.DType]:
+    try:
+        return elem.dtype
+    except TypeError:
+        return map_values(auto_dtype, elem)
+
+
 def new_py_function(func, inp, Tout, name=None):
     # Source: <https://github.com/tensorflow/tensorflow/issues/27679#issuecomment-522578000>
 
