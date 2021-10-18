@@ -12,7 +12,7 @@ from typing import (
 
 import funcy
 
-from boiling_learning.utils.dtypes import auto_spec, new_py_function
+from boiling_learning.utils.dtypes import auto_dtype, new_py_function
 from boiling_learning.utils.functional import Pack, nth_arg
 from boiling_learning.utils.utils import (
     FrozenNamedMixin,
@@ -20,10 +20,6 @@ from boiling_learning.utils.utils import (
     KeyedDefaultDict,
     SimpleStr,
 )
-
-# from boiling_learning.io.json_encoders import (
-#     PackEncoder
-# )
 
 C = TypeVar('C')
 T = TypeVar('T')
@@ -68,7 +64,7 @@ class Transformer(FrozenNamedMixin, SimpleStr, Generic[T, S]):
             func = self
 
         def _tf_py_function(*args):
-            return new_py_function(func=func, inp=args, Tout=auto_spec(args))
+            return new_py_function(func=func, inp=args, Tout=auto_dtype(args))
 
         return _tf_py_function
 
@@ -245,14 +241,6 @@ class DictImageTransformer(
             if isinstance(self.packer, Mapping)
             else self.packer.__name__,
         }
-
-
-# class PackTransformerEncoder(PackEncoder):
-#     def default(self, obj):
-#         if isinstance(obj, Transformer):
-#             return obj.describe()
-#         # Let the base class default method raise the TypeError
-#         return PackEncoder.default(self, obj)
 
 
 first_argument_transformer = Transformer('first_argument', nth_arg(0))
