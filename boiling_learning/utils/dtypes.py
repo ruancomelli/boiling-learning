@@ -1,10 +1,11 @@
-from functools import partial
-from typing import Hashable, List, Mapping, Tuple, TypeVar, Union
+from __future__ import annotations
 
-import funcy
+from typing import Hashable, List, Mapping, Optional, Tuple, TypeVar, Union
+
 import tensorflow as tf
 from bidict import bidict
 from tensorflow.types.experimental import TensorLike
+from typing_extensions import TypedDict
 
 from boiling_learning.utils.functional import map_values
 
@@ -48,7 +49,15 @@ tf_str_dtype_bidict = bidict(
 )
 
 
-def encode_element_spec(element_spec):
+class EncodedElementSpec(TypedDict):
+    dtype: str
+    name: str
+    shape: Tuple[Optional[int], ...]
+
+
+def encode_element_spec(
+    element_spec: NestedTypeSpec,
+) -> NestedStructure[EncodedElementSpec]:
     if tf.nest.is_nested(element_spec):
         return {
             'nested': True,
@@ -65,7 +74,9 @@ def encode_element_spec(element_spec):
         }
 
 
-def decode_element_spec(obj):
+def decode_element_spec(
+    obj: NestedStructure[EncodedElementSpec],
+) -> NestedTypeSpec:
     nested, contents = obj['nested'], obj['contents']
 
     if nested:
@@ -82,13 +93,7 @@ def auto_spec(elem: NestedTensorLike) -> NestedTypeSpec:
     try:
         return tf.type_spec_from_value(elem)
     except TypeError:
-        if isinstance(elem, (list, tuple)):
-            return funcy.walk(partial(auto_spec), elem)
-
-        if isinstance(elem, Mapping):
-            return funcy.walk_values(partial(auto_spec), elem)
-
-        raise
+        return map_values(auto_spec, elem)
 
 
 def new_py_function(func, inp, Tout, name=None):
