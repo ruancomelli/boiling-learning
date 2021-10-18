@@ -99,7 +99,7 @@ def auto_spec(elem: NestedTensorLike) -> NestedTypeSpec:
 def auto_dtype(elem: NestedTensorLike) -> NestedStructure[tf.DType]:
     try:
         return elem.dtype
-    except TypeError:
+    except (TypeError, AttributeError):
         return map_values(auto_dtype, elem)
 
 
