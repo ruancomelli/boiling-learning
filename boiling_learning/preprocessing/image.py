@@ -64,7 +64,7 @@ def ensure_grayscale(image: ImageType) -> np.ndarray:
     return image
 
 
-@autocast(tf.float32)
+@autocast(tf.float64)
 def crop(
     image: ImageType,
     left: Optional[Union[int, float]] = None,
