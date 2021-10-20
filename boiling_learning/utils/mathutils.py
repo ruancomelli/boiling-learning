@@ -2,7 +2,7 @@ import enum
 import math
 from fractions import Fraction
 from functools import reduce
-from typing import Iterable, Tuple, TypeVar, Union, overload
+from typing import Iterable, SupportsFloat, Tuple, TypeVar, Union, overload
 
 import funcy
 
@@ -10,6 +10,8 @@ from boiling_learning.utils.typeutils import SupportsLessThanT
 
 _T = TypeVar('_T')
 _U = TypeVar('_U')
+Real = SupportsFloat
+_Real = TypeVar('_Real', bound=Real)
 
 
 class _SentinelType(enum.Enum):
