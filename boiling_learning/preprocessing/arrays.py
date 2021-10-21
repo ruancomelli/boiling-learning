@@ -5,6 +5,8 @@ import numpy as np
 from skimage.color import rgb2gray as _grayscale
 from skimage.transform import downscale_local_mean as _downscale
 
+from boiling_learning.preprocessing.transformers import transformer
+
 
 @overload
 def _ratio_to_size(
@@ -38,6 +40,7 @@ def _crop(
     return image[top:bottom, left:right, ...]
 
 
+@transformer
 def crop(
     image: np.ndarray,
     *,
@@ -113,12 +116,14 @@ def crop(
     return _crop(image, left=left, right=right, top=top, bottom=bottom)
 
 
+@transformer
 def grayscale(image: np.ndarray) -> np.ndarray:
     if image.ndim > 2 and image.shape[2] != 1:
         return _grayscale(image)
     return image
 
 
+@transformer
 def downscale(
     image: np.ndarray, factors: Union[int, Tuple[int, int]]
 ) -> np.ndarray:

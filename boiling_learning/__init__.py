@@ -11,6 +11,6 @@ import boiling_learning.utils
 
 __all__ = ['__version__', 'version_info', 'version_compact']
 
-__version__ = _version('boiling_learning')
+__version__: str = _version('boiling_learning')
 version_info = VersionInfo.parse(__version__)
 version_compact = __version__.replace('-', '')
