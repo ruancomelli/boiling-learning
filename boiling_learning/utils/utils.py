@@ -52,26 +52,15 @@ from typing_extensions import overload
 
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.iterutils import flaglast
+from boiling_learning.utils.sentinels import EMPTY
 
 # ---------------------------------- Typing ----------------------------------
 _EnumType = TypeVar('_EnumType', bound=enum.Enum)
 _TypeT = TypeVar('_TypeT', bound=Type)
-
-
-class _Sentinel(enum.Enum):
-    INSTANCE = enum.auto()
-
-    @classmethod
-    def get_instance(cls) -> _Sentinel:
-        return cls.INSTANCE
-
-
-_sentinel = _Sentinel.get_instance()
 _T = TypeVar('_T')
 _Key = TypeVar('_Key')
 _Value = TypeVar('_Value')
 S = TypeVar('S')
-SentinelOptional = Union[_Sentinel, _T]
 
 
 # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
@@ -148,11 +137,11 @@ def as_immutable(coll: dict):
 # TODO: in the *_sentinel* case, use *key=as_immutable*. Do it and test!
 def remove_duplicates(
     iterable: Iterable[_T],
-    key: Union[None, object, Dict, Callable] = _sentinel,
+    key: Union[None, object, Dict, Callable] = EMPTY,
 ) -> Iterable[_T]:
     # See <https://more-itertools.readthedocs.io/en/stable/api.html#more_itertools.unique_everseen>
 
-    if key is _sentinel:
+    if key is EMPTY:
         # use default optimization
         return remove_duplicates(
             iterable,

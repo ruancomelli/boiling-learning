@@ -40,11 +40,11 @@ from boiling_learning.io.json_encoders import (
 from boiling_learning.preprocessing.transformers import Creator, Transformer
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.Parameters import Parameters
+from boiling_learning.utils.sentinels import EMPTY, Emptiable
 from boiling_learning.utils.utils import (  # JSONDataType,; TODO: maybe using JSONDataType would be a good idea
     PathLike,
     SimpleRepr,
     VerboseType,
-    _Sentinel,
     json_equivalent,
     print_verbose,
 )
@@ -56,7 +56,6 @@ from boiling_learning.utils.utils import (  # JSONDataType,; TODO: maybe using J
 # ? Perhaps a better idea would be to have only one way to pass a description: through elem_id. No *contents*, just the id...
 # TODO: standardize "post_processor": sometimes *None* means *None*, other times it means "get the default one"
 
-_sentinel = _Sentinel.get_instance()
 _ElemType = TypeVar('_ElemType')
 _PostProcessedElemType = TypeVar('_PostProcessedElemType')
 
@@ -103,7 +102,7 @@ class Manager(
     #         self._id: str = elem_id
     #         self._is_loaded: bool = False
     #         self._path: Path = bl.utils.ensure_resolved(path)
-    #         self._value: Union[_Sentinel, _ElemType, _PostProcessedElemType]
+    #         self._value: Union[Sentinel, _ElemType, _PostProcessedElemType]
 
     #     @property
     #     def id(self) -> str:
@@ -692,12 +691,12 @@ class Manager(
         self,
         elem_id: Optional[str] = None,
         contents: Optional[Mapping] = None,
-        creator: Union[_Sentinel, Creator[_ElemType]] = _sentinel,
+        creator: Emptiable[Creator[_ElemType]] = EMPTY,
         creator_description: Pack = Pack(),
         creator_params: Pack = Pack(),
         post_processor: Optional[
-            Union[_Sentinel, Transformer[_ElemType, _PostProcessedElemType]]
-        ] = _sentinel,
+            Emptiable[Transformer[_ElemType, _PostProcessedElemType]]
+        ] = EMPTY,
         post_processor_description: Pack = Pack(),
         post_processor_params: Pack = Pack(),
         load: Union[bool, BoolFlaggedLoaderFunction[_ElemType]] = False,
@@ -711,9 +710,9 @@ class Manager(
 
         If *post_processor* is *None*, will try to use this *Manager*'s default *post_processor*.
         """
-        if creator is _sentinel:
+        if creator is EMPTY:
             creator = self.creator
-        if post_processor is _sentinel:
+        if post_processor is EMPTY:
             post_processor = self.post_processor
 
         if elem_id is None:

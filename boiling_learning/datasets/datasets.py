@@ -30,9 +30,9 @@ from boiling_learning.utils.dtypes import auto_spec
 from boiling_learning.utils.iterutils import (
     distance_maximized_evenly_spaced_indices,
 )
+from boiling_learning.utils.sentinels import EMPTY
 from boiling_learning.utils.slicerators import Slicerator
 
-_sentinel = object()
 _T = TypeVar('_T')
 
 
@@ -416,8 +416,8 @@ def features(ds: tf.data.Dataset) -> tf.data.Dataset:
 
 @triplet_aware
 @none_aware
-def targets(ds: tf.data.Dataset, key: Any = _sentinel) -> tf.data.Dataset:
-    if key is _sentinel:
+def targets(ds: tf.data.Dataset, key: Any = EMPTY) -> tf.data.Dataset:
+    if key is EMPTY:
         return ds.map(lambda x, y: y)
     else:
         return ds.map(lambda x, y: y[key])

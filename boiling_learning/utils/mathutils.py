@@ -1,4 +1,3 @@
-import enum
 import math
 from fractions import Fraction
 from functools import reduce
@@ -6,19 +5,13 @@ from typing import Iterable, SupportsFloat, Tuple, TypeVar, Union, overload
 
 import funcy
 
+from boiling_learning.utils.sentinels import EMPTY, Emptiable
 from boiling_learning.utils.typeutils import SupportsLessThanT
 
 _T = TypeVar('_T')
 _U = TypeVar('_U')
 Real = SupportsFloat
 _Real = TypeVar('_Real', bound=Real)
-
-
-class _SentinelType(enum.Enum):
-    INSTANCE = enum.auto()
-
-
-_sentinel = _SentinelType.INSTANCE
 
 
 def gcd(*args: int) -> int:
@@ -65,13 +58,13 @@ def minmax(
 
 def minmax(
     iterable: Iterable[SupportsLessThanT],
-    default: Union[_SentinelType, _U] = _sentinel,
+    default: Emptiable[_U] = EMPTY,
 ) -> Tuple[Union[SupportsLessThanT, _U], Union[SupportsLessThanT, _U]]:
     it = iter(iterable)
     try:
         first = next(it)
     except StopIteration as e:
-        if default is _sentinel:
+        if default is EMPTY:
             raise ValueError('got an empty iterable!') from e
 
         return (default, default)
