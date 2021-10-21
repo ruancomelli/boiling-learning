@@ -258,10 +258,10 @@ class SupervisedSliceableDataset(
         return SupervisedSliceableDataset.from_pairs(super().take(count))
 
     def features(self) -> SliceableDataset[_X]:
-        return self.map(itemgetter(0))
+        return super().map(itemgetter(0))
 
     def targets(self) -> SliceableDataset[_Y]:
-        return self.map(itemgetter(1))
+        return super().map(itemgetter(1))
 
     def swap(self) -> SupervisedSliceableDataset[_Y, _X]:
         return self.map(itemgetter(1, 0))
