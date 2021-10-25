@@ -94,42 +94,40 @@ class Creator(Transformer[Pack, _Y], Generic[_Y]):
         super().__init__(name, g, pack=pack)
 
 
-class ImageTransformer(
+class FeatureTransformer(
     Transformer[Tuple[_X1, _Y], Tuple[_X2, _Y]], Generic[_X1, _X2, _Y]
 ):
     def __init__(self, name: str, f: Callable[..., _X2], pack: Pack = Pack()):
-        def g(
-            img_data_pair: Tuple[_X1, _Y], *args, **kwargs
-        ) -> Tuple[_X2, _Y]:
-            def pair_transformer(img: _X1, data: _Y) -> Tuple[_X2, _Y]:
-                return f(img, *args, **kwargs), data
+        def g(pair: Tuple[_X1, _Y], *args, **kwargs) -> Tuple[_X2, _Y]:
+            def pair_transformer(feature: _X1, target: _Y) -> Tuple[_X2, _Y]:
+                return f(feature, *args, **kwargs), target
 
-            return pair_transformer(*img_data_pair)
+            return pair_transformer(*pair)
 
         super().__init__(name, g, pack=pack)
 
-    def transform_image(self, img: _X1, *args, **kwargs) -> _X2:
-        return self((img, None), *args, **kwargs)[0]
+    def transform_feature(self, feature: _X1, *args, **kwargs) -> _X2:
+        return self((feature, None), *args, **kwargs)[0]
 
 
-class ImageDatasetTransformer(
+class PairTransformer(
     Transformer[Tuple[_X1, _Y1], Tuple[_X2, _Y2]], Generic[_X1, _Y1, _X2, _Y2]
 ):
     def __init__(
         self,
         name: str,
-        image_transformer: Transformer[_X1, _X2],
-        data_transformer: Transformer[_Y1, _Y2],
+        feature_transformer: Transformer[_X1, _X2],
+        target_transformer: Transformer[_Y1, _Y2],
     ):
-        def f(img: _X1, data: _Y1) -> Tuple[_X2, _Y2]:
-            return image_transformer(img), data_transformer(data)
+        def f(feature: _X1, target: _Y1) -> Tuple[_X2, _Y2]:
+            return feature_transformer(feature), target_transformer(target)
 
         super().__init__(name, f)
 
 
-class KeyedImageDatasetTransformer(
+class KeyedFeatureTransformer(
     Transformer[Tuple[_X1, _Y], Tuple[Union[_X1, _X2], _Y]],
-    Generic[_X1, _Y, _X2],
+    Generic[_X1, _X2, _Y],
 ):
     def __init__(
         self,
@@ -143,18 +141,20 @@ class KeyedImageDatasetTransformer(
         self.packer = packer
 
         def g(
-            img_data_pair: Tuple[_X1, _Y], *args, **kwargs
+            pair: Tuple[_X1, _Y], *args, **kwargs
         ) -> Tuple[Union[_X1, _X2], _Y]:
-            def mapped_f(img: _X1, data: _Y) -> Tuple[Union[_X1, _X2], _Y]:
-                key = key_getter(data)
-                img_f = self.get_image_transformer(f, key)
-                return img_f(img), data
+            def mapped_f(
+                feature: _X1, target: _Y
+            ) -> Tuple[Union[_X1, _X2], _Y]:
+                key = key_getter(target)
+                featre_transformer = self.get_feature_transformer(f, key)
+                return featre_transformer(feature), target
 
-            return mapped_f(*img_data_pair)
+            return mapped_f(*pair)
 
         super().__init__(name, g)
 
-    def get_image_transformer(
+    def get_feature_transformer(
         self, f: Callable[..., _X2], key: Optional[str]
     ) -> Callable[[_X1], Union[_X1, _X2]]:
         if callable(self.packer):
@@ -178,10 +178,10 @@ class KeyedImageDatasetTransformer(
         return funcy.merge(super().describe(), {'packer': self.packer})
 
 
-class DictImageTransformer(
+class DictFeatureTransformer(
     FrozenNamedMixin,
     Mapping[str, Transformer[Tuple[_X1, _Y], Tuple[Union[_X1, _X2], _Y]]],
-    Generic[_X1, _Y, _X2],
+    Generic[_X1, _X2, _Y],
 ):
     def __init__(
         self,
@@ -224,10 +224,12 @@ class DictImageTransformer(
                 f'Got {type(self.packer)}'
             )
 
-    def _transformer_factory(self, key: str) -> ImageTransformer[_X1, _Y, _X2]:
+    def _transformer_factory(
+        self, key: str
+    ) -> FeatureTransformer[_X1, _X2, _Y]:
         name = '_'.join((self.name, key))
         func, pack = self._resolve_func_and_pack(key)
-        return ImageTransformer(name, func, pack)
+        return FeatureTransformer(name, func, pack)
 
     def __iter__(self) -> Iterator[str]:
         return iter(self._transformer_mapping)
@@ -235,7 +237,7 @@ class DictImageTransformer(
     def __len__(self) -> int:
         return len(self._transformer_mapping)
 
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> FeatureTransformer[_X1, _X2, _Y]:
         return self._transformer_mapping[key]
 
     def describe(self) -> JSONDataType:
