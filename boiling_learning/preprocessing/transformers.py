@@ -103,11 +103,6 @@ class ImageTransformer(
     def transform_image(self, img: T, *args, **kwargs) -> S:
         return self((img, None), *args, **kwargs)[0]
 
-    def as_image_transformer(self) -> Transformer[T, S]:
-        return Transformer(
-            '_'.join((self.name, 'image_function')), self.transform_image
-        )
-
 
 class ImageDatasetTransformer(
     Transformer[Tuple[T, U], Tuple[S, V]], Generic[T, U, S, V]
@@ -172,10 +167,7 @@ class KeyedImageDatasetTransformer(
 
 class DictImageTransformer(
     FrozenNamedMixin,
-    Mapping[
-        str,
-        Transformer[Tuple[T, U], Tuple[Union[T, S], U]],
-    ],
+    Mapping[str, Transformer[Tuple[T, U], Tuple[Union[T, S], U]]],
     Generic[T, U, S],
 ):
     def __init__(
