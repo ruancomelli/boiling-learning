@@ -11,7 +11,7 @@ import random
 import re
 import string
 import zlib
-from collections import ChainMap, defaultdict
+from collections import ChainMap
 from contextlib import contextmanager
 from functools import partial, wraps
 from itertools import product
@@ -22,6 +22,7 @@ from typing import (
     Any,
     Callable,
     Collection,
+    DefaultDict,
     Dict,
     Iterable,
     Iterator,
@@ -392,13 +393,13 @@ def map_keys(dct, key_map):
     return {v: dct[k] for k, v in key_map.items()}
 
 
-class KeyedDefaultDict(defaultdict):
+class KeyedDefaultDict(DefaultDict[_Key, _Value]):
     '''
 
     Source: https://stackoverflow.com/a/2912455/5811400
     '''
 
-    def __missing__(self, key):
+    def __missing__(self, key: _Key) -> _Value:
         if self.default_factory is None:
             raise KeyError(key)
 

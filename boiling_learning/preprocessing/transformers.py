@@ -189,9 +189,13 @@ class DictFeatureTransformer(
         f: Callable[..., _X2],
         packer: Union[Callable[[str], Pack], Mapping[Optional[str], Pack]],
     ):
-        self.packer = packer
-        self._transformer_mapping = KeyedDefaultDict(self._transformer_factory)
-        self.func = f
+        self.packer: Union[
+            Callable[[str], Pack], Mapping[Optional[str], Pack]
+        ] = packer
+        self._transformer_mapping: KeyedDefaultDict[
+            str, FeatureTransformer[_X1, _X2, _Y]
+        ] = KeyedDefaultDict(self._transformer_factory)
+        self.func: Callable[..., _X2] = f
         super().__init__(name)
 
     def _resolve_func_and_pack(
