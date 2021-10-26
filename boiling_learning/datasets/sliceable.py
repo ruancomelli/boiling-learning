@@ -20,6 +20,7 @@ from typing import (
 import more_itertools as mit
 import numpy as np
 import tensorflow as tf
+from plum import Dispatcher
 from slicerator import pipeline
 
 from boiling_learning.utils.dtypes import auto_spec
@@ -28,7 +29,13 @@ from boiling_learning.utils.slicerators import Slicerator
 _T = TypeVar('_T')
 _U = TypeVar('_U')
 _X = TypeVar('_X')
+_X1 = TypeVar('_X1')
+_X2 = TypeVar('_X2')
 _Y = TypeVar('_Y')
+_Y1 = TypeVar('_Y1')
+_Y2 = TypeVar('_Y2')
+
+_dispatch = Dispatcher()
 
 
 class SliceableDataset(Sequence[_T]):
@@ -244,8 +251,8 @@ class SupervisedSliceableDataset(
         return SupervisedSliceableDataset.from_pairs(super().filter(predicate))
 
     def map(
-        self, map_func: Callable[[Tuple[_X, _Y]], Tuple[_T, _U]]
-    ) -> SupervisedSliceableDataset[_T, _U]:
+        self, map_func: Callable[[Tuple[_X, _Y]], Tuple[_X2, _Y2]]
+    ) -> SupervisedSliceableDataset[_X2, _Y2]:
         return SupervisedSliceableDataset.from_pairs(super().map(map_func))
 
     def shuffle(self) -> SupervisedSliceableDataset[_X, _Y]:
@@ -270,17 +277,17 @@ class SupervisedSliceableDataset(
         return self.features(), self.targets()
 
     def map_features(
-        self, map_func: Callable[[_X], _T]
-    ) -> SupervisedSliceableDataset[_T, _Y]:
-        def _map_func(pair: Tuple[_X, _Y]) -> Tuple[_T, _Y]:
+        self, map_func: Callable[[_X], _X2]
+    ) -> SupervisedSliceableDataset[_X2, _Y]:
+        def _map_func(pair: Tuple[_X, _Y]) -> Tuple[_X2, _Y]:
             return map_func(pair[0]), pair[1]
 
         return self.map(_map_func)
 
     def map_targets(
-        self, map_func: Callable[[_Y], _T]
-    ) -> SupervisedSliceableDataset[_X, _T]:
-        def _map_func(pair: Tuple[_X, _Y]) -> Tuple[_X, _T]:
+        self, map_func: Callable[[_Y], _Y2]
+    ) -> SupervisedSliceableDataset[_X, _Y2]:
+        def _map_func(pair: Tuple[_X, _Y]) -> Tuple[_X, _Y2]:
             return pair[0], map_func(pair[1])
 
         return self.map(_map_func)
@@ -305,3 +312,37 @@ class SupervisedSliceableDataset(
 ImageSliceableDataset = SupervisedSliceableDataset[np.ndarray, _Y]
 AnnotatedImageSliceableDataset = ImageSliceableDataset[Dict[str, Any]]
 RegressionImageSliceableDataset = ImageSliceableDataset[float]
+
+PairTransformer = Callable[[_X1, _Y1], Tuple[_X2, _Y2]]
+FeatureTransformer = PairTransformer[_X1, _Y, _X2, _Y]
+TargetTransformer = PairTransformer[_X, _Y1, _X, _Y2]
+
+
+class SupervisedSliceableDatasetPairTransformer(Generic[_X1, _Y1, _X2, _Y2]):
+    def __init__(self, call: PairTransformer[_X1, _Y1, _X2, _Y2]) -> None:
+        self.call: PairTransformer[_X1, _Y1, _X2, _Y2] = call
+
+    def map_to_dataset(
+        self, dataset: SupervisedSliceableDataset[_X1, _Y1]
+    ) -> SupervisedSliceableDataset[_X2, _Y2]:
+        return dataset.map(self.call)
+
+
+class SupervisedSliceableDatasetFeatureTransformer(Generic[_X1, _X2]):
+    def __init__(self, call: Callable[[_X1], _X2]) -> None:
+        self.call: Callable[[_X1], _X2] = call
+
+    def map_to_dataset(
+        self, dataset: SupervisedSliceableDataset[_X1, _Y]
+    ) -> SupervisedSliceableDataset[_X2, _Y]:
+        return dataset.map_features(self.call)
+
+
+class SupervisedSliceableDatasetTargetTransformer(Generic[_Y1, _Y2]):
+    def __init__(self, call: Callable[[_Y1], _Y2]) -> None:
+        self.call: Callable[[_Y1], _Y2] = call
+
+    def map_to_dataset(
+        self, dataset: SupervisedSliceableDataset[_X, _Y1]
+    ) -> SupervisedSliceableDataset[_X, _Y2]:
+        return dataset.map_targets(self.call)

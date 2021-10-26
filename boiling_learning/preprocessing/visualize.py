@@ -29,7 +29,7 @@ from boiling_learning.preprocessing.Case import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.ImageDataset import ImageDataset
 from boiling_learning.preprocessing.transformers import (
-    DictImageTransformer,
+    DictFeatureTransformer,
     Transformer,
 )
 from boiling_learning.utils.functional import P, Pack, nth_arg
@@ -113,25 +113,25 @@ _first_arg_getter = Transformer('first_argument', nth_arg(0))
 DEFAULT_VISUALIZERS = frozendict(
     {
         'grayscaler': lambda transformer, image: (
-            (transformer.transform_image, image, transformer.pack),
+            (transformer.transform_feature, image, transformer.pack),
         ),
         'normalizer': lambda transformer, image: (
-            (transformer.transform_image, image, transformer.pack),
+            (transformer.transform_feature, image, transformer.pack),
         ),
         'downscaler': lambda transformer, image: (
-            (transformer.transform_image, image, transformer.pack),
+            (transformer.transform_feature, image, transformer.pack),
         ),
         'region_cropper': lambda transformer, image: (
-            (transformer.transform_image, image, transformer.pack),
+            (transformer.transform_feature, image, transformer.pack),
         ),
         'visualization_shrinker': lambda transformer, image: (
-            (transformer.transform_image, image, transformer.pack),
+            (transformer.transform_feature, image, transformer.pack),
         ),
         'final_height_shrinker': lambda transformer, image: (
-            (transformer.transform_image, image, transformer.pack),
+            (transformer.transform_feature, image, transformer.pack),
         ),
         'random_cropper': lambda transformer, image: (
-            (transformer.transform_image, image, transformer.pack),
+            (transformer.transform_feature, image, transformer.pack),
         ),
         'random_left_right_flipper': lambda transformer, image: (
             (_first_arg_getter, image, P()),
@@ -293,7 +293,7 @@ def _visualize_transformations_plt(
     for transformer in transformers:
         transformer_name = transformer.name
         print(transformer_name)
-        if isinstance(transformer, DictImageTransformer):
+        if isinstance(transformer, DictFeatureTransformer):
             transformer = transformer[ev.name]
 
         visualizer = visualizers[transformer_name]
@@ -317,7 +317,7 @@ def _visualize_transformations_plt(
             ax.set_xlabel(xlabel)
 
         figs.append(fig)
-        image = transformer.transform_image(image)
+        image = transformer.transform_feature(image)
     return figs
 
 
@@ -406,7 +406,7 @@ def _visualize_transformations_bokeh(
     for first, _, transformer in mit.mark_ends(transformers):
         transformer_name = transformer.name
         print(transformer_name)
-        if isinstance(transformer, DictImageTransformer):
+        if isinstance(transformer, DictFeatureTransformer):
             transformer = transformer[ev.name]
 
         annotator = annotators[transformer_name]
@@ -428,7 +428,7 @@ def _visualize_transformations_bokeh(
                 bokeh.models.Div(text=visualization_title), p_canvas
             )
 
-        image = transformer.transform_image(image)
+        image = transformer.transform_feature(image)
         ps.append(p_canvas)
 
     return ps

@@ -98,7 +98,7 @@ class Manager(
     #             path: PathLike,
     #             load_method: BoolFlaggedLoaderFunction[_ElemType],
     #             save_method: SaverFunction[_ElemType]
-    #     ):
+    #     ) -> None:
     #         self._id: str = elem_id
     #         self._is_loaded: bool = False
     #         self._path: Path = bl.utils.ensure_resolved(path)
@@ -141,7 +141,7 @@ class Manager(
         description_comparer: Callable[
             [Mapping[str, Any], Mapping[str, Any]], bool
         ] = _default_description_comparer,
-    ):
+    ) -> None:
         '''
         The Manager's directory is structure like this:
         path/

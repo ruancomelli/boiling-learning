@@ -14,7 +14,7 @@ class FrozenDict(dict, Mapping[_Key, _Value]):
     Some modifications based on: https://www.python.org/dev/peps/pep-0603/
     '''
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         self._hash = None
         super().__init__(*args, **kwargs)
 

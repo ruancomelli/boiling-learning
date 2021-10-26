@@ -39,7 +39,7 @@ class ExperimentalData:
         path: Optional[PathLike] = None,
         data_path: Optional[PathLike] = None,
         description_path: Optional[PathLike] = None,
-    ):
+    ) -> None:
         if (path, data_path).count(None) != 1:
             raise ValueError(
                 'exactly one of path or data_path must be given as parameter.'

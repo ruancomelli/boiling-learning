@@ -43,7 +43,7 @@ class Channel(bl.utils.SimpleRepr, bl.utils.SimpleStr):
         description: str = '',
         type1: ChannelType = ChannelType.UNDEFINED,
         type2: ChannelType = ChannelType.UNDEFINED,
-    ):
+    ) -> None:
         self.device = device
         self.name = name
         self.description = description

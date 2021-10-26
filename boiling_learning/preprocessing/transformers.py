@@ -35,7 +35,9 @@ V = TypeVar('V')
 
 
 class Transformer(FrozenNamedMixin, SimpleStr, Generic[_X, _Y]):
-    def __init__(self, name: str, f: Callable[..., _Y], pack: Pack = Pack()):
+    def __init__(
+        self, name: str, f: Callable[..., _Y], pack: Pack = Pack()
+    ) -> None:
         super().__init__(name)
 
         self.pack = pack
@@ -82,7 +84,7 @@ class Creator(Transformer[Pack, _Y], Generic[_Y]):
         f: Callable[..., _Y],
         pack: Pack = Pack(),
         expand_pack_on_call: bool = False,
-    ):
+    ) -> None:
         if expand_pack_on_call:
 
             def g(pack: Pack, *args, **kwargs) -> _Y:
@@ -97,7 +99,9 @@ class Creator(Transformer[Pack, _Y], Generic[_Y]):
 class FeatureTransformer(
     Transformer[Tuple[_X1, _Y], Tuple[_X2, _Y]], Generic[_X1, _X2, _Y]
 ):
-    def __init__(self, name: str, f: Callable[..., _X2], pack: Pack = Pack()):
+    def __init__(
+        self, name: str, f: Callable[..., _X2], pack: Pack = Pack()
+    ) -> None:
         def g(pair: Tuple[_X1, _Y], *args, **kwargs) -> Tuple[_X2, _Y]:
             def pair_transformer(feature: _X1, target: _Y) -> Tuple[_X2, _Y]:
                 return f(feature, *args, **kwargs), target
@@ -118,7 +122,7 @@ class PairTransformer(
         name: str,
         feature_transformer: Transformer[_X1, _X2],
         target_transformer: Transformer[_Y1, _Y2],
-    ):
+    ) -> None:
         def f(feature: _X1, target: _Y1) -> Tuple[_X2, _Y2]:
             return feature_transformer(feature), target_transformer(target)
 
@@ -137,7 +141,7 @@ class KeyedFeatureTransformer(
         key_getter: Callable[[_Y], Optional[str]] = operator.itemgetter(
             'name'
         ),
-    ):
+    ) -> None:
         self.packer = packer
 
         def g(
@@ -188,7 +192,7 @@ class DictFeatureTransformer(
         name: str,
         f: Callable[..., _X2],
         packer: Union[Callable[[str], Pack], Mapping[Optional[str], Pack]],
-    ):
+    ) -> None:
         self.packer: Union[
             Callable[[str], Pack], Mapping[Optional[str], Pack]
         ] = packer

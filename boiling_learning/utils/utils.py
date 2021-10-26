@@ -358,7 +358,7 @@ class inclusive_bidict(dict):
     Source: <https://stackoverflow.com/a/21894086/5811400>
     '''
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.inverse = {}
         for key, value in self.items():
@@ -959,13 +959,13 @@ def simple_pprint_class(cls: _TypeT, *names: str) -> _TypeT:
 
 # ---------------------------------- Mixins ----------------------------------
 class NamedMixin:
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.name: str = name
 
 
 class FrozenNamedMixin:
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._name: str = name
 

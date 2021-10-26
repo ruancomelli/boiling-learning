@@ -4,7 +4,7 @@ from boiling_learning.utils.utils import DictEq, SimpleRepr, SimpleStr
 
 
 class Device(SimpleRepr, SimpleStr, DictEq):
-    def __init__(self, name: str = ''):
+    def __init__(self, name: str = '') -> None:
         self.name = name
 
     @property

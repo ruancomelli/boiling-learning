@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 from tinydb import TinyDB
 from tinydb.table import Table
@@ -14,7 +14,7 @@ from boiling_learning.utils.utils import (
     ensure_resolved,
 )
 
-Allocator = Callable[[Pack], Path]
+Allocator = Callable[[Pack[Any, Any]], Path]
 
 
 class TableAllocator:
@@ -22,11 +22,11 @@ class TableAllocator:
         self,
         path: PathLike,
         db: Table,
-        serializer: Callable[[Pack], JSONDataType] = json_serialize,
+        serializer: Callable[[Pack[Any, Any]], JSONDataType] = json_serialize,
     ) -> None:
         self.path: Path = ensure_resolved(path)
         self.db: Table = db
-        self.serializer: Callable[[Pack], JSONDataType] = serializer
+        self.serializer: Callable[[Pack[Any, Any]], JSONDataType] = serializer
 
     def _doc_path(self, doc_id: int) -> Path:
         return ensure_parent(self.path / f'{doc_id}.json')
@@ -37,7 +37,7 @@ class TableAllocator:
                 return doc.doc_id
         return self.db.insert(serialized)
 
-    def __call__(self, pack: Pack) -> Path:
+    def __call__(self, pack: Pack[Any, Any]) -> Path:
         serialized: JSONDataType = self.serializer(pack)
         doc_id: int = self._provide(serialized)
         return self._doc_path(doc_id)

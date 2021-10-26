@@ -21,7 +21,7 @@ from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.ImageDataset import ImageDataset
 from boiling_learning.preprocessing.preprocessing import snapshotter
 from boiling_learning.preprocessing.transformers import (
-    DictImageTransformer,
+    DictFeatureTransformer,
     Transformer,
     creator,
     transformer,
@@ -114,7 +114,7 @@ def dataset_creator(
     for name, ev in image_dataset.items():
         _data_preprocessors = [
             data_preprocessor[name]
-            if isinstance(data_preprocessor, DictImageTransformer)
+            if isinstance(data_preprocessor, DictFeatureTransformer)
             else data_preprocessor
             for data_preprocessor in data_preprocessors
         ]

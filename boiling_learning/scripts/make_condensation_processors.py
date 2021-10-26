@@ -9,8 +9,8 @@ from boiling_learning.preprocessing.image import (
     random_crop,
 )
 from boiling_learning.preprocessing.transformers import (
-    DictImageTransformer,
-    ImageTransformer,
+    DictFeatureTransformer,
+    FeatureTransformer,
     Transformer,
 )
 from boiling_learning.utils.functional import P
@@ -20,8 +20,8 @@ def main(
     downscale_factor: int = 5, height: int = 8 * 12, width: int = 8 * 12
 ) -> Tuple[List[Transformer], List[Transformer]]:
     preprocessors = [
-        ImageTransformer('grayscaler', tf.image.rgb_to_grayscale),
-        DictImageTransformer(
+        FeatureTransformer('grayscaler', tf.image.rgb_to_grayscale),
+        DictFeatureTransformer(
             'region_cropper',
             crop,
             {
@@ -159,7 +159,7 @@ def main(
                 ),
             },
         ),
-        ImageTransformer(
+        FeatureTransformer(
             'downscaler',
             downscale,
             pack=P((downscale_factor, downscale_factor, 1), antialias=True),
@@ -167,19 +167,19 @@ def main(
     ]
 
     augmentors = [
-        ImageTransformer(
+        FeatureTransformer(
             'random_cropper', random_crop, pack=P((height, width, None))
         ),
-        ImageTransformer(
+        FeatureTransformer(
             'random_left_right_flipper', tf.image.flip_left_right
         ),
-        ImageTransformer(
+        FeatureTransformer(
             'random_brightness', random_brightness, pack=P(-0.2, 0.2)
         ),
-        ImageTransformer(
+        FeatureTransformer(
             'random_contrast', tf.image.random_contrast, pack=P(0.6, 1.4)
         ),
-        ImageTransformer(
+        FeatureTransformer(
             'random_quality', tf.image.random_jpeg_quality, pack=P(30, 100)
         ),
     ]

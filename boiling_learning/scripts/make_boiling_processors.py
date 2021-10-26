@@ -10,8 +10,8 @@ from boiling_learning.preprocessing.image import (
     shrink,
 )
 from boiling_learning.preprocessing.transformers import (
-    DictImageTransformer,
-    ImageTransformer,
+    DictFeatureTransformer,
+    FeatureTransformer,
     Transformer,
 )
 from boiling_learning.utils.functional import P
@@ -26,8 +26,8 @@ def main(
     width: int = 128,
 ) -> Tuple[List[Transformer], List[Transformer]]:
     preprocessors = [
-        ImageTransformer('grayscaler', tf.image.rgb_to_grayscale),
-        DictImageTransformer(
+        FeatureTransformer('grayscaler', tf.image.rgb_to_grayscale),
+        DictFeatureTransformer(
             'region_cropper',
             crop,
             {
@@ -166,12 +166,12 @@ def main(
                 'GOPR2960': P(left=980, right=1810, top=400, bottom=1350),
             },
         ),
-        ImageTransformer(
+        FeatureTransformer(
             'downscaler',
             downscale,
             pack=P((downscale_factor, downscale_factor, 1), antialias=True),
         ),
-        ImageTransformer(
+        FeatureTransformer(
             'visualization_shrinker',
             shrink,
             pack=P(
@@ -181,7 +181,7 @@ def main(
                 bottom=(0 if direct_visualization else indirect_height_ratio),
             ),
         ),
-        ImageTransformer(
+        FeatureTransformer(
             'final_height_shrinker',
             shrink,
             pack=P(
@@ -196,19 +196,19 @@ def main(
     ]
 
     augmentors = [
-        ImageTransformer(
+        FeatureTransformer(
             'random_cropper', random_crop, pack=P((None, width, None))
         ),
-        ImageTransformer(
+        FeatureTransformer(
             'random_left_right_flipper', tf.image.flip_left_right
         ),
-        ImageTransformer(
+        FeatureTransformer(
             'random_brightness', random_brightness, pack=P(-0.2, 0.2)
         ),
-        ImageTransformer(
+        FeatureTransformer(
             'random_contrast', tf.image.random_contrast, pack=P(0.6, 1.4)
         ),
-        ImageTransformer(
+        FeatureTransformer(
             'random_quality', tf.image.random_jpeg_quality, pack=P(30, 100)
         ),
     ]

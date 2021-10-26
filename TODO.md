@@ -21,8 +21,8 @@
 - [ ] Document code.
 - [ ] Check for inconsistent input values in many functions, some of which are marked with a comment like `# TODO: use check_value_match`.
 - [ ] In the `ExperimentImages` class, many properties can be converted to cached properties. Python 3.8 is be necessary.
-- [ ] Allow the user to choose if only the train data must be modified `ImageDatasetTransformer`.
-- [ ] Allow dataset augmentation, not only transformation in `ImageDatasetTransformer`.
+- [ ] Allow the user to choose if only the train data must be modified `PairTransformer`.
+- [ ] Allow dataset augmentation, not only transformation in `PairTransformer`.
 - [ ] In `boiling_learning.model.restore`: allow a complete dictionary of important keys, not only epoch. For instance, `keys={'epoch_str': int, 'val_acc': float}`.
 - [ ] Implement asynchronous `UserPool`.
 - [x] In the `Parameters` class, allow getting `dict` keys. Usage: getting from a `dict` creates a branch:
@@ -255,7 +255,7 @@ d_flatten = flattendict(
 - [x] For many parameters, and above all for setting key names, how about creating a specialized `dataclasses.dataclass`? For instance, instead of:
 ```python
 class CSVDataset:
-  def __init__(self, path: Path, features_columns: Optional[List[str]] = None, target_column: str = 'target'):
+  def __init__(self, path: Path, features_columns: Optional[List[str]] = None, target_column: str = 'target') -> None:
     if features_columns is None:
       features_columns = ['image_path']
 
@@ -273,7 +273,7 @@ class CSVDatasetColumns:
   target_column: str = 'target'
 
 class CSVDataset:
-  def __init__(self, path: Path, csv_columns: CSVDatasetColumns = CSVDatasetColumns()):
+  def __init__(self, path: Path, csv_columns: CSVDatasetColumns = CSVDatasetColumns()) -> None:
     X = pd.read_csv(path, columns=csv_columns.features_columns + [csv_columns.target_column])
     self.y = X.pop(csv_columns.target_column)
     self.X = X

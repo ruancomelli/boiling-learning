@@ -51,7 +51,7 @@ class Parameters(MutableMapping, SimpleRepr, SimpleStr):
         for k, v in key.items():
             d[k] = value[v]
 
-    def __init__(self, params=None, config=None):
+    def __init__(self, params=None, config=None) -> None:
         if params is None:
             params = {}
         self.params = params

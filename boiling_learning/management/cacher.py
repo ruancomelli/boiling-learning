@@ -1,6 +1,5 @@
-from functools import partial
 from pathlib import Path
-from typing import Callable, Iterable, TypeVar, Union
+from typing import Any, Callable, Dict, Iterable, Tuple, TypeVar, Union
 
 import wrapt
 
@@ -16,7 +15,9 @@ from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.utils import PathLike
 
 _T = TypeVar('_T')
-_Callable = TypeVar('_Callable', bound=Callable)
+_ArgType = TypeVar('_ArgType')
+_KwargType = TypeVar('_KwargType')
+_CallableT = TypeVar('_CallableT', bound=Callable[..., Any])
 
 
 def cache(
@@ -28,20 +29,24 @@ def cache(
         NotADirectoryError,
     ),
     autosave: bool = True,
-) -> Callable[[_Callable], _Callable]:
+) -> Callable[[_CallableT], _CallableT]:
     @wrapt.decorator
     def cacher(
-        wrapped: Callable[..., _T], instance: None, args: tuple, kwargs: dict
+        wrapped: Callable[..., _T],
+        instance: None,
+        args: Tuple[_ArgType],
+        kwargs: Dict[str, _KwargType],
     ) -> _T:
-        pack: Pack = Pack(args, kwargs)
+        pack: Pack[_ArgType, _KwargType] = Pack(args, kwargs)
         path: Path = allocator(pack)
+        creator: Callable[[], _T] = pack.partial(wrapped)
 
         provider: FileProvider = FileProvider(
             path,
             Provider(
                 saver=saver,
                 loader=loader,
-                creator=partial(wrapped, *args, **kwargs),
+                creator=creator,
                 exceptions=exceptions,
                 autosave=autosave,
             ),
@@ -54,7 +59,7 @@ def cache(
 
 def json_cache(
     root: PathLike, autosave: bool = True
-) -> Callable[[_Callable], _Callable]:
+) -> Callable[[_CallableT], _CallableT]:
     return cache(
         allocator=default_table_allocator(root),
         saver=save_json,

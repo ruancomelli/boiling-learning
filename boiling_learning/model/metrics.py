@@ -58,7 +58,7 @@ class RSquare(Metric):
         y_shape: Tuple[int, ...] = (),
         multioutput: str = 'uniform_average',
         **kwargs,
-    ):
+    ) -> None:
         super().__init__(name=name, dtype=dtype, **kwargs)
         self.y_shape = y_shape
 

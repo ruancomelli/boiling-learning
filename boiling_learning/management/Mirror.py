@@ -42,7 +42,7 @@ class Mirror:
     class Fork(dict):
         pass
 
-    def __init__(self, config_params, **kwargs):
+    def __init__(self, config_params, **kwargs) -> None:
         self.config = config_params
         self.contents = kwargs
         self.forks = {}

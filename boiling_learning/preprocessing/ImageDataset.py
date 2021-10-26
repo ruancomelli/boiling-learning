@@ -67,7 +67,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         df_path: Optional[PathLike] = None,
         exist_load: bool = False,
         tags: Iterable[str] = (),
-    ):
+    ) -> None:
         self._name: str = name
         self.column_names: self.DataFrameColumnNames = column_names
         self.column_types: self.DataFrameColumnTypes = column_types
