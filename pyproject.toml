@@ -120,7 +120,7 @@ yogadl = "^0.1.4"
 zict = "^2.0"
 modin = {extras = ["ray"], version = "^0.11.1"}
 seaborn = "^0.11.2"
-tensorflow = "^2.6.0"
+tensorflow = "^2.7.0-rc1"
 slicerator = "^1.0.0"
 albumentations = "^1.1.0"
 
