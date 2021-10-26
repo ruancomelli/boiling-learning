@@ -85,15 +85,11 @@ def _interact_dataset_frames(
     )
 
 
-def main(
-    datasets: Iterable[ImageDataset], colab_backend: bool = False
-) -> None:
+def main(datasets: Iterable[ImageDataset], colab_backend: bool = False) -> None:
     datasets = tuple(datasets)
 
     imshow = (
-        google_colab_imshow
-        if colab_backend and google_colab_imshow is not None
-        else cv_imshow
+        google_colab_imshow if colab_backend and google_colab_imshow is not None else cv_imshow
     )
 
     # rescale images since float images are considered to be in [0, 1]
@@ -106,6 +102,4 @@ def main(
 
 
 if __name__ == '__main__':
-    raise RuntimeError(
-        '*interact_frames* cannot be executed as a standalone script yet.'
-    )
+    raise RuntimeError('*interact_frames* cannot be executed as a standalone script yet.')

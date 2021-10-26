@@ -33,9 +33,7 @@ def main(
     figsize: Tuple[int, int] = (7, 5),
 ) -> None:
     image = ensure_grayscale(image)
-    downscale_factors = sorted(
-        frozenset(downscale_factors) | {1, final_downscale_factor}
-    )
+    downscale_factors = sorted(frozenset(downscale_factors) | {1, final_downscale_factor})
 
     for name, scorer in metrics.items():
         ev_ds = evaluate_downsampling(

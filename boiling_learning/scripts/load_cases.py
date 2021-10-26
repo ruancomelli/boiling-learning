@@ -21,9 +21,7 @@ def main(
     options: Options,
     verbose: bool = True,
 ) -> Tuple[Case, ...]:
-    cases = tuple(
-        Case(casepath, video_suffix=video_suffix) for casepath in casepaths
-    )
+    cases = tuple(Case(casepath, video_suffix=video_suffix) for casepath in casepaths)
 
     for case in cases:
         if verbose:
@@ -31,9 +29,7 @@ def main(
 
         if options.convert_videos:
             print_verbose(verbose, 'Converting videos')
-            case.convert_videos(
-                '.mp4', 'converted', verbose=True, overwrite=False
-            )
+            case.convert_videos('.mp4', 'converted', verbose=True, overwrite=False)
         if options.extract_audios:
             print_verbose(verbose, 'Extracting audios')
             case.extract_audios(verbose=True)
@@ -53,6 +49,4 @@ def main(
 
 
 if __name__ == '__main__':
-    raise RuntimeError(
-        '*load_cases* cannot be executed as a standalone script yet.'
-    )
+    raise RuntimeError('*load_cases* cannot be executed as a standalone script yet.')

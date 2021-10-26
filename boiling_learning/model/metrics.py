@@ -7,21 +7,15 @@ from tensorflow.python.ops import weights_broadcast_ops
 from tensorflow_addons.utils.types import AcceptableDTypes
 from typeguard import typechecked
 
-VALID_MULTIOUTPUT = frozenset(
-    {'raw_values', 'uniform_average', 'variance_weighted'}
-)
+VALID_MULTIOUTPUT = frozenset({'raw_values', 'uniform_average', 'variance_weighted'})
 
 
-def _reduce_average(
-    input_tensor: tf.Tensor, axis=None, keepdims=False, weights=None
-) -> tf.Tensor:
+def _reduce_average(input_tensor: tf.Tensor, axis=None, keepdims=False, weights=None) -> tf.Tensor:
     """Computes the (weighted) mean of elements across dimensions of a tensor."""
     if weights is None:
         return tf.reduce_mean(input_tensor, axis=axis, keepdims=keepdims)
 
-    weighted_sum = tf.reduce_sum(
-        weights * input_tensor, axis=axis, keepdims=keepdims
-    )
+    weighted_sum = tf.reduce_sum(weights * input_tensor, axis=axis, keepdims=keepdims)
     sum_of_weights = tf.reduce_sum(weights, axis=axis, keepdims=keepdims)
     return weighted_sum / sum_of_weights
 
@@ -72,15 +66,9 @@ class RSquare(Metric):
         self.squared_sum = self.add_weight(
             name='squared_sum', shape=(), initializer='zeros', dtype=dtype
         )
-        self.sum = self.add_weight(
-            name='sum', shape=(), initializer='zeros', dtype=dtype
-        )
-        self.res = self.add_weight(
-            name='residual', shape=(), initializer='zeros', dtype=dtype
-        )
-        self.count = self.add_weight(
-            name='count', shape=(), initializer='zeros', dtype=dtype
-        )
+        self.sum = self.add_weight(name='sum', shape=(), initializer='zeros', dtype=dtype)
+        self.res = self.add_weight(name='residual', shape=(), initializer='zeros', dtype=dtype)
+        self.count = self.add_weight(name='count', shape=(), initializer='zeros', dtype=dtype)
 
     def update_state(self, y_true, y_pred, sample_weight=None) -> None:
         y_true = tf.cast(y_true, dtype=self._dtype)
@@ -95,12 +83,8 @@ class RSquare(Metric):
 
         weighted_y_true = y_true * sample_weight
         self.sum.assign_add(tf.reduce_sum(weighted_y_true, axis=0))
-        self.squared_sum.assign_add(
-            tf.reduce_sum(y_true * weighted_y_true, axis=0)
-        )
-        self.res.assign_add(
-            tf.reduce_sum(tf.square(y_true - y_pred) * sample_weight, axis=0)
-        )
+        self.squared_sum.assign_add(tf.reduce_sum(y_true * weighted_y_true, axis=0))
+        self.res.assign_add(tf.reduce_sum(tf.square(y_true - y_pred) * sample_weight, axis=0))
         self.count.assign_add(tf.reduce_sum(sample_weight, axis=0))
 
     def result(self) -> tf.Tensor:

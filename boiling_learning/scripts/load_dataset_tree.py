@@ -3,12 +3,7 @@ from typing import List
 from dataclassy import dataclass
 
 from boiling_learning.preprocessing import ExperimentVideo, ImageDataset
-from boiling_learning.utils.utils import (
-    PathLike,
-    ensure_resolved,
-    print_header,
-    print_verbose,
-)
+from boiling_learning.utils.utils import PathLike, ensure_resolved, print_header, print_verbose
 
 
 @dataclass(frozen=True)
@@ -19,9 +14,7 @@ class Options:
     extract_frames: bool = False
 
 
-def main(
-    datapath: PathLike, options: Options, verbose: bool = True
-) -> List[ImageDataset]:
+def main(datapath: PathLike, options: Options, verbose: bool = True) -> List[ImageDataset]:
     datapath = ensure_resolved(datapath)
 
     datasets: List[ImageDataset] = []
@@ -74,6 +67,4 @@ def main(
 
 
 if __name__ == '__main__':
-    raise RuntimeError(
-        '*load_dataset_tree* cannot be executed as a standalone script yet.'
-    )
+    raise RuntimeError('*load_dataset_tree* cannot be executed as a standalone script yet.')

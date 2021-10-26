@@ -17,9 +17,7 @@ ImageType = tf.types.experimental.TensorLike
 CallableT = TypeVar('CallableT', bound=Callable[..., Any])
 
 
-def reshape_to_largest(
-    image0: np.ndarray, image1: np.ndarray
-) -> Tuple[np.ndarray, np.ndarray]:
+def reshape_to_largest(image0: np.ndarray, image1: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     if image0.shape != image1.shape:
         max_shape = np.maximum(image0.shape, image1.shape)
         image0 = resize(image0, max_shape)
@@ -27,18 +25,14 @@ def reshape_to_largest(
     return image0, image1
 
 
-def _ratio_to_size(
-    image: ImageType, x: Optional[Union[int, float]], axis: int
-) -> Optional[int]:
+def _ratio_to_size(image: ImageType, x: Optional[Union[int, float]], axis: int) -> Optional[int]:
     if isinstance(x, float):
         return int(x * image.shape[axis])
     else:
         return x
 
 
-def ensure_tensor(
-    image: ImageType, *, dtype: Optional[tf.DType] = None
-) -> tf.Tensor:
+def ensure_tensor(image: ImageType, *, dtype: Optional[tf.DType] = None) -> tf.Tensor:
     image = tf.convert_to_tensor(image)
     if dtype is not None:
         image = tf.cast(image, dtype=dtype)
@@ -75,13 +69,9 @@ def crop(
     width: Optional[Union[int, float]] = None,
 ) -> tf.Tensor:
     if (left, right, width).count(None) != 1:
-        raise ValueError(
-            'exactly one of *left*, *right* and *width* must be None'
-        )
+        raise ValueError('exactly one of *left*, *right* and *width* must be None')
     if (top, bottom, height).count(None) != 1:
-        raise ValueError(
-            'exactly one of *top*, *bottom* and *height* must be None'
-        )
+        raise ValueError('exactly one of *top*, *bottom* and *height* must be None')
 
     left = _ratio_to_size(image, left, axis=1)
     right = _ratio_to_size(image, right, axis=1)
@@ -120,13 +110,9 @@ def shrink(
     width: Optional[Union[int, float]] = None,
 ) -> tf.Tensor:
     if (left, right, width).count(None) != 1:
-        raise ValueError(
-            'exactly one of *left*, *right* and *width* must be None'
-        )
+        raise ValueError('exactly one of *left*, *right* and *width* must be None')
     if (top, bottom, height).count(None) != 1:
-        raise ValueError(
-            'exactly one of *top*, *bottom* and *height* must be None'
-        )
+        raise ValueError('exactly one of *top*, *bottom* and *height* must be None')
 
     left = _ratio_to_size(image, left, axis=1)
     right = _ratio_to_size(image, right, axis=1)
@@ -164,13 +150,9 @@ def shift(
     # source: <https://stackoverflow.com/questions/47961447/shift-image-in-scikit-image-python>
 
     if (shift_left, shift_right).count(None) != 1:
-        raise ValueError(
-            'exactly one of *shift_left* and *shift_right* must be None'
-        )
+        raise ValueError('exactly one of *shift_left* and *shift_right* must be None')
     if (shift_down, shift_up).count(None) != 1:
-        raise ValueError(
-            'exactly one of *shift_down* and *shift_up* must be None'
-        )
+        raise ValueError('exactly one of *shift_down* and *shift_up* must be None')
 
     shift_left = _ratio_to_size(image, shift_left, axis=1)
     shift_right = _ratio_to_size(image, shift_right, axis=1)
@@ -191,9 +173,7 @@ def shift(
 
 
 @autocast(tf.float32)
-def flip(
-    image: _T, horizontal: bool = False, vertical: bool = False
-) -> Union[_T, tf.Tensor]:
+def flip(image: _T, horizontal: bool = False, vertical: bool = False) -> Union[_T, tf.Tensor]:
     if horizontal:
         image = tf.image.flip_left_right(image)
     if vertical:
@@ -208,34 +188,23 @@ def grayscale(image: ImageType) -> tf.Tensor:
 
 
 @autocast(tf.float64)
-def downscale(
-    image: ImageType, factors: Tuple[int, int], antialias: bool = False
-) -> tf.Tensor:
+def downscale(image: ImageType, factors: Tuple[int, int], antialias: bool = False) -> tf.Tensor:
     sizes = (
         math.ceil(image.shape[0] / factors[0]),
         math.ceil(image.shape[1] / factors[1]),
     )
-    return tf.image.resize(
-        image, sizes, method='bilinear', antialias=antialias
-    )
+    return tf.image.resize(image, sizes, method='bilinear', antialias=antialias)
 
 
 @autocast(tf.float32)
-def random_brightness(
-    image: ImageType, min_delta: float, max_delta: float
-) -> tf.Tensor:
+def random_brightness(image: ImageType, min_delta: float, max_delta: float) -> tf.Tensor:
     delta = tf.random.uniform([], minval=min_delta, maxval=max_delta)
     return tf.image.adjust_brightness(image, delta)
 
 
 @autocast(tf.float32)
-def random_crop(
-    image: ImageType, size: Iterable[Optional[int]], seed=None
-) -> tf.Tensor:
-    size = tuple(
-        dim if dim is not None else img_dim
-        for img_dim, dim in zip(image.shape, size)
-    )
+def random_crop(image: ImageType, size: Iterable[Optional[int]], seed=None) -> tf.Tensor:
+    size = tuple(dim if dim is not None else img_dim for img_dim, dim in zip(image.shape, size))
     return tf.image.random_crop(image, size, seed=seed)
 
 
@@ -311,9 +280,7 @@ def structural_similarity_ratio(ref: np.ndarray, image: np.ndarray) -> float:
     ref = np.squeeze(ref)
     image = np.squeeze(image)
 
-    return ssim(ref, image, win_size=WINDOW_SIZE) / ssim(
-        ref, ref, win_size=WINDOW_SIZE
-    )
+    return ssim(ref, image, win_size=WINDOW_SIZE) / ssim(ref, ref, win_size=WINDOW_SIZE)
 
 
 def variance(image: np.ndarray) -> float:
@@ -343,9 +310,9 @@ def shannon_cross_entropy(
 def shannon_cross_entropy_ratio(
     ref: np.ndarray, image: np.ndarray, nbins: int = 100, epsilon: float = 1e-9
 ) -> float:
-    return shannon_cross_entropy(
-        ref, image, nbins=nbins, epsilon=epsilon
-    ) / shannon_cross_entropy(ref, ref, nbins=nbins, epsilon=epsilon)
+    return shannon_cross_entropy(ref, image, nbins=nbins, epsilon=epsilon) / shannon_cross_entropy(
+        ref, ref, nbins=nbins, epsilon=epsilon
+    )
 
 
 def shannon_entropy_ratio(ref: np.ndarray, image: np.ndarray) -> float:

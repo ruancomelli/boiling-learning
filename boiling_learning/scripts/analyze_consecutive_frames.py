@@ -19,9 +19,7 @@ def main(
     timeshifts: FrozenSet[int] = frozenset(timeshifts) | {0, final_timeshift}
 
     frames = ((index, frame) for index, frame in frames if index in timeshifts)
-    frames = (
-        (index, np.squeeze(ensure_grayscale(frame))) for index, frame in frames
-    )
+    frames = ((index, np.squeeze(ensure_grayscale(frame))) for index, frame in frames)
     frames = sorted(frames, key=itemgetter(0))
     frames: Dict[int, np.ndarray] = dict(frames)
 
@@ -29,9 +27,7 @@ def main(
     final: np.ndarray = frames[final_timeshift]
 
     for name, scorer in metrics.items():
-        evaluations = {
-            index: scorer(ref, frame) for index, frame in frames.items()
-        }
+        evaluations = {index: scorer(ref, frame) for index, frame in frames.items()}
 
         original_evaluation = evaluations[0]
         final_evaluation = evaluations[final_timeshift]
@@ -39,9 +35,7 @@ def main(
         fig, ax = plt.subplots(figsize=figsize)
         ax.scatter(evaluations.keys(), evaluations.values(), color='k', s=15)
         ax.scatter(0, original_evaluation, color='r', label='reference', s=25)
-        ax.scatter(
-            final_timeshift, final_evaluation, color='b', label='target', s=25
-        )
+        ax.scatter(final_timeshift, final_evaluation, color='b', label='target', s=25)
         ax.legend()
 
         ax.set_xlabel('Frame #')
@@ -74,6 +68,4 @@ def main(
 
 
 if __name__ == '__main__':
-    raise RuntimeError(
-        'Cannot execute consecutive frames analysis without images!'
-    )
+    raise RuntimeError('Cannot execute consecutive frames analysis without images!')

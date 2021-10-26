@@ -2,7 +2,7 @@
 profile = "black"
 known_first_party = ["boiling_learning"]
 multi_line_output = 3
-line_length = 79
+line_length = 99
 float_to_top = true
 remove_redundant_aliases = true
 
@@ -15,7 +15,7 @@ requirements = true
 
 [tool.black]
 include = '\.py|\.pyi|\.ipynb$'
-line-length = 79
+line-length = 99
 skip-string-normalization = true
 target-version = ['py37']
 

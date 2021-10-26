@@ -31,9 +31,7 @@ def restore(
         paths = path.parent.glob(glob_pattern)
         parsed = (parser(path_item.name) for path_item in paths)
         parsed = filter(lambda p: p is not None and epoch_str in p, parsed)
-        epochs = bl_utils.append(
-            (int(p[epoch_str]) for p in parsed), last_epoch
-        )
+        epochs = bl_utils.append((int(p[epoch_str]) for p in parsed), last_epoch)
         last_epoch = max(epochs)
 
         if last_epoch != -1:
@@ -72,9 +70,7 @@ def make_creator_method(
         fetch,
     ):
         with strategy.scope():
-            model = builder(
-                problem=problem, num_classes=num_classes, **architecture_setup
-            )
+            model = builder(problem=problem, num_classes=num_classes, **architecture_setup)
 
             if compile_setup.get('do', False):
                 model = compiler(model, **compile_setup['params'])
@@ -90,9 +86,7 @@ def make_creator_method(
     return creator_method
 
 
-def make_creator(
-    name: str, defaults: Pack = Pack()
-) -> Callable[[Callable], Callable]:
+def make_creator(name: str, defaults: Pack = Pack()) -> Callable[[Callable], Callable]:
     return funcy.compose(
         Creator.make(name, pack=defaults, expand_pack_on_call=True),
         make_creator_method,
@@ -102,9 +96,7 @@ def make_creator(
 def models_from_checkpoints(
     pattern: PathLike,
     epoch_key: str = 'epoch',
-    load_method: bl_io.LoaderFunction[
-        tf.keras.models.Model
-    ] = tf.keras.models.load_model,
+    load_method: bl_io.LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model,
 ) -> Dict[int, tf.keras.models.Model]:
     pattern = bl_utils.ensure_resolved(pattern)
     filename_pattern = pattern.name
@@ -127,15 +119,10 @@ def history_from_checkpoints(
     ds_val: tf.data.Dataset,
     pattern: PathLike,
     epoch_key: str = 'epoch',
-    load_method: bl_io.LoaderFunction[
-        tf.keras.models.Model
-    ] = tf.keras.models.load_model,
+    load_method: bl_io.LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model,
 ) -> Dict[int, Dict[str, float]]:
     model_dict = models_from_checkpoints(pattern, epoch_key, load_method)
-    return {
-        epoch: model.evaluate(ds_val, return_dict=True)
-        for epoch, model in model_dict.items()
-    }
+    return {epoch: model.evaluate(ds_val, return_dict=True) for epoch, model in model_dict.items()}
 
 
 def eval_with(

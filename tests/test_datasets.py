@@ -3,11 +3,7 @@ from unittest import TestCase
 
 from tensorflow.data import Dataset
 
-from boiling_learning.datasets.datasets import (
-    DatasetSplits,
-    bulk_split,
-    calculate_dataset_size,
-)
+from boiling_learning.datasets.datasets import DatasetSplits, bulk_split, calculate_dataset_size
 
 
 class datasets_test(TestCase):

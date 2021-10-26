@@ -10,9 +10,7 @@ CreatorFunction = Callable[[], _T]
 
 
 class Persister(Generic[_T]):
-    def __init__(
-        self, saver: SaverFunction[_T], loader: LoaderFunction[_T]
-    ) -> None:
+    def __init__(self, saver: SaverFunction[_T], loader: LoaderFunction[_T]) -> None:
         self.saver: SaverFunction[_T] = saver
         self.loader: LoaderFunction[_T] = loader
 
@@ -49,11 +47,7 @@ class Provider(Persister[_T]):
     ) -> None:
         super().__init__(saver, loader)
 
-        exceptions = (
-            (exceptions,)
-            if isinstance(exceptions, Exception)
-            else tuple(exceptions)
-        )
+        exceptions = (exceptions,) if isinstance(exceptions, Exception) else tuple(exceptions)
 
         self.creator: CreatorFunction[_T] = creator
         self.exceptions: Tuple[Exception, ...] = exceptions

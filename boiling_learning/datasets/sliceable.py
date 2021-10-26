@@ -39,9 +39,7 @@ _dispatch = Dispatcher()
 
 
 class SliceableDataset(Sequence[_T]):
-    def __init__(
-        self, ancestor: Union[Sequence[_T], Slicerator[_T]] = ()
-    ) -> None:
+    def __init__(self, ancestor: Union[Sequence[_T], Slicerator[_T]] = ()) -> None:
         self._data: Slicerator[_T] = Slicerator(ancestor)
 
     @staticmethod
@@ -109,18 +107,14 @@ class SliceableDataset(Sequence[_T]):
         def getitem(i: int) -> Tuple[Any, ...]:
             return tuple(ds[i] for ds in all_datasets)
 
-        return SliceableDataset(
-            Slicerator.from_func(getitem, length=lenghts[0])
-        )
+        return SliceableDataset(Slicerator.from_func(getitem, length=lenghts[0]))
 
     @overload
     def __getitem__(self, key: int) -> _T:
         ...
 
     @overload
-    def __getitem__(
-        self, key: Union[slice, Iterable[Union[bool, int]]]
-    ) -> SliceableDataset[_T]:
+    def __getitem__(self, key: Union[slice, Iterable[Union[bool, int]]]) -> SliceableDataset[_T]:
         ...
 
     def __getitem__(
@@ -143,9 +137,7 @@ class SliceableDataset(Sequence[_T]):
     ) -> _U:
         return transformation_func(self)
 
-    def concatenate(
-        self, dataset: SliceableDataset[_U]
-    ) -> SliceableDataset[Union[_T, _U]]:
+    def concatenate(self, dataset: SliceableDataset[_U]) -> SliceableDataset[Union[_T, _U]]:
         current_length = len(self)
         other_length = len(dataset)
         total_length = current_length + other_length
@@ -164,19 +156,13 @@ class SliceableDataset(Sequence[_T]):
                 f'Got index {index}.'
             )
 
-        return SliceableDataset(
-            Slicerator.from_func(new_data, length=total_length)
-        )
+        return SliceableDataset(Slicerator.from_func(new_data, length=total_length))
 
     def enumerate(self) -> SliceableDataset[Tuple[int, _T]]:
         return SliceableDataset(Slicerator(enumerate(self), length=len(self)))
 
-    def filter(
-        self, predicate: Optional[Callable[[_T], bool]] = None
-    ) -> SliceableDataset[_T]:
-        return SliceableDataset(
-            Slicerator(filter(predicate, self), length=len(self))
-        )
+    def filter(self, predicate: Optional[Callable[[_T], bool]] = None) -> SliceableDataset[_T]:
+        return SliceableDataset(Slicerator(filter(predicate, self), length=len(self)))
 
     def map(self, map_func: Callable[[_T], _U]) -> SliceableDataset[_U]:
         pipeline_map = pipeline(map_func)
@@ -205,27 +191,19 @@ def sliceable_dataset_to_tensorflow_dataset(
     sample = dataset[0]
     typespec = auto_spec(sample)
 
-    return tf.data.Dataset.from_generator(
-        lambda: dataset, output_signature=typespec
-    )
+    return tf.data.Dataset.from_generator(lambda: dataset, output_signature=typespec)
 
 
-class SupervisedSliceableDataset(
-    SliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y]
-):
+class SupervisedSliceableDataset(SliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y]):
     @staticmethod
-    def from_pairs(
-        dataset: SliceableDataset[Tuple[_X, _Y]]
-    ) -> SupervisedSliceableDataset[_X, _Y]:
+    def from_pairs(dataset: SliceableDataset[Tuple[_X, _Y]]) -> SupervisedSliceableDataset[_X, _Y]:
         return SupervisedSliceableDataset(dataset)
 
     @staticmethod
     def from_features_and_targets(
         features: SliceableDataset[_X], targets: SliceableDataset[_Y]
     ) -> SupervisedSliceableDataset[_X, _Y]:
-        return SupervisedSliceableDataset.from_pairs(
-            SliceableDataset.zip(features, targets)
-        )
+        return SupervisedSliceableDataset.from_pairs(SliceableDataset.zip(features, targets))
 
     @overload
     def __getitem__(self, key: int) -> Tuple[_X, _Y]:
@@ -276,17 +254,13 @@ class SupervisedSliceableDataset(
     def unzip(self) -> Tuple[SliceableDataset[_X], SliceableDataset[_Y]]:
         return self.features(), self.targets()
 
-    def map_features(
-        self, map_func: Callable[[_X], _X2]
-    ) -> SupervisedSliceableDataset[_X2, _Y]:
+    def map_features(self, map_func: Callable[[_X], _X2]) -> SupervisedSliceableDataset[_X2, _Y]:
         def _map_func(pair: Tuple[_X, _Y]) -> Tuple[_X2, _Y]:
             return map_func(pair[0]), pair[1]
 
         return self.map(_map_func)
 
-    def map_targets(
-        self, map_func: Callable[[_Y], _Y2]
-    ) -> SupervisedSliceableDataset[_X, _Y2]:
+    def map_targets(self, map_func: Callable[[_Y], _Y2]) -> SupervisedSliceableDataset[_X, _Y2]:
         def _map_func(pair: Tuple[_X, _Y]) -> Tuple[_X, _Y2]:
             return pair[0], map_func(pair[1])
 

@@ -21,7 +21,7 @@ from boiling_learning.io.io import (
 from boiling_learning.management import Manager
 from boiling_learning.preprocessing import ImageDataset
 from boiling_learning.preprocessing.transformers import Transformer
-from boiling_learning.utils.functional import P, Pack
+from boiling_learning.utils.functional import Kwargs, P
 from boiling_learning.utils.Parameters import Parameters
 
 
@@ -41,9 +41,7 @@ def main(
     augment_test: bool = True,
     verbose: int = False,
     augmentors_to_force: Container[str] = frozenset({'random_cropper'}),
-    experiment_video_saver: SaverFunction[
-        DatasetTriplet
-    ] = saver_dataset_triplet(save_dataset),
+    experiment_video_saver: SaverFunction[DatasetTriplet] = saver_dataset_triplet(save_dataset),
 ):
     if not augment_train:
         augmentors = [
@@ -53,22 +51,18 @@ def main(
         ]
 
     dataset_params = Parameters(params=defaultdict(dict))
-    dataset_params[
-        ['creator', {'desc', 'value'}, 'dataset_size']
-    ] = dataset_size
+    dataset_params[['creator', {'desc', 'value'}, 'dataset_size']] = dataset_size
 
     dataset_params[['creator', {'desc', 'value'}, 'num_shards']] = 1024
 
-    dataset_params[['creator', 'desc', 'image_dataset']] = sorted(
-        img_ds.keys()
-    )
+    dataset_params[['creator', 'desc', 'image_dataset']] = sorted(img_ds.keys())
     dataset_params[['creator', 'value', 'image_dataset']] = img_ds
 
     print(f'Splits: {splits} ({type(splits)})')
 
-    dataset_params[
-        ['creator', {'desc', 'value'}, 'splits']
-    ] = funcy.walk_values(str, dataclassy.asdict(splits))
+    dataset_params[['creator', {'desc', 'value'}, 'splits']] = funcy.walk_values(
+        str, dataclassy.asdict(splits)
+    )
     dataset_params[['creator', 'value', 'splits']] = splits
 
     dataset_params[['creator', 'desc', 'data_preprocessors']] = [
@@ -81,9 +75,7 @@ def main(
     ]
     dataset_params[['post_processor', 'value', 'data_augmentors']] = augmentors
 
-    dataset_params[
-        ['post_processor', 'value', 'force_test_augmentors']
-    ] = augmentors_to_force
+    dataset_params[['post_processor', 'value', 'force_test_augmentors']] = augmentors_to_force
     dataset_params[['post_processor', 'value', 'take']] = take
 
     dataset_params[
@@ -122,19 +114,13 @@ def main(
         else shuffle_size
     )
     dataset_params[['post_processor', {'desc', 'value'}, 'batch_size']] = (
-        min(batch_size, dataset_size)
-        if None not in {batch_size, dataset_size}
-        else batch_size
+        min(batch_size, dataset_size) if None not in {batch_size, dataset_size} else batch_size
     )
-    dataset_params[
-        ['post_processor', {'desc', 'value'}, 'augment_test']
-    ] = augment_test
+    dataset_params[['post_processor', {'desc', 'value'}, 'augment_test']] = augment_test
 
     dataset_id = dataset_manager.provide_entry(
-        creator_description=Pack(kwargs=dataset_params[['creator', 'desc']]),
-        post_processor_description=Pack(
-            kwargs=dataset_params[['post_processor', 'desc']]
-        ),
+        creator_description=Kwargs(dataset_params[['creator', 'desc']]),
+        post_processor_description=Kwargs(dataset_params[['post_processor', 'desc']]),
         include=True,
         missing_ok=True,
     )
@@ -154,14 +140,10 @@ def main(
     # dataset_params[['creator', 'value', 'snapshot_path']] = snapshot_path
 
     return dataset_id, dataset_manager.provide_elem(
-        creator_description=Pack(kwargs=dataset_params[['creator', 'desc']]),
-        creator_params=Pack(kwargs=dataset_params[['creator', 'value']]),
-        post_processor_description=Pack(
-            kwargs=dataset_params[['post_processor', 'desc']]
-        ),
-        post_processor_params=Pack(
-            kwargs=dataset_params[['post_processor', 'value']]
-        ),
+        creator_description=Kwargs(dataset_params[['creator', 'desc']]),
+        creator_params=Kwargs(dataset_params[['creator', 'value']]),
+        post_processor_description=Kwargs(dataset_params[['post_processor', 'desc']]),
+        post_processor_params=Kwargs(dataset_params[['post_processor', 'value']]),
         load=loader_dataset_triplet(
             add_bool_flag(
                 partial(
@@ -173,13 +155,9 @@ def main(
                 (FileNotFoundError, AssertionError),
             )
         ),
-        save=saver_dataset_triplet(
-            partial(save_yogadl, dataset_id=dataset_id)
-        ),
+        save=saver_dataset_triplet(partial(save_yogadl, dataset_id=dataset_id)),
     )
 
 
 if __name__ == '__main__':
-    raise RuntimeError(
-        '*make_dataset* cannot be executed as a standalone script yet.'
-    )
+    raise RuntimeError('*make_dataset* cannot be executed as a standalone script yet.')

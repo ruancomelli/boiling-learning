@@ -34,13 +34,8 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 
 import boiling_learning.utils as bl_utils
-from boiling_learning.utils import (
-    PathLike,
-    ensure_dir,
-    ensure_parent,
-    ensure_resolved,
-)
-from boiling_learning.utils.functional import P
+from boiling_learning.utils import PathLike, ensure_dir, ensure_parent, ensure_resolved
+from boiling_learning.utils.functional import Kwargs
 
 try:
     # yogadl is an optional dependency
@@ -55,9 +50,7 @@ _T = TypeVar('_T')
 _S = TypeVar('_S')
 SaverFunction = Callable[[_S, PathLike], Any]
 LoaderFunction = Callable[[PathLike], _S]
-DatasetTriplet = Tuple[
-    tf.data.Dataset, Optional[tf.data.Dataset], tf.data.Dataset
-]
+DatasetTriplet = Tuple[tf.data.Dataset, Optional[tf.data.Dataset], tf.data.Dataset]
 OptionalDatasetTriplet = Tuple[
     Optional[tf.data.Dataset],
     Optional[tf.data.Dataset],
@@ -69,9 +62,7 @@ BoolFlaggedLoaderFunction = LoaderFunction[BoolFlagged[_S]]
 
 def add_bool_flag(
     loader: LoaderFunction[_T],
-    expected_exceptions: Union[
-        Type[Exception], Sequence[Type[Exception]]
-    ] = FileNotFoundError,
+    expected_exceptions: Union[Type[Exception], Sequence[Type[Exception]]] = FileNotFoundError,
 ) -> BoolFlaggedLoaderFunction[Optional[_T]]:
     if isinstance(expected_exceptions, Sequence):
         expected_exceptions = tuple(expected_exceptions)
@@ -138,9 +129,7 @@ def make_callable_filename_pattern(
             formatter = filename_pattern_str.format
 
             def _filename_pattern(index: int) -> Path:
-                return ensure_parent(
-                    formatter(**{index_key: index}), root=outputdir
-                )
+                return ensure_parent(formatter(**{index_key: index}), root=outputdir)
 
             return True, _filename_pattern
 
@@ -152,9 +141,7 @@ def make_callable_filename_pattern(
                 return False, filename_pattern
 
             def _filename_pattern(index: int) -> Path:
-                return ensure_parent(
-                    filename_pattern_str % index, root=outputdir
-                )
+                return ensure_parent(filename_pattern_str % index, root=outputdir)
 
             return True, _filename_pattern
 
@@ -163,15 +150,11 @@ def save_image(image: np.ndarray, path: PathLike) -> None:
     cv2.imwrite(str(ensure_parent(path)), image)
 
 
-def load_image(
-    path: PathLike, flag: Optional[int] = cv2.IMREAD_COLOR
-) -> np.ndarray:
+def load_image(path: PathLike, flag: Optional[int] = cv2.IMREAD_COLOR) -> np.ndarray:
     return cv2.imread(str(ensure_resolved(path)), flag)
 
 
-def save_serialized(
-    save_map: Mapping[_T, SaverFunction[_S]]
-) -> SaverFunction[Mapping[_T, _S]]:
+def save_serialized(save_map: Mapping[_T, SaverFunction[_S]]) -> SaverFunction[Mapping[_T, _S]]:
     def save(return_dict: Mapping[_T, _S], path: PathLike) -> None:
         path = ensure_parent(path)
         for key, obj in return_dict.items():
@@ -180,9 +163,7 @@ def save_serialized(
     return save
 
 
-def load_serialized(
-    load_map: Mapping[_T, LoaderFunction[_S]]
-) -> LoaderFunction[Dict[_T, _S]]:
+def load_serialized(load_map: Mapping[_T, LoaderFunction[_S]]) -> LoaderFunction[Dict[_T, _S]]:
     def load(path: PathLike) -> Dict[_T, _S]:
         path = ensure_resolved(path)
         return {key: loader(path / key) for key, loader in load_map.items()}
@@ -227,7 +208,7 @@ def save_json(
             category=RuntimeWarning,
         )
 
-    dump = P(cls=cls).omit('cls', bl_utils.is_(None)).partial(dump)
+    dump = Kwargs({'cls': cls}).omit('cls', bl_utils.is_(None)).partial(dump)
     with path.open('w', encoding='utf-8') as file:
         dump(obj, file, indent=4, ensure_ascii=False)
 
@@ -245,7 +226,7 @@ def load_json(
             category=RuntimeWarning,
         )
 
-    load = P(cls=cls).omit('cls', bl_utils.is_(None)).partial(load)
+    load = Kwargs({'cls': cls}).omit('cls', bl_utils.is_(None)).partial(load)
     with path.open('r', encoding='utf-8') as file:
         return load(file)
 
@@ -351,24 +332,18 @@ def saver_frames_dataset(
         save_frames_dataset(
             ds_train,
             path / 'train',
-            filename_pattern=partial(
-                filename_pattern, chunk_sizes=chunk_sizes
-            ),
+            filename_pattern=partial(filename_pattern, chunk_sizes=chunk_sizes),
         )
         if ds_val is not None:
             save_frames_dataset(
                 ds_val,
                 path / 'val',
-                filename_pattern=partial(
-                    filename_pattern, chunk_sizes=chunk_sizes
-                ),
+                filename_pattern=partial(filename_pattern, chunk_sizes=chunk_sizes),
             )
         save_frames_dataset(
             ds_test,
             path / 'test',
-            filename_pattern=partial(
-                filename_pattern, chunk_sizes=chunk_sizes
-            ),
+            filename_pattern=partial(filename_pattern, chunk_sizes=chunk_sizes),
         )
 
     return _saver
@@ -397,9 +372,7 @@ def process_path(file_path, in_dir: Optional[PathLike] = None):
     return img
 
 
-def load_frames_dataset(
-    path: PathLike, shuffle: bool = True
-) -> tf.data.Dataset:
+def load_frames_dataset(path: PathLike, shuffle: bool = True) -> tf.data.Dataset:
     path = ensure_resolved(path)
     df_path = path / 'dataframe.csv'
     # element_spec_path = path / 'elem_spec.json'
@@ -474,9 +447,7 @@ def save_yogadl(
     storage.submit(dataset, dataset_id, dataset_version)
 
 
-def saver_yogadl(
-    storage_path: PathLike, dataset_id: str
-) -> SaverFunction[DatasetTriplet]:
+def saver_yogadl(storage_path: PathLike, dataset_id: str) -> SaverFunction[DatasetTriplet]:
     storage_path = ensure_resolved(storage_path)
     id_train = dataset_id + '_train'
     id_val = dataset_id + '_val'
@@ -522,9 +493,7 @@ def load_yogadl(
     return yogadl.tensorflow.make_tf_dataset(stream)
 
 
-def loader_yogadl(
-    storage_path: PathLike, dataset_id: str
-) -> LoaderFunction[DatasetTriplet]:
+def loader_yogadl(storage_path: PathLike, dataset_id: str) -> LoaderFunction[DatasetTriplet]:
     storage_path = ensure_resolved(storage_path)
     id_train = dataset_id + '_train'
     id_val = dataset_id + '_val'
@@ -532,9 +501,7 @@ def loader_yogadl(
 
     def _loader(path: Optional[PathLike] = None):
         try:
-            ds_train = load_yogadl(
-                storage_path=storage_path, dataset_id=id_train
-            )
+            ds_train = load_yogadl(storage_path=storage_path, dataset_id=id_train)
         except AssertionError:
             ds_train = None
 
@@ -544,9 +511,7 @@ def loader_yogadl(
             ds_val = None
 
         try:
-            ds_test = load_yogadl(
-                storage_path=storage_path, dataset_id=id_test
-            )
+            ds_test = load_yogadl(storage_path=storage_path, dataset_id=id_test)
         except AssertionError:
             ds_test = None
 

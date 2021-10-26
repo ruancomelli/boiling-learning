@@ -114,15 +114,9 @@ class LazyTest(TestCase):
 
 class iterutils_test(TestCase):
     def test_evenly_spaced_indices(self) -> None:
-        self.assertListEqual(
-            evenly_spaced_indices(10, 0, goal=EvenlySpacedGoal.SPREAD), []
-        )
-        self.assertListEqual(
-            evenly_spaced_indices(10, 1, goal=EvenlySpacedGoal.SPREAD), [5]
-        )
-        self.assertListEqual(
-            evenly_spaced_indices(10, 2, goal=EvenlySpacedGoal.SPREAD), [3, 7]
-        )
+        self.assertListEqual(evenly_spaced_indices(10, 0, goal=EvenlySpacedGoal.SPREAD), [])
+        self.assertListEqual(evenly_spaced_indices(10, 1, goal=EvenlySpacedGoal.SPREAD), [5])
+        self.assertListEqual(evenly_spaced_indices(10, 2, goal=EvenlySpacedGoal.SPREAD), [3, 7])
         self.assertListEqual(
             evenly_spaced_indices(10, 3, goal=EvenlySpacedGoal.SPREAD),
             [2, 5, 8],
@@ -139,9 +133,7 @@ class iterutils_test(TestCase):
         for total, count in ((10, 6), (100, 70), (100, 5)):
             with self.subTest('General properties', total=total, count=count):
                 for goal in EvenlySpacedGoal:
-                    self.assertListEqual(
-                        evenly_spaced_indices(total, 0, goal=goal), []
-                    )
+                    self.assertListEqual(evenly_spaced_indices(total, 0, goal=goal), [])
 
                     with self.assertRaises(ValueError):
                         evenly_spaced_indices(total, total + 1, goal=goal)

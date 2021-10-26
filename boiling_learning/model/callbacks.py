@@ -12,11 +12,7 @@ from tensorflow.python.platform import tf_logging as logging
 from typing_extensions import Protocol
 
 from boiling_learning.io.io import load_json, save_json
-from boiling_learning.utils.utils import (
-    PathLike,
-    ensure_parent,
-    ensure_resolved,
-)
+from boiling_learning.utils.utils import PathLike, ensure_parent, ensure_resolved
 
 
 # Source: <https://stackoverflow.com/q/47731935/5811400>
@@ -98,8 +94,7 @@ class AdditionalValidationSets(Callback):
 
             if self.verbose >= 1:
                 values_str = ' - '.join(
-                    f'{name}: {result}'
-                    for name, result in zip(names, full_results)
+                    f'{name}: {result}' for name, result in zip(names, full_results)
                 )
 
                 print(f'{validation_set_name}[{values_str}]')
@@ -166,9 +161,7 @@ class TimePrinter(Callback):
 
     def on_predict_batch_begin(self, *args, **kwargs):
         if 'on_predict_batch_begin' in self.when:
-            self.streamer(
-                f'--- beginning predict_batch at {self._str_now()}', end=''
-            )
+            self.streamer(f'--- beginning predict_batch at {self._str_now()}', end='')
 
     def on_predict_batch_end(self, *args, **kwargs):
         if 'on_predict_batch_end' in self.when:
@@ -184,9 +177,7 @@ class TimePrinter(Callback):
 
     def on_test_batch_begin(self, *args, **kwargs):
         if 'on_test_batch_begin' in self.when:
-            self.streamer(
-                f'--- beginning test_batch at {self._str_now()}', end=''
-            )
+            self.streamer(f'--- beginning test_batch at {self._str_now()}', end='')
 
     def on_test_batch_end(self, *args, **kwargs):
         if 'on_test_batch_end' in self.when:
@@ -209,9 +200,7 @@ class TimePrinter(Callback):
 
     def on_train_batch_end(self, batch: int, *args, **kwargs):
         if 'on_train_batch_end' in self.when:
-            self.streamer(
-                f' | ending train_batch {batch} at {self._str_now()}'
-            )
+            self.streamer(f' | ending train_batch {batch} at {self._str_now()}')
 
     def on_train_begin(self, *args, **kwargs):
         if 'on_train_begin' in self.when:
@@ -271,9 +260,7 @@ class ReduceLROnPlateau(Callback):
 
         self.monitor = monitor
         if factor >= 1.0:
-            raise ValueError(
-                'ReduceLROnPlateau does not support a factor >= 1.0.'
-            )
+            raise ValueError('ReduceLROnPlateau does not support a factor >= 1.0.')
         self.factor = factor
         self.min_lr = min_lr
         self.min_delta = min_delta
@@ -292,31 +279,25 @@ class ReduceLROnPlateau(Callback):
         """Resets wait counter and cooldown counter."""
         if self.mode not in {'auto', 'min', 'max'}:
             logging.warning(
-                'Learning rate reduction mode %s is unknown, '
-                'fallback to auto mode.',
+                'Learning rate reduction mode %s is unknown, ' 'fallback to auto mode.',
                 self.mode,
             )
             self.mode = 'auto'
 
         if self.min_delta_mode not in {'absolute', 'relative'}:
             logging.warning(
-                'Minimum delta mode %s is unknown, '
-                'fallback to absolute mode.',
+                'Minimum delta mode %s is unknown, ' 'fallback to absolute mode.',
                 self.min_delta_mode,
             )
             self.min_delta_mode = 'absolute'
 
-        if self.mode == 'min' or (
-            self.mode == 'auto' and 'acc' not in self.monitor
-        ):
+        if self.mode == 'min' or (self.mode == 'auto' and 'acc' not in self.monitor):
             if self.min_delta_mode == 'relative':
                 self.monitor_op = lambda current, best: np.less(
                     current, (1 - self.min_delta) * best
                 )
             else:
-                self.monitor_op = lambda current, best: np.less(
-                    current, best - self.min_delta
-                )
+                self.monitor_op = lambda current, best: np.less(current, best - self.min_delta)
             self.best = np.Inf
         else:
             if self.min_delta_mode == 'relative':
@@ -324,9 +305,7 @@ class ReduceLROnPlateau(Callback):
                     current, (1 + self.min_delta) * best
                 )
             else:
-                self.monitor_op = lambda current, best: np.greater(
-                    current, best + self.min_delta
-                )
+                self.monitor_op = lambda current, best: np.greater(current, best + self.min_delta)
             self.best = -np.Inf
         self.cooldown_counter = 0
         self.wait = 0
@@ -382,9 +361,7 @@ class RegisterEpoch(Callback):
 
 
 class MoveOnTrainBegin(Callback):
-    def __init__(
-        self, source: PathLike, dest: PathLike, missing_ok: bool = False
-    ) -> None:
+    def __init__(self, source: PathLike, dest: PathLike, missing_ok: bool = False) -> None:
         self.source = ensure_resolved(source)
         self.dest = ensure_parent(dest)
         self._missing_ok = missing_ok

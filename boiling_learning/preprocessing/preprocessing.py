@@ -90,12 +90,8 @@ def simple_image_preprocessor(
             target_height=interest_region.size.height,
             target_width=interest_region.size.width,
         )
-        img = tf.image.random_crop(
-            img, (final_size.height, final_size.width, 1)
-        )
-        img = skimage.transform.downscale_local_mean(
-            img, (downscale_factor, downscale_factor, 1)
-        )
+        img = tf.image.random_crop(img, (final_size.height, final_size.width, 1))
+        img = skimage.transform.downscale_local_mean(img, (downscale_factor, downscale_factor, 1))
 
         return img
 

@@ -1,17 +1,7 @@
 import operator
 from datetime import timedelta
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple, Union
 
 import funcy
 import modin.pandas as pd
@@ -24,11 +14,7 @@ import boiling_learning.utils as bl_utils
 from boiling_learning.io.io import chunked_filename_pattern, load_dataset
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
 from boiling_learning.preprocessing.Video import Video
-from boiling_learning.preprocessing.video import (
-    convert_video,
-    extract_audio,
-    extract_frames,
-)
+from boiling_learning.preprocessing.video import convert_video, extract_audio, extract_frames
 from boiling_learning.utils import PathLike, VerboseType, ensure_resolved
 from boiling_learning.utils.dtypes import auto_spec
 from boiling_learning.utils.slicerators import Slicerator
@@ -120,47 +106,32 @@ class ExperimentVideo(Video):
         self._name: str = name if name is not None else self.path.stem
 
         if None not in {frames_dir, frames_path}:
-            raise ValueError(
-                'at most one of (*frames_dir*, *frames_path*) must be given.'
-            )
+            raise ValueError('at most one of (*frames_dir*, *frames_path*) must be given.')
 
         if None not in {frames_tensor_path, frames_tensor_dir}:
             raise ValueError(
-                'at most one of (*frames_tensor_path*, *frames_tensor_dir*) '
-                'must be given.'
+                'at most one of (*frames_tensor_path*, *frames_tensor_dir*) ' 'must be given.'
             )
 
         if None not in {audio_dir, audio_path}:
-            raise ValueError(
-                'at most one of (*audio_dir*, *audio_path*) must be given.'
-            )
+            raise ValueError('at most one of (*audio_dir*, *audio_path*) must be given.')
 
         if None not in {df_dir, df_path}:
             raise ValueError('at most one of (df_dir, df_path) must be given.')
 
         if not frames_suffix.startswith('.'):
-            raise ValueError(
-                'argument *frames_suffix* must start with a dot \'.\''
-            )
+            raise ValueError('argument *frames_suffix* must start with a dot \'.\'')
 
         if not audio_suffix.startswith('.'):
-            raise ValueError(
-                'argument *audio_suffix* must start with a dot \'.\''
-            )
+            raise ValueError('argument *audio_suffix* must start with a dot \'.\'')
 
         if not df_suffix.startswith('.'):
-            raise ValueError(
-                'argument *df_suffix* must start with a dot \'.\''
-            )
+            raise ValueError('argument *df_suffix* must start with a dot \'.\'')
 
         self.frames_path: Optional[Path] = (
             ensure_resolved(frames_path)
             if frames_path is not None
-            else (
-                ensure_resolved(frames_dir) / self.name
-                if frames_dir is not None
-                else None
-            )
+            else (ensure_resolved(frames_dir) / self.name if frames_dir is not None else None)
         )
 
         self.frames_tensor_path: Optional[Path] = (
@@ -179,9 +150,7 @@ class ExperimentVideo(Video):
             ensure_resolved(audio_path)
             if audio_path is not None
             else (
-                (ensure_resolved(audio_dir) / self.name).with_suffix(
-                    audio_suffix
-                )
+                (ensure_resolved(audio_dir) / self.name).with_suffix(audio_suffix)
                 if audio_dir is not None
                 else None
             )
@@ -215,9 +184,7 @@ class ExperimentVideo(Video):
             (
                 self.__class__.__name__,
                 '(',
-                ', '.join(
-                    f'{k}={v}' for k, v in kwargs.items() if v is not None
-                ),
+                ', '.join(f'{k}={v}' for k, v in kwargs.items() if v is not None),
                 ')',
             )
         )
@@ -237,9 +204,7 @@ class ExperimentVideo(Video):
         if data.start_index is not None:
             self.start = data.start_index
         elif data.start_elapsed_time is not None:
-            self.start = round(
-                data.start_elapsed_time.total_seconds() * data.fps
-            )
+            self.start = round(data.start_elapsed_time.total_seconds() * data.fps)
 
         if data.end_index is not None:
             self.end = data.end_index
@@ -254,14 +219,10 @@ class ExperimentVideo(Video):
     ) -> None:
         """Use this function to move or convert video"""
         dest_path = bl_utils.ensure_parent(dest_path)
-        convert_video(
-            self.path, dest_path, overwrite=overwrite, verbose=verbose
-        )
+        convert_video(self.path, dest_path, overwrite=overwrite, verbose=verbose)
         self.path = dest_path
 
-    def extract_audio(
-        self, overwrite: bool = False, verbose: VerboseType = False
-    ) -> None:
+    def extract_audio(self, overwrite: bool = False, verbose: VerboseType = False) -> None:
         if self.audio_path is None:
             raise ValueError('*audio_path* is not defined yet.')
 
@@ -330,13 +291,9 @@ class ExperimentVideo(Video):
         if isinstance(data, self.VideoData):
             self.data = data
         else:
-            self.data = bl_utils.dataclass_from_mapping(
-                data, self.VideoData, key_map=keys
-            )
+            self.data = bl_utils.dataclass_from_mapping(data, self.VideoData, key_map=keys)
 
-    def set_data(
-        self, data_source: pd.DataFrame, source_time_column: str
-    ) -> pd.DataFrame:
+    def set_data(self, data_source: pd.DataFrame, source_time_column: str) -> pd.DataFrame:
         '''Define data (other than the ones specified as video data) from a source *data_source*
 
         Example usage:
@@ -353,9 +310,7 @@ class ExperimentVideo(Video):
         '''
         self.make_dataframe(recalculate=False, enforce_time=True)
 
-        columns_to_set = tuple(
-            x for x in data_source.columns if x != source_time_column
-        )
+        columns_to_set = tuple(x for x in data_source.columns if x != source_time_column)
         intersect = frozenset(columns_to_set) & frozenset(self.df.columns)
         if intersect:
             raise ValueError(
@@ -366,9 +321,7 @@ class ExperimentVideo(Video):
         time = data_source[source_time_column]
         for column in columns_to_set:
             interpolator = interp1d(time, data_source[column])
-            self.df[column] = interpolator(
-                self.df[self.column_names.elapsed_time]
-            )
+            self.df[column] = interpolator(self.df[self.column_names.elapsed_time])
 
         return self.df
 
@@ -420,9 +373,7 @@ class ExperimentVideo(Video):
             return self.df
 
         if self.data is None:
-            raise ValueError(
-                'cannot convert to DataFrame. Video data must be previously set.'
-            )
+            raise ValueError('cannot convert to DataFrame. Video data must be previously set.')
 
         indices = range(len(self))
 
@@ -441,13 +392,10 @@ class ExperimentVideo(Video):
         )
         if all(available_time_info):
             ref_index = self.data.ref_index
-            ref_elapsed_time = pd.to_timedelta(
-                self.data.ref_elapsed_time, unit='s'
-            )
+            ref_elapsed_time = pd.to_timedelta(self.data.ref_elapsed_time, unit='s')
             delta = pd.to_timedelta(1 / self.data.fps, unit='s')
             elapsed_time_list = [
-                ref_elapsed_time + delta * (index - ref_index)
-                for index in indices
+                ref_elapsed_time + delta * (index - ref_index) for index in indices
             ]
 
             data[self.column_names.elapsed_time] = elapsed_time_list
@@ -462,20 +410,14 @@ class ExperimentVideo(Video):
             data[self.column_names.path] = paths
 
         df = pd.DataFrame(data)
-        df = self.convert_dataframe_type(
-            df, categories_as_int=categories_as_int
-        )
+        df = self.convert_dataframe_type(df, categories_as_int=categories_as_int)
 
         if inplace:
             self.df = df
         return df
 
-    def sync_time_series(
-        self, source_df: pd.DataFrame, inplace: bool = True
-    ) -> pd.DataFrame:
-        df = self.make_dataframe(
-            recalculate=False, enforce_time=True, inplace=inplace
-        )
+    def sync_time_series(self, source_df: pd.DataFrame, inplace: bool = True) -> pd.DataFrame:
+        df = self.make_dataframe(recalculate=False, enforce_time=True, inplace=inplace)
 
         df = sync_dataframes(
             source_df=source_df,
@@ -511,9 +453,7 @@ class ExperimentVideo(Video):
         inplace: bool = True,
     ) -> Optional[pd.DataFrame]:
         if self.df_path is None and path is None:
-            raise ValueError(
-                '*df_path* is not defined yet, so *path* must be given as argument.'
-            )
+            raise ValueError('*df_path* is not defined yet, so *path* must be given as argument.')
 
         if not overwrite and self.df is not None:
             return self.df
@@ -529,21 +469,15 @@ class ExperimentVideo(Video):
         if columns is None:
             df = pd.read_csv(self.df_path, skipinitialspace=True)
         else:
-            df = pd.read_csv(
-                self.df_path, skipinitialspace=True, usecols=tuple(columns)
-            )
+            df = pd.read_csv(self.df_path, skipinitialspace=True, usecols=tuple(columns))
 
         if inplace:
             self.df = df
         return df
 
-    def save_df(
-        self, path: Optional[PathLike] = None, overwrite: bool = False
-    ) -> None:
+    def save_df(self, path: Optional[PathLike] = None, overwrite: bool = False) -> None:
         if self.df_path is None:
-            raise ValueError(
-                '*df_path* is not defined yet, so *path* must be given as argument.'
-            )
+            raise ValueError('*df_path* is not defined yet, so *path* must be given as argument.')
 
         if path is None:
             path = self.df_path
@@ -560,8 +494,7 @@ class ExperimentVideo(Video):
     ) -> None:
         if self.df_path is None and (erase_old or renaming):
             raise ValueError(
-                '*erase_old* and *renaming* cannot be used '
-                'if *df_path* is not defined yet.'
+                '*erase_old* and *renaming* cannot be used ' 'if *df_path* is not defined yet.'
             )
 
         if erase_old:
@@ -596,9 +529,7 @@ class ExperimentVideo(Video):
     def as_pairs(
         self,
         *,
-        image_preprocessor: Optional[
-            Callable[[np.ndarray], np.ndarray]
-        ] = None,
+        image_preprocessor: Optional[Callable[[np.ndarray], np.ndarray]] = None,
         select_columns: Optional[Union[str, List[str]]] = None,
     ) -> Slicerator[Tuple[np.ndarray, Dict[str, Any]]]:
         df = self.make_dataframe(recalculate=False)
@@ -633,9 +564,7 @@ class ExperimentVideo(Video):
         pairs = self.as_pairs(select_columns=select_columns)
         type_spec = auto_spec(pairs[0])
 
-        ds = tf.data.Dataset.from_generator(
-            lambda: pairs, output_signature=type_spec
-        )
+        ds = tf.data.Dataset.from_generator(lambda: pairs, output_signature=type_spec)
 
         if inplace:
             self.ds = ds

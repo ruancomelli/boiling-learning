@@ -7,12 +7,7 @@ from boiling_learning.io.io import load_json, save_json
 from boiling_learning.management.allocators import TableAllocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.management.Manager import Manager
-from boiling_learning.management.persister import (
-    FilePersister,
-    FileProvider,
-    Persister,
-    Provider,
-)
+from boiling_learning.management.persister import FilePersister, FileProvider, Persister, Provider
 from boiling_learning.preprocessing.transformers import Creator
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.utils import tempdir, tempfilepath
@@ -27,9 +22,7 @@ class ManagerTest(TestCase):
                 return False, None
 
         with tempdir() as path:
-            manager = Manager(
-                path, load_method=_load_json, save_method=save_json, verbose=2
-            )
+            manager = Manager(path, load_method=_load_json, save_method=save_json, verbose=2)
 
             self.assertEqual(manager.table_path, path / 'lookup_table.json')
 
@@ -39,23 +32,17 @@ class ManagerTest(TestCase):
             contents = P(value=5)
 
             with self.assertRaises(ValueError):
-                manager.provide_entry(
-                    contents=contents, include=False, missing_ok=False
-                )
+                manager.provide_entry(contents=contents, include=False, missing_ok=False)
 
             with self.assertRaises(ValueError):
                 manager.provide_elem('wololooo')
 
-            elem_id = manager.provide_entry(
-                contents=contents, include=True, missing_ok=True
-            )
+            elem_id = manager.provide_entry(contents=contents, include=True, missing_ok=True)
 
             res = manager.provide_elem(
                 elem_id=elem_id,
                 creator_params=P(value=5),
-                creator=Creator(
-                    'add', add, P(added=3), expand_pack_on_call=True
-                ),
+                creator=Creator('add', add, P(added=3), expand_pack_on_call=True),
                 save=True,
                 load=True,
             )
@@ -68,9 +55,7 @@ class ManagerTest(TestCase):
                 manager.elem_workspace(elem_id),
                 manager.entry_dir(elem_id) / 'workspace',
             )
-            self.assertDictEqual(
-                dict(manager.retrieve_elems()), {elem_id: res}
-            )
+            self.assertDictEqual(dict(manager.retrieve_elems()), {elem_id: res})
 
 
 class PersisterTest(TestCase):
@@ -160,25 +145,15 @@ class CacherTest(TestCase):
 
             self.assertListEqual(history, [])
 
-            self.assertDictEqual(
-                func(3.14, 'pi'), {'number': 3.14, 'name': 'pi'}
-            )
+            self.assertDictEqual(func(3.14, 'pi'), {'number': 3.14, 'name': 'pi'})
             self.assertListEqual(history, [(3.14, 'pi')])
 
-            self.assertDictEqual(
-                func(3.14, 'pi'), {'number': 3.14, 'name': 'pi'}
-            )
+            self.assertDictEqual(func(3.14, 'pi'), {'number': 3.14, 'name': 'pi'})
             self.assertListEqual(history, [(3.14, 'pi')])
 
-            self.assertDictEqual(
-                func(0.0, 'zero'), {'number': 0.0, 'name': 'zero'}
-            )
+            self.assertDictEqual(func(0.0, 'zero'), {'number': 0.0, 'name': 'zero'})
             self.assertListEqual(history, [(3.14, 'pi'), (0.0, 'zero')])
 
-            self.assertDictEqual(
-                func(3.14, 'pi'), {'number': 3.14, 'name': 'pi'}
-            )
-            self.assertDictEqual(
-                func(0.0, 'zero'), {'number': 0.0, 'name': 'zero'}
-            )
+            self.assertDictEqual(func(3.14, 'pi'), {'number': 3.14, 'name': 'pi'})
+            self.assertDictEqual(func(0.0, 'zero'), {'number': 0.0, 'name': 'zero'})
             self.assertListEqual(history, [(3.14, 'pi'), (0.0, 'zero')])

@@ -3,10 +3,7 @@ from typing import Iterable, Mapping
 import numpy as np
 
 from boiling_learning.preprocessing.Case import Case
-from boiling_learning.preprocessing.ExperimentalData import (
-    SAMPLES,
-    ExperimentalData,
-)
+from boiling_learning.preprocessing.ExperimentalData import SAMPLES, ExperimentalData
 from boiling_learning.utils.printing import add_unit_post_fix
 from boiling_learning.utils.units import unit_registry as ureg
 from boiling_learning.utils.utils import PathLike, print_header, print_verbose
@@ -29,13 +26,9 @@ def main(
         except FileNotFoundError:
             print_verbose(verbose, 'Failed, making dataframes.')
 
-            df = ExperimentalData(
-                data_path=case_experiment_map[case.name]
-            ).as_dataframe()
+            df = ExperimentalData(data_path=case_experiment_map[case.name]).as_dataframe()
 
-            df = df.drop(columns='Time instant').astype(
-                {'Elapsed time': 'float64'}
-            )
+            df = df.drop(columns='Time instant').astype({'Elapsed time': 'float64'})
             df = df.set_index('Elapsed time')
 
             case.sync_time_series(df, inplace=True)
@@ -87,6 +80,4 @@ def main(
 
 
 if __name__ == '__main__':
-    raise RuntimeError(
-        '*set_boiling_cases_data* cannot be executed as a standalone script yet.'
-    )
+    raise RuntimeError('*set_boiling_cases_data* cannot be executed as a standalone script yet.')

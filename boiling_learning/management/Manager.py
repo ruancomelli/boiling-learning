@@ -33,10 +33,7 @@ from boiling_learning.io.io import (
     load_json,
     save_json,
 )
-from boiling_learning.io.json_encoders import (
-    GenericJSONDecoder,
-    GenericJSONEncoder,
-)
+from boiling_learning.io.json_encoders import GenericJSONDecoder, GenericJSONEncoder
 from boiling_learning.preprocessing.transformers import Creator, Transformer
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.Parameters import Parameters
@@ -129,14 +126,10 @@ class Manager(
         save_method: Optional[SaverFunction[_ElemType]] = None,
         load_method: Optional[BoolFlaggedLoaderFunction[_ElemType]] = None,
         creator: Optional[Creator[_ElemType]] = None,
-        post_processor: Optional[
-            Transformer[_ElemType, _PostProcessedElemType]
-        ] = None,
+        post_processor: Optional[Transformer[_ElemType, _PostProcessedElemType]] = None,
         verbose: VerboseType = False,
         key_names: Keys = Keys(),
-        table_saver: Callable[
-            [Dict[str, Any], Path], Any
-        ] = _default_table_saver,
+        table_saver: Callable[[Dict[str, Any], Path], Any] = _default_table_saver,
         table_loader: Callable[[Path], Dict[str, Any]] = _default_table_loader,
         description_comparer: Callable[
             [Mapping[str, Any], Mapping[str, Any]], bool
@@ -176,9 +169,7 @@ class Manager(
         self.key_names: self.Keys = key_names
         self._path: Path = bl.utils.ensure_dir(path)
         self._table_path: Path = self.path / 'lookup_table.json'
-        self._entries_dir_path: Path = bl.utils.ensure_dir(
-            self.path / self.key_names.entries
-        )
+        self._entries_dir_path: Path = bl.utils.ensure_dir(self.path / self.key_names.entries)
         self._shared_dir_path: Path = bl.utils.ensure_dir(self.path / 'shared')
         self._table_saver = table_saver
         self._table_loader = table_loader
@@ -200,9 +191,7 @@ class Manager(
         self._format_index: Callable[[int], str] = _format_index
 
         self.save_method: Optional[SaverFunction[_ElemType]] = save_method
-        self.load_method: Optional[
-            BoolFlaggedLoaderFunction[_ElemType]
-        ] = load_method
+        self.load_method: Optional[BoolFlaggedLoaderFunction[_ElemType]] = load_method
         self.creator: Optional[Creator[_ElemType]] = creator
         self.post_processor: Optional[
             Transformer[_ElemType, _PostProcessedElemType]
@@ -211,14 +200,10 @@ class Manager(
 
     def __getitem__(self, elem_id: str):
         self.load_lookup_table()
-        return self._lookup_table.setdefault(self.key_names.entries, {})[
-            elem_id
-        ]
+        return self._lookup_table.setdefault(self.key_names.entries, {})[elem_id]
 
     def __setitem__(self, elem_id: str, entry: Mapping[str, Any]) -> None:
-        self._lookup_table.setdefault(self.key_names.entries, {})[
-            elem_id
-        ] = entry
+        self._lookup_table.setdefault(self.key_names.entries, {})[elem_id] = entry
         self.save_lookup_table()
 
     def __delitem__(self, elem_id: str) -> None:
@@ -255,14 +240,10 @@ class Manager(
         return bl.utils.ensure_dir(self.entries_dir / elem_id)
 
     def elem_path(self, elem_id: str) -> Path:
-        return bl.utils.ensure_parent(
-            self.entry_dir(elem_id) / self.key_names.elements
-        )
+        return bl.utils.ensure_parent(self.entry_dir(elem_id) / self.key_names.elements)
 
     def elem_workspace(self, elem_id: str) -> Path:
-        return bl.utils.ensure_dir(
-            self.entry_dir(elem_id) / self.key_names.workspace
-        )
+        return bl.utils.ensure_dir(self.entry_dir(elem_id) / self.key_names.workspace)
 
     def _initialize_lookup_table(self) -> None:
         self._lookup_table = {self.key_names.entries: {}}
@@ -307,13 +288,9 @@ class Manager(
 
     def contents(self, elem_id: Optional[str] = None):
         if elem_id is None:
-            return {
-                elem_id: self.contents(elem_id) for elem_id in self.entries
-            }
+            return {elem_id: self.contents(elem_id) for elem_id in self.entries}
         else:
-            return self.entries.get(elem_id, {}).get(
-                self.key_names.elements, {}
-            )
+            return self.entries.get(elem_id, {}).get(self.key_names.elements, {})
 
     def new_elem_id(self) -> str:
         '''Return a elem id that does not exist yet'''
@@ -356,18 +333,14 @@ class Manager(
         elif hasattr(default_obj, 'name'):
             return default_obj.name
         else:
-            raise ValueError(
-                f'could not deduce name from ({key}, contents)=({obj},{contents})'
-            )
+            raise ValueError(f'could not deduce name from ({key}, contents)=({obj},{contents})')
 
     def _resolve_contents(
         self,
         contents: Optional[Mapping] = None,
         creator: Optional[Creator[_ElemType]] = None,
         creator_description: Pack = Pack(),
-        post_processor: Optional[
-            Transformer[_ElemType, _PostProcessedElemType]
-        ] = None,
+        post_processor: Optional[Transformer[_ElemType, _PostProcessedElemType]] = None,
         post_processor_description: Pack = Pack(),
     ) -> Dict[str, Union[str, Pack]]:
         if contents is not None:
@@ -409,9 +382,7 @@ class Manager(
         path: Optional[PathLike] = None,
     ) -> Mapping:
         if metadata is None and path is None:
-            raise ValueError(
-                f'cannot resolve metadata with (metadata, path)=({metadata}, {path})'
-            )
+            raise ValueError(f'cannot resolve metadata with (metadata, path)=({metadata}, {path})')
 
         if metadata is None:
             return {self.key_names.path: path}
@@ -423,9 +394,7 @@ class Manager(
         contents: Optional[Mapping] = None,
         creator: Optional[Creator[_ElemType]] = None,
         creator_description: Optional[Pack] = None,
-        post_processor: Optional[
-            Transformer[_ElemType, _PostProcessedElemType]
-        ] = None,
+        post_processor: Optional[Transformer[_ElemType, _PostProcessedElemType]] = None,
         post_processor_description: Optional[Pack] = None,
         metadata: Optional[Mapping] = None,
         path: Optional[PathLike] = None,
@@ -452,9 +421,7 @@ class Manager(
         contents: Optional[Mapping] = None,
         creator: Optional[Creator[_ElemType]] = None,
         creator_description: Optional[Pack] = None,
-        post_processor: Optional[
-            Transformer[_ElemType, _PostProcessedElemType]
-        ] = None,
+        post_processor: Optional[Transformer[_ElemType, _PostProcessedElemType]] = None,
         post_processor_description: Optional[Pack] = None,
         missing_ok: bool = True,
         multiple_ids_handler: Union[
@@ -472,9 +439,7 @@ class Manager(
         )
 
         elem_id_candidates = tuple(
-            bl.utils.extract_keys(
-                self.contents(), value=contents, cmp=self._description_comparer
-            )
+            bl.utils.extract_keys(self.contents(), value=contents, cmp=self._description_comparer)
         )
         n_candidates = len(elem_id_candidates)
 
@@ -482,15 +447,11 @@ class Manager(
             if missing_ok:
                 return self.new_elem_id()
             else:
-                raise ValueError(
-                    f'Could not find elem with the following contents: {contents}'
-                )
+                raise ValueError(f'Could not find elem with the following contents: {contents}')
         elif n_candidates == 1:
             return elem_id_candidates[0]
         else:
-            return self._handle_multiple_ids(
-                elem_id_candidates, multiple_ids_handler
-            )
+            return self._handle_multiple_ids(elem_id_candidates, multiple_ids_handler)
 
     def _handle_multiple_ids(
         self,
@@ -531,10 +492,7 @@ class Manager(
                     print('Removing entry', id_to_remove)  # DEBUG
                     # del self[id_to_remove]
 
-        if (
-            handler is self.MultipleIdsHandler.RAISE
-            and len(elem_id_candidates) > 1
-        ):
+        if handler is self.MultipleIdsHandler.RAISE and len(elem_id_candidates) > 1:
             raise ValueError(
                 f'Expected at most one item in iterable, but got {elem_id_candidates}'
             )
@@ -561,9 +519,7 @@ class Manager(
                 elem_id_candidates,
             )
             loadable_candidates = (
-                elem_id
-                for elem_id, (success, _) in loadable_candidates
-                if success
+                elem_id for elem_id, (success, _) in loadable_candidates if success
             )
             resolved_id = sorted(
                 loadable_candidates,
@@ -582,8 +538,7 @@ class Manager(
                 {
                     other_id
                     for other_id, other_contents in all_contents
-                    if other_id != elem_id
-                    and self._description_comparer(contents, other_contents)
+                    if other_id != elem_id and self._description_comparer(contents, other_contents)
                 },
                 key=self._parse_index,
             )
@@ -597,9 +552,7 @@ class Manager(
 
         return repetition_dict, repeated
 
-    def _load_elem(
-        self, path: PathLike, raise_if_load_fails: bool
-    ) -> BoolFlagged[_ElemType]:
+    def _load_elem(self, path: PathLike, raise_if_load_fails: bool) -> BoolFlagged[_ElemType]:
         success, elem = self.load_elem(path)
 
         if raise_if_load_fails and not success:
@@ -634,22 +587,15 @@ class Manager(
         if entry_pred is None:
             elems = self.entries.keys()
         else:
-            elems = (
-                elem_id
-                for elem_id, entry in self.entries.items()
-                if entry_pred(entry)
-            )
+            elems = (elem_id for elem_id, entry in self.entries.items() if entry_pred(entry))
 
         elems = ((elem_id, self.elem_path(elem_id)) for elem_id in elems)
 
         elems = (
-            (elem_id, self._load_elem(path, raise_if_load_fails=False))
-            for elem_id, path in elems
+            (elem_id, self._load_elem(path, raise_if_load_fails=False)) for elem_id, path in elems
         )
 
-        elems = (
-            (elem_id, elem) for elem_id, (success, elem) in elems if success
-        )
+        elems = ((elem_id, elem) for elem_id, (success, elem) in elems if success)
 
         return elems
 
@@ -658,9 +604,7 @@ class Manager(
         contents: Optional[Mapping] = None,
         creator: Optional[Creator[_ElemType]] = None,
         creator_description: Optional[Pack] = None,
-        post_processor: Optional[
-            Transformer[_ElemType, _PostProcessedElemType]
-        ] = None,
+        post_processor: Optional[Transformer[_ElemType, _PostProcessedElemType]] = None,
         post_processor_description: Pack = Pack(),
         include: bool = False,
         missing_ok: bool = False,
@@ -700,9 +644,7 @@ class Manager(
         post_processor_description: Pack = Pack(),
         post_processor_params: Pack = Pack(),
         load: Union[bool, BoolFlaggedLoaderFunction[_ElemType]] = False,
-        save: Union[
-            bool, Callable[[Union[_ElemType, _PostProcessedElemType]], Any]
-        ] = False,
+        save: Union[bool, Callable[[Union[_ElemType, _PostProcessedElemType]], Any]] = False,
         raise_if_load_fails: bool = False,
         reload_after_save: bool = False,
     ) -> Union[_ElemType, _PostProcessedElemType]:
@@ -763,14 +705,10 @@ class Manager(
                 elem_id: str, path: Path, raise_if_load_fails: bool
             ) -> BoolFlagged[_ElemType]:
                 if callable(load):
-                    self._print(
-                        1, 'Trying to load', elem_id, 'using custom loader'
-                    )
+                    self._print(1, 'Trying to load', elem_id, 'using custom loader')
                     success, elem = load(path)
                 else:
-                    self._print(
-                        1, 'Trying to load', elem_id, 'using default loader'
-                    )
+                    self._print(1, 'Trying to load', elem_id, 'using default loader')
                     success, elem = self._load_elem(
                         path=path, raise_if_load_fails=raise_if_load_fails
                     )
@@ -788,9 +726,7 @@ class Manager(
 
             success = False
             if must_load:
-                success, elem = _load(
-                    elem_id, path, raise_if_load_fails=raise_if_load_fails
-                )
+                success, elem = _load(elem_id, path, raise_if_load_fails=raise_if_load_fails)
 
             if not success:
                 self._print(1, 'Couldn\'t load', elem_id)
@@ -803,15 +739,11 @@ class Manager(
                         self._print(1, 'Saving', elem_id, 'using custom saver')
                         save(elem, path)
                     else:
-                        self._print(
-                            1, 'Saving', elem_id, 'using default saver'
-                        )
+                        self._print(1, 'Saving', elem_id, 'using default saver')
                         self.save_elem(elem, path)
 
                     if reload_after_save:
                         self._print(1, 'Reloading', elem_id)
-                        success, elem = _load(
-                            elem_id, path, raise_if_load_fails=True
-                        )
+                        success, elem = _load(elem_id, path, raise_if_load_fails=True)
 
         return elem

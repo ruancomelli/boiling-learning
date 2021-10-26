@@ -46,9 +46,7 @@ def convert_video(
 
     if out_path.is_file():
         if verbose:
-            print(
-                'Destination file already exists. Skipping video conversion.'
-            )
+            print('Destination file already exists. Skipping video conversion.')
     else:
         command_list = ['ffmpeg', '-i', str(in_path), '-vsync', '0']
         if remove_audio:
@@ -126,16 +124,12 @@ def make_callable_index_parser(
         index_parser_str = str(index_parser)
 
         if index_key is None or index_key not in {
-            tup[1]
-            for tup in string.Formatter().parse(index_parser_str)
-            if tup[1] is not None
+            tup[1] for tup in string.Formatter().parse(index_parser_str) if tup[1] is not None
         }:
             return False, index_parser
 
         parser = parse.compile(index_parser_str).parse
-        index_parser = funcy.compose(
-            int, operator.itemgetter(index_key), parser, str
-        )
+        index_parser = funcy.compose(int, operator.itemgetter(index_key), parser, str)
     return True, index_parser
 
 
@@ -163,9 +157,7 @@ def extract_frames_iterate(
         outputdir, filename_pattern, index_key=index_key
     )
     if not success:
-        raise ValueError(
-            'filename_pattern could not be successfully converted to a callable.'
-        )
+        raise ValueError('filename_pattern could not be successfully converted to a callable.')
 
     if verbose:
         print('Extracting frames iteratively.')
@@ -218,9 +210,7 @@ def extracted_frames_count(
     video_frames_count = None
     if use_metadata:
         metadata_path = bl.utils.ensure_parent(metadata_path, root=outputdir)
-        metadata = (
-            bl.io.load_json(metadata_path) if metadata_path.is_file() else {}
-        )
+        metadata = bl.io.load_json(metadata_path) if metadata_path.is_file() else {}
     if use_metadata and not recount_source:
         video_frames_count = metadata.get('video', {}).get(fast_key)
 
@@ -255,9 +245,7 @@ def extracted_frames_count(
                 exclude_count=tmp_dir_count,
             )
         else:
-            extracted_count = count_frames_in_dir(
-                outputdir, frame_suffix=frame_suffix
-            )
+            extracted_count = count_frames_in_dir(outputdir, frame_suffix=frame_suffix)
 
     if use_metadata:
         metadata['extracted'] = extracted_count
@@ -275,9 +263,7 @@ def extracted_frames_count(
 def extract_frames(
     video_path: PathLike,
     outputdir: PathLike,
-    filename_pattern: Union[
-        PathLike, Callable[[int], PathLike]
-    ] = 'frame%d.png',
+    filename_pattern: Union[PathLike, Callable[[int], PathLike]] = 'frame%d.png',
     index_key: Optional[str] = None,
     frame_suffix: Optional[str] = None,
     verbose: VerboseType = False,
@@ -339,11 +325,7 @@ def extract_frames(
     ) = make_callable_filename_pattern(outputdir, filename_pattern, index_key)
 
     if use_frames_count:
-        (
-            video_frames_count,
-            tmp_dir_count,
-            extracted_count,
-        ) = extracted_frames_count(
+        (video_frames_count, tmp_dir_count, extracted_count,) = extracted_frames_count(
             video_path,
             outputdir,
             frame_suffix,
@@ -354,13 +336,9 @@ def extract_frames(
         )
 
     skip_tmp_extraction = (
-        use_frames_count
-        and tmp_dir_count is not None
-        and tmp_dir_count == video_frames_count
+        use_frames_count and tmp_dir_count is not None and tmp_dir_count == video_frames_count
     )
-    skip_extraction = (
-        use_frames_count and extracted_count == video_frames_count
-    )
+    skip_extraction = use_frames_count and extracted_count == video_frames_count
 
     if skip_extraction:
         if verbose:
@@ -407,9 +385,7 @@ def extract_frames(
             source_dest_pairs = (
                 (
                     source,
-                    callable_filename_pattern(
-                        parse.parse(tmp_parser, source.name)['index']
-                    ),
+                    callable_filename_pattern(parse.parse(tmp_parser, source.name)['index']),
                 )
                 for source in temporary_folder.iterdir()
             )
@@ -532,9 +508,7 @@ def open_video(video_path: PathLike) -> Iterator[cv2.VideoCapture]:
         cap.release()
 
 
-def frames(
-    video_path: PathLike, suppress_retrieval_failure: bool = True
-) -> Iterator[np.ndarray]:
+def frames(video_path: PathLike, suppress_retrieval_failure: bool = True) -> Iterator[np.ndarray]:
     # Does not work with GOPRO format
 
     with open_video(video_path) as cap:
@@ -543,9 +517,7 @@ def frames(
             if flag:
                 yield frame
             elif not suppress_retrieval_failure:
-                raise RuntimeError(
-                    f'failed frame retrieval for video at {video_path}'
-                )
+                raise RuntimeError(f'failed frame retrieval for video at {video_path}')
 
 
 def opencv_property_getter_from_file(
@@ -593,9 +565,7 @@ def count_frames_in_dir(
         return n_frames_in_path
 
     if exclude_count is None:
-        exclude_count = count_frames_in_dir(
-            exclude_path, frame_suffix, recursive=recursive
-        )
+        exclude_count = count_frames_in_dir(exclude_path, frame_suffix, recursive=recursive)
     elif callable(exclude_count):
         exclude_count = exclude_count(exclude_path)
 
@@ -630,9 +600,7 @@ def reorganize_frames(
     )
 
     if not success:
-        raise ValueError(
-            'filename_pattern could not be converted to a callable.'
-        )
+        raise ValueError('filename_pattern could not be converted to a callable.')
 
     success, index_parser = make_callable_index_parser(index_parser, index_key)
 

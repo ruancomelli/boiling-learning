@@ -10,15 +10,9 @@ from boiling_learning.utils.units import unit_registry as ureg
 
 SAMPLES = frozendict(
     {
-        1: geometry.Cylinder(
-            length=6.5 * ureg.centimeter, diameter=0.51 * ureg.millimeter
-        ),
-        2: geometry.Cylinder(
-            length=6.5 * ureg.centimeter, diameter=0.51 * ureg.millimeter
-        ),
-        3: geometry.Cylinder(
-            length=6.5 * ureg.centimeter, diameter=0.25 * ureg.millimeter
-        ),
+        1: geometry.Cylinder(length=6.5 * ureg.centimeter, diameter=0.51 * ureg.millimeter),
+        2: geometry.Cylinder(length=6.5 * ureg.centimeter, diameter=0.51 * ureg.millimeter),
+        3: geometry.Cylinder(length=6.5 * ureg.centimeter, diameter=0.25 * ureg.millimeter),
         4: geometry.RectangularPrism(
             length=6.5 * ureg.centimeter,
             width=1 / 16 * ureg.inch,
@@ -41,18 +35,14 @@ class ExperimentalData:
         description_path: Optional[PathLike] = None,
     ) -> None:
         if (path, data_path).count(None) != 1:
-            raise ValueError(
-                'exactly one of path or data_path must be given as parameter.'
-            )
+            raise ValueError('exactly one of path or data_path must be given as parameter.')
 
         self.data_path: Path
         self.description_path: Optional[Path] = None
         if path is None:
             self.data_path = bl_utils.ensure_resolved(data_path)
             if description_path is not None:
-                self.description_path = bl_utils.ensure_resolved(
-                    description_path
-                )
+                self.description_path = bl_utils.ensure_resolved(description_path)
         else:
             path = bl_utils.ensure_resolved(path)
             self.data_path = path / 'data.csv'
@@ -62,10 +52,7 @@ class ExperimentalData:
             raise ValueError(
                 f'data path is not a valid file. Please pass a valid one as input. Got {self.data_path}'
             )
-        if (
-            self.description_path is not None
-            and not self.description_path.is_file()
-        ):
+        if self.description_path is not None and not self.description_path.is_file():
             self.description_path = None
 
     def as_dataframe(self) -> pd.DataFrame:

@@ -26,9 +26,7 @@ class NamedFunction(Generic[_Out]):
 
 
 class NamedFunctional(Generic[_Out]):
-    def __init__(
-        self, name: str, callable: Callable[..., _Out], pack: Pack = Pack()
-    ) -> None:
+    def __init__(self, name: str, callable: Callable[..., _Out], pack: Pack = Pack()) -> None:
         self.__name: str = name
         self.__call: Callable[..., _Out] = pack.rpartial(callable)
         self.__desc: Pack = pack
@@ -46,9 +44,7 @@ class NamedFunctional(Generic[_Out]):
 
 
 class Creator(NamedFunctional[_Out], Generic[_Out]):
-    def __init__(
-        self, name: str, callable: Callable[..., _Out], pack: Pack = Pack()
-    ) -> None:
+    def __init__(self, name: str, callable: Callable[..., _Out], pack: Pack = Pack()) -> None:
         super().__init__(name, callable, pack)
 
     def __call__(self) -> _Out:
@@ -56,9 +52,7 @@ class Creator(NamedFunctional[_Out], Generic[_Out]):
 
 
 class Transformer(NamedFunctional[_Out], Generic[_In, _Out]):
-    def __init__(
-        self, name: str, callable: Callable[..., _Out], pack: Pack = Pack()
-    ) -> None:
+    def __init__(self, name: str, callable: Callable[..., _Out], pack: Pack = Pack()) -> None:
         super().__init__(name, callable, pack)
 
     def __call__(self, arg: _In) -> _Out:

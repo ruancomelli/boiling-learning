@@ -22,6 +22,7 @@ import funcy
 import more_itertools as mit
 
 from boiling_learning.utils.FrozenDict import FrozenDict
+from boiling_learning.utils.sentinels import Sentinel
 
 # TODO: when variadic generics are available, they will be very useful here
 _T = TypeVar('_T')
@@ -46,9 +47,7 @@ def nth_arg(n: int) -> Callable:
 
 
 class Pack(Hashable, Generic[_T, _S]):
-    def __init__(
-        self, args: ArgsType[_T] = (), kwargs: KwargsType[_S] = FrozenDict()
-    ) -> None:
+    def __init__(self, args: ArgsType[_T] = (), kwargs: KwargsType[_S] = FrozenDict()) -> None:
         self._args: Tuple[_T] = tuple(args)
         self._kwargs: FrozenDict[str, _S] = FrozenDict(kwargs)
 
@@ -79,9 +78,7 @@ class Pack(Hashable, Generic[_T, _S]):
         elif isinstance(loc, str):
             return self.kwargs[loc]
         else:
-            raise ValueError(
-                f'*Pack* expects an *int* index or *str* key, but got a {type(loc)}'
-            )
+            raise ValueError(f'*Pack* expects an *int* index or *str* key, but got a {type(loc)}')
 
     def __iter__(self) -> Iterator[Union[Tuple[_T], KwargsType[_S]]]:
         return iter((self.args, self.kwargs))
@@ -91,9 +88,7 @@ class Pack(Hashable, Generic[_T, _S]):
 
     def __str__(self) -> str:
         args2str = ', '.join(map(str, self.args))
-        kwargs2str = ', '.join(
-            f'{key}={value}' for key, value in self.kwargs.items()
-        )
+        kwargs2str = ', '.join(f'{key}={value}' for key, value in self.kwargs.items())
         return ''.join(
             (
                 'P(',
@@ -152,9 +147,7 @@ class Pack(Hashable, Generic[_T, _S]):
 
     def omit(
         self,
-        loc: Union[
-            int, str, Iterable[Union[int, str]]
-        ] = (),  # TODO: unify everything here
+        loc: Union[int, str, Iterable[Union[int, str]]] = (),  # TODO: unify everything here
         pred: Optional[Callable[[_T], bool]] = None,
     ) -> Pack:
         '''
@@ -179,11 +172,7 @@ class Pack(Hashable, Generic[_T, _S]):
         if pred is not None:
             to_remove = funcy.select_values(pred, to_remove)
         to_remove = frozenset(funcy.walk(0, to_remove))
-        args = tuple(
-            funcy.select_keys(
-                lambda idx: idx not in to_remove, enumerated_args
-            )
-        )
+        args = tuple(funcy.select_keys(lambda idx: idx not in to_remove, enumerated_args))
         args = funcy.walk(1, args)
 
         to_remove = funcy.project(self.kwargs, key)
@@ -221,13 +210,10 @@ class Pack(Hashable, Generic[_T, _S]):
     def _apply(self, fargs, fkwargs, right: bool = False) -> Pack:
         n_fargs = len(fargs)
 
-        args_to_transform = (
-            self.args[-n_fargs:] if right else self.args[:n_fargs]
-        )
+        args_to_transform = self.args[-n_fargs:] if right else self.args[:n_fargs]
 
         new_args = tuple(
-            f(arg) if f is not None else arg
-            for f, arg in zip(fargs, args_to_transform)
+            f(arg) if f is not None else arg for f, arg in zip(fargs, args_to_transform)
         )
         new_kwargs = {k: f(self[k]) for k, f in fkwargs.items()}
 
@@ -250,7 +236,19 @@ class Pack(Hashable, Generic[_T, _S]):
         return self._apply(fargs, fkwargs, right=True)
 
 
-P = Pack.pack
+class Args(Pack[_T, _S], Generic[_T, _S]):
+    def __init__(self, args: ArgsType[_T] = ()) -> None:
+        super().__init__(args, {})
+
+
+class Kwargs(Pack[_T, _S], Generic[_T, _S]):
+    def __init__(self, kwargs: KwargsType[_S] = FrozenDict()) -> None:
+        super().__init__((), kwargs)
+
+
+class P(Pack[_T, _S], Generic[_T, _S]):
+    def __init__(self, *args: _T, cls: Any = Sentinel.INSTANCE, **kwargs: _S) -> None:
+        super().__init__(args, kwargs)
 
 
 def unpack(f: Callable[..., _U], packed_param: Pack[_T, _S]) -> _U:
@@ -265,9 +263,7 @@ def pack_combinations(
     n_args = len(pack.args)
 
     for combination in combinator(*pack.args, *values):
-        yield Pack(
-            combination[:n_args], funcy.zipdict(keys, combination[n_args:])
-        )
+        yield Pack(combination[:n_args], funcy.zipdict(keys, combination[n_args:]))
 
 
 def packed(f: Callable[..., _U]) -> Callable[[Pack], _U]:

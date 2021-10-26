@@ -23,7 +23,4 @@ class DatasetMultiMetricEvaluator:
         y_pred = model.predict(self.features)
         zipped = tf.data.Dataset.zip(self.targets, y_pred)
 
-        return {
-            metric.name: calculate_metric(zipped, metric)
-            for metric in self.metrics
-        }
+        return {metric.name: calculate_metric(zipped, metric) for metric in self.metrics}

@@ -113,9 +113,7 @@ def new_py_function(func, inp, Tout, name=None):
         return tf.TensorSpec(None, v) if isinstance(v, tf.dtypes.DType) else v
 
     def wrapped_func(*flat_inp):
-        reconstructed_inp = tf.nest.pack_sequence_as(
-            inp, flat_inp, expand_composites=True
-        )
+        reconstructed_inp = tf.nest.pack_sequence_as(inp, flat_inp, expand_composites=True)
         out = func(*reconstructed_inp)
         return tf.nest.flatten(out, expand_composites=True)
 
@@ -126,8 +124,6 @@ def new_py_function(func, inp, Tout, name=None):
         Tout=[_tensor_spec_to_dtype(v) for v in flat_Tout],
         name=name,
     )
-    spec_out = tf.nest.map_structure(
-        _dtype_to_tensor_spec, Tout, expand_composites=True
-    )
+    spec_out = tf.nest.map_structure(_dtype_to_tensor_spec, Tout, expand_composites=True)
     out = tf.nest.pack_sequence_as(spec_out, flat_out, expand_composites=True)
     return out

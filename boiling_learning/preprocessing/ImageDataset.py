@@ -113,9 +113,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     def __getitem__(self, name: str) -> ExperimentVideo:
         return self._experiment_videos[name]
 
-    def __setitem__(
-        self, name: str, experiment_video: ExperimentVideo
-    ) -> None:
+    def __setitem__(self, name: str, experiment_video: ExperimentVideo) -> None:
         if name != experiment_video.name:
             raise ValueError(
                 'there is no support for setting an ExperimentVideo with'
@@ -186,13 +184,9 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         for ev in self.values():
             ev.frames_to_tensor(overwrite=overwrite)
 
-    def extract_audios(
-        self, overwrite: bool = False, verbose: VerboseType = False
-    ) -> None:
+    def extract_audios(self, overwrite: bool = False, verbose: VerboseType = False) -> None:
         for experiment_video in self.values():
-            experiment_video.extract_audio(
-                overwrite=overwrite, verbose=verbose
-            )
+            experiment_video.extract_audio(overwrite=overwrite, verbose=verbose)
 
     def extract_frames(
         self,
@@ -238,11 +232,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
 
         if isinstance(video_data, list):
             if not purged:
-                video_data = [
-                    item
-                    for item in video_data
-                    if not item.pop(keys.ignore, False)
-                ]
+                video_data = [item for item in video_data if not item.pop(keys.ignore, False)]
                 purged = True
 
             video_data = {item.pop(keys.name): item for item in video_data}
@@ -272,13 +262,9 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         if columns is None:
             self.df = pd.read_csv(self.df_path, skipinitialspace=True)
         else:
-            self.df = pd.read_csv(
-                self.df_path, skipinitialspace=True, usecols=tuple(columns)
-            )
+            self.df = pd.read_csv(self.df_path, skipinitialspace=True, usecols=tuple(columns))
 
-    def save(
-        self, path: Optional[PathLike] = None, overwrite: bool = False
-    ) -> None:
+    def save(self, path: Optional[PathLike] = None, overwrite: bool = False) -> None:
         if path is None:
             path = self.df_path
         path = bl_utils.ensure_parent(path)
@@ -393,9 +379,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         return bl_utils.concatenate_dataframes(dfs)
 
     @overload
-    def iterdata_from_dataframe(
-        self, *, select_columns: str
-    ) -> Iterable[Tuple[np.ndarray, Any]]:
+    def iterdata_from_dataframe(self, *, select_columns: str) -> Iterable[Tuple[np.ndarray, Any]]:
         ...
 
     @overload
@@ -407,9 +391,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     def iterdata_from_dataframe(self, *, select_columns=None):
         return itertools.chain.from_iterable(
             map(
-                operator.methodcaller(
-                    'iterdata_from_dataframe', select_columns=select_columns
-                ),
+                operator.methodcaller('iterdata_from_dataframe', select_columns=select_columns),
                 self.values(),
             )
         )

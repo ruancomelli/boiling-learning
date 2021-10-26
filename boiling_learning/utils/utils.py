@@ -51,7 +51,7 @@ from plum import dispatch
 from sortedcontainers import SortedSet
 from typing_extensions import overload
 
-from boiling_learning.utils.functional import P
+from boiling_learning.utils.functional import Kwargs
 from boiling_learning.utils.iterutils import flaglast
 from boiling_learning.utils.sentinels import EMPTY
 
@@ -109,9 +109,7 @@ def constant_factory(value: Callable[[], _T]) -> Callable[..., _T]:
     return _constant
 
 
-def comment(
-    f: Callable, s: str = '', printer: Callable[[str], Any] = print
-) -> Callable:
+def comment(f: Callable, s: str = '', printer: Callable[[str], Any] = print) -> Callable:
     @wraps(f)
     def wrapped(*args, **kwargs):
         printer(s)
@@ -174,9 +172,7 @@ def argmax(iterable: Iterable) -> int:
 
 
 def argsorted(iterable: Iterable) -> Iterable[int]:
-    return funcy.pluck(
-        0, sorted(enumerate(iterable), key=operator.itemgetter(1))
-    )
+    return funcy.pluck(0, sorted(enumerate(iterable), key=operator.itemgetter(1)))
 
 
 def multipop(lst: MutableSequence[_T], indices: Collection[int]) -> List[_T]:
@@ -253,22 +249,15 @@ def one_factor_at_a_time(
     [(2, 'a', 'alpha'), (1, 'a', 'alpha'), (3, 'a', 'alpha'), (2, 'r', 'alpha'), (2, 'o', 'alpha'), (2, 'h', 'alpha'), (2, 'n', 'alpha'), (2, 'a', 'beta')]
     '''
     default_indices = tuple(default_indices)
-    default_indices = default_indices + (0,) * (
-        len(iterables) - len(default_indices)
-    )
+    default_indices = default_indices + (0,) * (len(iterables) - len(default_indices))
 
     if skip_repeated:
-        yield tuple(
-            iterable[default_indices[idx]]
-            for idx, iterable in enumerate(iterables)
-        )
+        yield tuple(iterable[default_indices[idx]] for idx, iterable in enumerate(iterables))
 
     for iterable_index, iterable in enumerate(iterables):
         head = tuple(
             item[head_idx]
-            for item, head_idx in zip(
-                iterables[:iterable_index], default_indices[:iterable_index]
-            )
+            for item, head_idx in zip(iterables[:iterable_index], default_indices[:iterable_index])
         )
         tail = tuple(
             tail[tail_idx]
@@ -422,9 +411,7 @@ def dataclass_from_mapping(
     dataclass_field_names = frozenset(dataclassy.fields(dataclass_factory))
 
     if key_map is None:
-        return dataclass_factory(
-            **funcy.select_keys(dataclass_field_names, mapping)
-        )
+        return dataclass_factory(**funcy.select_keys(dataclass_field_names, mapping))
 
     if is_dataclass_instance(key_map):
         key_map = dataclassy.as_dict(key_map)
@@ -435,9 +422,7 @@ def dataclass_from_mapping(
     return dataclass_from_mapping(mapping, dataclass_factory)
 
 
-def to_parent_dataclass(
-    obj: DataClass, parent: Callable[..., DataClass]
-) -> DataClass:
+def to_parent_dataclass(obj: DataClass, parent: Callable[..., DataClass]) -> DataClass:
     if not is_dataclass_class(parent):
         raise ValueError('*parent* must be a dataclass.')
 
@@ -471,9 +456,7 @@ def concatenate_dataframes(dfs: Iterable[pd.DataFrame]) -> pd.DataFrame:
     return pd.concat(dfs)
 
 
-def dataframe_categories_to_int(
-    df: pd.DataFrame, inplace: bool = False
-) -> pd.DataFrame:
+def dataframe_categories_to_int(df: pd.DataFrame, inplace: bool = False) -> pd.DataFrame:
     # See <https://www.tensorflow.org/tutorials/load_data/pandas_dataframe> for the reasoning behind this
 
     if not inplace:
@@ -530,10 +513,7 @@ def shorten_path(path, max_parts=None, max_len=None, prefix='...'):
         prefix = str(prefix) + sep
         prefix_len = len(prefix)
 
-        while (
-            len(str(shortened)) + prefix_len > max_len
-            and len(shortened.parts) > 1
-        ):
+        while len(str(shortened)) + prefix_len > max_len and len(shortened.parts) > 1:
             shortened = _slice_path(shortened, slice(1, None))
 
     if shortened == path:
@@ -569,13 +549,9 @@ def prepare_fig(
     * fig_size and subfig_size can be a pair (width, height) or a string in ['tiny', 'small', 'normal', 'intermediate', 'large', 'big']
     """
     if (fig_size, subfig_size).count(None) != 1:
-        raise ValueError(
-            'exactly one of *figsize* and *subfig_size* must be *None*'
-        )
+        raise ValueError('exactly one of *figsize* and *subfig_size* must be *None*')
     if (n_cols, n_rows, n_elems).count(None) != 1:
-        raise ValueError(
-            'exactly one of *n_cols*, *n_rows* and *n_elems* must be *None*'
-        )
+        raise ValueError('exactly one of *n_cols*, *n_rows* and *n_elems* must be *None*')
 
     if n_rows is None:
         n_rows = (n_elems - 1) // n_cols + 1
@@ -629,8 +605,8 @@ def json_equivalent(
     loads: Callable[[str], Any] = json.loads,
 ) -> bool:
     # ignore parameter *cls* when it is *None*
-    dumps = P(cls=encoder).partial(dumps)
-    loads = P(cls=decoder).partial(loads)
+    dumps = Kwargs({'cls': encoder}).partial(dumps)
+    loads = Kwargs({'cls': decoder}).partial(loads)
 
     lhs_str = dumps(lhs)
     rhs_str = dumps(rhs)
@@ -764,9 +740,7 @@ def dir_as_tree(dir_path, file_pred=None, dir_pred=None):
         if path.is_file() and (file_pred is None or file_pred(path)):
             ret_list.append(path)
         elif path.is_dir() and (dir_pred is None or dir_pred(path)):
-            ret_dict[path.name] = dir_as_tree(
-                path, file_pred=file_pred, dir_pred=dir_pred
-            )
+            ret_dict[path.name] = dir_as_tree(path, file_pred=file_pred, dir_pred=dir_pred)
 
     return ret_list, ret_dict
 
@@ -784,9 +758,7 @@ def count_file_lines(path):
         return mit.ilen(f)
 
 
-def generate_string(
-    length: int = 6, chars: Sequence[str] = string.ascii_lowercase
-) -> str:
+def generate_string(length: int = 6, chars: Sequence[str] = string.ascii_lowercase) -> str:
     '''source: <https://stackoverflow.com/a/2257449/5811400>'''
     return ''.join(random.choices(chars, k=length))
 
@@ -815,9 +787,7 @@ def tempfilepath(suffix: Optional[str] = None) -> Iterator[Path]:
         yield filepath
 
 
-def JSONDict(
-    path: PathLike, dumps: Callable[[_T], str], loads: Callable[[str], _T]
-) -> zict.Func:
+def JSONDict(path: PathLike, dumps: Callable[[_T], str], loads: Callable[[str], _T]) -> zict.Func:
     path = ensure_dir(path)
     file = zict.File(path, mode='a')
     compress = zict.Func(zlib.compress, zlib.decompress, file)
@@ -829,9 +799,7 @@ def JSONDict(
     )
 
 
-def fix_path(
-    path: PathLike, substitution_dict: Optional[Dict[str, str]] = None
-) -> Path:
+def fix_path(path: PathLike, substitution_dict: Optional[Dict[str, str]] = None) -> Path:
     path = ensure_resolved(path)
     path_str = str(path)
 
@@ -925,9 +893,7 @@ def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
     return simple_pprint
 
 
-def _format_kwarg_dict_items(
-    self, items, stream, indent, allowance, context, level
-):
+def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, level):
     '''
     Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
     '''
@@ -982,9 +948,7 @@ class SimpleRepr:
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
         address = id(self) & 0xFFFFFF
-        attrs = ', '.join(
-            f'{key}={value!r}' for key, value in self.__dict__.items()
-        )
+        attrs = ', '.join(f'{key}={value!r}' for key, value in self.__dict__.items())
 
         return f'<{class_name} @{address:x} {attrs}>'
 
@@ -992,9 +956,7 @@ class SimpleRepr:
 class SimpleStr:
     def __str__(self) -> str:
         class_name = self.__class__.__name__
-        attrs = ', '.join(
-            f'{key}={value}' for key, value in self.__dict__.items()
-        )
+        attrs = ', '.join(f'{key}={value}' for key, value in self.__dict__.items())
 
         return f'{class_name}({attrs})'
 
@@ -1024,9 +986,7 @@ class NoValueEnum(enum.Enum):
         return '<%s.%s>' % (self.__class__.__name__, self.name)
 
 
-def enum_item(
-    enumeration: Type[_EnumType], item: Union[_EnumType, int, str]
-) -> _EnumType:
+def enum_item(enumeration: Type[_EnumType], item: Union[_EnumType, int, str]) -> _EnumType:
     if isinstance(item, str):
         return enumeration[item]
     elif isinstance(item, int):

@@ -38,9 +38,7 @@ def _parse_timedelta(s: Optional[str]) -> Optional[timedelta]:
         return None
 
     m = _timedelta_pattern.fullmatch(s)
-    return timedelta(
-        hours=int(m['h']), minutes=int(m['min']), seconds=int(m['s'])
-    )
+    return timedelta(hours=int(m['h']), minutes=int(m['min']), seconds=int(m['s']))
 
 
 def dataframes_from_gspread(
@@ -65,9 +63,7 @@ def _parse_mass_timeseries(
     df = df.loc[:, (df.loc[0] == subcase) & (df.loc[1] == test)][2:]
     df, df.columns = df[1:], df.iloc[0]
 
-    df['datetime'] = pd.to_datetime(
-        df.pop('date').astype(str) + ' ' + df.pop('time').astype(str)
-    )
+    df['datetime'] = pd.to_datetime(df.pop('date').astype(str) + ' ' + df.pop('time').astype(str))
     datetime_secs = df.datetime.apply(lambda dt: time.mktime(dt.timetuple()))
     df['elapsed_time'] = datetime_secs - datetime_secs.min()
     mass = pd.to_numeric(df.pop('mass [g]').str.replace(',', '.'))
@@ -134,9 +130,7 @@ def main(
 
             # TODO: add average mass rate to categories?
 
-            print_verbose(
-                verbose >= 2, f'Setting categories for EV "{ev_name}"'
-            )
+            print_verbose(verbose >= 2, f'Setting categories for EV "{ev_name}"')
             if case == 'stainless steel' and subcase == 'polished':
                 # those are the standard conditions for polished SS
                 # temperatures are in Celsius
@@ -166,17 +160,15 @@ def main(
             else:
                 continue
 
-            videospec = dataspec['cases'][case]['subcases'][subcase]['tests'][
-                test_name
-            ]['videos'][video_name + '.mp4']
+            videospec = dataspec['cases'][case]['subcases'][subcase]['tests'][test_name]['videos'][
+                video_name + '.mp4'
+            ]
 
             print_verbose(verbose >= 2, f'Getting FPS for EV "{ev_name}"')
 
             fps = fps_getter(ev.path)
 
-            print_verbose(
-                verbose >= 2, f'Getting video data for EV "{ev_name}"'
-            )
+            print_verbose(verbose >= 2, f'Getting video data for EV "{ev_name}"')
 
             videodata = ExperimentVideo.VideoData(
                 categories=categories,
@@ -189,13 +181,9 @@ def main(
                 end_elapsed_time=_parse_timedelta(videospec['end']),
             )
 
-            print_verbose(
-                verbose >= 2, f'Setting video data for EV "{ev_name}"'
-            )
+            print_verbose(verbose >= 2, f'Setting video data for EV "{ev_name}"')
             ev.set_video_data(videodata)
-            print_verbose(
-                verbose, f'{ev_name} -> [{ev.start}, {ev.end}) :: {categories}'
-            )
+            print_verbose(verbose, f'{ev_name} -> [{ev.start}, {ev.end}) :: {categories}')
 
             dataset_name = ':'.join((case, subcase))
             datasets_dict[dataset_name].add(ev)
@@ -247,9 +235,7 @@ def main(
                     mass_data = dataframes_from_gspread(spreadsheet_name)
 
                 case_name, subcase_name, test_name, _ = ev.name.split(':')
-                df = _parse_mass_timeseries(
-                    mass_data, case_name, subcase_name, test_name
-                )
+                df = _parse_mass_timeseries(mass_data, case_name, subcase_name, test_name)
                 coefs = linear_regression(df, 'elapsed_time', 'mass')
                 ev.df[MASS_COLUMN] = coefs.coef
 

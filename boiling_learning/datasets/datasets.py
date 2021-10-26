@@ -2,16 +2,7 @@ import random
 from collections import deque
 from fractions import Fraction
 from functools import partial
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import Any, Callable, Iterable, List, Optional, Tuple, TypeVar, Union
 
 import funcy
 import more_itertools as mit
@@ -27,9 +18,7 @@ from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.utils.dtypes import auto_spec
-from boiling_learning.utils.iterutils import (
-    distance_maximized_evenly_spaced_indices,
-)
+from boiling_learning.utils.iterutils import distance_maximized_evenly_spaced_indices
 from boiling_learning.utils.sentinels import EMPTY
 from boiling_learning.utils.slicerators import Slicerator
 
@@ -61,9 +50,7 @@ class DatasetSplits:
                     if not (0 < others_sum <= 1):
                         raise ValueError(
                             'it is required that 0 < '
-                            + ' + '.join(
-                                f'*{other}*' for other in others.keys()
-                            )
+                            + ' + '.join(f'*{other}*' for other in others.keys())
                             + ' <= 1'
                         )
 
@@ -75,17 +62,11 @@ class DatasetSplits:
         if sum(splits) != 1:
             raise ValueError('*train* + *val* + *test* must equal 1')
 
-        if not (
-            0 < self.train < 1 and 0 <= self.val < 1 and 0 < self.test < 1
-        ):
-            raise ValueError(
-                'it is required that 0 < (*train*, *test*) < 1 and 0 <= *val* < 1'
-            )
+        if not (0 < self.train < 1 and 0 <= self.val < 1 and 0 < self.test < 1):
+            raise ValueError('it is required that 0 < (*train*, *test*) < 1 and 0 <= *val* < 1')
 
 
-def split_sizes(
-    splits: DatasetSplits, total_length: int
-) -> Tuple[int, int, int]:
+def split_sizes(splits: DatasetSplits, total_length: int) -> Tuple[int, int, int]:
     return (
         int(splits.train * total_length),
         int(splits.val * total_length),
@@ -198,18 +179,12 @@ def train_val_test_split(
     """
 
     if splits.val == 0:
-        split_train, split_test = mathutils.proportional_ints(
-            splits.train, splits.test
-        )
+        split_train, split_test = mathutils.proportional_ints(splits.train, splits.test)
         window_shift = split_train + split_test
         if shuffle:
             ds = ds.shuffle(window_shift, reshuffle_each_iteration=False)
         ds_train = ds.window(split_train, window_shift).flat_map(flatten_zip)
-        ds_test = (
-            ds.skip(split_train)
-            .window(split_test, window_shift)
-            .flat_map(flatten_zip)
-        )
+        ds_test = ds.skip(split_train).window(split_test, window_shift).flat_map(flatten_zip)
         ds_val = None
     else:
         split_train, split_val, split_test = mathutils.proportional_ints(
@@ -219,15 +194,9 @@ def train_val_test_split(
         if shuffle:
             ds = ds.shuffle(window_shift, reshuffle_each_iteration=False)
         ds_train = ds.window(split_train, window_shift).flat_map(flatten_zip)
-        ds_val = (
-            ds.skip(split_train)
-            .window(split_val, window_shift)
-            .flat_map(flatten_zip)
-        )
+        ds_val = ds.skip(split_train).window(split_val, window_shift).flat_map(flatten_zip)
         ds_test = (
-            ds.skip(split_train + split_val)
-            .window(split_test, window_shift)
-            .flat_map(flatten_zip)
+            ds.skip(split_train + split_val).window(split_test, window_shift).flat_map(flatten_zip)
         )
 
     return ds_train, ds_val, ds_test
@@ -287,9 +256,7 @@ def bulk_split(
 
 @triplet_aware
 @none_aware
-def take(
-    ds: tf.data.Dataset, count: Optional[Union[int, Fraction]]
-) -> tf.data.Dataset:
+def take(ds: tf.data.Dataset, count: Optional[Union[int, Fraction]]) -> tf.data.Dataset:
     if count is None:
         return ds
 
@@ -299,16 +266,12 @@ def take(
     if isinstance(count, Fraction):
         return train_val_test_split(ds, splits=DatasetSplits(train=count))[0]
 
-    raise TypeError(
-        f'*count* must be either an *int* or a *Fraction*, got {type(count)}.'
-    )
+    raise TypeError(f'*count* must be either an *int* or a *Fraction*, got {type(count)}.')
 
 
 @triplet_aware
 @none_aware
-def calculate_batch_size(
-    dataset: tf.data.Dataset, dim: int = 0, key: Optional[int] = None
-) -> int:
+def calculate_batch_size(dataset: tf.data.Dataset, dim: int = 0, key: Optional[int] = None) -> int:
     elem = mit.first(dataset)
     if key is not None:
         elem = elem[key]
@@ -317,13 +280,9 @@ def calculate_batch_size(
 
 @triplet_aware
 @none_aware
-def calculate_dataset_size(
-    dataset: tf.data.Dataset, batched_dim: Optional[int] = None
-) -> int:
+def calculate_dataset_size(dataset: tf.data.Dataset, batched_dim: Optional[int] = None) -> int:
     if batched_dim is not None:
-        return sum(
-            calculate_batch_size(batch, dim=batched_dim) for batch in dataset
-        )
+        return sum(calculate_batch_size(batch, dim=batched_dim) for batch in dataset)
 
     try:
         return len(dataset)
@@ -360,16 +319,12 @@ def map_unbatched(
     dim: int = 0,
     key: Optional[int] = None,
 ) -> tf.data.Dataset:
-    return apply_unbatched(
-        dataset, lambda ds: ds.map(map_fn), dim=dim, key=key
-    )
+    return apply_unbatched(dataset, lambda ds: ds.map(map_fn), dim=dim, key=key)
 
 
 @triplet_aware
 @none_aware
-def map_flattened(
-    dataset: tf.data.Dataset, map_fn: Callable
-) -> tf.data.Dataset:
+def map_flattened(dataset: tf.data.Dataset, map_fn: Callable) -> tf.data.Dataset:
     return map_unbatched(dataset, map_fn, dim=0, key=0)
 
 
@@ -381,9 +336,7 @@ def filter_unbatched(
     dim: int = 0,
     key: Optional[int] = None,
 ) -> tf.data.Dataset:
-    return apply_unbatched(
-        dataset, lambda ds: ds.filter(pred_fn), dim=dim, key=key
-    )
+    return apply_unbatched(dataset, lambda ds: ds.filter(pred_fn), dim=dim, key=key)
 
 
 @triplet_aware
@@ -435,9 +388,7 @@ def preprocess_slicerator(
         take = int(take * total)
 
     if isinstance(take, int):
-        keep_indices = distance_maximized_evenly_spaced_indices(
-            total=total, count=take
-        )
+        keep_indices = distance_maximized_evenly_spaced_indices(total=total, count=take)
         slicerator = slicerator[keep_indices]
 
     if shuffle:
@@ -452,9 +403,7 @@ def _slicerator_to_dataset(slicerator: Slicerator[Any]) -> tf.data.Dataset:
     sample = slicerator[0]
     typespec = auto_spec(sample)
 
-    return tf.data.Dataset.from_generator(
-        lambda: slicerator, output_signature=typespec
-    )
+    return tf.data.Dataset.from_generator(lambda: slicerator, output_signature=typespec)
 
 
 def slicerator_to_dataset(
@@ -463,9 +412,7 @@ def slicerator_to_dataset(
     dataset_size: Optional[Union[int, Fraction]] = None,
     shuffle: bool = False,
 ) -> tf.data.Dataset:
-    slicerator = preprocess_slicerator(
-        slicerator, take=dataset_size, shuffle=shuffle
-    )
+    slicerator = preprocess_slicerator(slicerator, take=dataset_size, shuffle=shuffle)
     return _slicerator_to_dataset(slicerator)
 
 
@@ -479,11 +426,7 @@ def slicerator_to_dataset_triplet(
     train_size, val_size, _ = split_sizes(splits, len(slicerator))
 
     train_set = slicerator[:train_size]
-    val_set = (
-        slicerator[train_size : train_size + val_size]
-        if val_size > 0
-        else None
-    )
+    val_set = slicerator[train_size : train_size + val_size] if val_size > 0 else None
     test_set = slicerator[train_size + val_size :]
 
     _slicerator_to_dataset = partial(
@@ -506,13 +449,9 @@ def experiment_video_to_dataset_triplet(
     dataset_size: Optional[Union[int, Fraction]] = None,
     shuffle: bool = False,
 ) -> DatasetTriplet:
-    pairs = ev.as_pairs(
-        image_preprocessor=image_preprocessor, select_columns=select_columns
-    )
+    pairs = ev.as_pairs(image_preprocessor=image_preprocessor, select_columns=select_columns)
 
-    return slicerator_to_dataset_triplet(
-        pairs, splits, dataset_size=dataset_size, shuffle=shuffle
-    )
+    return slicerator_to_dataset_triplet(pairs, splits, dataset_size=dataset_size, shuffle=shuffle)
 
 
 def experiment_video_to_sequential_dataset_triplet(

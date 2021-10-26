@@ -26,7 +26,7 @@ from boiling_learning.preprocessing.transformers import (
     creator,
     transformer,
 )
-from boiling_learning.utils.functional import Pack
+from boiling_learning.utils.functional import Kwargs, Pack
 from boiling_learning.utils.Parameters import Parameters
 from boiling_learning.utils.utils import PathLike, elapsed_timer, ensure_dir
 
@@ -55,9 +55,7 @@ def experiment_video_dataset_creator(
         if isinstance(dataset_size, int):
             num_shards = min(dataset_size, num_shards)
         elif isinstance(dataset_size, Fraction):
-            num_shards = min(
-                int(dataset_size * len(experiment_video)), num_shards
-            )
+            num_shards = min(int(dataset_size * len(experiment_video)), num_shards)
 
         ds_train = ds_train.apply(
             snapshotter(
@@ -97,17 +95,12 @@ def dataset_creator(
     save: bool = True,
     load: bool = True,
     reload_after_save: bool = False,
+    as_tensors: bool = False,
 ):
     experiment_video_dataset_params = Parameters(params=defaultdict(dict))
-    experiment_video_dataset_params[
-        ['creator', {'desc', 'value'}, 'dataset_size']
-    ] = dataset_size
-    experiment_video_dataset_params[
-        ['creator', {'desc', 'value'}, 'num_shards']
-    ] = num_shards
-    experiment_video_dataset_params[
-        ['creator', 'desc', 'splits']
-    ] = dataclassy.as_dict(splits)
+    experiment_video_dataset_params[['creator', {'desc', 'value'}, 'dataset_size']] = dataset_size
+    experiment_video_dataset_params[['creator', {'desc', 'value'}, 'num_shards']] = num_shards
+    experiment_video_dataset_params[['creator', 'desc', 'splits']] = dataclassy.as_dict(splits)
     experiment_video_dataset_params[['creator', 'value', 'splits']] = splits
 
     ds_dict = {}
@@ -118,51 +111,34 @@ def dataset_creator(
             else data_preprocessor
             for data_preprocessor in data_preprocessors
         ]
-        experiment_video_dataset_params[
-            ['creator', 'desc', 'experiment_video']
-        ] = ev.name
-        experiment_video_dataset_params[
-            ['creator', 'value', 'experiment_video']
-        ] = ev
-        experiment_video_dataset_params[
-            ['creator', 'desc', 'data_preprocessors']
-        ] = [
-            data_preprocessor.describe()
-            for data_preprocessor in _data_preprocessors
+        experiment_video_dataset_params[['creator', 'desc', 'experiment_video']] = ev.name
+        experiment_video_dataset_params[['creator', 'value', 'experiment_video']] = ev
+        experiment_video_dataset_params[['creator', 'desc', 'data_preprocessors']] = [
+            data_preprocessor.describe() for data_preprocessor in _data_preprocessors
         ]
         experiment_video_dataset_params[
             ['creator', 'value', 'data_preprocessors']
         ] = _data_preprocessors
         dataset_id = experiment_video_dataset_manager.provide_entry(
-            creator_description=Pack(
-                kwargs=experiment_video_dataset_params[['creator', 'desc']]
-            ),
+            creator_description=Kwargs(experiment_video_dataset_params[['creator', 'desc']]),
             post_processor_description=Pack(),
             include=True,
             missing_ok=True,
         )
-        workspace_path = experiment_video_dataset_manager.elem_workspace(
-            dataset_id
+        workspace_path = experiment_video_dataset_manager.elem_workspace(dataset_id)
+        experiment_video_dataset_params[['creator', 'value', 'snapshot_path']] = (
+            workspace_path / 'snapshot'
         )
-        experiment_video_dataset_params[
-            ['creator', 'value', 'snapshot_path']
-        ] = (workspace_path / 'snapshot')
 
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', category=ResourceWarning)
 
             with elapsed_timer() as timer:
                 ds_dict[name] = experiment_video_dataset_manager.provide_elem(
-                    creator_description=Pack(
-                        kwargs=experiment_video_dataset_params[
-                            ['creator', 'desc']
-                        ]
+                    creator_description=Kwargs(
+                        experiment_video_dataset_params[['creator', 'desc']]
                     ),
-                    creator_params=Pack(
-                        kwargs=experiment_video_dataset_params[
-                            ['creator', 'value']
-                        ]
-                    ),
+                    creator_params=Kwargs(experiment_video_dataset_params[['creator', 'value']]),
                     save=save,
                     load=load,
                     reload_after_save=reload_after_save,
@@ -173,9 +149,7 @@ def dataset_creator(
         print('--- ds_dict ---')
         pprint.pprint(ds_dict)
 
-    datasets_train, datasets_val, datasets_test = map(
-        tuple, mit.unzip(ds_dict.values())
-    )
+    datasets_train, datasets_val, datasets_test = map(tuple, mit.unzip(ds_dict.values()))
 
     ds_train = concatenate(datasets_train)
     ds_val = concatenate(datasets_val) if None not in datasets_val else None

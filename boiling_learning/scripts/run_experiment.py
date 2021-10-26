@@ -14,21 +14,12 @@ import scipy.interpolate
 from boiling_learning.daq import Channel, ChannelType, Device
 from boiling_learning.utils.geometry import Cylinder
 from boiling_learning.utils.units import unit_registry as u
-from boiling_learning.utils.utils import (
-    PathLike,
-    ensure_dir,
-    ensure_parent,
-    print_verbose,
-)
+from boiling_learning.utils.utils import PathLike, ensure_dir, ensure_parent, print_verbose
 
 here = Path().resolve()
 DEFAULT_EXPERIMENTS_DIR = here / 'experiments'
 DEFAULT_CALIBRATION_FILEPATH = (
-    here.parent
-    / 'resources'
-    / 'experimental-set-calibration'
-    / 'Processing'
-    / 'coefficients.csv'
+    here.parent / 'resources' / 'experimental-set-calibration' / 'Processing' / 'coefficients.csv'
 )
 
 
@@ -41,9 +32,7 @@ def main(
     from pyqtgraph.Qt import QtGui
 
     output_dir_pattern = str(
-        Path(
-            experiments_dir, 'Experiment %Y-%m-%d %H-%M{optional_index}'
-        ).resolve()
+        Path(experiments_dir, 'Experiment %Y-%m-%d %H-%M{optional_index}').resolve()
     )
 
     calibration_filepath = Path(calibration_filepath)
@@ -143,9 +132,7 @@ def main(
 
     u.Quantity(20, u.degC)
     reference_resistivity = 650 * u.ohm * u.cmil / u.foot
-    reference_resistance = (
-        reference_resistivity * sample.length / sample.cross_section_area
-    )
+    reference_resistance = reference_resistivity * sample.length / sample.cross_section_area
 
     def calculate_resistance(voltage, current):
         return np.where(
@@ -180,9 +167,7 @@ def main(
     """
 
     def format_output_dir(output_dir_pattern):
-        full_dir_pattern = str(
-            Path('experiments', datetime.now().strftime(output_dir_pattern))
-        )
+        full_dir_pattern = str(Path('experiments', datetime.now().strftime(output_dir_pattern)))
 
         def format_time(dirpattern, counter):
             return datetime.now().strftime(
@@ -196,10 +181,7 @@ def main(
             return Path(format_time(full_dir_pattern, counter))
 
         counter = 0
-        if any(
-            key in output_dir_pattern
-            for key in ('{index}', '{optional_index}')
-        ):
+        if any(key in output_dir_pattern for key in ('{index}', '{optional_index}')):
             while substituted_output_dir(full_dir_pattern, counter).is_dir():
                 counter += 1
 
@@ -221,9 +203,7 @@ def main(
     def generate_empty_copy(local_data):
         return dict.fromkeys(local_data, np.array([]))
 
-    def print_if_must(
-        keys, *args, conds: Iterable[bool] = (), **kwargs
-    ) -> None:
+    def print_if_must(keys, *args, conds: Iterable[bool] = (), **kwargs) -> None:
         cond = all(conds) and all(must_print.get(key, False) for key in keys)
         print_verbose(cond, *args, **kwargs)
 
@@ -299,9 +279,7 @@ def main(
         ('anything', 'info'),
         f'> DO ports in system.devices: { {x: [y.name for y in x.do_ports] for x in system.devices} }',
     )
-    print_if_must(
-        ('anything', 'info'), f'> Types in ChannelType: {tuple(ChannelType)}'
-    )
+    print_if_must(('anything', 'info'), f'> Types in ChannelType: {tuple(ChannelType)}')
 
     """
     Load calibration polynomial -------------------------------------------------------
@@ -328,9 +306,7 @@ def main(
         # see <https://stackoverflow.com/questions/45046239/python-realtime-plot-using-pyqtgraph>
         ####################
 
-    with filepath.open('w', newline='') as output_file, nidaqmx.Task(
-        'Experiment'
-    ) as experiment:
+    with filepath.open('w', newline='') as output_file, nidaqmx.Task('Experiment') as experiment:
         output_writer = csv.writer(output_file)
 
         # -------------------------------------------------------
@@ -359,7 +335,9 @@ def main(
             current_excit_val=1e-3,
             r_0=100,
         )
-        rtd_channel.ni.ai_rtd_a = 3.9083e-3  # This is how the original rtd was defined for the calibration
+        rtd_channel.ni.ai_rtd_a = (
+            3.9083e-3  # This is how the original rtd was defined for the calibration
+        )
         rtd_channel.ni.ai_rtd_b = -577.5e-9
         rtd_channel.ni.ai_rtd_c = -4.183e-12
 
@@ -388,9 +366,7 @@ def main(
             cjc_val=23.0,
         )
 
-        experiment.timing.cfg_samp_clk_timing(
-            sample_rate, sample_mode=sample_mode
-        )
+        experiment.timing.cfg_samp_clk_timing(sample_rate, sample_mode=sample_mode)
         experiment.start()
 
         print_if_must(
@@ -436,34 +412,25 @@ def main(
                 if voltage_readings_values.size > 0
                 else voltage_readings_values
             ) * u.V
-            current = (
-                current_channel.read(experiment, readings, dtype=np.array)
-                * u.A
-            )
+            current = current_channel.read(experiment, readings, dtype=np.array) * u.A
             power = voltage * current
             flux = power / sample.surface_area
             # resistance = calculate_resistance(voltage, current)
 
             # Thermal data:
-            rtd_read_value = rtd_channel.read(
-                experiment, readings, dtype=np.array
-            )
+            rtd_read_value = rtd_channel.read(experiment, readings, dtype=np.array)
             rtd_temperature = rtd_read_value
             if rtd_temperature.size > 0:
                 rtd_temperature = calibrated_polynomial(rtd_temperature)
 
-            wire_temperature = thermocouple_channel.read(
-                experiment, readings, dtype=np.array
-            )
+            wire_temperature = thermocouple_channel.read(experiment, readings, dtype=np.array)
             # wire_temperature_corrected = wire_temperature + wire_temperature_correction
             # wire_temperature_from_resistance = calculate_temperature(resistance)
 
             superheat = wire_temperature - rtd_temperature
 
             # LED data:
-            led_voltage = led_reading_channel.read(
-                experiment, readings, dtype=np.array
-            )
+            led_voltage = led_reading_channel.read(experiment, readings, dtype=np.array)
 
             # -------------------------------------------------------
             # Saving
@@ -489,9 +456,7 @@ def main(
                 now = time.time() - start
                 sampled_period = (now - elapsed_time) / n_values
                 elapsed_time = (
-                    np.pad(
-                        elapsed_time, (0, n_values - elapsed_time.size), 'edge'
-                    )
+                    np.pad(elapsed_time, (0, n_values - elapsed_time.size), 'edge')
                     + np.arange(n_values) * sampled_period
                 )
             print_if_must(('anything', 'info'), f'n_values: {n_values}')
@@ -503,10 +468,7 @@ def main(
             local_data = {
                 **{
                     'Time instant': np.array(
-                        [
-                            datetime.fromtimestamp(start + et)
-                            for et in elapsed_time
-                        ]
+                        [datetime.fromtimestamp(start + et) for et in elapsed_time]
                     ),
                     'Elapsed time': elapsed_time,
                 },
@@ -525,16 +487,11 @@ def main(
                         print(previous_elapsed_time[-1].shape)
                         print(elapsed_time[:-1].shape)
                         loop_time = (
-                            elapsed_time
-                            - np.c_[
-                                previous_elapsed_time[-1], elapsed_time[:-1]
-                            ]
+                            elapsed_time - np.c_[previous_elapsed_time[-1], elapsed_time[:-1]]
                         )
                     else:
                         loop_time = elapsed_time - previous_elapsed_time[-1]
-                    print_if_must(
-                        ('anything', 'elapsed time'), f'Loop time: {loop_time}'
-                    )
+                    print_if_must(('anything', 'elapsed time'), f'Loop time: {loop_time}')
                 previous_elapsed_time = elapsed_time
                 local_data['Loop time'] = loop_time
 
@@ -549,9 +506,7 @@ def main(
             continue_key = False
             for key, a in local_data.items():
                 if a.size == 0:
-                    print_if_must(
-                        ('anything', 'sleeping'), f'{key} is causing sleep'
-                    )
+                    print_if_must(('anything', 'sleeping'), f'{key} is causing sleep')
                     continue_key = True
             if continue_key:
                 time.sleep(sleeping_time)
@@ -647,9 +602,7 @@ def main(
                             rowspan=2,
                             colspan=1,
                         ),
-                        'Power [W]': win.addPlot(
-                            title='Power', row=3, col=2, colspan=1
-                        ),
+                        'Power [W]': win.addPlot(title='Power', row=3, col=2, colspan=1),
                         # 'Flux [W/m^2]': win.addPlot(title='Flux [W/m^2]', row=1, col=2, colspan=1),
                         'Flux [W/cm^2]': win.addPlot(
                             title='Flux [W/cm^2]',
@@ -658,16 +611,10 @@ def main(
                             rowspan=2,
                             colspan=3,
                         ),
-                        'Voltage [V]': win.addPlot(
-                            title='Voltage', row=3, col=0
-                        ),
-                        'Current [A]': win.addPlot(
-                            title='Current', row=3, col=1
-                        ),
+                        'Voltage [V]': win.addPlot(title='Voltage', row=3, col=0),
+                        'Current [A]': win.addPlot(title='Current', row=3, col=1),
                         # 'Resistance [Ohm]': win.addPlot(title='Resistance', row=2, col=4),
-                        'LED Voltage [V]': win.addPlot(
-                            title='LED Voltage', row=3, col=4
-                        ),
+                        'LED Voltage [V]': win.addPlot(title='LED Voltage', row=3, col=4),
                         # 'Wire Temperature (corrected) [deg C]': win.addPlot(title='Wire Temperature (corrected) [deg C]', row=2, col=2, rowspan=2, colspan=2),
                         # 'Temperature from Resistance [deg C]': win.addPlot(title='Temperature from Resistance [deg C]', row=2, col=6),
                     }

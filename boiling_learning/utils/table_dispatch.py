@@ -22,8 +22,7 @@ class TableDispatcher(Dict[Hashable, Callable]):
     def __missing__(self, key: Hashable) -> Callable:
         if self._default is None:
             raise DispatchError(
-                'no default callable'
-                f' and no dispatch form was provided for key "{key}".'
+                'no default callable' f' and no dispatch form was provided for key "{key}".'
             )
 
         return self._default

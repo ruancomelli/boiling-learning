@@ -167,9 +167,7 @@ def _main_array(
                 'GOPR2960': P(left=980, right=1810, top=400, bottom=1350),
             },
         ),
-        FeatureTransformer(
-            'downscaler', arrays.downscale, pack=P(factors=downscale_factor)
-        ),
+        FeatureTransformer('downscaler', arrays.downscale, pack=P(factors=downscale_factor)),
         FeatureTransformer(
             'visualization_shrinker',
             arrays.crop,
@@ -177,9 +175,7 @@ def _main_array(
                 left=0,
                 right_border=0,
                 top=0,
-                bottom_border=(
-                    0 if direct_visualization else indirect_height_ratio
-                ),
+                bottom_border=(0 if direct_visualization else indirect_height_ratio),
             ),
         ),
         FeatureTransformer(
@@ -189,29 +185,17 @@ def _main_array(
                 left=0,
                 right=0,
                 bottom_border=0,
-                height=(
-                    direct_height if direct_visualization else indirect_height
-                ),
+                height=(direct_height if direct_visualization else indirect_height),
             ),
         ),
     ]
 
     augmentors = [
-        FeatureTransformer(
-            'random_cropper', arrays.random_crop, pack=P(width=width)
-        ),
-        FeatureTransformer(
-            'random_left_right_flipper', arrays.random_flip_left_right
-        ),
-        FeatureTransformer(
-            'random_brightness', arrays.random_brightness, pack=P((-0.2, 0.2))
-        ),
-        FeatureTransformer(
-            'random_contrast', arrays.random_contrast, pack=P((0.6, 1.4))
-        ),
-        FeatureTransformer(
-            'random_quality', arrays.random_jpeg_quality, pack=P(30, 100)
-        ),
+        FeatureTransformer('random_cropper', arrays.random_crop, pack=P(width=width)),
+        FeatureTransformer('random_left_right_flipper', arrays.random_flip_left_right),
+        FeatureTransformer('random_brightness', arrays.random_brightness, pack=P((-0.2, 0.2))),
+        FeatureTransformer('random_contrast', arrays.random_contrast, pack=P((0.6, 1.4))),
+        FeatureTransformer('random_quality', arrays.random_jpeg_quality, pack=P(30, 100)),
     ]
 
     return preprocessors, augmentors
@@ -388,29 +372,17 @@ def _main_tensor(
                 left=0,
                 right=0,
                 bottom=0,
-                height=(
-                    direct_height if direct_visualization else indirect_height
-                ),
+                height=(direct_height if direct_visualization else indirect_height),
             ),
         ),
     ]
 
     augmentors = [
-        FeatureTransformer(
-            'random_cropper', random_crop, pack=P((None, width, None))
-        ),
-        FeatureTransformer(
-            'random_left_right_flipper', tf.image.flip_left_right
-        ),
-        FeatureTransformer(
-            'random_brightness', random_brightness, pack=P(-0.2, 0.2)
-        ),
-        FeatureTransformer(
-            'random_contrast', tf.image.random_contrast, pack=P(0.6, 1.4)
-        ),
-        FeatureTransformer(
-            'random_quality', tf.image.random_jpeg_quality, pack=P(30, 100)
-        ),
+        FeatureTransformer('random_cropper', random_crop, pack=P((None, width, None))),
+        FeatureTransformer('random_left_right_flipper', tf.image.flip_left_right),
+        FeatureTransformer('random_brightness', random_brightness, pack=P(-0.2, 0.2)),
+        FeatureTransformer('random_contrast', tf.image.random_contrast, pack=P(0.6, 1.4)),
+        FeatureTransformer('random_quality', tf.image.random_jpeg_quality, pack=P(30, 100)),
     ]
 
     return preprocessors, augmentors
@@ -436,6 +408,4 @@ def main(
 
 
 if __name__ == '__main__':
-    raise RuntimeError(
-        '*make_boiling_processors* cannot be executed as a standalone script yet.'
-    )
+    raise RuntimeError('*make_boiling_processors* cannot be executed as a standalone script yet.')

@@ -71,13 +71,10 @@ class EvenlySpacedGoal(enum.Enum):
     SPREAD = enum.auto()
 
 
-def evenly_spaced_indices(
-    total: int, count: int, *, goal: EvenlySpacedGoal
-) -> List[int]:
+def evenly_spaced_indices(total: int, count: int, *, goal: EvenlySpacedGoal) -> List[int]:
     if not (0 <= count <= total):
         raise ValueError(
-            '`total` and `count` must satisfy the constraint '
-            '`0 <= count <= total`.'
+            '`total` and `count` must satisfy the constraint ' '`0 <= count <= total`.'
         )
 
     if count == 0:
@@ -104,37 +101,23 @@ def evenly_spaced_indices(
     return np.round(points).astype(int).tolist()
 
 
-def distance_maximized_evenly_spaced_indices(
-    total: int, count: int
-) -> List[int]:
+def distance_maximized_evenly_spaced_indices(total: int, count: int) -> List[int]:
     return evenly_spaced_indices(total, count, goal=EvenlySpacedGoal.DISTANCE)
 
 
-def spread_maximized_evenly_spaced_indices(
-    total: int, count: int
-) -> List[int]:
+def spread_maximized_evenly_spaced_indices(total: int, count: int) -> List[int]:
     return evenly_spaced_indices(total, count, goal=EvenlySpacedGoal.SPREAD)
 
 
-def evenly_spaced_indices_mask(
-    total: int, count: int, *, goal: EvenlySpacedGoal
-) -> List[bool]:
+def evenly_spaced_indices_mask(total: int, count: int, *, goal: EvenlySpacedGoal) -> List[bool]:
     indices = frozenset(evenly_spaced_indices(total, count, goal=goal))
 
     return [(x in indices) for x in range(total)]
 
 
-def distance_maximized_evenly_spaced_indices_mask(
-    total: int, count: int
-) -> List[bool]:
-    return evenly_spaced_indices_mask(
-        total, count, goal=EvenlySpacedGoal.DISTANCE
-    )
+def distance_maximized_evenly_spaced_indices_mask(total: int, count: int) -> List[bool]:
+    return evenly_spaced_indices_mask(total, count, goal=EvenlySpacedGoal.DISTANCE)
 
 
-def spread_maximized_evenly_spaced_indices_mask(
-    total: int, count: int
-) -> List[bool]:
-    return evenly_spaced_indices_mask(
-        total, count, goal=EvenlySpacedGoal.SPREAD
-    )
+def spread_maximized_evenly_spaced_indices_mask(total: int, count: int) -> List[bool]:
+    return evenly_spaced_indices_mask(total, count, goal=EvenlySpacedGoal.SPREAD)

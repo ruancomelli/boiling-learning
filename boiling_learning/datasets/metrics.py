@@ -1,9 +1,7 @@
 import tensorflow as tf
 
 
-def calculate_stats(
-    ds: tf.data.Dataset, metric: tf.keras.metrics.Metric
-) -> float:
+def calculate_stats(ds: tf.data.Dataset, metric: tf.keras.metrics.Metric) -> float:
     """Calculate metric (or statistic) over dataset.
 
     Args:
@@ -21,9 +19,7 @@ def calculate_stats(
     return metric.result().numpy()
 
 
-def calculate_metric(
-    ds: tf.data.Dataset, metric: tf.keras.metrics.Metric
-) -> float:
+def calculate_metric(ds: tf.data.Dataset, metric: tf.keras.metrics.Metric) -> float:
     """Calculate metric (error, accuracy etc.) between true and predicted values in a dataset.
 
     Args:

@@ -32,19 +32,13 @@ class Case(ImageDataset):
         tags: Iterable[str] = (),
     ) -> None:
         if not video_suffix.startswith('.'):
-            raise ValueError(
-                'argument *video_suffix* must start with a dot \'.\''
-            )
+            raise ValueError('argument *video_suffix* must start with a dot \'.\'')
 
         if not audio_suffix.startswith('.'):
-            raise ValueError(
-                'argument *audio_suffix* must start with a dot \'.\''
-            )
+            raise ValueError('argument *audio_suffix* must start with a dot \'.\'')
 
         if not frames_suffix.startswith('.'):
-            raise ValueError(
-                'argument *frames_suffix* must start with a dot \'.\''
-            )
+            raise ValueError('argument *frames_suffix* must start with a dot \'.\'')
 
         self.path = bl_utils.ensure_dir(path)
 
@@ -52,15 +46,11 @@ class Case(ImageDataset):
             name = self.path.name
 
         df_path = self.path / df_name
-        self.dataframes_dir = bl_utils.ensure_dir(
-            self.path / dataframes_dir_name
-        )
+        self.dataframes_dir = bl_utils.ensure_dir(self.path / dataframes_dir_name)
         self.videos_dir = bl_utils.ensure_dir(self.path / videos_dir_name)
         self.audios_dir = bl_utils.ensure_dir(self.path / audios_dir_name)
         self.frames_dir = bl_utils.ensure_dir(self.path / frames_dir_name)
-        self.frames_tensor_dir = bl_utils.ensure_dir(
-            self.path / frames_tensor_dir_name
-        )
+        self.frames_tensor_dir = bl_utils.ensure_dir(self.path / frames_tensor_dir_name)
 
         super().__init__(
             name=name,
@@ -115,21 +105,15 @@ class Case(ImageDataset):
         verbose: VerboseType = False,
     ) -> None:
         if not new_suffix.startswith('.'):
-            raise ValueError(
-                'new_suffix is expected to start with a dot (\'.\')'
-            )
+            raise ValueError('new_suffix is expected to start with a dot (\'.\')')
 
         new_videos_dir = bl_utils.ensure_dir(new_videos_dir, root=self.path)
         for element_video in self.values():
             tail = element_video.path.relative_to(self.videos_dir)
             dest_path = (new_videos_dir / tail).with_suffix(new_suffix)
-            element_video.convert_video(
-                dest_path, overwrite=overwrite, verbose=verbose
-            )
+            element_video.convert_video(dest_path, overwrite=overwrite, verbose=verbose)
         self.videos_dir = new_videos_dir
 
-    def sync_time_series(
-        self, source_df: pd.DataFrame, inplace: bool = True
-    ) -> None:
+    def sync_time_series(self, source_df: pd.DataFrame, inplace: bool = True) -> None:
         for experiment_video in self.values():
             experiment_video.sync_time_series(source_df, inplace=True)

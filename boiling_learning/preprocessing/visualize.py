@@ -28,11 +28,8 @@ from boiling_learning.management import Manager
 from boiling_learning.preprocessing.Case import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.ImageDataset import ImageDataset
-from boiling_learning.preprocessing.transformers import (
-    DictFeatureTransformer,
-    Transformer,
-)
-from boiling_learning.utils.functional import P, Pack, nth_arg
+from boiling_learning.preprocessing.transformers import DictFeatureTransformer, Transformer
+from boiling_learning.utils.functional import Kwargs, P, Pack, nth_arg
 from boiling_learning.utils.Parameters import Parameters
 
 _T = TypeVar('_T')
@@ -44,20 +41,10 @@ DEFAULT_ANNOTATORS = frozendict(
         'normalizer': None,
         'downscaler': None,
         'region_cropper': lambda transformer, image, fig: fig.rect(
-            x=(
-                transformer.pack.kwargs['left']
-                + transformer.pack.kwargs['right']
-            )
-            / 2,
-            y=-(
-                transformer.pack.kwargs['bottom']
-                + transformer.pack.kwargs['top']
-            )
-            / 2,
-            width=transformer.pack.kwargs['right']
-            - transformer.pack.kwargs['left'],
-            height=transformer.pack.kwargs['bottom']
-            - transformer.pack.kwargs['top'],
+            x=(transformer.pack.kwargs['left'] + transformer.pack.kwargs['right']) / 2,
+            y=-(transformer.pack.kwargs['bottom'] + transformer.pack.kwargs['top']) / 2,
+            width=transformer.pack.kwargs['right'] - transformer.pack.kwargs['left'],
+            height=transformer.pack.kwargs['bottom'] - transformer.pack.kwargs['top'],
             fill_alpha=0.3,
             fill_color='royalblue',
         ),
@@ -74,10 +61,7 @@ DEFAULT_ANNOTATORS = frozendict(
                 transformer.pack.kwargs['left']
                 + (
                     image.shape[1]
-                    - (
-                        transformer.pack.kwargs['right']
-                        + transformer.pack.kwargs['left']
-                    )
+                    - (transformer.pack.kwargs['right'] + transformer.pack.kwargs['left'])
                 )
                 / 2
             ),
@@ -85,10 +69,7 @@ DEFAULT_ANNOTATORS = frozendict(
             + transformer.pack.kwargs['bottom']
             + transformer.pack.kwargs['height'] / 2,
             width=image.shape[1]
-            - (
-                transformer.pack.kwargs['right']
-                + transformer.pack.kwargs['left']
-            ),
+            - (transformer.pack.kwargs['right'] + transformer.pack.kwargs['left']),
             height=transformer.pack.kwargs['height'],
             fill_alpha=0.3,
             fill_color='red',
@@ -356,8 +337,7 @@ def _tensor_to_image(tensor: tf.Tensor) -> np.ndarray:
 def _make_figs(f_img_packs, return_single_image: bool = False):
 
     figs = [
-        _make_fig(_tensor_to_image(f(img)), y_axis_label=str(pack))
-        for f, img, pack in f_img_packs
+        _make_fig(_tensor_to_image(f(img)), y_axis_label=str(pack)) for f, img, pack in f_img_packs
     ]
 
     if len(figs) == 1 and return_single_image:
@@ -417,16 +397,10 @@ def _visualize_transformations_bokeh(
             annotator(transformer, image, p)
 
         visualizer = visualizers[transformer_name]
-        p = _make_figs(
-            visualizer(transformer, image), return_single_image=True
-        )
-        p_canvas = bokeh.layouts.column(
-            bokeh.models.Div(text=transformer_name), p
-        )
+        p = _make_figs(visualizer(transformer, image), return_single_image=True)
+        p_canvas = bokeh.layouts.column(bokeh.models.Div(text=transformer_name), p)
         if first and not plot_original:
-            p_canvas = bokeh.layouts.row(
-                bokeh.models.Div(text=visualization_title), p_canvas
-            )
+            p_canvas = bokeh.layouts.row(bokeh.models.Div(text=visualization_title), p_canvas)
 
         image = transformer.transform_feature(image)
         ps.append(p_canvas)
@@ -445,14 +419,10 @@ def visualize_dataset(
     # See <https://stackoverflow.com/a/34934631/5811400> for plotting
     def _make_ds(params: Parameters) -> tf.data.Dataset:
         return manager.provide_elem(
-            creator_description=Pack(kwargs=params[['creator', 'desc']]),
-            creator_params=Pack(kwargs=params[['creator', 'value']]),
-            post_processor_description=Pack(
-                kwargs=params[['post_processor', 'desc']]
-            ),
-            post_processor_params=Pack(
-                kwargs=params[['post_processor', 'value']]
-            ),
+            creator_description=Kwargs(params[['creator', 'desc']]),
+            creator_params=Kwargs(params[['creator', 'value']]),
+            post_processor_description=Kwargs(params[['post_processor', 'desc']]),
+            post_processor_params=Kwargs(params[['post_processor', 'value']]),
             load=load,
             save=save,
         )
@@ -476,9 +446,7 @@ def visualize_dataset(
         n_samples = n_samples_per_ev
 
     params[['creator', {'desc', 'value'}, 'dataset_size']] = n_samples
-    fig_spec = bl_utils.prepare_fig(
-        n_cols=3, n_rows=len(img_ds_list), subfig_size='small'
-    )
+    fig_spec = bl_utils.prepare_fig(n_cols=3, n_rows=len(img_ds_list), subfig_size='small')
     fig = plt.figure(figsize=fig_spec['fig_size'])
     outer = gridspec.GridSpec(fig_spec['n_rows'], fig_spec['n_cols'])
     for row, img_ds in enumerate(img_ds_list):
@@ -486,9 +454,7 @@ def visualize_dataset(
         params[['creator', 'value', 'image_dataset']] = img_ds
 
         ds = _make_ds(params)
-        for col, (split_name, ds_split) in enumerate(
-            zip(('train', 'val', 'test'), ds)
-        ):
+        for col, (split_name, ds_split) in enumerate(zip(('train', 'val', 'test'), ds)):
             elem = row * fig_spec['n_cols'] + col
             inner = gridspec.GridSpecFromSubplotSpec(
                 n_samples,

@@ -69,9 +69,9 @@ class Mirror:
             ):
                 self.forked = True
                 for splitter_key in real_value:
-                    self.forks.setdefault(splitter_key, self.default.copy())[
-                        key
-                    ] = real_value[splitter_key]
+                    self.forks.setdefault(splitter_key, self.default.copy())[key] = real_value[
+                        splitter_key
+                    ]
             else:
                 self.default[key] = real_value
                 for v in self.forks.values():

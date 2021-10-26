@@ -19,9 +19,7 @@ def shape(image: np.ndarray) -> Shape:
 
 
 @overload
-def _ratio_to_size(
-    image: np.ndarray, x: Union[int, float, Fraction], *, axis: int
-) -> int:
+def _ratio_to_size(image: np.ndarray, x: Union[int, float, Fraction], *, axis: int) -> int:
     ...
 
 
@@ -77,33 +75,23 @@ def crop(
     incompatible_arguments_error_message = (
         'at least two of `{}`, `{}`, `{}` and `{}` must be `None` or omitted.'
     )
-    incompatible_pair_error_message = (
-        'at least one of `{}` and `{}` must be `None` or omitted.'
-    )
+    incompatible_pair_error_message = 'at least one of `{}` and `{}` must be `None` or omitted.'
 
     if (left, right, right_border, width).count(None) < 2:
         raise TypeError(
-            incompatible_arguments_error_message.format(
-                'left', 'right', 'right_border', 'width'
-            )
+            incompatible_arguments_error_message.format('left', 'right', 'right_border', 'width')
         )
 
     if None not in {right, right_border}:
-        raise TypeError(
-            incompatible_pair_error_message.format('right', 'right_border')
-        )
+        raise TypeError(incompatible_pair_error_message.format('right', 'right_border'))
 
     if (top, bottom, bottom_border, height).count(None) < 2:
         raise TypeError(
-            incompatible_arguments_error_message.format(
-                'top', 'bottom', 'bottom_border', 'height'
-            )
+            incompatible_arguments_error_message.format('top', 'bottom', 'bottom_border', 'height')
         )
 
     if None not in {bottom, bottom_border}:
-        raise TypeError(
-            incompatible_pair_error_message.format('bottom', 'bottom_border')
-        )
+        raise TypeError(incompatible_pair_error_message.format('bottom', 'bottom_border'))
 
     if right_border is not None:
         right = total_width - right_border
@@ -131,9 +119,7 @@ def grayscale(image: np.ndarray) -> np.ndarray:
     return image
 
 
-def downscale(
-    image: np.ndarray, factors: Union[int, Tuple[int, int]]
-) -> np.ndarray:
+def downscale(image: np.ndarray, factors: Union[int, Tuple[int, int]]) -> np.ndarray:
     if isinstance(factors, int):
         factors = (factors, factors)
 
@@ -146,30 +132,20 @@ def random_crop(
     height: Optional[int] = None,
     width: Optional[int] = None,
 ) -> np.ndarray:
-    return A.RandomCrop(height=height, width=width, always_apply=True).apply(
-        image
-    )
+    return A.RandomCrop(height=height, width=width, always_apply=True).apply(image)
 
 
 def random_flip_left_right(image: np.ndarray) -> np.ndarray:
     return A.HorizontalFlip(p=0.5).apply(image)
 
 
-def random_brightness(
-    image: np.ndarray, delta: Union[float, Tuple[float, float]]
-) -> np.ndarray:
+def random_brightness(image: np.ndarray, delta: Union[float, Tuple[float, float]]) -> np.ndarray:
     return A.RandomBrightness(delta, always_apply=True).apply(image)
 
 
-def random_contrast(
-    image: np.ndarray, delta: Union[float, Tuple[float, float]]
-) -> np.ndarray:
+def random_contrast(image: np.ndarray, delta: Union[float, Tuple[float, float]]) -> np.ndarray:
     return A.RandomContrast(delta, always_apply=True).apply(image)
 
 
-def random_jpeg_quality(
-    image: np.ndarray, min_quality: int, max_quality: int = 100
-) -> np.ndarray:
-    return A.JpegCompression(
-        min_quality, max_quality, always_apply=True
-    ).apply(image)
+def random_jpeg_quality(image: np.ndarray, min_quality: int, max_quality: int = 100) -> np.ndarray:
+    return A.JpegCompression(min_quality, max_quality, always_apply=True).apply(image)

@@ -1,14 +1,5 @@
 import operator
-from typing import (
-    Callable,
-    Generic,
-    Iterator,
-    Mapping,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import Callable, Generic, Iterator, Mapping, Optional, Tuple, TypeVar, Union
 
 import funcy
 
@@ -35,9 +26,7 @@ V = TypeVar('V')
 
 
 class Transformer(FrozenNamedMixin, SimpleStr, Generic[_X, _Y]):
-    def __init__(
-        self, name: str, f: Callable[..., _Y], pack: Pack = Pack()
-    ) -> None:
+    def __init__(self, name: str, f: Callable[..., _Y], pack: Pack = Pack()) -> None:
         super().__init__(name)
 
         self.pack = pack
@@ -47,9 +36,7 @@ class Transformer(FrozenNamedMixin, SimpleStr, Generic[_X, _Y]):
         return self.transformer(arg, *args, **kwargs)
 
     @classmethod
-    def make(
-        cls: Callable[..., C], name: str, *args, **kwargs
-    ) -> Callable[[Callable], C]:
+    def make(cls: Callable[..., C], name: str, *args, **kwargs) -> Callable[[Callable], C]:
         def _make(f: Callable) -> C:
             return cls(name, f, *args, **kwargs)
 
@@ -96,12 +83,8 @@ class Creator(Transformer[Pack, _Y], Generic[_Y]):
         super().__init__(name, g, pack=pack)
 
 
-class FeatureTransformer(
-    Transformer[Tuple[_X1, _Y], Tuple[_X2, _Y]], Generic[_X1, _X2, _Y]
-):
-    def __init__(
-        self, name: str, f: Callable[..., _X2], pack: Pack = Pack()
-    ) -> None:
+class FeatureTransformer(Transformer[Tuple[_X1, _Y], Tuple[_X2, _Y]], Generic[_X1, _X2, _Y]):
+    def __init__(self, name: str, f: Callable[..., _X2], pack: Pack = Pack()) -> None:
         def g(pair: Tuple[_X1, _Y], *args, **kwargs) -> Tuple[_X2, _Y]:
             def pair_transformer(feature: _X1, target: _Y) -> Tuple[_X2, _Y]:
                 return f(feature, *args, **kwargs), target
@@ -114,9 +97,7 @@ class FeatureTransformer(
         return self((feature, None), *args, **kwargs)[0]
 
 
-class PairTransformer(
-    Transformer[Tuple[_X1, _Y1], Tuple[_X2, _Y2]], Generic[_X1, _Y1, _X2, _Y2]
-):
+class PairTransformer(Transformer[Tuple[_X1, _Y1], Tuple[_X2, _Y2]], Generic[_X1, _Y1, _X2, _Y2]):
     def __init__(
         self,
         name: str,
@@ -138,18 +119,12 @@ class KeyedFeatureTransformer(
         name: str,
         f: Callable[..., _X2],
         packer: Union[Callable[[str], Pack], Mapping[Optional[str], Pack]],
-        key_getter: Callable[[_Y], Optional[str]] = operator.itemgetter(
-            'name'
-        ),
+        key_getter: Callable[[_Y], Optional[str]] = operator.itemgetter('name'),
     ) -> None:
         self.packer = packer
 
-        def g(
-            pair: Tuple[_X1, _Y], *args, **kwargs
-        ) -> Tuple[Union[_X1, _X2], _Y]:
-            def mapped_f(
-                feature: _X1, target: _Y
-            ) -> Tuple[Union[_X1, _X2], _Y]:
+        def g(pair: Tuple[_X1, _Y], *args, **kwargs) -> Tuple[Union[_X1, _X2], _Y]:
+            def mapped_f(feature: _X1, target: _Y) -> Tuple[Union[_X1, _X2], _Y]:
                 key = key_getter(target)
                 featre_transformer = self.get_feature_transformer(f, key)
                 return featre_transformer(feature), target
@@ -193,18 +168,14 @@ class DictFeatureTransformer(
         f: Callable[..., _X2],
         packer: Union[Callable[[str], Pack], Mapping[Optional[str], Pack]],
     ) -> None:
-        self.packer: Union[
-            Callable[[str], Pack], Mapping[Optional[str], Pack]
-        ] = packer
+        self.packer: Union[Callable[[str], Pack], Mapping[Optional[str], Pack]] = packer
         self._transformer_mapping: KeyedDefaultDict[
             str, FeatureTransformer[_X1, _X2, _Y]
         ] = KeyedDefaultDict(self._transformer_factory)
         self.func: Callable[..., _X2] = f
         super().__init__(name)
 
-    def _resolve_func_and_pack(
-        self, key: str
-    ) -> Tuple[Callable[[_X1], _X2], Pack]:
+    def _resolve_func_and_pack(self, key: str) -> Tuple[Callable[[_X1], _X2], Pack]:
         if isinstance(self.packer, Mapping):
             try:
                 if key in self.packer:
@@ -232,9 +203,7 @@ class DictFeatureTransformer(
                 f'Got {type(self.packer)}'
             )
 
-    def _transformer_factory(
-        self, key: str
-    ) -> FeatureTransformer[_X1, _X2, _Y]:
+    def _transformer_factory(self, key: str) -> FeatureTransformer[_X1, _X2, _Y]:
         name = '_'.join((self.name, key))
         func, pack = self._resolve_func_and_pack(key)
         return FeatureTransformer(name, func, pack)
@@ -252,9 +221,7 @@ class DictFeatureTransformer(
         return {
             'type': self.__class__.__name__,
             'name': self.name,
-            'packer': self.packer
-            if isinstance(self.packer, Mapping)
-            else self.packer.__name__,
+            'packer': self.packer if isinstance(self.packer, Mapping) else self.packer.__name__,
         }
 
 

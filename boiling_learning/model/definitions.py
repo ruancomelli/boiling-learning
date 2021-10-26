@@ -372,9 +372,7 @@ def BoilNet(
     num_classes: int = 0,
     normalize_images: bool = False,
 ) -> Model:
-    input_shape = (
-        (time_window, *image_shape) if time_window > 0 else image_shape
-    )
+    input_shape = (time_window, *image_shape) if time_window > 0 else image_shape
     flattening = utils.enum_item(FlatteningMode, flattening)
     flatten = {
         FlatteningMode.FLATTEN: Flatten,
@@ -398,14 +396,10 @@ def BoilNet(
         ConvolutionType.SEPARABLE_CONV: SeparableConv2D,
     }[convolution_type]
 
-    conv = distribute(
-        conv_layer(32, (5, 5), padding='same', activation='relu')
-    )(normalized)
+    conv = distribute(conv_layer(32, (5, 5), padding='same', activation='relu'))(normalized)
     conv = distribute(spatial_dropouter())(conv)
     conv = distribute(MaxPool2D((2, 2), strides=(2, 2)))(conv)
-    conv = distribute(
-        conv_layer(64, (5, 5), padding='same', activation='relu')
-    )(conv)
+    conv = distribute(conv_layer(64, (5, 5), padding='same', activation='relu'))(conv)
     conv = distribute(spatial_dropouter())(conv)
     conv = distribute(MaxPool2D((2, 2), strides=(2, 2)))(conv)
     flatten = distribute(flatten)(conv)
@@ -428,9 +422,7 @@ def BoilNet(
 
     model = Model(inputs=inputs, outputs=outputs)
 
-    model = _apply_policies_to_layers(
-        model, hidden_layers_policy, output_layer_policy
-    )
+    model = _apply_policies_to_layers(model, hidden_layers_policy, output_layer_policy)
 
     return model
 
