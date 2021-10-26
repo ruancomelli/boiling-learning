@@ -1,11 +1,21 @@
 from fractions import Fraction
 from typing import Optional, Tuple, Union, overload
 
+import albumentations as A
 import numpy as np
+from dataclassy import dataclass
 from skimage.color import rgb2gray as _grayscale
 from skimage.transform import downscale_local_mean as _downscale
 
-from boiling_learning.preprocessing.transformers import transformer
+
+@dataclass
+class Shape:
+    height: int
+    width: int
+
+
+def shape(image: np.ndarray) -> Shape:
+    return Shape(height=image.shape[0], width=image.shape[1])
 
 
 @overload
@@ -40,7 +50,6 @@ def _crop(
     return image[top:bottom, left:right, ...]
 
 
-@transformer
 def crop(
     image: np.ndarray,
     *,
@@ -116,14 +125,12 @@ def crop(
     return _crop(image, left=left, right=right, top=top, bottom=bottom)
 
 
-@transformer
 def grayscale(image: np.ndarray) -> np.ndarray:
     if image.ndim > 2 and image.shape[2] != 1:
         return _grayscale(image)
     return image
 
 
-@transformer
 def downscale(
     image: np.ndarray, factors: Union[int, Tuple[int, int]]
 ) -> np.ndarray:
@@ -131,3 +138,38 @@ def downscale(
         factors = (factors, factors)
 
     return _downscale(image, factors)
+
+
+def random_crop(
+    image: np.ndarray,
+    *,
+    height: Optional[int] = None,
+    width: Optional[int] = None,
+) -> np.ndarray:
+    return A.RandomCrop(height=height, width=width, always_apply=True).apply(
+        image
+    )
+
+
+def random_flip_left_right(image: np.ndarray) -> np.ndarray:
+    return A.HorizontalFlip(p=0.5).apply(image)
+
+
+def random_brightness(
+    image: np.ndarray, delta: Union[float, Tuple[float, float]]
+) -> np.ndarray:
+    return A.RandomBrightness(delta, always_apply=True).apply(image)
+
+
+def random_contrast(
+    image: np.ndarray, delta: Union[float, Tuple[float, float]]
+) -> np.ndarray:
+    return A.RandomContrast(delta, always_apply=True).apply(image)
+
+
+def random_jpeg_quality(
+    image: np.ndarray, min_quality: int, max_quality: int = 100
+) -> np.ndarray:
+    return A.JpegCompression(
+        min_quality, max_quality, always_apply=True
+    ).apply(image)
