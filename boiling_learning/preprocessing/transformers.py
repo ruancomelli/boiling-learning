@@ -42,7 +42,7 @@ class Transformer(FrozenNamedMixin, SimpleStr, Generic[_X, _Y]):
 
         return _make
 
-    def describe(self) -> JSONDataType:
+    def __describe__(self) -> JSONDataType:
         return {
             'type': self.__class__.__name__,
             'name': self.name,
@@ -153,8 +153,8 @@ class KeyedFeatureTransformer(
     ) -> Callable[[_X1], _X2]:
         return self.packer[key].rpartial(f)
 
-    def describe(self) -> JSONDataType:
-        return funcy.merge(super().describe(), {'packer': self.packer})
+    def __describe__(self) -> JSONDataType:
+        return funcy.merge(super().__describe__(), {'packer': self.packer})
 
 
 class DictFeatureTransformer(
@@ -217,7 +217,7 @@ class DictFeatureTransformer(
     def __getitem__(self, key: str) -> FeatureTransformer[_X1, _X2, _Y]:
         return self._transformer_mapping[key]
 
-    def describe(self) -> JSONDataType:
+    def __describe__(self) -> JSONDataType:
         return {
             'type': self.__class__.__name__,
             'name': self.name,

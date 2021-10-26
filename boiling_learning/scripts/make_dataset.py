@@ -19,6 +19,7 @@ from boiling_learning.io.io import (
     saver_dataset_triplet,
 )
 from boiling_learning.management import Manager
+from boiling_learning.management.descriptors import describe
 from boiling_learning.preprocessing import ImageDataset
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.utils.functional import Kwargs, P
@@ -65,14 +66,10 @@ def main(
     )
     dataset_params[['creator', 'value', 'splits']] = splits
 
-    dataset_params[['creator', 'desc', 'data_preprocessors']] = [
-        data_preprocessor.describe() for data_preprocessor in preprocessors
-    ]
+    dataset_params[['creator', 'desc', 'data_preprocessors']] = describe(preprocessors)
     dataset_params[['creator', 'value', 'data_preprocessors']] = preprocessors
 
-    dataset_params[['post_processor', 'desc', 'data_augmentors']] = [
-        data_augmentor.describe() for data_augmentor in augmentors
-    ]
+    dataset_params[['post_processor', 'desc', 'data_augmentors']] = describe(augmentors)
     dataset_params[['post_processor', 'value', 'data_augmentors']] = augmentors
 
     dataset_params[['post_processor', 'value', 'force_test_augmentors']] = augmentors_to_force

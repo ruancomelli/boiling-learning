@@ -16,6 +16,7 @@ from boiling_learning.datasets.datasets import (
     take,
 )
 from boiling_learning.io.io import DatasetTriplet
+from boiling_learning.management.descriptors import describe
 from boiling_learning.management.Manager import Manager
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.ImageDataset import ImageDataset
@@ -113,9 +114,10 @@ def dataset_creator(
         ]
         experiment_video_dataset_params[['creator', 'desc', 'experiment_video']] = ev.name
         experiment_video_dataset_params[['creator', 'value', 'experiment_video']] = ev
-        experiment_video_dataset_params[['creator', 'desc', 'data_preprocessors']] = [
-            data_preprocessor.describe() for data_preprocessor in _data_preprocessors
-        ]
+        experiment_video_dataset_params[['creator', 'desc', 'data_preprocessors']] = describe(
+            _data_preprocessors
+        )
+
         experiment_video_dataset_params[
             ['creator', 'value', 'data_preprocessors']
         ] = _data_preprocessors

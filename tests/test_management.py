@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List
 from unittest.case import TestCase
 
 from tinydb import TinyDB
@@ -6,6 +7,7 @@ from tinydb import TinyDB
 from boiling_learning.io.io import load_json, save_json
 from boiling_learning.management.allocators import TableAllocator
 from boiling_learning.management.cacher import cache
+from boiling_learning.management.descriptors import describe
 from boiling_learning.management.Manager import Manager
 from boiling_learning.management.persister import FilePersister, FileProvider, Persister, Provider
 from boiling_learning.preprocessing.transformers import Creator
@@ -157,3 +159,28 @@ class CacherTest(TestCase):
             self.assertDictEqual(func(3.14, 'pi'), {'number': 3.14, 'name': 'pi'})
             self.assertDictEqual(func(0.0, 'zero'), {'number': 0.0, 'name': 'zero'})
             self.assertListEqual(history, [(3.14, 'pi'), (0.0, 'zero')])
+
+
+class DescriptorTest(TestCase):
+    def test_describe(self) -> None:
+        self.assertTrue(describe.supports(None))
+        self.assertIsNone(describe(None))
+
+        self.assertTrue(describe.supports(5))
+        self.assertEqual(describe(5), 5)
+
+        self.assertTrue(describe.supports(3.14))
+        self.assertAlmostEqual(describe(3.14), 3.14, delta=1e-8)
+
+        self.assertTrue(describe.supports('hello'))
+        self.assertEqual(describe('hello'), 'hello')
+
+        class CrazyItems:
+            def __init__(self, length: int) -> None:
+                self.value: int = length
+
+            def __describe__(self) -> List[int]:
+                return [self.value] * self.value
+
+        self.assertTrue(describe.supports(CrazyItems(3)))
+        self.assertListEqual(describe(CrazyItems(3)), [3, 3, 3])

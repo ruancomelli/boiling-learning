@@ -393,6 +393,17 @@ python-versions = ">=3.5.0"
 unicode_backport = ["unicodedata2"]
 
 [[package]]
+name = "classes"
+version = "0.4.0"
+description = "Smart, pythonic, ad-hoc, typed polymorphism for Python"
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0"
+
+[package.dependencies]
+typing_extensions = ">=3.10,<4.0"
+
+[[package]]
 name = "click"
 version = "8.0.1"
 description = "Composable command line interface toolkit"
@@ -2711,7 +2722,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "~=3.7.12"
-content-hash = "ebea6eea710d8205bf12945a0e0d3f41350940fada2b73e7fa6e98e313c65331"
+content-hash = "54a348b73c8f2c23ac6891b34f2a33932e4bfb38f33332f74ccfbf1c279ca4e0"
 
 [metadata.files]
 absl-py = [
@@ -2930,6 +2941,10 @@ chardet = [
 charset-normalizer = [
     {file = "charset-normalizer-2.0.6.tar.gz", hash = "sha256:5ec46d183433dcbd0ab716f2d7f29d8dee50505b3fdb40c6b985c7c4f5a3591f"},
     {file = "charset_normalizer-2.0.6-py3-none-any.whl", hash = "sha256:5d209c0a931f215cee683b6445e2d77677e7e75e159f78def0db09d68fafcaa6"},
+]
+classes = [
+    {file = "classes-0.4.0-py3-none-any.whl", hash = "sha256:b73394c070a80e0f8b9fe44eac8eee8703a3d35302248fcab194db78d37690bd"},
+    {file = "classes-0.4.0.tar.gz", hash = "sha256:32d96f78a9dff5830f24dfbf3f5f018bb169b8aa6325a8f88423290ccd35d030"},
 ]
 click = [
     {file = "click-8.0.1-py3-none-any.whl", hash = "sha256:fba402a4a47334742d782209a7c79bc448911afe1149d07bdabdf480b3e2f4b6"},
