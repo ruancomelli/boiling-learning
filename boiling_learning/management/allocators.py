@@ -3,6 +3,7 @@ from typing import Any, Callable
 
 from tinydb import TinyDB
 from tinydb.table import Table
+from tinydb_smartcache import SmartCacheTable
 
 from boiling_learning.io.storage import json_serialize
 from boiling_learning.utils.functional import Pack
@@ -49,5 +50,6 @@ def default_table_allocator(root: PathLike) -> TableAllocator:
     dbpath = root / 'db.json'
 
     db = TinyDB(str(dbpath))
+    db.table_class = SmartCacheTable
 
     return TableAllocator(datapath, db)
