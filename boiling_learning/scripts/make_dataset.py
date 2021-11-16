@@ -43,6 +43,7 @@ def main(
     verbose: int = False,
     augmentors_to_force: Container[str] = frozenset({'random_cropper'}),
     experiment_video_saver: SaverFunction[DatasetTriplet] = saver_dataset_triplet(save_dataset),
+    as_tensors: bool = False,
 ):
     if not augment_train:
         augmentors = [
@@ -53,6 +54,9 @@ def main(
 
     dataset_params = Parameters(params=defaultdict(dict))
     dataset_params[['creator', {'desc', 'value'}, 'dataset_size']] = dataset_size
+
+    if not as_tensors:
+        dataset_params[['creator', {'desc', 'value'}, 'as_tensors']] = as_tensors
 
     dataset_params[['creator', {'desc', 'value'}, 'num_shards']] = 1024
 

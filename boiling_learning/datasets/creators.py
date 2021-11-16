@@ -2,10 +2,11 @@ import pprint
 import warnings
 from collections import defaultdict
 from fractions import Fraction
-from typing import Container, Iterable, Optional, Sequence, Union
+from typing import Any, Container, Dict, Iterable, Optional, Sequence, Tuple, Union
 
 import dataclassy
 import more_itertools as mit
+import numpy as np
 from tensorflow.data import AUTOTUNE
 
 from boiling_learning.datasets.datasets import (
@@ -15,6 +16,7 @@ from boiling_learning.datasets.datasets import (
     experiment_video_to_dataset_triplet,
     take,
 )
+from boiling_learning.datasets.sliceable import SliceableDataset, SupervisedSliceableDataset
 from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.management.descriptors import describe
 from boiling_learning.management.Manager import Manager
@@ -31,9 +33,14 @@ from boiling_learning.utils.functional import Kwargs, Pack
 from boiling_learning.utils.Parameters import Parameters
 from boiling_learning.utils.utils import PathLike, elapsed_timer, ensure_dir
 
+VideoDatasetElement = Tuple[np.ndarray, Dict[str, Any]]
+SliceableVideoDataset = SliceableDataset[VideoDatasetElement]
+SliceableVideoDatasetTriplet = Tuple[
+    SliceableVideoDataset, SliceableVideoDataset, SliceableVideoDataset
+]
 
-@creator(expand_pack_on_call=True)
-def experiment_video_dataset_creator(
+
+def _experiment_video_dataset_creator_tensors(
     experiment_video: ExperimentVideo,
     splits: DatasetSplits,
     data_preprocessors: Iterable[Transformer],
@@ -84,6 +91,56 @@ def experiment_video_dataset_creator(
     return ds_train, ds_val, ds_test
 
 
+def _experiment_video_dataset_creator_arrays(
+    experiment_video: ExperimentVideo,
+    splits: DatasetSplits,
+    data_preprocessors: Iterable[Transformer[VideoDatasetElement, VideoDatasetElement]],
+    dataset_size: Optional[Union[int, Fraction]] = None,
+) -> SliceableVideoDatasetTriplet:
+    ds = SupervisedSliceableDataset(experiment_video.as_pairs())
+
+    if dataset_size is not None:
+        ds = ds.take(dataset_size)
+
+    for preprocessor in data_preprocessors:
+        ds = ds.map(preprocessor)
+
+    return ds.shuffle().split(splits.train, splits.val, splits.test)
+
+
+@creator(expand_pack_on_call=True)
+def experiment_video_dataset_creator(
+    experiment_video: ExperimentVideo,
+    splits: DatasetSplits,
+    data_preprocessors: Iterable[Transformer],
+    dataset_size: Optional[Union[int, Fraction]] = None,
+    snapshot_path: Optional[PathLike] = None,
+    num_shards: Optional[int] = None,
+    as_tensors: bool = False,
+) -> DatasetTriplet:
+    if as_tensors:
+        return _experiment_video_dataset_creator_tensors(
+            experiment_video=experiment_video,
+            splits=splits,
+            data_preprocessors=data_preprocessors,
+            dataset_size=dataset_size,
+            snapshot_path=snapshot_path,
+            num_shards=num_shards,
+        )
+
+    if snapshot_path is not None or num_shards is not None:
+        raise ValueError(
+            '`snapshot_path` and `num_shards` are not supported when `as_tensors=False`.'
+        )
+
+    return _experiment_video_dataset_creator_arrays(
+        experiment_video=experiment_video,
+        splits=splits,
+        data_preprocessors=data_preprocessors,
+        dataset_size=dataset_size,
+    )
+
+
 @creator(expand_pack_on_call=True)
 def dataset_creator(
     experiment_video_dataset_manager: Manager,
@@ -103,6 +160,9 @@ def dataset_creator(
     experiment_video_dataset_params[['creator', {'desc', 'value'}, 'num_shards']] = num_shards
     experiment_video_dataset_params[['creator', 'desc', 'splits']] = dataclassy.as_dict(splits)
     experiment_video_dataset_params[['creator', 'value', 'splits']] = splits
+
+    if not as_tensors:
+        experiment_video_dataset_params[['creator', {'desc', 'value'}, 'as_tensors']] = as_tensors
 
     ds_dict = {}
     for name, ev in image_dataset.items():
