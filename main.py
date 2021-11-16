@@ -15,7 +15,7 @@ from boiling_learning.datasets.creators import (
     dataset_post_processor,
     experiment_video_dataset_creator,
 )
-from boiling_learning.management import Manager
+from boiling_learning.management.Manager import Manager
 from boiling_learning.model.definitions import HoboldNet3
 from boiling_learning.preprocessing.Case import Case
 from boiling_learning.preprocessing.ImageDataset import ImageDataset
@@ -31,7 +31,7 @@ from boiling_learning.scripts import (
 )
 from boiling_learning.utils.lazy import Lazy
 from boiling_learning.utils.typeutils import Many, typename
-from boiling_learning.utils.utils import ensure_resolved, print_header
+from boiling_learning.utils.utils import resolve, print_header
 
 print_header('Initializing script')
 
@@ -54,7 +54,7 @@ for option, value in OPTIONS.items():
     print(f'{option}: {value}')
 
 config: dict = dict(dotenv_values('.env'))
-google_drive_path: Path = ensure_resolved(config['GOOGLE_DRIVE_PATH'])
+google_drive_path: Path = resolve(config['GOOGLE_DRIVE_PATH'])
 projects_path: Path = google_drive_path / 'Projects'
 boiling_learning_path: Path = projects_path / 'boiling-learning'
 boiling_experiments_path: Path = boiling_learning_path / 'experiments'
@@ -103,9 +103,7 @@ strategy_name: str = typename(strategy)
 print('Using distribute strategy:', strategy_name)
 
 boiling_cases_names: Many[str] = tuple(f'case {idx+1}' for idx in range(5))
-boiling_cases_names_timed: Many[str] = tuple(
-    funcy.without(boiling_cases_names, 'case 1')
-)
+boiling_cases_names_timed: Many[str] = tuple(funcy.without(boiling_cases_names, 'case 1'))
 
 print_header('Preparing datasets')
 print_header('Loading cases', level=1)
@@ -126,21 +124,11 @@ boiling_cases_timed: Many[Case] = tuple(
 )
 
 boiling_experiments_map: Dict[str, Path] = {
-    'case 1': boiling_experiments_path
-    / 'Experiment 2020-08-03 16-19'
-    / 'data.csv',
-    'case 2': boiling_experiments_path
-    / 'Experiment 2020-08-05 14-15'
-    / 'data.csv',
-    'case 3': boiling_experiments_path
-    / 'Experiment 2020-08-05 17-02'
-    / 'data.csv',
-    'case 4': boiling_experiments_path
-    / 'Experiment 2020-08-28 15-28'
-    / 'data.csv',
-    'case 5': boiling_experiments_path
-    / 'Experiment 2020-09-10 13-53'
-    / 'data.csv',
+    'case 1': boiling_experiments_path / 'Experiment 2020-08-03 16-19' / 'data.csv',
+    'case 2': boiling_experiments_path / 'Experiment 2020-08-05 14-15' / 'data.csv',
+    'case 3': boiling_experiments_path / 'Experiment 2020-08-05 17-02' / 'data.csv',
+    'case 4': boiling_experiments_path / 'Experiment 2020-08-28 15-28' / 'data.csv',
+    'case 5': boiling_experiments_path / 'Experiment 2020-09-10 13-53' / 'data.csv',
 }
 
 print('Loading condensation cases from', condensation_cases_path)
@@ -170,9 +158,7 @@ condensation_datasets_dict = set_condensation_datasets_data.main(
     verbose=2,
     fps_cache_path=Path('.cache', 'fps'),
 )
-condensation_all_cases = ImageDataset.make_union(
-    *condensation_datasets_dict.values()
-)
+condensation_all_cases = ImageDataset.make_union(*condensation_datasets_dict.values())
 
 boiling_preprocessors, boiling_augmentors = make_boiling_processors.main(
     direct_visualization=True,
@@ -186,9 +172,7 @@ boiling_preprocessors, boiling_augmentors = make_boiling_processors.main(
 (
     condensation_preprocessors,
     condensation_augmentors,
-) = make_condensation_processors.main(
-    downscale_factor=5, height=8 * 12, width=8 * 12
-)
+) = make_condensation_processors.main(downscale_factor=5, height=8 * 12, width=8 * 12)
 
 table_saver = partial(bl.io.save_json, dump=json_tricks.dump)
 table_loader = partial(bl.io.load_json, load=json_tricks.load)
@@ -198,9 +182,7 @@ description_comparer = partial(
 
 save_map = {
     'model': tf.keras.models.save_model,
-    'history': lambda obj, path: bl.io.save_pkl(
-        getattr(obj, 'history', obj), path
-    ),
+    'history': lambda obj, path: bl.io.save_pkl(getattr(obj, 'history', obj), path),
 }
 load_map = {
     'model': lambda path: bl.io.load_keras_model(
@@ -249,9 +231,7 @@ model_manager = Manager(
     id_fmt='{index}.model',
     index_key='index',
     save_method=bl.io.save_serialized(save_map),
-    load_method=bl.io.add_bool_flag(
-        bl.io.load_serialized(load_map), (FileNotFoundError, OSError)
-    ),
+    load_method=bl.io.add_bool_flag(bl.io.load_serialized(load_map), (FileNotFoundError, OSError)),
     verbose=2,
     key_names=Manager.Keys(elements='model'),
     table_saver=table_saver,

@@ -24,7 +24,7 @@ def restore(
     last_epoch = -1
     model = None
     if restore:
-        path = bl_utils.ensure_resolved(path)
+        path = bl_utils.resolve(path)
         glob_pattern = path.name.replace(f'{{{epoch_str}}}', '*')
         parser = parse.compile(path.name).parse
 
@@ -98,7 +98,7 @@ def models_from_checkpoints(
     epoch_key: str = 'epoch',
     load_method: bl_io.LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model,
 ) -> Dict[int, tf.keras.models.Model]:
-    pattern = bl_utils.ensure_resolved(pattern)
+    pattern = bl_utils.resolve(pattern)
     filename_pattern = pattern.name
     glob_pattern = filename_pattern.replace(f'{{{epoch_key}}}', '*')
     parser = parse.compile(filename_pattern).parse

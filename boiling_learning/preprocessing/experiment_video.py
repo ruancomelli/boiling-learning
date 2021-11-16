@@ -15,7 +15,7 @@ from boiling_learning.io.io import chunked_filename_pattern, load_dataset
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
 from boiling_learning.preprocessing.Video import Video
 from boiling_learning.preprocessing.video import convert_video, extract_audio, extract_frames
-from boiling_learning.utils import PathLike, VerboseType, ensure_resolved
+from boiling_learning.utils import PathLike, VerboseType, resolve
 from boiling_learning.utils.dtypes import auto_spec
 from boiling_learning.utils.slicerators import Slicerator
 
@@ -129,38 +129,36 @@ class ExperimentVideo(Video):
             raise ValueError('argument *df_suffix* must start with a dot \'.\'')
 
         self.frames_path: Optional[Path] = (
-            ensure_resolved(frames_path)
+            resolve(frames_path)
             if frames_path is not None
-            else (ensure_resolved(frames_dir) / self.name if frames_dir is not None else None)
+            else (resolve(frames_dir) / self.name if frames_dir is not None else None)
         )
 
         self.frames_tensor_path: Optional[Path] = (
-            ensure_resolved(frames_tensor_path)
+            resolve(frames_tensor_path)
             if frames_tensor_path is not None
             else (
-                ensure_resolved(frames_tensor_dir) / self.name
-                if frames_tensor_dir is not None
-                else None
+                resolve(frames_tensor_dir) / self.name if frames_tensor_dir is not None else None
             )
         )
 
         self.frames_suffix: str = frames_suffix
 
         self.audio_path: Optional[Path] = (
-            ensure_resolved(audio_path)
+            resolve(audio_path)
             if audio_path is not None
             else (
-                (ensure_resolved(audio_dir) / self.name).with_suffix(audio_suffix)
+                (resolve(audio_dir) / self.name).with_suffix(audio_suffix)
                 if audio_dir is not None
                 else None
             )
         )
 
         self.df_path: Optional[Path] = (
-            ensure_resolved(df_path)
+            resolve(df_path)
             if df_path is not None
             else (
-                (ensure_resolved(df_dir) / self.name).with_suffix(df_suffix)
+                (resolve(df_dir) / self.name).with_suffix(df_suffix)
                 if df_dir is not None
                 else None
             )
@@ -461,7 +459,7 @@ class ExperimentVideo(Video):
         if path is None:
             path = self.df_path
         else:
-            self.df_path = ensure_resolved(path)
+            self.df_path = resolve(path)
 
         if missing_ok and not self.df_path.is_file():
             return None
@@ -503,7 +501,7 @@ class ExperimentVideo(Video):
         if renaming:
             self.df_path = self.df_path.with_name(path)
         else:
-            self.df_path = ensure_resolved(path)
+            self.df_path = resolve(path)
 
         if erase_old and old_path.is_file():
             old_path.unlink()

@@ -6,7 +6,7 @@
 .UNIMPORT = $(shell unimport --remove --gitignore --ignore-init --include-star-import $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
 .BLACK = $(shell black $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
 .ISORT = $(shell isort $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
-.REFACTOR = $(foreach command,.AUTOFLAKE .UNIMPORT .BLACK .ISORT,$(call $(command)))
+.FORMAT = $(foreach command,.AUTOFLAKE .UNIMPORT .BLACK .ISORT,$(call $(command)))
 
 .READD = $(shell git update-index --again)
 .CHECK = $(shell pre-commit run)
@@ -41,11 +41,11 @@ typecheck:
 
 .PHONY: format
 format:
-	@$(call $(.REFACTOR))
+	@$(call $(.FORMAT))
 
 .PHONY: autofix
 autofix:
-	@-$(call $(.REFACTOR))
+	@-$(call $(.FORMAT))
 	@$(call $(.READD))
 	@-$(call $(.CHECK))
 	@$(call $(.READD))

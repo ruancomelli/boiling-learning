@@ -12,7 +12,7 @@ from tensorflow.python.platform import tf_logging as logging
 from typing_extensions import Protocol
 
 from boiling_learning.io.io import load_json, save_json
-from boiling_learning.utils.utils import PathLike, ensure_parent, ensure_resolved
+from boiling_learning.utils.utils import PathLike, ensure_parent, resolve
 
 
 # Source: <https://stackoverflow.com/q/47731935/5811400>
@@ -362,7 +362,7 @@ class RegisterEpoch(Callback):
 
 class MoveOnTrainBegin(Callback):
     def __init__(self, source: PathLike, dest: PathLike, missing_ok: bool = False) -> None:
-        self.source = ensure_resolved(source)
+        self.source = resolve(source)
         self.dest = ensure_parent(dest)
         self._missing_ok = missing_ok
 
@@ -385,7 +385,7 @@ class PeriodicallyMove(Callback):
         if period < 1:
             raise ValueError('*period* must be >= 1')
 
-        self.source = ensure_resolved(source)
+        self.source = resolve(source)
         self.dest = ensure_parent(dest)
         self.period = period
         self._missing_ok = missing_ok

@@ -34,7 +34,7 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 
 import boiling_learning.utils as bl_utils
-from boiling_learning.utils import PathLike, ensure_dir, ensure_parent, ensure_resolved
+from boiling_learning.utils import PathLike, ensure_dir, ensure_parent, resolve
 from boiling_learning.utils.functional import Kwargs
 
 try:
@@ -99,7 +99,7 @@ def chunked_filename_pattern(
             )
             current = Path(current_chunk_name) / current
 
-        current = ensure_resolved(current, root=root)
+        current = resolve(current, root=root)
 
         return current
 
@@ -151,7 +151,7 @@ def save_image(image: np.ndarray, path: PathLike) -> None:
 
 
 def load_image(path: PathLike, flag: Optional[int] = cv2.IMREAD_COLOR) -> np.ndarray:
-    return cv2.imread(str(ensure_resolved(path)), flag)
+    return cv2.imread(str(resolve(path)), flag)
 
 
 def save_serialized(save_map: Mapping[_T, SaverFunction[_S]]) -> SaverFunction[Mapping[_T, _S]]:
@@ -165,7 +165,7 @@ def save_serialized(save_map: Mapping[_T, SaverFunction[_S]]) -> SaverFunction[M
 
 def load_serialized(load_map: Mapping[_T, LoaderFunction[_S]]) -> LoaderFunction[Dict[_T, _S]]:
     def load(path: PathLike) -> Dict[_T, _S]:
-        path = ensure_resolved(path)
+        path = resolve(path)
         return {key: loader(path / key) for key, loader in load_map.items()}
 
     return load
@@ -190,7 +190,7 @@ def save_pkl(obj, path: PathLike) -> None:
 
 
 def load_pkl(path: PathLike):
-    with ensure_resolved(path).open('rb') as file:
+    with resolve(path).open('rb') as file:
         return pickle.load(file)
 
 
@@ -218,7 +218,7 @@ def load_json(
     load: Callable[[_io.TextIOWrapper], _T] = json.load,
     cls: Optional[Type] = None,
 ) -> _T:
-    path = ensure_resolved(path)
+    path = resolve(path)
 
     if path.suffix != '.json':
         warnings.warn(
@@ -242,7 +242,7 @@ def saver_hdf5(key: str = '') -> SaverFunction[Any]:
 
 def loader_hdf5(key: str = '') -> LoaderFunction[Any]:
     def load_hdf5(path: PathLike):
-        path = ensure_resolved(path)
+        path = resolve(path)
         with h5py.File(str(path), 'r') as hf:
             return hf.get(key)
 
@@ -269,7 +269,7 @@ def save_dataset(dataset: tf.data.Dataset, path: PathLike) -> None:
 
 
 def load_dataset(path: PathLike) -> tf.data.Dataset:
-    path = ensure_resolved(path)
+    path = resolve(path)
     dataset_path = path / 'dataset.tensorflow'
     element_spec_path = path / 'element_spec.json'
 
@@ -373,14 +373,14 @@ def process_path(file_path, in_dir: Optional[PathLike] = None):
 
 
 def load_frames_dataset(path: PathLike, shuffle: bool = True) -> tf.data.Dataset:
-    path = ensure_resolved(path)
+    path = resolve(path)
     df_path = path / 'dataframe.csv'
     # element_spec_path = path / 'elem_spec.json'
 
     df = pd.read_csv(df_path, index_col=0)
     if shuffle:
         df = df.sample(frac=1)
-    files = [str(ensure_resolved(path)) for path in df.index]
+    files = [str(resolve(path)) for path in df.index]
     df = df.reset_index(drop=True)
 
     ds_img = tf.data.Dataset.from_tensor_slices(files)
@@ -392,7 +392,7 @@ def load_frames_dataset(path: PathLike, shuffle: bool = True) -> tf.data.Dataset
 def loader_frames_dataset(
     path: PathLike,
 ) -> BoolFlagged[Optional[tf.data.Dataset]]:
-    path = ensure_resolved(path)
+    path = resolve(path)
 
     try:
         return True, load_frames_dataset(path, shuffle=True)
@@ -419,7 +419,7 @@ def loader_dataset_triplet(
     loader: BoolFlaggedLoaderFunction[Optional[tf.data.Dataset]],
 ) -> BoolFlaggedLoaderFunction[OptionalDatasetTriplet]:
     def _loader(path: PathLike) -> BoolFlagged[OptionalDatasetTriplet]:
-        path = ensure_resolved(path)
+        path = resolve(path)
 
         success_train, ds_train = loader(path / 'train')
         success_val, ds_val = loader(path / 'val')
@@ -448,7 +448,7 @@ def save_yogadl(
 
 
 def saver_yogadl(storage_path: PathLike, dataset_id: str) -> SaverFunction[DatasetTriplet]:
-    storage_path = ensure_resolved(storage_path)
+    storage_path = resolve(storage_path)
     id_train = dataset_id + '_train'
     id_val = dataset_id + '_val'
     id_test = dataset_id + '_test'
@@ -476,7 +476,7 @@ def load_yogadl(
     num_shards: int = 1,
     drop_shard_remainder: bool = False,
 ) -> tf.data.Dataset:
-    storage_path = ensure_resolved(storage_path)
+    storage_path = resolve(storage_path)
 
     lfs_config = yogadl.storage.LFSConfigurations(str(storage_path))
     storage = yogadl.storage.LFSStorage(lfs_config)
@@ -494,7 +494,7 @@ def load_yogadl(
 
 
 def loader_yogadl(storage_path: PathLike, dataset_id: str) -> LoaderFunction[DatasetTriplet]:
-    storage_path = ensure_resolved(storage_path)
+    storage_path = resolve(storage_path)
     id_train = dataset_id + '_train'
     id_val = dataset_id + '_val'
     id_test = dataset_id + '_test'

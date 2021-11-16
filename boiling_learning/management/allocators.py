@@ -7,13 +7,7 @@ from tinydb_smartcache import SmartCacheTable
 
 from boiling_learning.io.storage import json_serialize
 from boiling_learning.utils.functional import Pack
-from boiling_learning.utils.utils import (
-    JSONDataType,
-    PathLike,
-    ensure_dir,
-    ensure_parent,
-    ensure_resolved,
-)
+from boiling_learning.utils.utils import JSONDataType, PathLike, ensure_dir, ensure_parent, resolve
 
 Allocator = Callable[[Pack[Any, Any]], Path]
 
@@ -25,7 +19,7 @@ class TableAllocator:
         db: Table,
         serializer: Callable[[Pack[Any, Any]], JSONDataType] = json_serialize,
     ) -> None:
-        self.path: Path = ensure_resolved(path)
+        self.path: Path = resolve(path)
         self.db: Table = db
         self.serializer: Callable[[Pack[Any, Any]], JSONDataType] = serializer
 

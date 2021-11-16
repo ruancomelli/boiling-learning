@@ -15,6 +15,7 @@ from collections import ChainMap
 from contextlib import contextmanager
 from functools import partial, wraps
 from itertools import product
+from os.path import relpath as _relative_path
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from timeit import default_timer
@@ -648,29 +649,38 @@ def replace_last(iterable, last_value):
 
 
 # ---------------------------------- Path ----------------------------------
-def relative_path(origin, destination):
-    from os.path import relpath
-
-    return relpath(destination, start=origin)
+def relative_path(origin: PathLike, destination: PathLike) -> Path:
+    return _relative_path(resolve(destination), start=resolve(origin))
 
 
-def ensure_resolved(path: PathLike, root: Optional[PathLike] = None) -> Path:
+def resolve(
+    path: PathLike, root: Optional[PathLike] = None, dir: bool = False, parents: bool = False
+) -> Path:
     path = Path(path)
-    if root is not None and not path.is_absolute():
-        path = Path(root) / path
-    return path.resolve()
+
+    if root is not None:
+        root = resolve(root)
+        if not path.is_absolute():
+            path = root / path
+        elif root not in path.resolve().parents:
+            raise ValueError(f'incompatible `root` and `path`: {(root, path)}')
+
+    path = path.resolve()
+
+    if dir:
+        path.mkdir(exist_ok=True, parents=True)
+    elif parents:
+        path.parent.mkdir(exist_ok=True, parents=True)
+
+    return path
 
 
 def ensure_dir(path: PathLike, root: Optional[PathLike] = None) -> Path:
-    path = ensure_resolved(path, root=root)
-    path.mkdir(exist_ok=True, parents=True)
-    return path
+    return resolve(path, root=root, dir=True)
 
 
 def ensure_parent(path: PathLike, root: Optional[PathLike] = None) -> Path:
-    path = ensure_resolved(path, root=root)
-    path.parent.mkdir(exist_ok=True, parents=True)
-    return path
+    return resolve(path, root=root, parents=True)
 
 
 def remove_copy(directory, pattern):
@@ -691,8 +701,8 @@ def remove_copy(directory, pattern):
 
 # Source: https://stackoverflow.com/a/34236245/5811400
 def is_parent_dir(parent: PathLike, subdir: PathLike) -> bool:
-    parent = ensure_resolved(parent)
-    subdir = ensure_resolved(subdir)
+    parent = resolve(parent)
+    subdir = resolve(subdir)
     return parent in subdir.parents
 
 
@@ -703,7 +713,7 @@ def rmdir(
     keep: bool = False,
     missing_ok: bool = False,
 ) -> None:
-    path = ensure_resolved(path)
+    path = resolve(path)
 
     if not path.is_dir():
         if missing_ok:
@@ -770,10 +780,10 @@ def tempdir(
     dir: Optional[PathLike] = None,
 ) -> Iterator[Path]:
     if dir is not None:
-        dir = ensure_resolved(dir)
+        dir = resolve(dir)
 
     with TemporaryDirectory(suffix=suffix, prefix=prefix, dir=dir) as dirpath:
-        yield ensure_resolved(dirpath)
+        yield resolve(dirpath)
 
 
 @contextmanager
@@ -800,7 +810,7 @@ def JSONDict(path: PathLike, dumps: Callable[[_T], str], loads: Callable[[str], 
 
 
 def fix_path(path: PathLike, substitution_dict: Optional[Dict[str, str]] = None) -> Path:
-    path = ensure_resolved(path)
+    path = resolve(path)
     path_str = str(path)
 
     if substitution_dict is None:

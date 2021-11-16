@@ -27,7 +27,7 @@ def convert_video(
 ) -> None:
     # For `fps`, see <https://superuser.com/a/729351>.
 
-    in_path = bl.utils.ensure_resolved(in_path)
+    in_path = bl.utils.resolve(in_path)
     out_path = bl.utils.ensure_parent(out_path)
 
     if verbose:
@@ -87,8 +87,8 @@ def extract_frames_ffmpeg(
     # See <https://stackoverflow.com/a/50422454/5811400>
     # >>> ffmpeg -i {video_path} -vsync 0 {output_path}
 
-    video_path = bl.utils.ensure_resolved(video_path)
-    outputdir = bl.utils.ensure_resolved(outputdir)
+    video_path = bl.utils.resolve(video_path)
+    outputdir = bl.utils.resolve(outputdir)
 
     if overwrite:
         bl.utils.rmdir(outputdir, recursive=True, missing_ok=True)
@@ -142,7 +142,7 @@ def extract_frames_iterate(
     verbose: VerboseType = False,
 ) -> None:
     verbose_2 = verbose >= 2
-    video_path = bl.utils.ensure_resolved(video_path)
+    video_path = bl.utils.resolve(video_path)
 
     if video_path.suffix != '.mp4':
         warnings.warn(
@@ -200,8 +200,8 @@ def extracted_frames_count(
     use_tmp_dir = tmp_dir is not None
     fast_key = 'fast' if fast_frames_count else 'slow'
 
-    video_path = bl.utils.ensure_resolved(video_path)
-    outputdir = bl.utils.ensure_resolved(outputdir)
+    video_path = bl.utils.resolve(video_path)
+    outputdir = bl.utils.resolve(outputdir)
 
     if verbose:
         print('Counting frames from file', video_path)
@@ -277,7 +277,7 @@ def extract_frames(
     # Source 2: <https://forums.fast.ai/t/extracting-frames-from-video-file-with-ffmpeg/29818>
     # TODO: improve error messages
 
-    video_path = bl.utils.ensure_resolved(video_path)
+    video_path = bl.utils.resolve(video_path)
     outputdir = bl.utils.ensure_dir(outputdir)
     if verbose:
         print(
@@ -430,7 +430,7 @@ def concat_videos(in_paths: Iterable[PathLike], out_path: PathLike) -> None:
     # Source: <https://stackoverflow.com/a/11175851/5811400>
     # TODO: test!
 
-    in_paths = map(bl.utils.ensure_resolved, in_paths)
+    in_paths = map(bl.utils.resolve, in_paths)
     out_path = bl.utils.ensure_parent(out_path)
     out_dir = out_path.parent
 
@@ -499,7 +499,7 @@ def extract_audio(
 
 @contextlib.contextmanager
 def open_video(video_path: PathLike) -> Iterator[cv2.VideoCapture]:
-    video_path = bl.utils.ensure_resolved(video_path)
+    video_path = bl.utils.resolve(video_path)
     cap = cv2.VideoCapture(str(video_path))
 
     try:
@@ -548,7 +548,7 @@ def count_frames_in_dir(
     exclude_path: Optional[PathLike] = None,
     exclude_count: Optional[Union[int, Callable[[PathLike], int]]] = None,
 ) -> int:
-    path = bl.utils.ensure_resolved(path)
+    path = bl.utils.resolve(path)
 
     if not path.is_dir():
         return 0
@@ -559,7 +559,7 @@ def count_frames_in_dir(
     if exclude_path is None:
         return n_frames_in_path
 
-    exclude_path = bl.utils.ensure_resolved(exclude_path)
+    exclude_path = bl.utils.resolve(exclude_path)
 
     if not bl.utils.is_parent_dir(path, exclude_path):
         return n_frames_in_path
@@ -608,7 +608,7 @@ def reorganize_frames(
         raise ValueError('index_parser could not be converted to a callable.')
 
     if source_files is None:
-        source_dir = bl.utils.ensure_resolved(source_dir)
+        source_dir = bl.utils.resolve(source_dir)
         source_files = source_dir.rglob('*' + source_suffix)
 
     indices = map(index_parser, source_files)

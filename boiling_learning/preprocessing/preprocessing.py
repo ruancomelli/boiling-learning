@@ -103,7 +103,7 @@ def snapshotter(
     num_shards: Optional[int] = None,
     shuffle_size: Optional[int] = None,
 ) -> Callable[[tf.data.Dataset], tf.data.Dataset]:
-    snapshot_folder = bl_utils.ensure_resolved(snapshot_folder)
+    snapshot_folder = bl_utils.resolve(snapshot_folder)
 
     if shuffle_size is None:
         shuffle_size = os.cpu_count()

@@ -78,7 +78,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         self._tags: FrozenSet[str] = frozenset(tags)
 
         if df_path is not None:
-            df_path = bl_utils.ensure_resolved(df_path)
+            df_path = bl_utils.resolve(df_path)
         self.df_path = df_path
 
         if exist_load and self.df_path.is_file():
@@ -226,7 +226,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         remove_absent: bool = False,
         keys: VideoDataKeys = VideoDataKeys(),
     ) -> None:
-        data_path = bl_utils.ensure_resolved(data_path)
+        data_path = bl_utils.resolve(data_path)
         video_data = load_json(data_path)
         purged = not purge
 
@@ -257,7 +257,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         if path is None:
             path = self.df_path
         else:
-            self.df_path = bl_utils.ensure_resolved(path)
+            self.df_path = bl_utils.resolve(path)
 
         if columns is None:
             self.df = pd.read_csv(self.df_path, skipinitialspace=True)
@@ -311,7 +311,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         if renaming:
             self.df_path = self.df_path.with_name(path)
         else:
-            self.df_path = bl_utils.ensure_resolved(path)
+            self.df_path = bl_utils.resolve(path)
 
         self.save(overwrite=overwrite)
 

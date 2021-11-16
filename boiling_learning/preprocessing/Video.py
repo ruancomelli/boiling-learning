@@ -5,12 +5,12 @@ import numpy as np
 import pims
 
 from boiling_learning.utils.pathutils import PathLike
-from boiling_learning.utils.utils import ensure_resolved
+from boiling_learning.utils.utils import resolve
 
 
 class Video(Sequence[np.ndarray]):
     def __init__(self, path: PathLike) -> None:
-        self.path: Path = ensure_resolved(path)
+        self.path: Path = resolve(path)
 
         self.video: Optional[pims.Video] = None
         self._is_open_video: bool = False

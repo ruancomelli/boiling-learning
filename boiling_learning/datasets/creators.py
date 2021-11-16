@@ -31,7 +31,7 @@ from boiling_learning.preprocessing.transformers import (
 )
 from boiling_learning.utils.functional import Kwargs, Pack
 from boiling_learning.utils.Parameters import Parameters
-from boiling_learning.utils.utils import PathLike, elapsed_timer, ensure_dir
+from boiling_learning.utils.utils import PathLike, elapsed_timer, resolve
 
 VideoDatasetElement = Tuple[np.ndarray, Dict[str, Any]]
 SliceableVideoDataset = SliceableDataset[VideoDatasetElement]
@@ -58,11 +58,11 @@ def _experiment_video_dataset_creator_tensors(
     ds_train, ds_val, ds_test = ds_triplet
 
     if snapshot_path is not None:
-        snapshot_path = ensure_dir(snapshot_path)
+        snapshot_path = resolve(snapshot_path, dir=True)
 
-        if isinstance(dataset_size, int):
+        if isinstance(dataset_size, int) and isinstance(num_shards, int):
             num_shards = min(dataset_size, num_shards)
-        elif isinstance(dataset_size, Fraction):
+        elif isinstance(dataset_size, Fraction) and isinstance(num_shards, int):
             num_shards = min(int(dataset_size * len(experiment_video)), num_shards)
 
         ds_train = ds_train.apply(
@@ -258,7 +258,7 @@ def dataset_post_processor(
                 ds_val = ds_val.cache()
             ds_test = ds_test.cache()
     else:
-        cache = ensure_dir(cache)
+        cache = resolve(cache, dir=True)
         ds_train = ds_train.cache(str(cache / 'train'))
         if ds_val is not None:
             ds_val = ds_val.cache(str(cache / 'val'))

@@ -20,9 +20,9 @@ from boiling_learning.preprocessing.video import get_fps
 from boiling_learning.utils.utils import (
     KeyedDefaultDict,
     PathLike,
-    ensure_resolved,
     print_header,
     print_verbose,
+    resolve,
 )
 
 _subcase_patterns = {
@@ -99,7 +99,7 @@ def main(
     verbose: int = 0,
     fps_cache_path: Optional[PathLike] = None,
 ) -> Dict[str, ImageDataset]:
-    dataspecpath = ensure_resolved(dataspecpath)
+    dataspecpath = resolve(dataspecpath)
     dataspec = yaml.safe_load(dataspecpath.read_text())
 
     if fps_cache_path is not None:
@@ -114,7 +114,7 @@ def main(
             print('Loading from', path)
             return load_json(path)
 
-        fps_cache_path = ensure_resolved(fps_cache_path)
+        fps_cache_path = resolve(fps_cache_path)
         allocator = default_table_allocator(fps_cache_path)
         cacher = cache(allocator, saver=verbose_save, loader=verbose_load)
         fps_getter = cacher(get_fps)

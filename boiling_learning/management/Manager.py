@@ -98,7 +98,7 @@ class Manager(
     #     ) -> None:
     #         self._id: str = elem_id
     #         self._is_loaded: bool = False
-    #         self._path: Path = bl.utils.ensure_resolved(path)
+    #         self._path: Path = bl.utils.resolve(path)
     #         self._value: Union[Sentinel, _ElemType, _PostProcessedElemType]
 
     #     @property
@@ -283,7 +283,7 @@ class Manager(
                 ' or by defining it as a property.'
             )
 
-        path = bl.utils.ensure_resolved(path)
+        path = bl.utils.resolve(path)
         return self.load_method(path)
 
     def contents(self, elem_id: Optional[str] = None):

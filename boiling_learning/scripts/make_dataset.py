@@ -1,7 +1,7 @@
 from collections import defaultdict
 from fractions import Fraction
 from functools import partial
-from typing import Container, Optional, Sequence, Union
+from typing import Container, Optional, Sequence, Tuple, Union
 
 import dataclassy
 import funcy
@@ -44,7 +44,7 @@ def main(
     augmentors_to_force: Container[str] = frozenset({'random_cropper'}),
     experiment_video_saver: SaverFunction[DatasetTriplet] = saver_dataset_triplet(save_dataset),
     as_tensors: bool = False,
-):
+) -> Tuple[int, DatasetTriplet]:
     if not augment_train:
         augmentors = [
             data_augmentor
@@ -57,8 +57,8 @@ def main(
 
     if not as_tensors:
         dataset_params[['creator', {'desc', 'value'}, 'as_tensors']] = as_tensors
-
-    dataset_params[['creator', {'desc', 'value'}, 'num_shards']] = 1024
+    else:
+        dataset_params[['creator', {'desc', 'value'}, 'num_shards']] = 1024
 
     dataset_params[['creator', 'desc', 'image_dataset']] = sorted(img_ds.keys())
     dataset_params[['creator', 'value', 'image_dataset']] = img_ds

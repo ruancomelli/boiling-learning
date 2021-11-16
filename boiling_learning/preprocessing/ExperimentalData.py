@@ -40,11 +40,11 @@ class ExperimentalData:
         self.data_path: Path
         self.description_path: Optional[Path] = None
         if path is None:
-            self.data_path = bl_utils.ensure_resolved(data_path)
+            self.data_path = bl_utils.resolve(data_path)
             if description_path is not None:
-                self.description_path = bl_utils.ensure_resolved(description_path)
+                self.description_path = bl_utils.resolve(description_path)
         else:
-            path = bl_utils.ensure_resolved(path)
+            path = bl_utils.resolve(path)
             self.data_path = path / 'data.csv'
             self.description_path = path / 'description.md'
 

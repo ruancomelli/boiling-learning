@@ -3,7 +3,7 @@ from typing import List
 from dataclassy import dataclass
 
 from boiling_learning.preprocessing import ExperimentVideo, ImageDataset
-from boiling_learning.utils.utils import PathLike, ensure_resolved, print_header, print_verbose
+from boiling_learning.utils.utils import PathLike, print_header, print_verbose, resolve
 
 
 @dataclass(frozen=True)
@@ -15,7 +15,7 @@ class Options:
 
 
 def main(datapath: PathLike, options: Options, verbose: bool = True) -> List[ImageDataset]:
-    datapath = ensure_resolved(datapath)
+    datapath = resolve(datapath)
 
     datasets: List[ImageDataset] = []
     for casedir in datapath.iterdir():
