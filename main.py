@@ -31,7 +31,7 @@ from boiling_learning.scripts import (
 )
 from boiling_learning.utils.lazy import Lazy
 from boiling_learning.utils.typeutils import Many, typename
-from boiling_learning.utils.utils import resolve, print_header
+from boiling_learning.utils.utils import print_header, resolve
 
 print_header('Initializing script')
 
