@@ -1,3 +1,14 @@
+## v0.16.2 (2021-11-16)
+
+### Fix
+
+- **main**: fix formatting in `main.py`
+- **scripts/make-dataset**: include `num_shards` only when using `as_tensors=True` in `make_dataset.main`
+
+### Refactor
+
+- **management/allocators**: add smart cache tables for faster allocators
+
 ## v0.16.1 (2021-11-15)
 
 ### Fix
