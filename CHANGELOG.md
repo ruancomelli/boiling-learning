@@ -1,3 +1,9 @@
+## v0.16.3 (2021-11-16)
+
+### Fix
+
+- **datasets/creators**: avoid forwarding `num_shards` and `snapshot_path` to `experiment_video_dataset_creator` when `as_tensors=False`
+
 ## v0.16.2 (2021-11-16)
 
 ### Fix
