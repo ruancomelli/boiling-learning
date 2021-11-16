@@ -4,15 +4,15 @@ from typing import List, Optional, Type, TypeVar, Union
 from nidaqmx.constants import ChannelType as NIChannelType
 from nidaqmx.task import Task
 
-import boiling_learning as bl
 from boiling_learning.daq.Device import Device
+from boiling_learning.utils.utils import SimpleRepr, SimpleStr
 
 T = TypeVar('T')
 
 ChannelType = enum.Enum('ChannelType', 'UNDEFINED ANALOG COUNTER DIGITAL INPUT OUTPUT')
 
 
-class Channel(bl.utils.SimpleRepr, bl.utils.SimpleStr):
+class Channel(SimpleRepr, SimpleStr):
     channel_table = {}
 
     exclusive_types = [
@@ -90,6 +90,8 @@ class Channel(bl.utils.SimpleRepr, bl.utils.SimpleStr):
         for ni_channel_type in NIChannelType:
             if all(t.name in ni_channel_type.name for t in self.type):
                 return ni_channel_type
+
+        return None
 
     def is_ni_type(self, ni_channel_type: NIChannelType) -> bool:
         return self.ni_type is ni_channel_type
