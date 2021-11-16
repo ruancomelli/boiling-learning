@@ -154,7 +154,7 @@ def dataset_creator(
     load: bool = True,
     reload_after_save: bool = False,
     as_tensors: bool = False,
-):
+) -> DatasetTriplet:
     experiment_video_dataset_params = Parameters(params=defaultdict(dict))
     experiment_video_dataset_params[['creator', {'desc', 'value'}, 'dataset_size']] = dataset_size
     experiment_video_dataset_params[['creator', 'desc', 'splits']] = dataclassy.as_dict(splits)

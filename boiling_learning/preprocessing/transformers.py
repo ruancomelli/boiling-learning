@@ -25,12 +25,15 @@ U = TypeVar('U')
 V = TypeVar('V')
 
 
-class Transformer(FrozenNamedMixin, SimpleStr, Generic[_X, _Y]):
+class Transformer(SimpleStr, Generic[_X, _Y]):
     def __init__(self, name: str, f: Callable[..., _Y], pack: Pack = Pack()) -> None:
-        super().__init__(name)
-
+        self.__name__: str = name
         self.pack = pack
         self.transformer = pack.rpartial(f)
+
+    @property
+    def name(self) -> str:
+        return self.__name__
 
     def __call__(self, arg: _X, *args, **kwargs) -> _Y:
         return self.transformer(arg, *args, **kwargs)
