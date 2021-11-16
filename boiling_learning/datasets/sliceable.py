@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import random
+from fractions import Fraction
 from operator import itemgetter
 from typing import (
     Any,
@@ -9,6 +10,7 @@ from typing import (
     Generic,
     Iterable,
     Iterator,
+    List,
     Optional,
     Sequence,
     Tuple,
@@ -24,6 +26,7 @@ from plum import Dispatcher
 from slicerator import pipeline
 
 from boiling_learning.utils.dtypes import auto_spec
+from boiling_learning.utils.iterutils import distance_maximized_evenly_spaced_indices
 from boiling_learning.utils.slicerators import Slicerator
 
 _T = TypeVar('_T')
@@ -178,11 +181,57 @@ class SliceableDataset(Sequence[_T]):
 
         return self[indices]
 
-    def skip(self, count: int) -> SliceableDataset[_T]:
-        return self[count:]
+    def skip(self, count: Union[int, Fraction]) -> SliceableDataset[_T]:
+        if isinstance(count, int):
+            return self[count:]
 
-    def take(self, count: int) -> SliceableDataset[_T]:
-        return self[:count]
+        total: int = len(self)
+        keep_indices = distance_maximized_evenly_spaced_indices(
+            total=total, count=total - int(count * total)
+        )
+        return self[keep_indices]
+
+    def take(self, count: Union[int, Fraction]) -> SliceableDataset[_T]:
+        if isinstance(count, int):
+            return self[:count]
+
+        total: int = len(self)
+        keep_indices = distance_maximized_evenly_spaced_indices(
+            total=total, count=int(count * total)
+        )
+        return self[keep_indices]
+
+    def split(self, *sizes: Optional[Union[int, Fraction]]) -> Tuple[SliceableDataset[_T], ...]:
+        if sizes.count(None) > 1:
+            raise TypeError('`split` supports at most one `None` size.')
+
+        length = len(self)
+
+        optional_int_sizes: Tuple[Optional[int], ...] = tuple(
+            int(size * length) if isinstance(size, Fraction) else size for size in sizes
+        )
+        total_size = sum(size for size in optional_int_sizes if size is not None)
+
+        if None not in optional_int_sizes and total_size != length:
+            raise ValueError(
+                f'sum of sizes must equal this dataset size. Got sum={total_size}, length={length}'
+            )
+
+        clean_sizes: Tuple[int, ...] = tuple(
+            size if size is not None else length - total_size for size in optional_int_sizes
+        )
+
+        if any(size < 0 for size in clean_sizes):
+            raise ValueError(f'got negative sizes: {clean_sizes}')
+
+        remaining: SliceableDataset[_T] = self
+        splits: List[SliceableDataset[_T]] = []
+
+        for size in clean_sizes:
+            splits.append(remaining.take(size))
+            remaining = remaining.skip(size)
+
+        return tuple(splits)
 
 
 def sliceable_dataset_to_tensorflow_dataset(
@@ -236,10 +285,10 @@ class SupervisedSliceableDataset(SliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y
     def shuffle(self) -> SupervisedSliceableDataset[_X, _Y]:
         return SupervisedSliceableDataset.from_pairs(super().shuffle())
 
-    def skip(self, count: int) -> SupervisedSliceableDataset[_X, _Y]:
+    def skip(self, count: Union[int, Fraction]) -> SupervisedSliceableDataset[_X, _Y]:
         return SupervisedSliceableDataset.from_pairs(super().skip(count))
 
-    def take(self, count: int) -> SupervisedSliceableDataset[_X, _Y]:
+    def take(self, count: Union[int, Fraction]) -> SupervisedSliceableDataset[_X, _Y]:
         return SupervisedSliceableDataset.from_pairs(super().take(count))
 
     def features(self) -> SliceableDataset[_X]:
@@ -281,6 +330,13 @@ class SupervisedSliceableDataset(SliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y
             return predicate(pair[1])
 
         return self.filter(_filter_func)
+
+    def split(
+        self, *sizes: Optional[Union[int, Fraction]]
+    ) -> Tuple[SupervisedSliceableDataset[_T], ...]:
+        return tuple(
+            SupervisedSliceableDataset.from_pairs(split) for split in super().split(*sizes)
+        )
 
 
 ImageSliceableDataset = SupervisedSliceableDataset[np.ndarray, _Y]
