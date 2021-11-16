@@ -39,8 +39,8 @@ check:
 typecheck:
 	@mypy $(.PROJECT)
 
-.PHONY: refactor
-refactor:
+.PHONY: format
+format:
 	@$(call $(.REFACTOR))
 
 .PHONY: autofix
