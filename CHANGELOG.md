@@ -1,3 +1,30 @@
+## v0.16.0 (2021-11-15)
+
+### Feat
+
+- **scripts/make-dataset**: support making datasets by using arrays instead of tensors
+- **datasets/sliceable**: add splitting functionality to sliceable datasets
+- **management/descriptors**: add `descriptors` module for automatically describing objects
+- **scripts**: add support for processing condensation data using array transformers
+- **preprocessing/arrays**: include all data preprocessing functions in the `preprocessing.arrays` module
+- **preprocessing/arrays**: convert array preprocessing functions with `@transformer`
+- **preprocessing/arrays**: redefine image preprocessing functions in terms of NumPy arrays
+- **utils/mathutils**: add `Real` type to denote real number types
+
+### Refactor
+
+- **daq/Channel**: improve type annotations in `daq` module
+- improve type annotation and class nomenclature across project
+- **utils**: improve `KeyedDefaultDict` type annotations
+- **preprocessing/transformers**: improve transformers names, dropping image-exclusive terminology
+- **preprocessing/transformers**: improve type annotations in `preprocessing.transformers` module
+- **preprocessing/transformers**: remove unused `ImageTransformer.as_image_transformer` method
+
+### Fix
+
+- **datasets/sliceable**: fix `SupervisedSliceableDataset.{features|targets}` type annotations
+- **utils/sentinels**: fix import error from `utils.sentinels.EMPTY`
+
 ## v0.15.7 (2021-10-18)
 
 ### Fix
