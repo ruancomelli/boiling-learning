@@ -55,10 +55,10 @@ def main(
     dataset_params = Parameters(params=defaultdict(dict))
     dataset_params[['creator', {'desc', 'value'}, 'dataset_size']] = dataset_size
 
-    if not as_tensors:
-        dataset_params[['creator', {'desc', 'value'}, 'as_tensors']] = as_tensors
-    else:
+    if as_tensors:
         dataset_params[['creator', {'desc', 'value'}, 'num_shards']] = 1024
+    else:
+        dataset_params[['creator', {'desc', 'value'}, 'as_tensors']] = as_tensors
 
     dataset_params[['creator', 'desc', 'image_dataset']] = sorted(img_ds.keys())
     dataset_params[['creator', 'value', 'image_dataset']] = img_ds

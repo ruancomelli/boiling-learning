@@ -157,11 +157,12 @@ def dataset_creator(
 ):
     experiment_video_dataset_params = Parameters(params=defaultdict(dict))
     experiment_video_dataset_params[['creator', {'desc', 'value'}, 'dataset_size']] = dataset_size
-    experiment_video_dataset_params[['creator', {'desc', 'value'}, 'num_shards']] = num_shards
     experiment_video_dataset_params[['creator', 'desc', 'splits']] = dataclassy.as_dict(splits)
     experiment_video_dataset_params[['creator', 'value', 'splits']] = splits
 
-    if not as_tensors:
+    if as_tensors:
+        experiment_video_dataset_params[['creator', {'desc', 'value'}, 'num_shards']] = num_shards
+    else:
         experiment_video_dataset_params[['creator', {'desc', 'value'}, 'as_tensors']] = as_tensors
 
     ds_dict = {}
@@ -188,9 +189,11 @@ def dataset_creator(
             missing_ok=True,
         )
         workspace_path = experiment_video_dataset_manager.elem_workspace(dataset_id)
-        experiment_video_dataset_params[['creator', 'value', 'snapshot_path']] = (
-            workspace_path / 'snapshot'
-        )
+
+        if as_tensors:
+            experiment_video_dataset_params[['creator', 'value', 'snapshot_path']] = (
+                workspace_path / 'snapshot'
+            )
 
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', category=ResourceWarning)
