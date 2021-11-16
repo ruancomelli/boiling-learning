@@ -1,3 +1,9 @@
+## v0.16.4 (2021-11-16)
+
+### Feat
+
+- **preprocessing/transformers**: add a `__name__` attribute to `Transformer`s
+
 ## v0.16.3 (2021-11-16)
 
 ### Fix
