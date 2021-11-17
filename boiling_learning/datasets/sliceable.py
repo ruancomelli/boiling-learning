@@ -22,6 +22,7 @@ from typing import (
 import more_itertools as mit
 import numpy as np
 import tensorflow as tf
+from iteround import saferound
 from plum import Dispatcher
 from slicerator import pipeline
 
@@ -207,27 +208,26 @@ class SliceableDataset(Sequence[_T]):
 
         length = len(self)
 
-        optional_int_sizes: Tuple[Optional[int], ...] = tuple(
-            int(size * length) if isinstance(size, Fraction) else size for size in sizes
+        rescaled_sizes: Tuple[Optional[Union[int, float]], ...] = tuple(
+            float(size * length) if isinstance(size, Fraction) else size for size in sizes
         )
-        total_size = sum(size for size in optional_int_sizes if size is not None)
+        total_size: Union[int, float] = sum(size for size in rescaled_sizes if size is not None)
 
-        if None not in optional_int_sizes and total_size != length:
-            raise ValueError(
-                f'sum of sizes must equal this dataset size. Got sum={total_size}, length={length}'
-            )
-
-        clean_sizes: Tuple[int, ...] = tuple(
-            size if size is not None else length - total_size for size in optional_int_sizes
+        clean_sizes: Tuple[Union[int, float], ...] = tuple(
+            length - total_size if size is None else size for size in rescaled_sizes
         )
 
-        if any(size < 0 for size in clean_sizes):
-            raise ValueError(f'got negative sizes: {clean_sizes}')
+        int_sizes: Tuple[int, ...] = tuple(
+            map(int, saferound(clean_sizes, places=0, topline=length))
+        )
+
+        if any(size < 0 for size in int_sizes):
+            raise ValueError(f'got negative sizes: {int_sizes}')
 
         remaining: SliceableDataset[_T] = self
         splits: List[SliceableDataset[_T]] = []
 
-        for size in clean_sizes:
+        for size in int_sizes:
             splits.append(remaining.take(size))
             remaining = remaining.skip(size)
 
