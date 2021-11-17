@@ -1,3 +1,9 @@
+## v0.16.5 (2021-11-16)
+
+### Fix
+
+- **datasets/sliceable**: fix `SliceableDataset.split` automatic size scaling to take rounding effects into account
+
 ## v0.16.4 (2021-11-16)
 
 ### Feat
