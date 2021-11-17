@@ -17,7 +17,7 @@ from boiling_learning.datasets.creators import (
 )
 from boiling_learning.management.managers import Manager
 from boiling_learning.model.definitions import HoboldNet3
-from boiling_learning.preprocessing.Case import Case
+from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.ImageDataset import ImageDataset
 from boiling_learning.scripts import (
     load_cases,
