@@ -26,7 +26,7 @@ from iteround import saferound
 from plum import Dispatcher
 from slicerator import pipeline
 
-from boiling_learning.utils.dtypes import auto_spec
+from boiling_learning.utils.dtypes import NestedTypeSpec, auto_spec
 from boiling_learning.utils.iterutils import distance_maximized_evenly_spaced_indices
 from boiling_learning.utils.slicerators import Slicerator
 
@@ -232,6 +232,10 @@ class SliceableDataset(Sequence[_T]):
             remaining = remaining.skip(size)
 
         return tuple(splits)
+
+    @property
+    def element_spec(self) -> NestedTypeSpec:
+        return auto_spec(self[0])
 
 
 def sliceable_dataset_to_tensorflow_dataset(
