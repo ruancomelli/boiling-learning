@@ -8,8 +8,7 @@ import tensorflow as tf
 from dataclassy import dataclass
 from tensorflow.data import AUTOTUNE
 
-import boiling_learning.utils as bl_utils
-from boiling_learning.utils.utils import PathLike
+from boiling_learning.utils.utils import PathLike, resolve
 
 T = TypeVar('T')
 
@@ -103,7 +102,7 @@ def snapshotter(
     num_shards: Optional[int] = None,
     shuffle_size: Optional[int] = None,
 ) -> Callable[[tf.data.Dataset], tf.data.Dataset]:
-    snapshot_folder = bl_utils.resolve(snapshot_folder)
+    snapshot_folder = resolve(snapshot_folder)
 
     if shuffle_size is None:
         shuffle_size = os.cpu_count()

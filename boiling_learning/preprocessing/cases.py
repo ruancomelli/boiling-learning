@@ -3,9 +3,8 @@ from typing import Iterable, Optional
 import modin.pandas as pd
 
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
-from boiling_learning.preprocessing.ImageDataset import ImageDataset
-from boiling_learning.utils import utils as bl_utils
-from boiling_learning.utils.utils import PathLike, VerboseType
+from boiling_learning.preprocessing.image_datasets import ImageDataset
+from boiling_learning.utils.utils import PathLike, VerboseType, resolve
 
 
 class Case(ImageDataset):
@@ -40,17 +39,17 @@ class Case(ImageDataset):
         if not frames_suffix.startswith('.'):
             raise ValueError('argument *frames_suffix* must start with a dot \'.\'')
 
-        self.path = bl_utils.ensure_dir(path)
+        self.path = resolve(path, dir=True)
 
         if name is None:
             name = self.path.name
 
         df_path = self.path / df_name
-        self.dataframes_dir = bl_utils.ensure_dir(self.path / dataframes_dir_name)
-        self.videos_dir = bl_utils.ensure_dir(self.path / videos_dir_name)
-        self.audios_dir = bl_utils.ensure_dir(self.path / audios_dir_name)
-        self.frames_dir = bl_utils.ensure_dir(self.path / frames_dir_name)
-        self.frames_tensor_dir = bl_utils.ensure_dir(self.path / frames_tensor_dir_name)
+        self.dataframes_dir = resolve(self.path / dataframes_dir_name, dir=True)
+        self.videos_dir = resolve(self.path / videos_dir_name, dir=True)
+        self.audios_dir = resolve(self.path / audios_dir_name, dir=True)
+        self.frames_dir = resolve(self.path / frames_dir_name, dir=True)
+        self.frames_tensor_dir = resolve(self.path / frames_tensor_dir_name, dir=True)
 
         super().__init__(
             name=name,
@@ -107,7 +106,7 @@ class Case(ImageDataset):
         if not new_suffix.startswith('.'):
             raise ValueError('new_suffix is expected to start with a dot (\'.\')')
 
-        new_videos_dir = bl_utils.ensure_dir(new_videos_dir, root=self.path)
+        new_videos_dir = resolve(new_videos_dir, root=self.path, dir=True)
         for element_video in self.values():
             tail = element_video.path.relative_to(self.videos_dir)
             dest_path = (new_videos_dir / tail).with_suffix(new_suffix)

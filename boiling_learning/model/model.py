@@ -5,11 +5,10 @@ import funcy
 import parse
 import tensorflow as tf
 
-import boiling_learning.io.io as bl_io
-import boiling_learning.utils.utils as bl_utils
+from boiling_learning.io.io import LoaderFunction
 from boiling_learning.preprocessing.transformers import Creator
 from boiling_learning.utils.functional import Pack
-from boiling_learning.utils.utils import PathLike
+from boiling_learning.utils.utils import PathLike, append, resolve
 
 T = TypeVar('T')
 _ModelType = TypeVar('_ModelType')
@@ -18,20 +17,20 @@ _ModelType = TypeVar('_ModelType')
 def restore(
     restore: bool = False,
     path: Optional[PathLike] = None,
-    load_method: Optional[bl_io.LoaderFunction[T]] = None,
+    load_method: Optional[LoaderFunction[T]] = None,
     epoch_str: str = 'epoch',
 ) -> Tuple[int, Optional[T]]:
     last_epoch = -1
     model = None
     if restore:
-        path = bl_utils.resolve(path)
+        path = resolve(path)
         glob_pattern = path.name.replace(f'{{{epoch_str}}}', '*')
         parser = parse.compile(path.name).parse
 
         paths = path.parent.glob(glob_pattern)
         parsed = (parser(path_item.name) for path_item in paths)
         parsed = filter(lambda p: p is not None and epoch_str in p, parsed)
-        epochs = bl_utils.append((int(p[epoch_str]) for p in parsed), last_epoch)
+        epochs = append((int(p[epoch_str]) for p in parsed), last_epoch)
         last_epoch = max(epochs)
 
         if last_epoch != -1:
@@ -96,9 +95,9 @@ def make_creator(name: str, defaults: Pack = Pack()) -> Callable[[Callable], Cal
 def models_from_checkpoints(
     pattern: PathLike,
     epoch_key: str = 'epoch',
-    load_method: bl_io.LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model,
+    load_method: LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model,
 ) -> Dict[int, tf.keras.models.Model]:
-    pattern = bl_utils.resolve(pattern)
+    pattern = resolve(pattern)
     filename_pattern = pattern.name
     glob_pattern = filename_pattern.replace(f'{{{epoch_key}}}', '*')
     parser = parse.compile(filename_pattern).parse
@@ -119,7 +118,7 @@ def history_from_checkpoints(
     ds_val: tf.data.Dataset,
     pattern: PathLike,
     epoch_key: str = 'epoch',
-    load_method: bl_io.LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model,
+    load_method: LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model,
 ) -> Dict[int, Dict[str, float]]:
     model_dict = models_from_checkpoints(pattern, epoch_key, load_method)
     return {epoch: model.evaluate(ds_val, return_dict=True) for epoch, model in model_dict.items()}

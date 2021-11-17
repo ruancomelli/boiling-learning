@@ -1,2 +1,2 @@
-from boiling_learning.daq.Channel import *
-from boiling_learning.daq.Device import *
+from boiling_learning.daq.channels import *
+from boiling_learning.daq.devices import *

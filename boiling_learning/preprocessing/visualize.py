@@ -23,14 +23,14 @@ from frozendict import frozendict
 from matplotlib import gridspec
 from matplotlib.colors import NoNorm
 
-import boiling_learning.utils.utils as bl_utils
 from boiling_learning.management import Manager
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
-from boiling_learning.preprocessing.ImageDataset import ImageDataset
+from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.transformers import DictFeatureTransformer, Transformer
 from boiling_learning.utils.functional import Kwargs, P, Pack, nth_arg
-from boiling_learning.utils.Parameters import Parameters
+from boiling_learning.utils.parameters import Parameters
+from boiling_learning.utils.utils import prepare_fig
 
 _T = TypeVar('_T')
 ImageType = Any
@@ -263,7 +263,7 @@ def _visualize_transformations_plt(
 
     figs = []
     if plot_original:
-        bl_utils.prepare_fig(n_rows=1, n_cols=1, subfig_size='small')
+        prepare_fig(n_rows=1, n_cols=1, subfig_size='small')
         fig = plt.figure()
         gs = fig.add_gridspec(1, 1)
         ax = fig.add_subplot(gs[0])
@@ -281,7 +281,7 @@ def _visualize_transformations_plt(
         f_image_pack_pairs = visualizer(transformer, image)
         n_subfigs = len(f_image_pack_pairs)
 
-        bl_utils.prepare_fig(n_rows=1, n_cols=n_subfigs, subfig_size='small')
+        prepare_fig(n_rows=1, n_cols=n_subfigs, subfig_size='small')
         fig = plt.figure()
         gs = fig.add_gridspec(1, n_subfigs)
 
@@ -446,7 +446,7 @@ def visualize_dataset(
         n_samples = n_samples_per_ev
 
     params[['creator', {'desc', 'value'}, 'dataset_size']] = n_samples
-    fig_spec = bl_utils.prepare_fig(n_cols=3, n_rows=len(img_ds_list), subfig_size='small')
+    fig_spec = prepare_fig(n_cols=3, n_rows=len(img_ds_list), subfig_size='small')
     fig = plt.figure(figsize=fig_spec['fig_size'])
     outer = gridspec.GridSpec(fig_spec['n_rows'], fig_spec['n_cols'])
     for row, img_ds in enumerate(img_ds_list):

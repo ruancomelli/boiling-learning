@@ -4,17 +4,27 @@ import string
 import subprocess
 import warnings
 from pathlib import Path
-from typing import Any, Callable, Iterable, Iterator, Optional, Tuple, Union
+from typing import Any, Callable, Iterable, Iterator, Optional, Sequence, Tuple, Union
 
 import cv2
 import funcy
 import numpy as np
 import parse
+import pims
 from more_itertools import ilen, peekable
 
-import boiling_learning as bl
-from boiling_learning.io.io import make_callable_filename_pattern
+from boiling_learning.io.io import load_json, make_callable_filename_pattern, save_json
 from boiling_learning.utils import PathLike, VerboseType
+from boiling_learning.utils.functional import starapply, zip_filter
+from boiling_learning.utils.utils import (
+    is_parent_dir,
+    print_verbose,
+    relative_path,
+    resolve,
+    rmdir,
+    shorten_path,
+    tempdir,
+)
 
 
 def convert_video(
@@ -27,20 +37,20 @@ def convert_video(
 ) -> None:
     # For `fps`, see <https://superuser.com/a/729351>.
 
-    in_path = bl.utils.resolve(in_path)
-    out_path = bl.utils.ensure_parent(out_path)
+    in_path = resolve(in_path)
+    out_path = resolve(out_path, parents=True)
 
     if verbose:
         print(
             'Converting video',
-            bl.utils.shorten_path(in_path, max_len=50),
+            shorten_path(in_path, max_len=50),
             '->',
-            bl.utils.shorten_path(out_path, max_len=50),
+            shorten_path(out_path, max_len=50),
         )
 
     if overwrite and out_path.is_file():
         if verbose:
-            print('Overwriting', bl.utils.shorten_path(out_path, max_len=50))
+            print('Overwriting', shorten_path(out_path, max_len=50))
         out_path.unlink()
         # TO-DO: in Python 3.8, use out_path.unlink(missing_ok=True) and remove one condition
 
@@ -58,9 +68,9 @@ def convert_video(
         if verbose:
             print(
                 'Converting video:',
-                bl.utils.shorten_path(in_path, max_len=40),
+                shorten_path(in_path, max_len=40),
                 '->',
-                bl.utils.shorten_path(out_path, max_len=40),
+                shorten_path(out_path, max_len=40),
             )
             print('Command list =', command_list)
 
@@ -87,20 +97,20 @@ def extract_frames_ffmpeg(
     # See <https://stackoverflow.com/a/50422454/5811400>
     # >>> ffmpeg -i {video_path} -vsync 0 {output_path}
 
-    video_path = bl.utils.resolve(video_path)
-    outputdir = bl.utils.resolve(outputdir)
+    video_path = resolve(video_path)
+    outputdir = resolve(outputdir)
 
     if overwrite:
-        bl.utils.rmdir(outputdir, recursive=True, missing_ok=True)
+        rmdir(outputdir, recursive=True, missing_ok=True)
 
-    output_path = bl.utils.ensure_parent(filename_pattern, root=outputdir)
+    output_path = resolve(filename_pattern, root=outputdir, parents=True)
 
     if verbose:
         print(
             'Extracting frames:',
-            bl.utils.shorten_path(video_path, max_len=40),
+            shorten_path(video_path, max_len=40),
             '->',
-            bl.utils.shorten_path(output_path, max_len=40),
+            shorten_path(output_path, max_len=40),
         )
 
     command_list = ['ffmpeg', '-i', str(video_path)]
@@ -142,7 +152,7 @@ def extract_frames_iterate(
     verbose: VerboseType = False,
 ) -> None:
     verbose_2 = verbose >= 2
-    video_path = bl.utils.resolve(video_path)
+    video_path = resolve(video_path)
 
     if video_path.suffix != '.mp4':
         warnings.warn(
@@ -169,7 +179,7 @@ def extract_frames_iterate(
             print(
                 f'Frame #{index}',
                 '->',
-                bl.utils.shorten_path(path, max_len=60),
+                shorten_path(path, max_len=60),
                 '...',
                 end=' ',
             )
@@ -200,8 +210,8 @@ def extracted_frames_count(
     use_tmp_dir = tmp_dir is not None
     fast_key = 'fast' if fast_frames_count else 'slow'
 
-    video_path = bl.utils.resolve(video_path)
-    outputdir = bl.utils.resolve(outputdir)
+    video_path = resolve(video_path)
+    outputdir = resolve(outputdir)
 
     if verbose:
         print('Counting frames from file', video_path)
@@ -209,8 +219,8 @@ def extracted_frames_count(
 
     video_frames_count = None
     if use_metadata:
-        metadata_path = bl.utils.ensure_parent(metadata_path, root=outputdir)
-        metadata = bl.io.load_json(metadata_path) if metadata_path.is_file() else {}
+        metadata_path = resolve(metadata_path, root=outputdir, parents=True)
+        metadata = load_json(metadata_path) if metadata_path.is_file() else {}
     if use_metadata and not recount_source:
         video_frames_count = metadata.get('video', {}).get(fast_key)
 
@@ -219,18 +229,18 @@ def extracted_frames_count(
 
     if use_metadata:
         metadata.setdefault('video', {})[fast_key] = video_frames_count
-        bl.io.save_json(metadata, metadata_path)
+        save_json(metadata, metadata_path)
 
     tmp_dir_count = None
     if use_tmp_dir:
-        rel_tmp_dir = bl.utils.relative_path(outputdir, tmp_dir)
+        rel_tmp_dir = relative_path(outputdir, tmp_dir)
         if use_metadata and not recount_tmp:
             tmp_dir_count = metadata.get('tmp_dir', {}).get(rel_tmp_dir)
         if tmp_dir_count is None:
             tmp_dir_count = count_frames_in_dir(tmp_dir)
         if use_metadata:
             metadata.setdefault('tmp_dir', {})[rel_tmp_dir] = tmp_dir_count
-            bl.io.save_json(metadata, metadata_path)
+            save_json(metadata, metadata_path)
 
     extracted_count = None
     if use_metadata and not recount_dest:
@@ -249,7 +259,7 @@ def extracted_frames_count(
 
     if use_metadata:
         metadata['extracted'] = extracted_count
-        bl.io.save_json(metadata, metadata_path)
+        save_json(metadata, metadata_path)
 
     if verbose:
         print('Video frames count:', video_frames_count)
@@ -277,14 +287,14 @@ def extract_frames(
     # Source 2: <https://forums.fast.ai/t/extracting-frames-from-video-file-with-ffmpeg/29818>
     # TODO: improve error messages
 
-    video_path = bl.utils.resolve(video_path)
-    outputdir = bl.utils.ensure_dir(outputdir)
+    video_path = resolve(video_path)
+    outputdir = resolve(outputdir, dir=True)
     if verbose:
         print(
             'Extracting frames:',
-            bl.utils.shorten_path(video_path, max_len=52),
+            shorten_path(video_path, max_len=52),
             '->',
-            bl.utils.shorten_path(outputdir, max_len=52),
+            shorten_path(outputdir, max_len=52),
         )
     verbose_2 = verbose >= 2
 
@@ -298,12 +308,12 @@ def extract_frames(
         if iterate:
             raise ValueError('cannot use tmp_dir with iterative extraction.')
         else:
-            tmp_dir = bl.utils.ensure_dir(tmp_dir, root=outputdir)
+            tmp_dir = resolve(tmp_dir, root=outputdir, dir=True)
 
             def rm_tmp_dir() -> None:
                 if verbose:
                     print('Removing temporary folder.')
-                bl.utils.rmdir(tmp_dir, recursive=True, missing_ok=True)
+                rmdir(tmp_dir, recursive=True, missing_ok=True)
 
             if verbose:
                 print('Using persistent temporary folder at', tmp_dir)
@@ -358,13 +368,13 @@ def extract_frames(
         if use_persistent_tmp_dir:
             cm = contextlib.nullcontext(tmp_dir)
         else:
-            cm = bl.utils.tempdir(prefix='_', dir=outputdir)
+            cm = tempdir(prefix='_', dir=outputdir)
 
         with cm as temporary_folder:
             if verbose:
                 print(
                     'Extracting frames to temporary folder',
-                    bl.utils.shorten_path(temporary_folder, max_len=40),
+                    shorten_path(temporary_folder, max_len=40),
                 )
 
             tmp_format = f'frame%d{frame_suffix}'
@@ -407,11 +417,11 @@ def extract_frames(
                     if verbose_2:
                         print(
                             'Moving',
-                            bl.utils.shorten_path(source, 30),
+                            shorten_path(source, 30),
                             'to',
-                            bl.utils.shorten_path(dest, 30),
+                            shorten_path(dest, 30),
                         )
-                    dest = bl.utils.ensure_parent(dest)
+                    dest = resolve(dest, parents=True)
                     source.rename(dest)
             elif use_persistent_tmp_dir:
                 rm_tmp_dir()
@@ -430,11 +440,11 @@ def concat_videos(in_paths: Iterable[PathLike], out_path: PathLike) -> None:
     # Source: <https://stackoverflow.com/a/11175851/5811400>
     # TODO: test!
 
-    in_paths = map(bl.utils.resolve, in_paths)
-    out_path = bl.utils.ensure_parent(out_path)
+    in_paths = map(resolve, in_paths)
+    out_path = resolve(out_path, parents=True)
     out_dir = out_path.parent
 
-    with bl.utils.tempdir(prefix='_', dir=out_dir) as temp_dir:
+    with tempdir(prefix='_', dir=out_dir) as temp_dir:
         input_file_path = temp_dir / 'input.txt'
 
         with open(input_file_path, 'w+') as fp:
@@ -463,14 +473,14 @@ def extract_audio(
     overwrite: bool = False,
     verbose: bool = False,
 ) -> None:
-    out_path = bl.utils.ensure_parent(out_path)
+    out_path = resolve(out_path, parents=True)
 
     if verbose:
         print(
             'Extracting audio:',
-            bl.utils.shorten_path(video_path, max_len=52),
+            shorten_path(video_path, max_len=52),
             '->',
-            bl.utils.shorten_path(out_path, max_len=52),
+            shorten_path(out_path, max_len=52),
         )
 
     if overwrite or not out_path.is_file():
@@ -492,14 +502,14 @@ def extract_audio(
         ]
         subprocess.run(command_list)
 
-        bl.utils.print_verbose(verbose, 'Done.')
+        print_verbose(verbose, 'Done.')
     elif verbose:
         print('Audio already exists. Skipping proccess.')
 
 
 @contextlib.contextmanager
 def open_video(video_path: PathLike) -> Iterator[cv2.VideoCapture]:
-    video_path = bl.utils.resolve(video_path)
+    video_path = resolve(video_path)
     cap = cv2.VideoCapture(str(video_path))
 
     try:
@@ -548,7 +558,7 @@ def count_frames_in_dir(
     exclude_path: Optional[PathLike] = None,
     exclude_count: Optional[Union[int, Callable[[PathLike], int]]] = None,
 ) -> int:
-    path = bl.utils.resolve(path)
+    path = resolve(path)
 
     if not path.is_dir():
         return 0
@@ -559,9 +569,9 @@ def count_frames_in_dir(
     if exclude_path is None:
         return n_frames_in_path
 
-    exclude_path = bl.utils.resolve(exclude_path)
+    exclude_path = resolve(exclude_path)
 
-    if not bl.utils.is_parent_dir(path, exclude_path):
+    if not is_parent_dir(path, exclude_path):
         return n_frames_in_path
 
     if exclude_count is None:
@@ -608,7 +618,7 @@ def reorganize_frames(
         raise ValueError('index_parser could not be converted to a callable.')
 
     if source_files is None:
-        source_dir = bl.utils.resolve(source_dir)
+        source_dir = resolve(source_dir)
         source_files = source_dir.rglob('*' + source_suffix)
 
     indices = map(index_parser, source_files)
@@ -617,9 +627,7 @@ def reorganize_frames(
     if overwrite:
         src_dest_pairs = zip(source_files, dest_files)
     else:
-        src_dest_pairs = bl.utils.functional.zip_filter(
-            lambda src, dst: not dst.is_file(), source_files, dest_files
-        )
+        src_dest_pairs = zip_filter(lambda src, dst: not dst.is_file(), source_files, dest_files)
 
     if verbose >= 2:
 
@@ -627,8 +635,8 @@ def reorganize_frames(
             print(
                 ' -> '.join(
                     [
-                        bl.utils.shorten_path(src, max_len=60),
-                        bl.utils.shorten_path(dest, max_len=60),
+                        shorten_path(src, max_len=60),
+                        shorten_path(dest, max_len=60),
                     ]
                 )
             )
@@ -639,4 +647,51 @@ def reorganize_frames(
         def renamer(src, dest):
             src.rename(dest)
 
-    bl.utils.functional.starapply(renamer, src_dest_pairs)
+    starapply(renamer, src_dest_pairs)
+
+
+class Video(Sequence[np.ndarray]):
+    def __init__(self, path: PathLike) -> None:
+        self.path: Path = resolve(path)
+
+        self.video: Optional[pims.Video] = None
+        self._is_open_video: bool = False
+        self.start: int = 0
+        self.end: Optional[int] = None
+
+    def __len__(self) -> int:
+        self.open_video()
+        return self.end - self.start
+
+    def __getitem__(self, index: int) -> np.ndarray:
+        self.open_video()
+
+        length = len(self)
+
+        if index >= length:
+            raise IndexError(f'index must be less than {length}')
+
+        absolute_index = self.start + index
+
+        # normalize frames to TF's standard: `pims.Video` returns frames
+        # with float datatype, but scaled from 0 to 255 whereas TF expects
+        # those floating point types to be between 0 and 1
+        return self.at(absolute_index)
+
+    def at(self, index: int) -> np.ndarray:
+        return self.video[index] / 255
+
+    def open_video(self) -> None:
+        if not self._is_open_video:
+            self.video = pims.Video(str(self.path))
+
+            if self.end is None:
+                self.end = len(self.video)
+
+            self._is_open_video = True
+
+    def close_video(self) -> None:
+        if self._is_open_video:
+            self.video.close()
+        self.video = None
+        self._is_open_video = False

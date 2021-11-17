@@ -25,7 +25,6 @@ import more_itertools as mit
 import parse
 from dataclassy import dataclass
 
-import boiling_learning as bl
 from boiling_learning.io.io import (
     BoolFlagged,
     BoolFlaggedLoaderFunction,
@@ -36,14 +35,18 @@ from boiling_learning.io.io import (
 from boiling_learning.io.json_encoders import GenericJSONDecoder, GenericJSONEncoder
 from boiling_learning.preprocessing.transformers import Creator, Transformer
 from boiling_learning.utils.functional import Pack
-from boiling_learning.utils.Parameters import Parameters
+from boiling_learning.utils.parameters import Parameters
 from boiling_learning.utils.sentinels import EMPTY, Emptiable
 from boiling_learning.utils.utils import (  # JSONDataType,; TODO: maybe using JSONDataType would be a good idea
     PathLike,
     SimpleRepr,
     VerboseType,
+    extract_keys,
     json_equivalent,
+    missing_ints,
     print_verbose,
+    relative_path,
+    resolve,
 )
 
 # TODO: check out <https://www.mlflow.org/docs/latest/tracking.html>
@@ -98,7 +101,7 @@ class Manager(
     #     ) -> None:
     #         self._id: str = elem_id
     #         self._is_loaded: bool = False
-    #         self._path: Path = bl.utils.resolve(path)
+    #         self._path: Path = resolve(path)
     #         self._value: Union[Sentinel, _ElemType, _PostProcessedElemType]
 
     #     @property
@@ -167,10 +170,10 @@ class Manager(
         ```
         '''
         self.key_names: self.Keys = key_names
-        self._path: Path = bl.utils.ensure_dir(path)
+        self._path: Path = resolve(path, dir=True)
         self._table_path: Path = self.path / 'lookup_table.json'
-        self._entries_dir_path: Path = bl.utils.ensure_dir(self.path / self.key_names.entries)
-        self._shared_dir_path: Path = bl.utils.ensure_dir(self.path / 'shared')
+        self._entries_dir_path: Path = resolve(self.path / self.key_names.entries, dir=True)
+        self._shared_dir_path: Path = resolve(self.path / 'shared', dir=True)
         self._table_saver = table_saver
         self._table_loader = table_loader
         self._description_comparer = description_comparer
@@ -237,13 +240,13 @@ class Manager(
         return self._shared_dir_path
 
     def entry_dir(self, elem_id: str) -> Path:
-        return bl.utils.ensure_dir(self.entries_dir / elem_id)
+        return resolve(self.entries_dir / elem_id, dir=True)
 
     def elem_path(self, elem_id: str) -> Path:
-        return bl.utils.ensure_parent(self.entry_dir(elem_id) / self.key_names.elements)
+        return resolve(self.entry_dir(elem_id) / self.key_names.elements, parents=True)
 
     def elem_workspace(self, elem_id: str) -> Path:
-        return bl.utils.ensure_dir(self.entry_dir(elem_id) / self.key_names.workspace)
+        return resolve(self.entry_dir(elem_id) / self.key_names.workspace, dir=True)
 
     def _initialize_lookup_table(self) -> None:
         self._lookup_table = {self.key_names.entries: {}}
@@ -272,7 +275,7 @@ class Manager(
                 ' or by defining it as a property.'
             )
 
-        path = bl.utils.ensure_parent(path)
+        path = resolve(path, parents=True)
         self.save_method(elem, path)
 
     def load_elem(self, path: PathLike) -> BoolFlagged[_ElemType]:
@@ -283,7 +286,7 @@ class Manager(
                 ' or by defining it as a property.'
             )
 
-        path = bl.utils.resolve(path)
+        path = resolve(path)
         return self.load_method(path)
 
     def contents(self, elem_id: Optional[str] = None):
@@ -305,7 +308,7 @@ class Manager(
             )
         )
         if indices:
-            missing_elems = bl.utils.missing_ints(indices)
+            missing_elems = missing_ints(indices)
             index = mit.first(missing_elems, indices[-1] + 1)
         else:
             index = 0
@@ -439,7 +442,7 @@ class Manager(
         )
 
         elem_id_candidates = tuple(
-            bl.utils.extract_keys(self.contents(), value=contents, cmp=self._description_comparer)
+            extract_keys(self.contents(), value=contents, cmp=self._description_comparer)
         )
         n_candidates = len(elem_id_candidates)
 
@@ -486,7 +489,7 @@ class Manager(
                         # path.unlink()
                     else:
                         print('Removing dir', path)  # DEBUG
-                        # bl_utils.rmdir(path, recursive=True, missing_ok=True, keep=False)
+                        # rmdir(path, recursive=True, missing_ok=True, keep=False)
             if remove_entries:
                 for id_to_remove in ids_to_remove:
                     print('Removing entry', id_to_remove)  # DEBUG
@@ -622,7 +625,7 @@ class Manager(
 
         elem_id = self.elem_id(contents=contents, missing_ok=missing_ok)
         path = self.elem_path(elem_id)
-        elem_rel_path = bl.utils.relative_path(self.entries_dir, path)
+        elem_rel_path = relative_path(self.entries_dir, path)
 
         entry = self._resolve_entry(contents=contents, path=elem_rel_path)
 

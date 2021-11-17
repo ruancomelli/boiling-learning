@@ -33,9 +33,10 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
-import boiling_learning.utils as bl_utils
 from boiling_learning.utils import PathLike, ensure_dir, ensure_parent, resolve
+from boiling_learning.utils.dtypes import decode_element_spec, encode_element_spec
 from boiling_learning.utils.functional import Kwargs
+from boiling_learning.utils.utils import is_
 
 try:
     # yogadl is an optional dependency
@@ -208,7 +209,7 @@ def save_json(
             category=RuntimeWarning,
         )
 
-    dump = Kwargs({'cls': cls}).omit('cls', bl_utils.is_(None)).partial(dump)
+    dump = Kwargs({'cls': cls}).omit('cls', is_(None)).partial(dump)
     with path.open('w', encoding='utf-8') as file:
         dump(obj, file, indent=4, ensure_ascii=False)
 
@@ -226,7 +227,7 @@ def load_json(
             category=RuntimeWarning,
         )
 
-    load = Kwargs({'cls': cls}).omit('cls', bl_utils.is_(None)).partial(load)
+    load = Kwargs({'cls': cls}).omit('cls', is_(None)).partial(load)
     with path.open('r', encoding='utf-8') as file:
         return load(file)
 
@@ -250,13 +251,13 @@ def loader_hdf5(key: str = '') -> LoaderFunction[Any]:
 
 
 def save_element_spec(element_spec: tf.TensorSpec, path: PathLike) -> None:
-    encoded_element_spec = bl_utils.dtypes.encode_element_spec(element_spec)
+    encoded_element_spec = encode_element_spec(element_spec)
     save_json(encoded_element_spec, path, dump=json_tricks.dump)
 
 
 def load_element_spec(path: PathLike) -> tf.TensorSpec:
     encoded_element_spec = load_json(path, load=json_tricks.load)
-    return bl_utils.dtypes.decode_element_spec(encoded_element_spec)
+    return decode_element_spec(encoded_element_spec)
 
 
 def save_dataset(dataset: tf.data.Dataset, path: PathLike) -> None:

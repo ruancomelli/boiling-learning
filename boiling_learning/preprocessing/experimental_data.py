@@ -4,9 +4,9 @@ from typing import Optional
 import modin.pandas as pd
 from frozendict import frozendict
 
-import boiling_learning.utils as bl_utils
 from boiling_learning.utils import PathLike, geometry
 from boiling_learning.utils.units import unit_registry as ureg
+from boiling_learning.utils.utils import resolve
 
 SAMPLES = frozendict(
     {
@@ -40,11 +40,11 @@ class ExperimentalData:
         self.data_path: Path
         self.description_path: Optional[Path] = None
         if path is None:
-            self.data_path = bl_utils.resolve(data_path)
+            self.data_path = resolve(data_path)
             if description_path is not None:
-                self.description_path = bl_utils.resolve(description_path)
+                self.description_path = resolve(description_path)
         else:
-            path = bl_utils.resolve(path)
+            path = resolve(path)
             self.data_path = path / 'data.csv'
             self.description_path = path / 'description.md'
 

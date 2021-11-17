@@ -8,7 +8,7 @@ from boiling_learning.utils.iterutils import (
     evenly_spaced_indices_mask,
 )
 from boiling_learning.utils.lazy import Lazy, LazyCallable
-from boiling_learning.utils.Parameters import Parameters
+from boiling_learning.utils.parameters import Parameters
 from boiling_learning.utils.utils import indexify
 
 

@@ -21,7 +21,7 @@ from typing import (
 import funcy
 import more_itertools as mit
 
-from boiling_learning.utils.FrozenDict import FrozenDict
+from boiling_learning.utils.frozendict import FrozenDict
 from boiling_learning.utils.sentinels import Sentinel
 
 # TODO: when variadic generics are available, they will be very useful here

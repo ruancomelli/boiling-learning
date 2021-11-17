@@ -23,7 +23,7 @@ from boiling_learning.management.descriptors import describe
 from boiling_learning.preprocessing import ImageDataset
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.utils.functional import Kwargs, P
-from boiling_learning.utils.Parameters import Parameters
+from boiling_learning.utils.parameters import Parameters
 
 
 def main(

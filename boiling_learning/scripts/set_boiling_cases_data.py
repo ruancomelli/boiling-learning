@@ -3,7 +3,7 @@ from typing import Iterable, Mapping
 import numpy as np
 
 from boiling_learning.preprocessing.cases import Case
-from boiling_learning.preprocessing.ExperimentalData import SAMPLES, ExperimentalData
+from boiling_learning.preprocessing.experimental_data import SAMPLES, ExperimentalData
 from boiling_learning.utils.printing import add_unit_post_fix
 from boiling_learning.utils.units import unit_registry as ureg
 from boiling_learning.utils.utils import PathLike, print_header, print_verbose

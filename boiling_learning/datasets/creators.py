@@ -21,7 +21,7 @@ from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.management.descriptors import describe
 from boiling_learning.management.managers import Manager
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
-from boiling_learning.preprocessing.ImageDataset import ImageDataset
+from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.preprocessing import snapshotter
 from boiling_learning.preprocessing.transformers import (
     DictFeatureTransformer,
@@ -30,7 +30,7 @@ from boiling_learning.preprocessing.transformers import (
     transformer,
 )
 from boiling_learning.utils.functional import Kwargs, Pack
-from boiling_learning.utils.Parameters import Parameters
+from boiling_learning.utils.parameters import Parameters
 from boiling_learning.utils.utils import PathLike, elapsed_timer, resolve
 
 VideoDatasetElement = Tuple[np.ndarray, Dict[str, Any]]

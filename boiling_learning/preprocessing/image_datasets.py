@@ -28,13 +28,14 @@ import numpy as np
 import tensorflow as tf
 from dataclassy import dataclass
 
-import boiling_learning.utils as bl_utils
 from boiling_learning.io.io import load_json
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.utils import PathLike, VerboseType
+from boiling_learning.utils.functional import apply
+from boiling_learning.utils.utils import concatenate_dataframes, resolve, simple_pprint_class
 
 
-@bl_utils.simple_pprint_class
+@simple_pprint_class
 class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     '''
     TODO: improve this
@@ -78,7 +79,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         self._tags: FrozenSet[str] = frozenset(tags)
 
         if df_path is not None:
-            df_path = bl_utils.resolve(df_path)
+            df_path = resolve(df_path)
         self.df_path = df_path
 
         if exist_load and self.df_path.is_file():
@@ -226,7 +227,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         remove_absent: bool = False,
         keys: VideoDataKeys = VideoDataKeys(),
     ) -> None:
-        data_path = bl_utils.resolve(data_path)
+        data_path = resolve(data_path)
         video_data = load_json(data_path)
         purged = not purge
 
@@ -257,7 +258,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         if path is None:
             path = self.df_path
         else:
-            self.df_path = bl_utils.resolve(path)
+            self.df_path = resolve(path)
 
         if columns is None:
             self.df = pd.read_csv(self.df_path, skipinitialspace=True)
@@ -267,13 +268,13 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     def save(self, path: Optional[PathLike] = None, overwrite: bool = False) -> None:
         if path is None:
             path = self.df_path
-        path = bl_utils.ensure_parent(path)
+        path = resolve(path, parents=True)
 
         if overwrite or not path.is_file():
             self.df.to_csv(path, index=False)
 
     def save_dfs(self, overwrite: bool = False) -> None:
-        bl_utils.functional.apply(
+        apply(
             operator.methodcaller('save_df', overwrite=overwrite),
             self.values(),
         )
@@ -287,7 +288,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         if columns is not None:
             columns = tuple(columns)
 
-        bl_utils.functional.apply(
+        apply(
             operator.methodcaller(
                 'load_df',
                 columns=columns,
@@ -300,7 +301,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
 
     def move(
         self,
-        path: Union[str, bl_utils.PathLike],
+        path: Union[str, PathLike],
         renaming: bool = False,
         erase_old: bool = False,
         overwrite: bool = False,
@@ -311,7 +312,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         if renaming:
             self.df_path = self.df_path.with_name(path)
         else:
-            self.df_path = bl_utils.resolve(path)
+            self.df_path = resolve(path)
 
         self.save(overwrite=overwrite)
 
@@ -376,7 +377,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             ),
             self.values(),
         )
-        return bl_utils.concatenate_dataframes(dfs)
+        return concatenate_dataframes(dfs)
 
     @overload
     def iterdata_from_dataframe(self, *, select_columns: str) -> Iterable[Tuple[np.ndarray, Any]]:

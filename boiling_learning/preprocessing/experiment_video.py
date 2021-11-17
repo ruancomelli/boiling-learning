@@ -10,14 +10,23 @@ import tensorflow as tf
 from dataclassy import dataclass
 from scipy.interpolate import interp1d
 
-import boiling_learning.utils as bl_utils
 from boiling_learning.io.io import chunked_filename_pattern, load_dataset
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
-from boiling_learning.preprocessing.Video import Video
-from boiling_learning.preprocessing.video import convert_video, extract_audio, extract_frames
+from boiling_learning.preprocessing.video import (
+    Video,
+    convert_video,
+    extract_audio,
+    extract_frames,
+)
 from boiling_learning.utils import PathLike, VerboseType, resolve
 from boiling_learning.utils.dtypes import auto_spec
 from boiling_learning.utils.slicerators import Slicerator
+from boiling_learning.utils.utils import (
+    dataclass_from_mapping,
+    dataframe_categories_to_int,
+    is_not,
+    merge_dicts,
+)
 
 
 class ExperimentVideo(Video):
@@ -216,7 +225,7 @@ class ExperimentVideo(Video):
         verbose: VerboseType = False,
     ) -> None:
         """Use this function to move or convert video"""
-        dest_path = bl_utils.ensure_parent(dest_path)
+        dest_path = resolve(dest_path, parents=True)
         convert_video(self.path, dest_path, overwrite=overwrite, verbose=verbose)
         self.path = dest_path
 
@@ -289,7 +298,7 @@ class ExperimentVideo(Video):
         if isinstance(data, self.VideoData):
             self.data = data
         else:
-            self.data = bl_utils.dataclass_from_mapping(data, self.VideoData, key_map=keys)
+            self.data = dataclass_from_mapping(data, self.VideoData, key_map=keys)
 
     def set_data(self, data_source: pd.DataFrame, source_time_column: str) -> pd.DataFrame:
         '''Define data (other than the ones specified as video data) from a source *data_source*
@@ -348,7 +357,7 @@ class ExperimentVideo(Video):
             pass
 
         if categories_as_int:
-            df = bl_utils.dataframe_categories_to_int(df, inplace=True)
+            df = dataframe_categories_to_int(df, inplace=True)
 
         return df
 
@@ -375,7 +384,7 @@ class ExperimentVideo(Video):
 
         indices = range(len(self))
 
-        data = bl_utils.merge_dicts(
+        data = merge_dicts(
             {
                 self.column_names.name: self.name,
                 self.column_names.index: list(indices),
@@ -385,7 +394,7 @@ class ExperimentVideo(Video):
         )
 
         available_time_info = map(
-            bl_utils.is_not(None),
+            is_not(None),
             (self.data.fps, self.data.ref_index, self.data.ref_elapsed_time),
         )
         if all(available_time_info):
@@ -479,14 +488,14 @@ class ExperimentVideo(Video):
 
         if path is None:
             path = self.df_path
-        path = bl_utils.ensure_parent(path)
+        path = resolve(path, parents=True)
 
         if overwrite or not path.is_file():
             self.df.to_csv(path, index=False)
 
     def move_df(
         self,
-        path: Union[str, bl_utils.PathLike],
+        path: Union[str, PathLike],
         renaming: bool = False,
         erase_old: bool = False,
     ) -> None:
