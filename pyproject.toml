@@ -48,7 +48,7 @@ plugins = [
 [tool.commitizen]
 tag_format = "v$major.$minor.$patch$prerelease"
 update_changelog_on_bump = true
-version = "0.17.0"
+version = "0.17.1"
 version_files = [
 	"VERSION",
 	"pyproject.toml:version"
@@ -56,7 +56,7 @@ version_files = [
 
 [tool.poetry]
 name = "boiling-learning"
-version = "0.17.0"
+version = "0.17.1"
 description = "Deep learning models for phase-change quantification and classification."
 authors = ["Ruan Comelli <ruancomelli@gmail.com>"]
 readme = "README.md"

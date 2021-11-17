@@ -1,3 +1,9 @@
+## v0.17.1 (2021-11-17)
+
+### Feat
+
+- **datasets/sliceable**: add `element_spec` property to sliceable datasets
+
 ## v0.17.0 (2021-11-16)
 
 ### Refactor
