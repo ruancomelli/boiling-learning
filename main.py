@@ -15,7 +15,7 @@ from boiling_learning.datasets.creators import (
     dataset_post_processor,
     experiment_video_dataset_creator,
 )
-from boiling_learning.management.Manager import Manager
+from boiling_learning.management.managers import Manager
 from boiling_learning.model.definitions import HoboldNet3
 from boiling_learning.preprocessing.Case import Case
 from boiling_learning.preprocessing.ImageDataset import ImageDataset

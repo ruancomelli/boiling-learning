@@ -8,7 +8,7 @@ from boiling_learning.io.io import load_json, save_json
 from boiling_learning.management.allocators import TableAllocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.management.descriptors import describe
-from boiling_learning.management.Manager import Manager
+from boiling_learning.management.managers import Manager
 from boiling_learning.management.persister import FilePersister, FileProvider, Persister, Provider
 from boiling_learning.preprocessing.transformers import Creator
 from boiling_learning.utils.functional import P

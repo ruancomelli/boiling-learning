@@ -19,7 +19,7 @@ from boiling_learning.datasets.datasets import (
 from boiling_learning.datasets.sliceable import SliceableDataset, SupervisedSliceableDataset
 from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.management.descriptors import describe
-from boiling_learning.management.Manager import Manager
+from boiling_learning.management.managers import Manager
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.ImageDataset import ImageDataset
 from boiling_learning.preprocessing.preprocessing import snapshotter
