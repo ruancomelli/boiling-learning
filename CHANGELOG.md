@@ -1,3 +1,18 @@
+## v0.17.0 (2021-11-16)
+
+### Refactor
+
+- rename modules and improve imports all across the project
+- **preprocessing**: rename `preprocessing.Case` module as `preprocessing.cases`
+- **management**: rename `management.Manager` module as `management.managers`
+- **management**: remove unused `Mirror` class
+- **archive**: remove unused archive
+
+### BREAKING CHANGE
+
+- Many modules were renamed.
+- Module now has to be referred to by its new name.
+
 ## v0.16.5 (2021-11-16)
 
 ### Fix
