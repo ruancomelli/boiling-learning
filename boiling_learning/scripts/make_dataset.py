@@ -7,6 +7,7 @@ import dataclassy
 import funcy
 
 from boiling_learning.datasets import DatasetSplits
+from boiling_learning.datasets.sliceable import load_sliceable_dataset, save_sliceable_dataset
 from boiling_learning.io.io import (
     DatasetTriplet,
     SaverFunction,
@@ -42,7 +43,7 @@ def main(
     augment_test: bool = True,
     verbose: int = False,
     augmentors_to_force: Container[str] = frozenset({'random_cropper'}),
-    experiment_video_saver: SaverFunction[DatasetTriplet] = saver_dataset_triplet(save_dataset),
+    experiment_video_saver: Optional[SaverFunction[DatasetTriplet]] = None,
     as_tensors: bool = False,
 ) -> Tuple[int, DatasetTriplet]:
     if not augment_train:
@@ -89,13 +90,23 @@ def main(
         'name': 'bl.io.save_dataset',
         'params': P(),
     }
+
+    if experiment_video_saver is None:
+        if as_tensors:
+            experiment_video_saver = saver_dataset_triplet(save_dataset)
+        else:
+            experiment_video_saver = saver_dataset_triplet(save_sliceable_dataset)
+
     dataset_params[['creator', 'value', 'save']] = experiment_video_saver
     dataset_params[['creator', 'desc', 'load']] = {
         'name': 'bl.io.load_dataset',
         'params': P(),
     }
-    dataset_params[['creator', 'value', 'load']] = loader_dataset_triplet(
-        add_bool_flag(load_dataset)
+
+    dataset_params[['creator', 'value', 'load']] = (
+        loader_dataset_triplet(add_bool_flag(load_dataset))
+        if as_tensors
+        else loader_dataset_triplet(add_bool_flag(load_sliceable_dataset))
     )
 
     # dataset_params[['creator', 'desc', 'save']] = {
