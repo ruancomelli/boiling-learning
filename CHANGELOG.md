@@ -1,3 +1,9 @@
+## v0.17.5 (2021-11-18)
+
+### Feat
+
+- **scripts/make-dataset**: automatically decide saver and loader functions depending on the `as_tensors` flag
+
 ## v0.17.4 (2021-11-18)
 
 ## v0.17.3 (2021-11-18)
