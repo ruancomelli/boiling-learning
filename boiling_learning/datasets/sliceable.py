@@ -384,6 +384,16 @@ class SupervisedSliceableDatasetTargetTransformer(Generic[_Y1, _Y2]):
 
 
 @json_encode.dispatch
+def _json_encode_numpy_array(obj: np.ndarray) -> str:
+    return obj.dumps()
+
+
+@json_decode.dispatch(np.ndarray)
+def _json_decode_numpy_array(obj: str) -> np.ndarray:
+    return np.loads(obj)
+
+
+@json_encode.dispatch
 def _json_encode_tensor(obj: tf.Tensor) -> Dict[str, Any]:
     return {'tensor': tf.io.serialize_tensor(obj), 'dtype': tf_str_dtype_bidict.inverse[obj.dtype]}
 
