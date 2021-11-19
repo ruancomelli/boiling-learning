@@ -899,8 +899,10 @@ optional = false
 python-versions = ">=3.5"
 
 [package.dependencies]
+imageio-ffmpeg = {version = "*", optional = true, markers = "extra == \"ffmpeg\""}
 numpy = "*"
 pillow = ">=8.3.2"
+psutil = {version = "*", optional = true, markers = "extra == \"ffmpeg\""}
 
 [package.extras]
 build = ["wheel"]
@@ -914,6 +916,14 @@ itk = ["itk"]
 linting = ["black", "flake8"]
 test = ["invoke", "pytest", "pytest-cov"]
 tifffile = ["tifffile"]
+
+[[package]]
+name = "imageio-ffmpeg"
+version = "0.4.5"
+description = "FFMPEG wrapper for Python"
+category = "main"
+optional = false
+python-versions = ">=3.4"
 
 [[package]]
 name = "importlib-metadata"
@@ -2868,7 +2878,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "~=3.7.12"
-content-hash = "76f10efacf7a47129f1855e95b6351357097df9dc171e30e17c194e02826c285"
+content-hash = "bff85ef277e8cba325a154b3e6e9d476aa74df6b8e428fc0e062c30568d33e3e"
 
 [metadata.files]
 absl-py = [
@@ -3577,6 +3587,14 @@ idna = [
 imageio = [
     {file = "imageio-2.11.0-py3-none-any.whl", hash = "sha256:edf6367bb524375acc35508bef2c5748c989b76d8f113c78bbaf6738d7804cc3"},
     {file = "imageio-2.11.0.tar.gz", hash = "sha256:f3c4904a963eb578f14fa356213e49cc25495d017974ad946bb5dcfebf10f117"},
+]
+imageio-ffmpeg = [
+    {file = "imageio-ffmpeg-0.4.5.tar.gz", hash = "sha256:f2ea4245a2adad25dedf98d343159579167e549ac8c4691cef5eff980e20c139"},
+    {file = "imageio_ffmpeg-0.4.5-py3-none-macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:266601aab7619acf6ff78cd5ba78b5a593a1119a96d266d33b88bfcd01bbd3ca"},
+    {file = "imageio_ffmpeg-0.4.5-py3-none-manylinux2010_x86_64.whl", hash = "sha256:f127b8cdd842e8398de5f2aef23c687ae75d4d964e1df2ea3a9ff03e92a370e7"},
+    {file = "imageio_ffmpeg-0.4.5-py3-none-manylinux2014_aarch64.whl", hash = "sha256:db4d318f640419037a0df29bb11b1022f2f8094c90b4aac8affc7177b8ce4641"},
+    {file = "imageio_ffmpeg-0.4.5-py3-none-win32.whl", hash = "sha256:39a9ab4326bdf5eae3457961dfdfb4317078659ebe4e6980914ac897a462aeb2"},
+    {file = "imageio_ffmpeg-0.4.5-py3-none-win_amd64.whl", hash = "sha256:d2ba8339eecc02fa73a6b85c34654c49a7c78d732a1ac76478d11224e6cfa902"},
 ]
 importlib-metadata = [
     {file = "importlib_metadata-4.8.2-py3-none-any.whl", hash = "sha256:53ccfd5c134223e497627b9815d5030edf77d2ed573922f7a0b8f8bb81a1c100"},

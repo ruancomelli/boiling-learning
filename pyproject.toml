@@ -92,7 +92,7 @@ frozendict = "^1.2"
 funcy = "^1.15"
 gspread = "^4.0.1"
 h5py = "^3.0"
-imageio = "^2.9.0"
+imageio = {extras = ["ffmpeg"], version = "^2.11.0"}
 importlib-metadata = "^4.5"
 ipywidgets = "^7.6"
 json-tricks = "^3.15"
