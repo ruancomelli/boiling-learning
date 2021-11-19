@@ -1,3 +1,9 @@
+## v0.17.8 (2021-11-19)
+
+### Fix
+
+- **io/json**: remove wrong `indent` argument in call to `json.load`
+
 ## v0.17.7 (2021-11-19)
 
 ### Feat
