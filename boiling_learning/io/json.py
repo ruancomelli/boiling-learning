@@ -135,6 +135,6 @@ def save(obj: Any, path: PathLike) -> None:
 
 def load(path: PathLike) -> Any:
     with resolve(path, parents=True).open('r') as file:
-        obj = json.load(file, indent=4)
+        obj = json.load(file)
 
     return deserialize(obj)
