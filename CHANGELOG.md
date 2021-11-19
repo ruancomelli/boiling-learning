@@ -1,3 +1,9 @@
+## v0.17.7 (2021-11-19)
+
+### Feat
+
+- **datasets/sliceable**: use the extended json (de)serializer for sliceable datasets IO operations
+
 ## v0.17.6 (2021-11-19)
 
 ### Feat
