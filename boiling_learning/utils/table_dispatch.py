@@ -12,7 +12,7 @@ class TableDispatcher(Dict[Hashable, Callable]):
         super().__init__()
         self._default: Optional[Callable] = default
 
-    def dispatch(self, key: Hashable):
+    def dispatch(self, key: Hashable) -> Callable[[_Callable], _Callable]:
         def _dispatcher(call: _Callable) -> _Callable:
             self[key] = call
             return call

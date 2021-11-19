@@ -4,7 +4,7 @@ from typing import Any, Callable, Generic, Sequence, TypeVar
 
 import funcy
 
-from boiling_learning.io.storage import json_encode
+from boiling_learning.io.json import json_encode
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.utils import JSONDataType
 
