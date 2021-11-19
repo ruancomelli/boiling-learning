@@ -1,3 +1,17 @@
+## v0.17.2 (2021-11-18)
+
+### Fix
+
+- revert creation of `TypedDict`s since they have problems with instance checking
+
+### Feat
+
+- **datasets/sliceable**: define saving and loading functions for sliceable datasets
+
+### Refactor
+
+- **io**: rename `storage` module as `json`
+
 ## v0.17.1 (2021-11-17)
 
 ### Feat
