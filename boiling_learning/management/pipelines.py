@@ -4,7 +4,7 @@ from typing import Any, Callable, Generic, Sequence, TypeVar
 
 import funcy
 
-from boiling_learning.io.json import json_encode
+from boiling_learning.io import json
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.utils import JSONDataType
 
@@ -83,6 +83,6 @@ class FunctionalPipeline(Sequence[NamedFunctional]):
 #     def __init__(self, )
 
 
-@json_encode.dispatch
-def json_encode(obj: NamedFunctional):
-    return {'name': obj.name, 'desc': json_encode(obj.desc)}
+@json.encode.dispatch
+def _json_encode(obj: NamedFunctional):
+    return {'name': obj.name, 'desc': json.encode(obj.desc)}

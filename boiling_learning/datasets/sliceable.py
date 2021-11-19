@@ -26,8 +26,7 @@ import tensorflow as tf
 from iteround import saferound
 from slicerator import pipeline
 
-from boiling_learning.io.io import load_json, save_json
-from boiling_learning.io.json import json_decode, json_encode
+from boiling_learning.io import json
 from boiling_learning.utils.dtypes import NestedTypeSpec, auto_spec, tf_str_dtype_bidict
 from boiling_learning.utils.iterutils import distance_maximized_evenly_spaced_indices
 from boiling_learning.utils.slicerators import Slicerator
@@ -383,22 +382,22 @@ class SupervisedSliceableDatasetTargetTransformer(Generic[_Y1, _Y2]):
         return dataset.map_targets(self.call)
 
 
-@json_encode.dispatch
+@json.encode.dispatch
 def _json_encode_numpy_array(obj: np.ndarray) -> str:
     return obj.dumps()
 
 
-@json_decode.dispatch(np.ndarray)
+@json.decode.dispatch(np.ndarray)
 def _json_decode_numpy_array(obj: str) -> np.ndarray:
     return np.loads(obj)
 
 
-@json_encode.dispatch
+@json.encode.dispatch
 def _json_encode_tensor(obj: tf.Tensor) -> Dict[str, Any]:
     return {'tensor': tf.io.serialize_tensor(obj), 'dtype': tf_str_dtype_bidict.inverse[obj.dtype]}
 
 
-@json_decode.dispatch(tf.Tensor)
+@json.decode.dispatch(tf.Tensor)
 def _json_decode_tensor(obj: Dict[str, Any]) -> tf.Tensor:
     tensor = obj['tensor']
     dtype = tf_str_dtype_bidict[obj['dtype']]
@@ -410,18 +409,18 @@ def save_sliceable_dataset(obj: SliceableDataset[Any], path: PathLike) -> None:
     path = resolve(path, dir=True)
 
     spec = {'length': len(obj)}
-    save_json(spec, path / 'spec.json')
+    json.save(spec, path / 'spec.json')
 
     for index, element in enumerate(obj):
-        save_json(element, path / f'{index}.json')
+        json.save(element, path / f'{index}.json')
 
 
 def load_sliceable_dataset(path: PathLike) -> SliceableDataset[Any]:
     resolved_path: Path = resolve(path)
 
-    spec = load_json(resolved_path / 'spec.json')
+    spec = json.load(resolved_path / 'spec.json')
 
     def _get_element(index: int) -> Any:
-        return load_json(resolved_path / f'{index}.json')
+        return json.load(resolved_path / f'{index}.json')
 
     return SliceableDataset(Slicerator.from_func(_get_element, length=spec['length']))

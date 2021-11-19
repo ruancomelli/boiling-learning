@@ -1,21 +1,15 @@
-import json
 from unittest import TestCase
 
-from boiling_learning.io.json import (
-    JSONDataType,
-    json_decode,
-    json_deserialize,
-    json_encode,
-    json_serialize,
-)
+from boiling_learning.io import json
+from boiling_learning.io.json import JSONDataType
 
 
-@json_encode.dispatch
+@json.encode.dispatch
 def _json_encode(obj: tuple) -> list:
     return list(obj)
 
 
-@json_decode.dispatch(tuple)
+@json.decode.dispatch(tuple)
 def _json_decode(obj: JSONDataType) -> tuple:
     return tuple(obj)
 
@@ -28,8 +22,8 @@ class storage_Test(TestCase):
             {'likes dinos': True, 'political opinion': None},
         ]
 
-        encoded = json.dumps(json_serialize(test_list))
-        decoded = json_deserialize(json.loads(encoded))
+        encoded = json.dumps(json.serialize(test_list))
+        decoded = json.deserialize(json.loads(encoded))
 
         self.assertListEqual(decoded, test_list)
 
@@ -40,7 +34,7 @@ class storage_Test(TestCase):
             {'likes dinos': True, 'political opinion': None},
         )
 
-        encoded = json.dumps(json_serialize(test_tuple))
-        decoded = json_deserialize(json.loads(encoded))
+        encoded = json.dumps(json.serialize(test_tuple))
+        decoded = json.deserialize(json.loads(encoded))
 
         self.assertTupleEqual(decoded, test_tuple)
