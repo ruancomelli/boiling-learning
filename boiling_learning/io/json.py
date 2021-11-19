@@ -1,8 +1,9 @@
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Dict, List, TypeVar
+from typing import Any, Dict, List, Optional, TypeVar
 
 from plum import Dispatcher
+from typing_extensions import TypedDict
 
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.table_dispatch import table_dispatch
@@ -101,8 +102,13 @@ def _json_decode_Path(obj: JSONDataType) -> Path:
     return Path(obj)
 
 
+class SerializedObject(TypedDict):
+    type: Optional[str]
+    contents: JSONDataType
+
+
 @dispatch
-def json_serialize(obj: Any) -> Dict[str, Any]:
+def json_serialize(obj: Any) -> SerializedObject:
     return {
         'type': f'{type(obj).__module__}.{type(obj).__qualname__}',
         'contents': json_encode(obj),
@@ -110,11 +116,11 @@ def json_serialize(obj: Any) -> Dict[str, Any]:
 
 
 @json_serialize.dispatch
-def json_serialize(obj: None) -> Dict[str, Any]:
+def _json_serialize_none(obj: None) -> SerializedObject:
     return {'type': None, 'contents': json_encode(obj)}
 
 
-def json_deserialize(obj: Dict[str, Any]) -> Any:
+def json_deserialize(obj: SerializedObject) -> Any:
     obj_type = obj['type']
 
     if obj_type is not None:
