@@ -25,7 +25,6 @@ import numpy as np
 import tensorflow as tf
 from iteround import saferound
 from slicerator import pipeline
-from typing_extensions import TypedDict
 
 from boiling_learning.io.io import load_json, save_json
 from boiling_learning.io.json import json_decode, json_encode
@@ -384,32 +383,23 @@ class SupervisedSliceableDatasetTargetTransformer(Generic[_Y1, _Y2]):
         return dataset.map_targets(self.call)
 
 
-class EncodedTensor(TypedDict):
-    tensor: str
-    dtype: str
-
-
 @json_encode.dispatch
-def _json_encode_tensor(obj: tf.Tensor) -> EncodedTensor:
+def _json_encode_tensor(obj: tf.Tensor) -> Dict[str, Any]:
     return {'tensor': tf.io.serialize_tensor(obj), 'dtype': tf_str_dtype_bidict.inverse[obj.dtype]}
 
 
 @json_decode.dispatch(tf.Tensor)
-def _json_decode_tensor(obj: EncodedTensor) -> tf.Tensor:
+def _json_decode_tensor(obj: Dict[str, Any]) -> tf.Tensor:
     tensor = obj['tensor']
     dtype = tf_str_dtype_bidict[obj['dtype']]
 
     return tf.io.parse_tensor(tensor, dtype)
 
 
-class SliceableDatasetSpec(TypedDict):
-    length: int
-
-
 def save_sliceable_dataset(obj: SliceableDataset[Any], path: PathLike) -> None:
     path = resolve(path, dir=True)
 
-    spec: SliceableDatasetSpec = {'length': len(obj)}
+    spec = {'length': len(obj)}
     save_json(spec, path / 'spec.json')
 
     for index, element in enumerate(obj):
@@ -419,7 +409,7 @@ def save_sliceable_dataset(obj: SliceableDataset[Any], path: PathLike) -> None:
 def load_sliceable_dataset(path: PathLike) -> SliceableDataset[Any]:
     resolved_path: Path = resolve(path)
 
-    spec: SliceableDatasetSpec = load_json(resolved_path / 'spec.json')
+    spec = load_json(resolved_path / 'spec.json')
 
     def _get_element(index: int) -> Any:
         return load_json(resolved_path / f'{index}.json')
