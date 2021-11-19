@@ -1,3 +1,9 @@
+## v0.17.6 (2021-11-19)
+
+### Feat
+
+- implement JSON encode and decode functions for Numpy arrays
+
 ## v0.17.5 (2021-11-18)
 
 ### Feat
