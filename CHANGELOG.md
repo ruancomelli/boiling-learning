@@ -1,3 +1,9 @@
+## v0.17.9 (2021-11-21)
+
+### Fix
+
+- **datasets/sliceable**: fix NumPy arrays (de)serialization
+
 ## v0.17.8 (2021-11-19)
 
 ### Fix
