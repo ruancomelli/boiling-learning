@@ -20,6 +20,7 @@ from typing import (
     overload,
 )
 
+import json_tricks as tricks
 import more_itertools as mit
 import numpy as np
 import tensorflow as tf
@@ -384,12 +385,12 @@ class SupervisedSliceableDatasetTargetTransformer(Generic[_Y1, _Y2]):
 
 @json.encode.dispatch
 def _json_encode_numpy_array(obj: np.ndarray) -> str:
-    return obj.dumps()
+    return tricks.dumps(obj)
 
 
 @json.decode.dispatch(np.ndarray)
 def _json_decode_numpy_array(obj: str) -> np.ndarray:
-    return np.loads(obj)
+    return tricks.loads(obj)
 
 
 @json.encode.dispatch
