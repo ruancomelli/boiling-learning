@@ -1,6 +1,6 @@
 import collections
 import io as _io
-import json
+import json as _json
 import operator
 import os
 import pickle
@@ -198,7 +198,7 @@ def load_pkl(path: PathLike):
 def save_json(
     obj: _T,
     path: PathLike,
-    dump: Callable[[_T, _io.TextIOWrapper], Any] = json.dump,
+    dump: Callable[[_T, _io.TextIOWrapper], Any] = _json.dump,
     cls: Optional[Type] = None,
 ) -> None:
     path = ensure_parent(path)
@@ -216,7 +216,7 @@ def save_json(
 
 def load_json(
     path: PathLike,
-    load: Callable[[_io.TextIOWrapper], _T] = json.load,
+    load: Callable[[_io.TextIOWrapper], _T] = _json.load,
     cls: Optional[Type] = None,
 ) -> _T:
     path = resolve(path)

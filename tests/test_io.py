@@ -4,7 +4,7 @@ from boiling_learning.io import json
 from boiling_learning.io.json import JSONDataType
 
 
-@json.encode.dispatch
+@json.encode.instance(tuple)
 def _json_encode(obj: tuple) -> list:
     return list(obj)
 
@@ -38,3 +38,15 @@ class storage_Test(TestCase):
         decoded = json.deserialize(json.loads(encoded))
 
         self.assertTupleEqual(decoded, test_tuple)
+
+
+def test_json_encode_basic_types() -> None:
+    assert json.encode(None) is None
+    assert json.encode(3) == 3
+    assert json.encode(3.14) == 3.14
+    assert json.encode('hello') == 'hello'
+    assert json.encode(True) is True
+
+
+def test_json_encode_compound_types() -> None:
+    assert json.deserialize(json.serialize([0, 1, 'hello'])) == [0, 1, 'hello']

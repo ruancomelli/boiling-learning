@@ -45,7 +45,7 @@ def apply(side_effect: Callable[[_T], Any], iterable: Iterable[_T]) -> None:
     This function is very similar to `list(map(side_effect, iterable))` or `[side_effect(element) for element in iterable]`, except that it is faster and does not store values. This is why the mapped function is called `side_effect`.
 
     Examples:
-    ```py
+
     >>> numbers = [1, 2, 3]
     >>> apply(print, numbers)
     1
@@ -56,8 +56,6 @@ def apply(side_effect: Callable[[_T], Any], iterable: Iterable[_T]) -> None:
     >>> apply(dest.append, source)
     >>> dest
     ['a', 'b', 'c']
-
-    ```
 
     Args:
         side_effect (Callable[[_T], Any]): side effect to be applied to iterable. Should be a function accepting the elements yielded by the iterable.

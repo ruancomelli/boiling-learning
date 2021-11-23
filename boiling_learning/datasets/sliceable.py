@@ -383,37 +383,37 @@ class SupervisedSliceableDatasetTargetTransformer(Generic[_Y1, _Y2]):
         return dataset.map_targets(self.call)
 
 
-@json.encode.dispatch
+@json.encode.instance(np.ndarray)
 def _json_encode_numpy_array(obj: np.ndarray) -> str:
     return tricks.dumps(obj)
 
 
-@json.decode.dispatch(np.ndarray)
-def _json_decode_numpy_array(obj: str) -> np.ndarray:
-    return tricks.loads(obj)
+# @json.decode.dispatch(np.ndarray)
+# def _json_decode_numpy_array(obj: str) -> np.ndarray:
+#     return tricks.loads(obj)
 
 
-@json.encode.dispatch
-def _json_encode_tensor(obj: tf.Tensor) -> Dict[str, Any]:
+@json.encode.instance(tf.Tensor)
+def _json_encode_tensor(obj: tf.Tensor) -> dict:
     return {'tensor': tf.io.serialize_tensor(obj), 'dtype': tf_str_dtype_bidict.inverse[obj.dtype]}
 
 
-@json.decode.dispatch(tf.Tensor)
-def _json_decode_tensor(obj: Dict[str, Any]) -> tf.Tensor:
-    tensor = obj['tensor']
-    dtype = tf_str_dtype_bidict[obj['dtype']]
+# @json.decode.dispatch(tf.Tensor)
+# def _json_decode_tensor(obj: Dict[str, Any]) -> tf.Tensor:
+#     tensor = obj['tensor']
+#     dtype = tf_str_dtype_bidict[obj['dtype']]
 
-    return tf.io.parse_tensor(tensor, dtype)
+#     return tf.io.parse_tensor(tensor, dtype)
 
 
 def save_sliceable_dataset(obj: SliceableDataset[Any], path: PathLike) -> None:
     path = resolve(path, dir=True)
 
     spec = {'length': len(obj)}
-    json.save(spec, path / 'spec.json')
+    json.dump(spec, path / 'spec.json')
 
     for index, element in enumerate(obj):
-        json.save(element, path / f'{index}.json')
+        json.dump(element, path / f'{index}.json')
 
 
 def load_sliceable_dataset(path: PathLike) -> SliceableDataset[Any]:

@@ -83,6 +83,6 @@ class FunctionalPipeline(Sequence[NamedFunctional]):
 #     def __init__(self, )
 
 
-@json.encode.dispatch
+@json.encode.instance(NamedFunctional)
 def _json_encode(obj: NamedFunctional):
     return {'name': obj.name, 'desc': json.encode(obj.desc)}

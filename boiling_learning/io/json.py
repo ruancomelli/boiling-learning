@@ -1,67 +1,103 @@
-import json
+from __future__ import annotations
+
+import json as _json
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Dict, List, TypeVar
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
-from plum import Dispatcher
+from classes import AssociatedType, Supports
+from classes import typeclass as _typeclass
+from typing_extensions import Protocol, TypedDict, runtime_checkable
 
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.table_dispatch import table_dispatch
 from boiling_learning.utils.utils import JSONDataType, PathLike, resolve
 
 _T = TypeVar('_T')
-dispatch = Dispatcher()
+BasicTypes = Union[None, bool, int, str, float]
+_BasicType = TypeVar('_BasicType', bound=BasicTypes)
+_JSONDataType = TypeVar('_JSONDataType', bound=JSONDataType)
 
 
-@dispatch
-def encode(obj: None) -> None:
-    # default implementation: return object unmodified
-    return obj
+class SerializedJSONObject(TypedDict):
+    type: Optional[str]
+    contents: JSONDataType
 
 
-@encode.dispatch
-def _encode_bool(obj: bool) -> bool:
-    return obj
+SerializedJSONDataType = Union[BasicTypes, List[BasicTypes], SerializedJSONObject]
+_SerializedJSONDataType = TypeVar('_SerializedJSONDataType', bound=SerializedJSONDataType)
 
 
-@encode.dispatch
-def _encode_int(obj: int) -> int:
-    return obj
+class JSONEncodable(AssociatedType):
+    ...
 
 
-@encode.dispatch
-def _encode_float(obj: float) -> float:
-    return obj
+@_typeclass(JSONEncodable)
+def encode(instance: Supports[JSONEncodable]) -> JSONDataType:
+    '''Return a JSON encoding of an object.'''
 
 
-@encode.dispatch
-def _encode_str(obj: str) -> str:
-    return obj
+class JSONSerializable(AssociatedType):
+    ...
 
 
-@encode.dispatch
-def _encode_list(obj: list) -> list:
-    return list(map(serialize, obj))
+@_typeclass(JSONSerializable)
+def serialize(obj: Supports[JSONSerializable]) -> SerializedJSONObject:
+    '''Return a JSON serialization of an object.'''
 
 
-@encode.dispatch
-def _encode_tuple(obj: tuple) -> list:
-    return list(map(serialize, obj))
+@encode.instance(None)
+@encode.instance(bool)
+@encode.instance(int)
+@encode.instance(str)
+@encode.instance(float)
+def _encode_basics(instance: _BasicType) -> _BasicType:
+    return instance
 
 
-@encode.dispatch
-def _encode_dict(obj: dict) -> dict:
-    return {key: serialize(value) for key, value in obj.items()}
+@runtime_checkable
+class HasJSONEncode(Protocol):
+    def __json_encode__(self) -> JSONDataType:
+        ...
 
 
-@encode.dispatch
-def _encode_Pack(obj: Pack) -> list:
-    return [serialize(obj.args), serialize(dict(obj.kwargs))]
+@encode.instance(protocol=HasJSONEncode)
+def _encode_has_encode(instance: HasJSONEncode) -> JSONDataType:
+    return instance.__json_encode__()
 
 
-@encode.dispatch
-def _encode_Path(obj: Path) -> str:
-    return str(obj)
+class _ListOfJSONSerializableMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        return isinstance(instance, list) and all(serialize.supports(item) for item in instance)
+
+
+class ListOfJSONSerializable(
+    List[Supports[JSONSerializable]], metaclass=_ListOfJSONSerializableMeta
+):
+    ...
+
+
+@encode.instance(delegate=ListOfJSONSerializable)
+def _encode_list(instance: ListOfJSONSerializable) -> List[JSONDataType]:
+    return [serialize(item) for item in instance]
+
+
+class _DictOfJSONSerializableMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        return isinstance(instance, dict) and all(
+            isinstance(key, str) and serialize.supports(value) for key, value in instance.items()
+        )
+
+
+class DictOfJSONSerializable(
+    Dict[str, Supports[JSONSerializable]], metaclass=_DictOfJSONSerializableMeta
+):
+    ...
+
+
+@encode.instance(delegate=DictOfJSONSerializable)
+def _encode_dict(instance: DictOfJSONSerializable) -> Dict[str, SerializedJSONObject]:
+    return {key: serialize(value) for key, value in instance.items()}
 
 
 decode = table_dispatch()
@@ -92,7 +128,7 @@ def _json_decode_dict(obj: Dict[str, JSONDataType]) -> dict:
 
 
 @decode.dispatch(Pack)
-def _json_decode_Pack(obj: JSONDataType) -> Pack:
+def _json_decode_Pack(obj: List[JSONDataType]) -> Pack:
     args, kwargs = obj
     return Pack(deserialize(args), deserialize(kwargs))
 
@@ -102,39 +138,66 @@ def _json_decode_Path(obj: str) -> Path:
     return Path(obj)
 
 
-@dispatch
-def serialize(obj: Any) -> Dict[str, Any]:
+@serialize.instance(None)
+@serialize.instance(bool)
+@serialize.instance(int)
+@serialize.instance(str)
+@serialize.instance(float)
+def _serialize_basics(instance: _BasicType) -> _BasicType:
+    return instance
+
+
+class JSONEncodableMeta(type):
+    def __instancecheck__(self, instance: Any) -> bool:
+        return encode.supports(instance)
+
+
+class IsJSONEncodable(Supports[JSONEncodable], metaclass=JSONEncodableMeta):
+    ...
+
+
+@serialize.instance(delegate=IsJSONEncodable)
+def _serialize_json_encodable(obj: Supports[JSONEncodable]) -> SerializedJSONObject:
+    '''Return a JSON serialization of an object.'''
     return {
-        'type': f'{type(obj).__module__}.{type(obj).__qualname__}',
+        'type': f'{type(obj).__module__}.{type(obj).__qualname__}' if obj is not None else None,
         'contents': encode(obj),
     }
 
 
-@serialize.dispatch
-def _serialize_None(obj: None) -> Dict[str, Any]:
-    return {'type': None, 'contents': encode(obj)}
+def dumps(obj: Supports[JSONSerializable]) -> str:
+    return _json.dumps(serialize(obj))
 
 
-def deserialize(obj: Dict[str, Any]) -> Any:
-    obj_type = obj['type']
+def dump(obj: Supports[JSONSerializable], path: PathLike) -> None:
+    serialized: SerializedJSONObject = serialize(obj)
 
-    if obj_type is not None:
-        modulepath, typename = obj_type.rsplit('.', maxsplit=1)
-        module = import_module(modulepath)
-        obj_type = getattr(module, typename)
-
-    return decode[obj_type](obj['contents'])
+    with resolve(path, parents=True).open('w', encoding='utf-8') as file:
+        _json.dump(serialized, file, indent=4)
 
 
-def save(obj: Any, path: PathLike) -> None:
-    serialized = serialize(obj)
+def deserialize(obj: SerializedJSONDataType) -> Any:
+    if isinstance(obj, dict):
+        obj_type = obj['type']
 
-    with resolve(path, parents=True).open('w') as file:
-        json.dump(serialized, file, indent=4)
+        if obj_type is not None:
+            modulepath, typename = obj_type.rsplit('.', maxsplit=1)
+            module = import_module(modulepath)
+            obj_type = getattr(module, typename)
+
+        return decode[obj_type](obj['contents'])
+    elif isinstance(obj, list):
+        return [deserialize(item) for item in obj]
+    else:
+        return obj
 
 
 def load(path: PathLike) -> Any:
-    with resolve(path, parents=True).open('r') as file:
-        obj = json.load(file)
+    with resolve(path, parents=True).open('r', encoding='utf-8') as file:
+        obj = _json.load(file)
 
     return deserialize(obj)
+
+
+def loads(contents: str) -> Any:
+    return deserialize(_json.loads(contents))
