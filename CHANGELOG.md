@@ -1,3 +1,9 @@
+## v0.17.11 (2021-11-23)
+
+### Feat
+
+- **io/json**: add `tuple` (de)serialization
+
 ## v0.17.10 (2021-11-23)
 
 ### Fix
