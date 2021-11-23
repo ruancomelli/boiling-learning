@@ -1,3 +1,9 @@
+## v0.17.10 (2021-11-23)
+
+### Fix
+
+- **io/json**: fix JSON encoding and decoding functions
+
 ## v0.17.9 (2021-11-21)
 
 ### Fix
