@@ -3,39 +3,17 @@ repos:
   rev: v1.3
   hooks:
   - id: autoflake
-    args: [
-      --check,
-      --expand-star-imports,
-      --ignore-init-module-imports,
-      --recursive,
-      --remove-all-unused-imports,
-      --remove-duplicate-keys,
-      --remove-unused-variables,
-      boiling_learning,
-      tests
-    ]
+    args: [--check, --expand-star-imports, --ignore-init-module-imports, --recursive, --remove-all-unused-imports, --remove-duplicate-keys, --remove-unused-variables, boiling_learning, tests]
 - repo: https://github.com/hakancelik96/unimport
   rev: 0.8.3
   hooks:
   - id: unimport
-    args:
-      [
-        --check,
-        --gitignore,
-        --ignore-init,
-        --include-star-import,
-        boiling_learning,
-        tests
-      ]
+    args: [--check, --gitignore, --ignore-init, --include-star-import, boiling_learning, tests]
 - repo: https://github.com/psf/black
   rev: 21.6b0
   hooks:
   - id: black
-    args: [
-      --config,
-      pyproject.toml,
-      --check
-    ]
+    args: [--config, pyproject.toml, --check]
 - repo: https://github.com/pycqa/isort
   rev: 5.9.2
   hooks:
@@ -62,10 +40,18 @@ repos:
   rev: 3.9.2
   hooks:
   - id: flake8
-    args: [
-      '--count',
-      '--select=E71,E73,E74,E9,F63,F7,F82,F83',
-      '--show-source',
-      '--statistics',
-      'boiling_learning'
-    ]
+    args: [--count, '--select=E71,E73,E74,E9,F63,F7,F82,F83', --show-source, --statistics, boiling_learning]
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+  rev: v2.1.0
+  hooks:
+  - id: pretty-format-yaml
+    args: [--autofix, --indent, '2']
+- repo: https://github.com/executablebooks/mdformat
+  rev: 0.7.10
+  hooks:
+  - id: mdformat
+    args: [--number, --wrap, '80']
+    additional_dependencies:
+    - mdformat-beautysh
+    - mdformat-black
+    - mdformat-config
