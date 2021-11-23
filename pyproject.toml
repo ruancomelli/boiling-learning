@@ -127,6 +127,7 @@ classes = "^0.4.0"
 tinydb-smartcache = "^2.0.0"
 python-dotenv = "^0.19.2"
 iteround = "^1.0.3"
+phantom-types = "^0.13.1"
 
 [tool.poetry.dev-dependencies]
 autoflake = "1.4"

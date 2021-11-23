@@ -1,17 +1,23 @@
+from typing import Dict
 from unittest import TestCase
 
 from boiling_learning.io import json
 from boiling_learning.io.json import JSONDataType
 
 
-@json.encode.instance(tuple)
-def _json_encode(obj: tuple) -> list:
-    return list(obj)
+class X:
+    def __init__(self, value: int) -> None:
+        self.value: int = value
 
 
-@json.decode.dispatch(tuple)
-def _json_decode(obj: JSONDataType) -> tuple:
-    return tuple(obj)
+@json.encode.instance(X)
+def _json_encode(obj: X) -> Dict[str, int]:
+    return {'value': obj.value}
+
+
+@json.decode.dispatch(X)
+def _json_decode(obj: JSONDataType) -> X:
+    return X(obj['value'])
 
 
 class storage_Test(TestCase):
@@ -28,16 +34,12 @@ class storage_Test(TestCase):
         self.assertListEqual(decoded, test_list)
 
     def test_custom_json_io(self):
-        test_tuple = (
-            314159,
-            'apple pie tastes good',
-            {'likes dinos': True, 'political opinion': None},
-        )
+        x = X(3)
 
-        encoded = json.dumps(json.serialize(test_tuple))
+        encoded = json.dumps(json.serialize(x))
         decoded = json.deserialize(json.loads(encoded))
 
-        self.assertTupleEqual(decoded, test_tuple)
+        self.assertEqual(decoded.value, 3)
 
 
 def test_json_encode_basic_types() -> None:
@@ -49,4 +51,8 @@ def test_json_encode_basic_types() -> None:
 
 
 def test_json_encode_compound_types() -> None:
-    assert json.deserialize(json.serialize([0, 1, 'hello'])) == [0, 1, 'hello']
+    example_list = [0, 1, 'hello']
+    assert json.deserialize(json.serialize(example_list)) == example_list
+
+    example_tuple = (3, 'hi', ('no', 'yes'), True, None)
+    assert json.deserialize(json.serialize(example_tuple)) == example_tuple

@@ -3,10 +3,12 @@ from __future__ import annotations
 import json as _json
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 from classes import AssociatedType, Supports
 from classes import typeclass as _typeclass
+from phantom import Phantom
+from phantom.predicates import boolean, collection, generic
 from typing_extensions import Protocol, TypedDict, runtime_checkable
 
 from boiling_learning.utils.functional import Pack
@@ -98,6 +100,19 @@ class DictOfJSONSerializable(
 @encode.instance(delegate=DictOfJSONSerializable)
 def _encode_dict(instance: DictOfJSONSerializable) -> Dict[str, SerializedJSONObject]:
     return {key: serialize(value) for key, value in instance.items()}
+
+
+class TupleOfJSONSerializable(
+    Tuple[JSONSerializable, ...],
+    Phantom,
+    predicate=boolean.both(generic.of_type(tuple), collection.every(serialize.supports)),
+):
+    ...
+
+
+@encode.instance(delegate=TupleOfJSONSerializable)
+def _encode_tuple(instance: TupleOfJSONSerializable) -> List[SerializedJSONObject]:
+    return list(map(serialize, instance))
 
 
 decode = table_dispatch()

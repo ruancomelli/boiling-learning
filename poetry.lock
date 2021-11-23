@@ -1746,6 +1746,23 @@ python-versions = "*"
 ptyprocess = ">=0.5"
 
 [[package]]
+name = "phantom-types"
+version = "0.13.1"
+description = "Phantom types for Python"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+typeguard = ">=2.10"
+typing-extensions = ">=3.10.0.2"
+
+[package.extras]
+phonenumbers = ["phonenumbers (>=8.12.11)"]
+pydantic = ["pydantic (>=1.8.1)"]
+test = ["mypy", "pytest", "pytest-mypy-plugins", "coverage"]
+
+[[package]]
 name = "pickleshare"
 version = "0.7.5"
 description = "Tiny 'shelve'-like database with concurrency support"
@@ -2861,7 +2878,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "~=3.7.12"
-content-hash = "a33438f82eac3cc81e1b701228fb318c4bc667273c0708ffefce4acc1abab623"
+content-hash = "447ad7e647774de865ef214913d93f1c1e663f4ec6138fe8c9f807b9a9047d8e"
 
 [metadata.files]
 absl-py = [
@@ -4219,6 +4236,10 @@ pathspec = [
 pexpect = [
     {file = "pexpect-4.8.0-py2.py3-none-any.whl", hash = "sha256:0b48a55dcb3c05f3329815901ea4fc1537514d6ba867a152b581d69ae3710937"},
     {file = "pexpect-4.8.0.tar.gz", hash = "sha256:fc65a43959d153d0114afe13997d439c22823a27cefceb5ff35c2178c6784c0c"},
+]
+phantom-types = [
+    {file = "phantom-types-0.13.1.tar.gz", hash = "sha256:aea13e36d0439cf5c1250b0cd94bafb1c9f45eda09e743fa5f702bd0196d5ea4"},
+    {file = "phantom_types-0.13.1-py3-none-any.whl", hash = "sha256:03f3865b550943b70c63d9c4aa63b2d9dea124918fd9061058e3aa91f8279cb8"},
 ]
 pickleshare = [
     {file = "pickleshare-0.7.5-py2.py3-none-any.whl", hash = "sha256:9649af414d74d4df115d5d718f82acb59c9d418196b7b4290ed47a12ce62df56"},
