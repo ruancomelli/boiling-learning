@@ -179,7 +179,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
 
     def open_videos(self) -> None:
         for ev in self.values():
-            ev.open_video()
+            ev.open()
 
     def frames_to_tensor(self, overwrite: bool = False) -> None:
         for ev in self.values():

@@ -9,8 +9,10 @@ from typing import Any, Callable, Iterable, Iterator, Optional, Sequence, Tuple,
 import cv2
 import funcy
 import numpy as np
+import numpy.typing as npt
 import parse
 import pims
+from imageio.core import CannotReadFrameError
 from more_itertools import ilen, peekable
 
 from boiling_learning.io.io import load_json, make_callable_filename_pattern, save_json
@@ -650,48 +652,39 @@ def reorganize_frames(
     starapply(renamer, src_dest_pairs)
 
 
-class Video(Sequence[np.ndarray]):
+VideoFrame = npt.NDArray[np.float32]
+
+
+class Video(Sequence[VideoFrame]):
     def __init__(self, path: PathLike) -> None:
         self.path: Path = resolve(path)
-
         self.video: Optional[pims.Video] = None
-        self._is_open_video: bool = False
-        self.start: int = 0
-        self.end: Optional[int] = None
+
+    def __getitem__(self, key: int) -> VideoFrame:
+        return self.open()[key] / 255
 
     def __len__(self) -> int:
-        self.open_video()
-        return self.end - self.start
+        return len(self.open())
 
-    def __getitem__(self, index: int) -> np.ndarray:
-        self.open_video()
-
-        length = len(self)
-
-        if index >= length:
-            raise IndexError(f'index must be less than {length}')
-
-        absolute_index = self.start + index
-
-        # normalize frames to TF's standard: `pims.Video` returns frames
-        # with float datatype, but scaled from 0 to 255 whereas TF expects
-        # those floating point types to be between 0 and 1
-        return self.at(absolute_index)
-
-    def at(self, index: int) -> np.ndarray:
-        return self.video[index] / 255
-
-    def open_video(self) -> None:
-        if not self._is_open_video:
+    def open(self) -> pims.Video:
+        if not self.is_open():
             self.video = pims.Video(str(self.path))
+            self._shrink_to_valid_end_frames()
 
-            if self.end is None:
-                self.end = len(self.video)
+        return self.video
 
-            self._is_open_video = True
-
-    def close_video(self) -> None:
-        if self._is_open_video:
+    def close(self) -> None:
+        if self.is_open():
             self.video.close()
-        self.video = None
-        self._is_open_video = False
+            self.video = None
+
+    def is_open(self) -> bool:
+        return self.video is not None
+
+    def _shrink_to_valid_end_frames(self) -> None:
+        while len(self) > 0:
+            try:
+                self[-1]
+                return
+            except CannotReadFrameError:
+                self.video = self.video[:-1]
