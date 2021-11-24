@@ -1,3 +1,10 @@
+## v0.17.12 (2021-11-23)
+
+### Feat
+
+- **preprocessing/video**: add automatic video shrinking to avoid failing
+  because of empty frames
+
 ## v0.17.11 (2021-11-23)
 
 ### Feat
@@ -26,7 +33,8 @@
 
 ### Feat
 
-- **datasets/sliceable**: use the extended json (de)serializer for sliceable datasets IO operations
+- **datasets/sliceable**: use the extended json (de)serializer for sliceable
+  datasets IO operations
 
 ## v0.17.6 (2021-11-19)
 
@@ -38,7 +46,8 @@
 
 ### Feat
 
-- **scripts/make-dataset**: automatically decide saver and loader functions depending on the `as_tensors` flag
+- **scripts/make-dataset**: automatically decide saver and loader functions
+  depending on the `as_tensors` flag
 
 ## v0.17.4 (2021-11-18)
 
@@ -48,11 +57,13 @@
 
 ### Fix
 
-- revert creation of `TypedDict`s since they have problems with instance checking
+- revert creation of `TypedDict`s since they have problems with instance
+  checking
 
 ### Feat
 
-- **datasets/sliceable**: define saving and loading functions for sliceable datasets
+- **datasets/sliceable**: define saving and loading functions for sliceable
+  datasets
 
 ### Refactor
 
@@ -83,7 +94,8 @@
 
 ### Fix
 
-- **datasets/sliceable**: fix `SliceableDataset.split` automatic size scaling to take rounding effects into account
+- **datasets/sliceable**: fix `SliceableDataset.split` automatic size scaling to
+  take rounding effects into account
 
 ## v0.16.4 (2021-11-16)
 
@@ -95,14 +107,16 @@
 
 ### Fix
 
-- **datasets/creators**: avoid forwarding `num_shards` and `snapshot_path` to `experiment_video_dataset_creator` when `as_tensors=False`
+- **datasets/creators**: avoid forwarding `num_shards` and `snapshot_path` to
+  `experiment_video_dataset_creator` when `as_tensors=False`
 
 ## v0.16.2 (2021-11-16)
 
 ### Fix
 
 - **main**: fix formatting in `main.py`
-- **scripts/make-dataset**: include `num_shards` only when using `as_tensors=True` in `make_dataset.main`
+- **scripts/make-dataset**: include `num_shards` only when using
+  `as_tensors=True` in `make_dataset.main`
 
 ### Refactor
 
@@ -118,13 +132,19 @@
 
 ### Feat
 
-- **scripts/make-dataset**: support making datasets by using arrays instead of tensors
+- **scripts/make-dataset**: support making datasets by using arrays instead of
+  tensors
 - **datasets/sliceable**: add splitting functionality to sliceable datasets
-- **management/descriptors**: add `descriptors` module for automatically describing objects
-- **scripts**: add support for processing condensation data using array transformers
-- **preprocessing/arrays**: include all data preprocessing functions in the `preprocessing.arrays` module
-- **preprocessing/arrays**: convert array preprocessing functions with `@transformer`
-- **preprocessing/arrays**: redefine image preprocessing functions in terms of NumPy arrays
+- **management/descriptors**: add `descriptors` module for automatically
+  describing objects
+- **scripts**: add support for processing condensation data using array
+  transformers
+- **preprocessing/arrays**: include all data preprocessing functions in the
+  `preprocessing.arrays` module
+- **preprocessing/arrays**: convert array preprocessing functions with
+  `@transformer`
+- **preprocessing/arrays**: redefine image preprocessing functions in terms of
+  NumPy arrays
 - **utils/mathutils**: add `Real` type to denote real number types
 
 ### Refactor
@@ -132,13 +152,17 @@
 - **daq/Channel**: improve type annotations in `daq` module
 - improve type annotation and class nomenclature across project
 - **utils**: improve `KeyedDefaultDict` type annotations
-- **preprocessing/transformers**: improve transformers names, dropping image-exclusive terminology
-- **preprocessing/transformers**: improve type annotations in `preprocessing.transformers` module
-- **preprocessing/transformers**: remove unused `ImageTransformer.as_image_transformer` method
+- **preprocessing/transformers**: improve transformers names, dropping
+  image-exclusive terminology
+- **preprocessing/transformers**: improve type annotations in
+  `preprocessing.transformers` module
+- **preprocessing/transformers**: remove unused
+  `ImageTransformer.as_image_transformer` method
 
 ### Fix
 
-- **datasets/sliceable**: fix `SupervisedSliceableDataset.{features|targets}` type annotations
+- **datasets/sliceable**: fix `SupervisedSliceableDataset.{features|targets}`
+  type annotations
 - **utils/sentinels**: fix import error from `utils.sentinels.EMPTY`
 
 ## v0.15.7 (2021-10-18)
@@ -151,12 +175,15 @@
 
 ### Fix
 
-- **utils/dtypes**: define new `auto_dtype` function, an equivalent to `auto_spec` specialized for dtypes
-- **preprocessing/transformers**: replace `auto_spec` with `auto_dtype` in transformer `as_tf_py_function` method for backward compatibility
+- **utils/dtypes**: define new `auto_dtype` function, an equivalent to
+  `auto_spec` specialized for dtypes
+- **preprocessing/transformers**: replace `auto_spec` with `auto_dtype` in
+  transformer `as_tf_py_function` method for backward compatibility
 
 ### Feat
 
-- **datasets/sliceable**: define sliceable datasets based on slicerators and almost compatible with TensorFlow datasets
+- **datasets/sliceable**: define sliceable datasets based on slicerators and
+  almost compatible with TensorFlow datasets
 
 ### Refactor
 
@@ -166,29 +193,34 @@
 
 ### Fix
 
-- **preprocessing/image**: change required dtype for `crop` from float32 to float64
+- **preprocessing/image**: change required dtype for `crop` from float32 to
+  float64
 
 ## v0.15.4 (2021-10-17)
 
 ### Fix
 
-- **preprocessing/image**: change autocast dtypes to float32 everywhere except `downscale`, for which we keep float64
+- **preprocessing/image**: change autocast dtypes to float32 everywhere except
+  `downscale`, for which we keep float64
 
 ## v0.15.3 (2021-10-16)
 
 ### Feat
 
-- **preprocessing/image**: automatically convert image-like input to float64 `tf.Tensor`s in image manipulation functions
+- **preprocessing/image**: automatically convert image-like input to float64
+  `tf.Tensor`s in image manipulation functions
 
 ## v0.15.2 (2021-10-15)
 
 ### Feat
 
-- **scripts/make-dataset**: accept an optional custom experiment video dataset saver function in `make_dataset` script
+- **scripts/make-dataset**: accept an optional custom experiment video dataset
+  saver function in `make_dataset` script
 
 ### Refactor
 
-- **management/Manager**: improve some parts of the code in `Manager.py` and fix some typing issues
+- **management/Manager**: improve some parts of the code in `Manager.py` and fix
+  some typing issues
 
 ## v0.15.1 (2021-10-14)
 
@@ -200,15 +232,19 @@
 
 ### Feat
 
-- **preprocessing/experiment-video**: accept optional `image_preprocessor` parameter in `ExperimentVideo.as_pairs` to transform images before producing a `Slicerator`
+- **preprocessing/experiment-video**: accept optional `image_preprocessor`
+  parameter in `ExperimentVideo.as_pairs` to transform images before producing a
+  `Slicerator`
 - **typings**: include partial type stubs folder for `slicerator` dependency
 
 ### Refactor
 
 - **typing**: add type annotation to `Slicerator`s all over the project
 - **datasets/datasets**: remove no-longer-used `Split` class
-- **preprocessing/preprocessing**: remove no-longer-used old code for transforming datasets
-- **utils/utils**: replace seemingly useless `empty_gen` function with an empty tuple `()`
+- **preprocessing/preprocessing**: remove no-longer-used old code for
+  transforming datasets
+- **utils/utils**: replace seemingly useless `empty_gen` function with an empty
+  tuple `()`
 - **utils/dtypes**: remove unused `print` statements from `auto_spec`
 - **utils/dtypes**: remove unused `print` statements from `auto_spec`
 
@@ -219,19 +255,22 @@
 
 ### Fix
 
-- **preprocessing/experiment-video**: remove calls to no-longer-existant `ExperimentVideo.save` method
+- **preprocessing/experiment-video**: remove calls to no-longer-existant
+  `ExperimentVideo.save` method
 
 ## v0.14.5 (2021-10-12)
 
 ### Fix
 
-- **experiment-video**: fix experimental dataframe conversion to records list in `ExperimentVideo.as_pairs`
+- **experiment-video**: fix experimental dataframe conversion to records list in
+  `ExperimentVideo.as_pairs`
 
 ## v0.14.4 (2021-10-12)
 
 ### Refactor
 
-- **datasets**: utilize slicerators instead of datasets in the early setup of experiment video datasets for blazingly fast computations
+- **datasets**: utilize slicerators instead of datasets in the early setup of
+  experiment video datasets for blazingly fast computations
 - **mathutils**: improve type annotation in `mathutils` module
 
 ### Fix
@@ -241,9 +280,11 @@
 ### Feat
 
 - **iterutils**: add functions to get indices or masks of evenly spaced items
-- **experiment-video**: add `slicerator` functionality to `ExperimentVideo`s for lazy slicing
+- **experiment-video**: add `slicerator` functionality to `ExperimentVideo`s for
+  lazy slicing
 - **datasets**: make dataset functions `None`- and `DatasetTriplet`-aware
-- **datasets**: add `triplet_aware` decorator to make single-dataset functions accept dataset triplets
+- **datasets**: add `triplet_aware` decorator to make single-dataset functions
+  accept dataset triplets
 
 ## v0.14.3 (2021-10-08)
 
@@ -253,7 +294,8 @@
 
 ### Refactor
 
-- **flake8**: move `flake8` configuration to `tox.ini` and delete old `setup.cfg` file
+- **flake8**: move `flake8` configuration to `tox.ini` and delete old
+  `setup.cfg` file
 
 ## v0.14.0 (2021-10-07)
 
@@ -268,14 +310,17 @@
 
 ### Refactor
 
-- **scripts**: move optional imports out of function definition and into the module scope
-- **preprocessing**: remove unused `save` parameter in `ExperimentVideo.frames_to_tensor`
+- **scripts**: move optional imports out of function definition and into the
+  module scope
+- **preprocessing**: remove unused `save` parameter in
+  `ExperimentVideo.frames_to_tensor`
 - **model-definitions**: comment out old model definitions
 
 ### BREAKING CHANGE
 
 - Removed parameter `save` from `ExperimentVideo.frames_to_tensor`.
-- BREAKING CHANGE: old models are no longer available through boiling_learning.model._definitions.<model name>
+- BREAKING CHANGE: old models are no longer available through
+  boiling_learning.model.\_definitions.<model name>
 
 ## v0.13.5 (2021-09-29)
 
@@ -294,22 +339,26 @@
 
 ### Feat
 
-- **scripts**: accept verbosity flag in `connect_gpus` script and add check for NVIDIA output
+- **scripts**: accept verbosity flag in `connect_gpus` script and add check for
+  NVIDIA output
 - **scripts**: add script for connecting with GPUs
 
 ## v0.13.2 (2021-09-26)
 
 ### Feat
 
-- **pack**: implement `Pack` partial application using the matrix multiplication operator `@`
-- **datasets**: provide decorator for silencing errors when functions are passed `None`s instead of datasets
+- **pack**: implement `Pack` partial application using the matrix multiplication
+  operator `@`
+- **datasets**: provide decorator for silencing errors when functions are passed
+  `None`s instead of datasets
 - **transformers**: add shortcut decorators `creator` and `transformer`
 
 ## v0.13.1 (2021-09-14)
 
 ### Refactor
 
-- **preprocessing**: move video functionality to its own class, out of `ExperimentVideo`
+- **preprocessing**: move video functionality to its own class, out of
+  `ExperimentVideo`
 - **management**: move lazy functionality from management to utils subpackage
 
 ### Feat
@@ -343,13 +392,17 @@
 
 ### Fix
 
-- **io**: fix dispatching bug in JSON (de)serialization and its coupling with table dispatching
+- **io**: fix dispatching bug in JSON (de)serialization and its coupling with
+  table dispatching
 
 ### Feat
 
-- **management**: implement disk caching function based on allocators and providers
-- **datasets**: add functions for calculating dataset stats and prediction metrics
-- **utils**: implement a function for generating context-managed temporary file paths
+- **management**: implement disk caching function based on allocators and
+  providers
+- **datasets**: add functions for calculating dataset stats and prediction
+  metrics
+- **utils**: implement a function for generating context-managed temporary file
+  paths
 
 ### Refactor
 
@@ -367,13 +420,16 @@
 
 ### Refactor
 
-- simplify code by using Sourcery's suggestions and removing unused functionality
+- simplify code by using Sourcery's suggestions and removing unused
+  functionality
 - **scripts**: extract target getting functionality as a function
-- import TensorFlow's `AUTOTUNE` from `tensorflow.data` instead of from the experimental module
+- import TensorFlow's `AUTOTUNE` from `tensorflow.data` instead of from the
+  experimental module
 
 ### Feat
 
-- **datasets**: add `*_flattened` functions, which are shorthand versions of their `*_unbatched` counterparts when the batching key is zero
+- **datasets**: add `*_flattened` functions, which are shorthand versions of
+  their `*_unbatched` counterparts when the batching key is zero
 
 ## v0.11.0 (2021-08-01)
 
@@ -389,50 +445,62 @@
 
 ### Feat
 
-- **scripts**: add script for making boiling dataset preprocessors and data augmentors
-- **scripts**: implement script for creating preprocessors and data augmentors for condensation datasets
+- **scripts**: add script for making boiling dataset preprocessors and data
+  augmentors
+- **scripts**: implement script for creating preprocessors and data augmentors
+  for condensation datasets
 - **scripts**: add script for programmatically making datasets
-- **scripts**: add script for programmatically creating, compiling and fitting models
+- **scripts**: add script for programmatically creating, compiling and fitting
+  models
 
 ### Refactor
 
-- **scripts**: add a custom runtime error to `make_condensation_processors` in case users try to execute it as a standalone script
+- **scripts**: add a custom runtime error to `make_condensation_processors` in
+  case users try to execute it as a standalone script
 
 ## v0.10.0 (2021-07-23)
 
 ### Feat
 
-- **scripts**: accept `figsize` parameter to configure figure size directly in consecutive frames analysis
+- **scripts**: accept `figsize` parameter to configure figure size directly in
+  consecutive frames analysis
 - **scripts**: accept custom frames indexing in consecutive frames analysis
 
 ### Refactor
 
 - **scripts**: add legend to downsampling analysis plots
-- **scripts**: improve downsampling evaluation script with a better plot and more customization options
+- **scripts**: improve downsampling evaluation script with a better plot and
+  more customization options
 
 ### BREAKING CHANGE
 
-- The argument `frames` is now an iterable of tuples `(index, frame)` instead of being simply an iterable of frames. Code using previous versions can be updated by replacing `main(frames, ...)` with `main(enumerate(frames), ...)`.
+- The argument `frames` is now an iterable of tuples `(index, frame)` instead of
+  being simply an iterable of frames. Code using previous versions can be
+  updated by replacing `main(frames, ...)` with `main(enumerate(frames), ...)`.
 
 ## v0.9.6 (2021-07-22)
 
 ### Fix
 
-- **preprocessing**: allow omitting `frames_tensor_path` when converting `ExperimentVideo`s to datasets without saving
+- **preprocessing**: allow omitting `frames_tensor_path` when converting
+  `ExperimentVideo`s to datasets without saving
 
 ## v0.9.5 (2021-07-20)
 
 ### Feat
 
 - **scripts**: define script for setting video data for condensation datasets
-- **scripts**: define `set_boiling_cases_data` script for adding video data to boiling cases
-- **scripts**: add default error when trying to execute `load_cases` and `load_dataset_tree` as standalone scripts
+- **scripts**: define `set_boiling_cases_data` script for adding video data to
+  boiling cases
+- **scripts**: add default error when trying to execute `load_cases` and
+  `load_dataset_tree` as standalone scripts
 
 ## v0.9.4 (2021-07-20)
 
 ### Feat
 
-- **scripts**: add script for loading a video dataset tree in the form case:subcase:test:video
+- **scripts**: add script for loading a video dataset tree in the form
+  case:subcase:test:video
 
 ## v0.9.3 (2021-07-20)
 
@@ -448,7 +516,8 @@
 
 ### Fix
 
-- **visualization**: avoid `IndexError`s when interacting frames by correctly limiting the frames `IntSlider` widget
+- **visualization**: avoid `IndexError`s when interacting frames by correctly
+  limiting the frames `IntSlider` widget
 
 ## v0.9.1 (2021-07-14)
 
@@ -458,13 +527,16 @@
 
 ### Refactor
 
-- **preprocessing**: remove old commented code from `ExperimentVideo` source file
+- **preprocessing**: remove old commented code from `ExperimentVideo` source
+  file
 
 ## v0.9.0 (2021-07-14)
 
 ### Fix
 
-- **preprocessing**: remove competitive behaviour between `ExperimentVideo.open_video` and `ExperimentVideo.data.setter` when defining the end index
+- **preprocessing**: remove competitive behaviour between
+  `ExperimentVideo.open_video` and `ExperimentVideo.data.setter` when defining
+  the end index
 
 ### Refactor
 
@@ -478,13 +550,15 @@
 
 ### Fix
 
-- **preprocessing**: use built-in `round` instead of trying (and failing) to import from `math`
+- **preprocessing**: use built-in `round` instead of trying (and failing) to
+  import from `math`
 
 ## v0.8.1 (2021-07-13)
 
 ### Feat
 
-- **preprocessing**: allow setting experiment video `start` and `end` in `VideoData`
+- **preprocessing**: allow setting experiment video `start` and `end` in
+  `VideoData`
 
 ## v0.8.0 (2021-07-12)
 
@@ -494,7 +568,8 @@
 
 ### BREAKING CHANGE
 
-- Previous frame access methods were removed: `.frame()`, `.frames()` and `.sequential_frames()`
+- Previous frame access methods were removed: `.frame()`, `.frames()` and
+  `.sequential_frames()`
 
 ### Refactor
 
@@ -510,27 +585,33 @@
 
 ### Fix
 
-- **visualization**: rename visualizer "boiling_region_cropper" as "region_cropper" to allow different use cases
+- **visualization**: rename visualizer "boiling_region_cropper" as
+  "region_cropper" to allow different use cases
 
 ### BREAKING CHANGE
 
-- Transformers named "boiling_region_cropper" are no longer accepted. Please rename them as "region_cropper".
+- Transformers named "boiling_region_cropper" are no longer accepted. Please
+  rename them as "region_cropper".
 
 ## v0.6.0 (2021-07-08)
 
 ### Fix
 
-- **visualization**: rename annotator "boiling_region_cropper" as "region_cropper" to semantically allow non-boiling transformers
+- **visualization**: rename annotator "boiling_region_cropper" as
+  "region_cropper" to semantically allow non-boiling transformers
 
 ### BREAKING CHANGE
 
-- `DictImageTransformer`s named "boiling_region_cropper" are no longer accepted by visualization functions since they now lack annotators. Please rename them as "region_cropper" to get identical functionality as before.
+- `DictImageTransformer`s named "boiling_region_cropper" are no longer accepted
+  by visualization functions since they now lack annotators. Please rename them
+  as "region_cropper" to get identical functionality as before.
 
 ## v0.5.3 (2021-07-08)
 
 ### Fix
 
-- **preprocessing**: fix dataframe type conversion when elapsed time column is absent
+- **preprocessing**: fix dataframe type conversion when elapsed time column is
+  absent
 
 ## v0.5.2 (2021-07-06)
 
@@ -542,7 +623,8 @@
 
 ### Fix
 
-- **models**: accept the same arguments in `LinearModel` that we accept in the other models
+- **models**: accept the same arguments in `LinearModel` that we accept in the
+  other models
 
 ## v0.5.0 (2021-07-05)
 
@@ -556,7 +638,8 @@
 
 ### Refactor
 
-- **scripts**: improve output from consecutive frames and downsampling analysis scripts
+- **scripts**: improve output from consecutive frames and downsampling analysis
+  scripts
 
 ## v0.3.4 (2021-06-28)
 
@@ -568,7 +651,8 @@
 
 ### Feat
 
-- **transformers**: refactor KeyedImageDatasetTransformer for better compatibility with DictImageTransformer
+- **transformers**: refactor KeyedImageDatasetTransformer for better
+  compatibility with DictImageTransformer
 
 ### BREAKING CHANGE
 
@@ -576,7 +660,8 @@
 
 ### Fix
 
-- **git**: fix bug in commitizen configuration that still allowed the MAJOR version to increase
+- **git**: fix bug in commitizen configuration that still allowed the MAJOR
+  version to increase
 
 ## v0.3.2 (2021-06-25)
 
@@ -607,7 +692,7 @@
 
 ### Refactor
 
-- **image-preprocessing**: rename *_image_variance* as *variance*
+- **image-preprocessing**: rename *\_image_variance* as *variance*
 
 ### Fix
 
