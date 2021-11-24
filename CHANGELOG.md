@@ -1,3 +1,14 @@
+## v0.17.12 (2021-11-23)
+
+### Fix
+
+- try to fix the project versioning again
+- fix project versioning
+
+### Feat
+
+- **preprocessing/video**: add automatic video shrinking to avoid failing because of empty frames
+
 ## v0.17.11 (2021-11-23)
 
 ### Feat
