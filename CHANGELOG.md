@@ -1,10 +1,3 @@
-## v0.17.12 (2021-11-23)
-
-### Feat
-
-- **preprocessing/video**: add automatic video shrinking to avoid failing
-  because of empty frames
-
 ## v0.17.11 (2021-11-23)
 
 ### Feat
