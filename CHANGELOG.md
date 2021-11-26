@@ -1,3 +1,9 @@
+## v0.17.15 (2021-11-25)
+
+### Fix
+
+- **preprocessing/experiment-video**: open video before trying to access it in experiment video instances
+
 ## v0.17.14 (2021-11-25)
 
 ### Fix
