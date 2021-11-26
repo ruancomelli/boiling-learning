@@ -183,7 +183,6 @@ def main(
 
             print_verbose(verbose >= 2, f'Setting video data for EV "{ev_name}"')
             ev.set_video_data(videodata)
-            print_verbose(verbose, f'{ev_name} -> [{ev.start}, {ev.end}) :: {categories}')
 
             dataset_name = ':'.join((case, subcase))
             datasets_dict[dataset_name].add(ev)

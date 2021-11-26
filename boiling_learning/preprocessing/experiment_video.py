@@ -209,14 +209,21 @@ class ExperimentVideo(Video):
         self._data = data
 
         if data.start_index is not None:
-            self.start = data.start_index
+            start = data.start_index
         elif data.start_elapsed_time is not None:
-            self.start = round(data.start_elapsed_time.total_seconds() * data.fps)
+            start = round(data.start_elapsed_time.total_seconds() * data.fps)
+        else:
+            start = 0
 
         if data.end_index is not None:
-            self.end = data.end_index
+            end = data.end_index
         elif data.end_elapsed_time is not None:
-            self.end = round(data.end_elapsed_time.total_seconds() * data.fps)
+            end = round(data.end_elapsed_time.total_seconds() * data.fps)
+        else:
+            end = None
+
+        if start != 0 or end is not None:
+            self.video = self.video[start:end]
 
     def convert_video(
         self,
