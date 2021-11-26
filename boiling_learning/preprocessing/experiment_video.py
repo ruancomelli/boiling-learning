@@ -208,6 +208,9 @@ class ExperimentVideo(Video):
     def data(self, data: VideoData) -> None:
         self._data = data
 
+        start: int
+        end: Optional[int]
+
         if data.start_index is not None:
             start = data.start_index
         elif data.start_elapsed_time is not None:
@@ -223,6 +226,7 @@ class ExperimentVideo(Video):
             end = None
 
         if start != 0 or end is not None:
+            self.open()
             self.video = self.video[start:end]
 
     def convert_video(
