@@ -1,3 +1,9 @@
+## v0.17.14 (2021-11-25)
+
+### Fix
+
+- **preprocessing**: update client code to the new `preprocessing.video.Video` API
+
 ## v0.17.13 (2021-11-24)
 
 ## v0.17.12 (2021-11-23)
