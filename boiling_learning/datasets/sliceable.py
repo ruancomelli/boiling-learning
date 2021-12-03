@@ -388,9 +388,9 @@ def _json_encode_numpy_array(obj: np.ndarray) -> str:
     return tricks.dumps(obj)
 
 
-# @json.decode.dispatch(np.ndarray)
-# def _json_decode_numpy_array(obj: str) -> np.ndarray:
-#     return tricks.loads(obj)
+@json.decode.dispatch(np.ndarray)
+def _json_decode_numpy_array(obj: str) -> np.ndarray:
+    return tricks.loads(obj)
 
 
 @json.encode.instance(tf.Tensor)
@@ -398,12 +398,12 @@ def _json_encode_tensor(obj: tf.Tensor) -> dict:
     return {'tensor': tf.io.serialize_tensor(obj), 'dtype': tf_str_dtype_bidict.inverse[obj.dtype]}
 
 
-# @json.decode.dispatch(tf.Tensor)
-# def _json_decode_tensor(obj: Dict[str, Any]) -> tf.Tensor:
-#     tensor = obj['tensor']
-#     dtype = tf_str_dtype_bidict[obj['dtype']]
+@json.decode.dispatch(tf.Tensor)
+def _json_decode_tensor(obj: Dict[str, Any]) -> tf.Tensor:
+    tensor = obj['tensor']
+    dtype = tf_str_dtype_bidict[obj['dtype']]
 
-#     return tf.io.parse_tensor(tensor, dtype)
+    return tf.io.parse_tensor(tensor, dtype)
 
 
 def save_sliceable_dataset(obj: SliceableDataset[Any], path: PathLike) -> None:
