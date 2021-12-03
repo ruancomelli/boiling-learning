@@ -1,13 +1,18 @@
 from collections import defaultdict
 from fractions import Fraction
 from functools import partial
-from typing import Container, Optional, Sequence, Tuple, Union
+from pathlib import Path
+from typing import Any, Container, Optional, Sequence, Tuple, Union
 
 import dataclassy
 import funcy
 
 from boiling_learning.datasets import DatasetSplits
-from boiling_learning.datasets.sliceable import load_sliceable_dataset, save_sliceable_dataset
+from boiling_learning.datasets.sliceable import (
+    SliceableDataset,
+    load_sliceable_dataset,
+    save_sliceable_dataset,
+)
 from boiling_learning.io.io import (
     DatasetTriplet,
     SaverFunction,
@@ -92,12 +97,14 @@ def main(
     }
 
     if experiment_video_saver is None:
-        if as_tensors:
-            experiment_video_saver = saver_dataset_triplet(save_dataset)
-        else:
-            experiment_video_saver = saver_dataset_triplet(save_sliceable_dataset)
+        experiment_video_saver = (
+            saver_dataset_triplet(save_dataset)
+            if as_tensors
+            else saver_dataset_triplet(save_sliceable_dataset)
+        )
 
     dataset_params[['creator', 'value', 'save']] = experiment_video_saver
+
     dataset_params[['creator', 'desc', 'load']] = {
         'name': 'bl.io.load_dataset',
         'params': P(),
@@ -137,12 +144,34 @@ def main(
         missing_ok=True,
     )
 
+    if as_tensors:
+        loader = loader_dataset_triplet(
+            add_bool_flag(
+                partial(load_yogadl, dataset_id=dataset_id, shuffle=shuffle, shuffle_seed=2020),
+                (FileNotFoundError, AssertionError),
+            )
+        )
+        saver = saver_dataset_triplet(partial(save_yogadl, dataset_id=dataset_id))
+    else:
+
+        @loader_dataset_triplet
+        @add_bool_flag
+        def loader(path: Path) -> SliceableDataset[Any]:
+            return load_sliceable_dataset(path).shuffle()
+
+        saver = saver_dataset_triplet(save_sliceable_dataset)
+
     # dataset_params[['creator', 'value', 'save']] = bl.io.saver_dataset_triplet(
     #     partial(bl.io.save_yogadl, dataset_id=dataset_id)
     # )
     # dataset_params[['creator', 'value', 'load']] = bl.io.loader_dataset_triplet(
     #     bl.io.add_bool_flag(
-    #         partial(bl.io.load_yogadl, dataset_id=dataset_id, shuffle=load_shuffle, shuffle_seed=2020),
+    #         partial(
+    #             bl.io.load_yogadl,
+    #             dataset_id=dataset_id,
+    #             shuffle=load_shuffle,
+    #             shuffle_seed=2020
+    #         ),
     #         (FileNotFoundError, AssertionError)
     #     )
     # )
@@ -156,18 +185,8 @@ def main(
         creator_params=Kwargs(dataset_params[['creator', 'value']]),
         post_processor_description=Kwargs(dataset_params[['post_processor', 'desc']]),
         post_processor_params=Kwargs(dataset_params[['post_processor', 'value']]),
-        load=loader_dataset_triplet(
-            add_bool_flag(
-                partial(
-                    load_yogadl,
-                    dataset_id=dataset_id,
-                    shuffle=shuffle,
-                    shuffle_seed=2020,
-                ),
-                (FileNotFoundError, AssertionError),
-            )
-        ),
-        save=saver_dataset_triplet(partial(save_yogadl, dataset_id=dataset_id)),
+        load=loader,
+        save=saver,
     )
 
 
