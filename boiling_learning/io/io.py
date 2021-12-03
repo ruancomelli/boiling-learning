@@ -63,11 +63,8 @@ BoolFlaggedLoaderFunction = LoaderFunction[BoolFlagged[_S]]
 
 def add_bool_flag(
     loader: LoaderFunction[_T],
-    expected_exceptions: Union[Type[Exception], Sequence[Type[Exception]]] = FileNotFoundError,
+    expected_exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]] = FileNotFoundError,
 ) -> BoolFlaggedLoaderFunction[Optional[_T]]:
-    if isinstance(expected_exceptions, Sequence):
-        expected_exceptions = tuple(expected_exceptions)
-
     def _loader(path: PathLike) -> BoolFlagged[Optional[_T]]:
         try:
             return True, loader(path)
