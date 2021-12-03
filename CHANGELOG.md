@@ -1,3 +1,10 @@
+## v0.17.16 (2021-12-02)
+
+### Fix
+
+- **scripts/make-dataset**: fix saver and loader in `make_dataset` when using `as_tensors=False`
+- **io**: fix typing for expected exceptions in `add_bool_flag`
+
 ## v0.17.15 (2021-11-25)
 
 ### Fix
