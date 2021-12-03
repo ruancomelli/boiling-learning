@@ -1,3 +1,9 @@
+## v0.17.17 (2021-12-02)
+
+### Fix
+
+- **datasets/sliceable**: readd numpy arrays and tensorflow tensors decoding functions
+
 ## v0.17.16 (2021-12-02)
 
 ### Fix
