@@ -107,6 +107,10 @@ def none_aware(
         return f(ds, *args, **kwargs)
 
 
+def is_dataset_triplet(obj: Any) -> bool:
+    return isinstance(obj, tuple) and len(obj) == 3
+
+
 @decorator
 def triplet_aware(
     f: Callable[..., _T],
@@ -140,7 +144,7 @@ def triplet_aware(
     '''
     partialized: Callable[[tf.data.Dataset], _T] = rpartial(f, *args, **kwargs)
 
-    if isinstance(ds, tf.data.Dataset):
+    if not is_dataset_triplet(ds):
         return partialized(ds)
 
     ds_train, ds_val, ds_test = ds
