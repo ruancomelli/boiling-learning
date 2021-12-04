@@ -1,3 +1,9 @@
+## v0.17.18 (2021-12-04)
+
+### Fix
+
+- **datasets**: improve \`triplet_aware\` decorator to handle any kind of datasets
+
 ## v0.17.17 (2021-12-02)
 
 ### Fix
