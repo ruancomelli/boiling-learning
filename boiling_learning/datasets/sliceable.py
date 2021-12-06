@@ -51,7 +51,7 @@ class SliceableDataset(Sequence[_T]):
 
     @staticmethod
     def from_func(func: Callable[[int], _T], *, length: int) -> SliceableDataset[_T]:
-        return SliceableDataset.from_func(func, length=length)
+        return SliceableDataset(Slicerator.from_func(func, length=length))
 
     @staticmethod
     def range(
@@ -59,7 +59,7 @@ class SliceableDataset(Sequence[_T]):
     ) -> SliceableDataset[int]:
         r: range = (
             range(start, stop, step)
-            if step is not None
+            if step is not None and stop is not None
             else range(start, stop)
             if stop is not None
             else range(start)
