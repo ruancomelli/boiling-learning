@@ -1,3 +1,9 @@
+## v0.17.20 (2021-12-06)
+
+### Feat
+
+- **datasets/sliceable**: support `.prefetch` and `.batch` operations on sliceable datasets
+
 ## v0.17.19 (2021-12-06)
 
 ### Fix
