@@ -323,7 +323,9 @@ def map_unbatched(
     dim: int = 0,
     key: Optional[int] = None,
 ) -> tf.data.Dataset:
-    return apply_unbatched(dataset, lambda ds: ds.map(map_fn), dim=dim, key=key)
+    return apply_unbatched(
+        dataset, lambda ds: ds.map(map_fn, num_parallel_calls=AUTOTUNE), dim=dim, key=key
+    )
 
 
 @triplet_aware

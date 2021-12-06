@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import random
+import warnings
 from fractions import Fraction
 from operator import itemgetter
 from pathlib import Path
@@ -169,7 +170,15 @@ class SliceableDataset(Sequence[_T]):
     def filter(self, predicate: Optional[Callable[[_T], bool]] = None) -> SliceableDataset[_T]:
         return SliceableDataset(Slicerator(filter(predicate, self), length=len(self)))
 
-    def map(self, map_func: Callable[[_T], _U]) -> SliceableDataset[_U]:
+    def map(
+        self, map_func: Callable[[_T], _U], num_parallel_calls: Optional[int] = None
+    ) -> SliceableDataset[_U]:
+        if num_parallel_calls is not None:
+            warnings.warn(
+                '`num_parallel_calls` is ignored in `SliceableDataset.map` '
+                'and supported only for compatibility with `tf.data.Dataset`s'
+            )
+
         pipeline_map = pipeline(map_func)
 
         return SliceableDataset(pipeline_map(self._data))
