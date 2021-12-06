@@ -1,3 +1,9 @@
+## v0.17.21 (2021-12-06)
+
+### Fix
+
+- **datasets/sliceable**: return `None` instead of empty sliceable datasets in experiment video dataset creator
+
 ## v0.17.20 (2021-12-06)
 
 ### Feat
