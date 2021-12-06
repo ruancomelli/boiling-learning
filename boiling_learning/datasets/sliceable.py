@@ -125,14 +125,20 @@ class SliceableDataset(Sequence[_T]):
         ...
 
     @overload
-    def __getitem__(self, key: Union[slice, Iterable[Union[bool, int]]]) -> SliceableDataset[_T]:
+    def __getitem__(
+        self, key: Union[slice, Sequence[bool], Iterable[int]]
+    ) -> SliceableDataset[_T]:
         ...
 
     def __getitem__(
-        self, key: Union[int, slice, Iterable[Union[bool, int]]]
+        self, key: Union[int, slice, Sequence[bool], Iterable[int]]
     ) -> Union[_T, SliceableDataset[_T]]:
         if isinstance(key, int):
             return self._data[key]
+
+        if _is_boolean_mask_for_dataset(self, key):
+            indices = [index for index, boolean in enumerate(key) if boolean]
+            return SliceableDataset(self._data[indices])
 
         return SliceableDataset(self._data[key])
 
@@ -464,3 +470,11 @@ def load_sliceable_dataset(path: PathLike) -> SliceableDataset[Any]:
         return json.load(resolved_path / f'{index}.json')
 
     return SliceableDataset.from_func(_get_element, length=spec['length'])
+
+
+def _is_boolean_mask_for_dataset(dataset: SliceableDataset[Any], key: Any) -> bool:
+    return (
+        isinstance(key, Sequence)
+        and len(key) == len(dataset)
+        and all(isinstance(elem, bool) for elem in key)
+    )
