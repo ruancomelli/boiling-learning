@@ -105,7 +105,12 @@ def _experiment_video_dataset_creator_arrays(
     for preprocessor in data_preprocessors:
         ds = ds.map(preprocessor)
 
-    return ds.shuffle().split(splits.train, splits.val, splits.test)
+    ds_train, ds_val, ds_test = ds.shuffle().split(splits.train, splits.val, splits.test)
+
+    if not ds_val:
+        ds_val = None
+
+    return ds_train, ds_val, ds_test
 
 
 @creator(expand_pack_on_call=True)

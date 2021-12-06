@@ -50,6 +50,10 @@ class SliceableDataset(Sequence[_T]):
         self._data: Slicerator[_T] = Slicerator(ancestor)
 
     @staticmethod
+    def from_func(func: Callable[[int], _T], *, length: int) -> SliceableDataset[_T]:
+        return SliceableDataset.from_func(func, length=length)
+
+    @staticmethod
     def range(
         start: int, stop: Optional[int] = None, step: Optional[int] = None
     ) -> SliceableDataset[int]:
@@ -114,7 +118,7 @@ class SliceableDataset(Sequence[_T]):
         def getitem(i: int) -> Tuple[Any, ...]:
             return tuple(ds[i] for ds in all_datasets)
 
-        return SliceableDataset(Slicerator.from_func(getitem, length=lenghts[0]))
+        return SliceableDataset.from_func(getitem, length=lenghts[0])
 
     @overload
     def __getitem__(self, key: int) -> _T:
@@ -163,7 +167,7 @@ class SliceableDataset(Sequence[_T]):
                 f'Got index {index}.'
             )
 
-        return SliceableDataset(Slicerator.from_func(new_data, length=total_length))
+        return SliceableDataset.from_func(new_data, length=total_length)
 
     def enumerate(self) -> SliceableDataset[Tuple[int, _T]]:
         return SliceableDataset(Slicerator(enumerate(self), length=len(self)))
@@ -267,7 +271,7 @@ class SliceableDataset(Sequence[_T]):
             end = start + batch_size
             return self[start:end]
 
-        return SliceableDataset(Slicerator.from_func(new_data, length=new_length))
+        return SliceableDataset.from_func(new_data, length=new_length)
 
     @property
     def element_spec(self) -> NestedTypeSpec:
@@ -373,7 +377,7 @@ class SupervisedSliceableDataset(SliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y
 
     def split(
         self, *sizes: Optional[Union[int, Fraction]]
-    ) -> Tuple[SupervisedSliceableDataset[_T], ...]:
+    ) -> Tuple[SupervisedSliceableDataset[_X, _Y], ...]:
         return tuple(
             SupervisedSliceableDataset.from_pairs(split) for split in super().split(*sizes)
         )
@@ -459,4 +463,4 @@ def load_sliceable_dataset(path: PathLike) -> SliceableDataset[Any]:
     def _get_element(index: int) -> Any:
         return json.load(resolved_path / f'{index}.json')
 
-    return SliceableDataset(Slicerator.from_func(_get_element, length=spec['length']))
+    return SliceableDataset.from_func(_get_element, length=spec['length'])
