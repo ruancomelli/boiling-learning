@@ -1,3 +1,9 @@
+## v0.17.19 (2021-12-06)
+
+### Fix
+
+- **datasets/sliceable**: support `num_parallel_calls` argument in `.map` method in sliceable datasets
+
 ## v0.17.18 (2021-12-04)
 
 ### Fix
