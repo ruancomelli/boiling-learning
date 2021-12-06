@@ -62,3 +62,24 @@ def test_apply() -> None:
 
     sds = SliceableDataset([3, 1, 4, 1, 5])
     assert list(sds.apply(stringify)) == list(stringify(sds)) == ['3', '1', '4', '1', '5']
+
+
+def test_concatenate() -> None:
+    sds1 = SliceableDataset([4, 3, 2, 1])
+    sds2 = SliceableDataset('abcd')
+    sds = sds1.concatenate(sds2)
+
+    assert isinstance(sds, SliceableDataset)
+    assert list(sds) == [4, 3, 2, 1, 'a', 'b', 'c', 'd']
+
+
+def test_enumerate() -> None:
+    sds = SliceableDataset('abcd')
+
+    assert isinstance(sds.enumerate(), SliceableDataset)
+    assert list(sds.enumerate()) == [(0, 'a'), (1, 'b'), (2, 'c'), (3, 'd')]
+
+
+def test_map() -> None:
+    sds = SliceableDataset('abcd')
+    assert list(sds.map(str.upper)) == ['A', 'B', 'C', 'D']

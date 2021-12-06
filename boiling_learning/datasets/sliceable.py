@@ -176,10 +176,11 @@ class SliceableDataset(Sequence[_T]):
         return SliceableDataset.from_func(new_data, length=total_length)
 
     def enumerate(self) -> SliceableDataset[Tuple[int, _T]]:
-        return SliceableDataset(Slicerator(enumerate(self), length=len(self)))
+        def getitem(index: int) -> Tuple[int, _T]:
+            absolute_index = _absolute_index_for_dataset(self, index)
+            return absolute_index, self[absolute_index]
 
-    def filter(self, predicate: Optional[Callable[[_T], bool]] = None) -> SliceableDataset[_T]:
-        return SliceableDataset(Slicerator(filter(predicate, self), length=len(self)))
+        return SliceableDataset.from_func(getitem, length=len(self))
 
     def map(
         self, map_func: Callable[[_T], _U], num_parallel_calls: Optional[int] = None
@@ -478,3 +479,10 @@ def _is_boolean_mask_for_dataset(dataset: SliceableDataset[Any], key: Any) -> bo
         and len(key) == len(dataset)
         and all(isinstance(elem, bool) for elem in key)
     )
+
+
+def _absolute_index_for_dataset(dataset: SliceableDataset[Any], index: int) -> int:
+    if index < 0:
+        return len(dataset) + index
+
+    return index
