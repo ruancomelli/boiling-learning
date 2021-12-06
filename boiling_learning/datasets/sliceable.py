@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import random
 import warnings
 from fractions import Fraction
@@ -242,6 +243,31 @@ class SliceableDataset(Sequence[_T]):
             remaining = remaining.skip(size)
 
         return tuple(splits)
+
+    def prefetch(self, buffer_size: Optional[int] = None) -> SliceableDataset[_T]:
+        warnings.warn(
+            '`SliceableDataset.prefetch` is a no-op, kept only for consistency'
+            ' with `tf.data.Dataset`s.'
+        )
+        return self
+
+    def batch(
+        self, batch_size: int, *, num_parallel_calls: Optional[int] = None
+    ) -> SliceableDataset[SliceableDataset[_T]]:
+        if num_parallel_calls is not None:
+            warnings.warn(
+                '`num_parallel_calls` is ignored in `SliceableDataset.batch` '
+                'and supported only for compatibility with `tf.data.Dataset`s'
+            )
+
+        new_length: int = math.ceil(len(self) / batch_size)
+
+        def new_data(index: int) -> SliceableDataset[_T]:
+            start = index * batch_size
+            end = start + batch_size
+            return self[start:end]
+
+        return SliceableDataset(Slicerator.from_func(new_data, length=new_length))
 
     @property
     def element_spec(self) -> NestedTypeSpec:
