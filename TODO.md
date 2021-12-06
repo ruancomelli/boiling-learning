@@ -559,3 +559,4 @@ print(pipe())
   [`TinyDB`](https://tinydb.readthedocs.io/en/latest/) instance.
 - \[ \] automatically test length in `preprocessing.videos.Video` by trying to
   read the last frames.
+- \[ \] take a look at [`ndindex`](https://quansight-labs.github.io/ndindex/index.html)
