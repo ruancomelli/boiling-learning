@@ -1,3 +1,9 @@
+## v0.17.22 (2021-12-06)
+
+### Fix
+
+- **datasets/sliceable**: fix recursion bug in sliceable datasets
+
 ## v0.17.21 (2021-12-06)
 
 ### Fix
