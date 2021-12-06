@@ -1,3 +1,10 @@
+## v0.17.23 (2021-12-06)
+
+### Fix
+
+- **datasets/sliceable**: remove buggy `SliceableDataset.filter` method
+- **datasets/sliceable**: fix sliceable dataset bool masking
+
 ## v0.17.22 (2021-12-06)
 
 ### Fix
