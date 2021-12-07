@@ -109,3 +109,13 @@ def test_shuffle() -> None:
         shuffled = sds.shuffle()
 
     assert ''.join(shuffled) == shuffled_data == 'yhczewmkouqnaglvxrtsibjpdf'
+
+
+def test_skip() -> None:
+    sds = SliceableDataset('abcdefghijklmnopqrstuvwxyz')
+    assert ''.join(sds.skip(10)) == 'klmnopqrstuvwxyz'
+
+
+def test_take() -> None:
+    sds = SliceableDataset('abcdefghijklmnopqrstuvwxyz')
+    assert ''.join(sds.take(10)) == 'abcdefghij'
