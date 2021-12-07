@@ -1,4 +1,8 @@
+from fractions import Fraction
+from random import sample
+
 from boiling_learning.datasets.sliceable import SliceableDataset
+from boiling_learning.utils.random import random_state
 
 
 def test_basics() -> None:
@@ -83,3 +87,25 @@ def test_enumerate() -> None:
 def test_map() -> None:
     sds = SliceableDataset('abcd')
     assert list(sds.map(str.upper)) == ['A', 'B', 'C', 'D']
+
+
+def test_split() -> None:
+    sds = SliceableDataset('abcdefghijklmnopqrstuvwxyz')
+    splits = sds.split(5, 0, None, Fraction(1, 4))
+
+    assert ''.join(splits[0]) == 'abcde'
+    assert ''.join(splits[1]) == ''
+    assert ''.join(splits[2]) == 'fghijklmnopqrst'
+    assert ''.join(splits[3]) == 'uvwxyz'
+
+
+def test_shuffle() -> None:
+    data = 'abcdefghijklmnopqrstuvwxyz'
+    with random_state(1997):
+        shuffled_data = ''.join(sample(data, k=len(data)))
+
+    sds = SliceableDataset(data)
+    with random_state(1997):
+        shuffled = sds.shuffle()
+
+    assert ''.join(shuffled) == shuffled_data == 'yhczewmkouqnaglvxrtsibjpdf'

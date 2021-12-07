@@ -235,8 +235,8 @@ class SliceableDataset(Sequence[_T]):
         )
         total_size: Union[int, float] = sum(size for size in rescaled_sizes if size is not None)
 
-        clean_sizes: Tuple[Union[int, float], ...] = tuple(
-            length - total_size if size is None else size for size in rescaled_sizes
+        clean_sizes: Tuple[float, ...] = tuple(
+            float(length - total_size if size is None else size) for size in rescaled_sizes
         )
 
         int_sizes: Tuple[int, ...] = tuple(
