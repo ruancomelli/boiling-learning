@@ -24,9 +24,9 @@ from boiling_learning.io.io import (
     save_yogadl,
     saver_dataset_triplet,
 )
-from boiling_learning.management import Manager
 from boiling_learning.management.descriptors import describe
-from boiling_learning.preprocessing import ImageDataset
+from boiling_learning.management.managers import Manager
+from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.utils.functional import Kwargs, P
 from boiling_learning.utils.parameters import Parameters

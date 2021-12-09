@@ -1,7 +1,13 @@
 from fractions import Fraction
 from random import sample
 
-from boiling_learning.datasets.sliceable import SliceableDataset
+import numpy as np
+import tensorflow as tf
+
+from boiling_learning.datasets.sliceable import (
+    SliceableDataset,
+    sliceable_dataset_to_tensorflow_dataset,
+)
 from boiling_learning.utils.random import random_state
 
 
@@ -119,3 +125,87 @@ def test_skip() -> None:
 def test_take() -> None:
     sds = SliceableDataset('abcdefghijklmnopqrstuvwxyz')
     assert ''.join(sds.take(10)) == 'abcdefghij'
+
+
+def test_prefetch() -> None:
+    sds = SliceableDataset('abcdefghijklmnopqrstuvwxyz')
+
+    # make sure that this placeholder method at least returns the exact same
+    # dataset
+    assert sds.prefetch() is sds
+
+
+def test_batch() -> None:
+    sds = SliceableDataset('abcdefghijklmnopqrstuvwxyz')
+    batched = sds.batch(4)
+
+    assert isinstance(batched[0], SliceableDataset)
+    assert ''.join(batched[0]) == 'abcd'
+    assert [''.join(batch) for batch in batched] == [
+        'abcd',
+        'efgh',
+        'ijkl',
+        'mnop',
+        'qrst',
+        'uvwx',
+        'yz',
+    ]
+
+
+def test_element_spec() -> None:
+    sds1 = SliceableDataset('abcd')
+    assert sds1.element_spec == tf.TensorSpec(shape=(), dtype=tf.string)
+
+    sds2 = SliceableDataset([0, 1, 2])
+    assert sds2.element_spec == tf.TensorSpec(shape=(), dtype=tf.int32)
+
+    sds3 = SliceableDataset([(0, 'a'), (1, 'b'), (2, 'c')])
+    assert sds3.element_spec == (
+        tf.TensorSpec(shape=(), dtype=tf.int32),
+        tf.TensorSpec(shape=(), dtype=tf.string),
+    )
+
+    sds4 = SliceableDataset([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
+    assert sds4.element_spec == (tf.TensorSpec(shape=(3), dtype=tf.int32))
+
+    sds5 = SliceableDataset(
+        [
+            (
+                np.random.rand(3, 4),
+                {
+                    'key1': [np.random.rand(2, 5), np.random.rand(2, 5), np.random.rand(2, 5)],
+                    'key2': 'value1',
+                    'key3': 10.5,
+                },
+                False,
+            ),
+            (
+                np.random.rand(3, 4),
+                {
+                    'key1': [np.random.rand(2, 5), np.random.rand(2, 5)],
+                    'key2': 'value2',
+                    'key3': 3.14,
+                },
+                True,
+            ),
+        ]
+    )
+    assert sds5.element_spec == (
+        tf.TensorSpec(shape=(3, 4), dtype=tf.float64),
+        {
+            'key1': tf.TensorSpec(shape=(3, 2, 5), dtype=tf.float64),
+            'key2': tf.TensorSpec(shape=(), dtype=tf.string),
+            'key3': tf.TensorSpec(shape=(), dtype=tf.float32),
+        },
+        tf.TensorSpec(shape=(), dtype=tf.bool),
+    )
+
+
+def test_sliceable_to_tensorflow() -> None:
+    sds = SliceableDataset(
+        [np.random.rand(3, 4), np.random.rand(3, 4), np.random.rand(3, 4), np.random.rand(3, 4)]
+    )
+    ds = sliceable_dataset_to_tensorflow_dataset(sds)
+
+    for sds_elem, ds_elem in zip(sds, ds.as_numpy_iterator()):
+        assert np.allclose(sds_elem, ds_elem, atol=1e-8)
