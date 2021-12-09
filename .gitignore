@@ -147,3 +147,4 @@ sandbox/
 *.vscode/
 
 !tox.ini
+.envrc
