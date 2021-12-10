@@ -1,3 +1,9 @@
+## v0.17.24 (2021-12-09)
+
+### Fix
+
+- **datasets/sliceable**: add `__name__` property to `DictFeatureTransformer`s
+
 ## v0.17.23 (2021-12-06)
 
 ### Fix
