@@ -5,12 +5,7 @@ import funcy
 
 from boiling_learning.utils.dtypes import auto_dtype, new_py_function
 from boiling_learning.utils.functional import Pack, nth_arg
-from boiling_learning.utils.utils import (
-    FrozenNamedMixin,
-    JSONDataType,
-    KeyedDefaultDict,
-    SimpleStr,
-)
+from boiling_learning.utils.utils import JSONDataType, KeyedDefaultDict, SimpleStr
 
 _X = TypeVar('_X')
 _X1 = TypeVar('_X1')
@@ -161,7 +156,6 @@ class KeyedFeatureTransformer(
 
 
 class DictFeatureTransformer(
-    FrozenNamedMixin,
     Mapping[str, Transformer[Tuple[_X1, _Y], Tuple[Union[_X1, _X2], _Y]]],
     Generic[_X1, _X2, _Y],
 ):
@@ -171,12 +165,16 @@ class DictFeatureTransformer(
         f: Callable[..., _X2],
         packer: Union[Callable[[str], Pack], Mapping[Optional[str], Pack]],
     ) -> None:
+        self.__name__: str = name
         self.packer: Union[Callable[[str], Pack], Mapping[Optional[str], Pack]] = packer
         self._transformer_mapping: KeyedDefaultDict[
             str, FeatureTransformer[_X1, _X2, _Y]
         ] = KeyedDefaultDict(self._transformer_factory)
         self.func: Callable[..., _X2] = f
-        super().__init__(name)
+
+    @property
+    def name(self) -> str:
+        return self.__name__
 
     def _resolve_func_and_pack(self, key: str) -> Tuple[Callable[[_X1], _X2], Pack]:
         if isinstance(self.packer, Mapping):

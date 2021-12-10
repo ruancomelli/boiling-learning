@@ -28,6 +28,7 @@ import numpy as np
 import tensorflow as tf
 from iteround import saferound
 from slicerator import pipeline
+from typing_extensions import TypeGuard
 
 from boiling_learning.io import json
 from boiling_learning.utils.dtypes import NestedTypeSpec, auto_spec, tf_str_dtype_bidict
@@ -43,6 +44,7 @@ _X2 = TypeVar('_X2')
 _Y = TypeVar('_Y')
 _Y1 = TypeVar('_Y1')
 _Y2 = TypeVar('_Y2')
+BooleanMask = List[bool]
 
 
 class SliceableDataset(Sequence[_T]):
@@ -134,13 +136,12 @@ class SliceableDataset(Sequence[_T]):
         self, key: Union[int, slice, Sequence[bool], Iterable[int]]
     ) -> Union[_T, SliceableDataset[_T]]:
         if isinstance(key, int):
-            return self._data[key]
+            return self.getitem_from_index(key)
 
-        if _is_boolean_mask_for_dataset(self, key):
-            indices = [index for index, boolean in enumerate(key) if boolean]
-            return SliceableDataset(self._data[indices])
+        if self._is_boolean_mask(key):
+            return self.getitem_from_boolean_mask(key)
 
-        return SliceableDataset(self._data[key])
+        return self.getitem_from_indices(key)
 
     def __iter__(self) -> Iterator[_T]:
         return iter(self._data.__iter__())
@@ -283,6 +284,29 @@ class SliceableDataset(Sequence[_T]):
     @property
     def element_spec(self) -> NestedTypeSpec:
         return auto_spec(self[0])
+
+    def getitem_from_index(self, index: int) -> _T:
+        return self._data[index]
+
+    def getitem_from_boolean_mask(self, mask: BooleanMask) -> SliceableDataset[_T]:
+        if not self._is_boolean_mask(mask):
+            raise ValueError(f'not a valid boolean mask: {mask}')
+
+        indices = [index for index, boolean in enumerate(mask) if boolean]
+        return self.getitem_from_indices(indices)
+
+    def getitem_from_slice(self, slice_: slice) -> SliceableDataset[_T]:
+        return self.getitem_from_indices(slice_)
+
+    def getitem_from_indices(self, indices: Union[slice, Iterable[int]]) -> SliceableDataset[_T]:
+        return SliceableDataset(self._data[indices])
+
+    def _is_boolean_mask(self, key: Any) -> TypeGuard[BooleanMask]:
+        return (
+            isinstance(key, list)
+            and len(key) == len(self)
+            and all(isinstance(elem, bool) for elem in key)
+        )
 
 
 def sliceable_dataset_to_tensorflow_dataset(
@@ -471,14 +495,6 @@ def load_sliceable_dataset(path: PathLike) -> SliceableDataset[Any]:
         return json.load(resolved_path / f'{index}.json')
 
     return SliceableDataset.from_func(_get_element, length=spec['length'])
-
-
-def _is_boolean_mask_for_dataset(dataset: SliceableDataset[Any], key: Any) -> bool:
-    return (
-        isinstance(key, Sequence)
-        and len(key) == len(dataset)
-        and all(isinstance(elem, bool) for elem in key)
-    )
 
 
 def _absolute_index_for_dataset(dataset: SliceableDataset[Any], index: int) -> int:
