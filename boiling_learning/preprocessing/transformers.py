@@ -189,7 +189,7 @@ class DictFeatureTransformer(
                 else:
                     return self.func, pack
             except KeyError as e:
-                raise ValueError(
+                raise KeyError(
                     f'Invalid key {key}: corresponding pack was not found.'
                     ' Define a default pack by passing None: default_pack'
                     ' or None: None to skip missing keys.'
@@ -198,7 +198,7 @@ class DictFeatureTransformer(
         elif callable(self.packer):
             return self.func, self.packer(key)
         else:
-            raise ValueError(
+            raise TypeError(
                 'self.packer must be either a Mapping[Optional[str], Pack] '
                 'or a Callable[[str], Pack]. '
                 f'Got {type(self.packer)}'
