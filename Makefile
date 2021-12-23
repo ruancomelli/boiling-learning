@@ -11,12 +11,6 @@
 .READD = $(shell git update-index --again)
 .CHECK = $(shell pre-commit run)
 
-.PHONY: init
-init:
-	pip install -U pip wheel
-	pip install -r requirements.txt
-	pip install -r requirements-dev.txt
-
 .PHONY: coverage
 coverage:
 	@coverage run --source=$(.PROJECT)/ -m pytest $(.TESTS_FOLDER)
@@ -24,8 +18,7 @@ coverage:
 
 .PHONY: test
 test:
-	@pytest --doctest-modules $(.PROJECT)
-	@pytest $(.TESTS_FOLDER)
+	@pytest --doctest-modules $(.PROJECT) $(.TESTS_FOLDER)
 
 .PHONY: tox
 tox:
