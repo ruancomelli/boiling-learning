@@ -132,7 +132,7 @@ phantom-types = "^0.13.1"
 [tool.poetry.dev-dependencies]
 autoflake = "1.4"
 black = "21.4b0"
-commitizen = "2.19.0"
+commitizen = "2.20.1"
 coverage = "5.5"
 flake8 = "3.9.2"
 isort = {version = "5.9.3", extras = ["requirements_deprecated_finder"]}
