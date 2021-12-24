@@ -1708,7 +1708,7 @@ ptyprocess = ">=0.5"
 
 [[package]]
 name = "phantom-types"
-version = "0.13.1"
+version = "0.14.0"
 description = "Phantom types for Python"
 category = "main"
 optional = false
@@ -2847,7 +2847,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "~=3.9.0"
-content-hash = "d62be810081198250f71430457ff38a937795382e21ec122c9ad34e7bc740547"
+content-hash = "238b981c78875d984225f58ec5d883b7898fca6ac52f39e2d794d908a1d06f48"
 
 [metadata.files]
 absl-py = [
@@ -4249,8 +4249,8 @@ pexpect = [
     {file = "pexpect-4.8.0.tar.gz", hash = "sha256:fc65a43959d153d0114afe13997d439c22823a27cefceb5ff35c2178c6784c0c"},
 ]
 phantom-types = [
-    {file = "phantom-types-0.13.1.tar.gz", hash = "sha256:aea13e36d0439cf5c1250b0cd94bafb1c9f45eda09e743fa5f702bd0196d5ea4"},
-    {file = "phantom_types-0.13.1-py3-none-any.whl", hash = "sha256:03f3865b550943b70c63d9c4aa63b2d9dea124918fd9061058e3aa91f8279cb8"},
+    {file = "phantom-types-0.14.0.tar.gz", hash = "sha256:49f69a3c73ade781d10e8203743930abe6b7ac92a0d4daf5e69af4879c628f14"},
+    {file = "phantom_types-0.14.0-py3-none-any.whl", hash = "sha256:d5b5cc70b8bd1ff91d1e5f7f2be7d0c5f6cd904c2dcc466e31b10e6340fdd52b"},
 ]
 pickleshare = [
     {file = "pickleshare-0.7.5-py2.py3-none-any.whl", hash = "sha256:9649af414d74d4df115d5d718f82acb59c9d418196b7b4290ed47a12ce62df56"},
