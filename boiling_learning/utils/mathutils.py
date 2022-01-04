@@ -1,17 +1,11 @@
 import math
 from fractions import Fraction
 from functools import reduce
-from typing import Iterable, SupportsFloat, Tuple, TypeVar, Union, overload
+from typing import SupportsFloat, Tuple
 
 import funcy
 
-from boiling_learning.utils.sentinels import EMPTY, Emptiable
-from boiling_learning.utils.typeutils import SupportsLessThanT
-
-_T = TypeVar('_T')
-_U = TypeVar('_U')
 Real = SupportsFloat
-_Real = TypeVar('_Real', bound=Real)
 
 
 def gcd(*args: int) -> int:
@@ -40,40 +34,3 @@ def proportional_ints(*args: Fraction) -> Tuple[int, ...]:
 
     ints = map(_proportional_int, args)
     return tuple(ints)
-
-
-@overload
-def minmax(
-    iterable: Iterable[SupportsLessThanT],
-) -> Tuple[SupportsLessThanT, SupportsLessThanT]:
-    ...
-
-
-@overload
-def minmax(
-    iterable: Iterable[SupportsLessThanT], default: _U
-) -> Tuple[Union[SupportsLessThanT, _U], Union[SupportsLessThanT, _U]]:
-    ...
-
-
-def minmax(
-    iterable: Iterable[SupportsLessThanT],
-    default: Emptiable[_U] = EMPTY,
-) -> Tuple[Union[SupportsLessThanT, _U], Union[SupportsLessThanT, _U]]:
-    it = iter(iterable)
-    try:
-        first = next(it)
-    except StopIteration as e:
-        if default is EMPTY:
-            raise ValueError('got an empty iterable!') from e
-
-        return (default, default)
-
-    lo, hi = first, first
-    for val in it:
-        if val < lo:
-            lo = val
-        elif hi < val:
-            hi = val
-
-    return lo, hi

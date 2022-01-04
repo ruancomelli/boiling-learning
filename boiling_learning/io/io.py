@@ -119,7 +119,7 @@ def make_callable_filename_pattern(
     else:
         filename_pattern_str = str(filename_pattern)
 
-        if index_key is not None and index_key in {
+        if index_key in {
             index
             for _, index in string.Formatter().parse(filename_pattern_str)
             if index is not None

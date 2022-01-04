@@ -36,7 +36,7 @@ class DatasetSplits:
         n_nones = splits.count(None)
         if n_nones > 1:
             raise ValueError(
-                'at most one of *train*, *val* and *test* can be inferred (by passing None)'
+                'at most one of *train*, *val* and *test* can be inferred (by passing `None`)'
             )
 
         if n_nones == 1:
@@ -245,7 +245,7 @@ def bulk_split(
     ds: tf.data.Dataset, splits: DatasetSplits, length: Optional[int] = None
 ) -> DatasetTriplet:
     if length is None:
-        length = calculate_dataset_size(ds)
+        return bulk_split(ds, splits, length=calculate_dataset_size(ds))
 
     train_len = int(splits.train * length)
     val_len = int(splits.val * length)

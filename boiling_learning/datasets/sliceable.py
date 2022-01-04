@@ -141,6 +141,9 @@ class SliceableDataset(Sequence[_T]):
         if self._is_boolean_mask(key):
             return self.getitem_from_boolean_mask(key)
 
+        if isinstance(key, slice):
+            return self.getitem_from_slice(key)
+
         return self.getitem_from_indices(key)
 
     def __iter__(self) -> Iterator[_T]:
@@ -296,6 +299,9 @@ class SliceableDataset(Sequence[_T]):
         return self.getitem_from_indices(indices)
 
     def getitem_from_slice(self, slice_: slice) -> SliceableDataset[_T]:
+        print('Slice start:', slice_.start)
+        print('Slice step:', slice_.step)
+        print('Slice stop:', slice_.stop)
         return self.getitem_from_indices(slice_)
 
     def getitem_from_indices(self, indices: Union[slice, Iterable[int]]) -> SliceableDataset[_T]:

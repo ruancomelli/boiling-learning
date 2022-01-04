@@ -24,9 +24,9 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.mixed_precision.experimental import Policy
 from tensorflow.keras.models import Model
 
-import boiling_learning.utils as utils
 from boiling_learning.model.model import ProblemType, make_creator
 from boiling_learning.utils.functional import P
+from boiling_learning.utils.utils import enum_item
 
 # Check this guideline: https://docs.nvidia.com/deeplearning/performance/dl-performance-fully-connected/index.html
 # It includes tips and rules-of-thumb for defining layers.
@@ -51,8 +51,8 @@ def _apply_policies_to_layers(
     hidden_layers_policy = Policy(hidden_layers_policy)
     output_layer_policy = Policy(output_layer_policy)
 
-    for i in utils.indexify(model.layers[1:-1]):
-        model.layers[i].dtype = hidden_layers_policy
+    for layer in model.layers[1:-1]:
+        layer.dtype = hidden_layers_policy
     model.layers[-1].dtype = output_layer_policy
 
     return model
@@ -101,7 +101,7 @@ def HoboldNet1(
     x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    problem = utils.enum_item(ProblemType, problem)
+    problem = enum_item(ProblemType, problem)
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
@@ -149,7 +149,7 @@ def HoboldNet2(
     x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    problem = utils.enum_item(ProblemType, problem)
+    problem = enum_item(ProblemType, problem)
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
@@ -204,7 +204,7 @@ def HoboldNet3(
     x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    problem = utils.enum_item(ProblemType, problem)
+    problem = enum_item(ProblemType, problem)
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
@@ -259,7 +259,7 @@ def HoboldNetSupplementary(
     x = Dense(512, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    problem = utils.enum_item(ProblemType, problem)
+    problem = enum_item(ProblemType, problem)
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
@@ -345,7 +345,7 @@ def KramerNet(
     x = Dense(256, activation='relu', dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    problem = utils.enum_item(ProblemType, problem)
+    problem = enum_item(ProblemType, problem)
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Activation('softmax', dtype=output_layer_policy)(x)
@@ -373,7 +373,7 @@ def BoilNet(
     normalize_images: bool = False,
 ) -> Model:
     input_shape = (time_window, *image_shape) if time_window > 0 else image_shape
-    flattening = utils.enum_item(FlatteningMode, flattening)
+    flattening = enum_item(FlatteningMode, flattening)
     flatten = {
         FlatteningMode.FLATTEN: Flatten,
         FlatteningMode.AVERAGE_POOLING: GlobalAveragePooling2D,
@@ -390,7 +390,7 @@ def BoilNet(
     else:
         spatial_dropouter = funcy.constantly(Layer())
 
-    convolution_type = utils.enum_item(ConvolutionType, convolution_type)
+    convolution_type = enum_item(ConvolutionType, convolution_type)
     conv_layer = {
         ConvolutionType.CONV: Conv2D,
         ConvolutionType.SEPARABLE_CONV: SeparableConv2D,
@@ -413,7 +413,7 @@ def BoilNet(
     head = Dense(256, activation='relu')(head)
     head = dropouter()(head)
 
-    problem = utils.enum_item(ProblemType, problem)
+    problem = enum_item(ProblemType, problem)
     head_size, activation = {
         ProblemType.CLASSIFICATION: (num_classes, 'softmax'),
         ProblemType.REGRESSION: (1, 'linear'),
@@ -442,7 +442,7 @@ def LinearModel(
     if normalize_images:
         x = LayerNormalization()(x)
 
-    problem = utils.enum_item(ProblemType, problem.upper())
+    problem = enum_item(ProblemType, problem.upper())
     if problem is not ProblemType.REGRESSION:
         raise ValueError(f'unsupported problem type: \"{problem}\"')
 

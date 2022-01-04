@@ -686,5 +686,5 @@ class Video(Sequence[VideoFrame]):
             try:
                 self[-1]
                 return
-            except CannotReadFrameError:
+            except (CannotReadFrameError, RuntimeError, AttributeError):
                 self.video = self.video[:-1]

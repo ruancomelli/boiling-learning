@@ -18,7 +18,6 @@ from itertools import product
 from os.path import relpath as _relative_path
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from timeit import default_timer
 from typing import (
     Any,
     Callable,
@@ -831,44 +830,9 @@ def fix_path(path: PathLike, substitution_dict: Optional[Dict[str, str]] = None)
     return Path(path_str)
 
 
-# ---------------------------------- Timer ----------------------------------
-@contextmanager
-def elapsed_timer():
-    # Source: <https://stackoverflow.com/a/61613140/5811400>
-
-    class _Timer:
-        pass
-
-    _Timer.start = default_timer()
-    yield _Timer
-    _Timer.end = default_timer()
-    _Timer.duration = _Timer.end - _Timer.start
-
-
 # ---------------------------------- Class printing ----------------------------------
-def simple_pprint(self, obj, stream, indent, allowance, context, level):
-    """
-    Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
-    """
-    # Source: <https://stackoverflow.com/a/52521743/5811400>
-    write = stream.write
-
-    class_name = obj.__class__.__name__
-    write(class_name + '(')
-    _format_kwarg_dict_items(
-        self,
-        obj.__dict__.copy().items(),
-        stream,
-        indent + len(class_name),
-        allowance + 1,
-        context,
-        level,
-    )
-    write(')')
-
-
 def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
-    def simple_pprint(self, obj, stream, indent, allowance, context, level):
+    def _simple_pprint(self, obj: Any, stream, indent: int, allowance, context, level):
         """
         Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
         """
@@ -900,7 +864,7 @@ def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
         )
         write(')')
 
-    return simple_pprint
+    return _simple_pprint
 
 
 def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, level):

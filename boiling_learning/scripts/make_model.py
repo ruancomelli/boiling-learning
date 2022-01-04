@@ -15,8 +15,9 @@ from boiling_learning.model.callbacks import (
     ReduceLROnPlateau,
     TimePrinter,
 )
-from boiling_learning.utils import ensure_dir, ensure_parent, merge_dicts
+from boiling_learning.utils import merge_dicts
 from boiling_learning.utils.functional import Kwargs, P
+from boiling_learning.utils.utils import resolve
 
 
 def _take(ds: tf.data.Dataset, count: Optional[Union[int, float, Fraction]]) -> tf.data.Dataset:
@@ -46,8 +47,8 @@ def main(
     early_stopping_patience,
     dropout_ratio,
     batch_size,
-    missing_ok,
-    include,
+    missing_ok: bool,
+    include: bool,
     hidden_layers_policy,
     output_layer_policy,
 ):
@@ -190,8 +191,8 @@ def main(
 
     # This part is separated because ModelCheckpoint needs model_workspace
     model_workspace = manager.elem_workspace(model_id)
-    checkpoints_dir = ensure_dir(model_workspace / 'checkpoints')
-    backup_dir = ensure_parent(model_workspace / backup_dir_name)
+    checkpoints_dir = resolve(model_workspace / 'checkpoints', dir=True)
+    backup_dir = resolve(model_workspace / backup_dir_name, parents=True)
 
     last_trained_callback_path = checkpoints_dir / last_trained_callback_file_name
     last_trained_callback = ModelCheckpoint(

@@ -18,7 +18,6 @@ from boiling_learning.utils.utils import JSONDataType, PathLike, resolve
 _T = TypeVar('_T')
 BasicTypes = Union[None, bool, int, str, float]
 _BasicType = TypeVar('_BasicType', bound=BasicTypes)
-_JSONDataType = TypeVar('_JSONDataType', bound=JSONDataType)
 
 
 class SerializedJSONObject(TypedDict):
@@ -27,7 +26,6 @@ class SerializedJSONObject(TypedDict):
 
 
 SerializedJSONDataType = Union[BasicTypes, List[BasicTypes], SerializedJSONObject]
-_SerializedJSONDataType = TypeVar('_SerializedJSONDataType', bound=SerializedJSONDataType)
 
 
 class JSONEncodable(AssociatedType):
@@ -55,6 +53,21 @@ def serialize(obj: Supports[JSONSerializable]) -> SerializedJSONObject:
 @encode.instance(float)
 def _encode_basics(instance: _BasicType) -> _BasicType:
     return instance
+
+
+@encode.instance(Path)
+def _encode_Path(instance: Path) -> str:
+    return str(instance)
+
+
+class SerializedPack(TypedDict):
+    args: SerializedJSONObject
+    kwargs: SerializedJSONObject
+
+
+@encode.instance(Pack)
+def _encode_Pack(instance: Pack) -> SerializedPack:
+    return {'args': serialize(instance.args), 'kwargs': serialize(instance.kwargs)}
 
 
 @runtime_checkable
@@ -123,33 +136,34 @@ decode = table_dispatch()
 @decode.dispatch(int)
 @decode.dispatch(float)
 @decode.dispatch(str)
-def _json_decode(obj: _T) -> _T:
+def _decode(obj: _T) -> _T:
     return obj
 
 
 @decode.dispatch(list)
-def _json_decode_list(obj: List[JSONDataType]) -> list:
+def _decode_list(obj: List[JSONDataType]) -> list:
     return list(map(deserialize, obj))
 
 
 @decode.dispatch(tuple)
-def _json_decode_tuple(obj: List[JSONDataType]) -> tuple:
+def _decode_tuple(obj: List[JSONDataType]) -> tuple:
     return tuple(map(deserialize, obj))
 
 
 @decode.dispatch(dict)
-def _json_decode_dict(obj: Dict[str, JSONDataType]) -> dict:
+def _decode_dict(obj: Dict[str, JSONDataType]) -> dict:
     return {key: deserialize(value) for key, value in obj.items()}
 
 
 @decode.dispatch(Pack)
-def _json_decode_Pack(obj: List[JSONDataType]) -> Pack:
-    args, kwargs = obj
+def _decode_Pack(obj: SerializedPack) -> Pack:
+    args = obj['args']
+    kwargs = obj['kwargs']
     return Pack(deserialize(args), deserialize(kwargs))
 
 
 @decode.dispatch(Path)
-def _json_decode_Path(obj: str) -> Path:
+def _decode_Path(obj: str) -> Path:
     return Path(obj)
 
 
