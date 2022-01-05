@@ -134,7 +134,7 @@ phantom-types = "^0.14.0"
 autoflake = "1.4"
 black = "21.12b0"
 commitizen = "2.20.1"
-coverage = "5.5"
+coverage = "6.2"
 flake8 = "3.9.2"
 isort = {version = "5.10.1", extras = ["requirements_deprecated_finder"]}
 pre-commit = "2.15.0"
