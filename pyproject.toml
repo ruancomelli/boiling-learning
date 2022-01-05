@@ -136,7 +136,7 @@ black = "21.4b0"
 commitizen = "2.20.1"
 coverage = "5.5"
 flake8 = "3.9.2"
-isort = {version = "5.9.3", extras = ["requirements_deprecated_finder"]}
+isort = {version = "5.10.1", extras = ["requirements_deprecated_finder"]}
 pre-commit = "2.15.0"
 pytest = "6.2.5"
 tox = "3.24.4"
