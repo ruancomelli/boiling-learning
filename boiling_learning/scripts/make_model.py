@@ -7,8 +7,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from tensorflow.keras.optimizers import Adam
 
-from boiling_learning.datasets import calculate_dataset_size, take
-from boiling_learning.datasets.datasets import apply_flattened
+from boiling_learning.datasets.datasets import apply_flattened, calculate_dataset_size, take
 from boiling_learning.management.managers import Manager
 from boiling_learning.model.callbacks import (
     AdditionalValidationSets,

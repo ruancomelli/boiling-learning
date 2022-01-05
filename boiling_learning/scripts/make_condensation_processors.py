@@ -171,7 +171,7 @@ def _main_tensor(
         ),
     ]
 
-    augmentors = [
+    augmentors: List[FeatureTransformer] = [
         FeatureTransformer('random_cropper', random_crop, pack=P((height, width, None))),
         FeatureTransformer('random_left_right_flipper', tf.image.flip_left_right),
         FeatureTransformer('random_brightness', random_brightness, pack=P(-0.2, 0.2)),

@@ -18,6 +18,10 @@ from boiling_learning.datasets.creators import (
     dataset_post_processor,
     experiment_video_dataset_creator,
 )
+from boiling_learning.datasets.sliceable import (
+    SliceableDataset,
+    sliceable_dataset_to_tensorflow_dataset,
+)
 from boiling_learning.management.managers import Manager
 from boiling_learning.model.definitions import HoboldNet3
 from boiling_learning.preprocessing.cases import Case
@@ -268,6 +272,15 @@ dataset_id, (ds_train, ds_val, ds_test) = make_dataset.main(
     batch_size=256,
     verbose=True,
 )
+
+assert isinstance(ds_train, SliceableDataset)
+print("ds_train[0]:", ds_train[0])
+print("ds_train[0][0]:", ds_train[0][0])
+
+ds_train = sliceable_dataset_to_tensorflow_dataset(ds_train)
+if ds_val is not None:
+    ds_val = sliceable_dataset_to_tensorflow_dataset(ds_val)
+ds_test = sliceable_dataset_to_tensorflow_dataset(ds_test)
 
 ds_val_gt10 = bl.datasets.apply_unbatched(
     ds_val,
