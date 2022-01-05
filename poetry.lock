@@ -1773,18 +1773,18 @@ slicerator = ">=0.9.8"
 
 [[package]]
 name = "pint"
-version = "0.16.1"
+version = "0.18"
 description = "Physical quantities module"
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 
 [package.dependencies]
 packaging = "*"
 
 [package.extras]
-numpy = ["numpy (>=1.14)"]
-test = ["pytest", "pytest-mpl", "pytest-cov"]
+numpy = ["numpy (>=1.17)"]
+test = ["pytest", "pytest-mpl", "pytest-cov", "pytest-subtests"]
 uncertainties = ["uncertainties (>=3.0)"]
 
 [[package]]
@@ -2930,7 +2930,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "~=3.9.0"
-content-hash = "ef3bc29beca33b866ba17447ba84f26852a5a34bd412f01fdc50902e7719ed70"
+content-hash = "aa0e13f47caed0125e35ce3705c4c8c22303304e40239c1a0797bd49265713c0"
 
 [metadata.files]
 absl-py = [
@@ -4318,8 +4318,8 @@ pims = [
     {file = "PIMS-0.5.tar.gz", hash = "sha256:a02cdcbb153e2792042fb0bae7df4f30878bbba1f2d176114a87ee0dc18715a0"},
 ]
 pint = [
-    {file = "Pint-0.16.1-py2.py3-none-any.whl", hash = "sha256:63ccb7153754923fd95477be69dcf8d7d0764ec2ebb3f6945f920c31fdf13392"},
-    {file = "Pint-0.16.1.tar.gz", hash = "sha256:d43a2e9ae003164978b60fdf8cd920d8581e1a5991df8dded29b00f4850ec83a"},
+    {file = "Pint-0.18-py2.py3-none-any.whl", hash = "sha256:4b37f3c470639ea6f96b0026c3364bde30631fa737092bdaf18ad3f4f76f252f"},
+    {file = "Pint-0.18.tar.gz", hash = "sha256:8c4bce884c269051feb7abc69dbfd18403c0c764abc83da132e8a7222f8ba801"},
 ]
 pip-api = [
     {file = "pip-api-0.0.26.tar.gz", hash = "sha256:d1266be311f1cd1ddd0d501e99275c7f6ff1fd0ec6db46d521f56e747d9286e5"},
