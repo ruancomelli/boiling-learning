@@ -8,7 +8,6 @@ import modin.pandas as pd
 import numpy as np
 import tensorflow as tf
 from dataclassy import dataclass
-from scipy.interpolate import interp1d
 
 from boiling_learning.io.io import chunked_filename_pattern, load_dataset
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
@@ -286,18 +285,6 @@ class ExperimentVideo(Video):
             iterate=iterate,
         )
 
-    def _frame_stem_format(self) -> str:
-        return self.name + '_frame{index}'
-
-    def frame_stem(self, index: int) -> str:
-        return self._frame_stem_format().format(index=index)
-
-    def _frame_name_format(self) -> str:
-        return self._frame_stem_format() + self.frames_suffix
-
-    def frame_name(self, index: int) -> str:
-        return self._frame_name_format().format(index=index)
-
     def glob_frames(self) -> Iterable[Path]:
         if self.frames_path is None:
             raise ValueError('*frames_path* is not defined yet.')
@@ -312,38 +299,6 @@ class ExperimentVideo(Video):
             self.data = data
         else:
             self.data = dataclass_from_mapping(data, self.VideoData, key_map=keys)
-
-    def set_data(self, data_source: pd.DataFrame, source_time_column: str) -> pd.DataFrame:
-        '''Define data (other than the ones specified as video data) from a source *data_source*
-
-        Example usage:
-        ```
-        data_source = pd.read_csv('my_data.csv')
-        time_column, hf_column, temperature_column = 'time', 'heat_flux', 'temperature'
-        ev.set_data(
-            data_source[[time_column, hf_column, temperature_column]],
-            source_time_column=time_column
-        )
-        ```
-
-        WARNING: if *data_source* contains
-        '''
-        self.make_dataframe(recalculate=False, enforce_time=True)
-
-        columns_to_set = tuple(x for x in data_source.columns if x != source_time_column)
-        intersect = frozenset(columns_to_set) & frozenset(self.df.columns)
-        if intersect:
-            raise ValueError(
-                f'the columns {intersect} exist both in *data_source* and in this dataframe.'
-                ' Make sure you rename *data_source* columns to avoid this error.'
-            )
-
-        time = data_source[source_time_column]
-        for column in columns_to_set:
-            interpolator = interp1d(time, data_source[column])
-            self.df[column] = interpolator(self.df[self.column_names.elapsed_time])
-
-        return self.df
 
     def convert_dataframe_type(
         self, df: pd.DataFrame, categories_as_int: bool = False
@@ -450,20 +405,6 @@ class ExperimentVideo(Video):
 
         return df
 
-    def iterdata_from_dataframe(
-        self, *, select_columns: Optional[Union[str, List[str]]] = None
-    ) -> Iterable[Tuple[np.ndarray, Any]]:
-        df = self.make_dataframe(recalculate=False)
-        indices = df[self.column_names.index]
-
-        data = df
-        if select_columns is not None:
-            data = data[select_columns]
-            if not isinstance(select_columns, str):
-                data = data.to_dict(orient='records')
-
-        return zip(map(self.__getitem__, indices), data)
-
     def load_df(
         self,
         path: Optional[PathLike] = None,
@@ -505,30 +446,6 @@ class ExperimentVideo(Video):
 
         if overwrite or not path.is_file():
             self.df.to_csv(path, index=False)
-
-    def move_df(
-        self,
-        path: Union[str, PathLike],
-        renaming: bool = False,
-        erase_old: bool = False,
-    ) -> None:
-        if self.df_path is None and (erase_old or renaming):
-            raise ValueError(
-                '*erase_old* and *renaming* cannot be used ' 'if *df_path* is not defined yet.'
-            )
-
-        if erase_old:
-            old_path = self.df_path
-
-        if renaming:
-            self.df_path = self.df_path.with_name(path)
-        else:
-            self.df_path = resolve(path)
-
-        if erase_old and old_path.is_file():
-            old_path.unlink()
-        # if erase: # Python 3.8 only
-        #     old_path.unlink(missing_ok=True)
 
     def frames_to_tensor(self, overwrite: bool = False) -> tf.data.Dataset:
         if self.frames_tensor_path is None and overwrite:

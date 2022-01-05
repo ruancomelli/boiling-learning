@@ -1,11 +1,9 @@
 import math
 from fractions import Fraction
 from functools import reduce
-from typing import SupportsFloat, Tuple
+from typing import Tuple
 
 import funcy
-
-Real = SupportsFloat
 
 
 def gcd(*args: int) -> int:

@@ -303,7 +303,3 @@ def map_values(f: Callable[[_T], _S], iterable: Iterable[_T]) -> Iterable[_S]:
         return funcy.walk_values(f, iterable)
     else:
         return funcy.walk(f, iterable)
-
-
-def zip_filter(f: Callable[..., bool], *args: Iterable) -> Iterator:
-    yield from (tpl for tpl in zip(*args) if f(*tpl))

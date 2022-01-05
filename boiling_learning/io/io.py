@@ -33,10 +33,9 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
-from boiling_learning.utils import PathLike, ensure_dir, ensure_parent, resolve
 from boiling_learning.utils.dtypes import decode_element_spec, encode_element_spec
 from boiling_learning.utils.functional import Kwargs
-from boiling_learning.utils.utils import is_
+from boiling_learning.utils.utils import PathLike, ensure_dir, ensure_parent, is_, resolve
 
 try:
     # yogadl is an optional dependency

@@ -1,5 +1,5 @@
 import enum
-from typing import List, Optional, Type, TypeVar, Union
+from typing import Dict, List, Optional, Type, TypeVar, Union
 
 from nidaqmx.constants import ChannelType as NIChannelType
 from nidaqmx.task import Task
@@ -13,7 +13,7 @@ ChannelType = enum.Enum('ChannelType', 'UNDEFINED ANALOG COUNTER DIGITAL INPUT O
 
 
 class Channel(SimpleRepr, SimpleStr):
-    channel_table = {}
+    channel_table: Dict[str, str] = {}
 
     exclusive_types = [
         [
@@ -92,9 +92,6 @@ class Channel(SimpleRepr, SimpleStr):
                 return ni_channel_type
 
         return None
-
-    def is_ni_type(self, ni_channel_type: NIChannelType) -> bool:
-        return self.ni_type is ni_channel_type
 
     def ni_type_key(self) -> Optional[str]:
         return Channel.channel_type_keys[self.ni_type] if self.ni_type is not None else None

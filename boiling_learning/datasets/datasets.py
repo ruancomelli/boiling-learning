@@ -458,14 +458,3 @@ def experiment_video_to_dataset_triplet(
     pairs = ev.as_pairs(image_preprocessor=image_preprocessor, select_columns=select_columns)
 
     return slicerator_to_dataset_triplet(pairs, splits, dataset_size=dataset_size, shuffle=shuffle)
-
-
-def experiment_video_to_sequential_dataset_triplet(
-    ev: ExperimentVideo,
-    splits: DatasetSplits,
-    select_columns: Optional[Union[str, List[str]]] = None,
-    inplace: bool = False,
-) -> DatasetTriplet:
-    ds = ev.as_tf_dataset(select_columns=select_columns, inplace=inplace)
-
-    return bulk_split(ds, splits, length=len(ev))

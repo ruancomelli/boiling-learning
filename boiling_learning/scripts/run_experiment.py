@@ -9,7 +9,10 @@ import matplotlib as mpl
 import modin.pandas as pd
 import nidaqmx
 import numpy as np
+import pyqtgraph as pg
 import scipy.interpolate
+from pyqtgraph import GraphicsWindow
+from pyqtgraph.Qt import QtGui
 
 from boiling_learning.daq import Channel, ChannelType, Device
 from boiling_learning.utils.geometry import Cylinder
@@ -27,9 +30,6 @@ def main(
     experiments_dir: PathLike = DEFAULT_EXPERIMENTS_DIR,
     calibration_filepath: PathLike = DEFAULT_CALIBRATION_FILEPATH,
 ) -> None:
-    import pyqtgraph as pg
-    from pyqtgraph import GraphicsWindow
-    from pyqtgraph.Qt import QtGui
 
     output_dir_pattern = str(
         Path(experiments_dir, 'Experiment %Y-%m-%d %H-%M{optional_index}').resolve()

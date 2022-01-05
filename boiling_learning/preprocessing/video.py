@@ -4,7 +4,7 @@ import string
 import subprocess
 import warnings
 from pathlib import Path
-from typing import Any, Callable, Iterable, Iterator, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Iterator, Optional, Sequence, Tuple, Union
 
 import cv2
 import funcy
@@ -16,9 +16,9 @@ from imageio.core import CannotReadFrameError
 from more_itertools import ilen, peekable
 
 from boiling_learning.io.io import load_json, make_callable_filename_pattern, save_json
-from boiling_learning.utils import PathLike, VerboseType
-from boiling_learning.utils.functional import starapply, zip_filter
 from boiling_learning.utils.utils import (
+    PathLike,
+    VerboseType,
     is_parent_dir,
     print_verbose,
     relative_path,
@@ -437,36 +437,6 @@ def extract_frames(
         )
 
 
-def concat_videos(in_paths: Iterable[PathLike], out_path: PathLike) -> None:
-    # Original command: ffmpeg -f concat -safe 0 -i mylist.txt -c copy output.mp4
-    # Source: <https://stackoverflow.com/a/11175851/5811400>
-    # TODO: test!
-
-    in_paths = map(resolve, in_paths)
-    out_path = resolve(out_path, parents=True)
-    out_dir = out_path.parent
-
-    with tempdir(prefix='_', dir=out_dir) as temp_dir:
-        input_file_path = temp_dir / 'input.txt'
-
-        with open(input_file_path, 'w+') as fp:
-            fp.write('\n'.join(f'file {in_path}' for in_path in in_paths))
-
-        command_list = [
-            'ffmpeg',
-            '-f',
-            'concat',
-            '-safe',
-            '0',
-            '-i',
-            str(input_file_path),
-            '-c',
-            'copy',
-            str(out_path),
-        ]
-        subprocess.run(command_list)
-
-
 # Original code: $ ffmpeg -i input.mp4 -c:a copy -vn -sn output.m4a
 # Source: <https://superuser.com/a/633765>
 def extract_audio(
@@ -582,74 +552,6 @@ def count_frames_in_dir(
         exclude_count = exclude_count(exclude_path)
 
     return n_frames_in_path - exclude_count
-
-
-def reorganize_frames(
-    dest_dir: PathLike,
-    filename_pattern: Union[PathLike, Callable[[int], PathLike]],
-    index_parser: Union[PathLike, Callable[[str], int]],
-    source_dir: Optional[PathLike] = None,
-    source_files: Optional[Iterable[PathLike]] = None,
-    index_key: Optional[str] = None,
-    source_suffix: str = '',
-    overwrite: bool = False,
-    verbose: VerboseType = False,
-) -> None:
-    # TODO: check for incompatible arguments
-
-    if source_dir is None and source_files is None:
-        raise ValueError(
-            'Either source_dir is a PathLike or source_files is an iterable yielding PathLike'
-        )
-
-    if source_suffix and not source_suffix.startswith('.'):
-        raise ValueError(
-            'source_suffix must either be the empty string \'\' or start with a dot \'.\''
-        )
-
-    success, filename_pattern = make_callable_filename_pattern(
-        dest_dir, filename_pattern, index_key
-    )
-
-    if not success:
-        raise ValueError('filename_pattern could not be converted to a callable.')
-
-    success, index_parser = make_callable_index_parser(index_parser, index_key)
-
-    if not success:
-        raise ValueError('index_parser could not be converted to a callable.')
-
-    if source_files is None:
-        source_dir = resolve(source_dir)
-        source_files = source_dir.rglob('*' + source_suffix)
-
-    indices = map(index_parser, source_files)
-    dest_files = map(filename_pattern, indices)
-
-    if overwrite:
-        src_dest_pairs = zip(source_files, dest_files)
-    else:
-        src_dest_pairs = zip_filter(lambda src, dst: not dst.is_file(), source_files, dest_files)
-
-    if verbose >= 2:
-
-        def renamer(src, dest):
-            print(
-                ' -> '.join(
-                    [
-                        shorten_path(src, max_len=60),
-                        shorten_path(dest, max_len=60),
-                    ]
-                )
-            )
-            src.rename(dest)
-
-    else:
-
-        def renamer(src, dest):
-            src.rename(dest)
-
-    starapply(renamer, src_dest_pairs)
 
 
 VideoFrame = npt.NDArray[np.float32]

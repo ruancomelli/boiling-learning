@@ -15,9 +15,8 @@ from boiling_learning.model.callbacks import (
     ReduceLROnPlateau,
     TimePrinter,
 )
-from boiling_learning.utils import merge_dicts
 from boiling_learning.utils.functional import Kwargs, P
-from boiling_learning.utils.utils import resolve
+from boiling_learning.utils.utils import merge_dicts, resolve
 
 
 def _take(ds: tf.data.Dataset, count: Optional[Union[int, float, Fraction]]) -> tf.data.Dataset:
