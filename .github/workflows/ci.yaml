@@ -15,7 +15,7 @@ jobs:
 
     - name: Setup Python
       id: setup-python
-      uses: actions/setup-python-environment
+      uses: ./.github/actions/setup-python-environment
       with:
         python-version: 3.7
 
