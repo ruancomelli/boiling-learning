@@ -4,6 +4,7 @@ import math
 import random
 import warnings
 from fractions import Fraction
+from functools import reduce
 from operator import itemgetter
 from pathlib import Path
 from typing import (
@@ -122,6 +123,9 @@ class SliceableDataset(Sequence[_T]):
 
         return SliceableDataset.from_func(getitem, length=lenghts[0])
 
+    def __bool__(self) -> bool:
+        return len(self) > 0
+
     @overload
     def __getitem__(self, key: int) -> _T:
         ...
@@ -140,6 +144,9 @@ class SliceableDataset(Sequence[_T]):
 
         if self._is_boolean_mask(key):
             return self.getitem_from_boolean_mask(key)
+
+        if isinstance(key, slice):
+            return self.getitem_from_slice(key)
 
         return self.getitem_from_indices(key)
 
@@ -281,6 +288,15 @@ class SliceableDataset(Sequence[_T]):
 
         return SliceableDataset.from_func(new_data, length=new_length)
 
+    def unbatch(self) -> SliceableDataset[Any]:
+        return reduce(lambda left, right: left.concatenate(right), self)
+
+    def flatten(self) -> SliceableDataset[Any]:
+        flat = self
+        while flat and isinstance(flat[0], SliceableDataset):
+            flat = flat.unbatch()
+        return flat
+
     @property
     def element_spec(self) -> NestedTypeSpec:
         return auto_spec(self[0])
@@ -312,7 +328,7 @@ class SliceableDataset(Sequence[_T]):
 def sliceable_dataset_to_tensorflow_dataset(
     dataset: SliceableDataset[Any],
 ) -> tf.data.Dataset:
-    sample = dataset[0]
+    sample = dataset.flatten()[0]
     typespec = auto_spec(sample)
 
     return tf.data.Dataset.from_generator(lambda: dataset, output_signature=typespec)

@@ -1,3 +1,23 @@
+## v0.17.27 (2022-01-05)
+
+## v0.17.26 (2022-01-05)
+
+## v0.17.25 (2022-01-04)
+
+### Fix
+
+- **scripts**: fix import error in \`make_model\` script
+
+### Refactor
+
+- remove unused functionality
+- improve type-checking across the entire project
+- **preprocessing/transformers**: improve exception types in `preprocessing/transformers` module
+
+### BREAKING CHANGE
+
+- many functions and classes have been removed. Client code may have been broken by this.
+
 ## v0.17.24 (2021-12-09)
 
 ### Fix

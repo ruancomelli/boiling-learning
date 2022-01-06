@@ -1,4 +1,3 @@
-import copy
 import enum
 import json
 import operator
@@ -12,7 +11,6 @@ from typing import (
     Generic,
     Iterable,
     Iterator,
-    List,
     Mapping,
     Optional,
     Tuple,
@@ -35,7 +33,6 @@ from boiling_learning.io.io import (
 from boiling_learning.io.json_encoders import GenericJSONDecoder, GenericJSONEncoder
 from boiling_learning.preprocessing.transformers import Creator, Transformer
 from boiling_learning.utils.functional import Pack
-from boiling_learning.utils.parameters import Parameters
 from boiling_learning.utils.sentinels import EMPTY, Emptiable
 from boiling_learning.utils.utils import (  # JSONDataType,; TODO: maybe using JSONDataType would be a good idea
     PathLike,
@@ -533,28 +530,6 @@ class Manager(
 
         raise ValueError('invalid *multiple_ids_handler* passed.')
 
-    def _repeated_elems(self) -> Tuple[Dict[str, List[str]], List[str]]:
-        all_contents = self.contents().items()
-
-        repetition_dict = {
-            elem_id: sorted(
-                {
-                    other_id
-                    for other_id, other_contents in all_contents
-                    if other_id != elem_id and self._description_comparer(contents, other_contents)
-                },
-                key=self._parse_index,
-            )
-            for elem_id, contents in all_contents
-        }
-
-        repeated = sorted(
-            {x for lst in repetition_dict.values() for x in lst[1:]},
-            key=self._parse_index,
-        )
-
-        return repetition_dict, repeated
-
     def _load_elem(self, path: PathLike, raise_if_load_fails: bool) -> BoolFlagged[_ElemType]:
         success, elem = self.load_elem(path)
 
@@ -562,27 +537,6 @@ class Manager(
             raise RuntimeError('loading failed with *raise_if_load_fails*.')
         else:
             return success, elem
-
-    def update_entries(
-        self,
-        updater: Callable[[str, Parameters], Any],
-        elem_ids: Optional[Iterable[str]] = None,
-        save: bool = True,
-    ) -> None:
-        if elem_ids is None:
-            elem_ids = self.entries
-
-        self.load_lookup_table()
-
-        entries = self.entries
-        for elem_id in elem_ids:
-            old_entry = copy.deepcopy(entries[elem_id])
-            new_entry = updater(elem_id, old_entry)
-
-            self[elem_id] = new_entry
-
-        if save:
-            self.save_lookup_table()
 
     def retrieve_elems(
         self, entry_pred: Optional[Callable[[Mapping], bool]] = None

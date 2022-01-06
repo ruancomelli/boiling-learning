@@ -2,10 +2,10 @@
 .TESTS_FOLDER = tests
 .STUBS_FOLDER = typings
 
-.AUTOFLAKE = $(shell autoflake --in-place --recursive --expand-star-imports --remove-duplicate-keys --remove-unused-variables --remove-all-unused-imports --ignore-init-module-imports $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
-.UNIMPORT = $(shell unimport --remove --gitignore --ignore-init --include-star-import $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
-.BLACK = $(shell black $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
-.ISORT = $(shell isort $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
+.AUTOFLAKE = $(shell poetry run autoflake --in-place --recursive --expand-star-imports --remove-duplicate-keys --remove-unused-variables --remove-all-unused-imports --ignore-init-module-imports $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
+.UNIMPORT = $(shell poetry run unimport --remove --gitignore --ignore-init --include-star-import $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
+.BLACK = $(shell poetry run black $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
+.ISORT = $(shell poetry run isort $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
 .FORMAT = $(foreach command,.AUTOFLAKE .UNIMPORT .BLACK .ISORT,$(call $(command)))
 
 .READD = $(shell git update-index --again)
@@ -13,16 +13,16 @@
 
 .PHONY: coverage
 coverage:
-	@coverage run --source=$(.PROJECT)/ -m pytest $(.TESTS_FOLDER)
-	@coverage report -m
+	@poetry run coverage run --source=$(.PROJECT)/ -m pytest $(.TESTS_FOLDER)
+	@poetry run coverage report -m
 
 .PHONY: test
 test:
-	@pytest --doctest-modules $(.PROJECT) $(.TESTS_FOLDER)
+	@poetry run pytest --doctest-modules $(.PROJECT) $(.TESTS_FOLDER)
 
 .PHONY: tox
 tox:
-	@tox
+	@poetry run tox
 
 .PHONY: check
 check:
@@ -30,7 +30,7 @@ check:
 
 .PHONY: typecheck
 typecheck:
-	@mypy $(.PROJECT)
+	@poetry run mypy $(.PROJECT)
 
 .PHONY: format
 format:
@@ -45,7 +45,7 @@ autofix:
 
 .PHONY: commit
 commit: autofix
-	@cz commit
+	@poetry run cz commit
 
 .PHONY: release
 release:
@@ -56,6 +56,10 @@ release:
 # 	MINOR or PATCH -> PATCH (v0.2.3 -> v0.2.4)
 # effectively avoiding incrementing the MAJOR version number while the first
 # stable version (v1.0.0) is not released
-	cz bump --increment $(shell cz bump --dry-run | grep -q "MAJOR" && echo "MINOR" || echo "PATCH")
+	poetry run cz bump --increment $(shell cz bump --dry-run | grep -q "MAJOR" && echo "MINOR" || echo "PATCH")
 	git push
 	git push --tags
+
+.PHONY: run
+run:
+	poetry run python main.py

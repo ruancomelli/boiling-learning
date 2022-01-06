@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime
 import enum
 import itertools
 import json
@@ -8,17 +7,13 @@ import operator
 import os
 import pprint
 import random
-import re
 import string
-import zlib
 from collections import ChainMap
 from contextlib import contextmanager
-from functools import partial, wraps
-from itertools import product
+from functools import partial
 from os.path import relpath as _relative_path
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from timeit import default_timer
 from typing import (
     Any,
     Callable,
@@ -43,11 +38,9 @@ import funcy
 import matplotlib.pyplot as plt
 import modin.pandas as pd
 import more_itertools as mit
-import zict
 from dataclassy.dataclass import DataClass
 from dataclassy.functions import is_dataclass, is_dataclass_instance
 from frozendict import frozendict
-from more_itertools import unzip
 from plum import dispatch
 from sortedcontainers import SortedSet
 from typing_extensions import overload
@@ -82,10 +75,6 @@ PathLike = Union[str, os.PathLike]
 
 
 # ---------------------------------- Utility functions ----------------------------------
-def empty(*args, **kwargs) -> None:
-    pass
-
-
 @overload
 def indexify(arg: Iterable) -> Iterable[int]:
     ...
@@ -101,22 +90,6 @@ def indexify(arg: Union[Iterable, Collection]) -> Iterable[int]:
         return range(len(arg))
     except TypeError:
         return funcy.walk(0, enumerate(arg))
-
-
-def constant_factory(value: Callable[[], _T]) -> Callable[..., _T]:
-    def _constant(*args, **kwargs):
-        return value()
-
-    return _constant
-
-
-def comment(f: Callable, s: str = '', printer: Callable[[str], Any] = print) -> Callable:
-    @wraps(f)
-    def wrapped(*args, **kwargs):
-        printer(s)
-        return f(*args, **kwargs)
-
-    return wrapped
 
 
 @dispatch
@@ -183,17 +156,6 @@ def multipop(lst: MutableSequence[_T], indices: Collection[int]) -> List[_T]:
     return pop
 
 
-def has_duplicates(iterable: Iterable) -> bool:
-    if isinstance(iterable, Sequence):
-        iterable_seq = iterable
-    elif isinstance(iterable, set):
-        return False
-    else:
-        iterable_seq = tuple(iterable)
-
-    return len(iterable_seq) != mit.ilen(remove_duplicates(iterable_seq))
-
-
 def missing_ints(ints: Iterable[int]) -> Iterable[int]:
     # source: adapted from <https://stackoverflow.com/questions/16974047/efficient-way-to-find-missing-elements-in-an-integer-sequence>
     ints = SortedSet(ints)
@@ -224,13 +186,6 @@ def merge_dicts(*dict_args: Mapping, latter_precedence: bool = True) -> dict:
         dict_args = reversed(dict_args)
 
     return dict(ChainMap(*dict_args))
-
-
-def partial_isinstance(type_: Type) -> Callable[[Any], bool]:
-    def wrapped(x) -> bool:
-        return isinstance(x, type_)
-
-    return wrapped
 
 
 def one_factor_at_a_time(
@@ -276,95 +231,8 @@ def one_factor_at_a_time(
                 yield head + (item,) + tail
 
 
-def combine_dict(
-    dct: Mapping[Any, Iterable],
-    gen: Optional[Callable[[list], Iterable[Iterable]]] = None,
-) -> Iterator[dict]:
-    if gen is None:
-
-        def default_gen(x):
-            return product(*x)
-
-        gen = default_gen
-
-    keys, iterables = unzip(dct.items())
-    keys = list(keys)
-    iterables = list(iterables)
-
-    for combination in gen(iterables):
-        yield dict(zip(keys, combination))
-
-
-def dict_product(**kwargs: Mapping) -> Iterator[dict]:
-    # source: <https://stackoverflow.com/a/5228294/5811400>
-    keys = kwargs.keys()
-    values = kwargs.values()
-    for instance in product(*values):
-        yield dict(zip(keys, instance))
-
-
 def invert_dict(d: Mapping) -> dict:
     return funcy.walk(reversed, dict(d))
-
-
-class inclusive_bidict(dict):
-    '''Inclusive bidirectional dictionary.
-
-    Here is a class for a bidirectional dict.
-
-    Note that:
-
-    1) The inverse directory bd.inverse auto-updates itself when the standard dict bd is modified.
-    2) The inverse directory bd.inverse[value] is always a list of key such that bd[key] == value.
-    3) Unlike the bidict module from https://pypi.python.org/pypi/bidict, here we can have 2 keys having same value, this is very important.
-
-    Usage:
-    >>> bd = inclusive_bidict({'a': 1, 'b': 2})
-    >>> bd
-    {'a': 1, 'b': 2}
-    >>> bd.inverse
-    {1: ['a'], 2: ['b']}
-    >>> bd['c'] = 1 # Now two keys have the same value (= 1)
-    >>> bd
-    {'a': 1, 'b': 2, 'c': 1}
-    >>> bd.inverse
-    {1: ['a', 'c'], 2: ['b']}
-    >>> del bd['c']
-    >>> bd
-    {'a': 1, 'b': 2}
-    >>> bd.inverse
-    {1: ['a'], 2: ['b']}
-    >>> del bd['a']
-    >>> bd
-    {'b': 2}
-    >>> bd.inverse
-    {2: ['b']}
-    >>> bd['b'] = 3
-    >>> bd
-    {'b': 3}
-    >>> bd.inverse
-    {2: [], 3: ['b']}
-
-    Source: <https://stackoverflow.com/a/21894086/5811400>
-    '''
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.inverse = {}
-        for key, value in self.items():
-            self.inverse.setdefault(value, []).append(key)
-
-    def __setitem__(self, key, value):
-        if key in self:
-            self.inverse[self[key]].remove(key)
-        super().__setitem__(key, value)
-        self.inverse.setdefault(value, []).append(key)
-
-    def __delitem__(self, key):
-        self.inverse.setdefault(self[key], []).remove(key)
-        if self[key] in self.inverse and not self.inverse[self[key]]:
-            del self.inverse[self[key]]
-        super().__delitem__(key)
 
 
 def extract_keys(
@@ -377,10 +245,6 @@ def extract_keys(
     for k, v in d.items():
         if comparer(v):
             yield k
-
-
-def map_keys(dct, key_map):
-    return {v: dct[k] for k, v in key_map.items()}
 
 
 class KeyedDefaultDict(DefaultDict[_Key, _Value]):
@@ -625,13 +489,6 @@ def transpose(iterable: _T) -> Iterable[Tuple[_T, ...]]:
     return zip(*iterable)
 
 
-def projection(*indices):
-    def wrapped(*args):
-        return tuple(args[i] for i in indices)
-
-    return wrapped
-
-
 def replace(iterable, new_iterable):
     # Iterates over iterable and new_iterable, yielding only new_iterable values.
     # This effectively replaces every element in iterable with elements in new_iterable.
@@ -683,22 +540,6 @@ def ensure_parent(path: PathLike, root: Optional[PathLike] = None) -> Path:
     return resolve(path, root=root, parents=True)
 
 
-def remove_copy(directory, pattern):
-    def remove_copy_idx(path):
-        pattern = re.compile(r'(.*) \([0-9]+\)\.png')
-        matches = pattern.match(path.name)
-        if matches:
-            name = matches[1]
-            return (True, path.with_name(name).with_suffix(path.suffix))
-        else:
-            return (False, None)
-
-    for f in Path(directory).glob(pattern):
-        success, original_f = remove_copy_idx(f)
-        if success and original_f.is_file():
-            f.unlink()
-
-
 # Source: https://stackoverflow.com/a/34236245/5811400
 def is_parent_dir(parent: PathLike, subdir: PathLike) -> bool:
     parent = resolve(parent)
@@ -710,7 +551,6 @@ def is_parent_dir(parent: PathLike, subdir: PathLike) -> bool:
 def rmdir(
     path: PathLike,
     recursive: bool = False,
-    keep: bool = False,
     missing_ok: bool = False,
 ) -> None:
     path = resolve(path)
@@ -728,18 +568,9 @@ def rmdir(
             if child.is_file():
                 child.unlink()
             elif child.is_dir():
-                rmdir(child, recursive=recursive, keep=False, missing_ok=True)
-        if not keep:
-            path.rmdir()
-    elif keep:
-        ValueError('cannot keep dir when not in recursive mode.')
+                rmdir(child, recursive=recursive, missing_ok=True)
 
-
-def group_files(path, keyfunc=operator.attrgetter('suffix')):
-    d = {}
-    for p in filter(operator.methodcaller('is_file'), path.iterdir()):
-        d.setdefault(keyfunc(p), []).append(p)
-    return d
+    path.rmdir()
 
 
 def dir_as_tree(dir_path, file_pred=None, dir_pred=None):
@@ -761,11 +592,6 @@ def dir_as_tree_apply(dir_path, fs, dir_pred=None):
         for path in dir_path.iterdir()
         if path.is_dir() and (dir_pred is None or dir_pred(path))
     }
-
-
-def count_file_lines(path):
-    with open(path) as f:
-        return mit.ilen(f)
 
 
 def generate_string(length: int = 6, chars: Sequence[str] = string.ascii_lowercase) -> str:
@@ -797,78 +623,9 @@ def tempfilepath(suffix: Optional[str] = None) -> Iterator[Path]:
         yield filepath
 
 
-def JSONDict(path: PathLike, dumps: Callable[[_T], str], loads: Callable[[str], _T]) -> zict.Func:
-    path = ensure_dir(path)
-    file = zict.File(path, mode='a')
-    compress = zict.Func(zlib.compress, zlib.decompress, file)
-
-    return zict.Func(
-        lambda obj: dumps(obj).encode('utf-8'),
-        lambda byte_obj: loads(byte_obj.decode('utf-8')),
-        compress,
-    )
-
-
-def fix_path(path: PathLike, substitution_dict: Optional[Dict[str, str]] = None) -> Path:
-    path = resolve(path)
-    path_str = str(path)
-
-    if substitution_dict is None:
-        substitution_dict = {
-            ' ': '\\ ',
-            '?': '\\?',
-            '&': '\\&',
-            '(': '\\(',
-            ')': '\\)',
-            '*': '\\*',
-            '<': '\\<',
-            '>': '\\>',
-        }
-
-    for orig, dest in substitution_dict.items():
-        path_str = path_str.replace(orig, dest)
-
-    return Path(path_str)
-
-
-# ---------------------------------- Timer ----------------------------------
-@contextmanager
-def elapsed_timer():
-    # Source: <https://stackoverflow.com/a/61613140/5811400>
-
-    class _Timer:
-        pass
-
-    _Timer.start = default_timer()
-    yield _Timer
-    _Timer.end = default_timer()
-    _Timer.duration = _Timer.end - _Timer.start
-
-
 # ---------------------------------- Class printing ----------------------------------
-def simple_pprint(self, obj, stream, indent, allowance, context, level):
-    """
-    Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
-    """
-    # Source: <https://stackoverflow.com/a/52521743/5811400>
-    write = stream.write
-
-    class_name = obj.__class__.__name__
-    write(class_name + '(')
-    _format_kwarg_dict_items(
-        self,
-        obj.__dict__.copy().items(),
-        stream,
-        indent + len(class_name),
-        allowance + 1,
-        context,
-        level,
-    )
-    write(')')
-
-
 def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
-    def simple_pprint(self, obj, stream, indent, allowance, context, level):
+    def _simple_pprint(self, obj: Any, stream, indent: int, allowance, context, level):
         """
         Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
         """
@@ -900,7 +657,7 @@ def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
         )
         write(')')
 
-    return simple_pprint
+    return _simple_pprint
 
 
 def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, level):
@@ -934,22 +691,6 @@ def simple_pprint_class(cls: _TypeT, *names: str) -> _TypeT:
 
 
 # ---------------------------------- Mixins ----------------------------------
-class NamedMixin:
-    def __init__(self, name, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.name: str = name
-
-
-class FrozenNamedMixin:
-    def __init__(self, name, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self._name: str = name
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-
 class SimpleRepr:
     """A mixin implementing a simple __repr__."""
 
@@ -983,19 +724,7 @@ class DictEq:
         return not self.__eq__(other)
 
 
-# ---------------------------------- Timing ----------------------------------
-
-
-def get_timestamp(fmt='%Y-%m-%dT%H:%M:%SZ'):
-    return datetime.datetime.now().strftime(fmt)
-
-
 # ---------------------------------- Enum ----------------------------------
-class NoValueEnum(enum.Enum):
-    def __repr__(self):
-        return '<%s.%s>' % (self.__class__.__name__, self.name)
-
-
 def enum_item(enumeration: Type[_EnumType], item: Union[_EnumType, int, str]) -> _EnumType:
     if isinstance(item, str):
         return enumeration[item]

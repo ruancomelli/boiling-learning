@@ -31,7 +31,8 @@ from boiling_learning.preprocessing.transformers import (
 )
 from boiling_learning.utils.functional import Kwargs, Pack
 from boiling_learning.utils.parameters import Parameters
-from boiling_learning.utils.utils import PathLike, elapsed_timer, resolve
+from boiling_learning.utils.timing import Timer
+from boiling_learning.utils.utils import PathLike, resolve
 
 VideoDatasetElement = Tuple[np.ndarray, Dict[str, Any]]
 SliceableVideoDataset = SliceableDataset[VideoDatasetElement]
@@ -203,7 +204,7 @@ def dataset_creator(
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', category=ResourceWarning)
 
-            with elapsed_timer() as timer:
+            with Timer() as timer:
                 ds_dict[name] = experiment_video_dataset_manager.provide_elem(
                     creator_description=Kwargs(
                         experiment_video_dataset_params[['creator', 'desc']]
@@ -245,7 +246,7 @@ def dataset_post_processor(
     force_test_augmentors: Container[str] = frozenset(),
     take: Optional[int] = None,
     verbose: bool = False,
-):
+) -> DatasetTriplet:
     data_augmentors = tuple(data_augmentors)
 
     if verbose:

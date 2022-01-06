@@ -7,7 +7,7 @@ from typing import Any, Container, Optional, Sequence, Tuple, Union
 import dataclassy
 import funcy
 
-from boiling_learning.datasets import DatasetSplits
+from boiling_learning.datasets.datasets import DatasetSplits
 from boiling_learning.datasets.sliceable import (
     SliceableDataset,
     load_sliceable_dataset,
@@ -50,7 +50,7 @@ def main(
     augmentors_to_force: Container[str] = frozenset({'random_cropper'}),
     experiment_video_saver: Optional[SaverFunction[DatasetTriplet]] = None,
     as_tensors: bool = False,
-) -> Tuple[int, DatasetTriplet]:
+) -> Tuple[str, DatasetTriplet]:
     if not augment_train:
         augmentors = [
             data_augmentor
@@ -129,11 +129,13 @@ def main(
     dataset_params[['post_processor', {'desc', 'value'}, 'prefetch']] = True
     dataset_params[['post_processor', {'desc', 'value'}, 'shuffle_size']] = (
         min(shuffle_size, dataset_size)
-        if None not in {shuffle_size, dataset_size}
+        if None not in {shuffle_size, dataset_size} and isinstance(dataset_size, int)
         else shuffle_size
     )
     dataset_params[['post_processor', {'desc', 'value'}, 'batch_size']] = (
-        min(batch_size, dataset_size) if None not in {batch_size, dataset_size} else batch_size
+        min(batch_size, dataset_size)
+        if None not in {batch_size, dataset_size} and isinstance(dataset_size, int)
+        else batch_size
     )
     dataset_params[['post_processor', {'desc', 'value'}, 'augment_test']] = augment_test
 

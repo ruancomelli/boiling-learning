@@ -1,10 +1,12 @@
 import operator
-from typing import Callable, Generic, Iterator, Mapping, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Generic, Iterator, Mapping, Optional, Tuple, TypeVar, Union
 
 import funcy
+from typing_extensions import ParamSpec
 
 from boiling_learning.utils.dtypes import auto_dtype, new_py_function
 from boiling_learning.utils.functional import Pack, nth_arg
+from boiling_learning.utils.typeutils import CallableWithFirst
 from boiling_learning.utils.utils import JSONDataType, KeyedDefaultDict, SimpleStr
 
 _X = TypeVar('_X')
@@ -16,22 +18,23 @@ _Y2 = TypeVar('_Y2')
 C = TypeVar('C')
 T = TypeVar('T')
 S = TypeVar('S')
-U = TypeVar('U')
-V = TypeVar('V')
+_P = ParamSpec('_P')
 
 
 class Transformer(SimpleStr, Generic[_X, _Y]):
-    def __init__(self, name: str, f: Callable[..., _Y], pack: Pack = Pack()) -> None:
+    def __init__(
+        self, name: str, f: CallableWithFirst[_X, _P, _Y], pack: Pack[Any, Any] = Pack()
+    ) -> None:
         self.__name__: str = name
-        self.pack = pack
-        self.transformer = pack.rpartial(f)
+        self._call = pack.rpartial(f)
+        self.pack: Pack[Any, Any] = pack
 
     @property
     def name(self) -> str:
         return self.__name__
 
-    def __call__(self, arg: _X, *args, **kwargs) -> _Y:
-        return self.transformer(arg, *args, **kwargs)
+    def __call__(self, arg: _X, *args: Any, **kwargs: Any) -> _Y:
+        return self._call(arg, *args, **kwargs)
 
     @classmethod
     def make(cls: Callable[..., C], name: str, *args, **kwargs) -> Callable[[Callable], C]:

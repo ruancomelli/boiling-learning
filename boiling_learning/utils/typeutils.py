@@ -1,13 +1,16 @@
-from typing import Any, Tuple, TypeVar
+from typing import Any, Tuple, Type, TypeVar
 
 import typeguard
-from typing_extensions import Protocol
+from typing_extensions import ParamSpec, Protocol
 
 _T = TypeVar('_T')
+_X_contra = TypeVar('_X_contra', contravariant=True)
+_Y_co = TypeVar('_Y_co', covariant=True)
+_P = ParamSpec('_P')
 Many = Tuple[_T, ...]
 
 
-def typechecks(obj, type_) -> bool:
+def typechecks(obj: Any, type_: Type[Any]) -> bool:
     try:
         typeguard.check_type('', obj, type_)
         return True
@@ -25,3 +28,8 @@ class SupportsLessThan(Protocol):
 
 
 SupportsLessThanT = TypeVar('SupportsLessThanT', bound=SupportsLessThan)
+
+
+class CallableWithFirst(Protocol[_X_contra, _P, _Y_co]):
+    def __call__(self, x: _X_contra, *args: _P.args, **kwargs: _P.kwargs) -> _Y_co:
+        ...

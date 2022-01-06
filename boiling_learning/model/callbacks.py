@@ -44,17 +44,20 @@ class AdditionalValidationSets(Callback):
     def _expand_validation_set(self, val_set, idx):
         if len(val_set) == 1:
             return val_set[0], None, None, f'val_{idx}'
-        elif len(val_set) == 2:
+
+        if len(val_set) == 2:
             return val_set[0], None, None, val_set[1]
-        elif len(val_set) == 3:
+
+        if len(val_set) == 3:
             return val_set[0], val_set[1], None, val_set[2]
-        elif len(val_set) == 4:
+
+        if len(val_set) == 4:
             return val_set
-        else:
-            raise ValueError(
-                'every validation set must be either in the form'
-                ' (data,), (data, name), (x, y, name) or (x, y, sample_weights, name).'
-            )
+
+        raise ValueError(
+            'every validation set must be either in the form'
+            ' (data,), (data, name), (x, y, name) or (x, y, sample_weights, name).'
+        )
 
     def on_train_begin(self, logs=None):
         self.epoch = []
@@ -139,74 +142,75 @@ class TimePrinter(Callback):
             }
         self.when: FrozenSet[str] = frozenset(when)
 
-    def _str_now(self):
+    def _str_now(self) -> str:
         return datetime.datetime.now().strftime(self.fmt)
 
-    def on_batch_begin(self, *args, **kwargs):
+    def on_batch_begin(self, *args: Any, **kwargs: Any) -> None:
         if 'on_batch_begin' in self.when:
             self.streamer(f'--- beginning batch at {self._str_now()}', end='')
 
-    def on_batch_end(self, *args, **kwargs):
+    def on_batch_end(self, *args: Any, **kwargs: Any) -> None:
         if 'on_batch_end' in self.when:
             self.streamer(f' | ending batch at {self._str_now()}')
 
-    def on_epoch_begin(self, epoch: int, *args, **kwargs):
+    def on_epoch_begin(self, epoch: int, *args: Any, **kwargs: Any) -> None:
         self._current_epoch = epoch
         if 'on_epoch_begin' in self.when:
             self.streamer(f'-- beginning epoch {epoch} at {self._str_now()}')
 
-    def on_epoch_end(self, epoch: int, *args, **kwargs):
+    def on_epoch_end(self, epoch: int, *args: Any, **kwargs: Any) -> None:
         if 'on_epoch_end' in self.when:
             self.streamer(f'-- ending epoch {epoch} at {self._str_now()}')
 
-    def on_predict_batch_begin(self, *args, **kwargs):
+    def on_predict_batch_begin(self, *args: Any, **kwargs: Any) -> None:
         if 'on_predict_batch_begin' in self.when:
             self.streamer(f'--- beginning predict_batch at {self._str_now()}', end='')
 
-    def on_predict_batch_end(self, *args, **kwargs):
+    def on_predict_batch_end(self, *args: Any, **kwargs: Any) -> None:
         if 'on_predict_batch_end' in self.when:
             self.streamer(f' | ending predict_batch at {self._str_now()}')
 
-    def on_predict_begin(self, *args, **kwargs):
+    def on_predict_begin(self, *args: Any, **kwargs: Any) -> None:
         if 'on_predict_begin' in self.when:
             self.streamer(f'- beginning predict at {self._str_now()}')
 
-    def on_predict_end(self, *args, **kwargs):
+    def on_predict_end(self, *args: Any, **kwargs: Any) -> None:
         if 'on_predict_end' in self.when:
             self.streamer(f'- ending predict at {self._str_now()}')
 
-    def on_test_batch_begin(self, *args, **kwargs):
+    def on_test_batch_begin(self, *args: Any, **kwargs: Any) -> None:
         if 'on_test_batch_begin' in self.when:
             self.streamer(f'--- beginning test_batch at {self._str_now()}', end='')
 
-    def on_test_batch_end(self, *args, **kwargs):
+    def on_test_batch_end(self, *args: Any, **kwargs: Any) -> None:
         if 'on_test_batch_end' in self.when:
             self.streamer(f' | ending test_batch at {self._str_now()}')
 
-    def on_test_begin(self, *args, **kwargs):
+    def on_test_begin(self, *args: Any, **kwargs: Any) -> None:
         if 'on_test_begin' in self.when:
             self.streamer(f'- beginning test at {self._str_now()}')
 
-    def on_test_end(self, *args, **kwargs):
+    def on_test_end(self, *args: Any, **kwargs: Any) -> None:
         if 'on_test_end' in self.when:
             self.streamer(f'- ending test at {self._str_now()}')
 
-    def on_train_batch_begin(self, batch: int, *args, **kwargs):
+    def on_train_batch_begin(self, batch: int, *args: Any, **kwargs: Any) -> None:
         if 'on_train_batch_begin' in self.when:
             self.streamer(
-                f'--- epoch {self._current_epoch}: beginning train_batch {batch} at {self._str_now()}',
+                f'--- epoch {self._current_epoch}: '
+                'beginning train_batch {batch} at {self._str_now()}',
                 end='',
             )
 
-    def on_train_batch_end(self, batch: int, *args, **kwargs):
+    def on_train_batch_end(self, batch: int, *args: Any, **kwargs: Any) -> None:
         if 'on_train_batch_end' in self.when:
             self.streamer(f' | ending train_batch {batch} at {self._str_now()}')
 
-    def on_train_begin(self, *args, **kwargs):
+    def on_train_begin(self, *args: Any, **kwargs: Any) -> None:
         if 'on_train_begin' in self.when:
             self.streamer(f'- beginning train at {self._str_now()}')
 
-    def on_train_end(self, *args, **kwargs):
+    def on_train_end(self, *args: Any, **kwargs: Any) -> None:
         if 'on_train_end' in self.when:
             self.streamer(f'- ending train at {self._str_now()}')
 

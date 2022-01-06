@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import collections
-import itertools
 import operator
 import typing
 from contextlib import contextmanager
@@ -16,23 +15,25 @@ from typing import (
     List,
     Mapping,
     Optional,
-    Tuple,
     Type,
     Union,
-    overload,
 )
 
 import funcy
 import modin.pandas as pd
-import numpy as np
 import tensorflow as tf
 from dataclassy import dataclass
 
 from boiling_learning.io.io import load_json
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
-from boiling_learning.utils import PathLike, VerboseType
 from boiling_learning.utils.functional import apply
-from boiling_learning.utils.utils import concatenate_dataframes, resolve, simple_pprint_class
+from boiling_learning.utils.utils import (
+    PathLike,
+    VerboseType,
+    concatenate_dataframes,
+    resolve,
+    simple_pprint_class,
+)
 
 
 @simple_pprint_class
@@ -329,35 +330,6 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     def paths(self, other: pd.Series) -> None:
         self.df[self.column_names.path] = other
 
-    @overload
-    def modify_path(
-        self,
-        old_path: PathLike,
-        new_path: PathLike,
-        many: bool,  # many: Literal[False]
-    ) -> None:
-        ...
-
-    @overload
-    def modify_path(
-        self,
-        old_path: Iterable[PathLike],
-        new_path: Iterable[PathLike],
-        many: bool,  # many: Literal[True]
-    ) -> None:
-        ...
-
-    def modify_path(self, old_path, new_path, many):
-        if many:
-            old_to_new = dict(zip(map(Path, old_path), map(Path, new_path)))
-            self.paths = self.df[self.column_names.path].apply(
-                lambda x: old_to_new.get(Path(x), x)
-            )
-        else:
-            self.paths = self.df[self.column_names.path].mask(
-                lambda x: Path(x) == Path(old_path), new_path
-            )
-
     def make_dataframe(
         self,
         recalculate: bool = False,
@@ -378,24 +350,6 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             self.values(),
         )
         return concatenate_dataframes(dfs)
-
-    @overload
-    def iterdata_from_dataframe(self, *, select_columns: str) -> Iterable[Tuple[np.ndarray, Any]]:
-        ...
-
-    @overload
-    def iterdata_from_dataframe(
-        self, *, select_columns: Optional[List[str]]
-    ) -> Iterable[Tuple[np.ndarray, dict]]:
-        ...
-
-    def iterdata_from_dataframe(self, *, select_columns=None):
-        return itertools.chain.from_iterable(
-            map(
-                operator.methodcaller('iterdata_from_dataframe', select_columns=select_columns),
-                self.values(),
-            )
-        )
 
     def as_tf_dataset(
         self,
