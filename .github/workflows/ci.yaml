@@ -1,0 +1,23 @@
+name: Boiling Learning CI
+description: Setup environment and run tests for the project
+on:
+  pull_request: {}
+  push:
+    branch: main
+    tags: '*'
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Python
+      id: setup-python
+      uses: actions/setup-python-environment
+      with:
+        python-version: 3.7
+
+    - name: Run tests
+      run: make tox
