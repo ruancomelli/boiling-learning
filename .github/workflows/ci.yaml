@@ -1,9 +1,8 @@
 name: Boiling Learning CI
-description: Setup environment and run tests for the project
 on:
   pull_request: {}
   push:
-    branch: main
+    branches: [main]
     tags: '*'
 
 jobs:
