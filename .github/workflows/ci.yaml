@@ -1,4 +1,4 @@
-name: Boiling Learning CI
+name: Continuous Integration Tests
 on:
   pull_request: {}
   push:
