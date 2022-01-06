@@ -148,6 +148,7 @@ types-frozendict = "^2.0.1"
 types-PyYAML = "^6.0.1"
 vulture = "^2.3"
 tox-asdf = "^0.1.0"
+tox-gh-actions = "^2.8.1"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/python-poetry/poetry/issues"

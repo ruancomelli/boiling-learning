@@ -2756,6 +2756,20 @@ tox = ">=2.0"
 test = ["mock (>=2.0.0)", "pytest (>=4.0.0)", "pytest-cov", "pytest-mock", "pytest-sugar", "flake8", "wheel", "pluggy (>=0.7)"]
 
 [[package]]
+name = "tox-gh-actions"
+version = "2.8.1"
+description = "Seamless integration of tox into GitHub Actions"
+category = "dev"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
+
+[package.dependencies]
+tox = ">=3.12,<4"
+
+[package.extras]
+testing = ["flake8 (>=3,<4)", "pytest-cov (>=2,<3)", "pytest-mock (>=2,<3)", "black", "pytest (>=4,<7)", "pytest (>=6.2.5,<7)", "pytest-randomly (>=3)"]
+
+[[package]]
 name = "traitlets"
 version = "5.1.1"
 description = "Traitlets Python configuration system"
@@ -3008,7 +3022,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.12,<3.10"
-content-hash = "ada306b822020ceb73d4d2080941db6817a12b3eef8e18129e6e4540262cba3f"
+content-hash = "5584a456eef4014f011fc06f74936d735d8a9eedc3cb3725b2426321ac34f160"
 
 [metadata.files]
 absl-py = [
@@ -5181,6 +5195,10 @@ tox = [
 tox-asdf = [
     {file = "tox-asdf-0.1.0.tar.gz", hash = "sha256:09e8a425eecc0545305ad4e4266367560bf4375a4f880db56a1b6b4287c7b7f1"},
     {file = "tox_asdf-0.1.0-py2.py3-none-any.whl", hash = "sha256:18b40e396b70ed9cfb68af2c9463cfd3d38d2786a32872d37a0fe58392e4535f"},
+]
+tox-gh-actions = [
+    {file = "tox-gh-actions-2.8.1.tar.gz", hash = "sha256:43262d7ed1c126dacfd26b600641be4d51199622ce3b3e240e19b557fd4fa5a6"},
+    {file = "tox_gh_actions-2.8.1-py2.py3-none-any.whl", hash = "sha256:9d22215a487f3c2f61ba0af5454010009b23fecf0a909b4a831a20d641a77369"},
 ]
 traitlets = [
     {file = "traitlets-5.1.1-py3-none-any.whl", hash = "sha256:2d313cc50a42cd6c277e7d7dc8d4d7fedd06a2c215f78766ae7b1a66277e0033"},
