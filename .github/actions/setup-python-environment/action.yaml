@@ -35,5 +35,6 @@ runs:
       key: pre-commit|${{ runner.os }}|python-${{ steps.setup-python.outputs.python-version }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
   - name: Install package
+    shell: bash
     run: |
       poetry install
