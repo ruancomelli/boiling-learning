@@ -21,8 +21,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        apt update
-        apt install libegl1-mesa -y
+        sudo apt update
+        sudo apt install libegl1-mesa -y
 
     - name: Set up Python ${{ matrix.python-version }}
       id: setup-python
