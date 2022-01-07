@@ -1,3 +1,13 @@
+## v0.18.0 (2022-01-07)
+
+### Fix
+
+- fix main script
+
+### BREAKING CHANGE
+
+- Various functions had to change in a backwards-incompatible way for the fix to be implemented.
+
 ## v0.17.27 (2022-01-05)
 
 ## v0.17.26 (2022-01-05)
