@@ -5,7 +5,7 @@ from tinydb import TinyDB
 from tinydb.table import Table
 from tinydb_smartcache import SmartCacheTable
 
-from boiling_learning.io.json import serialize
+from boiling_learning.management.descriptors import describe
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.utils import JSONDataType, PathLike, ensure_dir, ensure_parent, resolve
 
@@ -17,11 +17,12 @@ class TableAllocator:
         self,
         path: PathLike,
         db: Table,
-        serializer: Callable[[Pack[Any, Any]], JSONDataType] = serialize,
+        *,
+        describer: Callable[[Pack[Any, Any]], JSONDataType] = describe,
     ) -> None:
         self.path: Path = resolve(path)
         self.db: Table = db
-        self.serializer: Callable[[Pack[Any, Any]], JSONDataType] = serializer
+        self.describer: Callable[[Pack[Any, Any]], JSONDataType] = describer
 
     def _doc_path(self, doc_id: int) -> Path:
         return ensure_parent(self.path / f'{doc_id}.json')
@@ -33,12 +34,16 @@ class TableAllocator:
         return self.db.insert(serialized)
 
     def __call__(self, pack: Pack[Any, Any]) -> Path:
-        serialized: JSONDataType = self.serializer(pack)
+        serialized: JSONDataType = self.describer(pack)
         doc_id: int = self._provide(serialized)
         return self._doc_path(doc_id)
 
 
-def default_table_allocator(root: PathLike) -> TableAllocator:
+def default_table_allocator(
+    root: PathLike,
+    *,
+    describer: Callable[[Pack[Any, Any]], JSONDataType] = describe,
+) -> TableAllocator:
     root = ensure_dir(root)
     datapath = ensure_dir(root / 'data')
     dbpath = root / 'db.json'
@@ -46,4 +51,4 @@ def default_table_allocator(root: PathLike) -> TableAllocator:
     db = TinyDB(str(dbpath))
     db.table_class = SmartCacheTable
 
-    return TableAllocator(datapath, db)
+    return TableAllocator(datapath, db, describer=describer)

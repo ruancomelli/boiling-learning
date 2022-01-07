@@ -32,6 +32,7 @@ from slicerator import pipeline
 from typing_extensions import TypeGuard
 
 from boiling_learning.io import json
+from boiling_learning.io.io import LoaderFunction, SaverFunction
 from boiling_learning.utils.dtypes import NestedTypeSpec, auto_spec, tf_str_dtype_bidict
 from boiling_learning.utils.iterutils import distance_maximized_evenly_spaced_indices
 from boiling_learning.utils.slicerators import Slicerator
@@ -302,7 +303,10 @@ class SliceableDataset(Sequence[_T]):
         return auto_spec(self[0])
 
     def getitem_from_index(self, index: int) -> _T:
-        return self._data[index]
+        try:
+            return self._data[index]
+        except KeyError as e:
+            raise IndexError(index, len(self)) from e
 
     def getitem_from_boolean_mask(self, mask: BooleanMask) -> SliceableDataset[_T]:
         if not self._is_boolean_mask(mask):
@@ -492,25 +496,67 @@ def _json_decode_tensor(obj: Dict[str, Any]) -> tf.Tensor:
     return tf.io.parse_tensor(tensor, dtype)
 
 
-def save_sliceable_dataset(obj: SliceableDataset[Any], path: PathLike) -> None:
+def save_sliceable_dataset(
+    obj: SliceableDataset[_T], path: PathLike, element_saver: SaverFunction[_T]
+) -> None:
     path = resolve(path, dir=True)
 
     spec = {'length': len(obj)}
     json.dump(spec, path / 'spec.json')
 
     for index, element in enumerate(obj):
-        json.dump(element, path / f'{index}.json')
+        element_saver(element, path / str(index))
 
 
-def load_sliceable_dataset(path: PathLike) -> SliceableDataset[Any]:
+def load_sliceable_dataset(
+    path: PathLike, element_loader: LoaderFunction[_T]
+) -> SliceableDataset[_T]:
     resolved_path: Path = resolve(path)
 
     spec = json.load(resolved_path / 'spec.json')
+    length = spec['length']
+
+    for index in range(length):
+        if not _sliceable_dataset_element_path(resolved_path, index).exists():
+            raise FileNotFoundError
 
     def _get_element(index: int) -> Any:
-        return json.load(resolved_path / f'{index}.json')
+        return element_loader(_sliceable_dataset_element_path(resolved_path, index))
 
     return SliceableDataset.from_func(_get_element, length=spec['length'])
+
+
+def save_supervised_sliceable_dataset(
+    obj: SupervisedSliceableDataset[_X, _Y],
+    path: PathLike,
+    feature_saver: SaverFunction[_X],
+    target_saver: SaverFunction[_Y],
+) -> None:
+    def element_saver(element: Tuple[_X, _Y], path: PathLike) -> None:
+        resolved_path = resolve(path, dir=True)
+        feature, target = element
+        feature_saver(feature, resolved_path / 'feature')
+        target_saver(target, resolved_path / 'target')
+
+    save_sliceable_dataset(obj, path, element_saver)
+
+
+def load_supervised_sliceable_dataset(
+    path: PathLike,
+    feature_loader: LoaderFunction[_X],
+    target_loader: LoaderFunction[_Y],
+) -> SupervisedSliceableDataset[_X, _Y]:
+    def element_loader(path: PathLike) -> None:
+        resolved_path = resolve(path)
+        feature = feature_loader(resolved_path / 'feature')
+        target = target_loader(resolved_path / 'target')
+        return feature, target
+
+    return load_sliceable_dataset(path, element_loader)
+
+
+def _sliceable_dataset_element_path(root: PathLike, index: int) -> Path:
+    return resolve(root) / str(index)
 
 
 def _absolute_index_for_dataset(dataset: SliceableDataset[Any], index: int) -> int:

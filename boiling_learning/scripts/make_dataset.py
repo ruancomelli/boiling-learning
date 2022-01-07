@@ -1,6 +1,7 @@
 from collections import defaultdict
 from fractions import Fraction
 from functools import partial
+from os import PathLike
 from pathlib import Path
 from typing import Any, Container, Optional, Sequence, Tuple, Union
 
@@ -10,17 +11,20 @@ import funcy
 from boiling_learning.datasets.datasets import DatasetSplits
 from boiling_learning.datasets.sliceable import (
     SliceableDataset,
-    load_sliceable_dataset,
-    save_sliceable_dataset,
+    load_supervised_sliceable_dataset,
+    save_supervised_sliceable_dataset,
 )
+from boiling_learning.io import json
 from boiling_learning.io.io import (
     DatasetTriplet,
     SaverFunction,
     add_bool_flag,
     load_dataset,
+    load_image,
     load_yogadl,
     loader_dataset_triplet,
     save_dataset,
+    save_image,
     save_yogadl,
     saver_dataset_triplet,
 )
@@ -28,8 +32,10 @@ from boiling_learning.management.descriptors import describe
 from boiling_learning.management.managers import Manager
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.transformers import Transformer
+from boiling_learning.preprocessing.video import VideoFrame
 from boiling_learning.utils.functional import Kwargs, P
 from boiling_learning.utils.parameters import Parameters
+from boiling_learning.utils.utils import resolve
 
 
 def main(
@@ -69,8 +75,6 @@ def main(
     dataset_params[['creator', 'desc', 'image_dataset']] = sorted(img_ds.keys())
     dataset_params[['creator', 'value', 'image_dataset']] = img_ds
 
-    print(f'Splits: {splits} ({type(splits)})')
-
     dataset_params[['creator', {'desc', 'value'}, 'splits']] = funcy.walk_values(
         str, dataclassy.asdict(splits)
     )
@@ -96,11 +100,25 @@ def main(
         'params': P(),
     }
 
+    def _feature_saver(image: VideoFrame, path: PathLike) -> None:
+        save_image(image, resolve(path).with_suffix('.png'))
+
+    def _feature_loader(path: PathLike) -> None:
+        return load_image(resolve(path).with_suffix('.png'))
+
+    sliceable_dataset_saver = partial(
+        save_supervised_sliceable_dataset, feature_saver=_feature_saver, target_saver=json.dump
+    )
+
+    sliceable_dataset_loader = partial(
+        load_supervised_sliceable_dataset, feature_loader=_feature_loader, target_loader=json.load
+    )
+
     if experiment_video_saver is None:
         experiment_video_saver = (
             saver_dataset_triplet(save_dataset)
             if as_tensors
-            else saver_dataset_triplet(save_sliceable_dataset)
+            else saver_dataset_triplet(sliceable_dataset_saver)
         )
 
     dataset_params[['creator', 'value', 'save']] = experiment_video_saver
@@ -113,17 +131,9 @@ def main(
     dataset_params[['creator', 'value', 'load']] = (
         loader_dataset_triplet(add_bool_flag(load_dataset))
         if as_tensors
-        else loader_dataset_triplet(add_bool_flag(load_sliceable_dataset))
+        else loader_dataset_triplet(add_bool_flag(sliceable_dataset_loader))
     )
 
-    # dataset_params[['creator', 'desc', 'save']] = {
-    #     'name': 'bl.io.save_yogadl',
-    #     'params': P()
-    # }
-    # dataset_params[['creator', 'desc', 'load']] = {
-    #     'name': 'bl.io.load_yogadl',
-    #     'params': P(shuffle=load_shuffle)
-    # }
     dataset_params[['creator', {'desc', 'value'}, 'reload_after_save']] = True
 
     dataset_params[['post_processor', {'desc', 'value'}, 'prefetch']] = True
@@ -149,7 +159,7 @@ def main(
     if as_tensors:
         loader = loader_dataset_triplet(
             add_bool_flag(
-                partial(load_yogadl, dataset_id=dataset_id, shuffle=shuffle, shuffle_seed=2020),
+                partial(load_yogadl, dataset_id=dataset_id, shuffle=shuffle, shuffle_seed=1997),
                 (FileNotFoundError, AssertionError),
             )
         )
@@ -159,28 +169,9 @@ def main(
         @loader_dataset_triplet
         @add_bool_flag
         def loader(path: Path) -> SliceableDataset[Any]:
-            return load_sliceable_dataset(path).shuffle()
+            return sliceable_dataset_loader(path).shuffle()
 
-        saver = saver_dataset_triplet(save_sliceable_dataset)
-
-    # dataset_params[['creator', 'value', 'save']] = bl.io.saver_dataset_triplet(
-    #     partial(bl.io.save_yogadl, dataset_id=dataset_id)
-    # )
-    # dataset_params[['creator', 'value', 'load']] = bl.io.loader_dataset_triplet(
-    #     bl.io.add_bool_flag(
-    #         partial(
-    #             bl.io.load_yogadl,
-    #             dataset_id=dataset_id,
-    #             shuffle=load_shuffle,
-    #             shuffle_seed=2020
-    #         ),
-    #         (FileNotFoundError, AssertionError)
-    #     )
-    # )
-
-    # workspace_path = dataset_manager.elem_workspace(dataset_id)
-    # snapshot_path = workspace_path / 'snapshot'
-    # dataset_params[['creator', 'value', 'snapshot_path']] = snapshot_path
+        saver = saver_dataset_triplet(sliceable_dataset_saver)
 
     return dataset_id, dataset_manager.provide_elem(
         creator_description=Kwargs(dataset_params[['creator', 'desc']]),

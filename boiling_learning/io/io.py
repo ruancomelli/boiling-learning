@@ -31,30 +31,24 @@ import json_tricks
 import modin.pandas as pd
 import numpy as np
 import tensorflow as tf
+import yogadl
+import yogadl.storage
 from tensorflow.keras.models import load_model
 
 from boiling_learning.utils.dtypes import decode_element_spec, encode_element_spec
 from boiling_learning.utils.functional import Kwargs
 from boiling_learning.utils.utils import PathLike, ensure_dir, ensure_parent, is_, resolve
 
-try:
-    # yogadl is an optional dependency
-    # TODO: read <https://stackoverflow.com/a/27361558/5811400>
-    import yogadl
-    import yogadl.storage
-except ImportError:
-    pass  # TODO: handle this case
-
-
 _T = TypeVar('_T')
 _S = TypeVar('_S')
+_Dataset = TypeVar('_Dataset')
 SaverFunction = Callable[[_S, PathLike], Any]
 LoaderFunction = Callable[[PathLike], _S]
-DatasetTriplet = Tuple[tf.data.Dataset, Optional[tf.data.Dataset], tf.data.Dataset]
+DatasetTriplet = Tuple[_Dataset, Optional[_Dataset], _Dataset]
 OptionalDatasetTriplet = Tuple[
-    Optional[tf.data.Dataset],
-    Optional[tf.data.Dataset],
-    Optional[tf.data.Dataset],
+    Optional[_Dataset],
+    Optional[_Dataset],
+    Optional[_Dataset],
 ]
 BoolFlagged = Tuple[bool, _S]
 BoolFlaggedLoaderFunction = LoaderFunction[BoolFlagged[_S]]

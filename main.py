@@ -3,7 +3,7 @@ from contextlib import suppress
 from fractions import Fraction
 from functools import partial
 from pathlib import Path
-from typing import Any, Dict, ItemsView, KeysView, NamedTuple, ValuesView
+from typing import Any, Dict, ItemsView, KeysView, NamedTuple, Sequence, ValuesView
 
 import funcy
 import json_tricks
@@ -22,10 +22,15 @@ from boiling_learning.datasets.sliceable import (
     SliceableDataset,
     sliceable_dataset_to_tensorflow_dataset,
 )
+from boiling_learning.management.allocators import default_table_allocator
+from boiling_learning.management.cacher import cache
+from boiling_learning.management.descriptors import describe
 from boiling_learning.management.managers import Manager
-from boiling_learning.model.definitions import HoboldNet3
+from boiling_learning.model.definitions import SmallConvNet
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.image_datasets import ImageDataset
+from boiling_learning.preprocessing.transformers import Transformer
+from boiling_learning.preprocessing.video import Video, VideoFrame
 from boiling_learning.scripts import (
     load_cases,
     load_dataset_tree,
@@ -162,13 +167,21 @@ condensation_datasets_dict = set_condensation_datasets_data.main(
 )
 condensation_all_cases = ImageDataset.make_union(*condensation_datasets_dict.values())
 
+# boiling_preprocessors, boiling_augmentors = make_boiling_processors.main(
+#     direct_visualization=True,
+#     downscale_factor=5,
+#     direct_height=180,
+#     indirect_height=108,
+#     indirect_height_ratio=0.4,
+#     width=128,
+# )
 boiling_preprocessors, boiling_augmentors = make_boiling_processors.main(
     direct_visualization=True,
-    downscale_factor=5,
-    direct_height=180,
+    downscale_factor=6,
+    direct_height=90,
     indirect_height=108,
     indirect_height_ratio=0.4,
-    width=128,
+    width=64,
 )
 
 condensation_preprocessors, condensation_augmentors = make_condensation_processors.main(
@@ -206,8 +219,30 @@ load_map = {
     'history': bl.io.load_pkl,
 }
 
+
+@describe.instance(Video)
+def _describe_Video(obj: Video) -> Dict[str, str]:
+    return {'path': obj.path}
+
+
+@cache(
+    allocator=default_table_allocator(analyses_path / 'datasets' / 'frames', describer=describe),
+    saver=bl.io.save_image,
+    loader=bl.io.load_image,
+)
+def get_frame(
+    video: Video,
+    index: int,
+    transformers: Sequence[Transformer[VideoFrame, VideoFrame]],
+) -> VideoFrame:
+    frame = video[index]
+    for transformer in transformers:
+        frame = transformer(frame)
+    return frame
+
+
 experiment_video_dataset_manager = Manager(
-    path=analyses_path / 'datasets' / 'boiling_experiment_video_datasets',
+    path=analyses_path / 'datasets' / 'boiling_experiment_video_datasets2',
     id_fmt='experiment video dataset {index}',
     index_key='index',
     creator=experiment_video_dataset_creator,
@@ -224,7 +259,7 @@ experiment_video_dataset_manager = Manager(
 )
 
 dataset_manager = Manager(
-    path=analyses_path / 'datasets' / 'boiling_datasets',
+    path=analyses_path / 'datasets' / 'boiling_datasets2',
     id_fmt='dataset {index}',
     index_key='index',
     creator=dataset_creator,
@@ -242,7 +277,7 @@ model_manager = Manager(
     index_key='index',
     save_method=bl.io.save_serialized(save_map),
     load_method=bl.io.add_bool_flag(bl.io.load_serialized(load_map), (FileNotFoundError, OSError)),
-    verbose=2,
+    verbose=1,
     key_names=Manager.Keys(elements='model'),
     table_saver=table_saver,
     table_loader=table_loader,
@@ -251,6 +286,10 @@ model_manager = Manager(
 
 experiment_video_dataset_manager.verbose = 2
 dataset_manager.verbose = 2
+
+image_dataset = boiling_cases_timed()[1]
+
+print('Size of the input dataset:', sum(len(ev) for ev in image_dataset.values()))
 
 dataset_id, (ds_train, ds_val, ds_test) = make_dataset.main(
     experiment_video_dataset_manager=experiment_video_dataset_manager,
@@ -266,21 +305,28 @@ dataset_id, (ds_train, ds_val, ds_test) = make_dataset.main(
     augment_train=True,
     augment_test=True,
     # dataset_size=None,
-    dataset_size=Fraction(1, 1000),
+    dataset_size=Fraction(1, 10),
     shuffle=True,
     shuffle_size=None,
-    batch_size=256,
-    verbose=True,
+    # batch_size=256,
+    verbose=False,
 )
 
-assert isinstance(ds_train, SliceableDataset)
-print("ds_train[0]:", ds_train[0])
-print("ds_train[0][0]:", ds_train[0][0])
+print('Size of the TRAIN SET:', len(ds_train.flatten()), f'({len(ds_train)} batches)')
+print('Size of the VAL SET:', len(ds_val.flatten()) if ds_val is not None else None)
+print('Size of the TEST SET:', len(ds_test.flatten()), f'({len(ds_test)} batches)')
 
-ds_train = sliceable_dataset_to_tensorflow_dataset(ds_train)
+assert isinstance(ds_train, SliceableDataset), type(ds_train)
+assert isinstance(ds_val, SliceableDataset), type(ds_val)
+assert isinstance(ds_test, SliceableDataset), type(ds_test)
+assert ds_train
+assert ds_val
+assert ds_test
+
+ds_train = sliceable_dataset_to_tensorflow_dataset(ds_train).batch(16)
 if ds_val is not None:
-    ds_val = sliceable_dataset_to_tensorflow_dataset(ds_val)
-ds_test = sliceable_dataset_to_tensorflow_dataset(ds_test)
+    ds_val = sliceable_dataset_to_tensorflow_dataset(ds_val).batch(16)
+ds_test = sliceable_dataset_to_tensorflow_dataset(ds_test).batch(16)
 
 ds_val_gt10 = bl.datasets.apply_unbatched(
     ds_val,
@@ -307,7 +353,7 @@ model_id, model_dict = make_model.main(
     take_train=None,
     take_val=None,
     additional_val_sets={'HF10': ds_val_gt10},
-    model_creator=HoboldNet3,
+    model_creator=SmallConvNet,
     lr=1e-5,
     target='Flux [W/cm**2]',
     normalize_images=False,
@@ -315,11 +361,14 @@ model_id, model_dict = make_model.main(
     reduce_lr_on_plateau_patience=None,
     early_stopping_patience=10,
     dropout_ratio=0.5,
-    batch_size=128,
+    batch_size=16,
     missing_ok=True,
     include=True,
     hidden_layers_policy='mixed_float16',
     output_layer_policy='float32',
 )
+
+# TODO: try to convert the dataset type from float64 to float32 or float16 to reduce memory usage
+# I have 8GB RAM whereas Google Colab has 12GB... not that much of a difference
 
 print(model_dict)

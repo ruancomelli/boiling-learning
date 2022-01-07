@@ -67,6 +67,54 @@ def LinearRegression(input_shape: Tuple, **kwargs) -> Model:
 
 
 @make_creator(
+    'SmallConvNet',
+    defaults=P(
+        num_classes=3,
+        problem=ProblemType.REGRESSION,
+        fetch=frozenset({'model', 'history'}),
+    ),
+)
+def SmallConvNet(
+    input_shape: Tuple,
+    dropout: Optional[float],
+    hidden_layers_policy: Union[str, Policy],
+    output_layer_policy: Union[str, Policy],
+    problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
+    num_classes: Optional[int] = None,
+    normalize_images: bool = False,
+) -> Model:
+    '''CNN #1 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.'''
+    input_data = Input(shape=input_shape)
+    x = input_data  # start "current layer" as the input layer
+    if normalize_images:
+        x = LayerNormalization()(x)
+    x = Conv2D(
+        16,
+        (5, 5),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(x)
+    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    x = Flatten(dtype=hidden_layers_policy)(x)
+    x = Dense(32, activation='relu', dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+
+    problem = enum_item(ProblemType, problem)
+    if problem is ProblemType.CLASSIFICATION:
+        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
+        predictions = Activation('softmax', dtype=output_layer_policy)(x)
+    elif problem is ProblemType.REGRESSION:
+        x = Dense(1, dtype=hidden_layers_policy)(x)
+        predictions = Activation('linear', dtype=output_layer_policy)(x)
+    else:
+        raise ValueError(f'unknown problem type: \"{problem}\"')
+
+    return Model(inputs=input_data, outputs=predictions)
+
+
+@make_creator(
     'HoboldNet1',
     defaults=P(
         num_classes=3,
