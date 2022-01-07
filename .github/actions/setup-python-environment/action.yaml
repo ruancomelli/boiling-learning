@@ -1,0 +1,40 @@
+name: Setup Python Environment
+description: Setup Python and install dependencies with Poetry
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        default: '3.7'
+        description: Python version number to use.
+        required: true
+        type: string
+runs:
+  using: composite
+  steps:
+  - name: Checkout code
+    uses: actions/checkout@v2
+
+  - name: Setup python ${{ inputs.python-version }}
+    uses: actions/setup-python@v2
+    with:
+      python-version: ${{ inputs.python-version }}
+
+  - name: Setup Poetry
+    uses: Gr1N/setup-poetry@v7
+
+  - name: Cache dependencies
+    uses: actions/cache@v2
+    with:
+      path: ~/.cache/pypoetry/virtualenvs
+      key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+
+  - name: Cache pre-commit
+    uses: actions/cache@v2
+    with:
+      path: ~/.cache/pre-commit
+      key: pre-commit|${{ runner.os }}|python-${{ steps.setup-python.outputs.python-version }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+  - name: Install package
+    shell: bash
+    run: |
+      poetry install
