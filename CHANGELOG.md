@@ -1,3 +1,9 @@
+## v0.18.1 (2022-01-09)
+
+### Refactor
+
+- improve project organization and typing
+
 ## v0.18.0 (2022-01-07)
 
 ### Fix
