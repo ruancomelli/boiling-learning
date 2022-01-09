@@ -136,7 +136,6 @@ def main(
     model_params[['value', 'architecture_setup', 'output_layer_policy']] = mixed_precision.Policy(
         output_layer_policy
     )
-    model_params[[{'desc', 'value'}, 'compile_setup', 'do']] = True
     model_params[['desc', 'compile_setup', 'params', 'optimizer']] = {
         'name': 'Adam',
         'params': optimizer_params,

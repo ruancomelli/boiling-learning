@@ -422,12 +422,11 @@ def BoilNet(
 ) -> Model:
     input_shape = (time_window, *image_shape) if time_window > 0 else image_shape
     flattening = enum_item(FlatteningMode, flattening)
-    flatten = {
+    flatten_layer = {
         FlatteningMode.FLATTEN: Flatten,
         FlatteningMode.AVERAGE_POOLING: GlobalAveragePooling2D,
         FlatteningMode.MAX_POOLING: GlobalMaxPooling2D,
     }[flattening]
-    flatten = flatten()
 
     inputs = Input(shape=input_shape)
 
@@ -450,7 +449,7 @@ def BoilNet(
     conv = distribute(conv_layer(64, (5, 5), padding='same', activation='relu'))(conv)
     conv = distribute(spatial_dropouter())(conv)
     conv = distribute(MaxPool2D((2, 2), strides=(2, 2)))(conv)
-    flatten = distribute(flatten)(conv)
+    flatten = distribute(flatten_layer())(conv)
 
     if dropout is not None:
         dropouter = partial(Dropout, dropout)

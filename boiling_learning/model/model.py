@@ -71,12 +71,9 @@ def make_creator_method(
         with strategy.scope():
             model = builder(problem=problem, num_classes=num_classes, **architecture_setup)
 
-            if compile_setup.get('do', False):
-                model = compiler(model, **compile_setup['params'])
+            model = compiler(model, **compile_setup['params'])
 
-        history = None
-        if fit_setup.get('do', False):
-            history = fitter(model, **fit_setup['params'])
+        history = fitter(model, **fit_setup['params']) if fit_setup.get('do', False) else None
 
         available_data = {'model': model, 'history': history}
 
