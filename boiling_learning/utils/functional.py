@@ -6,21 +6,25 @@ from typing import (
     Any,
     Callable,
     Dict,
+    FrozenSet,
     Generic,
     Hashable,
     Iterable,
     Iterator,
+    List,
     Mapping,
     Optional,
     Sequence,
     Tuple,
     TypeVar,
     Union,
+    overload,
 )
 
 import funcy
 import more_itertools as mit
 
+from boiling_learning.utils.descriptors import describe
 from boiling_learning.utils.frozendict import FrozenDict
 from boiling_learning.utils.sentinels import Sentinel
 
@@ -28,8 +32,6 @@ from boiling_learning.utils.sentinels import Sentinel
 _T = TypeVar('_T')
 _S = TypeVar('_S')
 _U = TypeVar('_U')
-ArgsType = Sequence[_T]
-KwargsType = Mapping[str, _S]
 
 
 def nth_arg(n: int) -> Callable:
@@ -46,23 +48,30 @@ def nth_arg(n: int) -> Callable:
     return _nth
 
 
+ArgsType = Tuple[_T, ...]
+KwargsType = FrozenDict[str, _S]
+
+
 class Pack(Hashable, Generic[_T, _S]):
-    def __init__(self, args: ArgsType[_T] = (), kwargs: KwargsType[_S] = FrozenDict()) -> None:
-        self._args: Tuple[_T] = tuple(args)
-        self._kwargs: FrozenDict[str, _S] = FrozenDict(kwargs)
+    def __init__(self, args: Iterable[_T] = (), kwargs: Mapping[str, _S] = FrozenDict()) -> None:
+        self._args: ArgsType[_T] = tuple(args)
+        self._kwargs: KwargsType[_S] = FrozenDict(kwargs)
 
     @property
-    def args(self) -> Tuple[_T]:
+    def args(self) -> ArgsType[_T]:
         return self._args
 
     @property
     def kwargs(self) -> KwargsType[_S]:
         return self._kwargs
 
+    def pair(self) -> Tuple[ArgsType[_T], KwargsType[_S]]:
+        return (self._args, self._kwargs)
+
     def __bool__(self) -> bool:
         return bool(self.args) or bool(self.kwargs)
 
-    def __eq__(self, other: Pack) -> bool:
+    def __eq__(self, other: Any) -> bool:
         return self is other or (
             isinstance(other, self.__class__)
             and self.args == other.args
@@ -81,7 +90,7 @@ class Pack(Hashable, Generic[_T, _S]):
             raise ValueError(f'*Pack* expects an *int* index or *str* key, but got a {type(loc)}')
 
     def __iter__(self) -> Iterator[Union[Tuple[_T], KwargsType[_S]]]:
-        return iter((self.args, self.kwargs))
+        return iter(self.pair())
 
     def __repr__(self) -> str:
         return f'Pack(args={self.args}, kwargs={self.kwargs})'
@@ -99,10 +108,10 @@ class Pack(Hashable, Generic[_T, _S]):
             )
         )
 
-    def __json_encode__(self) -> Dict[str, Union[list, dict]]:
+    def __json_encode__(self) -> Dict[str, Union[List[_T], Dict[str, _S]]]:
         return {'args': list(self.args), 'kwargs': dict(self.kwargs)}
 
-    def __json_decode__(self, **data) -> None:
+    def __json_decode__(self, args: Iterable[_T], kwargs: Mapping[str, _S]) -> None:
         '''Decode JSON object as Pack.
 
         Expects the object to be in the format *{"args": args, "kwargs": kwargs]*, e.g.:
@@ -116,8 +125,19 @@ class Pack(Hashable, Generic[_T, _S]):
             }
         }
         '''
-        self._args = data['args']
-        self._kwargs = data['kwargs']
+        self._args = tuple(args)
+        self._kwargs = FrozenDict(kwargs)
+
+    def __describe__(self) -> Tuple[Tuple[_T], KwargsType[_S]]:
+        pair = self.pair()
+        if describe.supports(pair):
+            return ((0,), {'a': 'b'})
+            # return describe(pair)
+
+        raise TypeError(
+            'this `Pack` cannot be described because one or more of its arguments is not '
+            f'describable: {self}'
+        )
 
     @classmethod
     def pack(*cls_n_args: _T, **kwargs: _S) -> Pack[_T, _S]:
@@ -133,23 +153,37 @@ class Pack(Hashable, Generic[_T, _S]):
     def rpartial(self, f: Callable[..., _U]) -> Callable[..., _U]:
         return funcy.rpartial(f, *self.args, **self.kwargs)
 
+    @overload
     def __matmul__(self, other: Callable[..., _U]) -> Callable[..., _U]:
+        ...
+
+    @overload
+    def __matmul__(self, other: Any) -> Any:
+        ...
+
+    def __matmul__(self, other: Any) -> Any:
         if callable(other):
             return self.partial(other)
-        else:
-            return NotImplemented
+        return NotImplemented
 
+    @overload
     def __rmatmul__(self, other: Callable[..., _U]) -> Callable[..., _U]:
+        ...
+
+    @overload
+    def __rmatmul__(self, other: Any) -> Any:
+        ...
+
+    def __rmatmul__(self, other: Any) -> Any:
         if callable(other):
             return self.rpartial(other)
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def omit(
         self,
         loc: Union[int, str, Iterable[Union[int, str]]] = (),  # TODO: unify everything here
         pred: Optional[Callable[[_T], bool]] = None,
-    ) -> Pack:
+    ) -> Pack[_T, _S]:
         '''
         p = P(1, 2, None, 4, None, 6, a='a', b='b', c=None, d='d', e=None, f='f')
         p2 = p.omit((0, 2, 'd', 'e'))
@@ -157,15 +191,17 @@ class Pack(Hashable, Generic[_T, _S]):
         p3 = p.omit((0, 2, 'd', 'e'), lambda x: x is None)
         print(p3) # prints Pack(1, 2, 4, None, 6, a=a, b=b, c=None, d=d, f=f)
         '''
+        pos: FrozenSet[int]
+        keys: Tuple[str, ...]
         if isinstance(loc, int):
             pos = frozenset({loc})
-            key = ()
+            keys = ()
         elif isinstance(loc, str):
             pos = frozenset()
-            key = (loc,)
+            keys = (loc,)
         else:
-            pos = frozenset(filter(funcy.isa(int), loc))
-            key = tuple(filter(funcy.isa(str), loc))
+            pos = frozenset(loc_ for loc_ in loc if isinstance(loc_, int))
+            keys = tuple(loc_ for loc_ in loc if isinstance(loc_, str))
 
         enumerated_args = tuple(enumerate(self.args))
         to_remove = funcy.select_keys(pos, enumerated_args)
@@ -175,7 +211,7 @@ class Pack(Hashable, Generic[_T, _S]):
         args = tuple(funcy.select_keys(lambda idx: idx not in to_remove, enumerated_args))
         args = funcy.walk(1, args)
 
-        to_remove = funcy.project(self.kwargs, key)
+        to_remove = funcy.project(self.kwargs, keys)
         if pred is not None:
             to_remove = funcy.select_values(pred, to_remove)
         kwargs = funcy.omit(self.kwargs, to_remove.keys())
@@ -188,7 +224,7 @@ class Pack(Hashable, Generic[_T, _S]):
             args = self.args[:-n_new_args] + new_args
         else:
             args = new_args + self.args[n_new_args:]
-        kwargs = self.kwargs.union(new_kwargs)
+        kwargs = FrozenDict({**self.kwargs, **new_kwargs})
         return Pack(args, kwargs)
 
     def copy(self, *new_args, **new_kwargs) -> Pack:

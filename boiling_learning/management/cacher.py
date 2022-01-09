@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, Iterable, Tuple, TypeVar, Union
 import wrapt
 
 from boiling_learning.io.io import LoaderFunction, SaverFunction, load_json, save_json
-from boiling_learning.management.allocators import default_table_allocator
+from boiling_learning.management.allocators.json_allocator import default_table_allocator
 from boiling_learning.management.persister import FileProvider, Provider
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.utils import PathLike

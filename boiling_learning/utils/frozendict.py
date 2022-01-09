@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Mapping, Optional, TypeVar, Union
+from functools import lru_cache
+from typing import Any, Dict, Mapping, Optional, TypeVar, Union
 
 _Key = TypeVar('_Key')
 _OtherKey = TypeVar('_OtherKey')
@@ -8,26 +9,21 @@ _Value = TypeVar('_Value')
 _OtherValue = TypeVar('_OtherValue')
 
 
-class FrozenDict(dict, Mapping[_Key, _Value]):
+class FrozenDict(Dict[_Key, _Value], Mapping[_Key, _Value]):
     '''
     Source: https://stackoverflow.com/questions/2703599/what-would-a-frozen-dict-be
     Some modifications based on: https://www.python.org/dev/peps/pep-0603/
     '''
 
-    def __init__(self, *args, **kwargs) -> None:
-        self._hash = None
-        super().__init__(*args, **kwargs)
-
-    def __hash__(self):
-        if self._hash is None:
-            self._hash = hash(tuple(sorted(self.items())))
-        return self._hash
+    @lru_cache(maxsize=1)
+    def __hash__(self) -> int:
+        return hash(tuple(sorted(self.items())))
 
     # makes (deep)copy alot more efficient
-    def __copy__(self):
+    def __copy__(self) -> FrozenDict[_Key, _Value]:
         return self
 
-    def __deepcopy__(self, memo=None):
+    def __deepcopy__(self, memo: Optional[Dict[int, Any]] = None) -> FrozenDict[_Key, _Value]:
         if memo is not None:
             memo[id(self)] = self
         return self

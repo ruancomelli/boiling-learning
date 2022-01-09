@@ -18,7 +18,6 @@ from boiling_learning.datasets.datasets import (
 )
 from boiling_learning.datasets.sliceable import SliceableDataset, SupervisedSliceableDataset
 from boiling_learning.io.io import DatasetTriplet
-from boiling_learning.management.descriptors import describe
 from boiling_learning.management.managers import Manager
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
@@ -29,6 +28,7 @@ from boiling_learning.preprocessing.transformers import (
     creator,
     transformer,
 )
+from boiling_learning.utils.descriptors import describe
 from boiling_learning.utils.functional import Kwargs, Pack
 from boiling_learning.utils.parameters import Parameters
 from boiling_learning.utils.timing import Timer

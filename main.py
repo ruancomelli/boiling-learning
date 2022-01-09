@@ -22,9 +22,8 @@ from boiling_learning.datasets.sliceable import (
     SliceableDataset,
     sliceable_dataset_to_tensorflow_dataset,
 )
-from boiling_learning.management.allocators import default_table_allocator
+from boiling_learning.management.allocators.json_allocator import default_table_allocator
 from boiling_learning.management.cacher import cache
-from boiling_learning.management.descriptors import describe
 from boiling_learning.management.managers import Manager
 from boiling_learning.model.definitions import SmallConvNet
 from boiling_learning.preprocessing.cases import Case
@@ -42,6 +41,7 @@ from boiling_learning.scripts import (
     set_condensation_datasets_data,
 )
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist, initialize_gpus
+from boiling_learning.utils.descriptors import describe
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import Many, typename
 from boiling_learning.utils.utils import print_header, resolve
@@ -226,7 +226,7 @@ def _describe_Video(obj: Video) -> Dict[str, str]:
 
 
 @cache(
-    allocator=default_table_allocator(analyses_path / 'datasets' / 'frames', describer=describe),
+    allocator=default_table_allocator(analyses_path / 'datasets' / 'frames'),
     saver=bl.io.save_image,
     loader=bl.io.load_image,
 )

@@ -497,7 +497,7 @@ def _json_decode_tensor(obj: Dict[str, Any]) -> tf.Tensor:
 
 
 def save_sliceable_dataset(
-    obj: SliceableDataset[_T], path: PathLike, element_saver: SaverFunction[_T]
+    obj: SliceableDataset[_T], path: PathLike, element_saver: SaverFunction[_T] = json.dump
 ) -> None:
     path = resolve(path, dir=True)
 
@@ -509,7 +509,7 @@ def save_sliceable_dataset(
 
 
 def load_sliceable_dataset(
-    path: PathLike, element_loader: LoaderFunction[_T]
+    path: PathLike, element_loader: LoaderFunction[_T] = json.load
 ) -> SliceableDataset[_T]:
     resolved_path: Path = resolve(path)
 

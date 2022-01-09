@@ -12,7 +12,7 @@ from oauth2client.client import GoogleCredentials
 from sklearn.linear_model import LinearRegression
 
 from boiling_learning.io.io import load_json, save_json
-from boiling_learning.management.allocators import default_table_allocator
+from boiling_learning.management.allocators.json_allocator import default_table_allocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset

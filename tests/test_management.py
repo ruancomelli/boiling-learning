@@ -5,12 +5,12 @@ from unittest.case import TestCase
 from tinydb import TinyDB
 
 from boiling_learning.io.io import load_json, save_json
-from boiling_learning.management.allocators import TableAllocator
+from boiling_learning.management.allocators.json_allocator import JSONAllocator
 from boiling_learning.management.cacher import cache
-from boiling_learning.management.descriptors import describe
 from boiling_learning.management.managers import Manager
 from boiling_learning.management.persister import FilePersister, FileProvider, Persister, Provider
 from boiling_learning.preprocessing.transformers import Creator
+from boiling_learning.utils.descriptors import describe
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.utils import tempdir, tempfilepath
 
@@ -117,10 +117,10 @@ class PersisterTest(TestCase):
 
 
 class AllocatorsTest(TestCase):
-    def test_TableAllocator(self) -> None:
+    def test_JSONAllocator(self) -> None:
         with tempdir() as directory:
             db = TinyDB(directory / 'db.json')
-            allocator = TableAllocator(directory / 'allocator', db)
+            allocator = JSONAllocator(directory / 'allocator', db)
 
             p1 = P(3.14, 0, name='pi')
             p2 = P('hello')
@@ -133,7 +133,7 @@ class CacherTest(TestCase):
     def test_cache(self) -> None:
         with tempdir() as directory:
             db = TinyDB(directory / 'db.json')
-            allocator = TableAllocator(directory / 'allocator', db)
+            allocator = JSONAllocator(directory / 'allocator', db)
 
             history = []
 

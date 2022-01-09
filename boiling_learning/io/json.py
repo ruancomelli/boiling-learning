@@ -32,12 +32,33 @@ class JSONEncodable(AssociatedType):
     ...
 
 
+class JSONEncodableMeta(type):
+    def __instancecheck__(self, instance: Any) -> bool:
+        return encode.supports(instance)
+
+
+class SupportsJSONEncodable(Supports[JSONEncodable], metaclass=JSONEncodableMeta):
+    ...
+
+
 @_typeclass(JSONEncodable)
 def encode(instance: Supports[JSONEncodable]) -> JSONDataType:
     '''Return a JSON encoding of an object.'''
 
 
 class JSONSerializable(AssociatedType):
+    ...
+
+
+class SupportsJSONSerializableMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        return serialize.supports(instance)
+
+
+class SupportsJSONSerializable(
+    Supports[JSONSerializable],
+    metaclass=SupportsJSONSerializableMeta,
+):
     ...
 
 
@@ -176,16 +197,7 @@ def _serialize_basics(instance: _BasicType) -> _BasicType:
     return instance
 
 
-class JSONEncodableMeta(type):
-    def __instancecheck__(self, instance: Any) -> bool:
-        return encode.supports(instance)
-
-
-class IsJSONEncodable(Supports[JSONEncodable], metaclass=JSONEncodableMeta):
-    ...
-
-
-@serialize.instance(delegate=IsJSONEncodable)
+@serialize.instance(delegate=SupportsJSONEncodable)
 def _serialize_json_encodable(obj: Supports[JSONEncodable]) -> SerializedJSONObject:
     '''Return a JSON serialization of an object.'''
     return {
