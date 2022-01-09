@@ -114,15 +114,14 @@ class SliceableDataset(Sequence[_T]):
         dataset: SliceableDataset[Any], *datasets: SliceableDataset[Any]
     ) -> SliceableDataset[Tuple[Any, ...]]:
         all_datasets = (dataset, *datasets)
-        lenghts = tuple(map(len, all_datasets))
 
-        if not mit.all_equal(lenghts):
+        if not mit.all_equal(map(len, all_datasets)):
             raise ValueError('all datasets must have the same length.')
 
         def getitem(i: int) -> Tuple[Any, ...]:
             return tuple(ds[i] for ds in all_datasets)
 
-        return SliceableDataset.from_func(getitem, length=lenghts[0])
+        return SliceableDataset.from_func(getitem, length=len(dataset))
 
     def __bool__(self) -> bool:
         return len(self) > 0

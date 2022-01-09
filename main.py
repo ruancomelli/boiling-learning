@@ -3,7 +3,18 @@ from contextlib import suppress
 from fractions import Fraction
 from functools import partial
 from pathlib import Path
-from typing import Any, Dict, ItemsView, KeysView, NamedTuple, Sequence, ValuesView
+from typing import (
+    Any,
+    Dict,
+    ItemsView,
+    Iterable,
+    KeysView,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Union,
+    ValuesView,
+)
 
 import funcy
 import json_tricks
@@ -14,19 +25,26 @@ from dotenv import dotenv_values
 
 import boiling_learning as bl
 from boiling_learning.datasets.creators import (
+    VideoDatasetElement,
     dataset_creator,
     dataset_post_processor,
     experiment_video_dataset_creator,
 )
+from boiling_learning.datasets.datasets import DatasetSplits
 from boiling_learning.datasets.sliceable import (
     SliceableDataset,
+    SupervisedSliceableDataset,
+    load_supervised_sliceable_dataset,
+    save_supervised_sliceable_dataset,
     sliceable_dataset_to_tensorflow_dataset,
 )
+from boiling_learning.io import json
 from boiling_learning.management.allocators.json_allocator import default_table_allocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.management.managers import Manager
 from boiling_learning.model.definitions import SmallConvNet
 from boiling_learning.preprocessing.cases import Case
+from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.preprocessing.video import Video, VideoFrame
@@ -44,7 +62,7 @@ from boiling_learning.scripts.utils.initialization import check_all_paths_exist,
 from boiling_learning.utils.descriptors import describe
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import Many, typename
-from boiling_learning.utils.utils import print_header, resolve
+from boiling_learning.utils.utils import PathLike, print_header, resolve
 
 ray.init()
 
@@ -225,6 +243,11 @@ def _describe_Video(obj: Video) -> Dict[str, str]:
     return {'path': obj.path}
 
 
+@describe.instance(ImageDataset)
+def _describe_ImageDataset(obj: ImageDataset) -> Dict[str, str]:
+    return {'path': obj.path}
+
+
 @cache(
     allocator=default_table_allocator(analyses_path / 'datasets' / 'frames'),
     saver=bl.io.save_image,
@@ -239,6 +262,58 @@ def get_frame(
     for transformer in transformers:
         frame = transformer(frame)
     return frame
+
+
+def sliceable_dataset_from_video_and_transformers(
+    video: ExperimentVideo, transformers: Sequence[Transformer[VideoFrame, VideoFrame]]
+) -> SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]:
+    features = SliceableDataset.from_func(
+        partial(get_frame, video=video, transformers=transformers), length=len(video)
+    )
+    targets = SliceableDataset(video.targets())
+    return SupervisedSliceableDataset.from_features_and_targets(features, targets)
+
+
+def _feature_saver(image: VideoFrame, path: PathLike) -> None:
+    bl.io.save_image(image, resolve(path).with_suffix('.png'))
+
+
+def _feature_loader(path: PathLike) -> None:
+    return bl.io.load_image(resolve(path).with_suffix('.png'))
+
+
+sliceable_dataset_saver = partial(
+    save_supervised_sliceable_dataset, feature_saver=_feature_saver, target_saver=json.dump
+)
+
+sliceable_dataset_loader = partial(
+    load_supervised_sliceable_dataset, feature_loader=_feature_loader, target_loader=json.load
+)
+
+
+@cache(
+    allocator=default_table_allocator(analyses_path / 'datasets' / 'sliceable_video_datasets'),
+    saver=bl.io.saver_dataset_triplet(sliceable_dataset_saver),
+    loader=bl.io.loader_dataset_triplet(
+        bl.io.add_bool_flag(sliceable_dataset_loader, FileNotFoundError)
+    ),
+)
+def get_video_dataset(
+    video: ExperimentVideo,
+    transformers: Sequence[Transformer[VideoFrame, VideoFrame]],
+    splits: DatasetSplits,
+    data_preprocessors: Iterable[Transformer[VideoDatasetElement, VideoDatasetElement]],
+    dataset_size: Optional[Union[int, Fraction]] = None,
+) -> VideoFrame:
+    ds = sliceable_dataset_from_video_and_transformers(video, transformers)
+
+    if dataset_size is not None:
+        ds = ds.take(dataset_size)
+
+    for preprocessor in data_preprocessors:
+        ds = ds.map(preprocessor)
+
+    return ds.shuffle().split(splits.train, splits.val, splits.test)
 
 
 experiment_video_dataset_manager = Manager(

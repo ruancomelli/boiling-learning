@@ -463,20 +463,25 @@ class ExperimentVideo(Video):
 
         return tf.data.Dataset.from_generator(lambda: self, tf.float32)
 
+    def targets(
+        self, select_columns: Optional[Union[str, List[str]]] = None
+    ) -> List[Dict[str, Any]]:
+        df = self.make_dataframe(recalculate=False)
+        df = self.convert_dataframe_type(df)
+        df.sort_values(by=self.column_names.index, inplace=True)
+
+        if select_columns is not None:
+            df = df[select_columns]
+
+        return df.to_dict('records')
+
     def as_pairs(
         self,
         *,
         image_preprocessor: Optional[Callable[[np.ndarray], np.ndarray]] = None,
         select_columns: Optional[Union[str, List[str]]] = None,
     ) -> Slicerator[Tuple[np.ndarray, Dict[str, Any]]]:
-        df = self.make_dataframe(recalculate=False)
-        df = self.convert_dataframe_type(df)
-        df = df.sort_values(by=self.column_names.index)
-
-        if select_columns is not None:
-            df = df[select_columns]
-
-        targets = df.to_dict('records')
+        targets = self.targets(select_columns)
 
         if image_preprocessor is not None:
 

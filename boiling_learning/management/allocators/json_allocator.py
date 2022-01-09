@@ -8,6 +8,7 @@ from tinydb_smartcache import SmartCacheTable
 from typing_extensions import final
 
 from boiling_learning.io import json
+from boiling_learning.utils.descriptors import describe
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.utils import JSONDataType, PathLike, ensure_dir, ensure_parent, resolve
 
@@ -29,21 +30,28 @@ def _json_describe_json_serializable(instance: json.SupportsJSONSerializable) ->
     return json.serialize(instance)
 
 
-class PackOfJSONDescribableMeta(type(Pack)):
+def _describable_as_json_isinstance(instance: Any, memo: Any) -> bool:
+    return describe.supports(instance) and json_describe.supports(describe(instance))
+
+
+class DescribableAsJSONDescribableMeta(type):
     def __instancecheck__(cls, instance: Any) -> bool:
-        return (
-            isinstance(instance, Pack)
-            and json_describe.supports(instance.args)
-            and json_describe.supports(instance.kwargs)
-        )
+        return _describable_as_json_isinstance(instance, memo=None)
 
 
-class PackOfJSONDescribable(
-    Pack[Supports[JSONDescribable[_JSONDescription]], Supports[JSONDescribable[_JSONDescription]]],
+class DescribableAsJSONDescribable(
+    Supports[JSONDescribable[_JSONDescription]],
     Generic[_JSONDescription],
-    metaclass=PackOfJSONDescribableMeta,
+    metaclass=DescribableAsJSONDescribableMeta,
 ):
     ...
+
+
+@describe.instance(delegate=DescribableAsJSONDescribable)
+def _json_describe_describable(
+    instance: DescribableAsJSONDescribable[_JSONDescription],
+) -> _JSONDescription:
+    return json_describe(describe(instance))
 
 
 class JSONAllocator:
@@ -77,7 +85,8 @@ def default_table_allocator(
     root: PathLike,
     *,
     describer: Callable[
-        [PackOfJSONDescribable[_JSONDescription]], _JSONDescription
+        [Pack[Supports[JSONDescribable[JSONDataType]], Supports[JSONDescribable[JSONDataType]]]],
+        JSONDataType,
     ] = json_describe,
 ) -> JSONAllocator:
     root = ensure_dir(root)
