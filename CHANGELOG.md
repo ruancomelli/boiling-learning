@@ -1,3 +1,13 @@
+## v0.18.2 (2022-01-11)
+
+### Fix
+
+- **management/allocators/json_allocator**: stop recursive calls in `json_allocator` instance check
+
+### Refactor
+
+- refactor project
+
 ## v0.18.1 (2022-01-09)
 
 ### Refactor

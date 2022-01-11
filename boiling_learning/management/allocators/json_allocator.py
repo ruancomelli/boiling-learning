@@ -61,7 +61,7 @@ def _json_describe_describable(
     return json_describe(describe(instance))
 
 
-class JSONAllocator:
+class JSONTableAllocator:
     def __init__(
         self,
         path: PathLike,
@@ -95,7 +95,7 @@ def default_table_allocator(
         [Pack[Supports[JSONDescribable[JSONDataType]], Supports[JSONDescribable[JSONDataType]]]],
         JSONDataType,
     ] = json_describe,
-) -> JSONAllocator:
+) -> JSONTableAllocator:
     root = ensure_dir(root)
     datapath = ensure_dir(root / 'data')
     dbpath = root / 'db.json'
@@ -103,4 +103,4 @@ def default_table_allocator(
     db = TinyDB(str(dbpath))
     db.table_class = SmartCacheTable
 
-    return JSONAllocator(datapath, db, describer=describer)
+    return JSONTableAllocator(datapath, db, describer=describer)
