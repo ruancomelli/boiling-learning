@@ -30,13 +30,20 @@ def _json_describe_json_serializable(instance: json.SupportsJSONSerializable) ->
     return json.serialize(instance)
 
 
-def _describable_as_json_isinstance(instance: Any, memo: Any) -> bool:
-    return describe.supports(instance) and json_describe.supports(describe(instance))
-
-
 class DescribableAsJSONDescribableMeta(type):
     def __instancecheck__(cls, instance: Any) -> bool:
-        return _describable_as_json_isinstance(instance, memo=None)
+        if not describe.supports(instance):
+            return False
+
+        description = describe(instance)
+
+        # If an object's description is equal to itself, then it is not the job of this
+        # instance check to try to check if it is describable.
+        # We then return `False` and let some other checker do the check.
+        if description == instance:
+            return False
+
+        return json_describe.supports(description)
 
 
 class DescribableAsJSONDescribable(
@@ -47,7 +54,7 @@ class DescribableAsJSONDescribable(
     ...
 
 
-@describe.instance(delegate=DescribableAsJSONDescribable)
+@json_describe.instance(delegate=DescribableAsJSONDescribable)
 def _json_describe_describable(
     instance: DescribableAsJSONDescribable[_JSONDescription],
 ) -> _JSONDescription:
