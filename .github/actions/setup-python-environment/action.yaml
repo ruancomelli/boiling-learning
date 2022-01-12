@@ -11,6 +11,11 @@ on:
 runs:
   using: composite
   steps:
+  - name: Install system dependencies
+    run: |
+      sudo apt update
+      sudo apt install libegl1-mesa -y
+
   - name: Checkout code
     uses: actions/checkout@v2
 

@@ -19,11 +19,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        sudo apt install libegl1-mesa -y
-
     - name: Set up Python ${{ matrix.python-version }}
       id: setup-python
       uses: ./.github/actions/setup-python-environment
