@@ -40,14 +40,11 @@ import modin.pandas as pd
 import more_itertools as mit
 from dataclassy.dataclass import DataClass
 from dataclassy.functions import is_dataclass, is_dataclass_instance
-from frozendict import frozendict
-from plum import dispatch
 from sortedcontainers import SortedSet
 from typing_extensions import overload
 
 from boiling_learning.utils.functional import Kwargs
 from boiling_learning.utils.iterutils import flaglast
-from boiling_learning.utils.sentinels import EMPTY
 
 # ---------------------------------- Typing ----------------------------------
 _EnumType = TypeVar('_EnumType', bound=enum.Enum)
@@ -90,47 +87,6 @@ def indexify(arg: Union[Iterable, Collection]) -> Iterable[int]:
         return range(len(arg))
     except TypeError:
         return funcy.walk(0, enumerate(arg))
-
-
-@dispatch
-def as_immutable(coll: list):
-    return tuple(coll)
-
-
-@dispatch
-def as_immutable(coll: set):
-    return frozenset(coll)
-
-
-@dispatch
-def as_immutable(coll: dict):
-    return frozendict(coll)
-
-
-# TODO: in the *_sentinel* case, use *key=as_immutable*. Do it and test!
-def remove_duplicates(
-    iterable: Iterable[_T],
-    key: Union[None, object, Dict, Callable] = EMPTY,
-) -> Iterable[_T]:
-    # See <https://more-itertools.readthedocs.io/en/stable/api.html#more_itertools.unique_everseen>
-
-    if key is EMPTY:
-        # use default optimization
-        return remove_duplicates(
-            iterable,
-            key={
-                list: tuple,
-                set: frozenset,
-                dict: (lambda elem: frozenset(elem.items())),
-            },
-        )
-    elif isinstance(key, dict):
-        return mit.unique_everseen(
-            iterable,
-            key=lambda elem: key.get(type(elem), funcy.identity)(elem),
-        )
-    else:
-        return mit.unique_everseen(iterable, key=key)
 
 
 def reorder(seq: Sequence[_T], indices: Iterable[int]) -> Iterable[_T]:
