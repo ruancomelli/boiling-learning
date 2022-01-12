@@ -7,7 +7,6 @@ from typing import (
     Any,
     Dict,
     ItemsView,
-    Iterable,
     KeysView,
     NamedTuple,
     Optional,
@@ -25,7 +24,6 @@ from dotenv import dotenv_values
 
 import boiling_learning as bl
 from boiling_learning.datasets.creators import (
-    VideoDatasetElement,
     dataset_creator,
     dataset_post_processor,
     experiment_video_dataset_creator,
@@ -34,11 +32,13 @@ from boiling_learning.datasets.datasets import DatasetSplits
 from boiling_learning.datasets.sliceable import (
     SliceableDataset,
     SupervisedSliceableDataset,
+    concatenate,
     load_supervised_sliceable_dataset,
     save_supervised_sliceable_dataset,
     sliceable_dataset_to_tensorflow_dataset,
 )
 from boiling_learning.io import json
+from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.management.allocators.json_allocator import default_table_allocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.management.managers import Manager
@@ -245,7 +245,7 @@ def _describe_Video(obj: Video) -> Dict[str, str]:
 
 @describe.instance(ImageDataset)
 def _describe_ImageDataset(obj: ImageDataset) -> Dict[str, str]:
-    return {'path': obj.path}
+    return describe(list(obj))
 
 
 @cache(
@@ -292,26 +292,25 @@ sliceable_dataset_loader = partial(
 
 
 @cache(
-    allocator=default_table_allocator(analyses_path / 'datasets' / 'sliceable_video_datasets'),
+    allocator=default_table_allocator(analyses_path / 'datasets' / 'sliceable_image_datasets'),
     saver=bl.io.saver_dataset_triplet(sliceable_dataset_saver),
     loader=bl.io.loader_dataset_triplet(
         bl.io.add_bool_flag(sliceable_dataset_loader, FileNotFoundError)
     ),
 )
-def get_video_dataset(
-    video: ExperimentVideo,
+def get_image_dataset(
+    image_dataset: ImageDataset,
     transformers: Sequence[Transformer[VideoFrame, VideoFrame]],
     splits: DatasetSplits,
-    data_preprocessors: Iterable[Transformer[VideoDatasetElement, VideoDatasetElement]],
     dataset_size: Optional[Union[int, Fraction]] = None,
-) -> VideoFrame:
-    ds = sliceable_dataset_from_video_and_transformers(video, transformers)
+) -> DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]]:
+    ds = concatenate(
+        sliceable_dataset_from_video_and_transformers(video, transformers)
+        for video in image_dataset.values()
+    )
 
     if dataset_size is not None:
         ds = ds.take(dataset_size)
-
-    for preprocessor in data_preprocessors:
-        ds = ds.map(preprocessor)
 
     return ds.shuffle().split(splits.train, splits.val, splits.test)
 

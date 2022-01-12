@@ -433,6 +433,10 @@ class SupervisedSliceableDataset(SliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y
         )
 
 
+def concatenate(datasets: Iterable[SliceableDataset[_T]]) -> SliceableDataset[_T]:
+    return reduce(SliceableDataset[_T].concatenate, datasets)
+
+
 ImageSliceableDataset = SupervisedSliceableDataset[np.ndarray, _Y]
 AnnotatedImageSliceableDataset = ImageSliceableDataset[Dict[str, Any]]
 RegressionImageSliceableDataset = ImageSliceableDataset[float]

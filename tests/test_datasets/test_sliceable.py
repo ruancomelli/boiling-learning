@@ -6,6 +6,7 @@ import tensorflow as tf
 
 from boiling_learning.datasets.sliceable import (
     SliceableDataset,
+    concatenate,
     sliceable_dataset_to_tensorflow_dataset,
 )
 from boiling_learning.utils.random import random_state
@@ -201,6 +202,15 @@ class TestSliceableDataset:
             },
             tf.TensorSpec(shape=(), dtype=tf.bool),
         )
+
+
+def test_concatenate() -> None:
+    sds1 = SliceableDataset('abcd')
+    sds2 = SliceableDataset('efg')
+    sds3 = SliceableDataset('hijkl')
+
+    concat = concatenate((sds1, sds2, sds3))
+    assert ''.join(concat) == 'abcdefghijkl'
 
 
 def test_sliceable_to_tensorflow() -> None:
