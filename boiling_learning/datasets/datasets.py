@@ -101,10 +101,7 @@ def none_aware(
     >>> safe_take(None)
     None
     '''
-    if ds is None:
-        return None
-    else:
-        return f(ds, *args, **kwargs)
+    return f(ds, *args, **kwargs) if ds is not None else None
 
 
 def is_dataset_triplet(obj: Any) -> bool:
@@ -178,7 +175,8 @@ def train_val_test_split(
 
     # Source: <https://stackoverflow.com/a/60503037/5811400>
 
-    This function is deterministic in the sense that it outputs the same splits given the same inputs.
+    This function is deterministic in the sense that it outputs the same splits given the same
+    inputs.
     Consequently it is safe to be used early in the pipeline to avoid consuming test data.
     """
 
@@ -213,9 +211,11 @@ def train_val_test_split_concat(
 
     # Source: <https://stackoverflow.com/a/60503037/5811400>
 
-    The paramenter *splits* is must contain only integers, with the possible exception of *val*, which can be *None*.
+    The paramenter *splits* is must contain only integers, with the possible exception of *val*,
+    which can be *None*.
 
-    This function is deterministic in the sense that it outputs the same splits given the same inputs.
+    This function is deterministic in the sense that it outputs the same splits given the same
+    inputs.
     Consequently it is safe to be used early in the pipeline to avoid consuming test data.
     """
     datasets = deque(datasets)

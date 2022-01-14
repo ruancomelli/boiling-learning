@@ -26,16 +26,13 @@ def reshape_to_largest(image0: np.ndarray, image1: np.ndarray) -> Tuple[np.ndarr
 
 
 def _ratio_to_size(image: ImageType, x: Optional[Union[int, float]], axis: int) -> Optional[int]:
-    if isinstance(x, float):
-        return int(x * image.shape[axis])
-    else:
-        return x
+    return int(x * image.shape[axis]) if isinstance(x, float) else x
 
 
 def ensure_tensor(image: ImageType, *, dtype: Optional[tf.DType] = None) -> tf.Tensor:
     image = tf.convert_to_tensor(image)
     if dtype is not None:
-        image = tf.cast(image, dtype=dtype)
+        image = tf.cast(image, dtype)
     return image
 
 
@@ -53,9 +50,7 @@ def autocast(dtype: tf.DType) -> Callable[[CallableT], CallableT]:
 
 
 def ensure_grayscale(image: ImageType) -> np.ndarray:
-    if image.shape[2] != 1:
-        return rgb2gray(image)
-    return image
+    return rgb2gray(image) if image.shape[2] != 1 else image
 
 
 @autocast(tf.float64)

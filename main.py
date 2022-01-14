@@ -1,5 +1,4 @@
 import os
-from contextlib import suppress
 from fractions import Fraction
 from functools import partial
 from pathlib import Path
@@ -22,7 +21,6 @@ import json_tricks
 import ray
 import tensorflow as tf
 import tensorflow_addons as tfa
-from dotenv import dotenv_values
 
 import boiling_learning as bl
 from boiling_learning.datasets.creators import (
@@ -97,10 +95,6 @@ print_header('Options', level=1)
 OPTIONS = Options()
 for option, value in OPTIONS.items():
     print(f'{option}: {value}')
-
-config: Dict[str, Any] = {}
-with suppress(FileNotFoundError):
-    config.update(dotenv_values('.env'))
 
 boiling_learning_path: Path = resolve(os.environ['BOILING_DATA_PATH'])
 boiling_experiments_path: Path = boiling_learning_path / 'experiments'
