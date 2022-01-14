@@ -32,7 +32,7 @@ runs:
     uses: actions/cache@v2
     with:
       path: ~/.cache/pypoetry/virtualenvs
-      key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+      key: poetry-venv|python-${{ steps.setup-python.outputs.python-version }}|${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
 
   - name: Cache pre-commit
     uses: actions/cache@v2
