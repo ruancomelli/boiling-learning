@@ -1,4 +1,3 @@
-import operator
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple, Union
@@ -64,7 +63,6 @@ class ExperimentVideo(Video):
     @dataclass(frozen=True, kwargs=True)
     class DataFrameColumnNames:
         index: str = 'index'
-        path: Optional[str] = None
         name: str = 'name'
         elapsed_time: str = 'elapsed_time'
 
@@ -80,14 +78,6 @@ class ExperimentVideo(Video):
         self,
         video_path: PathLike,
         name: Optional[str] = None,
-        frames_dir: Optional[PathLike] = None,
-        frames_suffix: str = '.png',
-        frames_path: Optional[PathLike] = None,
-        frames_tensor_dir: Optional[PathLike] = None,
-        frames_tensor_path: Optional[PathLike] = None,
-        audio_dir: Optional[PathLike] = None,
-        audio_suffix: str = '.m4a',
-        audio_path: Optional[PathLike] = None,
         df_dir: Optional[PathLike] = None,
         df_suffix: str = '.csv',
         df_path: Optional[PathLike] = None,
@@ -96,11 +86,7 @@ class ExperimentVideo(Video):
     ) -> None:
         super().__init__(video_path)
 
-        self.frames_path: Optional[Path]
-        self.frames_suffix: str
-        self.audio_path: Optional[Path]
         self.df_path: Optional[Path]
-        self.frames_tensor_path: Optional[Path]
         self._data: Optional[self.VideoData] = None
         self._name: str
         self.column_names: self.DataFrameColumnNames = column_names
@@ -109,54 +95,11 @@ class ExperimentVideo(Video):
         self.ds: Optional[tf.data.Dataset] = None
         self._name: str = name if name is not None else self.path.stem
 
-        if None not in {frames_dir, frames_path}:
-            raise ValueError('at most one of (*frames_dir*, *frames_path*) must be given.')
-
-        if None not in {frames_tensor_path, frames_tensor_dir}:
-            raise ValueError(
-                'at most one of (*frames_tensor_path*, *frames_tensor_dir*) ' 'must be given.'
-            )
-
-        if None not in {audio_dir, audio_path}:
-            raise ValueError('at most one of (*audio_dir*, *audio_path*) must be given.')
-
         if None not in {df_dir, df_path}:
             raise ValueError('at most one of (df_dir, df_path) must be given.')
 
-        if not frames_suffix.startswith('.'):
-            raise ValueError('argument *frames_suffix* must start with a dot \'.\'')
-
-        if not audio_suffix.startswith('.'):
-            raise ValueError('argument *audio_suffix* must start with a dot \'.\'')
-
         if not df_suffix.startswith('.'):
             raise ValueError('argument *df_suffix* must start with a dot \'.\'')
-
-        self.frames_path: Optional[Path] = (
-            resolve(frames_path)
-            if frames_path is not None
-            else (resolve(frames_dir) / self.name if frames_dir is not None else None)
-        )
-
-        self.frames_tensor_path: Optional[Path] = (
-            resolve(frames_tensor_path)
-            if frames_tensor_path is not None
-            else (
-                resolve(frames_tensor_dir) / self.name if frames_tensor_dir is not None else None
-            )
-        )
-
-        self.frames_suffix: str = frames_suffix
-
-        self.audio_path: Optional[Path] = (
-            resolve(audio_path)
-            if audio_path is not None
-            else (
-                (resolve(audio_dir) / self.name).with_suffix(audio_suffix)
-                if audio_dir is not None
-                else None
-            )
-        )
 
         self.df_path: Optional[Path] = (
             resolve(df_path)
@@ -172,11 +115,7 @@ class ExperimentVideo(Video):
         kwargs = {
             'name': self.name,
             'video_path': self.path,
-            'frames_path': self.frames_path,
-            'frames_suffix': self.frames_suffix,
-            'audio_path': self.audio_path,
             'df_path': self.df_path,
-            'frames_tensor_path': self.frames_tensor_path,
             'data': self.data,
             'column_names': self.column_names,
             'column_types': self.column_types,
@@ -234,11 +173,6 @@ class ExperimentVideo(Video):
         dest_path = resolve(dest_path, parents=True)
         convert_video(self.path, dest_path, overwrite=overwrite, verbose=verbose)
         self.path = dest_path
-
-    def glob_frames(self) -> Iterable[Path]:
-        if self.frames_path is None:
-            raise ValueError('*frames_path* is not defined yet.')
-        return self.frames_path.rglob('*' + self.frames_suffix)
 
     def set_video_data(
         self,
@@ -329,10 +263,6 @@ class ExperimentVideo(Video):
                 'there is not enough time info in video data'
                 ' (set *enforce_time*=False to suppress this error).'
             )
-
-        if self.column_names.path is not None:
-            paths = sorted(self.glob_frames(), key=operator.attrgetter('stem'))
-            data[self.column_names.path] = paths
 
         df = pd.DataFrame(data)
         df = self.convert_dataframe_type(df, categories_as_int=categories_as_int)

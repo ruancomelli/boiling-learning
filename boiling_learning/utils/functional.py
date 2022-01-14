@@ -21,7 +21,6 @@ from typing import (
 )
 
 import funcy
-import more_itertools as mit
 from frozendict import frozendict
 
 from boiling_learning.utils.descriptors import describe
@@ -315,10 +314,6 @@ def unpacked(f: Callable[[Pack[_T, _S]], _U]) -> Callable[..., _U]:
         return f(Pack(args, kwargs))
 
     return wrapper
-
-
-def apply(f: Callable[..., Any], *args) -> None:
-    mit.consume(map(f, *args))
 
 
 def map_values(f: Callable[[_T], _S], iterable: Iterable[_T]) -> Iterable[_S]:

@@ -1,22 +1,9 @@
 from __future__ import annotations
 
 import collections
-import operator
 import typing
 from contextlib import contextmanager
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    FrozenSet,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Type,
-    Union,
-)
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Mapping, Optional, Type, Union
 
 import funcy
 import modin.pandas as pd
@@ -25,7 +12,6 @@ from dataclassy import dataclass
 
 from boiling_learning.io.io import load_json
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
-from boiling_learning.utils.functional import apply
 from boiling_learning.utils.utils import (
     PathLike,
     concatenate_dataframes,
@@ -38,7 +24,11 @@ from boiling_learning.utils.utils import (
 class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     '''
     TODO: improve this
-    An ImageDataset is a file CSV in df_path and the correspondent images. The file in df_path contains at least two columns. One of this columns contains file paths, and the other the targets for training, validation or test. This is intended for using flow_from_dataframe. There may be an optional column which specifies if that image belongs to the training, the validation or the test sets.
+    An ImageDataset is a file CSV in df_path and the correspondent images. The file in df_path
+    contains at least two columns. One of this columns contains file paths, and the other the
+    targets for training, validation or test. This is intended for using flow_from_dataframe. There
+    may be an optional column which specifies if that image belongs to the training, the validation
+    or the test sets.
     '''
 
     VideoData: Type[ExperimentVideo.VideoData] = ExperimentVideo.VideoData
@@ -66,7 +56,6 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         column_types: DataFrameColumnTypes = DataFrameColumnTypes(),
         df_path: Optional[PathLike] = None,
         exist_load: bool = False,
-        tags: Iterable[str] = (),
     ) -> None:
         self._name: str = name
         self.column_names: self.DataFrameColumnNames = column_names
@@ -75,7 +64,6 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         self._allow_key_overwrite: bool = True
         self.df: Optional[pd.DataFrame] = None
         self.ds = None
-        self._tags: FrozenSet[str] = frozenset(tags)
 
         if df_path is not None:
             df_path = resolve(df_path)
@@ -105,10 +93,6 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     @property
     def name(self) -> str:
         return self._name
-
-    @property
-    def tags(self) -> FrozenSet[str]:
-        return self._tags
 
     def __getitem__(self, name: str) -> ExperimentVideo:
         return self._experiment_videos[name]
@@ -240,10 +224,8 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             self.df.to_csv(path, index=False)
 
     def save_dfs(self, overwrite: bool = False) -> None:
-        apply(
-            operator.methodcaller('save_df', overwrite=overwrite),
-            self.values(),
-        )
+        for ev in self.values():
+            ev.save_df(overwrite=overwrite)
 
     def load_dfs(
         self,
@@ -254,42 +236,13 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         if columns is not None:
             columns = tuple(columns)
 
-        apply(
-            operator.methodcaller(
-                'load_df',
+        for ev in self.values():
+            ev.load_df(
                 columns=columns,
                 overwrite=overwrite,
                 missing_ok=missing_ok,
                 inplace=True,
-            ),
-            self.values(),
-        )
-
-    def move(
-        self,
-        path: Union[str, PathLike],
-        renaming: bool = False,
-        erase_old: bool = False,
-        overwrite: bool = False,
-    ) -> None:
-        if erase_old:
-            old_path = self.df_path
-
-        self.df_path = self.df_path.with_name(path) if renaming else resolve(path)
-        self.save(overwrite=overwrite)
-
-        if erase_old and old_path.is_file():
-            old_path.unlink()
-        # if erase: # Python 3.8 only
-        #     old_path.unlink(missing_ok=True)
-
-    @property
-    def paths(self) -> pd.Series:
-        return self.df[self.column_names.path]
-
-    @paths.setter
-    def paths(self, other: pd.Series) -> None:
-        self.df[self.column_names.path] = other
+            )
 
     def make_dataframe(
         self,
@@ -299,16 +252,15 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         categories_as_int: bool = False,
         inplace: bool = True,
     ) -> pd.DataFrame:
-        dfs = map(
-            operator.methodcaller(
-                'make_dataframe',
+        dfs = (
+            ev.make_dataframe(
                 recalculate=recalculate,
                 exist_load=exist_load,
                 enforce_time=enforce_time,
                 categories_as_int=categories_as_int,
                 inplace=inplace,
-            ),
-            self.values(),
+            )
+            for ev in self.values()
         )
         return concatenate_dataframes(dfs)
 
@@ -319,14 +271,11 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         inplace: bool = False,
     ) -> tf.data.Dataset:
         datasets = collections.deque(
-            map(
-                operator.methodcaller(
-                    'as_tf_dataset',
-                    select_columns=select_columns,
-                    inplace=inplace,
-                ),
-                self.values(),
+            ev.as_tf_dataset(
+                select_columns=select_columns,
+                inplace=inplace,
             )
+            for ev in self.values()
         )
 
         if not datasets:

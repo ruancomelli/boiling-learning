@@ -23,7 +23,7 @@ def main(
         try:
             print_verbose(verbose, 'Loading')
             case.load_dfs(overwrite=False, missing_ok=False)
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             print_verbose(verbose, 'Failed, making dataframes.')
 
             df = ExperimentalData(data_path=case_experiment_map[case.name]).as_dataframe()
@@ -48,7 +48,7 @@ def main(
                         f'expected indices != indices for {ev.name}.'
                         f' Got expected: {_expected}'
                         f' Got indices: {_indices}'
-                    )
+                    ) from e
 
             for ev in case.values():
                 ev.df = ev.df.drop(
