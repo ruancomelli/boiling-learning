@@ -8,8 +8,6 @@ from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 from classes import AssociatedType, Supports
 from classes import typeclass as _typeclass
 from frozendict import frozendict
-from phantom import Phantom
-from phantom.predicates import boolean, collection, generic
 from typing_extensions import Protocol, TypedDict, runtime_checkable
 
 from boiling_learning.utils.functional import Pack
@@ -137,10 +135,15 @@ def _encode_dict(instance: DictOfJSONSerializable) -> Dict[str, SerializedJSONOb
     return {key: serialize(value) for key, value in instance.items()}
 
 
+class _TupleOfJSONSerializableMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        return isinstance(instance, tuple) and all(
+            serialize.supports(instance) for instance in instance
+        )
+
+
 class TupleOfJSONSerializable(
-    Tuple[JSONSerializable, ...],
-    Phantom,
-    predicate=boolean.both(generic.of_type(tuple), collection.every(serialize.supports)),
+    Tuple[str, Supports[JSONSerializable]], metaclass=_TupleOfJSONSerializableMeta
 ):
     ...
 
