@@ -1,3 +1,22 @@
+## v0.18.5 (2022-01-14)
+
+### Fix
+
+- **utils/frozendict**: fix support for generic frozendicts
+
+### Refactor
+
+- remove `phantom` dependency (#25)
+- **management/cache**: refactor caching out into classes
+- simply `preprocessing` model to remove extracted frames
+- remove frames extracting functionality
+- remove further unused functionality
+- remove unused functionality
+
+### Feat
+
+- **main**: add cached function for defining sliceable datasets from image datasets
+
 ## v0.18.4 (2022-01-11)
 
 ## v0.18.3 (2022-01-11)
