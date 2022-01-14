@@ -28,18 +28,6 @@ runs:
   - name: Setup Poetry
     uses: Gr1N/setup-poetry@v7
 
-  - name: Cache dependencies
-    uses: actions/cache@v2
-    with:
-      path: ~/.cache/pypoetry/virtualenvs
-      key: poetry-venv|python-${{ inputs.python-version }}|${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
-
-  - name: Cache pre-commit
-    uses: actions/cache@v2
-    with:
-      path: ~/.cache/pre-commit
-      key: pre-commit|${{ runner.os }}|python-${{ inputs.python-version }}|${{ hashFiles('.pre-commit-config.yaml') }}
-
   - name: Install package
     shell: bash
     run: |
