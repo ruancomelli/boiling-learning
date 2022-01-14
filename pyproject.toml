@@ -127,7 +127,6 @@ tinydb-smartcache = "^2.0.0"
 iteround = "^1.0.3"
 pyqtgraph = "^0.12.3"
 PyQt6 = "^6.2.2"
-phantom-types = "^0.14.0"
 types-frozendict = "^2.0.4"
 
 [tool.poetry.dev-dependencies]
