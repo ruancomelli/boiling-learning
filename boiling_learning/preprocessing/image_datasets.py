@@ -28,7 +28,6 @@ from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.utils.functional import apply
 from boiling_learning.utils.utils import (
     PathLike,
-    VerboseType,
     concatenate_dataframes,
     resolve,
     simple_pprint_class,
@@ -172,30 +171,6 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         for ev in self.values():
             ev.open()
 
-    def frames_to_tensor(self, overwrite: bool = False) -> None:
-        for ev in self.values():
-            ev.frames_to_tensor(overwrite=overwrite)
-
-    def extract_audios(self, overwrite: bool = False, verbose: VerboseType = False) -> None:
-        for experiment_video in self.values():
-            experiment_video.extract_audio(overwrite=overwrite, verbose=verbose)
-
-    def extract_frames(
-        self,
-        overwrite: bool = False,
-        verbose: VerboseType = False,
-        chunk_sizes: Optional[List[int]] = None,
-        iterate: bool = True,
-    ) -> None:
-        for experiment_video in self.values():
-            experiment_video.extract_frames(
-                chunk_sizes=chunk_sizes,
-                prepend_name=True,
-                iterate=iterate,
-                overwrite=overwrite,
-                verbose=verbose,
-            )
-
     def set_video_data(
         self,
         video_data: Mapping[str, Union[Mapping[str, Any], VideoData]],
@@ -300,11 +275,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         if erase_old:
             old_path = self.df_path
 
-        if renaming:
-            self.df_path = self.df_path.with_name(path)
-        else:
-            self.df_path = resolve(path)
-
+        self.df_path = self.df_path.with_name(path) if renaming else resolve(path)
         self.save(overwrite=overwrite)
 
         if erase_old and old_path.is_file():

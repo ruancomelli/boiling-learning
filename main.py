@@ -132,9 +132,7 @@ boiling_cases: Lazy[Many[Case]] = LazyCallable(load_cases.main)(
     video_suffix='.MP4',
     options=load_cases.Options(
         convert_videos=OPTIONS.convert_videos,
-        extract_audios=OPTIONS.extract_audios,
         pre_load_videos=OPTIONS.pre_load_videos,
-        extract_frames=OPTIONS.extract_frames,
     ),
     verbose=False,
 )
@@ -155,9 +153,7 @@ condensation_datasets = LazyCallable(load_dataset_tree.main)(
     condensation_cases_path,
     load_dataset_tree.Options(
         convert_videos=OPTIONS.convert_videos,
-        extract_audios=OPTIONS.extract_audios,
         pre_load_videos=OPTIONS.pre_load_videos,
-        extract_frames=OPTIONS.extract_frames,
     ),
 )
 

@@ -35,7 +35,6 @@ from typing import (
 import funcy
 import matplotlib.pyplot as plt
 import modin.pandas as pd
-import more_itertools as mit
 from sortedcontainers import SortedSet
 from typing_extensions import overload
 
@@ -160,10 +159,6 @@ def one_factor_at_a_time(
         else:
             for item in iterable:
                 yield head + (item,) + tail
-
-
-def invert_dict(d: Mapping) -> dict:
-    return funcy.walk(reversed, dict(d))
 
 
 def extract_keys(
@@ -388,11 +383,6 @@ def replace(iterable, new_iterable):
         yield new_value
 
 
-def drop_last(iterable: Iterable[_T]) -> Iterator[_T]:
-    for current_value, _ in mit.pairwise(iterable):
-        yield current_value
-
-
 # ---------------------------------- Path ----------------------------------
 def relative_path(origin: PathLike, destination: PathLike) -> Path:
     return _relative_path(resolve(destination), start=resolve(origin))
@@ -426,13 +416,6 @@ def ensure_dir(path: PathLike, root: Optional[PathLike] = None) -> Path:
 
 def ensure_parent(path: PathLike, root: Optional[PathLike] = None) -> Path:
     return resolve(path, root=root, parents=True)
-
-
-# Source: https://stackoverflow.com/a/34236245/5811400
-def is_parent_dir(parent: PathLike, subdir: PathLike) -> bool:
-    parent = resolve(parent)
-    subdir = resolve(subdir)
-    return parent in subdir.parents
 
 
 # Source: https://stackoverflow.com/a/57892171/5811400

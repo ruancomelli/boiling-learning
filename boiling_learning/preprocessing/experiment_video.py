@@ -9,14 +9,8 @@ import numpy as np
 import tensorflow as tf
 from dataclassy import dataclass
 
-from boiling_learning.io.io import chunked_filename_pattern, load_dataset
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
-from boiling_learning.preprocessing.video import (
-    Video,
-    convert_video,
-    extract_audio,
-    extract_frames,
-)
+from boiling_learning.preprocessing.video import Video, convert_video
 from boiling_learning.utils.dataclasses import dataclass_from_mapping
 from boiling_learning.utils.dtypes import auto_spec
 from boiling_learning.utils.slicerators import Slicerator
@@ -241,50 +235,6 @@ class ExperimentVideo(Video):
         convert_video(self.path, dest_path, overwrite=overwrite, verbose=verbose)
         self.path = dest_path
 
-    def extract_audio(self, overwrite: bool = False, verbose: VerboseType = False) -> None:
-        if self.audio_path is None:
-            raise ValueError('*audio_path* is not defined yet.')
-
-        extract_audio(
-            self.path,
-            self.audio_path,
-            overwrite=overwrite,
-            verbose=verbose,
-        )
-
-    def extract_frames(
-        self,
-        chunk_sizes: Optional[List[int]] = None,
-        prepend_name: bool = True,
-        iterate: bool = True,
-        overwrite: bool = False,
-        verbose: VerboseType = False,
-    ) -> None:
-        if self.frames_path is None:
-            raise ValueError('*frames_path* is not defined yet.')
-
-        filename_pattern = 'frame{index}' + self.frames_suffix
-        if prepend_name:
-            filename_pattern = '_'.join((self.name, filename_pattern))
-
-        if chunk_sizes is not None:
-            filename_pattern = chunked_filename_pattern(
-                chunk_sizes=chunk_sizes,
-                chunk_name='{min_index}-{max_index}',
-                filename=filename_pattern,
-            )
-
-        extract_frames(
-            self.path,
-            outputdir=self.frames_path,
-            filename_pattern=filename_pattern,
-            frame_suffix=self.frames_suffix,
-            verbose=verbose,
-            fast_frames_count=None if overwrite else not iterate,
-            overwrite=overwrite,
-            iterate=iterate,
-        )
-
     def glob_frames(self) -> Iterable[Path]:
         if self.frames_path is None:
             raise ValueError('*frames_path* is not defined yet.')
@@ -446,22 +396,6 @@ class ExperimentVideo(Video):
 
         if overwrite or not path.is_file():
             self.df.to_csv(path, index=False)
-
-    def frames_to_tensor(self, overwrite: bool = False) -> tf.data.Dataset:
-        if self.frames_tensor_path is None and overwrite:
-            raise ValueError(
-                '`frames_tensor_path` is not defined yet. '
-                'Please define it or pass `overwrite=False`.'
-            )
-
-        if (
-            self.frames_tensor_path is not None
-            and self.frames_tensor_path.is_file()
-            and not overwrite
-        ):
-            return load_dataset(self.frames_tensor_path)
-
-        return tf.data.Dataset.from_generator(lambda: self, tf.float32)
 
     def targets(
         self, select_columns: Optional[Union[str, List[str]]] = None
