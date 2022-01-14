@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Any, Callable, Generic, Iterable, TypeVar, Union
 
@@ -32,6 +34,12 @@ class Cacher(Generic[_R]):
         self.exceptions: Union[Exception, Iterable[Exception]] = exceptions
         self.autosave: bool = autosave
 
+    def allocate(self, *args: _P.args, **kwargs: _P.kwargs) -> Path:
+        return self.allocator(Pack(args, kwargs))
+
+    def decorate(self, function: Callable[_P, _R]) -> CachedFunction[_P, _R]:
+        return CachedFunction(function, self)
+
 
 class CachedFunction(Generic[_P, _R]):
     def __init__(self, function: Callable[_P, _R], cacher: Cacher[_R]) -> None:
@@ -56,7 +64,7 @@ class CachedFunction(Generic[_P, _R]):
         return provider.provide()
 
     def allocate(self, *args: _P.args, **kwargs: _P.kwargs) -> Path:
-        return self.cacher.allocator(Pack(args, kwargs))
+        return self.cacher.allocate(*args, **kwargs)
 
 
 def function_cacher(cacher: Cacher[_R]) -> Callable[[Callable[_P, _R]], CachedFunction[_P, _R]]:
@@ -76,15 +84,13 @@ def cache(
     ),
     autosave: bool = True,
 ) -> Callable[[Callable[_P, _R]], CachedFunction[_P, _R]]:
-    return function_cacher(
-        Cacher(
-            allocator=allocator,
-            saver=saver,
-            loader=loader,
-            exceptions=exceptions,
-            autosave=autosave,
-        )
-    )
+    return Cacher(
+        allocator=allocator,
+        saver=saver,
+        loader=loader,
+        exceptions=exceptions,
+        autosave=autosave,
+    ).decorate
 
 
 def json_cache(root: PathLike, autosave: bool = True) -> Callable[[_CallableT], _CallableT]:
