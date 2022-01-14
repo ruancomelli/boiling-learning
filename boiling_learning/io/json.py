@@ -7,9 +7,9 @@ from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 from classes import AssociatedType, Supports
 from classes import typeclass as _typeclass
-from frozendict import frozendict
 from typing_extensions import Protocol, TypedDict, runtime_checkable
 
+from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.table_dispatch import table_dispatch
 from boiling_learning.utils.utils import JSONDataType, PathLike, resolve

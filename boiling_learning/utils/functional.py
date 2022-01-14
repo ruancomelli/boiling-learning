@@ -21,9 +21,9 @@ from typing import (
 )
 
 import funcy
-from frozendict import frozendict
 
 from boiling_learning.utils.descriptors import describe
+from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.sentinels import Sentinel
 
 # TODO: when variadic generics are available, they will be very useful here

@@ -19,7 +19,6 @@ import matplotlib.pyplot as plt
 import more_itertools as mit
 import numpy as np
 import tensorflow as tf
-from frozendict import frozendict
 from matplotlib import gridspec
 from matplotlib.colors import NoNorm
 
@@ -28,6 +27,7 @@ from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.transformers import DictFeatureTransformer, Transformer
+from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.functional import Kwargs, P, Pack, nth_arg
 from boiling_learning.utils.parameters import Parameters
 from boiling_learning.utils.utils import prepare_fig
