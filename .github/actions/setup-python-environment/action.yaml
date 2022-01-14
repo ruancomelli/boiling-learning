@@ -32,13 +32,13 @@ runs:
     uses: actions/cache@v2
     with:
       path: ~/.cache/pypoetry/virtualenvs
-      key: poetry-venv|python-${{ steps.setup-python.outputs.python-version }}|${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+      key: poetry-venv|python-${{ inputs.python-version }}|${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
 
   - name: Cache pre-commit
     uses: actions/cache@v2
     with:
       path: ~/.cache/pre-commit
-      key: pre-commit|${{ runner.os }}|python-${{ steps.setup-python.outputs.python-version }}|${{ hashFiles('.pre-commit-config.yaml') }}
+      key: pre-commit|${{ runner.os }}|python-${{ inputs.python-version }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
   - name: Install package
     shell: bash
