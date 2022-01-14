@@ -438,42 +438,9 @@ def concatenate(datasets: Iterable[SliceableDataset[_T]]) -> SliceableDataset[_T
 
 
 ImageSliceableDataset = SupervisedSliceableDataset[np.ndarray, _Y]
-AnnotatedImageSliceableDataset = ImageSliceableDataset[Dict[str, Any]]
-RegressionImageSliceableDataset = ImageSliceableDataset[float]
-
 PairTransformer = Callable[[_X1, _Y1], Tuple[_X2, _Y2]]
 FeatureTransformer = PairTransformer[_X1, _Y, _X2, _Y]
 TargetTransformer = PairTransformer[_X, _Y1, _X, _Y2]
-
-
-class SupervisedSliceableDatasetPairTransformer(Generic[_X1, _Y1, _X2, _Y2]):
-    def __init__(self, call: PairTransformer[_X1, _Y1, _X2, _Y2]) -> None:
-        self.call: PairTransformer[_X1, _Y1, _X2, _Y2] = call
-
-    def map_to_dataset(
-        self, dataset: SupervisedSliceableDataset[_X1, _Y1]
-    ) -> SupervisedSliceableDataset[_X2, _Y2]:
-        return dataset.map(self.call)
-
-
-class SupervisedSliceableDatasetFeatureTransformer(Generic[_X1, _X2]):
-    def __init__(self, call: Callable[[_X1], _X2]) -> None:
-        self.call: Callable[[_X1], _X2] = call
-
-    def map_to_dataset(
-        self, dataset: SupervisedSliceableDataset[_X1, _Y]
-    ) -> SupervisedSliceableDataset[_X2, _Y]:
-        return dataset.map_features(self.call)
-
-
-class SupervisedSliceableDatasetTargetTransformer(Generic[_Y1, _Y2]):
-    def __init__(self, call: Callable[[_Y1], _Y2]) -> None:
-        self.call: Callable[[_Y1], _Y2] = call
-
-    def map_to_dataset(
-        self, dataset: SupervisedSliceableDataset[_X, _Y1]
-    ) -> SupervisedSliceableDataset[_X, _Y2]:
-        return dataset.map_targets(self.call)
 
 
 @json.encode.instance(np.ndarray)

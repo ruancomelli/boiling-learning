@@ -187,10 +187,7 @@ class DictFeatureTransformer(
 
                 pack = self.packer[None]
 
-                if pack is None:
-                    return funcy.identity, Pack()
-                else:
-                    return self.func, pack
+                return (funcy.identity, Pack()) if pack is None else (self.func, pack)
             except KeyError as e:
                 raise KeyError(
                     f'Invalid key {key}: corresponding pack was not found.'

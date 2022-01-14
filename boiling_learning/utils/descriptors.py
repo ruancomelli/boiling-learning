@@ -3,6 +3,8 @@ from typing import Any, Dict, Generic, List, Tuple, TypeVar, Union
 from classes import AssociatedType, Supports, typeclass
 from typing_extensions import Protocol, final, runtime_checkable
 
+from boiling_learning.utils.dataclasses import asdict, is_dataclass_instance
+
 _Description = TypeVar('_Description')
 _Description_co = TypeVar('_Description_co', covariant=True)
 
@@ -94,3 +96,22 @@ class DictOfDescribable(
 @describe.instance(delegate=DictOfDescribable)
 def _describe_dict(instance: DictOfDescribable[_Description]) -> Dict[str, _Description]:
     return {key: describe(value) for key, value in instance.items()}
+
+
+class DataclassOfDescribableFieldsMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        return is_dataclass_instance(instance) and describe.supports(asdict(instance))
+
+
+class DataclassOfDescribableFields(
+    Generic[_Description],
+    metaclass=DataclassOfDescribableFieldsMeta,
+):
+    ...
+
+
+@describe.instance(delegate=DataclassOfDescribableFields)
+def _describe_dataclass(
+    instance: DataclassOfDescribableFields[_Description],
+) -> Dict[str, _Description]:
+    return describe(asdict(instance))

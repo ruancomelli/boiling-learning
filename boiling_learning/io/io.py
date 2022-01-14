@@ -2,33 +2,18 @@ import collections
 import io as _io
 import json as _json
 import operator
-import os
 import pickle
 import string
 import warnings
 from contextlib import nullcontext
-from functools import partial
 from itertools import accumulate
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Tuple, Type, TypeVar, Union
 
 import cv2
 import funcy
 import h5py
 import json_tricks
-import modin.pandas as pd
 import numpy as np
 import tensorflow as tf
 import yogadl
@@ -277,118 +262,6 @@ def load_dataset(path: PathLike) -> tf.data.Dataset:
     element_spec = recurse_fix(element_spec)
 
     return tf.data.experimental.load(str(dataset_path), element_spec)
-
-
-def _default_filename_pattern(name: str, index: int) -> Path:
-    return Path(name + '_' + index + '.png')
-
-
-def save_frames_dataset(
-    dataset: tf.data.Dataset,
-    path: PathLike,
-    filename_pattern: Callable[[str, int], Path] = _default_filename_pattern,
-    name_column: str = 'name',
-    index_column: str = 'index',
-) -> None:
-    path = ensure_dir(path)
-    imgs_path = ensure_dir(path / 'images')
-    df_path = path / 'dataframe.csv'
-
-    def _get_path(data):
-        name = data[name_column].decode('utf-8')
-        index = int(data[index_column])
-
-        return imgs_path / filename_pattern(name, index)
-
-    def _make_series(path, data):
-        return pd.Series(data, name=path)
-
-    df = pd.DataFrame()
-    for img, data in dataset.as_numpy_iterator():
-        img_path = _get_path(data)
-        df = df.append(_make_series(img_path, data))
-        save_image(img, img_path)
-
-    df.to_csv(df_path, header=True, index=True)
-
-
-def saver_frames_dataset(
-    filename_pattern: Callable[[str, int], Path] = _default_filename_pattern,
-    chunk_sizes: Optional[Sequence[int]] = (100, 100),
-) -> SaverFunction[DatasetTriplet]:
-    def _saver(ds: DatasetTriplet, path: PathLike) -> None:
-        path = ensure_parent(path)
-        ds_train, ds_val, ds_test = ds
-
-        save_frames_dataset(
-            ds_train,
-            path / 'train',
-            filename_pattern=partial(filename_pattern, chunk_sizes=chunk_sizes),
-        )
-        if ds_val is not None:
-            save_frames_dataset(
-                ds_val,
-                path / 'val',
-                filename_pattern=partial(filename_pattern, chunk_sizes=chunk_sizes),
-            )
-        save_frames_dataset(
-            ds_test,
-            path / 'test',
-            filename_pattern=partial(filename_pattern, chunk_sizes=chunk_sizes),
-        )
-
-    return _saver
-
-
-def decode_img(img, channels: int = 1):
-    # convert the compressed string to a 3D uint8 tensor
-    img = tf.image.decode_png(img, channels=channels)
-    # Use `convert_image_dtype` to convert to floats in the [0,1] range
-    img = tf.image.convert_image_dtype(img, tf.float32)
-    # resize the image to the desired size
-    # img = tf.image.resize(img, IMG_SHAPE[:2])
-    # img = tf.reshape(img, IMG_SHAPE)
-    return img
-
-
-def process_path(file_path, in_dir: Optional[PathLike] = None):
-    # from relative to absolute path
-    if in_dir is not None:
-        file_path = str(in_dir) + os.sep + file_path
-
-    # load the raw data from the file as a string
-    img = tf.io.read_file(file_path)
-    # decode data
-    img = decode_img(img)
-    return img
-
-
-def load_frames_dataset(path: PathLike, shuffle: bool = True) -> tf.data.Dataset:
-    path = resolve(path)
-    df_path = path / 'dataframe.csv'
-    # element_spec_path = path / 'elem_spec.json'
-
-    df = pd.read_csv(df_path, index_col=0)
-    if shuffle:
-        df = df.sample(frac=1)
-    files = [str(resolve(path)) for path in df.index]
-    df = df.reset_index(drop=True)
-
-    ds_img = tf.data.Dataset.from_tensor_slices(files)
-    ds_img = ds_img.map(process_path)
-    ds_data = tf.data.Dataset.from_tensor_slices(df.to_dict('list'))
-    return tf.data.Dataset.zip((ds_img, ds_data))
-
-
-def loader_frames_dataset(
-    path: PathLike,
-) -> BoolFlagged[Optional[tf.data.Dataset]]:
-    path = resolve(path)
-
-    try:
-        return True, load_frames_dataset(path, shuffle=True)
-    except FileNotFoundError:
-        return False, None
 
 
 def saver_dataset_triplet(

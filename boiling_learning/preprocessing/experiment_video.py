@@ -17,12 +17,12 @@ from boiling_learning.preprocessing.video import (
     extract_audio,
     extract_frames,
 )
+from boiling_learning.utils.dataclasses import dataclass_from_mapping
 from boiling_learning.utils.dtypes import auto_spec
 from boiling_learning.utils.slicerators import Slicerator
 from boiling_learning.utils.utils import (
     PathLike,
     VerboseType,
-    dataclass_from_mapping,
     dataframe_categories_to_int,
     is_not,
     merge_dicts,

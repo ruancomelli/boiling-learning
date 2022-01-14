@@ -33,15 +33,15 @@ class KeyedSet(MutableSet[_Value], Generic[_Key, _Value]):
     def __iter__(self) -> Iterator[_Value]:
         return iter(self.values())
 
-    def add(self, element: _Value) -> None:
-        self.__data[self.__key(element)] = element
+    def add(self, value: _Value) -> None:
+        self.__data[self.__key(value)] = value
 
-    def remove(self, element: _Value) -> None:
-        del self[self.__key(element)]
+    def remove(self, value: _Value) -> None:
+        del self[self.__key(value)]
 
-    def discard(self, element: _Value) -> None:
+    def discard(self, value: _Value) -> None:
         with suppress(KeyError):
-            self.remove(element)
+            self.remove(value)
 
     # TODO: implement other operations as in the standard docs:
     # <https://docs.python.org/3/library/stdtypes.html#set-types-set-frozenset>

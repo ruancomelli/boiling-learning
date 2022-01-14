@@ -2816,7 +2816,7 @@ python-versions = "*"
 name = "types-frozendict"
 version = "2.0.4"
 description = "Typing stubs for frozendict"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -3026,7 +3026,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.12,<3.10"
-content-hash = "08ef7bc12583d34164990c1485648fb49dc1ca81373c1167c4586e907e60f232"
+content-hash = "61170a21e3249424a535bbda10e807826a676ff2deab4532ea008571479c3c76"
 
 [metadata.files]
 absl-py = [

@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 from classes import AssociatedType, Supports
 from classes import typeclass as _typeclass
+from frozendict import frozendict
 from phantom import Phantom
 from phantom.predicates import boolean, collection, generic
 from typing_extensions import Protocol, TypedDict, runtime_checkable
@@ -147,6 +148,31 @@ class TupleOfJSONSerializable(
 @encode.instance(delegate=TupleOfJSONSerializable)
 def _encode_tuple(instance: TupleOfJSONSerializable) -> List[SerializedJSONObject]:
     return list(map(serialize, instance))
+
+
+class _FrozenDictOfJSONEncodableMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        return isinstance(instance, frozendict) and all(
+            isinstance(key, str) and encode.supports(value) for key, value in instance.items()
+        )
+
+
+class FrozenDictMeta(_FrozenDictOfJSONEncodableMeta, type(frozendict)):
+    pass
+
+
+class FrozenDictOfJSONEncodable(
+    frozendict[str, Supports[JSONEncodable]],
+    metaclass=FrozenDictMeta,
+):
+    ...
+
+
+@encode.instance(delegate=FrozenDictOfJSONEncodable)
+def _encode_frozendict(
+    instance: FrozenDictOfJSONEncodable,
+) -> Dict[str, SerializedJSONObject]:
+    return encode(dict(instance))
 
 
 decode = table_dispatch()

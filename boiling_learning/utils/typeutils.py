@@ -27,9 +27,6 @@ class SupportsLessThan(Protocol):
         pass
 
 
-SupportsLessThanT = TypeVar('SupportsLessThanT', bound=SupportsLessThan)
-
-
 class CallableWithFirst(Protocol[_X_contra, _P, _Y_co]):
     def __call__(self, x: _X_contra, *args: _P.args, **kwargs: _P.kwargs) -> _Y_co:
         ...

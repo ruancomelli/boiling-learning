@@ -4,7 +4,6 @@ import collections
 import operator
 import typing
 from contextlib import contextmanager
-from pathlib import Path
 from typing import (
     Any,
     Callable,
@@ -168,15 +167,6 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         self._allow_key_overwrite = False
         yield self
         self._allow_key_overwrite = prev_state
-
-    def video_paths(self) -> Iterable[Path]:
-        return funcy.pluck_attr('video_path', self.values())
-
-    def audio_paths(self) -> Iterable[Path]:
-        return funcy.pluck_attr('audio_path', self.values())
-
-    def frames_paths(self) -> Iterable[Path]:
-        return funcy.pluck_attr('frames_path', self.values())
 
     def open_videos(self) -> None:
         for ev in self.values():
@@ -379,11 +369,3 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             self.ds = ds
 
         return ds
-
-    def as_tf_dataset_dict(
-        self, *, select_columns: Optional[Union[str, List[str]]] = None
-    ) -> Dict[str, tf.data.Dataset]:
-        return {
-            name: experiment_video.as_tf_dataset(select_columns=select_columns)
-            for name, experiment_video in self.items()
-        }

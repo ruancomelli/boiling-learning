@@ -1,13 +1,10 @@
 import contextlib
-import operator
-import string
 import subprocess
 import warnings
 from pathlib import Path
 from typing import Any, Callable, Iterator, Optional, Sequence, Tuple, Union
 
 import cv2
-import funcy
 import numpy as np
 import numpy.typing as npt
 import parse
@@ -125,24 +122,7 @@ def extract_frames_ffmpeg(
     if verbose:
         print('Command list =', command_list)
 
-    subprocess.run(command_list)
-
-
-def make_callable_index_parser(
-    index_parser: Union[PathLike, Callable[[PathLike], int]],
-    index_key: Optional[str] = None,
-) -> Tuple[bool, Callable[[PathLike], int]]:
-    if not callable(index_parser):
-        index_parser_str = str(index_parser)
-
-        if index_key is None or index_key not in {
-            tup[1] for tup in string.Formatter().parse(index_parser_str) if tup[1] is not None
-        }:
-            return False, index_parser
-
-        parser = parse.compile(index_parser_str).parse
-        index_parser = funcy.compose(int, operator.itemgetter(index_key), parser, str)
-    return True, index_parser
+    subprocess.run(command_list, check=True)
 
 
 def extract_frames_iterate(

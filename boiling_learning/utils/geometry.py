@@ -21,7 +21,6 @@ class Prism(Solid):
     def __post_init__(self) -> None:
         self.lateral_area = self.cross_section_perimeter * self.length
         self.surface_area = self.lateral_area + 2 * self.cross_section_area
-        self.volume = self.cross_section_area * self.length
 
 
 class Cylinder(Prism):

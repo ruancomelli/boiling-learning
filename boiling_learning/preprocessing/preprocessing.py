@@ -2,7 +2,6 @@ import os
 from typing import Callable, Optional, TypeVar
 
 import modin.pandas as pd
-import scipy
 import skimage
 import tensorflow as tf
 from dataclassy import dataclass
@@ -11,11 +10,6 @@ from tensorflow.data import AUTOTUNE
 from boiling_learning.utils.utils import PathLike, resolve
 
 T = TypeVar('T')
-
-
-def interpolate_timeseries(x_ref, y_ref, x):
-    f = scipy.interpolate.interp1d(x_ref, y_ref)
-    return f(x)
 
 
 def sync_dataframes(

@@ -5,12 +5,14 @@ from functools import partial
 from pathlib import Path
 from typing import (
     Any,
+    Container,
     Dict,
     ItemsView,
     KeysView,
     NamedTuple,
     Optional,
     Sequence,
+    Tuple,
     Union,
     ValuesView,
 )
@@ -59,6 +61,7 @@ from boiling_learning.scripts import (
     set_condensation_datasets_data,
 )
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist, initialize_gpus
+from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.descriptors import describe
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import Many, typename
@@ -73,9 +76,6 @@ print_header('Initializing script')
 class Options(NamedTuple):
     login_user: bool = False
     convert_videos: bool = True
-    save_frames_to_tensor: bool = False
-    extract_audios: bool = False
-    extract_frames: bool = False
     pre_load_videos: bool = False
     interact_processed_frames: bool = False
     analyze_downsampling: bool = False
@@ -239,12 +239,12 @@ load_map = {
 
 
 @describe.instance(Video)
-def _describe_Video(obj: Video) -> Dict[str, str]:
+def _describe_video(obj: Video) -> Dict[str, str]:
     return {'path': obj.path}
 
 
 @describe.instance(ImageDataset)
-def _describe_ImageDataset(obj: ImageDataset) -> Dict[str, str]:
+def _describe_image_dataset(obj: ImageDataset) -> Dict[str, str]:
     return describe(list(obj))
 
 
@@ -291,14 +291,15 @@ sliceable_dataset_loader = partial(
 )
 
 
-@cache(
-    allocator=default_table_allocator(analyses_path / 'datasets' / 'sliceable_image_datasets'),
-    saver=bl.io.saver_dataset_triplet(sliceable_dataset_saver),
-    loader=bl.io.loader_dataset_triplet(
-        bl.io.add_bool_flag(sliceable_dataset_loader, FileNotFoundError)
-    ),
-)
-def get_image_dataset(
+@dataclass(frozen=True)
+class GetImageDatasetParams:
+    image_dataset: ImageDataset
+    transformers: Sequence[Transformer[VideoFrame, VideoFrame]]
+    splits: DatasetSplits
+    dataset_size: Optional[Union[int, Fraction]] = None
+
+
+def _get_image_dataset(
     image_dataset: ImageDataset,
     transformers: Sequence[Transformer[VideoFrame, VideoFrame]],
     splits: DatasetSplits,
@@ -313,6 +314,177 @@ def get_image_dataset(
         ds = ds.take(dataset_size)
 
     return ds.shuffle().split(splits.train, splits.val, splits.test)
+
+
+@cache(
+    allocator=default_table_allocator(analyses_path / 'datasets' / 'sliceable_image_datasets'),
+    saver=bl.io.saver_dataset_triplet(sliceable_dataset_saver),
+    loader=bl.io.loader_dataset_triplet(
+        bl.io.add_bool_flag(sliceable_dataset_loader, FileNotFoundError)
+    ),
+)
+def get_image_dataset(
+    params: GetImageDatasetParams,
+) -> DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]]:
+    return _get_image_dataset(
+        params.image_dataset, params.transformers, params.splits, params.dataset_size
+    )
+
+
+@dataclass(frozen=True)
+class AugmentDatasetParams:
+    augmentors: Sequence[Transformer[VideoFrame, VideoFrame]]
+    batch_size: Optional[int] = None
+    take: Optional[Union[int, Fraction]] = None
+    augment_train: bool = True
+    augment_test: bool = True
+    augmentors_to_force: Container[str] = frozenset({'random_cropper'})
+
+
+def apply_transformers_to_supervised_sliceable_dataset(
+    dataset: SupervisedSliceableDataset[VideoFrame, Dict[str, Any]],
+    augmentors: Sequence[
+        Transformer[Tuple[VideoFrame, Dict[str, Any]], Tuple[VideoFrame, Dict[str, Any]]]
+    ],
+) -> SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]:
+    for augmentor in augmentors:
+        dataset = dataset.map(augmentor)
+    return dataset
+
+
+def _augment_datasets(
+    datasets: DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]],
+    augmentors: Sequence[Transformer[VideoFrame, VideoFrame]],
+    batch_size: Optional[int] = None,
+    take: Optional[Union[int, Fraction]] = None,
+    augment_train: bool = True,
+    augment_test: bool = True,
+    augmentors_to_force: Container[str] = frozenset({'random_cropper'}),
+) -> DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]]:
+    ds_train, ds_val, ds_test = datasets
+    if take is not None:
+        ds_train = ds_train.take(take)
+        if ds_val is not None:
+            ds_val = ds_val.take(take)
+        ds_test = ds_test.take(take)
+
+    filtered_augmentors = (
+        augmentors
+        if augment_test
+        else tuple(augmentor for augmentor in augmentors if augmentor.name in augmentors_to_force)
+    )
+    train_augmentors = augmentors if augment_train else filtered_augmentors
+    test_augmentors = augmentors if augment_test else filtered_augmentors
+
+    ds_train = apply_transformers_to_supervised_sliceable_dataset(ds_train, train_augmentors)
+    ds_val = apply_transformers_to_supervised_sliceable_dataset(ds_val, test_augmentors)
+    ds_test = apply_transformers_to_supervised_sliceable_dataset(ds_test, test_augmentors)
+
+    ds_train = ds_train.shuffle()
+    if ds_val is not None:
+        ds_val = ds_val.shuffle()
+    ds_test = ds_test.shuffle()
+
+    if batch_size is not None:
+        ds_train = ds_train.batch(batch_size)
+        if ds_val is not None:
+            ds_val = ds_val.batch(batch_size)
+        ds_test = ds_test.batch(batch_size)
+
+    return ds_train, ds_val, ds_test
+
+
+def augment_datasets(
+    datasets: DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]],
+    params: AugmentDatasetParams,
+) -> DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]]:
+    return _augment_datasets(
+        datasets,
+        augmentors=params.augmentors,
+        batch_size=params.batch_size,
+        take=params.take,
+        augment_train=params.augment_train,
+        augment_test=params.augment_test,
+        augmentors_to_force=params.augmentors_to_force,
+    )
+
+
+@dataclass(frozen=True)
+class FitModelParams:
+    architecture: tf.keras.Model
+    strategy: tf.distribute.Strategy
+    take_train: Optional[Union[int, Fraction]]
+    take_val: Optional[Union[int, Fraction]]
+    target: str
+    additional_val_sets: Dict[str, tf.data.Dataset]
+    lr: float
+    normalize_images: bool
+    reduce_lr_on_plateau_factor: float
+    reduce_lr_on_plateau_patience: int
+    early_stopping_patience: int
+    dropout_ratio: float
+    hidden_layers_policy: str
+    output_layer_policy: str
+
+
+@dataclass
+class FittedModel:
+    model: tf.keras.Model
+    history: tf.keras.History
+
+
+def _fit_model(
+    augmented_datasets: DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]],
+    architecture: tf.keras.Model,
+    strategy: tf.distribute.Strategy,
+    take_train: Optional[Union[int, Fraction]],
+    take_val: Optional[Union[int, Fraction]],
+    target: str,
+    additional_val_sets: Dict[str, tf.data.Dataset],
+    lr: float,
+    normalize_images: bool,
+    reduce_lr_on_plateau_factor: float,
+    reduce_lr_on_plateau_patience: int,
+    early_stopping_patience: int,
+    dropout_ratio: float,
+    hidden_layers_policy: str,
+    output_layer_policy: str,
+) -> FittedModel:
+    # TODO: here!!!
+    pass
+
+
+@cache(
+    allocator=default_table_allocator(analyses_path / 'models' / 'trained_models2'),
+    saver=bl.io.saver_dataset_triplet(sliceable_dataset_saver),
+    loader=bl.io.loader_dataset_triplet(
+        bl.io.add_bool_flag(sliceable_dataset_loader, FileNotFoundError)
+    ),
+)
+def fit_model(
+    image_dataset_get_params: GetImageDatasetParams,
+    image_dataset_augment_params: AugmentDatasetParams,
+    fit_model_params: FitModelParams,
+) -> FittedModel:
+    return _fit_model(
+        augment_datasets(
+            get_image_dataset(image_dataset_get_params), image_dataset_augment_params
+        ),
+        architecture=fit_model_params.architecture,
+        strategy=fit_model_params.strategy,
+        take_train=fit_model_params.take_train,
+        take_val=fit_model_params.take_val,
+        target=fit_model_params.target,
+        additional_val_sets=fit_model_params.additional_val_sets,
+        lr=fit_model_params.lr,
+        normalize_images=fit_model_params.normalize_images,
+        reduce_lr_on_plateau_factor=fit_model_params.reduce_lr_on_plateau_factor,
+        reduce_lr_on_plateau_patience=fit_model_params.reduce_lr_on_plateau_patience,
+        early_stopping_patience=fit_model_params.early_stopping_patience,
+        dropout_ratio=fit_model_params.dropout_ratio,
+        hidden_layers_policy=fit_model_params.hidden_layers_policy,
+        output_layer_policy=fit_model_params.output_layer_policy,
+    )
 
 
 experiment_video_dataset_manager = Manager(

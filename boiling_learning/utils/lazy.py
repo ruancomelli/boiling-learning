@@ -6,7 +6,7 @@ from typing import Any, Callable, Generic, TypeVar
 import funcy
 from lazy import lazy as lazy_property
 
-__all__ = ('Lazy', 'LazyCallable', 'lazy_property', 'lazy_callable')
+__all__ = ('Lazy', 'LazyCallable', 'lazy_property')
 
 _T = TypeVar('_T')
 _S = TypeVar('_S')
@@ -39,6 +39,3 @@ class LazyCallable(Generic[_T]):
         if callable(other):
             return LazyCallable(funcy.compose(other, self._call))
         return NotImplemented
-
-
-lazy_callable = LazyCallable

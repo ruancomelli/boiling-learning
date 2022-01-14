@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 from functools import partial, wraps
 from typing import (
     Any,
@@ -23,9 +22,9 @@ from typing import (
 
 import funcy
 import more_itertools as mit
+from frozendict import frozendict
 
 from boiling_learning.utils.descriptors import describe
-from boiling_learning.utils.frozendict import FrozenDict
 from boiling_learning.utils.sentinels import Sentinel
 
 # TODO: when variadic generics are available, they will be very useful here
@@ -49,13 +48,13 @@ def nth_arg(n: int) -> Callable:
 
 
 ArgsType = Tuple[_T, ...]
-KwargsType = FrozenDict[str, _S]
+KwargsType = frozendict[str, _S]
 
 
 class Pack(Hashable, Generic[_T, _S]):
-    def __init__(self, args: Iterable[_T] = (), kwargs: Mapping[str, _S] = FrozenDict()) -> None:
+    def __init__(self, args: Iterable[_T] = (), kwargs: Mapping[str, _S] = frozendict()) -> None:
         self._args: ArgsType[_T] = tuple(args)
-        self._kwargs: KwargsType[_S] = FrozenDict(kwargs)
+        self._kwargs: KwargsType[_S] = frozendict(kwargs)
 
     @property
     def args(self) -> ArgsType[_T]:
@@ -126,7 +125,7 @@ class Pack(Hashable, Generic[_T, _S]):
         }
         '''
         self._args = tuple(args)
-        self._kwargs = FrozenDict(kwargs)
+        self._kwargs = frozendict(kwargs)
 
     def __describe__(self) -> Tuple[Tuple[_T], KwargsType[_S]]:
         pair = self.pair()
@@ -224,7 +223,7 @@ class Pack(Hashable, Generic[_T, _S]):
             args = self.args[:-n_new_args] + new_args
         else:
             args = new_args + self.args[n_new_args:]
-        kwargs = FrozenDict({**self.kwargs, **new_kwargs})
+        kwargs = frozendict({**self.kwargs, **new_kwargs})
         return Pack(args, kwargs)
 
     def copy(self, *new_args, **new_kwargs) -> Pack:
@@ -278,7 +277,7 @@ class Args(Pack[_T, _S], Generic[_T, _S]):
 
 
 class Kwargs(Pack[_T, _S], Generic[_T, _S]):
-    def __init__(self, kwargs: KwargsType[_S] = FrozenDict()) -> None:
+    def __init__(self, kwargs: KwargsType[_S] = frozendict()) -> None:
         super().__init__((), kwargs)
 
 
@@ -318,20 +317,8 @@ def unpacked(f: Callable[[Pack[_T, _S]], _U]) -> Callable[..., _U]:
     return wrapper
 
 
-def reverse_args(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        return f(*reversed(args), **kwargs)
-
-    return wrapper
-
-
 def apply(f: Callable[..., Any], *args) -> None:
     mit.consume(map(f, *args))
-
-
-def starapply(f: Callable[..., Any], arg: Iterable) -> None:
-    mit.consume(itertools.starmap(f, arg))
 
 
 def map_values(f: Callable[[_T], _S], iterable: Iterable[_T]) -> Iterable[_S]:

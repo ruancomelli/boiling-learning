@@ -1,4 +1,6 @@
 import enum
+from operator import itemgetter
+from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, Optional, Tuple, TypeVar
 
 import funcy
@@ -89,11 +91,7 @@ def make_creator(name: str, defaults: Pack = Pack()) -> Callable[[Callable], Cal
     )
 
 
-def models_from_checkpoints(
-    pattern: PathLike,
-    epoch_key: str = 'epoch',
-    load_method: LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model,
-) -> Dict[int, tf.keras.models.Model]:
+def model_checkpoints(pattern: PathLike, *, epoch_key: str = 'epoch') -> Dict[int, Path]:
     pattern = resolve(pattern)
     filename_pattern = pattern.name
     glob_pattern = filename_pattern.replace(f'{{{epoch_key}}}', '*')
@@ -102,22 +100,50 @@ def models_from_checkpoints(
     paths = pattern.parent.glob(glob_pattern)
 
     path_dict = {parser(path.name): path for path in paths}
-    path_dict = {
+
+    return {
         int(parsed_obj[epoch_key]): path
         for parsed_obj, path in path_dict.items()
         if parsed_obj is not None and epoch_key in parsed_obj
     }
 
+
+def models_from_checkpoints(
+    pattern: PathLike,
+    load_method: LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model,
+    *,
+    epoch_key: str = 'epoch',
+) -> Dict[int, tf.keras.models.Model]:
+    path_dict = model_checkpoints(pattern, epoch_key=epoch_key)
+
     return {epoch: load_method(str(path)) for epoch, path in path_dict.items()}
+
+
+def last_model_checkpoint(
+    pattern: PathLike,
+    load_method: LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model,
+    *,
+    epoch_key: str = 'epoch',
+) -> Optional[Tuple[int, tf.keras.models.Model]]:
+    path_dict = model_checkpoints(pattern, epoch_key=epoch_key)
+
+    last_pair = max(path_dict.items(), default=None, key=itemgetter(0))
+
+    if last_pair is None:
+        return None
+
+    epoch, path = last_pair
+    return epoch, load_method(path)
 
 
 def history_from_checkpoints(
     ds_val: tf.data.Dataset,
     pattern: PathLike,
-    epoch_key: str = 'epoch',
     load_method: LoaderFunction[tf.keras.models.Model] = tf.keras.models.load_model,
+    *,
+    epoch_key: str = 'epoch',
 ) -> Dict[int, Dict[str, float]]:
-    model_dict = models_from_checkpoints(pattern, epoch_key, load_method)
+    model_dict = models_from_checkpoints(pattern, load_method, epoch_key=epoch_key)
     return {epoch: model.evaluate(ds_val, return_dict=True) for epoch, model in model_dict.items()}
 
 

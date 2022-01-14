@@ -24,7 +24,6 @@ from typing import (
     Iterator,
     List,
     Mapping,
-    MutableSequence,
     Optional,
     Sequence,
     Tuple,
@@ -33,13 +32,10 @@ from typing import (
     Union,
 )
 
-import dataclassy
 import funcy
 import matplotlib.pyplot as plt
 import modin.pandas as pd
 import more_itertools as mit
-from dataclassy.dataclass import DataClass
-from dataclassy.functions import is_dataclass, is_dataclass_instance
 from sortedcontainers import SortedSet
 from typing_extensions import overload
 
@@ -105,13 +101,6 @@ def argsorted(iterable: Iterable) -> Iterable[int]:
     return funcy.pluck(0, sorted(enumerate(iterable), key=operator.itemgetter(1)))
 
 
-def multipop(lst: MutableSequence[_T], indices: Collection[int]) -> List[_T]:
-    pop = [lst[i] for i in indices]
-    lst[:] = [v for i, v in enumerate(lst) if i not in indices]
-
-    return pop
-
-
 def missing_ints(ints: Iterable[int]) -> Iterable[int]:
     # source: adapted from <https://stackoverflow.com/questions/16974047/efficient-way-to-find-missing-elements-in-an-integer-sequence>
     ints = SortedSet(ints)
@@ -121,20 +110,6 @@ def missing_ints(ints: Iterable[int]) -> Iterable[int]:
         return itertools.filterfalse(ints.__contains__, full)
     else:
         return ()
-
-
-def is_consecutive(ints: Iterable[int], ignore_order: bool = False) -> bool:
-    ints = tuple(ints)
-    if not ints:
-        return True
-
-    if ignore_order:
-        # Source: https://stackoverflow.com/a/64177833/5811400
-        r = range(min(ints), max(ints) + 1)
-        return len(ints) == len(r) and funcy.all(ints.__contains__, r)
-    else:
-        r = range(ints[0], ints[-1] + 1)
-        return ints == tuple(r)
 
 
 def merge_dicts(*dict_args: Mapping, latter_precedence: bool = True) -> dict:
@@ -215,45 +190,6 @@ class KeyedDefaultDict(DefaultDict[_Key, _Value]):
 
         ret = self[key] = self.default_factory(key)
         return ret
-
-
-def is_dataclass_class(type_: Any) -> bool:
-    return is_dataclass(type_) and not is_dataclass_instance(type_)
-
-
-def dataclass_from_mapping(
-    mapping: Mapping[str, Any],
-    dataclass_factory: Callable[..., _T],
-    key_map: Optional[Union[DataClass, Mapping[str, str]]] = None,
-) -> _T:
-    if not is_dataclass_class(dataclass_factory):
-        raise ValueError('*dataclass_factory* must be a dataclass.')
-
-    dataclass_field_names = frozenset(dataclassy.fields(dataclass_factory))
-
-    if key_map is None:
-        return dataclass_factory(**funcy.select_keys(dataclass_field_names, mapping))
-
-    if is_dataclass_instance(key_map):
-        key_map = dataclassy.as_dict(key_map)
-
-    key_map = funcy.select_keys(dataclass_field_names, key_map)
-    translator = invert_dict(key_map).get
-    mapping = {translator(key, key): value for key, value in mapping.items()}
-    return dataclass_from_mapping(mapping, dataclass_factory)
-
-
-def to_parent_dataclass(obj: DataClass, parent: Callable[..., DataClass]) -> DataClass:
-    if not is_dataclass_class(parent):
-        raise ValueError('*parent* must be a dataclass.')
-
-    if not is_dataclass_instance(obj):
-        raise ValueError('*obj* must be a dataclass instance.')
-
-    if not isinstance(obj, parent):
-        raise ValueError('*obj* must be an instance of *parent*.')
-
-    return dataclass_from_mapping(dataclassy.as_dict(obj), parent)
 
 
 def concatenate_dataframes(dfs: Iterable[pd.DataFrame]) -> pd.DataFrame:
@@ -452,13 +388,9 @@ def replace(iterable, new_iterable):
         yield new_value
 
 
-def drop_last(iterable):
+def drop_last(iterable: Iterable[_T]) -> Iterator[_T]:
     for current_value, _ in mit.pairwise(iterable):
         yield current_value
-
-
-def replace_last(iterable, last_value):
-    return append(drop_last(iterable), last_value)
 
 
 # ---------------------------------- Path ----------------------------------
