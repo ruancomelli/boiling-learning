@@ -191,7 +191,6 @@ class ExperimentVideo(Video):
             dict.fromkeys(self.data.categories, 'category'),
             {
                 self.column_names.index: self.column_types.index,
-                self.column_names.path: self.column_types.path,
                 self.column_names.name: self.column_types.name,
                 # self.column_names.elapsed_time: self.column_types.elapsed_time
                 # BUG: including the line above rounds elapsed time, breaking the whole pipeline
