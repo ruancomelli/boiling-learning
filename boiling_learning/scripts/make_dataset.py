@@ -32,7 +32,7 @@ from boiling_learning.management.managers import Manager
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.preprocessing.video import VideoFrame
-from boiling_learning.utils.descriptors import describe
+from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import Kwargs, P
 from boiling_learning.utils.parameters import Parameters
 from boiling_learning.utils.utils import resolve

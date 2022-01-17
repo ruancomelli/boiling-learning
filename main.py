@@ -60,7 +60,7 @@ from boiling_learning.scripts import (
 )
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist, initialize_gpus
 from boiling_learning.utils.dataclasses import dataclass
-from boiling_learning.utils.descriptors import describe
+from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import Many, typename
 from boiling_learning.utils.utils import PathLike, print_header, resolve

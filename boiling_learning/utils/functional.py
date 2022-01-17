@@ -22,7 +22,7 @@ from typing import (
 
 import funcy
 
-from boiling_learning.utils.descriptors import describe
+from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.sentinels import Sentinel
 

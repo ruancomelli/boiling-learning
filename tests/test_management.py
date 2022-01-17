@@ -10,7 +10,7 @@ from boiling_learning.management.cacher import cache
 from boiling_learning.management.managers import Manager
 from boiling_learning.management.persister import FilePersister, FileProvider, Persister, Provider
 from boiling_learning.preprocessing.transformers import Creator
-from boiling_learning.utils.descriptors import describe
+from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.utils import tempdir, tempfilepath
 

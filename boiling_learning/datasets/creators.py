@@ -28,7 +28,7 @@ from boiling_learning.preprocessing.transformers import (
     creator,
     transformer,
 )
-from boiling_learning.utils.descriptors import describe
+from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import Kwargs, Pack
 from boiling_learning.utils.parameters import Parameters
 from boiling_learning.utils.timing import Timer
