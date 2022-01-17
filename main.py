@@ -42,7 +42,7 @@ from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.management.allocators.json_allocator import default_table_allocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.management.managers import Manager
-from boiling_learning.model.definitions import SmallConvNet
+from boiling_learning.models.definitions import SmallConvNet
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset

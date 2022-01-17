@@ -9,7 +9,7 @@ from tensorflow.keras.optimizers import Adam
 
 from boiling_learning.datasets.datasets import apply_flattened, calculate_dataset_size, take
 from boiling_learning.management.managers import Manager
-from boiling_learning.model.callbacks import (
+from boiling_learning.models.callbacks import (
     AdditionalValidationSets,
     ReduceLROnPlateau,
     TimePrinter,

@@ -5,7 +5,7 @@ from semver import VersionInfo
 import boiling_learning.datasets
 import boiling_learning.io
 import boiling_learning.management
-import boiling_learning.model
+import boiling_learning.models
 import boiling_learning.preprocessing
 import boiling_learning.utils
 
