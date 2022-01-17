@@ -132,7 +132,6 @@ _tmp/
 analyses/
 experiments/
 images/
-models/
 selected_experiments/
 testing_process/
 testing_tf_process/
