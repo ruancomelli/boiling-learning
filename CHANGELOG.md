@@ -1,3 +1,9 @@
+## v0.18.6 (2022-01-17)
+
+### Fix
+
+- **preprocessing/experiment_video**: remove incorrect access to removed property
+
 ## v0.18.5 (2022-01-14)
 
 ### Fix
