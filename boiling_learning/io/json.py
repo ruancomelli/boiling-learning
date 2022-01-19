@@ -148,7 +148,7 @@ class TupleOfJSONSerializable(
 
 @encode.instance(delegate=TupleOfJSONSerializable)
 def _encode_tuple(instance: TupleOfJSONSerializable) -> List[SerializedJSONObject]:
-    return serialize(list(instance))
+    return list(map(serialize, instance))
 
 
 class _FrozenDictOfJSONEncodableMeta(type):

@@ -18,7 +18,7 @@ coverage:
 
 .PHONY: test
 test:
-	@poetry run pytest --doctest-modules $(.PROJECT) $(.TESTS_FOLDER)
+	@poetry run pytest --doctest-modules $(.PROJECT) $(.TESTS_FOLDER) -vv
 
 .PHONY: tox
 tox:
