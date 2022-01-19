@@ -10,7 +10,7 @@ from classes import typeclass as _typeclass
 from typing_extensions import Protocol, TypedDict, runtime_checkable
 
 from boiling_learning.utils.frozendict import frozendict
-from boiling_learning.utils.functional import Pack
+from boiling_learning.utils.functional import P, Pack
 from boiling_learning.utils.table_dispatch import table_dispatch
 from boiling_learning.utils.utils import JSONDataType, PathLike, resolve
 
@@ -85,8 +85,24 @@ class SerializedPack(TypedDict):
     kwargs: SerializedJSONObject
 
 
-@encode.instance(Pack)
-def _encode_Pack(instance: Pack) -> SerializedPack:
+class _PackOfJSONSerializableMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        return (
+            isinstance(instance, Pack)
+            and serialize.supports(instance.args)
+            and serialize.supports(instance.kwargs)
+        )
+
+
+class PackOfJSONSerializable(
+    Pack[Supports[JSONSerializable], Supports[JSONSerializable]],
+    metaclass=_PackOfJSONSerializableMeta,
+):
+    ...
+
+
+@encode.instance(delegate=PackOfJSONSerializable)
+def _encode_Pack(instance: PackOfJSONSerializable) -> SerializedPack:
     return {'args': serialize(instance.args), 'kwargs': serialize(instance.kwargs)}
 
 
@@ -173,7 +189,7 @@ class FrozenDictOfJSONEncodable(
 def _encode_frozendict(
     instance: FrozenDictOfJSONEncodable,
 ) -> Dict[str, SerializedJSONObject]:
-    return encode(dict(instance))
+    return serialize(dict(instance))
 
 
 decode = table_dispatch()
@@ -203,6 +219,7 @@ def _decode_dict(obj: Dict[str, JSONDataType]) -> dict:
     return {key: deserialize(value) for key, value in obj.items()}
 
 
+@decode.dispatch(P)
 @decode.dispatch(Pack)
 def _decode_Pack(obj: SerializedPack) -> Pack:
     args = obj['args']
@@ -213,6 +230,11 @@ def _decode_Pack(obj: SerializedPack) -> Pack:
 @decode.dispatch(Path)
 def _decode_Path(obj: str) -> Path:
     return Path(obj)
+
+
+@decode.dispatch(frozendict)
+def _decode_frozendict(obj: Dict[str, Any]) -> frozendict:
+    return frozendict(deserialize(obj))
 
 
 @serialize.instance(None)

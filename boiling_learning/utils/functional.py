@@ -7,7 +7,6 @@ from typing import (
     Dict,
     FrozenSet,
     Generic,
-    Hashable,
     Iterable,
     Iterator,
     List,
@@ -50,7 +49,7 @@ ArgsType = Tuple[_T, ...]
 KwargsType = frozendict[str, _S]
 
 
-class Pack(Hashable, Generic[_T, _S]):
+class Pack(Generic[_T, _S]):
     def __init__(self, args: Iterable[_T] = (), kwargs: Mapping[str, _S] = frozendict()) -> None:
         self._args: ArgsType[_T] = tuple(args)
         self._kwargs: KwargsType[_S] = frozendict(kwargs)
@@ -71,9 +70,7 @@ class Pack(Hashable, Generic[_T, _S]):
 
     def __eq__(self, other: Any) -> bool:
         return self is other or (
-            isinstance(other, self.__class__)
-            and self.args == other.args
-            and self.kwargs == other.kwargs
+            isinstance(other, Pack) and self.args == other.args and self.kwargs == other.kwargs
         )
 
     def __hash__(self) -> int:

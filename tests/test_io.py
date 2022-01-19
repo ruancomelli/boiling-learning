@@ -5,6 +5,7 @@ import pytest
 
 from boiling_learning.io import json
 from boiling_learning.io.json import JSONDataType
+from boiling_learning.utils.functional import P
 
 
 class X:
@@ -108,6 +109,36 @@ class storage_Test(TestCase):
                 {'type': None, 'contents': None},
             ],
             id='tuple-of-complex',
+        ),
+        pytest.param(
+            P(3, 'hi', ('no', X(4)), do=True, errors=None),
+            {
+                'args': {
+                    'type': 'builtins.tuple',
+                    'contents': [
+                        {'type': 'builtins.int', 'contents': 3},
+                        {'type': 'builtins.str', 'contents': 'hi'},
+                        {
+                            'type': 'builtins.tuple',
+                            'contents': [
+                                {'type': 'builtins.str', 'contents': 'no'},
+                                {'type': f'{__name__}.X', 'contents': {'value': 4}},
+                            ],
+                        },
+                    ],
+                },
+                'kwargs': {
+                    'type': 'frozendict.frozendict',
+                    'contents': {
+                        'type': 'builtins.dict',
+                        'contents': {
+                            'do': {'type': 'builtins.bool', 'contents': True},
+                            'errors': {'type': None, 'contents': None},
+                        },
+                    },
+                },
+            },
+            id='pack-of-complex',
         ),
     ],
 )
