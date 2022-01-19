@@ -137,20 +137,18 @@ def _encode_dict(instance: DictOfJSONSerializable) -> Dict[str, SerializedJSONOb
 
 class _TupleOfJSONSerializableMeta(type):
     def __instancecheck__(cls, instance: Any) -> bool:
-        return isinstance(instance, tuple) and all(
-            serialize.supports(instance) for instance in instance
-        )
+        return isinstance(instance, tuple) and all(serialize.supports(item) for item in instance)
 
 
 class TupleOfJSONSerializable(
-    Tuple[str, Supports[JSONSerializable]], metaclass=_TupleOfJSONSerializableMeta
+    Tuple[Supports[JSONSerializable], ...], metaclass=_TupleOfJSONSerializableMeta
 ):
     ...
 
 
 @encode.instance(delegate=TupleOfJSONSerializable)
 def _encode_tuple(instance: TupleOfJSONSerializable) -> List[SerializedJSONObject]:
-    return list(map(serialize, instance))
+    return serialize(list(instance))
 
 
 class _FrozenDictOfJSONEncodableMeta(type):

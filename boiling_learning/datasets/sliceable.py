@@ -530,7 +530,4 @@ def _sliceable_dataset_element_path(root: PathLike, index: int) -> Path:
 
 
 def _absolute_index_for_dataset(dataset: SliceableDataset[Any], index: int) -> int:
-    if index < 0:
-        return len(dataset) + index
-
-    return index
+    return len(dataset) + index if index < 0 else index

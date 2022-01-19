@@ -43,6 +43,14 @@ from boiling_learning.management.allocators.json_allocator import default_table_
 from boiling_learning.management.cacher import cache
 from boiling_learning.management.managers import Manager
 from boiling_learning.model.definitions import SmallConvNet
+from boiling_learning.model.training import (
+    CompileModelParams,
+    FitModel,
+    FitModelParams,
+    ModelArchitecture,
+)
+from boiling_learning.model.training import compile_model as _compile_model
+from boiling_learning.model.training import fit_model as _fit_model
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
@@ -399,51 +407,6 @@ def augment_datasets(
     )
 
 
-@dataclass(frozen=True)
-class FitModelParams:
-    architecture: tf.keras.Model
-    strategy: tf.distribute.Strategy
-    take_train: Optional[Union[int, Fraction]]
-    take_val: Optional[Union[int, Fraction]]
-    target: str
-    additional_val_sets: Dict[str, tf.data.Dataset]
-    lr: float
-    normalize_images: bool
-    reduce_lr_on_plateau_factor: float
-    reduce_lr_on_plateau_patience: int
-    early_stopping_patience: int
-    dropout_ratio: float
-    hidden_layers_policy: str
-    output_layer_policy: str
-
-
-@dataclass
-class FittedModel:
-    model: tf.keras.Model
-    history: tf.keras.History
-
-
-def _fit_model(
-    augmented_datasets: DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]],
-    architecture: tf.keras.Model,
-    strategy: tf.distribute.Strategy,
-    take_train: Optional[Union[int, Fraction]],
-    take_val: Optional[Union[int, Fraction]],
-    target: str,
-    additional_val_sets: Dict[str, tf.data.Dataset],
-    lr: float,
-    normalize_images: bool,
-    reduce_lr_on_plateau_factor: float,
-    reduce_lr_on_plateau_patience: int,
-    early_stopping_patience: int,
-    dropout_ratio: float,
-    hidden_layers_policy: str,
-    output_layer_policy: str,
-) -> FittedModel:
-    # TODO: here!!!
-    pass
-
-
 @cache(
     allocator=default_table_allocator(analyses_path / 'models' / 'trained_models2'),
     saver=bl.io.saver_dataset_triplet(sliceable_dataset_saver),
@@ -452,29 +415,39 @@ def _fit_model(
     ),
 )
 def fit_model(
+    architecture: ModelArchitecture,
+    compile_params: CompileModelParams,
+    fit_model_params: FitModelParams,
     image_dataset_get_params: GetImageDatasetParams,
     image_dataset_augment_params: AugmentDatasetParams,
-    fit_model_params: FitModelParams,
-) -> FittedModel:
+) -> FitModel:
     return _fit_model(
+        _compile_model(architecture, compile_params),
         augment_datasets(
             get_image_dataset(image_dataset_get_params), image_dataset_augment_params
         ),
-        architecture=fit_model_params.architecture,
-        strategy=fit_model_params.strategy,
-        take_train=fit_model_params.take_train,
-        take_val=fit_model_params.take_val,
-        target=fit_model_params.target,
-        additional_val_sets=fit_model_params.additional_val_sets,
-        lr=fit_model_params.lr,
-        normalize_images=fit_model_params.normalize_images,
-        reduce_lr_on_plateau_factor=fit_model_params.reduce_lr_on_plateau_factor,
-        reduce_lr_on_plateau_patience=fit_model_params.reduce_lr_on_plateau_patience,
-        early_stopping_patience=fit_model_params.early_stopping_patience,
-        dropout_ratio=fit_model_params.dropout_ratio,
-        hidden_layers_policy=fit_model_params.hidden_layers_policy,
-        output_layer_policy=fit_model_params.output_layer_policy,
+        fit_model_params,
     )
+
+
+ds_train, ds_val, ds_test = augment_datasets(
+    get_image_dataset(
+        GetImageDatasetParams(
+            boiling_cases_timed()[0],
+            transformers=boiling_preprocessors,
+            splits=DatasetSplits(
+                train=Fraction(70, 100),
+                val=Fraction(15, 100),
+                test=Fraction(15, 100),
+            ),
+            dataset_size=Fraction(1, 1000),
+        )
+    ),
+    AugmentDatasetParams(augmentors=boiling_augmentors, batch_size=128),
+)
+
+
+assert False, 'OLD CODE AHEAD!'
 
 
 experiment_video_dataset_manager = Manager(
