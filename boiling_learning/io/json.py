@@ -45,6 +45,9 @@ def encode(instance: Supports[JSONEncodable]) -> JSONDataType:
     '''Return a JSON encoding of an object.'''
 
 
+decode = table_dispatch()
+
+
 class JSONSerializable(AssociatedType):
     ...
 
@@ -69,15 +72,40 @@ def serialize(obj: Supports[JSONSerializable]) -> SerializedJSONObject:
 @encode.instance(None)
 @encode.instance(bool)
 @encode.instance(int)
-@encode.instance(str)
 @encode.instance(float)
+@encode.instance(str)
 def _encode_basics(instance: _BasicType) -> _BasicType:
     return instance
+
+
+@decode.dispatch(None)
+@decode.dispatch(bool)
+@decode.dispatch(int)
+@decode.dispatch(float)
+@decode.dispatch(str)
+def _decode(obj: _BasicType) -> _BasicType:
+    return obj
+
+
+@runtime_checkable
+class HasJSONEncode(Protocol):
+    def __json_encode__(self) -> JSONDataType:
+        ...
+
+
+@encode.instance(protocol=HasJSONEncode)
+def _encode_has_encode(instance: HasJSONEncode) -> JSONDataType:
+    return instance.__json_encode__()
 
 
 @encode.instance(Path)
 def _encode_Path(instance: Path) -> str:
     return str(instance)
+
+
+@decode.dispatch(Path)
+def _decode_Path(obj: str) -> Path:
+    return Path(obj)
 
 
 class SerializedPack(TypedDict):
@@ -106,15 +134,12 @@ def _encode_Pack(instance: PackOfJSONSerializable) -> SerializedPack:
     return {'args': serialize(instance.args), 'kwargs': serialize(instance.kwargs)}
 
 
-@runtime_checkable
-class HasJSONEncode(Protocol):
-    def __json_encode__(self) -> JSONDataType:
-        ...
-
-
-@encode.instance(protocol=HasJSONEncode)
-def _encode_has_encode(instance: HasJSONEncode) -> JSONDataType:
-    return instance.__json_encode__()
+@decode.dispatch(P)
+@decode.dispatch(Pack)
+def _decode_Pack(obj: SerializedPack) -> Pack:
+    args = obj['args']
+    kwargs = obj['kwargs']
+    return Pack(deserialize(args), deserialize(kwargs))
 
 
 class _ListOfJSONSerializableMeta(type):
@@ -131,6 +156,11 @@ class ListOfJSONSerializable(
 @encode.instance(delegate=ListOfJSONSerializable)
 def _encode_list(instance: ListOfJSONSerializable) -> List[JSONDataType]:
     return [serialize(item) for item in instance]
+
+
+@decode.dispatch(list)
+def _decode_list(obj: List[JSONDataType]) -> list:
+    return list(map(deserialize, obj))
 
 
 class _DictOfJSONSerializableMeta(type):
@@ -151,6 +181,11 @@ def _encode_dict(instance: DictOfJSONSerializable) -> Dict[str, SerializedJSONOb
     return {key: serialize(value) for key, value in instance.items()}
 
 
+@decode.dispatch(dict)
+def _decode_dict(obj: Dict[str, JSONDataType]) -> dict:
+    return {key: deserialize(value) for key, value in obj.items()}
+
+
 class _TupleOfJSONSerializableMeta(type):
     def __instancecheck__(cls, instance: Any) -> bool:
         return isinstance(instance, tuple) and all(serialize.supports(item) for item in instance)
@@ -165,6 +200,11 @@ class TupleOfJSONSerializable(
 @encode.instance(delegate=TupleOfJSONSerializable)
 def _encode_tuple(instance: TupleOfJSONSerializable) -> List[SerializedJSONObject]:
     return list(map(serialize, instance))
+
+
+@decode.dispatch(tuple)
+def _decode_tuple(obj: List[JSONDataType]) -> tuple:
+    return tuple(map(deserialize, obj))
 
 
 class _FrozenDictOfJSONEncodableMeta(type):
@@ -190,46 +230,6 @@ def _encode_frozendict(
     instance: FrozenDictOfJSONEncodable,
 ) -> Dict[str, SerializedJSONObject]:
     return serialize(dict(instance))
-
-
-decode = table_dispatch()
-
-
-@decode.dispatch(None)
-@decode.dispatch(bool)
-@decode.dispatch(int)
-@decode.dispatch(float)
-@decode.dispatch(str)
-def _decode(obj: _T) -> _T:
-    return obj
-
-
-@decode.dispatch(list)
-def _decode_list(obj: List[JSONDataType]) -> list:
-    return list(map(deserialize, obj))
-
-
-@decode.dispatch(tuple)
-def _decode_tuple(obj: List[JSONDataType]) -> tuple:
-    return tuple(map(deserialize, obj))
-
-
-@decode.dispatch(dict)
-def _decode_dict(obj: Dict[str, JSONDataType]) -> dict:
-    return {key: deserialize(value) for key, value in obj.items()}
-
-
-@decode.dispatch(P)
-@decode.dispatch(Pack)
-def _decode_Pack(obj: SerializedPack) -> Pack:
-    args = obj['args']
-    kwargs = obj['kwargs']
-    return Pack(deserialize(args), deserialize(kwargs))
-
-
-@decode.dispatch(Path)
-def _decode_Path(obj: str) -> Path:
-    return Path(obj)
 
 
 @decode.dispatch(frozendict)

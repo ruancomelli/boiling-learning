@@ -25,7 +25,7 @@ from boiling_learning.utils.slicerators import Slicerator
 _T = TypeVar('_T')
 
 
-@dataclass(kwargs=True)
+@dataclass(frozen=True, kwargs=True)
 class DatasetSplits:
     train: Optional[Fraction] = None
     test: Optional[Fraction] = None
