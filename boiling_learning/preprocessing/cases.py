@@ -92,6 +92,6 @@ class Case(ImageDataset):
             element_video.convert_video(dest_path, overwrite=overwrite, verbose=verbose)
         self.videos_dir = new_videos_dir
 
-    def sync_time_series(self, source_df: pd.DataFrame, inplace: bool = True) -> None:
+    def sync_time_series(self, source_df: pd.DataFrame) -> None:
         for experiment_video in self.values():
             experiment_video.sync_time_series(source_df, inplace=True)
