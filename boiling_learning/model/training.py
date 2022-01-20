@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, TypedDict, Union
+from typing import Any, Dict, List, Optional, Union
 
 from dataclassy import dataclass
 from tensorflow.keras import Model
@@ -8,6 +8,7 @@ from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.losses import Loss
 from tensorflow.keras.metrics import Metric
 from tensorflow.keras.optimizers import Optimizer
+from typing_extensions import TypedDict
 
 from boiling_learning.datasets.sliceable import (
     SupervisedSliceableDataset,
