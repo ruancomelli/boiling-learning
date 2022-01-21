@@ -318,14 +318,14 @@ typing-extensions = ">=3.10.0"
 
 [[package]]
 name = "boto3"
-version = "1.20.38"
+version = "1.20.40"
 description = "The AWS SDK for Python"
 category = "main"
 optional = false
 python-versions = ">= 3.6"
 
 [package.dependencies]
-botocore = ">=1.23.38,<1.24.0"
+botocore = ">=1.23.40,<1.24.0"
 jmespath = ">=0.7.1,<1.0.0"
 s3transfer = ">=0.5.0,<0.6.0"
 
@@ -334,7 +334,7 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.23.38"
+version = "1.23.40"
 description = "Low-level, data-driven core of boto 3."
 category = "main"
 optional = false
@@ -747,11 +747,11 @@ grpc = ["grpcio (>=1.8.2,<2.0dev)"]
 
 [[package]]
 name = "google-cloud-storage"
-version = "2.0.0"
+version = "2.1.0"
 description = "Google Cloud Storage API client library"
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 
 [package.dependencies]
 google-api-core = ">=1.29.0,<3.0dev"
@@ -986,7 +986,7 @@ test = ["pytest (!=5.3.4)", "pytest-cov", "flaky", "ipyparallel"]
 
 [[package]]
 name = "ipython"
-version = "7.31.0"
+version = "7.31.1"
 description = "IPython: Productive Interactive Computing"
 category = "main"
 optional = false
@@ -2419,7 +2419,7 @@ win32 = ["pywin32"]
 
 [[package]]
 name = "setuptools-scm"
-version = "6.4.1"
+version = "6.4.2"
 description = "the blessed package to manage your versions by scm tags"
 category = "main"
 optional = false
@@ -2783,7 +2783,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-frozendict"
-version = "2.0.4"
+version = "2.0.5"
 description = "Typing stubs for frozendict"
 category = "main"
 optional = false
@@ -3187,12 +3187,12 @@ bokeh = [
     {file = "bokeh-2.4.2.tar.gz", hash = "sha256:f0a4b53364ed3b7eb936c5cb1a4f4132369e394c7ae0a8ef420459410958033d"},
 ]
 boto3 = [
-    {file = "boto3-1.20.38-py3-none-any.whl", hash = "sha256:22b243302f526df9c599c6b81092cb3c62f785bc06cedceeff9054489df4ffb3"},
-    {file = "boto3-1.20.38.tar.gz", hash = "sha256:edeae6d38c98691cb9da187c541f3033e0f30d6b2a0b54b5399a44d9b3ba4f61"},
+    {file = "boto3-1.20.40-py3-none-any.whl", hash = "sha256:cfe85589e4a0a997c7b9ae7432400b03fa6fa5fea29fdc48db3099a903b76998"},
+    {file = "boto3-1.20.40.tar.gz", hash = "sha256:66aef9a6d8cad393f69166112ba49e14e2c6766f9278c96134101314a9af2992"},
 ]
 botocore = [
-    {file = "botocore-1.23.38-py3-none-any.whl", hash = "sha256:49b304d9d4a782d7108f6a5ca0df6557da20a22b74d5bf745f02fea5cffc35ca"},
-    {file = "botocore-1.23.38.tar.gz", hash = "sha256:f733bc565f144f0ec97ffe0d51235d358ad2f5f12b331563b69d9e9227262a36"},
+    {file = "botocore-1.23.40-py3-none-any.whl", hash = "sha256:88a314fe27cd97a0c731094c5b34db01ebe930801700e5d1b68485ebde746c3c"},
+    {file = "botocore-1.23.40.tar.gz", hash = "sha256:49baa1fca4483b24769f0743fbf72afe4db391f41f1fc12ea34e06036db642a4"},
 ]
 cached-property = [
     {file = "cached-property-1.5.2.tar.gz", hash = "sha256:9fa5755838eecbb2d234c3aa390bd80fbd3ac6b6869109bfc1b499f7bd89a130"},
@@ -3507,8 +3507,8 @@ google-cloud-core = [
     {file = "google_cloud_core-2.2.2-py2.py3-none-any.whl", hash = "sha256:d9cffaf86df6a876438d4e8471183bbe404c9a15de9afe60433bc7dce8cb4252"},
 ]
 google-cloud-storage = [
-    {file = "google-cloud-storage-2.0.0.tar.gz", hash = "sha256:a57a15aead0f9dfbd4381f1bfdbe8bf89818a4bd75bab846cafcefb2db846c47"},
-    {file = "google_cloud_storage-2.0.0-py2.py3-none-any.whl", hash = "sha256:ec4be60bb223a3a960f0d01697d849b86d91cad815a84915a32ed3635e93a5e7"},
+    {file = "google-cloud-storage-2.1.0.tar.gz", hash = "sha256:0a5e7ab1a38d2c24be8e566e50b8b0daa8af8fd49d4ab312b1fda5c147429893"},
+    {file = "google_cloud_storage-2.1.0-py2.py3-none-any.whl", hash = "sha256:53e4f6030d771526e4dbe9c6000cca44eab812f39ae8c7a810be999473e4f02c"},
 ]
 google-crc32c = [
     {file = "google-crc32c-1.3.0.tar.gz", hash = "sha256:276de6273eb074a35bc598f8efbc00c7869c5cf2e29c90748fccc8c898c244df"},
@@ -3714,8 +3714,8 @@ ipykernel = [
     {file = "ipykernel-6.7.0.tar.gz", hash = "sha256:d82b904fdc2fd8c7b1fbe0fa481c68a11b4cd4c8ef07e6517da1f10cc3114d24"},
 ]
 ipython = [
-    {file = "ipython-7.31.0-py3-none-any.whl", hash = "sha256:4c4234cdcc6b8f87c5b5c7af9899aa696ac5cfcf0e9f6d0688018bbee5c73bce"},
-    {file = "ipython-7.31.0.tar.gz", hash = "sha256:346c74db7312c41fa566d3be45d2e759a528dcc2994fe48aac1a03a70cd668a3"},
+    {file = "ipython-7.31.1-py3-none-any.whl", hash = "sha256:55df3e0bd0f94e715abd968bedd89d4e8a7bce4bf498fb123fed4f5398fea874"},
+    {file = "ipython-7.31.1.tar.gz", hash = "sha256:b5548ec5329a4bcf054a5deed5099b0f9622eb9ea51aaa7104d215fece201d8c"},
 ]
 ipython-genutils = [
     {file = "ipython_genutils-0.2.0-py2.py3-none-any.whl", hash = "sha256:72dd37233799e619666c9f639a9da83c34013a73e8bbc79a7a6348d93c61fab8"},
@@ -4972,8 +4972,8 @@ send2trash = [
     {file = "Send2Trash-1.8.0.tar.gz", hash = "sha256:d2c24762fd3759860a0aff155e45871447ea58d2be6bdd39b5c8f966a0c99c2d"},
 ]
 setuptools-scm = [
-    {file = "setuptools_scm-6.4.1-py3-none-any.whl", hash = "sha256:93bbcc1d3e92f20eaef42df31e4b5e5a348f8cb0e48eaff3e060184a57e94b07"},
-    {file = "setuptools_scm-6.4.1.tar.gz", hash = "sha256:9bd9ff7fd5fa1cf469fe28a632336b9cfd351476c6d09379ff676d3945f669b9"},
+    {file = "setuptools_scm-6.4.2-py3-none-any.whl", hash = "sha256:acea13255093849de7ccb11af9e1fb8bde7067783450cee9ef7a93139bddf6d4"},
+    {file = "setuptools_scm-6.4.2.tar.gz", hash = "sha256:6833ac65c6ed9711a4d5d2266f8024cfa07c533a0e55f4c12f6eff280a5a9e30"},
 ]
 six = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
@@ -5169,8 +5169,8 @@ types-decorator = [
     {file = "types_decorator-5.1.3-py3-none-any.whl", hash = "sha256:3900fc2b2567c58f295a61900319b60b224fec3c87d3712102f4eee1b130c970"},
 ]
 types-frozendict = [
-    {file = "types-frozendict-2.0.4.tar.gz", hash = "sha256:20fe0def0ee8fcc6065be767dba5d4c3ab10569448ac04f0c6ce503e9c29bcce"},
-    {file = "types_frozendict-2.0.4-py3-none-any.whl", hash = "sha256:c7871584e63b0fe348b1eaff07915b077dd33dae9a2425c13e2be2b29d7439c2"},
+    {file = "types-frozendict-2.0.5.tar.gz", hash = "sha256:e64e706a90751d02284b950af2dda77c40a308aea69546f3af4970179be78962"},
+    {file = "types_frozendict-2.0.5-py3-none-any.whl", hash = "sha256:d24e983568aa219066507b4faa3c6ddfad2653a6da5e5048026f388c879c2f73"},
 ]
 types-pyyaml = [
     {file = "types-PyYAML-6.0.3.tar.gz", hash = "sha256:6ea4eefa8579e0ce022f785a62de2bcd647fad4a81df5cf946fd67e4b059920b"},
