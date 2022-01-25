@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json as _json
+from fractions import Fraction
 from importlib import import_module
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
@@ -9,12 +10,12 @@ from classes import AssociatedType, Supports
 from classes import typeclass as _typeclass
 from typing_extensions import Protocol, TypedDict, runtime_checkable
 
+from boiling_learning.utils.dataclasses import asdict, is_dataclass_instance
 from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.functional import P, Pack
 from boiling_learning.utils.table_dispatch import table_dispatch
 from boiling_learning.utils.utils import JSONDataType, PathLike, resolve
 
-_T = TypeVar('_T')
 BasicTypes = Union[None, bool, int, str, float]
 _BasicType = TypeVar('_BasicType', bound=BasicTypes)
 
@@ -108,18 +109,9 @@ def _decode_Path(obj: str) -> Path:
     return Path(obj)
 
 
-class SerializedPack(TypedDict):
-    args: SerializedJSONObject
-    kwargs: SerializedJSONObject
-
-
 class _PackOfJSONSerializableMeta(type):
     def __instancecheck__(cls, instance: Any) -> bool:
-        return (
-            isinstance(instance, Pack)
-            and serialize.supports(instance.args)
-            and serialize.supports(instance.kwargs)
-        )
+        return isinstance(instance, Pack) and serialize.supports(instance.pair())
 
 
 class PackOfJSONSerializable(
@@ -130,15 +122,14 @@ class PackOfJSONSerializable(
 
 
 @encode.instance(delegate=PackOfJSONSerializable)
-def _encode_Pack(instance: PackOfJSONSerializable) -> SerializedPack:
-    return {'args': serialize(instance.args), 'kwargs': serialize(instance.kwargs)}
+def _encode_Pack(instance: PackOfJSONSerializable) -> List[SerializedJSONObject]:
+    return serialize(instance.pair())
 
 
 @decode.dispatch(P)
 @decode.dispatch(Pack)
-def _decode_Pack(obj: SerializedPack) -> Pack:
-    args = obj['args']
-    kwargs = obj['kwargs']
+def _decode_Pack(obj: List[SerializedJSONObject]) -> Pack:
+    args, kwargs = obj
     return Pack(deserialize(args), deserialize(kwargs))
 
 
@@ -235,6 +226,35 @@ def _encode_frozendict(
 @decode.dispatch(frozendict)
 def _decode_frozendict(obj: Dict[str, Any]) -> frozendict:
     return frozendict(deserialize(obj))
+
+
+class DataclassOfJSONSerializableFieldsMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        return is_dataclass_instance(instance) and serialize.supports(asdict(instance))
+
+
+class DataclassOfJSONSerializableFields(
+    metaclass=DataclassOfJSONSerializableFieldsMeta,
+):
+    ...
+
+
+@encode.instance(delegate=DataclassOfJSONSerializableFields)
+def _encode_dataclass(
+    instance: DataclassOfJSONSerializableFields,
+) -> Dict[str, SerializedJSONObject]:
+    return serialize(asdict(instance))
+
+
+@encode.instance(Fraction)
+def _encode_fraction(instance: Fraction) -> List[int]:
+    return serialize(instance.as_integer_ratio())
+
+
+@decode.dispatch(Fraction)
+def _decode_fraction(instance: List[int]) -> Fraction:
+    numerator, denominator = instance
+    return Fraction(deserialize(numerator), deserialize(denominator))
 
 
 @serialize.instance(None)

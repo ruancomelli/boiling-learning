@@ -1,9 +1,11 @@
+from fractions import Fraction
 from typing import Any, Dict, Generic, List, Tuple, TypeVar, Union
 
 from classes import AssociatedType, Supports, typeclass
 from typing_extensions import Protocol, final, runtime_checkable
 
 from boiling_learning.utils.dataclasses import asdict, is_dataclass_instance
+from boiling_learning.utils.frozendict import frozendict
 
 _Description = TypeVar('_Description')
 _Description_co = TypeVar('_Description_co', covariant=True)
@@ -42,7 +44,7 @@ def _describe_has_describe(instance: HasDescribe[_Description]) -> _Description:
     return instance.__describe__()
 
 
-class ListOfDescribableMeta(type):
+class _ListOfDescribableMeta(type):
     def __instancecheck__(cls, instance: Any) -> bool:
         return isinstance(instance, list) and all(describe.supports(item) for item in instance)
 
@@ -50,7 +52,7 @@ class ListOfDescribableMeta(type):
 class ListOfDescribable(
     List[Supports[Describable[_Description]]],
     Generic[_Description],
-    metaclass=ListOfDescribableMeta,
+    metaclass=_ListOfDescribableMeta,
 ):
     ...
 
@@ -60,7 +62,7 @@ def _describe_list(instance: ListOfDescribable[_Description]) -> List[_Descripti
     return [describe(item) for item in instance]
 
 
-class TupleOfDescribableMeta(type):
+class _TupleOfDescribableMeta(type):
     def __instancecheck__(cls, instance: Any) -> bool:
         return isinstance(instance, tuple) and all(describe.supports(item) for item in instance)
 
@@ -68,7 +70,7 @@ class TupleOfDescribableMeta(type):
 class TupleOfDescribable(
     Tuple[Supports[Describable[_Description]], ...],
     Generic[_Description],
-    metaclass=TupleOfDescribableMeta,
+    metaclass=_TupleOfDescribableMeta,
 ):
     ...
 
@@ -78,7 +80,7 @@ def _describe_tuple(instance: TupleOfDescribable[_Description]) -> Tuple[_Descri
     return tuple(describe(item) for item in instance)
 
 
-class DictOfDescribableMeta(type):
+class _DictOfDescribableMeta(type):
     def __instancecheck__(cls, instance: Any) -> bool:
         return isinstance(instance, dict) and all(
             isinstance(key, str) and describe.supports(value) for key, value in instance.items()
@@ -88,7 +90,7 @@ class DictOfDescribableMeta(type):
 class DictOfDescribable(
     Dict[str, Supports[Describable[_Description]]],
     Generic[_Description],
-    metaclass=DictOfDescribableMeta,
+    metaclass=_DictOfDescribableMeta,
 ):
     ...
 
@@ -98,14 +100,14 @@ def _describe_dict(instance: DictOfDescribable[_Description]) -> Dict[str, _Desc
     return {key: describe(value) for key, value in instance.items()}
 
 
-class DataclassOfDescribableFieldsMeta(type):
+class _DataclassOfDescribableFieldsMeta(type):
     def __instancecheck__(cls, instance: Any) -> bool:
         return is_dataclass_instance(instance) and describe.supports(asdict(instance))
 
 
 class DataclassOfDescribableFields(
     Generic[_Description],
-    metaclass=DataclassOfDescribableFieldsMeta,
+    metaclass=_DataclassOfDescribableFieldsMeta,
 ):
     ...
 
@@ -115,3 +117,32 @@ def _describe_dataclass(
     instance: DataclassOfDescribableFields[_Description],
 ) -> Dict[str, _Description]:
     return describe(asdict(instance))
+
+
+@describe.instance(Fraction)
+def _describe_fraction(instance: Fraction) -> Tuple[int, int]:
+    return instance.as_integer_ratio()
+
+
+class _FrozenDictOfDescribableMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        return isinstance(instance, frozendict) and describe.supports(dict(instance))
+
+
+class _FrozenDictMeta(_FrozenDictOfDescribableMeta, type(frozendict)):
+    pass
+
+
+class FrozenDictOfDescribable(
+    frozendict[str, Supports[Describable[_Description]]],
+    Generic[_Description],
+    metaclass=_FrozenDictMeta,
+):
+    ...
+
+
+@describe.instance(delegate=FrozenDictOfDescribable)
+def _describe_frozendict(
+    instance: FrozenDictOfDescribable[_Description],
+) -> Dict[str, _Description]:
+    return describe(dict(instance))

@@ -4,6 +4,7 @@ from typing import Any, Callable, Generic, Iterator, Mapping, Optional, Tuple, T
 import funcy
 from typing_extensions import ParamSpec
 
+from boiling_learning.io import json
 from boiling_learning.utils.dtypes import auto_dtype, new_py_function
 from boiling_learning.utils.functional import Pack, nth_arg
 from boiling_learning.utils.typeutils import CallableWithFirst
@@ -44,11 +45,13 @@ class Transformer(SimpleStr, Generic[_X, _Y]):
         return _make
 
     def __describe__(self) -> JSONDataType:
-        return {
-            'type': self.__class__.__name__,
-            'name': self.name,
-            'pack': self.pack,
-        }
+        return json.serialize(
+            {
+                'type': self.__class__.__name__,
+                'name': self.name,
+                'pack': self.pack,
+            }
+        )
 
     def as_tf_py_function(self, pack_tuple: bool = False):
         if pack_tuple:
@@ -155,7 +158,7 @@ class KeyedFeatureTransformer(
         return self.packer[key].rpartial(f)
 
     def __describe__(self) -> JSONDataType:
-        return funcy.merge(super().__describe__(), {'packer': self.packer})
+        return json.serialize(funcy.merge(super().__describe__(), {'packer': self.packer}))
 
 
 class DictFeatureTransformer(
@@ -219,11 +222,15 @@ class DictFeatureTransformer(
         return self._transformer_mapping[key]
 
     def __describe__(self) -> JSONDataType:
-        return {
-            'type': self.__class__.__name__,
-            'name': self.name,
-            'packer': self.packer if isinstance(self.packer, Mapping) else self.packer.__name__,
-        }
+        return json.serialize(
+            {
+                'type': self.__class__.__name__,
+                'name': self.name,
+                'packer': self.packer
+                if isinstance(self.packer, Mapping)
+                else self.packer.__name__,
+            }
+        )
 
 
 first_argument_transformer = Transformer('first_argument', nth_arg(0))

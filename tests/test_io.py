@@ -5,6 +5,7 @@ import pytest
 
 from boiling_learning.io import json
 from boiling_learning.io.json import JSONDataType
+from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.functional import P
 
 
@@ -128,7 +129,7 @@ class storage_Test(TestCase):
                     ],
                 },
                 'kwargs': {
-                    'type': 'frozendict.frozendict',
+                    'type': f'{frozendict.__module__}.{frozendict.__name__}',
                     'contents': {
                         'type': 'builtins.dict',
                         'contents': {

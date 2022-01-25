@@ -4,12 +4,10 @@ from functools import partial, wraps
 from typing import (
     Any,
     Callable,
-    Dict,
     FrozenSet,
     Generic,
     Iterable,
     Iterator,
-    List,
     Mapping,
     Optional,
     Sequence,
@@ -103,36 +101,8 @@ class Pack(Generic[_T, _S]):
             )
         )
 
-    def __json_encode__(self) -> Dict[str, Union[List[_T], Dict[str, _S]]]:
-        return {'args': list(self.args), 'kwargs': dict(self.kwargs)}
-
-    def __json_decode__(self, args: Iterable[_T], kwargs: Mapping[str, _S]) -> None:
-        '''Decode JSON object as Pack.
-
-        Expects the object to be in the format *{"args": args, "kwargs": kwargs]*, e.g.:
-        {
-            "my_pack": {
-                "args": [1, 2, "name"],
-                "kwargs": {
-                    "number": 3.14,
-                    "phone": null
-                }
-            }
-        }
-        '''
-        self._args = tuple(args)
-        self._kwargs = frozendict(kwargs)
-
     def __describe__(self) -> Tuple[Tuple[_T], KwargsType[_S]]:
-        pair = self.pair()
-        if describe.supports(pair):
-            return ((0,), {'a': 'b'})
-            # return describe(pair)
-
-        raise TypeError(
-            'this `Pack` cannot be described because one or more of its arguments is not '
-            f'describable: {self}'
-        )
+        return describe(self.pair())
 
     @classmethod
     def pack(*cls_n_args: _T, **kwargs: _S) -> Pack[_T, _S]:
@@ -157,9 +127,7 @@ class Pack(Generic[_T, _S]):
         ...
 
     def __matmul__(self, other: Any) -> Any:
-        if callable(other):
-            return self.partial(other)
-        return NotImplemented
+        return self.partial(other) if callable(other) else NotImplemented
 
     @overload
     def __rmatmul__(self, other: Callable[..., _U]) -> Callable[..., _U]:
@@ -170,9 +138,7 @@ class Pack(Generic[_T, _S]):
         ...
 
     def __rmatmul__(self, other: Any) -> Any:
-        if callable(other):
-            return self.rpartial(other)
-        return NotImplemented
+        return self.rpartial(other) if callable(other) else NotImplemented
 
     def omit(
         self,
