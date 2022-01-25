@@ -43,16 +43,16 @@ class Case(ImageDataset):
             df_path=df_path,
         )
 
-        for video_path in self.videos_dir.rglob('*' + video_suffix):
-            self.add(
-                ExperimentVideo(
-                    video_path=video_path,
-                    df_dir=self.dataframes_dir,
-                    df_suffix='.csv',
-                    column_names=column_names,
-                    column_types=column_types,
-                )
+        self.update(
+            ExperimentVideo(
+                video_path=video_path,
+                df_dir=self.dataframes_dir,
+                df_suffix='.csv',
+                column_names=column_names,
+                column_types=column_types,
             )
+            for video_path in self.videos_dir.rglob('*' + video_suffix)
+        )
 
         if video_data_path is None:
             video_data_path = self.path / 'data.json'
@@ -86,12 +86,12 @@ class Case(ImageDataset):
             raise ValueError('new_suffix is expected to start with a dot (\'.\')')
 
         new_videos_dir = resolve(new_videos_dir, root=self.path, dir=True)
-        for element_video in self.values():
-            tail = element_video.path.relative_to(self.videos_dir)
+        for experiment_video in self:
+            tail = experiment_video.path.relative_to(self.videos_dir)
             dest_path = (new_videos_dir / tail).with_suffix(new_suffix)
-            element_video.convert_video(dest_path, overwrite=overwrite, verbose=verbose)
+            experiment_video.convert_video(dest_path, overwrite=overwrite, verbose=verbose)
         self.videos_dir = new_videos_dir
 
     def sync_time_series(self, source_df: pd.DataFrame) -> None:
-        for experiment_video in self.values():
+        for experiment_video in self:
             experiment_video.sync_time_series(source_df, inplace=True)

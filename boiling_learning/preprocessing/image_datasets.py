@@ -101,7 +101,9 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
     ) -> ImageDataset:
         name = namer(funcy.lpluck_attr('name', others))
         example = others[0]
-        return ImageDataset(name, example.column_names, example.column_types).union(*others)
+        image_dataset = ImageDataset(name, example.column_names, example.column_types)
+        image_dataset.update(*others)
+        return image_dataset
 
     def open_videos(self) -> None:
         for ev in self:

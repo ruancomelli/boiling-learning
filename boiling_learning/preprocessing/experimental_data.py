@@ -50,7 +50,8 @@ class ExperimentalData:
 
         if not self.data_path.is_file():
             raise ValueError(
-                f'data path is not a valid file. Please pass a valid one as input. Got {self.data_path}'
+                'data path is not a valid file. Please pass a valid one as input. '
+                f'Got {self.data_path}'
             )
         if self.description_path is not None and not self.description_path.is_file():
             self.description_path = None
@@ -58,7 +59,8 @@ class ExperimentalData:
     def as_dataframe(self) -> pd.DataFrame:
         if not self.data_path.is_file():
             raise ValueError(
-                f'data path is not a valid file. Please pass a valid one as input. Got {self.data_path}'
+                'data path is not a valid file. Please pass a valid one as input. '
+                f'Got {self.data_path}'
             )
 
         return pd.read_csv(self.data_path)
