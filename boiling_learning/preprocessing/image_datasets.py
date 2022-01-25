@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import collections
-import typing
-from contextlib import contextmanager
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Mapping, Optional, Type, Union
+from typing import Any, Callable, Iterable, List, Mapping, Optional, Type, Union
 
 import funcy
 import modin.pandas as pd
@@ -12,6 +10,7 @@ from dataclassy import dataclass
 
 from boiling_learning.io.io import load_json
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
+from boiling_learning.utils.collections import KeyedSet
 from boiling_learning.utils.utils import (
     PathLike,
     concatenate_dataframes,
@@ -21,7 +20,7 @@ from boiling_learning.utils.utils import (
 
 
 @simple_pprint_class
-class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
+class ImageDataset(KeyedSet[str, ExperimentVideo]):
     '''
     TODO: improve this
     An ImageDataset is a file CSV in df_path and the correspondent images. The file in df_path
@@ -57,11 +56,11 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
         df_path: Optional[PathLike] = None,
         exist_load: bool = False,
     ) -> None:
+        super().__init__(_get_experiment_video_name)
+
         self._name: str = name
         self.column_names: self.DataFrameColumnNames = column_names
         self.column_types: self.DataFrameColumnTypes = column_types
-        self._experiment_videos: Dict[str, ExperimentVideo] = {}
-        self._allow_key_overwrite: bool = True
         self.df: Optional[pd.DataFrame] = None
         self.ds = None
 
@@ -94,40 +93,6 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     def name(self) -> str:
         return self._name
 
-    def __getitem__(self, name: str) -> ExperimentVideo:
-        return self._experiment_videos[name]
-
-    def __setitem__(self, name: str, experiment_video: ExperimentVideo) -> None:
-        if name != experiment_video.name:
-            raise ValueError(
-                'there is no support for setting an ExperimentVideo with'
-                f' a different name. Got *name={name}*,'
-                f' but *ev.name={experiment_video.name}*'
-            )
-        if not self._allow_key_overwrite and name in self:
-            raise ValueError(
-                f'overwriting existing element with name={name}'
-                ' with overwriting disabled is not allowed.'
-            )
-        self._experiment_videos[name] = experiment_video
-
-    def __delitem__(self, name: str) -> None:
-        del self._experiment_videos[name]
-
-    def __iter__(self) -> Iterator[ExperimentVideo]:
-        return iter(self._experiment_videos)
-
-    def __len__(self) -> int:
-        return len(self._experiment_videos)
-
-    def add(self, *experiment_videos: ExperimentVideo) -> None:
-        for experiment_video in experiment_videos:
-            self[experiment_video.name] = experiment_video
-
-    def union(self, *others: ImageDataset) -> None:
-        for other in others:
-            self.add(*other.values())
-
     @classmethod
     def make_union(
         cls,
@@ -136,23 +101,10 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
     ) -> ImageDataset:
         name = namer(funcy.lpluck_attr('name', others))
         example = others[0]
-        img_ds = ImageDataset(name, example.column_names, example.column_types)
-        img_ds.union(*others)
-        return img_ds
-
-    def discard(self, *experiment_videos: ExperimentVideo) -> None:
-        for experiment_video in experiment_videos:
-            del self[experiment_video.name]
-
-    @contextmanager
-    def disable_key_overwriting(self) -> Iterator[ImageDataset]:
-        prev_state = self._allow_key_overwrite
-        self._allow_key_overwrite = False
-        yield self
-        self._allow_key_overwrite = prev_state
+        return ImageDataset(name, example.column_names, example.column_types).union(*others)
 
     def open_videos(self) -> None:
-        for ev in self.values():
+        for ev in self:
             ev.open()
 
     def set_video_data(
@@ -224,7 +176,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             self.df.to_csv(path, index=False)
 
     def save_dfs(self, overwrite: bool = False) -> None:
-        for ev in self.values():
+        for ev in self:
             ev.save_df(overwrite=overwrite)
 
     def load_dfs(
@@ -260,7 +212,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
                 categories_as_int=categories_as_int,
                 inplace=inplace,
             )
-            for ev in self.values()
+            for ev in self
         )
         return concatenate_dataframes(dfs)
 
@@ -275,7 +227,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
                 select_columns=select_columns,
                 inplace=inplace,
             )
-            for ev in self.values()
+            for ev in self
         )
 
         if not datasets:
@@ -289,3 +241,7 @@ class ImageDataset(typing.MutableMapping[str, ExperimentVideo]):
             self.ds = ds
 
         return ds
+
+
+def _get_experiment_video_name(experiment_video: ExperimentVideo) -> str:
+    return experiment_video.name

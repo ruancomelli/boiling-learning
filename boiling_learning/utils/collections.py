@@ -1,17 +1,23 @@
+from __future__ import annotations
+
 from contextlib import suppress
+from itertools import chain
 from typing import (
     Callable,
     Dict,
     Generic,
     Hashable,
+    ItemsView,
     Iterable,
     Iterator,
     KeysView,
     MutableSet,
     TypeVar,
+    Union,
     ValuesView,
 )
 
+_Any = TypeVar('_Any')
 _Key = TypeVar('_Key', bound=Hashable)
 _Value = TypeVar('_Value')
 
@@ -33,15 +39,38 @@ class KeyedSet(MutableSet[_Value], Generic[_Key, _Value]):
     def __iter__(self) -> Iterator[_Value]:
         return iter(self.values())
 
-    def add(self, value: _Value) -> None:
-        self.__data[self.__key(value)] = value
+    def add(self, *values: _Value) -> None:
+        for value in values:
+            self.__data[self.__key(value)] = value
 
-    def remove(self, value: _Value) -> None:
-        del self[self.__key(value)]
+    def remove(self, *values: _Value) -> None:
+        for value in values:
+            del self[self.__key(value)]
 
-    def discard(self, value: _Value) -> None:
-        with suppress(KeyError):
-            self.remove(value)
+    def discard(self, *values: _Value) -> None:
+        for value in values:
+            with suppress(KeyError):
+                self.remove(value)
+
+    def isdisjoint(self, other: Iterable[_Value]) -> bool:
+        return frozenset(self.keys()).isdisjoint(KeyedSet(self.__key, other).keys())
+
+    def issubset(self, other: Iterable[_Value]) -> bool:
+        return frozenset(self.keys()).issubset(KeyedSet(self.__key, other).keys())
+
+    def issuperset(self, other: Iterable[_Value]) -> bool:
+        return frozenset(self.keys()).issuperset(KeyedSet(self.__key, other).keys())
+
+    def union(self, *others: Iterable[_Value]) -> KeyedSet[_Key, _Value]:
+        return KeyedSet(self.__key, chain(self, *others))
+
+    def update(self, *others: Iterable[_Value]) -> None:
+        for other in others:
+            for item in other:
+                self.add(item)
+
+    def clear(self) -> None:
+        self.__data.clear()
 
     # TODO: implement other operations as in the standard docs:
     # <https://docs.python.org/3/library/stdtypes.html#set-types-set-frozenset>
@@ -60,3 +89,11 @@ class KeyedSet(MutableSet[_Value], Generic[_Key, _Value]):
 
     def values(self) -> ValuesView[_Value]:
         return self.__data.values()
+
+    def items(self) -> ItemsView[_Key, _Value]:
+        return self.__data.items()
+
+    def get(self, key: _Key, default: _Any = None) -> Union[_Value, _Any]:
+        with suppress(KeyError):
+            return self[key]
+        return default
