@@ -1,3 +1,32 @@
+## v0.18.7 (2022-01-25)
+
+### Fix
+
+- **main**: fix dataset generation pipeline
+- **io/json**: fix JSON decoding of `Pack`s
+- fix I/O and description issues
+- **model/training**: import `TypedDict` from `typing_extensions`
+- **io/json**: fix dispatching order error
+
+### Refactor
+
+- **io/json**: simplify JSON serialization of lists
+- **datasets/sliceable**: make strict zip an option
+- **preprocessing/video**: reduce number of video shrinking operations for easier tracking of frames origin
+- **preprocessing**: use more `KeyedSet` functionality
+- **preprocessing/image_dataset**: make `ImageDataset`s instances of `KeyedSet`s
+- **preprocessing/cases**: remove unused parameter from `Case.sync_time_series`
+- **models**: revert module naming
+- rename module `descriptors` as `descriptions`
+- rename subpackage `model` as `models`
+
+### Feat
+
+- **preprocessing/image_datasets**: add description for `ImageDataset`s
+- **utils/table_dispatch**: allow dispatching based on predicates
+- implement full training pipeline designed for caching
+- **utils**: define `Described` objects
+
 ## v0.18.6 (2022-01-17)
 
 ### Fix
