@@ -40,7 +40,7 @@ warn_unreachable = true
 warn_unused_configs = true
 warn_unused_ignores = true
 plugins = [
-	# "numpy.typing.mypy_plugin",
+	"numpy.typing.mypy_plugin",
 	"classes.contrib.mypy.classes_plugin",
 	"tinydb.mypy_plugin",
 	"dataclassy.mypy"
