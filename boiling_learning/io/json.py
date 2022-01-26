@@ -266,11 +266,31 @@ def _serialize_basics(instance: _BasicType) -> _BasicType:
     return instance
 
 
-@serialize.instance(delegate=SupportsJSONEncodable)
-def _serialize_json_encodable(obj: Supports[JSONEncodable]) -> SerializedJSONObject:
+@serialize.instance(delegate=ListOfJSONSerializable)
+def _serialize_list(instance: ListOfJSONSerializable) -> List[JSONDataType]:
+    return [serialize(item) for item in instance]
+
+
+class _ComplexJSONEncodableTypeMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        return (
+            instance is not None
+            and not isinstance(instance, (bool, int, str, float, ListOfJSONSerializable))
+            and encode.supports(instance)
+        )
+
+
+class ComplexJSONEncodableType(
+    metaclass=_ComplexJSONEncodableTypeMeta,
+):
+    ...
+
+
+@serialize.instance(delegate=ComplexJSONEncodableType)
+def _serialize_complex_json_encodable(obj: ComplexJSONEncodableType) -> SerializedJSONObject:
     '''Return a JSON serialization of an object.'''
     return {
-        'type': f'{type(obj).__module__}.{type(obj).__qualname__}' if obj is not None else None,
+        'type': f'{type(obj).__module__}.{type(obj).__qualname__}',
         'contents': encode(obj),
     }
 

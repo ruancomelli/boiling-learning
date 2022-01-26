@@ -61,53 +61,30 @@ class storage_Test(TestCase):
         pytest.param(X(5), {'value': 5}, id='custom-type'),
         pytest.param(
             [0, 1, 'hello'],
-            [
-                {'type': 'builtins.int', 'contents': 0},
-                {'type': 'builtins.int', 'contents': 1},
-                {'type': 'builtins.str', 'contents': 'hello'},
-            ],
+            [0, 1, 'hello'],
             id='list-of-basics',
         ),
         pytest.param(
             (0, None, 'hello'),
-            [
-                {'type': 'builtins.int', 'contents': 0},
-                {'type': None, 'contents': None},
-                {'type': 'builtins.str', 'contents': 'hello'},
-            ],
+            [0, None, 'hello'],
             id='tuple-of-basics',
         ),
         pytest.param(
             (3, 'hi', ['no', 'yes'], True, None),
-            [
-                {'type': 'builtins.int', 'contents': 3},
-                {'type': 'builtins.str', 'contents': 'hi'},
-                {
-                    'type': 'builtins.list',
-                    'contents': [
-                        {'type': 'builtins.str', 'contents': 'no'},
-                        {'type': 'builtins.str', 'contents': 'yes'},
-                    ],
-                },
-                {'type': 'builtins.bool', 'contents': True},
-                {'type': None, 'contents': None},
-            ],
+            [3, 'hi', ['no', 'yes'], True, None],
             id='tuple-of-basics',
         ),
         pytest.param(
             (3, 'hi', ('no', X(4)), True, None),
             [
-                {'type': 'builtins.int', 'contents': 3},
-                {'type': 'builtins.str', 'contents': 'hi'},
+                3,
+                'hi',
                 {
                     'type': 'builtins.tuple',
-                    'contents': [
-                        {'type': 'builtins.str', 'contents': 'no'},
-                        {'type': f'{__name__}.X', 'contents': {'value': 4}},
-                    ],
+                    'contents': ['no', {'type': f'{__name__}.X', 'contents': {'value': 4}}],
                 },
-                {'type': 'builtins.bool', 'contents': True},
-                {'type': None, 'contents': None},
+                True,
+                None,
             ],
             id='tuple-of-complex',
         ),
@@ -119,12 +96,12 @@ class storage_Test(TestCase):
                     {
                         'type': 'builtins.tuple',
                         'contents': [
-                            {'type': 'builtins.int', 'contents': 3},
-                            {'type': 'builtins.str', 'contents': 'hi'},
+                            3,
+                            'hi',
                             {
                                 'type': 'builtins.tuple',
                                 'contents': [
-                                    {'type': 'builtins.str', 'contents': 'no'},
+                                    'no',
                                     {'type': f'{__name__}.X', 'contents': {'value': 4}},
                                 ],
                             },
@@ -134,10 +111,7 @@ class storage_Test(TestCase):
                         'type': f'{frozendict.__module__}.{frozendict.__name__}',
                         'contents': {
                             'type': 'builtins.dict',
-                            'contents': {
-                                'do': {'type': 'builtins.bool', 'contents': True},
-                                'errors': {'type': None, 'contents': None},
-                            },
+                            'contents': {'do': True, 'errors': None},
                         },
                     },
                 ],
@@ -155,55 +129,22 @@ def test_json_encode_decode(obj: Any, encoded: Any) -> None:
 @pytest.mark.parametrize(
     'obj,serialized',
     [
-        pytest.param(None, {'type': None, 'contents': None}),
-        pytest.param(3, {'type': 'builtins.int', 'contents': 3}),
-        pytest.param(3.14, {'type': 'builtins.float', 'contents': 3.14}),
-        pytest.param('hello', {'type': 'builtins.str', 'contents': 'hello'}),
-        pytest.param(True, {'type': 'builtins.bool', 'contents': True}),
-        pytest.param([], {'type': 'builtins.list', 'contents': []}, id='empty-list'),
+        pytest.param(None, None),
+        pytest.param(3, 3),
+        pytest.param(3.14, 3.14),
+        pytest.param('hello', 'hello'),
+        pytest.param(True, True),
+        pytest.param([], [], id='empty-list'),
         pytest.param(X(5), {'type': f'{__name__}.X', 'contents': {'value': 5}}, id='custom-type'),
-        pytest.param(
-            [0, 1, 'hello'],
-            {
-                'type': 'builtins.list',
-                'contents': [
-                    {'type': 'builtins.int', 'contents': 0},
-                    {'type': 'builtins.int', 'contents': 1},
-                    {'type': 'builtins.str', 'contents': 'hello'},
-                ],
-            },
-            id='list-of-basics',
-        ),
+        pytest.param([0, 1, 'hello'], [0, 1, 'hello'], id='list-of-basics'),
         pytest.param(
             (0, None, 'hello'),
-            {
-                'type': 'builtins.tuple',
-                'contents': [
-                    {'type': 'builtins.int', 'contents': 0},
-                    {'type': None, 'contents': None},
-                    {'type': 'builtins.str', 'contents': 'hello'},
-                ],
-            },
+            {'type': 'builtins.tuple', 'contents': [0, None, 'hello']},
             id='tuple-of-basics',
         ),
         pytest.param(
             (3, 'hi', ['no', 'yes'], True, None),
-            {
-                'type': 'builtins.tuple',
-                'contents': [
-                    {'type': 'builtins.int', 'contents': 3},
-                    {'type': 'builtins.str', 'contents': 'hi'},
-                    {
-                        'type': 'builtins.list',
-                        'contents': [
-                            {'type': 'builtins.str', 'contents': 'no'},
-                            {'type': 'builtins.str', 'contents': 'yes'},
-                        ],
-                    },
-                    {'type': 'builtins.bool', 'contents': True},
-                    {'type': None, 'contents': None},
-                ],
-            },
+            {'type': 'builtins.tuple', 'contents': [3, 'hi', ['no', 'yes'], True, None]},
             id='tuple-of-complex-native',
         ),
         pytest.param(
@@ -211,17 +152,17 @@ def test_json_encode_decode(obj: Any, encoded: Any) -> None:
             {
                 'type': 'builtins.tuple',
                 'contents': [
-                    {'type': 'builtins.int', 'contents': 3},
-                    {'type': 'builtins.str', 'contents': 'hi'},
+                    3,
+                    'hi',
                     {
                         'type': 'builtins.tuple',
                         'contents': [
-                            {'type': 'builtins.str', 'contents': 'no'},
+                            'no',
                             {'type': f'{__name__}.X', 'contents': {'value': 4}},
                         ],
                     },
-                    {'type': 'builtins.bool', 'contents': True},
-                    {'type': None, 'contents': None},
+                    True,
+                    None,
                 ],
             },
             id='tuple-of-complex-custom',
