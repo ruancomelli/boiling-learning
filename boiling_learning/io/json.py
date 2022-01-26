@@ -129,8 +129,8 @@ def _encode_Pack(instance: PackOfJSONSerializable) -> List[SerializedJSONObject]
 @decode.dispatch(P)
 @decode.dispatch(Pack)
 def _decode_Pack(obj: List[SerializedJSONObject]) -> Pack:
-    args, kwargs = obj
-    return Pack(deserialize(args), deserialize(kwargs))
+    args, kwargs = deserialize(obj)
+    return Pack(args, kwargs)
 
 
 class _ListOfJSONSerializableMeta(type):
