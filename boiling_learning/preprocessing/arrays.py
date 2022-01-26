@@ -31,10 +31,7 @@ def _ratio_to_size(image: np.ndarray, x: None, *, axis: int) -> None:
 def _ratio_to_size(
     image: np.ndarray, x: Optional[Union[int, float, Fraction]], *, axis: int
 ) -> Optional[int]:
-    if isinstance(x, (float, Fraction)):
-        return int(x * image.shape[axis])
-    else:
-        return x
+    return int(x * image.shape[axis]) if isinstance(x, (float, Fraction)) else x
 
 
 def _crop(
@@ -109,6 +106,11 @@ def crop(
             top = bottom - height
         elif top is not None:
             bottom = top + height
+
+    assert left is None or left >= 0 and ((right is None or left <= right))
+    assert right is None or 0 <= right <= total_width
+    assert top is None or top >= 0 and ((bottom is None or top <= bottom))
+    assert bottom is None or 0 <= bottom <= total_height
 
     return _crop(image, left=left, right=right, top=top, bottom=bottom)
 

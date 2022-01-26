@@ -19,10 +19,10 @@ from boiling_learning.io.io import (
     DatasetTriplet,
     SaverFunction,
     add_bool_flag,
+    bool_flagged_loader_dataset_triplet,
     load_dataset,
     load_image,
     load_yogadl,
-    loader_dataset_triplet,
     save_dataset,
     save_image,
     save_yogadl,
@@ -129,9 +129,9 @@ def main(
     }
 
     dataset_params[['creator', 'value', 'load']] = (
-        loader_dataset_triplet(add_bool_flag(load_dataset))
+        bool_flagged_loader_dataset_triplet(add_bool_flag(load_dataset))
         if as_tensors
-        else loader_dataset_triplet(add_bool_flag(sliceable_dataset_loader))
+        else bool_flagged_loader_dataset_triplet(add_bool_flag(sliceable_dataset_loader))
     )
 
     dataset_params[['creator', {'desc', 'value'}, 'reload_after_save']] = True
@@ -157,7 +157,7 @@ def main(
     )
 
     if as_tensors:
-        loader = loader_dataset_triplet(
+        loader = bool_flagged_loader_dataset_triplet(
             add_bool_flag(
                 partial(load_yogadl, dataset_id=dataset_id, shuffle=shuffle, shuffle_seed=1997),
                 (FileNotFoundError, AssertionError),
@@ -166,7 +166,7 @@ def main(
         saver = saver_dataset_triplet(partial(save_yogadl, dataset_id=dataset_id))
     else:
 
-        @loader_dataset_triplet
+        @bool_flagged_loader_dataset_triplet
         @add_bool_flag
         def loader(path: Path) -> SliceableDataset[Any]:
             return sliceable_dataset_loader(path).shuffle()

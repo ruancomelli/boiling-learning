@@ -174,18 +174,8 @@ def _main_array(
             pack=P(
                 left=0,
                 right_border=0,
-                top=0,
-                bottom_border=(0 if direct_visualization else indirect_height_ratio),
-            ),
-        ),
-        FeatureTransformer(
-            'final_height_shrinker',
-            arrays.crop,
-            pack=P(
-                left=0,
-                right=0,
-                bottom_border=0,
                 height=(direct_height if direct_visualization else indirect_height),
+                bottom_border=(0 if direct_visualization else indirect_height_ratio),
             ),
         ),
     ]

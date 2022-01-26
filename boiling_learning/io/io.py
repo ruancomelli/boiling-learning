@@ -206,6 +206,21 @@ def saver_dataset_triplet(
 
 
 def loader_dataset_triplet(
+    loader: LoaderFunction[Optional[tf.data.Dataset]],
+) -> LoaderFunction[OptionalDatasetTriplet]:
+    def _loader(path: PathLike) -> OptionalDatasetTriplet:
+        path = resolve(path)
+
+        ds_train = loader(path / 'train')
+        ds_val = loader(path / 'val')
+        ds_test = loader(path / 'test')
+
+        return ds_train, ds_val, ds_test
+
+    return _loader
+
+
+def bool_flagged_loader_dataset_triplet(
     loader: BoolFlaggedLoaderFunction[Optional[tf.data.Dataset]],
 ) -> BoolFlaggedLoaderFunction[OptionalDatasetTriplet]:
     def _loader(path: PathLike) -> BoolFlagged[OptionalDatasetTriplet]:

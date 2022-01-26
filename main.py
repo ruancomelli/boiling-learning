@@ -54,7 +54,7 @@ from boiling_learning.model.training import fit_model as _fit_model
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
-from boiling_learning.preprocessing.transformers import Transformer
+from boiling_learning.preprocessing.transformers import DictFeatureTransformer, Transformer
 from boiling_learning.preprocessing.video import Video, VideoFrame
 from boiling_learning.scripts import (
     load_cases,
@@ -68,7 +68,6 @@ from boiling_learning.scripts import (
 )
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist, initialize_gpus
 from boiling_learning.utils.dataclasses import dataclass
-from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import Many, typename
 from boiling_learning.utils.utils import PathLike, print_header, resolve
@@ -129,7 +128,9 @@ strategy: tf.distribute.Strategy = initialize_gpus()
 strategy_name: str = typename(strategy)
 print('Using distribute strategy:', strategy_name)
 
-boiling_cases_names: Many[str] = tuple(f'case {idx+1}' for idx in range(5))
+boiling_cases_names: Many[str] = tuple(f'case {idx+1}' for idx in range(2))
+# FIXME: use the following:
+# boiling_cases_names: Many[str] = tuple(f'case {idx+1}' for idx in range(5))
 boiling_cases_names_timed: Many[str] = tuple(funcy.without(boiling_cases_names, 'case 1'))
 
 print_header('Preparing datasets')
@@ -183,21 +184,13 @@ condensation_datasets_dict = set_condensation_datasets_data.main(
 )
 condensation_all_cases = ImageDataset.make_union(*condensation_datasets_dict.values())
 
-# boiling_preprocessors, boiling_augmentors = make_boiling_processors.main(
-#     direct_visualization=True,
-#     downscale_factor=5,
-#     direct_height=180,
-#     indirect_height=108,
-#     indirect_height_ratio=0.4,
-#     width=128,
-# )
 boiling_preprocessors, boiling_augmentors = make_boiling_processors.main(
     direct_visualization=True,
-    downscale_factor=6,
-    direct_height=90,
+    downscale_factor=5,
+    direct_height=180,
     indirect_height=108,
     indirect_height_ratio=0.4,
-    width=64,
+    width=128,
 )
 
 condensation_preprocessors, condensation_augmentors = make_condensation_processors.main(
@@ -236,24 +229,22 @@ load_map = {
 }
 
 
-@describe.instance(Video)
-def _describe_video(obj: Video) -> Dict[str, str]:
-    return {'path': obj.path}
+def _feature_saver(image: VideoFrame, path: PathLike) -> None:
+    bl.io.save_image(image, resolve(path, parents=True).with_suffix('.png'))
 
 
-@describe.instance(ImageDataset)
-def _describe_image_dataset(obj: ImageDataset) -> Dict[str, str]:
-    return describe(list(obj))
+def _feature_loader(path: PathLike) -> None:
+    return bl.io.load_image(resolve(path).with_suffix('.png'))
 
 
 @cache(
     allocator=default_table_allocator(analyses_path / 'datasets' / 'frames'),
-    saver=bl.io.save_image,
-    loader=bl.io.load_image,
+    saver=_feature_saver,
+    loader=_feature_loader,
 )
 def get_frame(
-    video: Video,
     index: int,
+    video: Video,
     transformers: Sequence[Transformer[VideoFrame, VideoFrame]],
 ) -> VideoFrame:
     frame = video[index]
@@ -265,19 +256,20 @@ def get_frame(
 def sliceable_dataset_from_video_and_transformers(
     video: ExperimentVideo, transformers: Sequence[Transformer[VideoFrame, VideoFrame]]
 ) -> SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]:
+    feature_transformers = [
+        (
+            transformer[video.name]
+            if isinstance(transformer, DictFeatureTransformer)
+            else transformer
+        ).as_transformer()
+        for transformer in transformers
+    ]
+
     features = SliceableDataset.from_func(
-        partial(get_frame, video=video, transformers=transformers), length=len(video)
+        partial(get_frame, video=video, transformers=feature_transformers), length=len(video)
     )
     targets = SliceableDataset(video.targets())
     return SupervisedSliceableDataset.from_features_and_targets(features, targets)
-
-
-def _feature_saver(image: VideoFrame, path: PathLike) -> None:
-    bl.io.save_image(image, resolve(path).with_suffix('.png'))
-
-
-def _feature_loader(path: PathLike) -> None:
-    return bl.io.load_image(resolve(path).with_suffix('.png'))
 
 
 sliceable_dataset_saver = partial(
@@ -311,15 +303,15 @@ def _get_image_dataset(
     if dataset_size is not None:
         ds = ds.take(dataset_size)
 
-    return ds.shuffle().split(splits.train, splits.val, splits.test)
+    dss = ds.shuffle().split(splits.train, splits.val, splits.test)
+    assert len(dss) == 3
+    return dss
 
 
 @cache(
     allocator=default_table_allocator(analyses_path / 'datasets' / 'sliceable_image_datasets'),
     saver=bl.io.saver_dataset_triplet(sliceable_dataset_saver),
-    loader=bl.io.loader_dataset_triplet(
-        bl.io.add_bool_flag(sliceable_dataset_loader, FileNotFoundError)
-    ),
+    loader=bl.io.loader_dataset_triplet(sliceable_dataset_loader),
 )
 def get_image_dataset(
     params: GetImageDatasetParams,
@@ -407,6 +399,23 @@ def augment_datasets(
     )
 
 
+ds_train, ds_val, ds_test = augment_datasets(
+    get_image_dataset(
+        GetImageDatasetParams(
+            boiling_cases_timed()[0],
+            transformers=boiling_preprocessors,
+            splits=DatasetSplits(
+                train=Fraction(70, 100),
+                val=Fraction(15, 100),
+                test=Fraction(15, 100),
+            ),
+            dataset_size=Fraction(1, 1000),
+        )
+    ),
+    AugmentDatasetParams(augmentors=boiling_augmentors, batch_size=128),
+)
+
+
 @cache(
     allocator=default_table_allocator(analyses_path / 'models' / 'trained_models2'),
     saver=bl.io.saver_dataset_triplet(sliceable_dataset_saver),
@@ -428,23 +437,6 @@ def fit_model(
         ),
         fit_model_params,
     )
-
-
-ds_train, ds_val, ds_test = augment_datasets(
-    get_image_dataset(
-        GetImageDatasetParams(
-            boiling_cases_timed()[0],
-            transformers=boiling_preprocessors,
-            splits=DatasetSplits(
-                train=Fraction(70, 100),
-                val=Fraction(15, 100),
-                test=Fraction(15, 100),
-            ),
-            dataset_size=Fraction(1, 1000),
-        )
-    ),
-    AugmentDatasetParams(augmentors=boiling_augmentors, batch_size=128),
-)
 
 
 assert False, 'OLD CODE AHEAD!'

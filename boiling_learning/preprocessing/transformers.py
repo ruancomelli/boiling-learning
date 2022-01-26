@@ -90,15 +90,18 @@ class Creator(Transformer[Pack, _Y], Generic[_Y]):
 class FeatureTransformer(Transformer[Tuple[_X1, _Y], Tuple[_X2, _Y]], Generic[_X1, _X2, _Y]):
     def __init__(self, name: str, f: Callable[..., _X2], pack: Pack = Pack()) -> None:
         def g(pair: Tuple[_X1, _Y], *args, **kwargs) -> Tuple[_X2, _Y]:
-            def pair_transformer(feature: _X1, target: _Y) -> Tuple[_X2, _Y]:
-                return f(feature, *args, **kwargs), target
-
-            return pair_transformer(*pair)
+            feature, target = pair
+            return f(feature, *args, **kwargs), target
 
         super().__init__(name, g, pack=pack)
 
     def transform_feature(self, feature: _X1, *args, **kwargs) -> _X2:
         return self((feature, None), *args, **kwargs)[0]
+
+    def as_transformer(self) -> Transformer[_X1, _X2]:
+        feature_transformer: Transformer[_X1, _X2] = Transformer(self.name, self.transform_feature)
+        feature_transformer.pack = self.pack
+        return feature_transformer
 
 
 class PairTransformer(Transformer[Tuple[_X1, _Y1], Tuple[_X2, _Y2]], Generic[_X1, _Y1, _X2, _Y2]):
