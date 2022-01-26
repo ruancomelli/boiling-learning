@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import collections
+from pathlib import Path
 from typing import Any, Callable, Iterable, List, Mapping, Optional, Type, Union
 
 import funcy
@@ -11,6 +12,7 @@ from dataclassy import dataclass
 from boiling_learning.io.io import load_json
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.utils.collections import KeyedSet
+from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.utils import (
     PathLike,
     concatenate_dataframes,
@@ -247,3 +249,8 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
 
 def _get_experiment_video_name(experiment_video: ExperimentVideo) -> str:
     return experiment_video.name
+
+
+@describe.instance(ImageDataset)
+def _describe_image_dataset(obj: ImageDataset) -> List[Path]:
+    return describe(list(obj))
