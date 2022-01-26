@@ -61,7 +61,7 @@ class SliceableDataset(Sequence[_T]):
     def range(
         start: int, stop: Optional[int] = None, step: Optional[int] = None
     ) -> SliceableDataset[int]:
-        r: range = (
+        return SliceableDataset(
             range(start, stop, step)
             if step is not None and stop is not None
             else range(start, stop)
@@ -69,17 +69,15 @@ class SliceableDataset(Sequence[_T]):
             else range(start)
         )
 
-        return SliceableDataset(r)
-
     @overload
     @staticmethod
-    def zip(dataset: SliceableDataset[_X]) -> SliceableDataset[Tuple[_X]]:
+    def zip(dataset: SliceableDataset[_X], strict: bool = False) -> SliceableDataset[Tuple[_X]]:
         ...
 
     @overload
     @staticmethod
     def zip(
-        dataset: SliceableDataset[_X], __ds1: SliceableDataset[_Y]
+        dataset: SliceableDataset[_X], __ds1: SliceableDataset[_Y], strict: bool = False
     ) -> SliceableDataset[Tuple[_X, _Y]]:
         ...
 
@@ -89,6 +87,7 @@ class SliceableDataset(Sequence[_T]):
         dataset: SliceableDataset[_X],
         __ds1: SliceableDataset[_Y],
         __ds2: SliceableDataset[_T],
+        strict: bool = False,
     ) -> SliceableDataset[Tuple[_X, _Y, _T]]:
         ...
 
@@ -99,29 +98,35 @@ class SliceableDataset(Sequence[_T]):
         __ds1: SliceableDataset[_Y],
         __ds2: SliceableDataset[_T],
         __ds3: SliceableDataset[_U],
+        strict: bool = False,
     ) -> SliceableDataset[Tuple[_X, _Y, _T, _U]]:
         ...
 
     @overload
     @staticmethod
     def zip(
-        dataset: SliceableDataset[Any], *datasets: SliceableDataset[Any]
+        dataset: SliceableDataset[Any], *datasets: SliceableDataset[Any], strict: bool = False
     ) -> SliceableDataset[Tuple[Any, ...]]:
         ...
 
     @staticmethod
     def zip(
-        dataset: SliceableDataset[Any], *datasets: SliceableDataset[Any]
+        dataset: SliceableDataset[Any], *datasets: SliceableDataset[Any], strict: bool = False
     ) -> SliceableDataset[Tuple[Any, ...]]:
         all_datasets = (dataset, *datasets)
 
-        if not mit.all_equal(map(len, all_datasets)):
-            raise ValueError('all datasets must have the same length.')
+        lengths = list(map(len, all_datasets))
+        min_len = min(lengths)
+        if strict:
+            if not mit.all_equal(lengths):
+                raise ValueError(f'all datasets must have the same length. Got lengths={lengths}')
+        else:
+            all_datasets = tuple(ds[:min_len] for ds in all_datasets)
 
         def getitem(i: int) -> Tuple[Any, ...]:
             return tuple(ds[i] for ds in all_datasets)
 
-        return SliceableDataset.from_func(getitem, length=len(dataset))
+        return SliceableDataset.from_func(getitem, length=min_len)
 
     def __bool__(self) -> bool:
         return len(self) > 0
@@ -167,7 +172,7 @@ class SliceableDataset(Sequence[_T]):
         other_length = len(dataset)
         total_length = current_length + other_length
 
-        def new_data(index: int) -> Union[_T, _U]:
+        def getitem(index: int) -> Union[_T, _U]:
             if index < current_length:
                 return self[index]
             elif index < total_length:
@@ -181,7 +186,7 @@ class SliceableDataset(Sequence[_T]):
                 f'Got index {index}.'
             )
 
-        return SliceableDataset.from_func(new_data, length=total_length)
+        return SliceableDataset.from_func(getitem, length=total_length)
 
     def enumerate(self) -> SliceableDataset[Tuple[int, _T]]:
         def getitem(index: int) -> Tuple[int, _T]:
@@ -231,6 +236,56 @@ class SliceableDataset(Sequence[_T]):
             total=total, count=int(count * total)
         )
         return self[keep_indices]
+
+    @overload
+    def split(
+        self,
+        __size1: Optional[Union[int, Fraction]],
+    ) -> Tuple[SliceableDataset[_T]]:
+        ...
+
+    @overload
+    def split(
+        self,
+        __size1: None,
+        __size2: Union[int, Fraction],
+    ) -> Tuple[SliceableDataset[_T], SliceableDataset[_T]]:
+        ...
+
+    @overload
+    def split(
+        self,
+        __size1: Union[int, Fraction],
+        __size2: None,
+    ) -> Tuple[SliceableDataset[_T], SliceableDataset[_T]]:
+        ...
+
+    @overload
+    def split(
+        self,
+        __size1: None,
+        __size2: Union[int, Fraction],
+        __size3: Union[int, Fraction],
+    ) -> Tuple[SliceableDataset[_T], SliceableDataset[_T], SliceableDataset[_T]]:
+        ...
+
+    @overload
+    def split(
+        self,
+        __size1: Union[int, Fraction],
+        __size2: None,
+        __size3: Union[int, Fraction],
+    ) -> Tuple[SliceableDataset[_T], SliceableDataset[_T], SliceableDataset[_T]]:
+        ...
+
+    @overload
+    def split(
+        self,
+        __size1: Union[int, Fraction],
+        __size2: Union[int, Fraction],
+        __size3: None,
+    ) -> Tuple[SliceableDataset[_T], SliceableDataset[_T], SliceableDataset[_T]]:
+        ...
 
     def split(self, *sizes: Optional[Union[int, Fraction]]) -> Tuple[SliceableDataset[_T], ...]:
         if sizes.count(None) > 1:
