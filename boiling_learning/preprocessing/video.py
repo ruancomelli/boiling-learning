@@ -9,6 +9,7 @@ import numpy.typing as npt
 import pims
 from imageio.core import CannotReadFrameError
 
+from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.utils import PathLike, VerboseType, resolve, shorten_path
 
 VideoFrame = npt.NDArray[np.float32]
@@ -107,9 +108,25 @@ class Video(Sequence[VideoFrame]):
         return self.video is not None
 
     def _shrink_to_valid_end_frames(self) -> None:
-        while len(self) > 0:
-            try:
-                self[-1]
-                return
-            except (CannotReadFrameError, RuntimeError, AttributeError):
-                self.video = self.video[:-1]
+        valid_end_frame = self._valid_end_frame()
+        self.video = self.video[: valid_end_frame + 1]
+
+    def _valid_end_frame(self) -> int:
+        for index in range(
+            len(self) - 1,  # starting from the last frame
+            -1,  # up until the first frame (frame 0 is included)
+            -1,  # decrementing this index
+        ):
+            # the following exceptions are "expected" and signify that this candidate end frame is
+            # invalid
+            with contextlib.suppress(CannotReadFrameError, RuntimeError, AttributeError):
+                # try to access frame at `index`
+                self[index]
+                # if access is successful (by not raising any errors), we found a valid end frame
+                return index
+        return -1
+
+
+@describe.instance(Video)
+def _describe_video(obj: Video) -> Path:
+    return obj.path
