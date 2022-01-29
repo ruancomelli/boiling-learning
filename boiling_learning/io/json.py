@@ -242,9 +242,7 @@ def _decode_frozenset(obj: List[JSONDataType]) -> frozenset:
 
 class _FrozenDictOfJSONEncodableMeta(type):
     def __instancecheck__(cls, instance: Any) -> bool:
-        return isinstance(instance, frozendict) and all(
-            isinstance(key, str) and encode.supports(value) for key, value in instance.items
-        )
+        return isinstance(instance, frozendict) and serialize.supports(dict(instance))
 
 
 class FrozenDictMeta(_FrozenDictOfJSONEncodableMeta, type(frozendict)):
