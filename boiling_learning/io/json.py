@@ -4,7 +4,7 @@ import json as _json
 from fractions import Fraction
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple, TypeVar, Union
 
 from classes import AssociatedType, Supports
 from classes import typeclass as _typeclass
@@ -198,10 +198,52 @@ def _decode_tuple(obj: List[JSONDataType]) -> tuple:
     return tuple(map(deserialize, obj))
 
 
+class _SetOfJSONSerializableMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        return isinstance(instance, set) and all(serialize.supports(item) for item in instance)
+
+
+class SetOfJSONSerializable(Set[Supports[JSONSerializable]], metaclass=_SetOfJSONSerializableMeta):
+    ...
+
+
+@encode.instance(delegate=SetOfJSONSerializable)
+def _encode_set(instance: SetOfJSONSerializable) -> List[SerializedJSONObject]:
+    return sorted(map(serialize, instance))
+
+
+@decode.dispatch(set)
+def _decode_set(obj: List[JSONDataType]) -> set:
+    return set(map(deserialize, obj))
+
+
+class _FrozenSetOfJSONSerializableMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        return isinstance(instance, frozenset) and all(
+            serialize.supports(item) for item in instance
+        )
+
+
+class FrozenSetOfJSONSerializable(
+    FrozenSet[Supports[JSONSerializable]], metaclass=_FrozenSetOfJSONSerializableMeta
+):
+    ...
+
+
+@encode.instance(delegate=FrozenSetOfJSONSerializable)
+def _encode_frozenset(instance: FrozenSetOfJSONSerializable) -> List[SerializedJSONObject]:
+    return sorted(map(serialize, instance))
+
+
+@decode.dispatch(frozenset)
+def _decode_frozenset(obj: List[JSONDataType]) -> frozenset:
+    return frozenset(map(deserialize, obj))
+
+
 class _FrozenDictOfJSONEncodableMeta(type):
     def __instancecheck__(cls, instance: Any) -> bool:
         return isinstance(instance, frozendict) and all(
-            isinstance(key, str) and encode.supports(value) for key, value in instance.items()
+            isinstance(key, str) and encode.supports(value) for key, value in instance.items
         )
 
 
@@ -257,6 +299,18 @@ def _decode_fraction(instance: List[int]) -> Fraction:
     return Fraction(deserialize(numerator), deserialize(denominator))
 
 
+@encode.instance(type)
+def _encode_types(instance: type) -> str:
+    return f'{instance.__module__}.{instance.__qualname__}'
+
+
+@decode.dispatch(type)
+def _decode_types(instance: str) -> type:
+    modulepath, typename = instance.rsplit('.', maxsplit=1)
+    module = import_module(modulepath)
+    return getattr(module, typename)
+
+
 @serialize.instance(None)
 @serialize.instance(bool)
 @serialize.instance(int)
@@ -290,7 +344,7 @@ class ComplexJSONEncodableType(
 def _serialize_complex_json_encodable(obj: ComplexJSONEncodableType) -> SerializedJSONObject:
     '''Return a JSON serialization of an object.'''
     return {
-        'type': f'{type(obj).__module__}.{type(obj).__qualname__}',
+        'type': encode(type(obj)),
         'contents': encode(obj),
     }
 
@@ -308,12 +362,9 @@ def dump(obj: Supports[JSONSerializable], path: PathLike) -> None:
 
 def deserialize(obj: SerializedJSONDataType) -> Any:
     if isinstance(obj, dict):
-        obj_type = obj['type']
+        encoded_type = obj['type']
 
-        if obj_type is not None:
-            modulepath, typename = obj_type.rsplit('.', maxsplit=1)
-            module = import_module(modulepath)
-            obj_type = getattr(module, typename)
+        obj_type = decode[type](encoded_type) if encoded_type is not None else None
 
         return decode[obj_type](obj['contents'])
     elif isinstance(obj, list):

@@ -9,6 +9,7 @@ import numpy.typing as npt
 import pims
 from imageio.core import CannotReadFrameError
 
+from boiling_learning.io import json
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.utils import PathLike, VerboseType, resolve, shorten_path
 
@@ -125,6 +126,11 @@ class Video(Sequence[VideoFrame]):
                 # if access is successful (by not raising any errors), we found a valid end frame
                 return index
         return -1
+
+
+@json.encode.instance(Video)
+def _encode_video(obj: Video) -> json.JSONDataType:
+    return json.serialize(obj.path)
 
 
 @describe.instance(Video)

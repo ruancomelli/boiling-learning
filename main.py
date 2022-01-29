@@ -1,3 +1,4 @@
+import operator
 import os
 from fractions import Fraction
 from functools import partial
@@ -21,6 +22,16 @@ import json_tricks
 import ray
 import tensorflow as tf
 import tensorflow_addons as tfa
+from tensorflow.keras.layers import (  # Conv2D,; MaxPool2D,
+    Activation,
+    Dense,
+    Dropout,
+    Flatten,
+    Input,
+    LayerNormalization,
+)
+from tensorflow.keras.mixed_precision.experimental import Policy
+from tensorflow.keras.models import Model
 
 import boiling_learning as bl
 from boiling_learning.datasets.creators import (
@@ -43,6 +54,7 @@ from boiling_learning.management.allocators.json_allocator import default_table_
 from boiling_learning.management.cacher import cache
 from boiling_learning.management.managers import Manager
 from boiling_learning.model.definitions import SmallConvNet
+from boiling_learning.model.model import ProblemType
 from boiling_learning.model.training import (
     CompileModelParams,
     FitModel,
@@ -68,9 +80,10 @@ from boiling_learning.scripts import (
 )
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist, initialize_gpus
 from boiling_learning.utils.dataclasses import dataclass
+from boiling_learning.utils.described import Described
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import Many, typename
-from boiling_learning.utils.utils import PathLike, print_header, resolve
+from boiling_learning.utils.utils import PathLike, enum_item, print_header, resolve
 
 ray.init()
 
@@ -286,6 +299,7 @@ class GetImageDatasetParams:
     image_dataset: ImageDataset
     transformers: Sequence[Transformer[VideoFrame, VideoFrame]]
     splits: DatasetSplits
+    target: Optional[str] = None
     dataset_size: Optional[Union[int, Fraction]] = None
 
 
@@ -294,14 +308,20 @@ def _get_image_dataset(
     transformers: Sequence[Transformer[VideoFrame, VideoFrame]],
     splits: DatasetSplits,
     dataset_size: Optional[Union[int, Fraction]] = None,
+    target: Optional[str] = None,
 ) -> DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]]:
-    ds = concatenate(
-        sliceable_dataset_from_video_and_transformers(video, transformers)
-        for video in image_dataset.values()
+    ds: SupervisedSliceableDataset[VideoFrame, Dict[str, Any]] = SupervisedSliceableDataset(
+        concatenate(
+            sliceable_dataset_from_video_and_transformers(video, transformers)
+            for video in image_dataset.values()
+        )
     )
 
     if dataset_size is not None:
         ds = ds.take(dataset_size)
+
+    if target is not None:
+        ds = ds.map_targets(operator.itemgetter(target))
 
     dss = ds.shuffle().split(splits.train, splits.val, splits.test)
     assert len(dss) == 3
@@ -317,7 +337,11 @@ def get_image_dataset(
     params: GetImageDatasetParams,
 ) -> DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]]:
     return _get_image_dataset(
-        params.image_dataset, params.transformers, params.splits, params.dataset_size
+        params.image_dataset,
+        params.transformers,
+        params.splits,
+        params.dataset_size,
+        target=params.target,
     )
 
 
@@ -399,20 +423,23 @@ def augment_datasets(
     )
 
 
-ds_train, ds_val, ds_test = augment_datasets(
-    get_image_dataset(
-        GetImageDatasetParams(
-            boiling_cases_timed()[0],
-            transformers=boiling_preprocessors,
-            splits=DatasetSplits(
-                train=Fraction(70, 100),
-                val=Fraction(15, 100),
-                test=Fraction(15, 100),
-            ),
-            dataset_size=Fraction(1, 1000),
-        )
+get_image_dataset_params = GetImageDatasetParams(
+    boiling_cases_timed()[0],
+    transformers=boiling_preprocessors,
+    splits=DatasetSplits(
+        train=Fraction(70, 100),
+        val=Fraction(15, 100),
+        test=Fraction(15, 100),
     ),
-    AugmentDatasetParams(augmentors=boiling_augmentors, batch_size=128),
+    dataset_size=Fraction(1, 1000),
+    target='Flux [W/cm**2]',
+)
+augment_dataset_params = AugmentDatasetParams(augmentors=boiling_augmentors, batch_size=128)
+
+
+ds_train, ds_val, ds_test = augment_datasets(
+    get_image_dataset(get_image_dataset_params),
+    augment_dataset_params,
 )
 
 
@@ -432,11 +459,81 @@ def fit_model(
 ) -> FitModel:
     return _fit_model(
         _compile_model(architecture, compile_params),
-        augment_datasets(
-            get_image_dataset(image_dataset_get_params), image_dataset_augment_params
+        Described(
+            value=augment_datasets(
+                get_image_dataset(image_dataset_get_params), image_dataset_augment_params
+            ),
+            description=(image_dataset_get_params, image_dataset_augment_params),
         ),
         fit_model_params,
     )
+
+
+def small_convnet(
+    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
+    dropout: Optional[float],
+    hidden_layers_policy: Union[str, Policy],
+    output_layer_policy: Union[str, Policy],
+    problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
+    num_classes: Optional[int] = None,
+    normalize_images: bool = False,
+) -> ModelArchitecture:
+    if len(input_shape) == 2:
+        input_shape = input_shape + (1,)
+
+    input_data = Input(shape=input_shape)
+    x = input_data  # start "current layer" as the input layer
+    if normalize_images:
+        x = LayerNormalization()(x)
+    # x = Conv2D(
+    #     16,
+    #     (5, 5),
+    #     padding='same',
+    #     activation='relu',
+    #     dtype=hidden_layers_policy,
+    # )(x)
+    # x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    x = Flatten(dtype=hidden_layers_policy)(x)
+    # x = Dense(32, activation='relu', dtype=hidden_layers_policy)(x)
+    # x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+
+    problem = enum_item(ProblemType, problem)
+    if problem is ProblemType.CLASSIFICATION:
+        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
+        predictions = Activation('softmax', dtype=output_layer_policy)(x)
+    elif problem is ProblemType.REGRESSION:
+        x = Dense(1, dtype=hidden_layers_policy)(x)
+        predictions = Activation('linear', dtype=output_layer_policy)(x)
+    else:
+        raise ValueError(f'unknown problem type: \"{problem}\"')
+
+    return ModelArchitecture(Model(inputs=input_data, outputs=predictions))
+
+
+first_frame = ds_train.flatten()[0][0]
+
+model = fit_model(
+    architecture=small_convnet(
+        first_frame.shape[:3],
+        dropout=0.5,
+        hidden_layers_policy='mixed_float16',
+        output_layer_policy='float32',
+    ),
+    compile_params=CompileModelParams(
+        loss=tf.keras.losses.MeanSquaredError(),
+        optimizer=tf.keras.optimizers.Adam(1e-5),
+        metrics=[
+            tf.keras.metrics.MeanSquaredError('MSE'),
+            tf.keras.metrics.RootMeanSquaredError('RMS'),
+            tf.keras.metrics.MeanAbsoluteError('MAE'),
+            tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
+        ],
+    ),
+    fit_model_params=FitModelParams(batch_size=128, epochs=100, callbacks=Described([], [])),
+    image_dataset_get_params=get_image_dataset_params,
+    image_dataset_augment_params=augment_dataset_params,
+)
 
 
 assert False, 'OLD CODE AHEAD!'

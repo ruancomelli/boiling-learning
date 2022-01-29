@@ -134,7 +134,12 @@ def random_crop(
     height: Optional[int] = None,
     width: Optional[int] = None,
 ) -> np.ndarray:
-    return A.RandomCrop(height=height, width=width, always_apply=True).apply(image)
+    default_height, default_width = image.shape[:2]
+    return A.RandomCrop(
+        height=height if height is not None else default_height,
+        width=width if width is not None else default_width,
+        always_apply=True,
+    ).apply(image)
 
 
 def random_flip_left_right(image: np.ndarray) -> np.ndarray:

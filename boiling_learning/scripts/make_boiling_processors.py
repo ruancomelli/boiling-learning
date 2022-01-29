@@ -1,5 +1,6 @@
 from typing import List, Tuple
 
+import numpy as np
 import tensorflow as tf
 
 from boiling_learning.preprocessing import arrays
@@ -27,6 +28,7 @@ def _main_array(
     width: int = 128,
 ) -> Tuple[List[Transformer], List[Transformer]]:
     preprocessors = [
+        FeatureTransformer('dtyper', np.ndarray.astype, P(np.float32)),
         FeatureTransformer('grayscaler', arrays.grayscale),
         DictFeatureTransformer(
             'region_cropper',

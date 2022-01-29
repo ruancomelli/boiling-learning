@@ -1,5 +1,6 @@
 from fractions import Fraction
-from typing import Any, Dict, Generic, List, Tuple, TypeVar, Union
+from pathlib import Path
+from typing import Any, Dict, FrozenSet, Generic, List, Set, Tuple, TypeVar, Union
 
 from classes import AssociatedType, Supports, typeclass
 from typing_extensions import Protocol, final, runtime_checkable
@@ -27,7 +28,7 @@ def describe(instance: Supports[Describable[_Description]]) -> _Description:
     '''Return a JSON description of an object.'''
 
 
-_BasicType = TypeVar('_BasicType', bound=Union[None, bool, int, str, float])
+_BasicType = TypeVar('_BasicType', bound=Union[None, bool, int, str, float, Path])
 
 
 @describe.instance(None)
@@ -35,6 +36,7 @@ _BasicType = TypeVar('_BasicType', bound=Union[None, bool, int, str, float])
 @describe.instance(int)
 @describe.instance(str)
 @describe.instance(float)
+@describe.instance(Path)
 def _describe_basics(instance: _BasicType) -> _BasicType:
     return instance
 
@@ -146,3 +148,41 @@ def _describe_frozendict(
     instance: FrozenDictOfDescribable[_Description],
 ) -> Dict[str, _Description]:
     return describe(dict(instance))
+
+
+class _SetOfDescribableMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        return isinstance(instance, set) and all(describe.supports(item) for item in instance)
+
+
+class SetOfDescribable(
+    Set[Supports[Describable[_Description]]],
+    Generic[_Description],
+    metaclass=_SetOfDescribableMeta,
+):
+    ...
+
+
+@describe.instance(delegate=SetOfDescribable)
+def _describe_set(instance: SetOfDescribable[_Description]) -> Set[_Description]:
+    return {describe(item) for item in instance}
+
+
+class _FrozenSetOfDescribableMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        return isinstance(instance, frozenset) and all(
+            describe.supports(item) for item in instance
+        )
+
+
+class FrozenSetOfDescribable(
+    FrozenSet[Supports[Describable[_Description]]],
+    Generic[_Description],
+    metaclass=_FrozenSetOfDescribableMeta,
+):
+    ...
+
+
+@describe.instance(delegate=FrozenSetOfDescribable)
+def _describe_frozenset(instance: FrozenSetOfDescribable[_Description]) -> FrozenSet[_Description]:
+    return frozenset(describe(item) for item in instance)

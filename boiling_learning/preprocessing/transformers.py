@@ -1,4 +1,5 @@
 import operator
+from pydoc import describe
 from typing import Any, Callable, Generic, Iterator, Mapping, Optional, Tuple, TypeVar, Union
 
 import funcy
@@ -253,3 +254,13 @@ def creator(*args, **kwargs) -> Callable[[Callable[..., S]], Creator[S]]:
         return maker(f)
 
     return decorator
+
+
+@json.encode.instance(Transformer)
+def _encode_transformer(instance: Transformer) -> json.JSONDataType:
+    return json.serialize(describe(instance))
+
+
+@json.encode.instance(DictFeatureTransformer)
+def _encode_dict_feature_transformer(instance: DictFeatureTransformer) -> json.JSONDataType:
+    return json.serialize(describe(instance))

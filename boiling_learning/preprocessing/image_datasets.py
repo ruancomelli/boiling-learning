@@ -9,6 +9,7 @@ import modin.pandas as pd
 import tensorflow as tf
 from dataclassy import dataclass
 
+from boiling_learning.io import json
 from boiling_learning.io.io import load_json
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.utils.collections import KeyedSet
@@ -249,6 +250,11 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
 
 def _get_experiment_video_name(experiment_video: ExperimentVideo) -> str:
     return experiment_video.name
+
+
+@json.encode.instance(ImageDataset)
+def _encode_image_dataset(obj: ImageDataset) -> List[json.JSONDataType]:
+    return json.serialize(list(obj))
 
 
 @describe.instance(ImageDataset)
