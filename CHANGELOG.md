@@ -1,3 +1,10 @@
+## v0.18.8 (2022-01-28)
+
+### Fix
+
+- fix broken frozendict JSON encoding
+- fix training pipeline from end to end
+
 ## v0.18.7 (2022-01-25)
 
 ### Fix
