@@ -123,7 +123,7 @@ def _describe_dataclass(
 
 @describe.instance(Fraction)
 def _describe_fraction(instance: Fraction) -> Tuple[int, int]:
-    return instance.as_integer_ratio()
+    return instance.numerator, instance.denominator
 
 
 class _FrozenDictOfDescribableMeta(type):

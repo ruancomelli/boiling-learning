@@ -288,7 +288,7 @@ def _encode_dataclass(
 
 @encode.instance(Fraction)
 def _encode_fraction(instance: Fraction) -> List[int]:
-    return serialize(instance.as_integer_ratio())
+    return serialize((instance.numerator, instance.denominator))
 
 
 @decode.dispatch(Fraction)
