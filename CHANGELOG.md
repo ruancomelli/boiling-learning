@@ -1,3 +1,9 @@
+## v0.18.10 (2022-01-30)
+
+### Fix
+
+- **model/training**: apply batching only right after training
+
 ## v0.18.9 (2022-01-30)
 
 ### Fix
