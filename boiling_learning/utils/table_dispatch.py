@@ -65,6 +65,3 @@ class TableDispatcher(Dict[type, Callable]):
             )
 
         return self._default
-
-
-table_dispatch = TableDispatcher
