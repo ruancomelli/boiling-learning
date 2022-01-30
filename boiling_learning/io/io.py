@@ -4,7 +4,7 @@ import json as _json
 import pickle
 import warnings
 from contextlib import nullcontext
-from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, Dict, Generic, Mapping, Optional, Tuple, Type, TypeVar, Union
 
 import cv2
 import funcy
@@ -25,7 +25,6 @@ _S = TypeVar('_S')
 _Dataset = TypeVar('_Dataset')
 SaverFunction = Callable[[_S, PathLike], Any]
 LoaderFunction = Callable[[PathLike], _S]
-DatasetTriplet = Tuple[_Dataset, Optional[_Dataset], _Dataset]
 OptionalDatasetTriplet = Tuple[
     Optional[_Dataset],
     Optional[_Dataset],
@@ -33,6 +32,10 @@ OptionalDatasetTriplet = Tuple[
 ]
 BoolFlagged = Tuple[bool, _S]
 BoolFlaggedLoaderFunction = LoaderFunction[BoolFlagged[_S]]
+
+
+class DatasetTriplet(Tuple[_Dataset, Optional[_Dataset], _Dataset], Generic[_Dataset]):
+    pass
 
 
 def add_bool_flag(

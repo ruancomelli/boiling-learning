@@ -348,7 +348,6 @@ def get_image_dataset(
 @dataclass(frozen=True)
 class AugmentDatasetParams:
     augmentors: Sequence[Transformer[VideoFrame, VideoFrame]]
-    batch_size: Optional[int] = None
     take: Optional[Union[int, Fraction]] = None
     augment_train: bool = True
     augment_test: bool = True
@@ -369,7 +368,6 @@ def apply_transformers_to_supervised_sliceable_dataset(
 def _augment_datasets(
     datasets: DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]],
     augmentors: Sequence[Transformer[VideoFrame, VideoFrame]],
-    batch_size: Optional[int] = None,
     take: Optional[Union[int, Fraction]] = None,
     augment_train: bool = True,
     augment_test: bool = True,
@@ -399,12 +397,6 @@ def _augment_datasets(
         ds_val = ds_val.shuffle()
     ds_test = ds_test.shuffle()
 
-    if batch_size is not None:
-        ds_train = ds_train.batch(batch_size)
-        if ds_val is not None:
-            ds_val = ds_val.batch(batch_size)
-        ds_test = ds_test.batch(batch_size)
-
     return ds_train, ds_val, ds_test
 
 
@@ -415,7 +407,6 @@ def augment_datasets(
     return _augment_datasets(
         datasets,
         augmentors=params.augmentors,
-        batch_size=params.batch_size,
         take=params.take,
         augment_train=params.augment_train,
         augment_test=params.augment_test,
@@ -434,7 +425,7 @@ get_image_dataset_params = GetImageDatasetParams(
     dataset_size=Fraction(1, 1000),
     target='Flux [W/cm**2]',
 )
-augment_dataset_params = AugmentDatasetParams(augmentors=boiling_augmentors, batch_size=128)
+augment_dataset_params = AugmentDatasetParams(augmentors=boiling_augmentors)
 
 
 ds_train, ds_val, ds_test = augment_datasets(
