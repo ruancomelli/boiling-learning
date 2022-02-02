@@ -2,10 +2,10 @@
 .TESTS_FOLDER = tests
 .STUBS_FOLDER = typings
 
-.AUTOFLAKE = $(shell poetry run autoflake --in-place --recursive --expand-star-imports --remove-duplicate-keys --remove-unused-variables --remove-all-unused-imports --ignore-init-module-imports $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
-.UNIMPORT = $(shell poetry run unimport --remove --gitignore --ignore-init --include-star-import $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
-.BLACK = $(shell poetry run black $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
-.ISORT = $(shell poetry run isort $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
+.AUTOFLAKE = $(shell pdm run autoflake --in-place --recursive --expand-star-imports --remove-duplicate-keys --remove-unused-variables --remove-all-unused-imports --ignore-init-module-imports $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
+.UNIMPORT = $(shell pdm run unimport --remove --gitignore --ignore-init --include-star-import $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
+.BLACK = $(shell pdm run black $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
+.ISORT = $(shell pdm run isort $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
 .FORMAT = $(foreach command,.AUTOFLAKE .UNIMPORT .BLACK .ISORT,$(call $(command)))
 
 .READD = $(shell git update-index --again)
@@ -13,16 +13,16 @@
 
 .PHONY: coverage
 coverage:
-	@poetry run coverage run --source=$(.PROJECT)/ -m pytest $(.TESTS_FOLDER)
-	@poetry run coverage report -m
+	@pdm run coverage run --source=$(.PROJECT)/ -m pytest $(.TESTS_FOLDER)
+	@pdm run coverage report -m
 
 .PHONY: test
 test:
-	@poetry run pytest --doctest-modules $(.PROJECT) $(.TESTS_FOLDER) -vv
+	@pdm run pytest --doctest-modules $(.PROJECT) $(.TESTS_FOLDER) -vv
 
 .PHONY: tox
 tox:
-	@poetry run tox
+	@pdm run tox
 
 .PHONY: check
 check:
@@ -30,11 +30,11 @@ check:
 
 .PHONY: typecheck
 typecheck:
-	@poetry run mypy $(.PROJECT)
+	@pdm run mypy $(.PROJECT)
 
 .PHONY: check_valid_python
 check_valid_python:
-	@poetry run flake8 boiling_learning/* --count --select=E9,F63,F7,F82 --show-source --statistics
+	@pdm run flake8 boiling_learning/* --count --select=E9,F63,F7,F82 --show-source --statistics
 
 .PHONY: format
 format:
@@ -49,7 +49,7 @@ autofix:
 
 .PHONY: commit
 commit: autofix
-	@poetry run cz commit
+	@pdm run cz commit
 
 .PHONY: release
 release:
@@ -60,10 +60,10 @@ release:
 # 	MINOR or PATCH -> PATCH (v0.2.3 -> v0.2.4)
 # effectively avoiding incrementing the MAJOR version number while the first
 # stable version (v1.0.0) is not released
-	poetry run cz bump --increment $(shell cz bump --dry-run | grep -q "MAJOR" && echo "MINOR" || echo "PATCH")
+	pdm run cz bump --increment $(shell cz bump --dry-run | grep -q "MAJOR" && echo "MINOR" || echo "PATCH")
 	git push
 	git push --tags
 
 .PHONY: run
 run:
-	poetry run python main.py
+	pdm run python main.py
