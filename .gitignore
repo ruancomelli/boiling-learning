@@ -147,3 +147,4 @@ sandbox/
 
 !tox.ini
 .envrc
+__pypackages__

@@ -1,5 +1,9 @@
 ## v0.18.11 (2022-02-02)
 
+### Fix
+
+- fix Makefile to use PDM
+
 ### Refactor
 
 - **io**: improve testing and remove unused function
