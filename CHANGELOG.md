@@ -1,5 +1,9 @@
 ## v0.18.11 (2022-02-02)
 
+### Feat
+
+- define module for storage of arbitrary objects
+
 ### Fix
 
 - fix Makefile to use PDM
