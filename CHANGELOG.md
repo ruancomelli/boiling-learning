@@ -1,3 +1,9 @@
+## v0.18.11 (2022-02-02)
+
+### Refactor
+
+- **io**: improve testing and remove unused function
+
 ## v0.18.10 (2022-01-30)
 
 ### Fix
