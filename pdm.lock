@@ -954,7 +954,7 @@ requires_python = ">=3.7.1"
 summary = "Modin: Make your pandas code run faster by changing one line of code."
 dependencies = [
     "fsspec",
-    "modin<1.0.0,>=0.12.1",
+    "modin==0.12.1",
     "numpy>=1.16.5",
     "packaging",
     "pandas==1.3.5",
@@ -1091,15 +1091,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "numerary"
-version = "0.3.0"
-requires_python = ">=3.7"
-summary = "Python hacks for type-checking numbers"
-dependencies = [
-    "typing-extensions>=3.10; python_version < \"3.9\"",
-]
-
-[[package]]
 name = "numpy"
 version = "1.21.5"
 requires_python = ">=3.7,<3.11"
@@ -1227,17 +1218,6 @@ version = "4.8.0"
 summary = "Pexpect allows easy control of interactive console applications."
 dependencies = [
     "ptyprocess>=0.5",
-]
-
-[[package]]
-name = "phantom-types"
-version = "0.15.1"
-requires_python = ">=3.7"
-summary = "Phantom types for Python"
-dependencies = [
-    "numerary>=0.3.0",
-    "typeguard>=2.10",
-    "typing-extensions>=3.10.0.2",
 ]
 
 [[package]]
@@ -1613,7 +1593,7 @@ dependencies = [
     "protobuf>=3.15.3",
     "py-spy>=0.2.0",
     "pyyaml",
-    "ray>=1.4.0",
+    "ray==1.9.2",
     "redis>=3.5.0",
     "requests",
     "smart-open",
@@ -2133,7 +2113,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:d1aa8406e0ebdae5ca4a8b1caf810d11fe7590adc7190508e66221bdbf1dee61"
+content_hash = "sha256:a55cb7f523aee9adcc8d2c9af9a4fd10292d0486fa8e3fca6902fba655161909"
 
 [metadata.files]
 "absl-py 1.0.0" = [
@@ -3370,9 +3350,6 @@ content_hash = "sha256:d1aa8406e0ebdae5ca4a8b1caf810d11fe7590adc7190508e66221bdb
     {file = "notebook-6.4.8-py3-none-any.whl", hash = "sha256:3e702fcc54b8ae597533c3864793b7a1e971dec9e112f67235828d8a798fd654"},
     {file = "notebook-6.4.8.tar.gz", hash = "sha256:1e985c9dc6f678bdfffb9dc657306b5469bfa62d73e03f74e8defbf76d284312"},
 ]
-"numerary 0.3.0" = [
-    {file = "numerary-0.3.0-py3-none-any.whl", hash = "sha256:0516174ff377bc7114ad383e1355a178410b4f8422ae55dc1d95c5ef23b6a03b"},
-]
 "numpy 1.21.5" = [
     {file = "numpy-1.21.5-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:301e408a052fdcda5cdcf03021ebafc3c6ea093021bf9d1aa47c54d48bdad166"},
     {file = "numpy-1.21.5-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:a7e8f6216f180f3fd4efb73de5d1eaefb5f5a1ee5b645c67333033e39440e63a"},
@@ -3495,10 +3472,6 @@ content_hash = "sha256:d1aa8406e0ebdae5ca4a8b1caf810d11fe7590adc7190508e66221bdb
 "pexpect 4.8.0" = [
     {file = "pexpect-4.8.0-py2.py3-none-any.whl", hash = "sha256:0b48a55dcb3c05f3329815901ea4fc1537514d6ba867a152b581d69ae3710937"},
     {file = "pexpect-4.8.0.tar.gz", hash = "sha256:fc65a43959d153d0114afe13997d439c22823a27cefceb5ff35c2178c6784c0c"},
-]
-"phantom-types 0.15.1" = [
-    {file = "phantom_types-0.15.1-py3-none-any.whl", hash = "sha256:991d22dc50fa6e35a84da40948d4dcd5f78b59b3209daeea829843791ed0159c"},
-    {file = "phantom-types-0.15.1.tar.gz", hash = "sha256:38847849b9ecbea857464d5d8bb46b2accb383b616d90fe404ced20385b694c9"},
 ]
 "pickleshare 0.7.5" = [
     {file = "pickleshare-0.7.5-py2.py3-none-any.whl", hash = "sha256:9649af414d74d4df115d5d718f82acb59c9d418196b7b4290ed47a12ce62df56"},

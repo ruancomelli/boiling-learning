@@ -235,9 +235,7 @@ dependencies = [
     "iteround<2.0.0,>=1.0.3",
     "pyqtgraph<1.0.0,>=0.12.3",
     "PyQt6<7.0.0,>=6.2.2",
-    "types-frozendict<3.0.0,>=2.0.4",
-    "phantom-types<1.0.0,>=0.15.1"
-]
+    "types-frozendict<3.0.0,>=2.0.4"]
 requires-python = ">=3.7.12,<3.10"
 license = {text = "MIT"}
 readme = "README.md"

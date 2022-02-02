@@ -372,7 +372,7 @@ def deserialize(obj: SerializedJSONDataType) -> Any:
 
 
 def load(path: PathLike) -> Any:
-    with resolve(path, parents=True).open('r', encoding='utf-8') as file:
+    with resolve(path).open('r', encoding='utf-8') as file:
         obj = _json.load(file)
 
     return deserialize(obj)
