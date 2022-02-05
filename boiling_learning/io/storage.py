@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Type, TypeVar, final
+from typing import Any, TypeVar, final
 
 from classes import AssociatedType, Supports, typeclass
 
 from boiling_learning.io import json
+from boiling_learning.utils.table_dispatch import TableDispatcher
 from boiling_learning.utils.utils import PathLike, resolve
 
 _T = TypeVar('_T')
@@ -30,22 +31,16 @@ def serialize(instance: Supports[Serializable], path: Path) -> None:
     '''Serialize object contents.'''
 
 
-class Deserializable(AssociatedType):
-    ...
-
-
 class _DeserializableMeta(type):
     def __instancecheck__(self, instance: Any) -> bool:
-        return deserialize.supports(instance)
+        return instance in deserialize
 
 
-class SupportsDeserializable(Supports[Deserializable], metaclass=_DeserializableMeta):
+class SupportsDeserializable(metaclass=_DeserializableMeta):
     ...
 
 
-@typeclass(Deserializable)
-def deserialize(instance: Type[_T], path: Path) -> _T:
-    '''Deserialize object contents.'''
+deserialize = TableDispatcher()
 
 
 class Saveable(AssociatedType):
@@ -88,4 +83,4 @@ def load(path: PathLike) -> Any:
 
     obj_type = metadata['type']
 
-    return deserialize(obj_type)(path / '__data__')
+    return deserialize[obj_type](path / '__data__')

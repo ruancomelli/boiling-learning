@@ -5,15 +5,16 @@ from typing import Iterator, Optional, Sequence, Union
 
 import cv2
 import numpy as np
-import numpy.typing as npt
 import pims
 from imageio.core import CannotReadFrameError
 
 from boiling_learning.io import json
+from boiling_learning.io.storage import deserialize, serialize
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.utils import PathLike, VerboseType, resolve, shorten_path
 
-VideoFrame = npt.NDArray[np.float32]
+# VideoFrame = npt.NDArray[np.float32]
+VideoFrame = np.ndarray
 
 
 def convert_video(
@@ -136,3 +137,13 @@ def _encode_video(obj: Video) -> json.JSONDataType:
 @describe.instance(Video)
 def _describe_video(obj: Video) -> Path:
     return obj.path
+
+
+@serialize.instance(VideoFrame)
+def _serialize_video_frame(instance: VideoFrame, path: Path) -> None:
+    np.save(path.with_suffix('.npy'), instance)
+
+
+@deserialize.dispatch(VideoFrame)
+def _deserialize_video_frame(path: Path) -> VideoFrame:
+    return np.load(path.with_suffix('.npy'))

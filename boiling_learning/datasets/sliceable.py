@@ -577,7 +577,7 @@ def load_supervised_sliceable_dataset(
         target = target_loader(resolved_path / 'target')
         return feature, target
 
-    return load_sliceable_dataset(path, element_loader)
+    return SupervisedSliceableDataset(load_sliceable_dataset(path, element_loader))
 
 
 def _sliceable_dataset_element_path(root: PathLike, index: int) -> Path:

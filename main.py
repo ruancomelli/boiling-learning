@@ -19,6 +19,7 @@ from typing import (
 
 import funcy
 import json_tricks
+import numpy as np
 import ray
 import tensorflow as tf
 import tensorflow_addons as tfa
@@ -50,6 +51,7 @@ from boiling_learning.datasets.sliceable import (
 )
 from boiling_learning.io import json
 from boiling_learning.io.io import DatasetTriplet
+from boiling_learning.io.storage import load, save
 from boiling_learning.management.allocators.json_allocator import default_table_allocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.management.managers import Manager
@@ -432,6 +434,15 @@ ds_train, ds_val, ds_test = augment_datasets(
     get_image_dataset(get_image_dataset_params),
     augment_dataset_params,
 )
+
+frame = ds_train.flatten()[0][0]
+path = analyses_path / 'temp' / 'random_frame'
+save(frame, path)
+other_frame = load(path)
+assert np.abs(frame - other_frame).max() <= 1e-5
+
+
+assert False, 'STOP!'
 
 
 @cache(

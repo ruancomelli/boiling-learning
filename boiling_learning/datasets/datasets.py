@@ -2,6 +2,7 @@ import random
 from collections import deque
 from fractions import Fraction
 from functools import partial
+from pathlib import Path
 from typing import Any, Callable, Iterable, List, Optional, Tuple, TypeVar, Union
 
 import funcy
@@ -15,12 +16,14 @@ from tensorflow.data import AUTOTUNE
 
 import boiling_learning.utils.mathutils as mathutils
 from boiling_learning.io.io import DatasetTriplet
+from boiling_learning.io.storage import deserialize, load, save, serialize
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.utils.dtypes import auto_spec
 from boiling_learning.utils.iterutils import distance_maximized_evenly_spaced_indices
 from boiling_learning.utils.sentinels import EMPTY
 from boiling_learning.utils.slicerators import Slicerator
+from boiling_learning.utils.utils import resolve
 
 _T = TypeVar('_T')
 
@@ -458,3 +461,23 @@ def experiment_video_to_dataset_triplet(
     pairs = ev.as_pairs(image_preprocessor=image_preprocessor, select_columns=select_columns)
 
     return slicerator_to_dataset_triplet(pairs, splits, dataset_size=dataset_size, shuffle=shuffle)
+
+
+@serialize.instance(DatasetTriplet)
+def _serialize_dataset_triplet(instance: DatasetTriplet[Any], path: Path) -> None:
+    path = resolve(path, dir=True)
+
+    ds_train, ds_val, ds_test = instance
+
+    save(ds_train, path / 'train')
+    save(ds_val, path / 'val')
+    save(ds_test, path / 'test')
+
+
+@deserialize.dispatch(DatasetTriplet)
+def _deserialize_dataset_triplet(path: Path) -> DatasetTriplet[Any]:
+    ds_train = load(path / 'train')
+    ds_val = load(path / 'val')
+    ds_test = load(path / 'test')
+
+    return DatasetTriplet(ds_train, ds_val, ds_test)
