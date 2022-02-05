@@ -429,7 +429,17 @@ frame = ds_train.flatten()[0][0]
 path = analyses_path / 'temp' / 'random_frame'
 save(frame, path)
 other_frame = load(path)
-assert np.abs(frame - other_frame).max() <= 1e-5
+assert np.isclose(frame, other_frame, 1e-8).all()
+
+
+items = list(ds_train[:4])
+path = analyses_path / 'temp' / 'random_items'
+save(items, path)
+other_items = load(path)
+
+for (feature1, target1), (feature2, target2) in zip(items, other_items):
+    assert np.isclose(feature1, feature2, 1e-8).all()
+    assert target1 == target2
 
 
 assert False, 'STOP!'
