@@ -213,16 +213,6 @@ condensation_preprocessors, condensation_augmentors = make_condensation_processo
 )
 
 
-def table_saver(obj: Dict[str, Any], path: Path) -> None:
-    path = resolve(path, parents=True)
-    json_tricks.dump(obj, str(path))
-
-
-def table_loader(path: Path) -> None:
-    path = resolve(path, parents=True)
-    return json_tricks.load(str(path))
-
-
 description_comparer = partial(
     bl.utils.json_equivalent, dumps=json_tricks.dumps, loads=json_tricks.loads
 )
@@ -443,6 +433,16 @@ assert np.abs(frame - other_frame).max() <= 1e-5
 
 
 assert False, 'STOP!'
+
+
+def table_saver(obj: Dict[str, Any], path: Path) -> None:
+    path = resolve(path, parents=True)
+    json_tricks.dump(obj, str(path))
+
+
+def table_loader(path: Path) -> None:
+    path = resolve(path, parents=True)
+    return json_tricks.load(str(path))
 
 
 @cache(

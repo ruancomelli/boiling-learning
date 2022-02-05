@@ -8,7 +8,6 @@ from typing import Any, Callable, Dict, Generic, Mapping, Optional, Tuple, Type,
 
 import cv2
 import funcy
-import h5py
 import json_tricks
 import numpy as np
 import tensorflow as tf
@@ -136,24 +135,6 @@ def load_json(
         return load(file)
 
 
-def saver_hdf5(key: str = '') -> SaverFunction[Any]:
-    def save_hdf5(obj, path: PathLike) -> None:
-        path = ensure_parent(path)
-        with h5py.File(str(path), 'w') as hf:
-            hf.create_dataset(key, data=obj)
-
-    return save_hdf5
-
-
-def loader_hdf5(key: str = '') -> LoaderFunction[Any]:
-    def load_hdf5(path: PathLike):
-        path = resolve(path)
-        with h5py.File(str(path), 'r') as hf:
-            return hf.get(key)
-
-    return load_hdf5
-
-
 def save_element_spec(element_spec: tf.TensorSpec, path: PathLike) -> None:
     encoded_element_spec = encode_element_spec(element_spec)
     save_json(encoded_element_spec, path, dump=json_tricks.dump)
@@ -255,23 +236,6 @@ def save_yogadl(
     storage.submit(dataset, dataset_id, dataset_version)
 
 
-def saver_yogadl(storage_path: PathLike, dataset_id: str) -> SaverFunction[DatasetTriplet]:
-    storage_path = resolve(storage_path)
-    id_train = dataset_id + '_train'
-    id_val = dataset_id + '_val'
-    id_test = dataset_id + '_test'
-
-    def _saver(ds: DatasetTriplet, path: Optional[PathLike] = None) -> None:
-        ds_train, ds_val, ds_test = ds
-
-        save_yogadl(ds_train, storage_path=storage_path, dataset_id=id_train)
-        if ds_val is not None:
-            save_yogadl(ds_val, storage_path=storage_path, dataset_id=id_val)
-        save_yogadl(ds_test, storage_path=storage_path, dataset_id=id_test)
-
-    return _saver
-
-
 def load_yogadl(
     storage_path: PathLike,
     dataset_id: str,
@@ -299,31 +263,3 @@ def load_yogadl(
         drop_shard_remainder=drop_shard_remainder,
     )
     return yogadl.tensorflow.make_tf_dataset(stream)
-
-
-def loader_yogadl(storage_path: PathLike, dataset_id: str) -> LoaderFunction[DatasetTriplet]:
-    storage_path = resolve(storage_path)
-    id_train = dataset_id + '_train'
-    id_val = dataset_id + '_val'
-    id_test = dataset_id + '_test'
-
-    def _loader(path: Optional[PathLike] = None):
-        try:
-            ds_train = load_yogadl(storage_path=storage_path, dataset_id=id_train)
-        except AssertionError:
-            ds_train = None
-
-        try:
-            ds_val = load_yogadl(storage_path=storage_path, dataset_id=id_val)
-        except AssertionError:
-            ds_val = None
-
-        try:
-            ds_test = load_yogadl(storage_path=storage_path, dataset_id=id_test)
-        except AssertionError:
-            ds_test = None
-
-        success = ds_train is not None and ds_test is not None
-        return success, (ds_train, ds_val, ds_test)
-
-    return _loader

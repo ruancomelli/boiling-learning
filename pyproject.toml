@@ -14,7 +14,6 @@ dependencies = [
     "frozendict<2.0,>=1.2",
     "funcy<2.0,>=1.17",
     "gspread<6.0.0,>=5.1.1",
-    "h5py<4.0.0,>=3.6.0",
     "imageio==2.4.1",
     "ipywidgets<8.0.0,>=7.6.5",
     "json-tricks<4.0.0,>=3.15.5",
