@@ -30,7 +30,6 @@ dependencies = [
     "scikit-image<1.0.0,>=0.19.1",
     "scikit-learn<2.0.0,>=1.0.2",
     "scipy<2.0.0,>=1.7.3",
-    "semver<3.0.0,>=2.13.0",
     "sortedcontainers<3.0.0,>=2.4.0",
     "tensorflow-addons<1.0.0,>=0.15.0",
     "tinydb<5.0.0,>=4.5.2",
@@ -166,7 +165,4 @@ plugins = [
 tag_format = "v$major.$minor.$patch$prerelease"
 update_changelog_on_bump = true
 version = "0.18.12"
-version_files = [
-	"VERSION",
-	"pyproject.toml:version"
-]
+version_files = ["pyproject.toml:version"]
