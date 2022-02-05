@@ -1,3 +1,10 @@
+## v0.18.13 (2022-02-05)
+
+### Refactor
+
+- remove unused version information
+- **io**: remove unused functions
+
 ## v0.18.12 (2022-02-04)
 
 ### Fix
