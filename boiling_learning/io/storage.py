@@ -128,6 +128,20 @@ def _serialize_list(instance: ListOfSaveable, path: Path) -> None:
         save(item, path / str(index))
 
 
+class _TupleOfSaveableMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        return isinstance(instance, tuple) and all(save.supports(item) for item in instance)
+
+
+class TupleOfSaveable(metaclass=_TupleOfSaveableMeta):
+    pass
+
+
+@serialize.instance(delegate=TupleOfSaveable)
+def _serialize_tuple(instance: TupleOfSaveable, path: Path) -> None:
+    serialize(list(instance), path)
+
+
 class _DictOfSaveableMeta(type):
     def __instancecheck__(cls, instance: Any) -> bool:
         return isinstance(instance, dict) and all(
@@ -196,3 +210,8 @@ def _deserialize_dict(path: Path, metadata: Metadata) -> dict:
         return json.load(path)
 
     return {item_path.name: load(item_path) for item_path in path.iterdir()}
+
+
+@deserialize.dispatch(tuple)
+def _deserialize_tuple(path: Path, metadata: Metadata) -> tuple:
+    return tuple(deserialize[list](path, metadata))

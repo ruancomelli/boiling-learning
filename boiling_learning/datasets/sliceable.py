@@ -577,7 +577,9 @@ def _serialize_sliceable_dataset(instance: SliceableDataset[Any], path: Path) ->
 
 
 @deserialize.dispatch(SliceableDataset)
-def _deserialize_sliceable_dataset(path: Path, metadata: Metadata) -> SliceableDataset[Any]:
+def _deserialize_sliceable_dataset(
+    path: Path, metadata: Metadata
+) -> SliceableDataset[Any]:  # pylint: disable=unused-argument
     path = resolve(path, dir=True)
     return load_sliceable_dataset(path, element_loader=load)
 
@@ -593,6 +595,6 @@ def _serialize_supervised_sliceable_dataset(
 @deserialize.dispatch(SupervisedSliceableDataset)
 def _deserialize_supervised_sliceable_dataset(
     path: Path, metadata: Metadata
-) -> SupervisedSliceableDataset[Any, Any]:
+) -> SupervisedSliceableDataset[Any, Any]:  # pylint: disable=unused-argument
     path = resolve(path, dir=True)
     return load_supervised_sliceable_dataset(path, feature_loader=load, target_loader=load)

@@ -5,11 +5,15 @@ from typing import Any, Callable, Generic, Iterable, TypeVar, Union
 
 from typing_extensions import ParamSpec
 
-from boiling_learning.io.io import LoaderFunction, SaverFunction, load_json, save_json
+from boiling_learning.io import json
+from boiling_learning.io.io import LoaderFunction, SaverFunction
+from boiling_learning.io.storage import load, save
 from boiling_learning.management.allocators.json_allocator import default_table_allocator
 from boiling_learning.management.persister import FileProvider, Provider
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.utils import PathLike
+
+# pylint: disable=missing-function-docstring,missing-class-docstring
 
 _P = ParamSpec('_P')
 _R = TypeVar('_R')
@@ -20,8 +24,8 @@ class Cacher(Generic[_R]):
     def __init__(
         self,
         allocator: Callable[[Pack], Path],
-        saver: SaverFunction[_R],
-        loader: LoaderFunction[_R],
+        saver: SaverFunction[_R] = save,
+        loader: LoaderFunction[_R] = load,
         exceptions: Union[Exception, Iterable[Exception]] = (
             FileNotFoundError,
             NotADirectoryError,
@@ -76,8 +80,8 @@ def function_cacher(cacher: Cacher[_R]) -> Callable[[Callable[_P, _R]], CachedFu
 
 def cache(
     allocator: Callable[[Pack], Path],
-    saver: SaverFunction[_R],
-    loader: LoaderFunction[_R],
+    saver: SaverFunction[_R] = save,
+    loader: LoaderFunction[_R] = load,
     exceptions: Union[Exception, Iterable[Exception]] = (
         FileNotFoundError,
         NotADirectoryError,
@@ -96,7 +100,7 @@ def cache(
 def json_cache(root: PathLike, autosave: bool = True) -> Callable[[_CallableT], _CallableT]:
     return cache(
         allocator=default_table_allocator(root),
-        saver=save_json,
-        loader=load_json,
+        saver=json.dump,
+        loader=json.load,
         autosave=autosave,
     )

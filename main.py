@@ -45,11 +45,8 @@ from boiling_learning.datasets.sliceable import (
     SliceableDataset,
     SupervisedSliceableDataset,
     concatenate,
-    load_supervised_sliceable_dataset,
-    save_supervised_sliceable_dataset,
     sliceable_dataset_to_tensorflow_dataset,
 )
-from boiling_learning.io import json
 from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.io.storage import load, save
 from boiling_learning.management.allocators.json_allocator import default_table_allocator
@@ -85,7 +82,7 @@ from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import Many, typename
-from boiling_learning.utils.utils import PathLike, enum_item, print_header, resolve
+from boiling_learning.utils.utils import enum_item, print_header, resolve
 
 ray.init()
 
@@ -234,19 +231,7 @@ load_map = {
 }
 
 
-def _feature_saver(image: VideoFrame, path: PathLike) -> None:
-    bl.io.save_image(image, resolve(path, parents=True).with_suffix('.png'))
-
-
-def _feature_loader(path: PathLike) -> None:
-    return bl.io.load_image(resolve(path).with_suffix('.png'))
-
-
-@cache(
-    allocator=default_table_allocator(analyses_path / 'datasets' / 'frames'),
-    saver=_feature_saver,
-    loader=_feature_loader,
-)
+@cache(default_table_allocator(analyses_path / 'datasets' / 'frames'))
 def get_frame(
     index: int,
     video: Video,
@@ -275,15 +260,6 @@ def sliceable_dataset_from_video_and_transformers(
     )
     targets = SliceableDataset(video.targets())
     return SupervisedSliceableDataset.from_features_and_targets(features, targets)
-
-
-sliceable_dataset_saver = partial(
-    save_supervised_sliceable_dataset, feature_saver=_feature_saver, target_saver=json.dump
-)
-
-sliceable_dataset_loader = partial(
-    load_supervised_sliceable_dataset, feature_loader=_feature_loader, target_loader=json.load
-)
 
 
 @dataclass(frozen=True)
@@ -320,11 +296,7 @@ def _get_image_dataset(
     return dss
 
 
-@cache(
-    allocator=default_table_allocator(analyses_path / 'datasets' / 'sliceable_image_datasets'),
-    saver=bl.io.saver_dataset_triplet(sliceable_dataset_saver),
-    loader=bl.io.loader_dataset_triplet(sliceable_dataset_loader),
-)
+@cache(default_table_allocator(analyses_path / 'datasets' / 'sliceable_image_datasets'))
 def get_image_dataset(
     params: GetImageDatasetParams,
 ) -> DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]]:
@@ -455,13 +427,7 @@ def table_loader(path: Path) -> None:
     return json_tricks.load(str(path))
 
 
-@cache(
-    allocator=default_table_allocator(analyses_path / 'models' / 'trained_models2'),
-    saver=bl.io.saver_dataset_triplet(sliceable_dataset_saver),
-    loader=bl.io.loader_dataset_triplet(
-        bl.io.add_bool_flag(sliceable_dataset_loader, FileNotFoundError)
-    ),
-)
+@cache(allocator=default_table_allocator(analyses_path / 'models' / 'trained_models2'))
 def fit_model(
     architecture: ModelArchitecture,
     compile_params: CompileModelParams,
