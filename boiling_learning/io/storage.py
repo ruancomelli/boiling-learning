@@ -9,6 +9,8 @@ from boiling_learning.io import json
 from boiling_learning.utils.table_dispatch import TableDispatcher
 from boiling_learning.utils.utils import PathLike, resolve
 
+# pylint: disable=missing-function-docstring,missing-class-docstring
+
 _T = TypeVar('_T')
 
 
@@ -18,7 +20,7 @@ class Serializable(AssociatedType):
 
 
 class _SerializableMeta(type):
-    def __instancecheck__(self, instance: Any) -> bool:
+    def __instancecheck__(cls, instance: Any) -> bool:
         return serialize.supports(instance)
 
 
@@ -32,7 +34,7 @@ def serialize(instance: Supports[Serializable], path: Path) -> None:
 
 
 class _DeserializableMeta(type):
-    def __instancecheck__(self, instance: Any) -> bool:
+    def __instancecheck__(cls, instance: Any) -> bool:
         return instance in deserialize
 
 

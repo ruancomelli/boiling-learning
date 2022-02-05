@@ -1,3 +1,14 @@
+## v0.18.12 (2022-02-04)
+
+### Fix
+
+- **datasets/sliceable**: remove unused `filter` method
+
+### Feat
+
+- **datasets/sliceable**: define save/load functions for `SliceableDataset`s
+- **io/storage**: define save/load functions for numpy arrays
+
 ## v0.18.11 (2022-02-02)
 
 ### Feat
