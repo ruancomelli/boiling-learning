@@ -16,7 +16,7 @@ from tensorflow.data import AUTOTUNE
 
 import boiling_learning.utils.mathutils as mathutils
 from boiling_learning.io.io import DatasetTriplet
-from boiling_learning.io.storage import deserialize, load, save, serialize
+from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.utils.dtypes import auto_spec
@@ -475,7 +475,7 @@ def _serialize_dataset_triplet(instance: DatasetTriplet[Any], path: Path) -> Non
 
 
 @deserialize.dispatch(DatasetTriplet)
-def _deserialize_dataset_triplet(path: Path) -> DatasetTriplet[Any]:
+def _deserialize_dataset_triplet(path: Path, metadata: Metadata) -> DatasetTriplet[Any]:
     ds_train = load(path / 'train')
     ds_val = load(path / 'val')
     ds_test = load(path / 'test')

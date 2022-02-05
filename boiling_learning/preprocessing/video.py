@@ -9,7 +9,7 @@ import pims
 from imageio.core import CannotReadFrameError
 
 from boiling_learning.io import json
-from boiling_learning.io.storage import deserialize, serialize
+from boiling_learning.io.storage import Metadata, deserialize, serialize
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.utils import PathLike, VerboseType, resolve, shorten_path
 
@@ -145,5 +145,5 @@ def _serialize_video_frame(instance: VideoFrame, path: Path) -> None:
 
 
 @deserialize.dispatch(VideoFrame)
-def _deserialize_video_frame(path: Path) -> VideoFrame:
+def _deserialize_video_frame(path: Path, metadata: Metadata) -> VideoFrame:
     return np.load(path.with_suffix('.npy'))
