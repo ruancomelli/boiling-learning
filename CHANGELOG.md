@@ -1,3 +1,11 @@
+## v0.18.14 (2022-02-05)
+
+### Feat
+
+- **io**: define save/load operations for sliceable datasets
+- **io**: allow save/load basic types and JSON serializable types
+- **io/storage**: allow additional metadata in save/load
+
 ## v0.18.13 (2022-02-05)
 
 ### Refactor
