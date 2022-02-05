@@ -39,6 +39,8 @@ from boiling_learning.utils.iterutils import distance_maximized_evenly_spaced_in
 from boiling_learning.utils.slicerators import Slicerator
 from boiling_learning.utils.utils import PathLike, resolve
 
+# pylint: disable=missing-function-docstring,missing-class-docstring
+
 _T = TypeVar('_T')
 _U = TypeVar('_U')
 _X = TypeVar('_X')
@@ -422,11 +424,6 @@ class SupervisedSliceableDataset(SliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y
 
         return SupervisedSliceableDataset.from_pairs(super().__getitem__(key))
 
-    def filter(
-        self, predicate: Optional[Callable[[Tuple[_X, _Y]], bool]] = None
-    ) -> SupervisedSliceableDataset[_X, _Y]:
-        return SupervisedSliceableDataset.from_pairs(super().filter(predicate))
-
     def map(
         self, map_func: Callable[[Tuple[_X, _Y]], Tuple[_X2, _Y2]]
     ) -> SupervisedSliceableDataset[_X2, _Y2]:
@@ -464,22 +461,6 @@ class SupervisedSliceableDataset(SliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y
             return pair[0], map_func(pair[1])
 
         return self.map(_map_func)
-
-    def filter_features(
-        self, predicate: Callable[[_X], bool]
-    ) -> SupervisedSliceableDataset[_X, _Y]:
-        def _filter_func(pair: Tuple[_X, _Y]) -> bool:
-            return predicate(pair[0])
-
-        return self.filter(_filter_func)
-
-    def filter_targets(
-        self, predicate: Callable[[_Y], bool]
-    ) -> SupervisedSliceableDataset[_X, _Y]:
-        def _filter_func(pair: Tuple[_X, _Y]) -> bool:
-            return predicate(pair[1])
-
-        return self.filter(_filter_func)
 
     def split(
         self, *sizes: Optional[Union[int, Fraction]]
