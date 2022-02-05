@@ -33,6 +33,7 @@ from typing_extensions import TypeGuard
 
 from boiling_learning.io import json
 from boiling_learning.io.io import LoaderFunction, SaverFunction
+from boiling_learning.io.storage import deserialize, load, save, serialize
 from boiling_learning.utils.dtypes import NestedTypeSpec, auto_spec, tf_str_dtype_bidict
 from boiling_learning.utils.iterutils import distance_maximized_evenly_spaced_indices
 from boiling_learning.utils.slicerators import Slicerator
@@ -586,3 +587,29 @@ def _sliceable_dataset_element_path(root: PathLike, index: int) -> Path:
 
 def _absolute_index_for_dataset(dataset: SliceableDataset[Any], index: int) -> int:
     return len(dataset) + index if index < 0 else index
+
+
+@serialize.instance(SliceableDataset)
+def _serialize_sliceable_dataset(instance: SliceableDataset[Any], path: Path) -> None:
+    path = resolve(path, dir=True)
+    save_sliceable_dataset(instance, path, element_saver=save)
+
+
+@deserialize.dispatch(SliceableDataset)
+def _deserialize_sliceable_dataset(path: Path) -> SliceableDataset[Any]:
+    path = resolve(path, dir=True)
+    return load_sliceable_dataset(path, element_loader=load)
+
+
+@serialize.instance(SupervisedSliceableDataset)
+def _serialize_supervised_sliceable_dataset(
+    instance: SupervisedSliceableDataset[Any, Any], path: Path
+) -> None:
+    path = resolve(path, dir=True)
+    save_supervised_sliceable_dataset(instance, path, feature_saver=save, target_saver=save)
+
+
+@deserialize.dispatch(SupervisedSliceableDataset)
+def _deserialize_supervised_sliceable_dataset(path: Path) -> SupervisedSliceableDataset[Any, Any]:
+    path = resolve(path, dir=True)
+    return load_supervised_sliceable_dataset(path, feature_loader=load, target_loader=load)
