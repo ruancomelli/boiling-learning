@@ -59,13 +59,18 @@ from boiling_learning.model.training import (
     FitModel,
     FitModelParams,
     ModelArchitecture,
+    compile_model,
+    get_fit_model,
 )
-from boiling_learning.model.training import compile_model as _compile_model
-from boiling_learning.model.training import fit_model as _fit_model
+from boiling_learning.preprocessing import arrays
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
-from boiling_learning.preprocessing.transformers import DictFeatureTransformer, Transformer
+from boiling_learning.preprocessing.transformers import (
+    DictFeatureTransformer,
+    FeatureTransformer,
+    Transformer,
+)
 from boiling_learning.preprocessing.video import Video, VideoFrame
 from boiling_learning.scripts import (
     load_cases,
@@ -80,6 +85,7 @@ from boiling_learning.scripts import (
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist, initialize_gpus
 from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.described import Described
+from boiling_learning.utils.functional import P
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import Many, typename
 from boiling_learning.utils.utils import enum_item, print_header, resolve
@@ -380,7 +386,10 @@ def augment_datasets(
 
 get_image_dataset_params = GetImageDatasetParams(
     boiling_cases_timed()[0],
-    transformers=boiling_preprocessors,
+    transformers=(
+        boiling_preprocessors
+        + [FeatureTransformer('final_cropper', arrays.crop, P(left=0, width=10, top=0, bottom=10))]
+    ),
     splits=DatasetSplits(
         train=Fraction(70, 100),
         val=Fraction(15, 100),
@@ -401,7 +410,7 @@ frame = ds_train.flatten()[0][0]
 path = analyses_path / 'temp' / 'random_frame'
 save(frame, path)
 other_frame = load(path)
-assert np.isclose(frame, other_frame, 1e-8).all()
+assert np.allclose(frame, other_frame, 1e-8)
 
 
 items = list(ds_train[:4])
@@ -410,24 +419,15 @@ save(items, path)
 other_items = load(path)
 
 for (feature1, target1), (feature2, target2) in zip(items, other_items):
-    assert np.isclose(feature1, feature2, 1e-8).all()
+    assert np.allclose(feature1, feature2, 1e-8)
     assert target1 == target2
 
 
-assert False, 'STOP!'
+get_fit_model = cache(
+    allocator=default_table_allocator(analyses_path / 'models' / 'trained_models2')
+)(get_fit_model)
 
 
-def table_saver(obj: Dict[str, Any], path: Path) -> None:
-    path = resolve(path, parents=True)
-    json_tricks.dump(obj, str(path))
-
-
-def table_loader(path: Path) -> None:
-    path = resolve(path, parents=True)
-    return json_tricks.load(str(path))
-
-
-@cache(allocator=default_table_allocator(analyses_path / 'models' / 'trained_models2'))
 def fit_model(
     architecture: ModelArchitecture,
     compile_params: CompileModelParams,
@@ -435,15 +435,17 @@ def fit_model(
     image_dataset_get_params: GetImageDatasetParams,
     image_dataset_augment_params: AugmentDatasetParams,
 ) -> FitModel:
-    return _fit_model(
-        _compile_model(architecture, compile_params),
-        Described(
-            value=augment_datasets(
-                get_image_dataset(image_dataset_get_params), image_dataset_augment_params
-            ),
-            description=(image_dataset_get_params, image_dataset_augment_params),
+    datasets = Described(
+        value=augment_datasets(
+            get_image_dataset(image_dataset_get_params), image_dataset_augment_params
         ),
-        fit_model_params,
+        description=(image_dataset_get_params, image_dataset_augment_params),
+    )
+    return FitModel(
+        get_fit_model(compile_model(architecture, compile_params), datasets, fit_model_params),
+        datasets,
+        compile_params=compile_params,
+        fit_params=fit_model_params,
     )
 
 
@@ -513,8 +515,20 @@ model = fit_model(
     image_dataset_augment_params=augment_dataset_params,
 )
 
+assert False, 'STOP!'
+
 
 assert False, 'OLD CODE AHEAD!'
+
+
+def table_saver(obj: Dict[str, Any], path: Path) -> None:
+    path = resolve(path, parents=True)
+    json_tricks.dump(obj, str(path))
+
+
+def table_loader(path: Path) -> None:
+    path = resolve(path, parents=True)
+    return json_tricks.load(str(path))
 
 
 experiment_video_dataset_manager = Manager(

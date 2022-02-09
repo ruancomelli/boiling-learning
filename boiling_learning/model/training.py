@@ -69,10 +69,14 @@ class CompiledModel:
     params: CompileModelParams
 
 
-def compile_model(architecture: ModelArchitecture, params: CompileModelParams) -> CompiledModel:
+def get_compiled_model(architecture: ModelArchitecture, params: CompileModelParams) -> Model:
     model = architecture.model
     model.compile(optimizer=params.optimizer, loss=params.loss, metrics=params.metrics)
-    return CompiledModel(model, params)
+    return model
+
+
+def compile_model(architecture: ModelArchitecture, params: CompileModelParams) -> CompiledModel:
+    return CompiledModel(get_compiled_model(architecture, params), params)
 
 
 @dataclass(frozen=True)
@@ -90,11 +94,11 @@ class FitModel:
     fit_params: FitModelParams
 
 
-def fit_model(
+def get_fit_model(
     compiled_model: CompiledModel,
     datasets: Described[DatasetTriplet[SupervisedSliceableDataset], json.JSONDataType],
     params: FitModelParams,
-) -> FitModel:
+) -> Model:
     model = compiled_model.model
 
     ds = datasets.value
@@ -114,4 +118,18 @@ def fit_model(
         use_multiprocessing=True,
         workers=-1,
     )
-    return FitModel(model, datasets, compile_params=compiled_model.params, fit_params=params)
+
+    return model
+
+
+def fit_model(
+    compiled_model: CompiledModel,
+    datasets: Described[DatasetTriplet[SupervisedSliceableDataset], json.JSONDataType],
+    params: FitModelParams,
+) -> FitModel:
+    return FitModel(
+        get_fit_model(compiled_model=compiled_model, datasets=datasets, params=params),
+        datasets,
+        compile_params=compiled_model.params,
+        fit_params=params,
+    )
