@@ -189,7 +189,7 @@ def _deserialize_str(path: Path, metadata: Metadata) -> str:  # pylint: disable=
 
 @deserialize.dispatch(list)
 def _deserialize_list(path: Path, metadata: Metadata) -> list:
-    if metadata.get('json'):
+    if isinstance(metadata, dict) and metadata.get('json'):
         return json.load(path)
 
     items = []
