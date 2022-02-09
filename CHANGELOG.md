@@ -1,3 +1,10 @@
+## v0.18.15 (2022-02-08)
+
+### Feat
+
+- **model/training**: separate cacheable from non-cacheable training functions
+- **model**: define save/load functions for Keras models
+
 ## v0.18.14 (2022-02-05)
 
 ### Feat
