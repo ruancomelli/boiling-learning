@@ -8,11 +8,10 @@ import parse
 import tensorflow as tf
 
 from boiling_learning.io.io import LoaderFunction
+from boiling_learning.io.storage import Metadata, deserialize, serialize
 from boiling_learning.preprocessing.transformers import Creator
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.utils import PathLike, append, resolve
-
-# pylint: disable=missing-function-docstring
 
 T = TypeVar('T')
 _ModelType = TypeVar('_ModelType')
@@ -167,3 +166,13 @@ def eval_with(
             metric.update_state(y_true, y_pred)
 
     return {metric.name: metric.result().numpy() for metric in metrics}
+
+
+@serialize.instance(tf.keras.models.Model)
+def _serialize_model(instance: tf.keras.models.Model, path: Path) -> None:
+    tf.keras.models.save_model(instance, resolve(path))
+
+
+@deserialize.dispatch(tf.keras.models.Model)
+def _deserialize_model(path: Path, _metadata: Metadata) -> tf.keras.models.Model:
+    return tf.keras.models.load_model(path)
