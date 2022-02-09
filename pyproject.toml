@@ -1,6 +1,6 @@
 [project]
 name = "boiling-learning"
-version = "0.18.16"
+version = "0.18.17"
 description = "Deep learning models for phase-change quantification and classification."
 authors = [
     {name = "Ruan Comelli", email = "ruancomelli@gmail.com"}
@@ -71,6 +71,9 @@ repository = "https://github.com/ruancomelli/boiling-learning"
 documentation = "https://github.com/ruancomelli/boiling_learning/blob/main/README.md"
 
 [project.optional-dependencies]
+
+[project.entry-points.tox]
+pdm = "tox_pdm.plugin"
 
 [build-system]
 requires = ["pdm-pep517"]
@@ -164,5 +167,5 @@ plugins = [
 [tool.commitizen]
 tag_format = "v$major.$minor.$patch$prerelease"
 update_changelog_on_bump = true
-version = "0.18.16"
+version = "0.18.17"
 version_files = ["pyproject.toml:version"]

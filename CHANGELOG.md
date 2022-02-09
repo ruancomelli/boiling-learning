@@ -1,3 +1,9 @@
+## v0.18.17 (2022-02-09)
+
+### Fix
+
+- **io**: fix wrong assumption about metadata objects being dicts
+
 ## v0.18.16 (2022-02-08)
 
 ### Fix
