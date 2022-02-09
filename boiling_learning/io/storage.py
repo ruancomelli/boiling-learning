@@ -207,7 +207,7 @@ def _deserialize_list(path: Path, metadata: Metadata) -> list:
 
 @deserialize.dispatch(dict)
 def _deserialize_dict(path: Path, metadata: Metadata) -> dict:
-    if metadata.get('json'):
+    if isinstance(metadata, dict) and metadata.get('json'):
         return json.load(path)
 
     return {item_path.name: load(item_path) for item_path in path.iterdir()}
