@@ -1,3 +1,13 @@
+## v0.18.16 (2022-02-08)
+
+### Fix
+
+- **io**: fix wrong import from typing instead of typing-extensions
+
+### Refactor
+
+- **main**: improve structure of `main` script
+
 ## v0.18.15 (2022-02-08)
 
 ### Feat
