@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import itertools
 from pathlib import Path
-from typing import Any, TypeVar, final
+from typing import Any, TypeVar
 
 from classes import AssociatedType, Supports, typeclass
+from typing_extensions import final
 
 from boiling_learning.io import json
 from boiling_learning.utils.table_dispatch import TableDispatcher
