@@ -108,7 +108,7 @@ class SimpleJSONSerializable(metaclass=_SimpleJSONSerializableMeta):
 
 @serialize.instance(delegate=SimpleJSONSerializable)
 def _serialize_simple_json_serializable(instance: SimpleJSONSerializable, path: Path) -> Metadata:
-    json.dump(instance, path)
+    json.dump(instance, path.with_suffix('.json'))
     return {'json': True}
 
 
@@ -169,28 +169,28 @@ def _deserialize_none(path: Path, metadata: Metadata) -> None:  # pylint: disabl
 
 @deserialize.dispatch(int)
 def _deserialize_int(path: Path, metadata: Metadata) -> int:  # pylint: disable=unused-argument
-    return json.load(path)
+    return json.load(path.with_suffix('.json'))
 
 
 @deserialize.dispatch(bool)
 def _deserialize_bool(path: Path, metadata: Metadata) -> bool:  # pylint: disable=unused-argument
-    return json.load(path)
+    return json.load(path.with_suffix('.json'))
 
 
 @deserialize.dispatch(float)
 def _deserialize_float(path: Path, metadata: Metadata) -> float:  # pylint: disable=unused-argument
-    return json.load(path)
+    return json.load(path.with_suffix('.json'))
 
 
 @deserialize.dispatch(str)
 def _deserialize_str(path: Path, metadata: Metadata) -> str:  # pylint: disable=unused-argument
-    return json.load(path)
+    return json.load(path.with_suffix('.json'))
 
 
 @deserialize.dispatch(list)
 def _deserialize_list(path: Path, metadata: Metadata) -> list:
     if isinstance(metadata, dict) and metadata.get('json'):
-        return json.load(path)
+        return json.load(path.with_suffix('.json'))
 
     items = []
 
@@ -208,7 +208,7 @@ def _deserialize_list(path: Path, metadata: Metadata) -> list:
 @deserialize.dispatch(dict)
 def _deserialize_dict(path: Path, metadata: Metadata) -> dict:
     if isinstance(metadata, dict) and metadata.get('json'):
-        return json.load(path)
+        return json.load(path.with_suffix('.json'))
 
     return {item_path.name: load(item_path) for item_path in path.iterdir()}
 
