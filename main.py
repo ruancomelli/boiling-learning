@@ -216,27 +216,6 @@ condensation_preprocessors, condensation_augmentors = make_condensation_processo
 )
 
 
-description_comparer = partial(
-    bl.utils.json_equivalent, dumps=json_tricks.dumps, loads=json_tricks.loads
-)
-
-save_map = {
-    'model': tf.keras.models.save_model,
-    'history': lambda obj, path: bl.io.save_pkl(getattr(obj, 'history', obj), path),
-}
-load_map = {
-    'model': lambda path: bl.io.load_keras_model(
-        path,
-        strategy,
-        custom_objects={
-            'AdditionalValidationSets': bl.model.callbacks.AdditionalValidationSets,
-            'RSquare': tfa.metrics.RSquare,
-        },
-    ),
-    'history': bl.io.load_pkl,
-}
-
-
 @cache(default_table_allocator(analyses_path / 'datasets' / 'frames'))
 def get_frame(
     index: int,
@@ -441,11 +420,10 @@ def fit_model(
         ),
         description=(image_dataset_get_params, image_dataset_augment_params),
     )
+    compiled_model = compile_model(architecture, compile_params)
+    model = get_fit_model(compiled_model, datasets, fit_model_params)
     return FitModel(
-        get_fit_model(compile_model(architecture, compile_params), datasets, fit_model_params),
-        datasets,
-        compile_params=compile_params,
-        fit_params=fit_model_params,
+        model, datasets, compile_params=compiled_model.params, fit_params=fit_model_params
     )
 
 
@@ -519,6 +497,27 @@ assert False, 'STOP!'
 
 
 assert False, 'OLD CODE AHEAD!'
+
+
+description_comparer = partial(
+    bl.utils.json_equivalent, dumps=json_tricks.dumps, loads=json_tricks.loads
+)
+
+save_map = {
+    'model': tf.keras.models.save_model,
+    'history': lambda obj, path: bl.io.save_pkl(getattr(obj, 'history', obj), path),
+}
+load_map = {
+    'model': lambda path: bl.io.load_keras_model(
+        path,
+        strategy,
+        custom_objects={
+            'AdditionalValidationSets': bl.model.callbacks.AdditionalValidationSets,
+            'RSquare': tfa.metrics.RSquare,
+        },
+    ),
+    'history': bl.io.load_pkl,
+}
 
 
 def table_saver(obj: Dict[str, Any], path: Path) -> None:
