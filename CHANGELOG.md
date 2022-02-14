@@ -1,3 +1,13 @@
+## v0.18.19 (2022-02-14)
+
+### Feat
+
+- **io**: make `abc.ABCMeta` types JSON serializable
+
+### Refactor
+
+- **io**: add `.json` suffix to JSON saved/loaded files
+
 ## v0.18.18 (2022-02-09)
 
 ### Fix
