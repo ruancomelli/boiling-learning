@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 import json as _json
 from fractions import Fraction
 from importlib import import_module
@@ -302,6 +303,7 @@ def _encode_types(instance: type) -> str:
     return f'{instance.__module__}.{instance.__qualname__}'
 
 
+@decode.dispatch(abc.ABCMeta)
 @decode.dispatch(type)
 def _decode_types(instance: str) -> type:
     modulepath, typename = instance.rsplit('.', maxsplit=1)

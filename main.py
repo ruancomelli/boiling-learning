@@ -8,7 +8,9 @@ from typing import (
     Container,
     Dict,
     ItemsView,
+    Iterable,
     KeysView,
+    List,
     NamedTuple,
     Optional,
     Sequence,
@@ -19,6 +21,7 @@ from typing import (
 
 import funcy
 import json_tricks
+import more_itertools as mit
 import numpy as np
 import ray
 import tensorflow as tf
@@ -62,15 +65,10 @@ from boiling_learning.model.training import (
     compile_model,
     get_fit_model,
 )
-from boiling_learning.preprocessing import arrays
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
-from boiling_learning.preprocessing.transformers import (
-    DictFeatureTransformer,
-    FeatureTransformer,
-    Transformer,
-)
+from boiling_learning.preprocessing.transformers import DictFeatureTransformer, Transformer
 from boiling_learning.preprocessing.video import Video, VideoFrame
 from boiling_learning.scripts import (
     load_cases,
@@ -85,7 +83,6 @@ from boiling_learning.scripts import (
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist, initialize_gpus
 from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.described import Described
-from boiling_learning.utils.functional import P
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import Many, typename
 from boiling_learning.utils.utils import enum_item, print_header, resolve
@@ -216,22 +213,10 @@ condensation_preprocessors, condensation_augmentors = make_condensation_processo
 )
 
 
-@cache(default_table_allocator(analyses_path / 'datasets' / 'frames'))
-def get_frame(
-    index: int,
-    video: Video,
-    transformers: Sequence[Transformer[VideoFrame, VideoFrame]],
-) -> VideoFrame:
-    frame = video[index]
-    for transformer in transformers:
-        frame = transformer(frame)
-    return frame
-
-
-def sliceable_dataset_from_video_and_transformers(
-    video: ExperimentVideo, transformers: Sequence[Transformer[VideoFrame, VideoFrame]]
-) -> SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]:
-    feature_transformers = [
+def _compile_transformers_to_video(
+    transformers: Iterable[Transformer[VideoFrame, VideoFrame]], video: Video
+) -> List[Transformer[VideoFrame, VideoFrame]]:
+    return [
         (
             transformer[video.name]
             if isinstance(transformer, DictFeatureTransformer)
@@ -240,17 +225,43 @@ def sliceable_dataset_from_video_and_transformers(
         for transformer in transformers
     ]
 
-    features = SliceableDataset.from_func(
-        partial(get_frame, video=video, transformers=feature_transformers), length=len(video)
-    )
+
+@cache(default_table_allocator(analyses_path / 'datasets' / 'frames'))
+def get_frame(
+    index: int,
+    video: Video,
+    transformers: Iterable[Transformer[VideoFrame, VideoFrame]],
+) -> VideoFrame:
+    frame = video[index]
+    for transformer in _compile_transformers_to_video(transformers, video):
+        frame = transformer(frame)
+    return frame
+
+
+sample_ev = mit.first(boiling_cases_timed()[0])
+sample_frame = get_frame(0, sample_ev, boiling_preprocessors)
+print(sample_frame)
+
+
+def sliceable_dataset_from_video_and_transformers(
+    video: ExperimentVideo, transformers: Iterable[Transformer[VideoFrame, VideoFrame]]
+) -> SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]:
+    frame_getter = partial(get_frame, video=video, transformers=list(transformers))
+
+    features = SliceableDataset.from_func(frame_getter, length=len(video))
     targets = SliceableDataset(video.targets())
     return SupervisedSliceableDataset.from_features_and_targets(features, targets)
+
+
+sds = sliceable_dataset_from_video_and_transformers(sample_ev, boiling_preprocessors)
+sample_frame2 = sds[0][0]
+assert np.allclose(sample_frame, sample_frame2)
 
 
 @dataclass(frozen=True)
 class GetImageDatasetParams:
     image_dataset: ImageDataset
-    transformers: Sequence[Transformer[VideoFrame, VideoFrame]]
+    transformers: List[Transformer[VideoFrame, VideoFrame]]
     splits: DatasetSplits
     target: Optional[str] = None
     dataset_size: Optional[Union[int, Fraction]] = None
@@ -258,7 +269,7 @@ class GetImageDatasetParams:
 
 def _get_image_dataset(
     image_dataset: ImageDataset,
-    transformers: Sequence[Transformer[VideoFrame, VideoFrame]],
+    transformers: List[Transformer[VideoFrame, VideoFrame]],
     splits: DatasetSplits,
     dataset_size: Optional[Union[int, Fraction]] = None,
     target: Optional[str] = None,
@@ -281,7 +292,7 @@ def _get_image_dataset(
     return dss
 
 
-@cache(default_table_allocator(analyses_path / 'datasets' / 'sliceable_image_datasets'))
+@cache(default_table_allocator(analyses_path / 'datasets' / 'sliceable_image_datasets2'))
 def get_image_dataset(
     params: GetImageDatasetParams,
 ) -> DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]]:
@@ -292,6 +303,31 @@ def get_image_dataset(
         params.dataset_size,
         target=params.target,
     )
+
+
+get_image_dataset_params = GetImageDatasetParams(
+    boiling_cases_timed()[0],
+    transformers=boiling_preprocessors,
+    splits=DatasetSplits(
+        train=Fraction(70, 100),
+        val=Fraction(15, 100),
+        test=Fraction(15, 100),
+    ),
+    dataset_size=Fraction(1, 1000),
+    target='Flux [W/cm**2]',
+)
+ds_train, ds_val, ds_test = get_image_dataset(get_image_dataset_params)
+ds_train_len = len(ds_train)
+ds_val_len = len(ds_val)
+ds_test_len = len(ds_test)
+expected_length = sum(len(ev) for ev in boiling_cases_timed()[0]) // 1000
+assert ds_train_len > ds_test_len > 0
+assert (
+    ds_train_len + ds_val_len + ds_test_len == expected_length
+), f'{ds_train_len} + {ds_val_len} + {ds_test_len} != {expected_length}'
+sample_element = ds_train[0]
+assert isinstance(sample_element[0], np.ndarray)
+assert isinstance(sample_element[1], float)
 
 
 @dataclass(frozen=True)
@@ -312,6 +348,16 @@ def apply_transformers_to_supervised_sliceable_dataset(
     for augmentor in augmentors:
         dataset = dataset.map(augmentor)
     return dataset
+
+
+ds_train = apply_transformers_to_supervised_sliceable_dataset(ds_train, boiling_augmentors)
+ds_val = apply_transformers_to_supervised_sliceable_dataset(ds_val, boiling_augmentors)
+ds_test = apply_transformers_to_supervised_sliceable_dataset(ds_test, boiling_augmentors)
+
+assert len(ds_train) == ds_train_len
+sample_element = ds_train[0]
+assert isinstance(sample_element[0], np.ndarray)
+assert isinstance(sample_element[1], float)
 
 
 def _augment_datasets(
@@ -365,10 +411,7 @@ def augment_datasets(
 
 get_image_dataset_params = GetImageDatasetParams(
     boiling_cases_timed()[0],
-    transformers=(
-        boiling_preprocessors
-        + [FeatureTransformer('final_cropper', arrays.crop, P(left=0, width=10, top=0, bottom=10))]
-    ),
+    transformers=boiling_preprocessors,
     splits=DatasetSplits(
         train=Fraction(70, 100),
         val=Fraction(15, 100),
@@ -385,14 +428,17 @@ ds_train, ds_val, ds_test = augment_datasets(
     augment_dataset_params,
 )
 
-frame = ds_train.flatten()[0][0]
+sample_element = ds_train[0]
+assert isinstance(sample_element[0], np.ndarray)
+assert isinstance(sample_element[1], float)
+sample_frame = sample_element[0]
 path = analyses_path / 'temp' / 'random_frame'
-save(frame, path)
+save(sample_frame, path)
 other_frame = load(path)
-assert np.allclose(frame, other_frame, 1e-8)
+assert np.allclose(sample_frame, other_frame, 1e-8)
 
 
-items = list(ds_train[:4])
+items = ds_train[:4]
 path = analyses_path / 'temp' / 'random_items'
 save(items, path)
 other_items = load(path)
@@ -405,6 +451,9 @@ for (feature1, target1), (feature2, target2) in zip(items, other_items):
 get_fit_model = cache(
     allocator=default_table_allocator(analyses_path / 'models' / 'trained_models2')
 )(get_fit_model)
+
+
+assert False, 'STOP'
 
 
 def fit_model(
