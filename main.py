@@ -28,6 +28,7 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 from tensorflow.keras.layers import (  # Conv2D,; MaxPool2D,
     Activation,
+    AveragePooling2D,
     Dense,
     Dropout,
     Flatten,
@@ -35,7 +36,6 @@ from tensorflow.keras.layers import (  # Conv2D,; MaxPool2D,
     LayerNormalization,
 )
 from tensorflow.keras.mixed_precision.experimental import Policy
-from tensorflow.keras.models import Model
 
 import boiling_learning as bl
 from boiling_learning.datasets.creators import (
@@ -56,7 +56,7 @@ from boiling_learning.management.allocators.json_allocator import default_table_
 from boiling_learning.management.cacher import cache
 from boiling_learning.management.managers import Manager
 from boiling_learning.model.definitions import SmallConvNet
-from boiling_learning.model.model import ProblemType
+from boiling_learning.model.model import Model, ProblemType
 from boiling_learning.model.training import (
     CompileModelParams,
     FitModel,
@@ -453,9 +453,6 @@ get_fit_model = cache(
 )(get_fit_model)
 
 
-assert False, 'STOP'
-
-
 def fit_model(
     architecture: ModelArchitecture,
     compile_params: CompileModelParams,
@@ -490,6 +487,9 @@ def small_convnet(
 
     input_data = Input(shape=input_shape)
     x = input_data  # start "current layer" as the input layer
+
+    x = AveragePooling2D((10, 10))(x)
+
     if normalize_images:
         x = LayerNormalization()(x)
     # x = Conv2D(

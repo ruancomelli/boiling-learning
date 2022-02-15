@@ -91,7 +91,7 @@ def load(path: PathLike) -> Any:
 
     obj_type = metadata['type']
 
-    return deserialize[obj_type](path / '__data__', metadata=metadata['metadata'])
+    return deserialize[obj_type](path / '__data__', metadata['metadata'])
 
 
 class _SimpleJSONSerializableMeta(type):

@@ -168,11 +168,15 @@ def eval_with(
     return {metric.name: metric.result().numpy() for metric in metrics}
 
 
-@serialize.instance(tf.keras.models.Model)
-def _serialize_model(instance: tf.keras.models.Model, path: Path) -> None:
+class Model(tf.keras.models.Model):
+    pass
+
+
+@serialize.instance(Model)
+def _serialize_model(instance: Model, path: Path) -> None:
     tf.keras.models.save_model(instance, resolve(path))
 
 
-@deserialize.dispatch(tf.keras.models.Model)
-def _deserialize_model(path: Path, _metadata: Metadata) -> tf.keras.models.Model:
+@deserialize.dispatch(Model)
+def _deserialize_model(path: Path, _metadata: Metadata) -> Model:
     return tf.keras.models.load_model(path)
