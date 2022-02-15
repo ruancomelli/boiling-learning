@@ -1,3 +1,9 @@
+## v0.18.20 (2022-02-14)
+
+### Fix
+
+- fix training pipeline from end-to-end
+
 ## v0.18.19 (2022-02-14)
 
 ### Feat
