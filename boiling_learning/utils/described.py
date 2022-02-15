@@ -1,15 +1,35 @@
-from typing import Generic, TypeVar
+from typing import Generic, List, Tuple, Type, TypeVar
 
-from dataclassy import dataclass
+from boiling_learning.utils.descriptions import describe
+from boiling_learning.utils.functional import Pack
+from boiling_learning.utils.sentinels import EMPTY, Emptiable
 
 _Any = TypeVar('_Any')
+_AnyT = TypeVar('_AnyT')
+_AnyS = TypeVar('_AnyS')
 _Description = TypeVar('_Description')
 
 
-@dataclass(frozen=True, slots=True)
 class Described(Generic[_Any, _Description]):
-    value: _Any
-    description: _Description
+    def __init__(self, value: _Any, description: Emptiable[_Description] = EMPTY) -> None:
+        self.value = value
+        self.description = describe(description if description is not EMPTY else value)
 
     def __describe__(self) -> _Description:
         return self.description
+
+
+_DescribedConstructedObject = Tuple[str, Pack[_AnyT, _AnyS]]
+
+
+def described_constructor(
+    type_: Type[_Any], params: Pack[_AnyT, _AnyS]
+) -> Described[_Any, _DescribedConstructedObject[_AnyT, _AnyS]]:
+    return Described(params.feed(type_), describe((type_, params)))
+
+
+def described_list(
+    described: List[Described[_Any, _Description]]
+) -> Described[List[_Any], List[_Description]]:
+    values = [item.value for item in described]
+    return Described(values)

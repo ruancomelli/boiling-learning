@@ -20,7 +20,6 @@ from typing import (
 )
 
 import funcy
-import json_tricks
 import more_itertools as mit
 import numpy as np
 import ray
@@ -37,25 +36,16 @@ from tensorflow.keras.layers import (  # Conv2D,; MaxPool2D,
 )
 from tensorflow.keras.mixed_precision.experimental import Policy
 
-import boiling_learning as bl
-from boiling_learning.datasets.creators import (
-    dataset_creator,
-    dataset_post_processor,
-    experiment_video_dataset_creator,
-)
 from boiling_learning.datasets.datasets import DatasetSplits
 from boiling_learning.datasets.sliceable import (
     SliceableDataset,
     SupervisedSliceableDataset,
     concatenate,
-    sliceable_dataset_to_tensorflow_dataset,
 )
 from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.io.storage import load, save
 from boiling_learning.management.allocators.json_allocator import default_table_allocator
 from boiling_learning.management.cacher import cache
-from boiling_learning.management.managers import Manager
-from boiling_learning.model.definitions import SmallConvNet
 from boiling_learning.model.model import Model, ProblemType
 from boiling_learning.model.training import (
     CompileModelParams,
@@ -75,14 +65,12 @@ from boiling_learning.scripts import (
     load_dataset_tree,
     make_boiling_processors,
     make_condensation_processors,
-    make_dataset,
-    make_model,
     set_boiling_cases_data,
     set_condensation_datasets_data,
 )
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist, initialize_gpus
 from boiling_learning.utils.dataclasses import dataclass
-from boiling_learning.utils.described import Described
+from boiling_learning.utils.described import Described, described_list
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import Many, typename
 from boiling_learning.utils.utils import enum_item, print_header, resolve
@@ -535,178 +523,216 @@ model = fit_model(
             tf.keras.metrics.RootMeanSquaredError('RMS'),
             tf.keras.metrics.MeanAbsoluteError('MAE'),
             tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
+            tfa.metrics.RSquare('R2', y_shape=(1,)),
         ],
     ),
-    fit_model_params=FitModelParams(batch_size=128, epochs=100, callbacks=Described([], [])),
+    fit_model_params=FitModelParams(
+        batch_size=128,
+        epochs=100,
+        callbacks=described_list(
+            [
+                # described_constructor(TimePrinter, P()),
+                #     described_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
+                #     described_constructor(
+                #         tf.keras.callbacks.ModelCheckpoint,
+                #         P(filepath='last-trained', save_best_only=False, monitor='val_loss'),
+                #     ),
+                #     described_constructor(
+                #         tf.keras.callbacks.EarlyStopping,
+                #         P(
+                #             monitor='val_loss',
+                #             min_delta=0,
+                #             patience=10,
+                #             baseline=None,
+                #             mode='auto',
+                #             restore_best_weights=True,
+                #         ),
+                #     ),
+                #     described_constructor(
+                #         ReduceLROnPlateau,
+                #         P(
+                #             monitor='val_loss',
+                #             factor=None,
+                #             patience=None,
+                #             min_delta=0.01,
+                #             min_delta_mode='relative',
+                #             min_lr=0,
+                #             mode='auto',
+                #             cooldown=2,
+                #         ),
+                #     ),
+                #     # described_constructor(tf.keras.callbacks.experimental.BackupAndRestore(str(backup_dir)), P()),
+                #     # described_constructor(AdditionalValidationSets, P()),
+            ]
+        ),
+    ),
     image_dataset_get_params=get_image_dataset_params,
     image_dataset_augment_params=augment_dataset_params,
 )
 
 assert False, 'STOP!'
-
-
 assert False, 'OLD CODE AHEAD!'
 
 
-description_comparer = partial(
-    bl.utils.json_equivalent, dumps=json_tricks.dumps, loads=json_tricks.loads
-)
+# description_comparer = partial(
+#     bl.utils.json_equivalent, dumps=json_tricks.dumps, loads=json_tricks.loads
+# )
 
-save_map = {
-    'model': tf.keras.models.save_model,
-    'history': lambda obj, path: bl.io.save_pkl(getattr(obj, 'history', obj), path),
-}
-load_map = {
-    'model': lambda path: bl.io.load_keras_model(
-        path,
-        strategy,
-        custom_objects={
-            'AdditionalValidationSets': bl.model.callbacks.AdditionalValidationSets,
-            'RSquare': tfa.metrics.RSquare,
-        },
-    ),
-    'history': bl.io.load_pkl,
-}
-
-
-def table_saver(obj: Dict[str, Any], path: Path) -> None:
-    path = resolve(path, parents=True)
-    json_tricks.dump(obj, str(path))
+# save_map = {
+#     'model': tf.keras.models.save_model,
+#     'history': lambda obj, path: bl.io.save_pkl(getattr(obj, 'history', obj), path),
+# }
+# load_map = {
+#     'model': lambda path: bl.io.load_keras_model(
+#         path,
+#         strategy,
+#         custom_objects={
+#             'AdditionalValidationSets': bl.model.callbacks.AdditionalValidationSets,
+#             'RSquare': tfa.metrics.RSquare,
+#         },
+#     ),
+#     'history': bl.io.load_pkl,
+# }
 
 
-def table_loader(path: Path) -> None:
-    path = resolve(path, parents=True)
-    return json_tricks.load(str(path))
+# def table_saver(obj: Dict[str, Any], path: Path) -> None:
+#     path = resolve(path, parents=True)
+#     json_tricks.dump(obj, str(path))
 
 
-experiment_video_dataset_manager = Manager(
-    path=analyses_path / 'datasets' / 'boiling_experiment_video_datasets2',
-    id_fmt='experiment video dataset {index}',
-    index_key='index',
-    creator=experiment_video_dataset_creator,
-    post_processor=None,
-    verbose=1,
-    key_names=Manager.Keys(elements='dataset'),
-    save_method=bl.io.saver_dataset_triplet(bl.io.save_dataset),
-    load_method=bl.io.loader_dataset_triplet(
-        bl.io.add_bool_flag(bl.io.load_dataset, FileNotFoundError)
-    ),
-    table_saver=table_saver,
-    table_loader=table_loader,
-    description_comparer=description_comparer,
-)
+# def table_loader(path: Path) -> None:
+#     path = resolve(path, parents=True)
+#     return json_tricks.load(str(path))
 
-dataset_manager = Manager(
-    path=analyses_path / 'datasets' / 'boiling_datasets2',
-    id_fmt='dataset {index}',
-    index_key='index',
-    creator=dataset_creator,
-    post_processor=dataset_post_processor,
-    verbose=1,
-    key_names=Manager.Keys(elements='dataset'),
-    table_saver=table_saver,
-    table_loader=table_loader,
-    description_comparer=description_comparer,
-)
 
-model_manager = Manager(
-    path=analyses_path / 'models' / 'trained_models',
-    id_fmt='{index}.model',
-    index_key='index',
-    save_method=bl.io.save_serialized(save_map),
-    load_method=bl.io.add_bool_flag(bl.io.load_serialized(load_map), (FileNotFoundError, OSError)),
-    verbose=1,
-    key_names=Manager.Keys(elements='model'),
-    table_saver=table_saver,
-    table_loader=table_loader,
-    description_comparer=description_comparer,
-)
+# experiment_video_dataset_manager = Manager(
+#     path=analyses_path / 'datasets' / 'boiling_experiment_video_datasets2',
+#     id_fmt='experiment video dataset {index}',
+#     index_key='index',
+#     creator=experiment_video_dataset_creator,
+#     post_processor=None,
+#     verbose=1,
+#     key_names=Manager.Keys(elements='dataset'),
+#     save_method=bl.io.saver_dataset_triplet(bl.io.save_dataset),
+#     load_method=bl.io.loader_dataset_triplet(
+#         bl.io.add_bool_flag(bl.io.load_dataset, FileNotFoundError)
+#     ),
+#     table_saver=table_saver,
+#     table_loader=table_loader,
+#     description_comparer=description_comparer,
+# )
 
-experiment_video_dataset_manager.verbose = 2
-dataset_manager.verbose = 2
+# dataset_manager = Manager(
+#     path=analyses_path / 'datasets' / 'boiling_datasets2',
+#     id_fmt='dataset {index}',
+#     index_key='index',
+#     creator=dataset_creator,
+#     post_processor=dataset_post_processor,
+#     verbose=1,
+#     key_names=Manager.Keys(elements='dataset'),
+#     table_saver=table_saver,
+#     table_loader=table_loader,
+#     description_comparer=description_comparer,
+# )
 
-image_dataset = boiling_cases_timed()[1]
+# model_manager = Manager(
+#     path=analyses_path / 'models' / 'trained_models',
+#     id_fmt='{index}.model',
+#     index_key='index',
+#     save_method=bl.io.save_serialized(save_map),
+#     load_method=bl.io.add_bool_flag(bl.io.load_serialized(load_map), (FileNotFoundError, OSError)),
+#     verbose=1,
+#     key_names=Manager.Keys(elements='model'),
+#     table_saver=table_saver,
+#     table_loader=table_loader,
+#     description_comparer=description_comparer,
+# )
 
-print('Size of the input dataset:', sum(len(ev) for ev in image_dataset.values()))
+# experiment_video_dataset_manager.verbose = 2
+# dataset_manager.verbose = 2
 
-dataset_id, (ds_train, ds_val, ds_test) = make_dataset.main(
-    experiment_video_dataset_manager=experiment_video_dataset_manager,
-    dataset_manager=dataset_manager,
-    img_ds=boiling_cases_timed()[1],
-    splits=bl.datasets.DatasetSplits(
-        train=Fraction(70, 100),
-        val=Fraction(15, 100),
-        test=Fraction(15, 100),
-    ),
-    preprocessors=boiling_preprocessors,
-    augmentors=boiling_augmentors,
-    augment_train=True,
-    augment_test=True,
-    # dataset_size=None,
-    dataset_size=Fraction(1, 10),
-    shuffle=True,
-    shuffle_size=None,
-    # batch_size=256,
-    verbose=False,
-)
+# image_dataset = boiling_cases_timed()[1]
 
-print('Size of the TRAIN SET:', len(ds_train.flatten()), f'({len(ds_train)} batches)')
-print('Size of the VAL SET:', len(ds_val.flatten()) if ds_val is not None else None)
-print('Size of the TEST SET:', len(ds_test.flatten()), f'({len(ds_test)} batches)')
+# print('Size of the input dataset:', sum(len(ev) for ev in image_dataset.values()))
 
-assert isinstance(ds_train, SliceableDataset), type(ds_train)
-assert isinstance(ds_val, SliceableDataset), type(ds_val)
-assert isinstance(ds_test, SliceableDataset), type(ds_test)
-assert ds_train
-assert ds_val
-assert ds_test
+# dataset_id, (ds_train, ds_val, ds_test) = make_dataset.main(
+#     experiment_video_dataset_manager=experiment_video_dataset_manager,
+#     dataset_manager=dataset_manager,
+#     img_ds=boiling_cases_timed()[1],
+#     splits=bl.datasets.DatasetSplits(
+#         train=Fraction(70, 100),
+#         val=Fraction(15, 100),
+#         test=Fraction(15, 100),
+#     ),
+#     preprocessors=boiling_preprocessors,
+#     augmentors=boiling_augmentors,
+#     augment_train=True,
+#     augment_test=True,
+#     # dataset_size=None,
+#     dataset_size=Fraction(1, 10),
+#     shuffle=True,
+#     shuffle_size=None,
+#     # batch_size=256,
+#     verbose=False,
+# )
 
-ds_train = sliceable_dataset_to_tensorflow_dataset(ds_train).batch(16)
-if ds_val is not None:
-    ds_val = sliceable_dataset_to_tensorflow_dataset(ds_val).batch(16)
-ds_test = sliceable_dataset_to_tensorflow_dataset(ds_test).batch(16)
+# print('Size of the TRAIN SET:', len(ds_train.flatten()), f'({len(ds_train)} batches)')
+# print('Size of the VAL SET:', len(ds_val.flatten()) if ds_val is not None else None)
+# print('Size of the TEST SET:', len(ds_test.flatten()), f'({len(ds_test)} batches)')
 
-ds_val_gt10 = bl.datasets.apply_unbatched(
-    ds_val,
-    # the following quantity is defined on
-    # "Visualization-based nucleate boiling heat flux quantification
-    # using machine learning"
-    lambda ds: ds.take(12614),
-    dim=0,
-    key=0,
-)
-ds_val_gt10 = bl.datasets.filter_unbatched(
-    ds_val_gt10, lambda img, data: data['Flux [W/cm**2]'] >= 10, dim=0, key=0
-)
+# assert isinstance(ds_train, SliceableDataset), type(ds_train)
+# assert isinstance(ds_val, SliceableDataset), type(ds_val)
+# assert isinstance(ds_test, SliceableDataset), type(ds_test)
+# assert ds_train
+# assert ds_val
+# assert ds_test
 
-ds_contents = dataset_manager.contents(dataset_id)
+# ds_train = sliceable_dataset_to_tensorflow_dataset(ds_train).batch(16)
+# if ds_val is not None:
+#     ds_val = sliceable_dataset_to_tensorflow_dataset(ds_val).batch(16)
+# ds_test = sliceable_dataset_to_tensorflow_dataset(ds_test).batch(16)
 
-model_id, model_dict = make_model.main(
-    model_manager,
-    strategy,
-    dataset_contents_train=ds_contents,
-    dataset_contents_val=ds_contents,
-    ds_train=ds_train,
-    ds_val=ds_val,
-    take_train=None,
-    take_val=None,
-    additional_val_sets={'HF10': ds_val_gt10},
-    model_creator=SmallConvNet,
-    lr=1e-5,
-    target='Flux [W/cm**2]',
-    normalize_images=False,
-    reduce_lr_on_plateau_factor=None,
-    reduce_lr_on_plateau_patience=None,
-    early_stopping_patience=10,
-    dropout_ratio=0.5,
-    batch_size=16,
-    missing_ok=True,
-    include=True,
-    hidden_layers_policy='mixed_float16',
-    output_layer_policy='float32',
-)
+# ds_val_gt10 = bl.datasets.apply_unbatched(
+#     ds_val,
+#     # the following quantity is defined on
+#     # "Visualization-based nucleate boiling heat flux quantification
+#     # using machine learning"
+#     lambda ds: ds.take(12614),
+#     dim=0,
+#     key=0,
+# )
+# ds_val_gt10 = bl.datasets.filter_unbatched(
+#     ds_val_gt10, lambda img, data: data['Flux [W/cm**2]'] >= 10, dim=0, key=0
+# )
 
-# TODO: try to convert the dataset type from float64 to float32 or float16 to reduce memory usage
-# I have 8GB RAM whereas Google Colab has 12GB... not that much of a difference
+# ds_contents = dataset_manager.contents(dataset_id)
 
-print(model_dict)
+# model_id, model_dict = make_model.main(
+#     model_manager,
+#     strategy,
+#     dataset_contents_train=ds_contents,
+#     dataset_contents_val=ds_contents,
+#     ds_train=ds_train,
+#     ds_val=ds_val,
+#     take_train=None,
+#     take_val=None,
+#     additional_val_sets={'HF10': ds_val_gt10},
+#     model_creator=SmallConvNet,
+#     lr=1e-5,
+#     target='Flux [W/cm**2]',
+#     normalize_images=False,
+#     reduce_lr_on_plateau_factor=None,
+#     reduce_lr_on_plateau_patience=None,
+#     early_stopping_patience=10,
+#     dropout_ratio=0.5,
+#     batch_size=16,
+#     missing_ok=True,
+#     include=True,
+#     hidden_layers_policy='mixed_float16',
+#     output_layer_policy='float32',
+# )
+
+# # TODO: try to convert the dataset type from float64 to float32 or float16 to reduce memory usage
+# # I have 8GB RAM whereas Google Colab has 12GB... not that much of a difference
+
+# print(model_dict)
