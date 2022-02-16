@@ -1,6 +1,6 @@
 from fractions import Fraction
 from pathlib import Path
-from typing import Any, Dict, FrozenSet, Generic, List, Set, Tuple, TypeVar, Union
+from typing import Any, Dict, FrozenSet, Generic, List, Set, Tuple, Type, TypeVar, Union
 
 from classes import AssociatedType, Supports, typeclass
 from typing_extensions import Protocol, final, runtime_checkable
@@ -8,6 +8,7 @@ from typing_extensions import Protocol, final, runtime_checkable
 from boiling_learning.utils.dataclasses import asdict, is_dataclass_instance
 from boiling_learning.utils.frozendict import frozendict
 
+_AnyType = TypeVar('_AnyType', bound=Type[Any])
 _Description = TypeVar('_Description')
 _Description_co = TypeVar('_Description_co', covariant=True)
 
@@ -186,3 +187,8 @@ class FrozenSetOfDescribable(
 @describe.instance(delegate=FrozenSetOfDescribable)
 def _describe_frozenset(instance: FrozenSetOfDescribable[_Description]) -> FrozenSet[_Description]:
     return frozenset(describe(item) for item in instance)
+
+
+@describe.instance(type)
+def _describe_type(instance: _AnyType) -> _AnyType:
+    return instance

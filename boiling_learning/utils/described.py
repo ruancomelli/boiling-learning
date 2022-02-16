@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Generic, List, Tuple, Type, TypeVar
 
 from boiling_learning.utils.descriptions import describe
@@ -10,6 +12,9 @@ _AnyS = TypeVar('_AnyS')
 _Description = TypeVar('_Description')
 
 
+_DescribedConstructedObject = Tuple[str, Pack[_AnyT, _AnyS]]
+
+
 class Described(Generic[_Any, _Description]):
     def __init__(self, value: _Any, description: Emptiable[_Description] = EMPTY) -> None:
         self.value = value
@@ -18,18 +23,15 @@ class Described(Generic[_Any, _Description]):
     def __describe__(self) -> _Description:
         return self.description
 
+    @classmethod
+    def from_constructor(
+        cls, type_: Type[_Any], params: Pack[_AnyT, _AnyS]
+    ) -> Described[_Any, _DescribedConstructedObject[_AnyT, _AnyS]]:
+        return cls(params.feed(type_), describe((type_, params)))
 
-_DescribedConstructedObject = Tuple[str, Pack[_AnyT, _AnyS]]
-
-
-def described_constructor(
-    type_: Type[_Any], params: Pack[_AnyT, _AnyS]
-) -> Described[_Any, _DescribedConstructedObject[_AnyT, _AnyS]]:
-    return Described(params.feed(type_), describe((type_, params)))
-
-
-def described_list(
-    described: List[Described[_Any, _Description]]
-) -> Described[List[_Any], List[_Description]]:
-    values = [item.value for item in described]
-    return Described(values)
+    @classmethod
+    def from_list(
+        cls, described: List[Described[_Any, _Description]]
+    ) -> Described[List[_Any], List[_Description]]:
+        values = [item.value for item in described]
+        return cls(values, describe(described))

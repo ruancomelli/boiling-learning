@@ -5,6 +5,7 @@ from functools import partial
 from pathlib import Path
 from typing import (
     Any,
+    Callable,
     Container,
     Dict,
     ItemsView,
@@ -35,19 +36,28 @@ from tensorflow.keras.layers import (  # Conv2D,; MaxPool2D,
     LayerNormalization,
 )
 from tensorflow.keras.mixed_precision.experimental import Policy
+from typing_extensions import ParamSpec
 
 from boiling_learning.datasets.datasets import DatasetSplits
 from boiling_learning.datasets.sliceable import (
     SliceableDataset,
     SupervisedSliceableDataset,
     concatenate,
+    sliceable_dataset_to_tensorflow_dataset,
 )
+from boiling_learning.io import json
 from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.io.storage import load, save
 from boiling_learning.management.allocators.json_allocator import default_table_allocator
-from boiling_learning.management.cacher import cache
+from boiling_learning.management.cacher import CachedFunction, Cacher, cache
+from boiling_learning.model.callbacks import (
+    AdditionalValidationSets,
+    ReduceLROnPlateau,
+    TimePrinter,
+)
 from boiling_learning.model.model import Model, ProblemType
 from boiling_learning.model.training import (
+    CompiledModel,
     CompileModelParams,
     FitModel,
     FitModelParams,
@@ -70,7 +80,8 @@ from boiling_learning.scripts import (
 )
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist, initialize_gpus
 from boiling_learning.utils.dataclasses import dataclass
-from boiling_learning.utils.described import Described, described_list
+from boiling_learning.utils.described import Described
+from boiling_learning.utils.functional import P
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import Many, typename
 from boiling_learning.utils.utils import enum_item, print_header, resolve
@@ -228,7 +239,6 @@ def get_frame(
 
 sample_ev = mit.first(boiling_cases_timed()[0])
 sample_frame = get_frame(0, sample_ev, boiling_preprocessors)
-print(sample_frame)
 
 
 def sliceable_dataset_from_video_and_transformers(
@@ -435,10 +445,55 @@ for (feature1, target1), (feature2, target2) in zip(items, other_items):
     assert np.allclose(feature1, feature2, 1e-8)
     assert target1 == target2
 
+_P = ParamSpec('_P')
 
-get_fit_model = cache(
-    allocator=default_table_allocator(analyses_path / 'models' / 'trained_models2')
-)(get_fit_model)
+
+class GetFitModel(CachedFunction[_P, Model]):
+    def __init__(self, cacher: Cacher[Model]) -> None:
+        super().__init__(get_fit_model, cacher)
+
+    def __call__(
+        self,
+        compiled_model: CompiledModel,
+        datasets: Described[DatasetTriplet[SupervisedSliceableDataset], json.JSONDataType],
+        params: FitModelParams,
+    ) -> Model:
+        path = self.allocate(compiled_model, datasets, params)
+        path = resolve(path, parents=True)
+
+        _, ds_val, _ = datasets.value
+        ds_val_g10 = sliceable_dataset_to_tensorflow_dataset(ds_val).filter(
+            lambda frame, hf: hf >= 10
+        )
+
+        if params.batch_size is not None:
+            ds_val_g10 = ds_val_g10.batch(params.batch_size)
+
+        params.callbacks.value.extend(
+            [
+                TimePrinter(),
+                tf.keras.callbacks.ModelCheckpoint(
+                    filepath=str(path.parent / f'last-trained-{path.name}'),
+                    save_best_only=False,
+                    monitor='val_loss',
+                ),
+                tf.keras.callbacks.experimental.BackupAndRestore(
+                    str(path.parent / f'backup-{path.name}')
+                ),
+                AdditionalValidationSets(
+                    [(ds_val_g10, 'HF10')], batch_size=params.batch_size, verbose=1
+                ),
+            ]
+        )
+
+        creator: Callable[[], Model] = P(compiled_model, datasets, params).partial(self.function)
+
+        return self.provide(creator, path)
+
+
+_get_fit_model = GetFitModel(
+    Cacher(allocator=default_table_allocator(analyses_path / 'models' / 'trained_models4'))
+)
 
 
 def fit_model(
@@ -455,7 +510,7 @@ def fit_model(
         description=(image_dataset_get_params, image_dataset_augment_params),
     )
     compiled_model = compile_model(architecture, compile_params)
-    model = get_fit_model(compiled_model, datasets, fit_model_params)
+    model = _get_fit_model(compiled_model, datasets, fit_model_params)
     return FitModel(
         model, datasets, compile_params=compiled_model.params, fit_params=fit_model_params
     )
@@ -508,6 +563,7 @@ def small_convnet(
 
 first_frame = ds_train.flatten()[0][0]
 
+
 model = fit_model(
     architecture=small_convnet(
         first_frame.shape[:3],
@@ -529,40 +585,37 @@ model = fit_model(
     fit_model_params=FitModelParams(
         batch_size=128,
         epochs=100,
-        callbacks=described_list(
+        callbacks=Described.from_list(
             [
-                # described_constructor(TimePrinter, P()),
-                #     described_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
-                #     described_constructor(
-                #         tf.keras.callbacks.ModelCheckpoint,
-                #         P(filepath='last-trained', save_best_only=False, monitor='val_loss'),
-                #     ),
-                #     described_constructor(
-                #         tf.keras.callbacks.EarlyStopping,
-                #         P(
-                #             monitor='val_loss',
-                #             min_delta=0,
-                #             patience=10,
-                #             baseline=None,
-                #             mode='auto',
-                #             restore_best_weights=True,
-                #         ),
-                #     ),
-                #     described_constructor(
-                #         ReduceLROnPlateau,
-                #         P(
-                #             monitor='val_loss',
-                #             factor=None,
-                #             patience=None,
-                #             min_delta=0.01,
-                #             min_delta_mode='relative',
-                #             min_lr=0,
-                #             mode='auto',
-                #             cooldown=2,
-                #         ),
-                #     ),
-                #     # described_constructor(tf.keras.callbacks.experimental.BackupAndRestore(str(backup_dir)), P()),
-                #     # described_constructor(AdditionalValidationSets, P()),
+                Described.from_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
+                Described.from_constructor(
+                    tf.keras.callbacks.ModelCheckpoint,
+                    P(filepath='last-trained', save_best_only=False, monitor='val_loss'),
+                ),
+                Described.from_constructor(
+                    tf.keras.callbacks.EarlyStopping,
+                    P(
+                        monitor='val_loss',
+                        min_delta=0,
+                        patience=10,
+                        baseline=None,
+                        mode='auto',
+                        restore_best_weights=True,
+                    ),
+                ),
+                Described.from_constructor(
+                    ReduceLROnPlateau,
+                    P(
+                        monitor='val_loss',
+                        factor=0.5,
+                        patience=5,
+                        min_delta=0.01,
+                        min_delta_mode='relative',
+                        min_lr=0,
+                        mode='auto',
+                        cooldown=2,
+                    ),
+                ),
             ]
         ),
     ),

@@ -51,10 +51,13 @@ class CachedFunction(Generic[_P, _R]):
         self.cacher: Cacher[_R] = cacher
 
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> _R:
-        path: Path = self.allocate(*args, **kwargs)
+        path = self.allocate(*args, **kwargs)
         creator: Callable[[], _R] = Pack(args, kwargs).partial(self.function)
 
-        provider: FileProvider = FileProvider(
+        return self.provide(creator, path)
+
+    def provide(self, creator: Callable[[], _R], path: Path) -> _R:
+        provider = FileProvider(
             path,
             Provider(
                 saver=self.cacher.saver,

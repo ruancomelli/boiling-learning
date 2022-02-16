@@ -89,7 +89,7 @@ class AdditionalValidationSets(Callback):
             )
 
             names = ['loss'] + [m.name for m in self.model.metrics]
-            full_names = [validation_set_name + '_' + name for name in names]
+            full_names = [f'{validation_set_name}_{name}' for name in names]
             full_results = [logs['loss']] + results
 
             for full_name, result in zip(full_names, full_results):
@@ -198,7 +198,7 @@ class TimePrinter(Callback):
         if 'on_train_batch_begin' in self.when:
             self.streamer(
                 f'--- epoch {self._current_epoch}: '
-                'beginning train_batch {batch} at {self._str_now()}',
+                f'beginning train_batch {batch} at {self._str_now()}',
                 end='',
             )
 
