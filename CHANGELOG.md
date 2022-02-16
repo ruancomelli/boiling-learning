@@ -1,3 +1,13 @@
+## v0.18.21 (2022-02-16)
+
+### Fix
+
+- fix end-to-end model training pipeline
+
+### Feat
+
+- **utils/described**: define special `Described` cases
+
 ## v0.18.20 (2022-02-14)
 
 ### Fix
