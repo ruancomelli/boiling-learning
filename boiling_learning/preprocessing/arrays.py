@@ -146,12 +146,14 @@ def random_flip_left_right(image: np.ndarray) -> np.ndarray:
     return A.HorizontalFlip(p=0.5).apply(image)
 
 
-def random_brightness(image: np.ndarray, delta: Union[float, Tuple[float, float]]) -> np.ndarray:
-    return A.RandomBrightness(delta, always_apply=True).apply(image)
-
-
-def random_contrast(image: np.ndarray, delta: Union[float, Tuple[float, float]]) -> np.ndarray:
-    return A.RandomContrast(delta, always_apply=True).apply(image)
+def random_brightness_contrast(
+    image: np.ndarray,
+    brightness_delta: Union[float, Tuple[float, float]],
+    contrast_delta: Union[float, Tuple[float, float]],
+) -> np.ndarray:
+    return A.RandomBrightnessContrast(brightness_delta, contrast_delta, always_apply=True).apply(
+        image
+    )
 
 
 def random_jpeg_quality(image: np.ndarray, min_quality: int, max_quality: int = 100) -> np.ndarray:

@@ -185,8 +185,11 @@ def _main_array(
     augmentors = [
         FeatureTransformer('random_cropper', arrays.random_crop, pack=P(width=width)),
         FeatureTransformer('random_left_right_flipper', arrays.random_flip_left_right),
-        FeatureTransformer('random_brightness', arrays.random_brightness, pack=P((-0.2, 0.2))),
-        FeatureTransformer('random_contrast', arrays.random_contrast, pack=P((0.6, 1.4))),
+        FeatureTransformer(
+            'random_brightness_contrast',
+            arrays.random_brightness_contrast,
+            pack=P((-0.2, 0.2), (0.6, 1.4)),
+        ),
         FeatureTransformer('random_quality', arrays.random_jpeg_quality, pack=P(30, 100)),
     ]
 

@@ -86,7 +86,7 @@ from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import Many, typename
 from boiling_learning.utils.utils import enum_item, print_header, resolve
 
-ray.init()
+ray.init(ignore_reinit_error=True)
 
 
 print_header('Initializing script')
