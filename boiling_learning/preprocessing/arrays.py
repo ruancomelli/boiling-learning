@@ -157,4 +157,9 @@ def random_brightness_contrast(
 
 
 def random_jpeg_quality(image: np.ndarray, min_quality: int, max_quality: int = 100) -> np.ndarray:
-    return A.JpegCompression(min_quality, max_quality, always_apply=True).apply(image)
+    return A.ImageCompression(
+        min_quality,
+        max_quality,
+        compression_type=A.ImageCompression.ImageCompressionType.JPEG,
+        always_apply=True,
+    ).apply(image)
