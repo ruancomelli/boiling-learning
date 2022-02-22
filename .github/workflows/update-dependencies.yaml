@@ -1,0 +1,70 @@
+# Based on https://gist.github.com/carstencodes/bdf6c1664f49f387b6994a02965e787c
+
+name: Update dependencies
+on:
+  schedule:
+  # Each day at 3 pm - set according to your own needs. See https://crontab.guru for explanations, if needed
+  - cron: 0 15 * * *
+
+jobs:
+  auto-update:
+    name: Perform automatic dependencies update
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    # Set machine up
+    - name: Set up Python 3.7
+      id: setup-python
+      uses: ./.github/actions/setup-python-environment
+      with:
+        python-version: '3.7'
+
+    # Update Packages
+    - name: Update dependencies to latest versions
+      id: pdm_update
+      run: |
+        message=$(pdm update) # If you only want to check if there newer versions, use PDM outdated
+        # Preserve whitespace characters
+        message="${message//'%'/'%25'}"
+        message="${message//$'\n'/'%0A'}"
+        message="${message//$'\r'/'%0D'}"
+        echo ::set-output name=message::${message}
+
+    # Check if lock file has been modified
+    - name: Get all files changed
+      id: changed_files
+      run: |
+        modified_version_files=$(git status --porcelain --untracked-files=no pdm.lock | sed 's/^ M //g')
+        echo ::set-output name=modified_files::${modified_version_files}
+        if [ -n "${modified_version_files}" ];
+        then
+          echo ::set-output name=any_modified::true
+        else
+          echo ::set-output name=any_modified::false
+        fi
+
+    # Create a new pull request, if changed files are present
+    - name: Commit and create Pull request
+      id: create-pr
+      uses: peter-evans/create-pull-request@v3
+      if: ${{ steps.changed_files.outputs.any_modified == 'true' }}
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        add-paths: |
+          pdm.lock
+        commit-message: 'build(deps): bump dependencies' # I prefer using dep: as prefix for dependency updates
+        committer: ${{ github.repository_owner }} <${{ github.repository_owner }}@users.noreply.github.com>
+        author: ${{ github.repository_owner }} <${{ github.repository_owner }}@users.noreply.github.com>
+        signoff: false
+        branch: auto-update/dependencies # The branch to use
+        branch-suffix: timestamp
+        delete-branch: true
+        title: Automatic update of dependent packages
+        body: ${{ steps.pdm_update.outputs.message }}
+        assignees: ${{ github.repository_owner }}
+        labels: |
+          automerge
+        reviewers: |
+          ${{ github.repository_owner }}
