@@ -1,3 +1,11 @@
+## v0.18.22 (2022-02-21)
+
+### Fix
+
+- fix deprecation warning from TensorFlow by using `tf.keras.callbacks.BackupAndRestore`
+- **preprocessing/arrays**: fix albumentations deprecation warning by using `ImageCompression`
+- **preprocessing/arrays**: fix albumentations deprecation warning by using `RandomBrightnessContrast`
+
 ## v0.18.21 (2022-02-16)
 
 ### Fix
