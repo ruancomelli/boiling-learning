@@ -477,9 +477,7 @@ class GetFitModel(CachedFunction[_P, Model]):
                     save_best_only=False,
                     monitor='val_loss',
                 ),
-                tf.keras.callbacks.experimental.BackupAndRestore(
-                    str(path.parent / f'backup-{path.name}')
-                ),
+                tf.keras.callbacks.BackupAndRestore(str(path.parent / f'backup-{path.name}')),
                 AdditionalValidationSets(
                     [(ds_val_g10, 'HF10')], batch_size=params.batch_size, verbose=1
                 ),
@@ -624,6 +622,9 @@ model = fit_model(
 )
 
 assert False, 'STOP!'
+
+# Running on big runtime + ocamlfuse: 1 epoch = 31min
+
 assert False, 'OLD CODE AHEAD!'
 
 
