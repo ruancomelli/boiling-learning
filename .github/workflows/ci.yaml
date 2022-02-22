@@ -26,24 +26,3 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - run: ${{ matrix.task }}
-
-  codecov:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Download Codecov uploader
-      run: |
-        curl -Os https://uploader.codecov.io/latest/linux/codecov
-
-    # See https://docs.codecov.com/docs/codecov-uploader#integrity-checking-the-uploader
-    - name: Check uploader integrity
-      run: |
-        curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import
-        curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
-        curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
-        gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
-        shasum -a 256 -c codecov.SHA256SUM
-
-    - run: |
-        chmod +x codecov
-        ./codecov
