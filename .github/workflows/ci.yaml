@@ -31,14 +31,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Set up Python ${{ matrix.python-version }}
-      id: setup-python
-      uses: ./.github/actions/setup-python-environment
-      with:
-        python-version: ${{ matrix.python-version }}
-
     - name: Download Codecov uploader
       run: |
         curl -Os https://uploader.codecov.io/latest/linux/codecov
