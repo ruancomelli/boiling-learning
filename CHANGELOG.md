@@ -1,3 +1,9 @@
+## v0.18.23 (2022-02-22)
+
+### Feat
+
+- **datasets**: add option to batch, shuffle and prefetch datasets constructed from sliceable datasets
+
 ## v0.18.22 (2022-02-21)
 
 ### Fix
