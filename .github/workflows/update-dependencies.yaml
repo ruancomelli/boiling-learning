@@ -4,7 +4,7 @@ name: Update dependencies
 on:
   schedule:
   # Each day at 3 pm - set according to your own needs. See https://crontab.guru for explanations, if needed
-  - cron: 0 15 * * *
+  - cron: 0 17 * * *
 
 jobs:
   auto-update:
@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - uses: actions/checkout@v2
 
     # Set machine up
     - name: Set up Python 3.7
