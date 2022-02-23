@@ -29,6 +29,7 @@ import numpy as np
 import tensorflow as tf
 from iteround import saferound
 from slicerator import pipeline
+from tensorflow.data import AUTOTUNE
 from typing_extensions import TypeGuard
 
 from boiling_learning.io import json
@@ -388,11 +389,26 @@ class SliceableDataset(Sequence[_T]):
 
 def sliceable_dataset_to_tensorflow_dataset(
     dataset: SliceableDataset[Any],
+    *,
+    batch_size: Optional[int] = None,
+    prefetch: bool = False,
+    shuffle: bool = False,
 ) -> tf.data.Dataset:
     sample = dataset.flatten()[0]
     typespec = auto_spec(sample)
 
-    return tf.data.Dataset.from_generator(lambda: dataset, output_signature=typespec)
+    if shuffle:
+        dataset = dataset.shuffle()
+
+    ds = tf.data.Dataset.from_generator(lambda: dataset, output_signature=typespec)
+
+    if batch_size is not None:
+        ds = ds.batch(batch_size)
+
+    if prefetch:
+        ds = ds.prefetch(AUTOTUNE)
+
+    return ds
 
 
 class SupervisedSliceableDataset(SliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y]):

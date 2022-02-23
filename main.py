@@ -462,12 +462,14 @@ class GetFitModel(CachedFunction[_P, Model]):
         path = resolve(path, parents=True)
 
         _, ds_val, _ = datasets.value
-        ds_val_g10 = sliceable_dataset_to_tensorflow_dataset(ds_val).filter(
+        ds_val_g10 = sliceable_dataset_to_tensorflow_dataset(ds_val, shuffle=True).filter(
             lambda frame, hf: hf >= 10
         )
 
         if params.batch_size is not None:
             ds_val_g10 = ds_val_g10.batch(params.batch_size)
+
+        ds_val_g10 = ds_val_g10.prefetch()
 
         params.callbacks.value.extend(
             [

@@ -102,12 +102,12 @@ def get_fit_model(
     model = compiled_model.model
 
     ds = datasets.value
-    ds_train = sliceable_dataset_to_tensorflow_dataset(ds[0])
-    ds_val = sliceable_dataset_to_tensorflow_dataset(ds[1])
-
-    if params.batch_size is not None:
-        ds_train = ds_train.batch(params.batch_size)
-        ds_val = ds_val.batch(params.batch_size)
+    ds_train = sliceable_dataset_to_tensorflow_dataset(
+        ds[0], batch_size=params.batch_size, shuffle=True, prefetch=True
+    )
+    ds_val = sliceable_dataset_to_tensorflow_dataset(
+        ds[1], batch_size=params.batch_size, shuffle=True, prefetch=True
+    )
 
     model.fit(
         ds_train,
