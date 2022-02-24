@@ -40,6 +40,10 @@ check_valid_python:
 format:
 	@$(call $(.FORMAT))
 
+.PHONY: vulture
+vulture:
+	@pdm run vulture --ignore-decorators @*.dispatch*,@*.instance* --ignore-names __*[!_][!_] $(.PROJECT) main.py
+
 .PHONY: autofix
 autofix:
 	@-$(call $(.FORMAT))

@@ -627,8 +627,7 @@ model = fit_model(
 assert False, 'STOP!'
 
 # Running on big runtime + ocamlfuse: 1 epoch = 31min
-
-assert False, 'OLD CODE AHEAD!'
+# Running on regular runtime + Google Drive: 1 epoch = 2h+
 
 
 # description_comparer = partial(
