@@ -393,6 +393,7 @@ def sliceable_dataset_to_tensorflow_dataset(
     batch_size: Optional[int] = None,
     prefetch: bool = False,
     shuffle: bool = False,
+    snapshot_path: Optional[Path] = None,
 ) -> tf.data.Dataset:
     sample = dataset.flatten()[0]
     typespec = auto_spec(sample)
@@ -401,6 +402,9 @@ def sliceable_dataset_to_tensorflow_dataset(
         dataset = dataset.shuffle()
 
     ds = tf.data.Dataset.from_generator(lambda: dataset, output_signature=typespec)
+
+    if snapshot_path is not None:
+        ds = ds.snapshot(str(snapshot_path))
 
     if batch_size is not None:
         ds = ds.batch(batch_size)
