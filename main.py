@@ -26,6 +26,7 @@ import numpy as np
 import ray
 import tensorflow as tf
 import tensorflow_addons as tfa
+from tensorflow.data import AUTOTUNE
 from tensorflow.keras.layers import (  # Conv2D,; MaxPool2D,
     Activation,
     AveragePooling2D,
@@ -469,7 +470,7 @@ class GetFitModel(CachedFunction[_P, Model]):
         if params.batch_size is not None:
             ds_val_g10 = ds_val_g10.batch(params.batch_size)
 
-        ds_val_g10 = ds_val_g10.prefetch()
+        ds_val_g10 = ds_val_g10.prefetch(AUTOTUNE)
 
         params.callbacks.value.extend(
             [
