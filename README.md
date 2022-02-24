@@ -76,6 +76,7 @@ pip install -r requirements-dev.txt
 Then install the [pre-commit](https://pre-commit.com/) git hooks:
 ```sh
 pre-commit install
+pre-commit install --hook-type commit-msg
 ```
 
 ### Making changes

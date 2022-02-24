@@ -1,8 +1,9 @@
 repos:
-- repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
-  rev: v8.0.0
+
+- repo: https://github.com/commitizen-tools/commitizen
+  rev: master
   hooks:
-  - id: commitlint
+  - id: commitizen
     stages: [commit-msg]
 
 - repo: https://github.com/humitos/mirrors-autoflake
