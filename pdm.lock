@@ -229,18 +229,18 @@ dependencies = [
 
 [[package]]
 name = "boto3"
-version = "1.21.8"
+version = "1.21.9"
 requires_python = ">= 3.6"
 summary = "The AWS SDK for Python"
 dependencies = [
-    "botocore<1.25.0,>=1.24.8",
+    "botocore<1.25.0,>=1.24.9",
     "jmespath<1.0.0,>=0.7.1",
     "s3transfer<0.6.0,>=0.5.0",
 ]
 
 [[package]]
 name = "botocore"
-version = "1.24.8"
+version = "1.24.9"
 requires_python = ">= 3.6"
 summary = "Low-level, data-driven core of boto 3."
 dependencies = [
@@ -1256,7 +1256,7 @@ summary = "The PyPA recommended tool for installing Python packages."
 
 [[package]]
 name = "pip-api"
-version = "0.0.27"
+version = "0.0.28"
 requires_python = ">=3.7"
 summary = "An unofficial, importable pip API"
 dependencies = [
@@ -2296,13 +2296,12 @@ content_hash = "sha256:5b02b027f8b135b470673d63338fe8f5a1554f35f6ee3aec4015fadb2
     {file = "bokeh-2.4.2-py3-none-any.whl", hash = "sha256:2a842d717feeee802e668054277c09054b6f1561557a16dddaf5f7c452f2728c"},
     {file = "bokeh-2.4.2.tar.gz", hash = "sha256:f0a4b53364ed3b7eb936c5cb1a4f4132369e394c7ae0a8ef420459410958033d"},
 ]
-"boto3 1.21.8" = [
-    {file = "boto3-1.21.8-py3-none-any.whl", hash = "sha256:9b6903fe9cc92d2f6111db28675263f1ab45adbcf1483025c82a304ce7790b71"},
-    {file = "boto3-1.21.8.tar.gz", hash = "sha256:f2ce641957c1782e382548ced4a447189e45851bbe58c1f6752ff2b661527de7"},
+"boto3 1.21.9" = [
+    {file = "boto3-1.21.9-py3-none-any.whl", hash = "sha256:32080e2d956b222f36b76f8fec532ec237ddb4a935dd1c9bb79c759fbe4a5868"},
+    {file = "boto3-1.21.9.tar.gz", hash = "sha256:bd7c71274e9257596879f99cff3d0f531b801e567e509b5e3d613bd2033a7279"},
 ]
-"botocore 1.24.8" = [
-    {file = "botocore-1.24.8-py3-none-any.whl", hash = "sha256:9fbc5c57b31850c51c87abc3e166ed4e0f343665bec4e1a0ff814fbc9704642c"},
-    {file = "botocore-1.24.8.tar.gz", hash = "sha256:a5431d806dc75fb1844463d921759fcd8d387674443af8d7fd0867f296b02759"},
+"botocore 1.24.9" = [
+    {file = "botocore-1.24.9-py3-none-any.whl", hash = "sha256:c44758c487df7a357c4a103d959962d78e225d1ab6c9eeda4c77f79a410ccd19"},
 ]
 "cached-property 1.5.2" = [
     {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
@@ -3477,9 +3476,9 @@ content_hash = "sha256:5b02b027f8b135b470673d63338fe8f5a1554f35f6ee3aec4015fadb2
     {file = "pip-22.0.3-py3-none-any.whl", hash = "sha256:c146f331f0805c77017c6bb9740cec4a49a0d4582d0c3cc8244b057f83eca359"},
     {file = "pip-22.0.3.tar.gz", hash = "sha256:f29d589df8c8ab99c060e68ad294c4a9ed896624f6368c5349d70aa581b333d0"},
 ]
-"pip-api 0.0.27" = [
-    {file = "pip_api-0.0.27-py3-none-any.whl", hash = "sha256:da0a10870b9105bc7ff7f347793db885c5c30102032de9112a6118b7af645478"},
-    {file = "pip-api-0.0.27.tar.gz", hash = "sha256:354825f2fa89b9b1c56e943be32823c09590e13055a57af5590456ff7d6524bd"},
+"pip-api 0.0.28" = [
+    {file = "pip_api-0.0.28-py3-none-any.whl", hash = "sha256:68631896064751baad4b6fc675bc1281a4aa930453f9c6a71b6c0de7aaf095c4"},
+    {file = "pip-api-0.0.28.tar.gz", hash = "sha256:caabb697f40a2cfa6726405a7b90c8fd1794ec39ea383fa5313b3ff0ee88f001"},
 ]
 "pipreqs 0.4.11" = [
     {file = "pipreqs-0.4.11-py2.py3-none-any.whl", hash = "sha256:1510a91ae73ef6a8e2f24ffc8751132251cd61a01296d61538f37d1491841640"},
