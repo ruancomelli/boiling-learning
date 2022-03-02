@@ -229,18 +229,18 @@ dependencies = [
 
 [[package]]
 name = "boto3"
-version = "1.21.9"
+version = "1.21.10"
 requires_python = ">= 3.6"
 summary = "The AWS SDK for Python"
 dependencies = [
-    "botocore<1.25.0,>=1.24.9",
+    "botocore<1.25.0,>=1.24.10",
     "jmespath<1.0.0,>=0.7.1",
     "s3transfer<0.6.0,>=0.5.0",
 ]
 
 [[package]]
 name = "botocore"
-version = "1.24.9"
+version = "1.24.10"
 requires_python = ">= 3.6"
 summary = "Low-level, data-driven core of boto 3."
 dependencies = [
@@ -2296,12 +2296,13 @@ content_hash = "sha256:5b02b027f8b135b470673d63338fe8f5a1554f35f6ee3aec4015fadb2
     {file = "bokeh-2.4.2-py3-none-any.whl", hash = "sha256:2a842d717feeee802e668054277c09054b6f1561557a16dddaf5f7c452f2728c"},
     {file = "bokeh-2.4.2.tar.gz", hash = "sha256:f0a4b53364ed3b7eb936c5cb1a4f4132369e394c7ae0a8ef420459410958033d"},
 ]
-"boto3 1.21.9" = [
-    {file = "boto3-1.21.9-py3-none-any.whl", hash = "sha256:32080e2d956b222f36b76f8fec532ec237ddb4a935dd1c9bb79c759fbe4a5868"},
-    {file = "boto3-1.21.9.tar.gz", hash = "sha256:bd7c71274e9257596879f99cff3d0f531b801e567e509b5e3d613bd2033a7279"},
+"boto3 1.21.10" = [
+    {file = "boto3-1.21.10-py3-none-any.whl", hash = "sha256:0122f8428a23efd29283c9ec92e7da1a8f35a69ddfd0635131cc5ca558723c4f"},
+    {file = "boto3-1.21.10.tar.gz", hash = "sha256:365156a9e55f08f2394e0bc84fc953f2a200f63adb08091c2ea06d7b025ea80b"},
 ]
-"botocore 1.24.9" = [
-    {file = "botocore-1.24.9-py3-none-any.whl", hash = "sha256:c44758c487df7a357c4a103d959962d78e225d1ab6c9eeda4c77f79a410ccd19"},
+"botocore 1.24.10" = [
+    {file = "botocore-1.24.10-py3-none-any.whl", hash = "sha256:fc4bf1c71fabd84c35b7fb728268a6f9f491493e9ee7a5efb603425bfe8a0277"},
+    {file = "botocore-1.24.10.tar.gz", hash = "sha256:7429f6e54851d3f40fa9147ca1517f5f54101865ae4e79ba2095f580ff85333e"},
 ]
 "cached-property 1.5.2" = [
     {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
