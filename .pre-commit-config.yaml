@@ -1,31 +1,31 @@
 repos:
 
 - repo: https://github.com/commitizen-tools/commitizen
-  rev: master
+  rev: v2.21.2
   hooks:
   - id: commitizen
     stages: [commit-msg]
 
 - repo: https://github.com/humitos/mirrors-autoflake
-  rev: v1.3
+  rev: v1.1
   hooks:
   - id: autoflake
     args: [--check, --expand-star-imports, --ignore-init-module-imports, --recursive, --remove-all-unused-imports, --remove-duplicate-keys, --remove-unused-variables, boiling_learning, tests]
 
 - repo: https://github.com/hakancelik96/unimport
-  rev: 0.8.3
+  rev: 0.9.4
   hooks:
   - id: unimport
     args: [--check, --gitignore, --ignore-init, --include-star-import, boiling_learning, tests]
 
 - repo: https://github.com/psf/black
-  rev: 21.6b0
+  rev: 22.1.0
   hooks:
   - id: black
     args: [--config, pyproject.toml, --check]
 
 - repo: https://github.com/pycqa/isort
-  rev: 5.9.2
+  rev: 5.10.1
   hooks:
   - id: isort
     name: isort (python)
@@ -40,7 +40,7 @@ repos:
     args: [--check]
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.0.1
+  rev: v4.1.0
   hooks:
   - id: double-quote-string-fixer
   - id: end-of-file-fixer
@@ -49,13 +49,13 @@ repos:
   - id: check-ast
 
 - repo: https://github.com/pycqa/flake8
-  rev: 3.9.2
+  rev: 4.0.1
   hooks:
   - id: flake8
     args: [--count, '--select=E71,E73,E74,E9,F63,F7,F82,F83', --show-source, --statistics, boiling_learning]
 
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.1.0
+  rev: v2.3.0
   hooks:
   - id: pretty-format-yaml
     args: [--autofix, --indent, '2']
