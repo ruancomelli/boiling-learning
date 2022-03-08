@@ -1,3 +1,14 @@
+## v0.18.24 (2022-03-07)
+
+### Feat
+
+- **model/training**: accept dataset cache dir when fitting model
+- **datasets/sliceable**: accept snapshot path in conversion from sliceable datasets to tensorflow datasets
+
+### Refactor
+
+- improve type-annotations and match main script with Google Colab
+
 ## v0.18.23 (2022-02-22)
 
 ### Feat
