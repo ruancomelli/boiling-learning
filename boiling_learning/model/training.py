@@ -97,16 +97,16 @@ class FitModel:
 def get_fit_model(
     compiled_model: CompiledModel,
     datasets: Described[DatasetTriplet[SupervisedSliceableDataset], json.JSONDataType],
-    params: FitModelParams,
+    params: FitModelParams
 ) -> Model:
     model = compiled_model.model
 
-    ds = datasets.value
+    ds_train, ds_val, _ = datasets.value
     ds_train = sliceable_dataset_to_tensorflow_dataset(
-        ds[0], batch_size=params.batch_size, shuffle=True, prefetch=True
+        ds_train, batch_size=params.batch_size, shuffle=True, prefetch=True
     )
     ds_val = sliceable_dataset_to_tensorflow_dataset(
-        ds[1], batch_size=params.batch_size, shuffle=True, prefetch=True
+        ds_val, batch_size=params.batch_size, shuffle=True, prefetch=True
     )
 
     model.fit(

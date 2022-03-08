@@ -590,10 +590,6 @@ model = fit_model(
             [
                 Described.from_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
                 Described.from_constructor(
-                    tf.keras.callbacks.ModelCheckpoint,
-                    P(filepath='last-trained', save_best_only=False, monitor='val_loss'),
-                ),
-                Described.from_constructor(
                     tf.keras.callbacks.EarlyStopping,
                     P(
                         monitor='val_loss',
@@ -623,6 +619,7 @@ model = fit_model(
     image_dataset_get_params=get_image_dataset_params,
     image_dataset_augment_params=augment_dataset_params,
 )
+
 
 assert False, 'STOP!'
 

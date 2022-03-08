@@ -200,7 +200,7 @@ class SliceableDataset(Sequence[_T]):
         return SliceableDataset.from_func(getitem, length=len(self))
 
     def map(
-        self, map_func: Callable[[_T], _U], num_parallel_calls: Optional[int] = None
+        self, __map_func: Callable[[_T], _U], *, num_parallel_calls: Optional[int] = None
     ) -> SliceableDataset[_U]:
         if num_parallel_calls is not None:
             warnings.warn(
@@ -208,7 +208,7 @@ class SliceableDataset(Sequence[_T]):
                 'and supported only for compatibility with `tf.data.Dataset`s'
             )
 
-        pipeline_map = pipeline(map_func)
+        pipeline_map = pipeline(__map_func)
 
         return SliceableDataset(pipeline_map(self._data))
 
@@ -445,9 +445,14 @@ class SupervisedSliceableDataset(SliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y
         return SupervisedSliceableDataset.from_pairs(super().__getitem__(key))
 
     def map(
-        self, map_func: Callable[[Tuple[_X, _Y]], Tuple[_X2, _Y2]]
+        self,
+        __map_func: Callable[[Tuple[_X, _Y]], Tuple[_X2, _Y2]],
+        *,
+        num_parallel_calls: Optional[int] = None,
     ) -> SupervisedSliceableDataset[_X2, _Y2]:
-        return SupervisedSliceableDataset.from_pairs(super().map(map_func))
+        return SupervisedSliceableDataset.from_pairs(
+            super().map(__map_func, num_parallel_calls=num_parallel_calls)
+        )
 
     def shuffle(self) -> SupervisedSliceableDataset[_X, _Y]:
         return SupervisedSliceableDataset.from_pairs(super().shuffle())
