@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json as _json
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 from dataclassy import dataclass
@@ -97,16 +98,18 @@ class FitModel:
 def get_fit_model(
     compiled_model: CompiledModel,
     datasets: Described[DatasetTriplet[SupervisedSliceableDataset], json.JSONDataType],
-    params: FitModelParams
+    params: FitModelParams,
+    *,
+    cache: Optional[Path] = None,
 ) -> Model:
     model = compiled_model.model
 
     ds_train, ds_val, _ = datasets.value
     ds_train = sliceable_dataset_to_tensorflow_dataset(
-        ds_train, batch_size=params.batch_size, shuffle=True, prefetch=True
+        ds_train, batch_size=params.batch_size, shuffle=True, prefetch=True, cache=cache
     )
     ds_val = sliceable_dataset_to_tensorflow_dataset(
-        ds_val, batch_size=params.batch_size, shuffle=True, prefetch=True
+        ds_val, batch_size=params.batch_size, shuffle=True, prefetch=True, cache=cache
     )
 
     model.fit(

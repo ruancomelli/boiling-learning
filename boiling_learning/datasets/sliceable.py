@@ -394,6 +394,7 @@ def sliceable_dataset_to_tensorflow_dataset(
     prefetch: bool = False,
     shuffle: bool = False,
     snapshot_path: Optional[Path] = None,
+    cache: Optional[Path] = None,
 ) -> tf.data.Dataset:
     sample = dataset.flatten()[0]
     typespec = auto_spec(sample)
@@ -408,6 +409,9 @@ def sliceable_dataset_to_tensorflow_dataset(
 
     if batch_size is not None:
         ds = ds.batch(batch_size)
+
+    if cache is not None:
+        ds = ds.cache(str(cache))
 
     if prefetch:
         ds = ds.prefetch(AUTOTUNE)
