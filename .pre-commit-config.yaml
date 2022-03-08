@@ -6,12 +6,6 @@ repos:
   - id: commitizen
     stages: [commit-msg]
 
-- repo: https://github.com/humitos/mirrors-autoflake
-  rev: v1.1
-  hooks:
-  - id: autoflake
-    args: [--check, --expand-star-imports, --ignore-init-module-imports, --recursive, --remove-all-unused-imports, --remove-duplicate-keys, --remove-unused-variables, boiling_learning, tests]
-
 - repo: https://github.com/hakancelik96/unimport
   rev: 0.9.4
   hooks:
