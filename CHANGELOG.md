@@ -1,3 +1,15 @@
+## v0.19.0 (2022-03-08)
+
+### Refactor
+
+- remove loads of dead code
+- remove dataset creators & scripts `make_dataset` and `make_model`
+- **main**: clean up old code from main
+
+### BREAKING CHANGE
+
+- removed multiple functions, classes and modules.
+
 ## v0.18.24 (2022-03-07)
 
 ### Feat
