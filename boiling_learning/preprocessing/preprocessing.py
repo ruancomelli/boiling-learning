@@ -2,9 +2,7 @@ import os
 from typing import Callable, Optional, TypeVar
 
 import modin.pandas as pd
-import skimage
 import tensorflow as tf
-from dataclassy import dataclass
 from tensorflow.data import AUTOTUNE
 
 from boiling_learning.utils.utils import PathLike, resolve
@@ -57,38 +55,6 @@ def sync_dataframes(
         concat = concat.interpolate(method='time', limit_direction='both')
     concat = concat.loc[dest_df.index]
     return concat
-
-
-@dataclass(frozen=True, kwargs=True)
-class SizeSpec:
-    height: int
-    width: int
-
-
-@dataclass(frozen=True, kwargs=True)
-class CropSpec:
-    offset_box: SizeSpec
-    size: SizeSpec
-
-
-def simple_image_preprocessor(
-    interest_region: CropSpec, final_size: SizeSpec, downscale_factor: int
-) -> Callable:
-    def preprocessor(img):
-        img = tf.image.rgb_to_grayscale(img)
-        img = tf.image.crop_to_bounding_box(
-            img,
-            offset_height=interest_region.offset_box.height,
-            offset_width=interest_region.offset_box.width,
-            target_height=interest_region.size.height,
-            target_width=interest_region.size.width,
-        )
-        img = tf.image.random_crop(img, (final_size.height, final_size.width, 1))
-        img = skimage.transform.downscale_local_mean(img, (downscale_factor, downscale_factor, 1))
-
-        return img
-
-    return preprocessor
 
 
 def snapshotter(

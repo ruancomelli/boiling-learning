@@ -4,12 +4,10 @@ import json as _json
 import pickle
 import warnings
 from contextlib import nullcontext
-from typing import Any, Callable, Dict, Generic, Mapping, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, Dict, Generic, Mapping, Optional, Tuple, Type, TypeVar
 
-import cv2
 import funcy
 import json_tricks
-import numpy as np
 import tensorflow as tf
 import yogadl
 import yogadl.storage
@@ -35,27 +33,6 @@ BoolFlaggedLoaderFunction = LoaderFunction[BoolFlagged[_S]]
 
 class DatasetTriplet(Tuple[_Dataset, Optional[_Dataset], _Dataset], Generic[_Dataset]):
     pass
-
-
-def add_bool_flag(
-    loader: LoaderFunction[_T],
-    expected_exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]] = FileNotFoundError,
-) -> BoolFlaggedLoaderFunction[Optional[_T]]:
-    def _loader(path: PathLike) -> BoolFlagged[Optional[_T]]:
-        try:
-            return True, loader(path)
-        except expected_exceptions:
-            return False, None
-
-    return _loader
-
-
-def save_image(image: np.ndarray, path: PathLike) -> None:
-    cv2.imwrite(str(ensure_parent(path)), image)
-
-
-def load_image(path: PathLike, flag: Optional[int] = cv2.IMREAD_COLOR) -> np.ndarray:
-    return cv2.imread(str(resolve(path)), flag)
 
 
 def save_serialized(save_map: Mapping[_T, SaverFunction[_S]]) -> SaverFunction[Mapping[_T, _S]]:

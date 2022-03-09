@@ -74,13 +74,6 @@ class CachedFunction(Generic[_P, _R]):
         return self.cacher.allocate(*args, **kwargs)
 
 
-def function_cacher(cacher: Cacher[_R]) -> Callable[[Callable[_P, _R]], CachedFunction[_P, _R]]:
-    def _wrapper(function: Callable[_P, _R]) -> CachedFunction[_P, _R]:
-        return CachedFunction(function, cacher)
-
-    return _wrapper
-
-
 def cache(
     allocator: Callable[[Pack], Path],
     saver: SaverFunction[_R] = save,

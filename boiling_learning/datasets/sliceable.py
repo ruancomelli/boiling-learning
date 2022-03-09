@@ -322,7 +322,7 @@ class SliceableDataset(Sequence[_T]):
 
         return tuple(splits)
 
-    def prefetch(self, buffer_size: Optional[int] = None) -> SliceableDataset[_T]:
+    def prefetch(self, _buffer_size: Optional[int] = None) -> SliceableDataset[_T]:
         warnings.warn(
             '`SliceableDataset.prefetch` is a no-op, kept only for consistency'
             ' with `tf.data.Dataset`s.'
@@ -501,12 +501,6 @@ class SupervisedSliceableDataset(SliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y
 
 def concatenate(datasets: Iterable[SliceableDataset[_T]]) -> SliceableDataset[_T]:
     return reduce(SliceableDataset[_T].concatenate, datasets)
-
-
-ImageSliceableDataset = SupervisedSliceableDataset[np.ndarray, _Y]
-PairTransformer = Callable[[_X1, _Y1], Tuple[_X2, _Y2]]
-FeatureTransformer = PairTransformer[_X1, _Y, _X2, _Y]
-TargetTransformer = PairTransformer[_X, _Y1, _X, _Y2]
 
 
 @json.encode.instance(np.ndarray)
