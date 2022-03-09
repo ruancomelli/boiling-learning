@@ -1581,18 +1581,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "seaborn"
-version = "0.11.2"
-requires_python = ">=3.6"
-summary = "seaborn: statistical data visualization"
-dependencies = [
-    "matplotlib>=2.2",
-    "numpy>=1.15",
-    "pandas>=0.23",
-    "scipy>=1.0",
-]
-
-[[package]]
 name = "send2trash"
 version = "1.8.0"
 summary = "Send file to trash natively under Mac OS X, Windows and Linux."
@@ -1980,7 +1968,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:3389fa5ce5a2fa9902558938c9f0a66efa37cea58f7aa55239e166571c295dba"
+content_hash = "sha256:ef7789702fc6136ac131ee8527e6d4ae35e68bdc0ba0c0d8c7647a3754d502b4"
 
 [metadata.files]
 "absl-py 1.0.0" = [
@@ -3785,10 +3773,6 @@ content_hash = "sha256:3389fa5ce5a2fa9902558938c9f0a66efa37cea58f7aa55239e166571
     {file = "scipy-1.7.3-cp39-cp39-win32.whl", hash = "sha256:2c56b820d304dffcadbbb6cbfbc2e2c79ee46ea291db17e288e73cd3c64fefa9"},
     {file = "scipy-1.7.3-cp39-cp39-win_amd64.whl", hash = "sha256:3f78181a153fa21c018d346f595edd648344751d7f03ab94b398be2ad083ed3e"},
     {file = "scipy-1.7.3.tar.gz", hash = "sha256:ab5875facfdef77e0a47d5fd39ea178b58e60e454a4c85aa1e52fcb80db7babf"},
-]
-"seaborn 0.11.2" = [
-    {file = "seaborn-0.11.2-py3-none-any.whl", hash = "sha256:85a6baa9b55f81a0623abddc4a26b334653ff4c6b18c418361de19dbba0ef283"},
-    {file = "seaborn-0.11.2.tar.gz", hash = "sha256:cf45e9286d40826864be0e3c066f98536982baf701a7caa386511792d61ff4f6"},
 ]
 "send2trash 1.8.0" = [
     {file = "Send2Trash-1.8.0-py3-none-any.whl", hash = "sha256:f20eaadfdb517eaca5ce077640cb261c7d2698385a6a0f072a4a5447fd49fa08"},

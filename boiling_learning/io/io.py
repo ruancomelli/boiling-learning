@@ -13,20 +13,13 @@ from boiling_learning.utils.functional import Kwargs
 from boiling_learning.utils.utils import PathLike, is_, resolve
 
 _T = TypeVar('_T')
-_S = TypeVar('_S')
-_Dataset = TypeVar('_Dataset')
-SaverFunction = Callable[[_S, PathLike], Any]
-LoaderFunction = Callable[[PathLike], _S]
-OptionalDatasetTriplet = Tuple[
-    Optional[_Dataset],
-    Optional[_Dataset],
-    Optional[_Dataset],
-]
-BoolFlagged = Tuple[bool, _S]
-BoolFlaggedLoaderFunction = LoaderFunction[BoolFlagged[_S]]
+SaverFunction = Callable[[_T, PathLike], Any]
+LoaderFunction = Callable[[PathLike], _T]
+BoolFlagged = Tuple[bool, _T]
+BoolFlaggedLoaderFunction = LoaderFunction[BoolFlagged[_T]]
 
 
-class DatasetTriplet(Tuple[_Dataset, Optional[_Dataset], _Dataset], Generic[_Dataset]):
+class DatasetTriplet(Tuple[_T, Optional[_T], _T], Generic[_T]):
     pass
 
 

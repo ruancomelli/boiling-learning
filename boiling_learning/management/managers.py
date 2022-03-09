@@ -225,25 +225,14 @@ class Manager(
         return self._path
 
     @property
-    def table_path(self) -> Path:
-        return self._table_path
-
-    @property
     def entries_dir(self) -> Path:
         return self._entries_dir_path
-
-    @property
-    def shared_dir(self) -> Path:
-        return self._shared_dir_path
 
     def entry_dir(self, elem_id: str) -> Path:
         return resolve(self.entries_dir / elem_id, dir=True)
 
     def elem_path(self, elem_id: str) -> Path:
         return resolve(self.entry_dir(elem_id) / self.key_names.elements, parents=True)
-
-    def elem_workspace(self, elem_id: str) -> Path:
-        return resolve(self.entry_dir(elem_id) / self.key_names.workspace, dir=True)
 
     def _initialize_lookup_table(self) -> None:
         self._lookup_table = {self.key_names.entries: {}}
@@ -537,24 +526,6 @@ class Manager(
             raise RuntimeError('loading failed with *raise_if_load_fails*.')
         else:
             return success, elem
-
-    def retrieve_elems(
-        self, entry_pred: Optional[Callable[[Mapping], bool]] = None
-    ) -> Iterable[Tuple[str, _ElemType]]:
-        if entry_pred is None:
-            elems = self.entries.keys()
-        else:
-            elems = (elem_id for elem_id, entry in self.entries.items() if entry_pred(entry))
-
-        elems = ((elem_id, self.elem_path(elem_id)) for elem_id in elems)
-
-        elems = (
-            (elem_id, self._load_elem(path, raise_if_load_fails=False)) for elem_id, path in elems
-        )
-
-        elems = ((elem_id, elem) for elem_id, (success, elem) in elems if success)
-
-        return elems
 
     def provide_entry(
         self,
