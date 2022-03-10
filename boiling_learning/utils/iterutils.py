@@ -103,19 +103,7 @@ def distance_maximized_evenly_spaced_indices(total: int, count: int) -> List[int
     return evenly_spaced_indices(total, count, goal=EvenlySpacedGoal.DISTANCE)
 
 
-def spread_maximized_evenly_spaced_indices(total: int, count: int) -> List[int]:
-    return evenly_spaced_indices(total, count, goal=EvenlySpacedGoal.SPREAD)
-
-
 def evenly_spaced_indices_mask(total: int, count: int, *, goal: EvenlySpacedGoal) -> List[bool]:
     indices = frozenset(evenly_spaced_indices(total, count, goal=goal))
 
     return [(x in indices) for x in range(total)]
-
-
-def distance_maximized_evenly_spaced_indices_mask(total: int, count: int) -> List[bool]:
-    return evenly_spaced_indices_mask(total, count, goal=EvenlySpacedGoal.DISTANCE)
-
-
-def spread_maximized_evenly_spaced_indices_mask(total: int, count: int) -> List[bool]:
-    return evenly_spaced_indices_mask(total, count, goal=EvenlySpacedGoal.SPREAD)

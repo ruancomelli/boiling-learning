@@ -10,7 +10,7 @@ from tensorflow.python.keras import backend as K
 from tensorflow.python.platform import tf_logging as logging
 from typing_extensions import Protocol
 
-from boiling_learning.io.io import load_json, save_json
+from boiling_learning.io import json
 from boiling_learning.utils.utils import PathLike, ensure_parent
 
 
@@ -375,7 +375,7 @@ class SaveHistory(Callback):
         self.history: DefaultDict[str, list] = defaultdict(list)
 
         if mode is SaveHistoryMode.APPEND and self.path.is_file():
-            self.history.update(load_json(self.path))
+            self.history.update(json.load(self.path))
 
     def _append_to_history(self, logs: Dict[str, Any]) -> None:
         for key, value in logs.items():
@@ -383,4 +383,4 @@ class SaveHistory(Callback):
 
     def on_epoch_end(self, epoch: int, logs: Dict[str, Any]):
         self._append_to_history(logs)
-        save_json(self.history, self.path)
+        json.dump(self.history, self.path)

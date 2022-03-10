@@ -11,7 +11,7 @@ from dataclassy import dataclass
 from oauth2client.client import GoogleCredentials
 from sklearn.linear_model import LinearRegression
 
-from boiling_learning.io.io import load_json, save_json
+from boiling_learning.io import json
 from boiling_learning.management.allocators.json_allocator import default_table_allocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
@@ -108,11 +108,11 @@ def main(
             print('Saving...')
             print('> obj:', obj)
             print('> path:', path)
-            return save_json(obj, path)
+            return json.dump(obj, path)
 
         def verbose_load(path):
             print('Loading from', path)
-            return load_json(path)
+            return json.load(path)
 
         fps_cache_path = resolve(fps_cache_path)
         allocator = default_table_allocator(fps_cache_path)
@@ -194,7 +194,7 @@ def main(
         try:
             print_verbose(verbose, 'Loading')
             dataset.load_dfs(overwrite=False, missing_ok=False)
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             print_verbose(verbose, 'Failed, making dataframes.')
 
             dataset.make_dataframe(
@@ -213,7 +213,7 @@ def main(
                         f'expected indices != indices for {ev.name}.'
                         f' Got expected: {_expected}'
                         f' Got indices: {_indices}'
-                    )
+                    ) from e
 
             dataset.save_dfs(overwrite=False)
 

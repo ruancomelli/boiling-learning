@@ -225,7 +225,7 @@ class SliceableDataset(Sequence[_T]):
         if isinstance(count, int):
             return self[count:]
 
-        total: int = len(self)
+        total = len(self)
         keep_indices = distance_maximized_evenly_spaced_indices(
             total=total, count=total - int(count * total)
         )
@@ -235,7 +235,7 @@ class SliceableDataset(Sequence[_T]):
         if isinstance(count, int):
             return self[:count]
 
-        total: int = len(self)
+        total = len(self)
         keep_indices = distance_maximized_evenly_spaced_indices(
             total=total, count=int(count * total)
         )
@@ -289,6 +289,10 @@ class SliceableDataset(Sequence[_T]):
         __size2: Union[int, Fraction],
         __size3: None,
     ) -> Tuple[SliceableDataset[_T], SliceableDataset[_T], SliceableDataset[_T]]:
+        ...
+
+    @overload
+    def split(self, *sizes: Optional[Union[int, Fraction]]) -> Tuple[SliceableDataset[_T], ...]:
         ...
 
     def split(self, *sizes: Optional[Union[int, Fraction]]) -> Tuple[SliceableDataset[_T], ...]:

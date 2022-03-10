@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import collections
+import json as _json
 from pathlib import Path
 from typing import Any, Callable, Iterable, List, Mapping, Optional, Type, Union
 
@@ -10,7 +11,6 @@ import tensorflow as tf
 from dataclassy import dataclass
 
 from boiling_learning.io import json
-from boiling_learning.io.io import load_json
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.utils.collections import KeyedSet
 from boiling_learning.utils.descriptions import describe
@@ -135,7 +135,7 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
         keys: VideoDataKeys = VideoDataKeys(),
     ) -> None:
         data_path = resolve(data_path)
-        video_data = load_json(data_path)
+        video_data = _json.loads(data_path.read_text())
         purged = not purge
 
         if isinstance(video_data, list):

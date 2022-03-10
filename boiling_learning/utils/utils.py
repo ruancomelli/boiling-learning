@@ -33,7 +33,6 @@ from typing import (
 )
 
 import funcy
-import matplotlib.pyplot as plt
 import modin.pandas as pd
 from sortedcontainers import SortedSet
 from typing_extensions import overload
@@ -272,80 +271,6 @@ def shorten_path(path, max_parts=None, max_len=None, prefix='...'):
         return str(shortened)
     else:
         return prefix + str(shortened)
-
-
-# ---------------------------------- Plotting functions ----------------------------------
-def prepare_fig(
-    n_cols: Optional[int] = None,
-    n_rows: Optional[int] = None,
-    n_elems: Optional[int] = None,
-    fig_size: Optional[Union[str, Tuple[int, int]]] = None,
-    subfig_size: Optional[Union[str, Tuple[int, int]]] = None,
-    tight_layout: bool = True,
-) -> dict:
-    """Resize figure and calculate the number of rows and columns in the subplot grid.
-
-    Parameters
-    ----------
-    n_cols       : number of columns in the subplot grid
-    n_rows       : number of rows in the subplot grid
-    n_elems      : number of elements in the subplot
-    fig_size     : total size of the figure
-    subfig_size  : total size of each subfigure
-    tight_layout : if True, use tight_layout
-
-    Notes
-    -----
-    * only two of the three arguments n_cols, n_rows and n_elems must be given. The other one is calculated.
-    * only two of the two arguments fig_size and subfig_size must be computed. The other one is calculated.
-    * fig_size and subfig_size can be a pair (width, height) or a string in ['tiny', 'small', 'normal', 'intermediate', 'large', 'big']
-    """
-    if (fig_size, subfig_size).count(None) != 1:
-        raise ValueError('exactly one of *figsize* and *subfig_size* must be *None*')
-    if (n_cols, n_rows, n_elems).count(None) != 1:
-        raise ValueError('exactly one of *n_cols*, *n_rows* and *n_elems* must be *None*')
-
-    if n_rows is None:
-        n_rows = (n_elems - 1) // n_cols + 1
-    elif n_cols is None:
-        n_cols = (n_elems - 1) // n_rows + 1
-    grid_size = (n_rows, n_cols)
-
-    def validate(size: _T) -> Union[_T, Tuple[int, int]]:
-        if size in {'micro'}:
-            return (2, 1.5)
-        if size in {'tiny'}:
-            return (4, 3)
-        if size in {'small'}:
-            return (7, 5)
-        elif size in {'normal', 'intermediate'}:
-            return (9, 7)
-        elif size in {'large', 'big'}:
-            return (18, 15)
-        else:
-            return size
-
-    if subfig_size is None:
-        fig_size = validate(fig_size)
-    else:
-        subfig_size = validate(subfig_size)
-        fig_size = (
-            grid_size[1] * subfig_size[0],
-            grid_size[0] * subfig_size[1],
-        )
-
-    plt.rcParams['figure.figsize'] = fig_size
-    if tight_layout:
-        plt.tight_layout()
-
-    return {
-        'fig_size': fig_size,
-        'subfig_size': subfig_size,
-        'grid_size': grid_size,
-        'n_cols': n_cols,
-        'n_rows': n_rows,
-        'n_elems': n_elems,
-    }
 
 
 def json_equivalent(

@@ -1,69 +1,21 @@
-from pathlib import Path
 from typing import List
 from unittest.case import TestCase
 
 from tinydb import TinyDB
 
-from boiling_learning.io.io import load_json, save_json
+from boiling_learning.io import json
 from boiling_learning.management.allocators.json_allocator import JSONTableAllocator
 from boiling_learning.management.cacher import cache
-from boiling_learning.management.managers import Manager
 from boiling_learning.management.persister import FilePersister, FileProvider, Persister, Provider
-from boiling_learning.preprocessing.transformers import Creator
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.utils import tempdir, tempfilepath
 
 
-class ManagerTest(TestCase):
-    def test_manager(self):
-        def _load_json(path: Path):
-            try:
-                return True, load_json(path)
-            except FileNotFoundError:
-                return False, None
-
-        with tempdir() as path:
-            manager = Manager(path, load_method=_load_json, save_method=save_json, verbose=2)
-
-            self.assertEqual(manager.table_path, path / 'lookup_table.json')
-
-            def add(value, added):
-                return value + added
-
-            contents = P(value=5)
-
-            with self.assertRaises(ValueError):
-                manager.provide_entry(contents=contents, include=False, missing_ok=False)
-
-            with self.assertRaises(ValueError):
-                manager.provide_elem('wololooo')
-
-            elem_id = manager.provide_entry(contents=contents, include=True, missing_ok=True)
-
-            res = manager.provide_elem(
-                elem_id=elem_id,
-                creator_params=P(value=5),
-                creator=Creator('add', add, P(added=3), expand_pack_on_call=True),
-                save=True,
-                load=True,
-            )
-
-            self.assertEqual(res, 8)
-            self.assertEqual(len(manager), 1)
-            self.assertTupleEqual(tuple(manager), (elem_id,))
-            self.assertEqual(manager.shared_dir, manager.path / 'shared')
-            self.assertEqual(
-                manager.elem_workspace(elem_id),
-                manager.entry_dir(elem_id) / 'workspace',
-            )
-            self.assertDictEqual(dict(manager.retrieve_elems()), {elem_id: res})
-
-
 class PersisterTest(TestCase):
     def test_Persister(self):
         VALUE = 'hello'
-        persister = Persister(save_json, load_json)
+        persister = Persister(json.dump, json.load)
 
         with tempfilepath() as filepath:
             persister.save(VALUE, filepath)
@@ -71,7 +23,7 @@ class PersisterTest(TestCase):
 
     def test_FileManager(self):
         VALUE = 3
-        persister = Persister(save_json, load_json)
+        persister = Persister(json.dump, json.load)
 
         with tempfilepath() as filepath:
             file_manager = FilePersister(filepath, persister)
@@ -82,8 +34,8 @@ class PersisterTest(TestCase):
     def test_Provider(self):
         MISSING = 0
         provider = Provider(
-            saver=save_json,
-            loader=load_json,
+            saver=json.dump,
+            loader=json.load,
             creator=lambda: MISSING,
         )
 
@@ -99,8 +51,8 @@ class PersisterTest(TestCase):
     def test_FileProvider(self):
         MISSING = 0
         provider = Provider(
-            saver=save_json,
-            loader=load_json,
+            saver=json.dump,
+            loader=json.load,
             creator=lambda: MISSING,
         )
 
@@ -140,7 +92,7 @@ class CacherTest(TestCase):
             def side_effect(number: float, name: str) -> None:
                 history.append((number, name))
 
-            @cache(allocator=allocator, saver=save_json, loader=load_json)
+            @cache(allocator=allocator, saver=json.dump, loader=json.load)
             def func(number: float, name: str) -> dict:
                 side_effect(number, name)
                 return {'number': number, 'name': name}

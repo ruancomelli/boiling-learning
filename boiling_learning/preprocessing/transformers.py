@@ -6,7 +6,6 @@ import funcy
 from typing_extensions import ParamSpec
 
 from boiling_learning.io import json
-from boiling_learning.utils.dtypes import auto_dtype, new_py_function
 from boiling_learning.utils.functional import Pack, nth_arg
 from boiling_learning.utils.typeutils import CallableWithFirst
 from boiling_learning.utils.utils import JSONDataType, KeyedDefaultDict, SimpleStr
@@ -53,20 +52,6 @@ class Transformer(SimpleStr, Generic[_X, _Y]):
                 'pack': self.pack,
             }
         )
-
-    def as_tf_py_function(self, pack_tuple: bool = False):
-        if pack_tuple:
-
-            def func(*a):
-                return self(a)
-
-        else:
-            func = self
-
-        def _tf_py_function(*args):
-            return new_py_function(func=func, inp=args, Tout=auto_dtype(args))
-
-        return _tf_py_function
 
 
 class Creator(Transformer[Pack, _Y], Generic[_Y]):

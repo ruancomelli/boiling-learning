@@ -1,15 +1,4 @@
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple, TypeVar, Union
 
 import bokeh.models
 import bokeh.plotting
@@ -22,18 +11,15 @@ import tensorflow as tf
 from matplotlib import gridspec
 from matplotlib.colors import NoNorm
 
-from boiling_learning.management import Manager
-from boiling_learning.preprocessing.cases import Case
+from boiling_learning.datasets.datasets import DatasetTriplet
+from boiling_learning.datasets.sliceable import SupervisedSliceableDataset
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
-from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.transformers import DictFeatureTransformer, Transformer
+from boiling_learning.preprocessing.video import VideoFrame
 from boiling_learning.utils.frozendict import frozendict
-from boiling_learning.utils.functional import Kwargs, P, Pack, nth_arg
-from boiling_learning.utils.parameters import Parameters
-from boiling_learning.utils.utils import prepare_fig
+from boiling_learning.utils.functional import P, Pack, nth_arg
 
 _T = TypeVar('_T')
-ImageType = Any
 
 DEFAULT_ANNOTATORS = frozendict(
     {
@@ -197,8 +183,8 @@ def visualize_transformations(
     visualizers: Mapping[
         str,
         Callable[
-            [Transformer, ImageType],
-            Sequence[Tuple[Transformer, ImageType, Pack]],
+            [Transformer, VideoFrame],
+            Sequence[Tuple[Transformer, VideoFrame, Pack]],
         ],
     ] = DEFAULT_VISUALIZERS,
     annotators: Optional[
@@ -206,7 +192,7 @@ def visualize_transformations(
             str,
             Optional[
                 Callable[
-                    [Transformer, ImageType, bokeh.plotting.Figure],
+                    [Transformer, VideoFrame, bokeh.plotting.Figure],
                     bokeh.plotting.Figure,
                 ]
             ],
@@ -243,8 +229,8 @@ def _visualize_transformations_plt(
     visualizers: Mapping[
         str,
         Callable[
-            [Transformer, ImageType],
-            Sequence[Tuple[Transformer, ImageType, Pack]],
+            [Transformer, VideoFrame],
+            Sequence[Tuple[Transformer, VideoFrame, Pack]],
         ],
     ] = DEFAULT_VISUALIZERS,
     annotators=None,
@@ -263,7 +249,7 @@ def _visualize_transformations_plt(
 
     figs = []
     if plot_original:
-        prepare_fig(n_rows=1, n_cols=1, subfig_size='small')
+        _prepare_fig(n_rows=1, n_cols=1, subfig_size='small')
         fig = plt.figure()
         gs = fig.add_gridspec(1, 1)
         ax = fig.add_subplot(gs[0])
@@ -281,7 +267,7 @@ def _visualize_transformations_plt(
         f_image_pack_pairs = visualizer(transformer, image)
         n_subfigs = len(f_image_pack_pairs)
 
-        prepare_fig(n_rows=1, n_cols=n_subfigs, subfig_size='small')
+        _prepare_fig(n_rows=1, n_cols=n_subfigs, subfig_size='small')
         fig = plt.figure()
         gs = fig.add_gridspec(1, n_subfigs)
 
@@ -353,15 +339,15 @@ def _visualize_transformations_bokeh(
     visualizers: Mapping[
         str,
         Callable[
-            [Transformer, ImageType],
-            Sequence[Tuple[Transformer, ImageType, Pack]],
+            [Transformer, VideoFrame],
+            Sequence[Tuple[Transformer, VideoFrame, Pack]],
         ],
     ] = DEFAULT_VISUALIZERS,
     annotators: Mapping[
         str,
         Optional[
             Callable[
-                [Transformer, ImageType, bokeh.plotting.Figure],
+                [Transformer, VideoFrame, bokeh.plotting.Figure],
                 bokeh.plotting.Figure,
             ]
         ],
@@ -409,58 +395,21 @@ def _visualize_transformations_bokeh(
 
 
 def visualize_dataset(
-    manager: Manager[tf.data.Dataset, tf.data.Dataset],
-    case_list: Iterable[Case],
-    params: Parameters,
-    load: Union[bool, Callable[[], Tuple[bool, _T]]] = False,
-    save: Union[bool, Callable[[Union[_T, Any]], Any]] = False,
-    n_samples_per_ev: int = 0,
+    named_datasets: Dict[
+        str, DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]]
+    ],
+    n_samples: int = 1,
 ) -> None:
     # See <https://stackoverflow.com/a/34934631/5811400> for plotting
-    def _make_ds(params: Parameters) -> tf.data.Dataset:
-        return manager.provide_elem(
-            creator_description=Kwargs(params[['creator', 'desc']]),
-            creator_params=Kwargs(params[['creator', 'value']]),
-            post_processor_description=Kwargs(params[['post_processor', 'desc']]),
-            post_processor_params=Kwargs(params[['post_processor', 'value']]),
-            load=load,
-            save=save,
-        )
+    PAD = 2
 
-    pad = 2
-
-    if n_samples_per_ev == 0:
-        img_ds_list = case_list
-        n_samples = 1
-    else:
-        img_ds_list = []
-        for case in case_list:
-            for ev in case.values():
-                img_ds = ImageDataset(
-                    ev.name,
-                    column_names=ev.column_names,
-                    column_types=ev.column_types,
-                )
-                img_ds.add(ev)
-                img_ds_list.append(img_ds)
-        n_samples = n_samples_per_ev
-
-    params[['creator', {'desc', 'value'}, 'dataset_size']] = n_samples
-    fig_spec = prepare_fig(n_cols=3, n_rows=len(img_ds_list), subfig_size='small')
+    fig_spec = _prepare_fig(n_cols=3, n_rows=len(named_datasets), subfig_size='small')
     fig = plt.figure(figsize=fig_spec['fig_size'])
     outer = gridspec.GridSpec(fig_spec['n_rows'], fig_spec['n_cols'])
-    for row, img_ds in enumerate(img_ds_list):
-        params[['creator', 'desc', 'image_dataset']] = sorted(img_ds.keys())
-        params[['creator', 'value', 'image_dataset']] = img_ds
-
-        ds = _make_ds(params)
-        for col, (split_name, ds_split) in enumerate(zip(('train', 'val', 'test'), ds)):
+    for row, (dataset_name, dataset) in enumerate(named_datasets.items()):
+        for col, (split_name, ds_split) in enumerate(zip(('train', 'val', 'test'), dataset)):
             elem = row * fig_spec['n_cols'] + col
-            inner = gridspec.GridSpecFromSubplotSpec(
-                n_samples,
-                1,
-                subplot_spec=outer[elem],
-            )
+            inner = gridspec.GridSpecFromSubplotSpec(n_samples, 1, subplot_spec=outer[elem])
             for sample, (img, _) in enumerate(ds_split.take(n_samples)):
                 img = tf.image.convert_image_dtype(img, tf.uint8)
 
@@ -476,7 +425,7 @@ def visualize_dataset(
                     ax.annotate(
                         split_name,
                         xy=(0.5, 1),
-                        xytext=(0, pad),
+                        xytext=(0, PAD),
                         xycoords='axes fraction',
                         textcoords='offset points',
                         size='large',
@@ -486,9 +435,9 @@ def visualize_dataset(
 
                 if col == 0:
                     ax.annotate(
-                        img_ds.name,
+                        dataset_name,
                         xy=(0, 0.5),
-                        xytext=(-ax.yaxis.labelpad - pad, 0),
+                        xytext=(-ax.yaxis.labelpad - PAD, 0),
                         xycoords=ax.yaxis.label,
                         textcoords='offset points',
                         size='large',
@@ -498,3 +447,79 @@ def visualize_dataset(
 
                 fig.add_subplot(ax)
                 fig.show()
+
+
+def _prepare_fig(
+    n_cols: Optional[int] = None,
+    n_rows: Optional[int] = None,
+    n_elems: Optional[int] = None,
+    fig_size: Optional[Union[str, Tuple[int, int]]] = None,
+    subfig_size: Optional[Union[str, Tuple[int, int]]] = None,
+    tight_layout: bool = True,
+) -> dict:
+    """Resize figure and calculate the number of rows and columns in the subplot grid.
+
+    Parameters
+    ----------
+    n_cols       : number of columns in the subplot grid
+    n_rows       : number of rows in the subplot grid
+    n_elems      : number of elements in the subplot
+    fig_size     : total size of the figure
+    subfig_size  : total size of each subfigure
+    tight_layout : if True, use tight_layout
+
+    Notes
+    -----
+    * only two of the three arguments n_cols, n_rows and n_elems must be given. The other one is
+        calculated.
+    * only two of the two arguments fig_size and subfig_size must be computed. The other one is
+        calculated.
+    * fig_size and subfig_size can be a pair (width, height) or a string in ['tiny', 'small',
+        'normal', 'intermediate', 'large', 'big']
+    """
+    if (fig_size, subfig_size).count(None) != 1:
+        raise ValueError('exactly one of *figsize* and *subfig_size* must be *None*')
+    if (n_cols, n_rows, n_elems).count(None) != 1:
+        raise ValueError('exactly one of *n_cols*, *n_rows* and *n_elems* must be *None*')
+
+    if n_rows is None:
+        n_rows = (n_elems - 1) // n_cols + 1
+    elif n_cols is None:
+        n_cols = (n_elems - 1) // n_rows + 1
+    grid_size = (n_rows, n_cols)
+
+    def validate(size: _T) -> Union[_T, Tuple[int, int]]:
+        if size in {'micro'}:
+            return (2, 1.5)
+        if size in {'tiny'}:
+            return (4, 3)
+        if size in {'small'}:
+            return (7, 5)
+        elif size in {'normal', 'intermediate'}:
+            return (9, 7)
+        elif size in {'large', 'big'}:
+            return (18, 15)
+        else:
+            return size
+
+    if subfig_size is None:
+        fig_size = validate(fig_size)
+    else:
+        subfig_size = validate(subfig_size)
+        fig_size = (
+            grid_size[1] * subfig_size[0],
+            grid_size[0] * subfig_size[1],
+        )
+
+    plt.rcParams['figure.figsize'] = fig_size
+    if tight_layout:
+        plt.tight_layout()
+
+    return {
+        'fig_size': fig_size,
+        'subfig_size': subfig_size,
+        'grid_size': grid_size,
+        'n_cols': n_cols,
+        'n_rows': n_rows,
+        'n_elems': n_elems,
+    }
