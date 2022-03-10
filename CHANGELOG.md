@@ -1,3 +1,12 @@
+## v0.19.1 (2022-03-09)
+
+### Refactor
+
+- remove further code
+- remove `Manager`s
+- remove more unused functionality
+- remove `yogadl` dependency
+
 ## v0.19.0 (2022-03-08)
 
 ### Refactor
