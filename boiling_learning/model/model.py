@@ -10,8 +10,8 @@ import tensorflow as tf
 from boiling_learning.io.io import LoaderFunction
 from boiling_learning.io.storage import Metadata, deserialize, serialize
 from boiling_learning.preprocessing.transformers import Creator
+from boiling_learning.utils import PathLike, append, resolve
 from boiling_learning.utils.functional import Pack
-from boiling_learning.utils.utils import PathLike, append, resolve
 
 T = TypeVar('T')
 _ModelType = TypeVar('_ModelType')

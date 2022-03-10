@@ -11,7 +11,7 @@ from tensorflow.python.platform import tf_logging as logging
 from typing_extensions import Protocol
 
 from boiling_learning.io import json
-from boiling_learning.utils.utils import PathLike, ensure_parent
+from boiling_learning.utils import PathLike, ensure_parent
 
 
 # Source: <https://stackoverflow.com/q/47731935/5811400>

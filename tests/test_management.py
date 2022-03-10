@@ -7,9 +7,9 @@ from boiling_learning.io import json
 from boiling_learning.management.allocators.json_allocator import JSONTableAllocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.management.persister import FilePersister, FileProvider, Persister, Provider
+from boiling_learning.utils import tempdir, tempfilepath
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import P
-from boiling_learning.utils.utils import tempdir, tempfilepath
 
 
 class PersisterTest(TestCase):

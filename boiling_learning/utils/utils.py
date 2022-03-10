@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import enum
 import itertools
-import json
 import operator
 import os
 import pprint
@@ -37,7 +36,6 @@ import modin.pandas as pd
 from sortedcontainers import SortedSet
 from typing_extensions import overload
 
-from boiling_learning.utils.functional import Kwargs
 from boiling_learning.utils.iterutils import flaglast
 
 # ---------------------------------- Typing ----------------------------------
@@ -160,18 +158,6 @@ def one_factor_at_a_time(
                 yield head + (item,) + tail
 
 
-def extract_keys(
-    d: Mapping[_Key, _Value],
-    value: _T,
-    cmp: Callable[[_T, _Value], bool] = operator.eq,
-) -> Iterator[_Key]:
-    comparer: Callable[[_Value], bool] = partial(cmp, value)
-
-    for k, v in d.items():
-        if comparer(v):
-            yield k
-
-
 class KeyedDefaultDict(DefaultDict[_Key, _Value]):
     '''
 
@@ -273,32 +259,10 @@ def shorten_path(path, max_parts=None, max_len=None, prefix='...'):
         return prefix + str(shortened)
 
 
-def json_equivalent(
-    lhs,
-    rhs,
-    encoder: Optional[Type] = None,
-    decoder: Optional[Type] = None,
-    dumps: Callable[[_T], str] = json.dumps,
-    loads: Callable[[str], Any] = json.loads,
-) -> bool:
-    # ignore parameter *cls* when it is *None*
-    dumps = Kwargs({'cls': encoder}).partial(dumps)
-    loads = Kwargs({'cls': decoder}).partial(loads)
-
-    lhs_str = dumps(lhs)
-    rhs_str = dumps(rhs)
-
-    return (lhs_str == rhs_str) or (loads(lhs_str) == loads(rhs_str))
-
-
 # ---------------------------------- Iteration ----------------------------------
 def append(iterable: Iterable[_T], value: S) -> Iterator[Union[_T, S]]:
     yield from iterable
     yield value
-
-
-def transpose(iterable: _T) -> Iterable[Tuple[_T, ...]]:
-    return zip(*iterable)
 
 
 def replace(iterable, new_iterable):

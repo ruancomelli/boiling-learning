@@ -2,7 +2,7 @@ from collections.abc import MutableMapping
 
 import funcy
 
-from boiling_learning.utils.utils import SimpleRepr, SimpleStr, simple_pprint_class
+from boiling_learning.utils import SimpleRepr, SimpleStr, simple_pprint_class
 
 
 @simple_pprint_class
@@ -67,15 +67,6 @@ class Parameters(MutableMapping, SimpleRepr, SimpleStr):
             }
         self.config = config
 
-    def register_get_method(self, pred, method):
-        self.config.setdefault('get', []).append((pred, method))
-
-    def register_set_method(self, pred, method):
-        self.config.setdefault('set', []).append((pred, method))
-
-    def register_del_method(self, pred, method):
-        self.config.setdefault('del', []).append((pred, method))
-
     def __getitem__(self, key):
         for pred, func in self.config.get('get', ()):
             if pred(key):
@@ -87,48 +78,17 @@ class Parameters(MutableMapping, SimpleRepr, SimpleStr):
             if pred(key):
                 func(self, key, value)
                 return
-        else:
-            self.params.__setitem__(key, value)
+        self.params.__setitem__(key, value)
 
     def __delitem__(self, key):
         for pred, func in self.config.get('del', ()):
             if pred(key):
                 func(self, key)
                 return
-        else:
-            self.params.__delitem__(key)
+        self.params.__delitem__(key)
 
     def __iter__(self):
         return self.params.__iter__()
 
     def __len__(self):
         return self.params.__len__()
-
-    # class Fork(dict):
-    #     pass
-
-    # def fork(self, forker_classes=(Parameters,), forker_markers=(Parameters.Fork,), propagate=True):
-    # 	forked = False
-    # 	forks = dict()
-    # 	default = dict()
-
-    #     for key, real_value in self.items():
-    #         if (
-    #             any(isinstance(real_value, forker_marker) for forker_marker in forker_markers)
-    #             or (
-    #                 propagate
-    #                 and any(isinstance(real_value, forker_class) for forker_class in forker_classes)
-    #                 and real_value.forked
-    #             )
-    #         ):
-    #             forked = True
-    #             for splitter_key in real_value:
-    #                 forks.setdefault(splitter_key, default.copy())[key] = real_value[splitter_key]
-    #         else:
-    #             default[key] = real_value
-    #             for v in forks.values():
-    #                 v[key] = real_value
-    #     if not forked:
-    #         forks = self
-
-    #     return forks

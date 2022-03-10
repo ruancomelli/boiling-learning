@@ -12,8 +12,8 @@ from funcy.funcs import rpartial
 import boiling_learning.utils.mathutils as mathutils
 from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
+from boiling_learning.utils import resolve
 from boiling_learning.utils.sentinels import EMPTY
-from boiling_learning.utils.utils import resolve
 
 _T = TypeVar('_T')
 

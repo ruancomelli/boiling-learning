@@ -5,7 +5,7 @@ import modin.pandas as pd
 import tensorflow as tf
 from tensorflow.data import AUTOTUNE
 
-from boiling_learning.utils.utils import PathLike, resolve
+from boiling_learning.utils import PathLike, resolve
 
 T = TypeVar('T')
 

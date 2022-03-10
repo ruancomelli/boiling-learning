@@ -32,7 +32,7 @@ class Cylinder(Prism):
     def __post_init__(self) -> None:
         self.radius = self.diameter / 2
         self.cross_section_perimeter = math.pi * self.diameter
-        self.cross_section_area = math.pi * self.radius ** 2
+        self.cross_section_area = math.pi * self.radius**2
         super().__post_init__()
 
 

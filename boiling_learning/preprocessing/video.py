@@ -10,8 +10,8 @@ from imageio.core import CannotReadFrameError
 
 from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, serialize
+from boiling_learning.utils import PathLike, VerboseType, resolve, shorten_path
 from boiling_learning.utils.descriptions import describe
-from boiling_learning.utils.utils import PathLike, VerboseType, resolve, shorten_path
 
 # VideoFrame = npt.NDArray[np.float32]
 VideoFrame = np.ndarray

@@ -15,9 +15,9 @@ from pyqtgraph import GraphicsWindow
 from pyqtgraph.Qt import QtGui
 
 from boiling_learning.daq import Channel, ChannelType, Device
+from boiling_learning.utils import PathLike, ensure_dir, ensure_parent, print_verbose
 from boiling_learning.utils.geometry import Cylinder
 from boiling_learning.utils.units import unit_registry as u
-from boiling_learning.utils.utils import PathLike, ensure_dir, ensure_parent, print_verbose
 
 here = Path().resolve()
 DEFAULT_EXPERIMENTS_DIR = here / 'experiments'
@@ -439,8 +439,8 @@ def main(
                 'Voltage [V]': voltage.m_as(u.V),
                 'Current [A]': current.m_as(u.A),
                 'Power [W]': power.m_as(u.W),
-                'Flux [W/m^2]': flux.m_as(u.W / u.m ** 2),
-                'Flux [W/cm^2]': flux.m_as(u.W / u.cm ** 2),
+                'Flux [W/m^2]': flux.m_as(u.W / u.m**2),
+                'Flux [W/cm^2]': flux.m_as(u.W / u.cm**2),
                 # 'Resistance [Ohm]': resistance,
                 'Bulk Temperature [deg C]': rtd_temperature,
                 'LED Voltage [V]': led_voltage,

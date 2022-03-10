@@ -13,11 +13,6 @@ def typename(obj: Any) -> str:
     return type(obj).__name__
 
 
-class SupportsLessThan(Protocol):
-    def __lt__(self, other: Any) -> bool:
-        pass
-
-
 class CallableWithFirst(Protocol[_X_contra, _P, _Y_co]):
     def __call__(self, x: _X_contra, *args: _P.args, **kwargs: _P.kwargs) -> _Y_co:
         ...

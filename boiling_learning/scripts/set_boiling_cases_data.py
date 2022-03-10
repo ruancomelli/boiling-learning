@@ -4,9 +4,9 @@ import numpy as np
 
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experimental_data import SAMPLES, ExperimentalData
+from boiling_learning.utils import PathLike, print_header, print_verbose
 from boiling_learning.utils.printing import add_unit_post_fix
 from boiling_learning.utils.units import unit_registry as ureg
-from boiling_learning.utils.utils import PathLike, print_header, print_verbose
 
 
 def main(
@@ -64,7 +64,7 @@ def main(
                 )
 
                 power_unit = ureg.watt
-                heat_flux_unit = ureg.watt / ureg.centimeter ** 2
+                heat_flux_unit = ureg.watt / ureg.centimeter**2
                 sample_id = ev.data.categories['sample_id']
 
                 full_power_key = add_unit_post_fix('Power', power_unit)

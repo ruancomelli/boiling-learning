@@ -80,12 +80,12 @@ from boiling_learning.scripts import (
     set_condensation_datasets_data,
 )
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist, initialize_gpus
+from boiling_learning.utils import enum_item, print_header, resolve
 from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import Many, typename
-from boiling_learning.utils.utils import enum_item, print_header, resolve
 
 ray.init(ignore_reinit_error=True)
 

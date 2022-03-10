@@ -25,8 +25,8 @@ from tensorflow.keras.mixed_precision.experimental import Policy
 from tensorflow.keras.models import Model
 
 from boiling_learning.model.model import ProblemType, make_creator
+from boiling_learning.utils import enum_item
 from boiling_learning.utils.functional import P
-from boiling_learning.utils.utils import enum_item
 
 # Check this guideline: https://docs.nvidia.com/deeplearning/performance/dl-performance-fully-connected/index.html
 # It includes tips and rules-of-thumb for defining layers.

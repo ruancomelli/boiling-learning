@@ -12,14 +12,9 @@ from dataclassy import dataclass
 
 from boiling_learning.io import json
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
+from boiling_learning.utils import PathLike, concatenate_dataframes, resolve, simple_pprint_class
 from boiling_learning.utils.collections import KeyedSet
 from boiling_learning.utils.descriptions import describe
-from boiling_learning.utils.utils import (
-    PathLike,
-    concatenate_dataframes,
-    resolve,
-    simple_pprint_class,
-)
 
 
 @simple_pprint_class

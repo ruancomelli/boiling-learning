@@ -8,9 +8,9 @@ from tinydb_smartcache import SmartCacheTable
 from typing_extensions import final
 
 from boiling_learning.io import json
+from boiling_learning.utils import JSONDataType, PathLike, ensure_dir, ensure_parent, resolve
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import Pack
-from boiling_learning.utils.utils import JSONDataType, PathLike, ensure_dir, ensure_parent, resolve
 
 _JSONDescription = TypeVar('_JSONDescription', bound=JSONDataType)
 

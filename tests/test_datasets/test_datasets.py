@@ -3,7 +3,7 @@ from boiling_learning.datasets.sliceable import (
     load_sliceable_dataset,
     save_sliceable_dataset,
 )
-from boiling_learning.utils.utils import tempfilepath
+from boiling_learning.utils import tempfilepath
 
 
 def test_io() -> None:

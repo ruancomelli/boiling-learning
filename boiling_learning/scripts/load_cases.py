@@ -3,7 +3,7 @@ from typing import Iterable, Tuple
 from dataclassy import dataclass
 
 from boiling_learning.preprocessing.cases import Case
-from boiling_learning.utils.utils import PathLike, print_header, print_verbose
+from boiling_learning.utils import PathLike, print_header, print_verbose
 
 
 @dataclass(frozen=True)

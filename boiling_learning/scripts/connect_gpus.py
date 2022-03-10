@@ -2,7 +2,7 @@ from typing import Optional
 
 import tensorflow as tf
 
-from boiling_learning.utils.utils import print_verbose
+from boiling_learning.utils import print_verbose
 
 
 def main(

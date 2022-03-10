@@ -11,11 +11,11 @@ from classes import AssociatedType, Supports
 from classes import typeclass as _typeclass
 from typing_extensions import Protocol, TypedDict, runtime_checkable
 
+from boiling_learning.utils import JSONDataType, PathLike, resolve
 from boiling_learning.utils.dataclasses import asdict, is_dataclass_instance
 from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.functional import P, Pack
 from boiling_learning.utils.table_dispatch import TableDispatcher
-from boiling_learning.utils.utils import JSONDataType, PathLike, resolve
 
 BasicTypes = Union[None, bool, int, str, float]
 _BasicType = TypeVar('_BasicType', bound=BasicTypes)

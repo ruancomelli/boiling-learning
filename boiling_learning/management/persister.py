@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Callable, Generic, Iterable, Tuple, TypeVar, Union
 
 from boiling_learning.io.io import LoaderFunction, PathLike, SaverFunction
-from boiling_learning.utils.utils import ensure_parent, resolve
+from boiling_learning.utils import ensure_parent, resolve
 
 _T = TypeVar('_T')
 CreatorFunction = Callable[[], _T]

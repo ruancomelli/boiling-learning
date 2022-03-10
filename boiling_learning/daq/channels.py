@@ -5,7 +5,7 @@ from nidaqmx.constants import ChannelType as NIChannelType
 from nidaqmx.task import Task
 
 from boiling_learning.daq.devices import Device
-from boiling_learning.utils.utils import SimpleRepr, SimpleStr
+from boiling_learning.utils import SimpleRepr, SimpleStr
 
 T = TypeVar('T')
 

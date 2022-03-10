@@ -17,13 +17,7 @@ from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.video import get_fps
-from boiling_learning.utils.utils import (
-    KeyedDefaultDict,
-    PathLike,
-    print_header,
-    print_verbose,
-    resolve,
-)
+from boiling_learning.utils import KeyedDefaultDict, PathLike, print_header, print_verbose, resolve
 
 _subcase_patterns = {
     'T_inf': parse.compile('T_inf {:d}C'),

@@ -3,7 +3,7 @@ from typing import List
 from dataclassy import dataclass
 
 from boiling_learning.preprocessing import ExperimentVideo, ImageDataset
-from boiling_learning.utils.utils import PathLike, print_header, print_verbose, resolve
+from boiling_learning.utils import PathLike, print_header, print_verbose, resolve
 
 
 @dataclass(frozen=True)

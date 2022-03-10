@@ -35,10 +35,10 @@ from typing_extensions import TypeGuard
 from boiling_learning.io import json
 from boiling_learning.io.io import LoaderFunction, SaverFunction
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
+from boiling_learning.utils import PathLike, resolve
 from boiling_learning.utils.dtypes import NestedTypeSpec, auto_spec, tf_str_dtype_bidict
 from boiling_learning.utils.iterutils import distance_maximized_evenly_spaced_indices
 from boiling_learning.utils.slicerators import Slicerator
-from boiling_learning.utils.utils import PathLike, resolve
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
 

@@ -3,7 +3,7 @@ from typing import Iterable, List, Tuple
 
 import tensorflow as tf
 
-from boiling_learning.utils.utils import VerboseType
+from boiling_learning.utils import VerboseType
 
 
 def check_all_paths_exist(

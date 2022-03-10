@@ -3,10 +3,9 @@ from typing import Optional
 
 import modin.pandas as pd
 
-from boiling_learning.utils import geometry
+from boiling_learning.utils import PathLike, geometry, resolve
 from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.units import unit_registry as ureg
-from boiling_learning.utils.utils import PathLike, resolve
 
 SAMPLES = frozendict(
     {

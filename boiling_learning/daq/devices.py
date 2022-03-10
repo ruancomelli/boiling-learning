@@ -1,6 +1,6 @@
 from nidaqmx.task import Task
 
-from boiling_learning.utils.utils import DictEq, SimpleRepr, SimpleStr
+from boiling_learning.utils import DictEq, SimpleRepr, SimpleStr
 
 
 class Device(SimpleRepr, SimpleStr, DictEq):

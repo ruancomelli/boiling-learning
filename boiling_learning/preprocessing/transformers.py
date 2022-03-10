@@ -6,9 +6,9 @@ import funcy
 from typing_extensions import ParamSpec
 
 from boiling_learning.io import json
+from boiling_learning.utils import JSONDataType, KeyedDefaultDict, SimpleStr
 from boiling_learning.utils.functional import Pack, nth_arg
 from boiling_learning.utils.typeutils import CallableWithFirst
-from boiling_learning.utils.utils import JSONDataType, KeyedDefaultDict, SimpleStr
 
 _X = TypeVar('_X')
 _X1 = TypeVar('_X1')

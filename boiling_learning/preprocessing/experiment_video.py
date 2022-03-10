@@ -10,10 +10,7 @@ from dataclassy import dataclass
 
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
 from boiling_learning.preprocessing.video import Video, convert_video
-from boiling_learning.utils.dataclasses import dataclass_from_mapping
-from boiling_learning.utils.dtypes import auto_spec
-from boiling_learning.utils.slicerators import Slicerator
-from boiling_learning.utils.utils import (
+from boiling_learning.utils import (
     PathLike,
     VerboseType,
     dataframe_categories_to_int,
@@ -21,6 +18,9 @@ from boiling_learning.utils.utils import (
     merge_dicts,
     resolve,
 )
+from boiling_learning.utils.dataclasses import dataclass_from_mapping
+from boiling_learning.utils.dtypes import auto_spec
+from boiling_learning.utils.slicerators import Slicerator
 
 
 class ExperimentVideo(Video):
