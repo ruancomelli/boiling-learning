@@ -614,7 +614,6 @@ model = fit_model(
     image_dataset_augment_params=augment_dataset_params,
 )
 
-
 assert False, 'STOP!'
 
 # TODO: use SaveHistory callback?
