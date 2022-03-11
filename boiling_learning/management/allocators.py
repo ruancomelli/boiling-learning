@@ -12,6 +12,8 @@ from boiling_learning.utils import JSONDataType, PathLike, ensure_dir, ensure_pa
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import Pack
 
+Allocator = Callable[[Pack[Any, Any]], Path]
+
 _JSONDescription = TypeVar('_JSONDescription', bound=JSONDataType)
 
 

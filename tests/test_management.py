@@ -4,7 +4,7 @@ from unittest.case import TestCase
 from tinydb import TinyDB
 
 from boiling_learning.io import json
-from boiling_learning.management.allocators.json_allocator import JSONTableAllocator
+from boiling_learning.management.allocators import JSONTableAllocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.management.persister import FilePersister, FileProvider, Persister, Provider
 from boiling_learning.utils import tempdir, tempfilepath

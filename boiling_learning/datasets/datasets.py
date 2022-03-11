@@ -9,10 +9,9 @@ from dataclassy import dataclass
 from decorator import decorator
 from funcy.funcs import rpartial
 
-import boiling_learning.utils.mathutils as mathutils
 from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
-from boiling_learning.utils import resolve
+from boiling_learning.utils import mathutils, resolve
 from boiling_learning.utils.sentinels import EMPTY
 
 _T = TypeVar('_T')
