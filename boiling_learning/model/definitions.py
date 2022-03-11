@@ -28,7 +28,8 @@ from boiling_learning.model.model import ProblemType, make_creator
 from boiling_learning.utils import enum_item
 from boiling_learning.utils.functional import P
 
-# Check this guideline: https://docs.nvidia.com/deeplearning/performance/dl-performance-fully-connected/index.html
+# Check this guideline:
+# https://docs.nvidia.com/deeplearning/performance/dl-performance-fully-connected/index.html
 # It includes tips and rules-of-thumb for defining layers.
 
 

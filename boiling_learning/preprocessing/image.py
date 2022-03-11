@@ -1,5 +1,5 @@
 from fractions import Fraction
-from typing import Any, Callable, Optional, Tuple, TypeVar, Union, overload
+from typing import Optional, Tuple, Union, overload
 
 import albumentations as A
 import numpy as np
@@ -11,10 +11,6 @@ from skimage.measure import shannon_entropy
 from skimage.metrics import structural_similarity as ssim
 from skimage.transform import downscale_local_mean as _downscale
 from skimage.transform import resize
-
-_T = TypeVar('_T')
-# something convertible to tf.Tensor
-CallableT = TypeVar('CallableT', bound=Callable[..., Any])
 
 
 @dataclass

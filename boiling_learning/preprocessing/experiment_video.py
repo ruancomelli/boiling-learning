@@ -19,7 +19,6 @@ from boiling_learning.utils import (
     resolve,
 )
 from boiling_learning.utils.dataclasses import dataclass_from_mapping
-from boiling_learning.utils.dtypes import auto_spec
 from boiling_learning.utils.slicerators import Slicerator
 
 
@@ -357,21 +356,3 @@ class ExperimentVideo(Video):
                 return self[i], targets[i]
 
         return Slicerator.from_func(get_item, length=len(self))
-
-    def as_tf_dataset(
-        self,
-        *,
-        select_columns: Optional[Union[str, List[str]]] = None,
-        inplace: bool = False,
-    ) -> tf.data.Dataset:
-        # See <https://www.tensorflow.org/tutorials/load_data/pandas_dataframe>
-
-        pairs = self.as_pairs(select_columns=select_columns)
-        type_spec = auto_spec(pairs[0])
-
-        ds = tf.data.Dataset.from_generator(lambda: pairs, output_signature=type_spec)
-
-        if inplace:
-            self.ds = ds
-
-        return ds

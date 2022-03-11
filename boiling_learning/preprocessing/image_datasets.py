@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import collections
 import json as _json
 from pathlib import Path
 from typing import Any, Callable, Iterable, List, Mapping, Optional, Type, Union
 
 import funcy
 import modin.pandas as pd
-import tensorflow as tf
 from dataclassy import dataclass
 
 from boiling_learning.io import json
@@ -40,11 +38,6 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
     class VideoDataKeys(ExperimentVideo.VideoDataKeys):
         name: str = 'name'
         ignore: str = 'ignore'
-
-    # @dataclass(frozen=True, kwargs=True)
-    # class VideoData(ExperimentVideo.VideoData):
-    #     name: str
-    #     ignore: bool = False
 
     def __init__(
         self,
@@ -162,10 +155,11 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
         else:
             self.df_path = resolve(path)
 
-        if columns is None:
-            self.df = pd.read_csv(self.df_path, skipinitialspace=True)
-        else:
-            self.df = pd.read_csv(self.df_path, skipinitialspace=True, usecols=tuple(columns))
+        self.df = pd.read_csv(
+            self.df_path,
+            skipinitialspace=True,
+            usecols=tuple(columns) if columns is not None else None,
+        )
 
     def save(self, path: Optional[PathLike] = None, overwrite: bool = False) -> None:
         if path is None:
@@ -204,7 +198,7 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
         categories_as_int: bool = False,
         inplace: bool = True,
     ) -> pd.DataFrame:
-        dfs = (
+        return concatenate_dataframes(
             ev.make_dataframe(
                 recalculate=recalculate,
                 exist_load=exist_load,
@@ -214,33 +208,6 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
             )
             for ev in self
         )
-        return concatenate_dataframes(dfs)
-
-    def as_tf_dataset(
-        self,
-        *,
-        select_columns: Optional[Union[str, List[str]]] = None,
-        inplace: bool = False,
-    ) -> tf.data.Dataset:
-        datasets = collections.deque(
-            ev.as_tf_dataset(
-                select_columns=select_columns,
-                inplace=inplace,
-            )
-            for ev in self
-        )
-
-        if not datasets:
-            raise ValueError('resulting tensorflow dataset is empty.')
-
-        ds = datasets.popleft()
-        for dataset in datasets:
-            ds = ds.concatenate(dataset)
-
-        if inplace:
-            self.ds = ds
-
-        return ds
 
 
 def _get_experiment_video_name(experiment_video: ExperimentVideo) -> str:
