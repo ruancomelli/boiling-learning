@@ -1,3 +1,9 @@
+## v0.19.2 (2022-03-10)
+
+### Refactor
+
+- work around unnecessary dependencies and remove them
+
 ## v0.19.1 (2022-03-09)
 
 ### Refactor
