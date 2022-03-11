@@ -5,7 +5,7 @@ from typing import Callable, Dict, FrozenSet, Iterable, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 
-from boiling_learning.preprocessing.image import ensure_grayscale
+from boiling_learning.preprocessing.image import grayscale
 
 
 def main(
@@ -19,7 +19,7 @@ def main(
     timeshifts: FrozenSet[int] = frozenset(timeshifts) | {0, final_timeshift}
 
     frames = ((index, frame) for index, frame in frames if index in timeshifts)
-    frames = ((index, np.squeeze(ensure_grayscale(frame))) for index, frame in frames)
+    frames = ((index, np.squeeze(grayscale(frame))) for index, frame in frames)
     frames = sorted(frames, key=itemgetter(0))
     frames: Dict[int, np.ndarray] = dict(frames)
 

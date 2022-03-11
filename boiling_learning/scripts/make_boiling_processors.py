@@ -2,7 +2,15 @@ from typing import List, Tuple
 
 import numpy as np
 
-from boiling_learning.preprocessing import arrays
+from boiling_learning.preprocessing.image import (
+    crop,
+    downscale,
+    grayscale,
+    random_brightness_contrast,
+    random_crop,
+    random_flip_left_right,
+    random_jpeg_quality,
+)
 from boiling_learning.preprocessing.transformers import (
     DictFeatureTransformer,
     FeatureTransformer,
@@ -21,10 +29,10 @@ def main(
 ) -> Tuple[List[Transformer], List[Transformer]]:
     preprocessors = [
         FeatureTransformer('dtyper', np.ndarray.astype, P(np.float32)),
-        FeatureTransformer('grayscaler', arrays.grayscale),
+        FeatureTransformer('grayscaler', grayscale),
         DictFeatureTransformer(
             'region_cropper',
-            arrays.crop,
+            crop,
             {
                 'GOPR2819': P(left=861, right=1687, top=321, bottom=1273),
                 'GOPR2820': P(left=861, right=1678, top=321, bottom=1267),
@@ -161,10 +169,10 @@ def main(
                 'GOPR2960': P(left=980, right=1810, top=400, bottom=1350),
             },
         ),
-        FeatureTransformer('downscaler', arrays.downscale, pack=P(factors=downscale_factor)),
+        FeatureTransformer('downscaler', downscale, pack=P(factors=downscale_factor)),
         FeatureTransformer(
             'visualization_shrinker',
-            arrays.crop,
+            crop,
             pack=P(
                 left=0,
                 right_border=0,
@@ -175,14 +183,14 @@ def main(
     ]
 
     augmentors = [
-        FeatureTransformer('random_cropper', arrays.random_crop, pack=P(width=width)),
-        FeatureTransformer('random_left_right_flipper', arrays.random_flip_left_right),
+        FeatureTransformer('random_cropper', random_crop, pack=P(width=width)),
+        FeatureTransformer('random_left_right_flipper', random_flip_left_right),
         FeatureTransformer(
             'random_brightness_contrast',
-            arrays.random_brightness_contrast,
+            random_brightness_contrast,
             pack=P((-0.2, 0.2), (0.6, 1.4)),
         ),
-        FeatureTransformer('random_quality', arrays.random_jpeg_quality, pack=P(30, 100)),
+        FeatureTransformer('random_quality', random_jpeg_quality, pack=P(30, 100)),
     ]
 
     return preprocessors, augmentors

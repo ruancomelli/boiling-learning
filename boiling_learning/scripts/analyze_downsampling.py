@@ -5,8 +5,7 @@ from typing import Callable, Dict, Iterable, List, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 
-from boiling_learning.preprocessing.image import downscale as tf_downscale
-from boiling_learning.preprocessing.image import ensure_grayscale
+from boiling_learning.preprocessing.image import downscale, grayscale
 
 
 def evaluate_downsampling(
@@ -20,10 +19,6 @@ def evaluate_downsampling(
     return list(evaluations)
 
 
-def downscale(image: np.ndarray, factor: int) -> np.ndarray:
-    return tf_downscale(image, factors=(factor, factor)).numpy()
-
-
 def main(
     image: np.ndarray,
     metrics: Dict[str, Callable[[np.ndarray, np.ndarray], float]],
@@ -32,7 +27,7 @@ def main(
     xscale: str = 'log',
     figsize: Tuple[int, int] = (7, 5),
 ) -> None:
-    image = ensure_grayscale(image)
+    image = grayscale(image)
     downscale_factors = sorted(frozenset(downscale_factors) | {1, final_downscale_factor})
 
     for name, scorer in metrics.items():
@@ -83,7 +78,7 @@ def main(
     ax.set_title(str(np.squeeze(image).shape))
 
     ax = fig.add_subplot(1, 2, 2)
-    downscaled = downscale(image, factor=final_downscale_factor)
+    downscaled = downscale(image, factors=final_downscale_factor)
     ax.imshow(downscaled, cmap='gray')
     ax.set_title(str(np.squeeze(downscaled).shape))
 

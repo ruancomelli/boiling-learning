@@ -484,7 +484,7 @@
 - **scripts**: add support for processing condensation data using array
   transformers
 - **preprocessing/arrays**: include all data preprocessing functions in the
-  `preprocessing.arrays` module
+  `preprocessing.image` module
 - **preprocessing/arrays**: convert array preprocessing functions with
   `@transformer`
 - **preprocessing/arrays**: redefine image preprocessing functions in terms of
