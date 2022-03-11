@@ -1,3 +1,11 @@
+## v0.19.3 (2022-03-10)
+
+### Refactor
+
+- remove more unnecessary functionality
+- merge array preprocessing module into the image module
+- reorganize management module
+
 ## v0.19.2 (2022-03-10)
 
 ### Refactor
