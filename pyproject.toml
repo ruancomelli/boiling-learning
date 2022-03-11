@@ -7,7 +7,6 @@ authors = [
 ]
 dependencies = [
     "aioredis<2.0.0,>=1.3.1",
-    "bidict<1.0.0,>=0.21.4",
     "bokeh<3.0.0,>=2.4.2",
     "dataclassy<1.0.0,>=0.11.1",
     "decorator<6.0.0,>=5.1.1",
@@ -16,7 +15,6 @@ dependencies = [
     "gspread<6.0.0,>=5.1.1",
     "imageio==2.4.1",
     "ipywidgets<8.0.0,>=7.6.5",
-    "json-tricks<4.0.0,>=3.15.5",
     "lazy<2.0,>=1.4",
     "matplotlib<4.0.0,>=3.5.1",
     "more-itertools>=8.11.0",
@@ -43,8 +41,7 @@ dependencies = [
     "iteround<2.0.0,>=1.0.3",
     "pyqtgraph<1.0.0,>=0.12.3",
     "PyQt6<7.0.0,>=6.2.2",
-    "modin[all]>=0.12.1",
-]
+    "modin[all]>=0.12.1"]
 
 requires-python = ">=3.7.12,<3.10"
 license = {text = "MIT"}

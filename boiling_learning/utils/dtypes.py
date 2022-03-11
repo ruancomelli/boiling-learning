@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Hashable, List, Mapping, Optional, Tuple, TypeVar, Union
 
 import tensorflow as tf
-from bidict import bidict
 from tensorflow.types.experimental import TensorLike
 from typing_extensions import TypedDict
 
@@ -18,35 +17,6 @@ NestedStructure = Union[
 ]
 NestedTypeSpec = NestedStructure[tf.TypeSpec]
 NestedTensorLike = NestedStructure[TensorLike]
-
-tf_str_dtype_bidict = bidict(
-    (dtype.name, dtype)
-    for dtype in (
-        tf.float16,
-        tf.float32,
-        tf.float64,
-        tf.bfloat16,
-        tf.complex64,
-        tf.complex128,
-        tf.int8,
-        tf.int32,
-        tf.int64,
-        tf.uint8,
-        tf.uint16,
-        tf.uint32,
-        tf.uint64,
-        tf.int16,
-        tf.bool,
-        tf.string,
-        tf.qint8,
-        tf.qint16,
-        tf.qint32,
-        tf.quint8,
-        tf.quint16,
-        tf.resource,
-        tf.variant,
-    )
-)
 
 
 class EncodedElementSpec(TypedDict):
@@ -67,7 +37,7 @@ def encode_element_spec(
         return {
             'nested': False,
             'contents': {
-                'dtype': tf_str_dtype_bidict.inverse[element_spec.dtype],
+                'dtype': element_spec.dtype.name,
                 'name': element_spec.name,
                 'shape': element_spec.shape,
             },
@@ -83,9 +53,7 @@ def decode_element_spec(
         return map_values(decode_element_spec, contents)
 
     return tf.TensorSpec(
-        shape=contents['shape'],
-        name=contents['name'],
-        dtype=tf_str_dtype_bidict[contents['dtype']],
+        shape=contents['shape'], name=contents['name'], dtype=getattr(tf, contents['dtype'])
     )
 
 

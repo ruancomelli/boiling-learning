@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
-    Dict,
     Generic,
     Iterable,
     Iterator,
@@ -23,9 +22,7 @@ from typing import (
     overload,
 )
 
-import json_tricks as tricks
 import more_itertools as mit
-import numpy as np
 import tensorflow as tf
 from iteround import saferound
 from slicerator import pipeline
@@ -36,7 +33,7 @@ from boiling_learning.io import json
 from boiling_learning.io.io import LoaderFunction, SaverFunction
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
 from boiling_learning.utils import PathLike, resolve
-from boiling_learning.utils.dtypes import NestedTypeSpec, auto_spec, tf_str_dtype_bidict
+from boiling_learning.utils.dtypes import NestedTypeSpec, auto_spec
 from boiling_learning.utils.iterutils import distance_maximized_evenly_spaced_indices
 from boiling_learning.utils.slicerators import Slicerator
 
@@ -505,29 +502,6 @@ class SupervisedSliceableDataset(SliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y
 
 def concatenate(datasets: Iterable[SliceableDataset[_T]]) -> SliceableDataset[_T]:
     return reduce(SliceableDataset[_T].concatenate, datasets)
-
-
-@json.encode.instance(np.ndarray)
-def _json_encode_numpy_array(obj: np.ndarray) -> str:
-    return tricks.dumps(obj)
-
-
-@json.decode.dispatch(np.ndarray)
-def _json_decode_numpy_array(obj: str) -> np.ndarray:
-    return tricks.loads(obj)
-
-
-@json.encode.instance(tf.Tensor)
-def _json_encode_tensor(obj: tf.Tensor) -> dict:
-    return {'tensor': tf.io.serialize_tensor(obj), 'dtype': tf_str_dtype_bidict.inverse[obj.dtype]}
-
-
-@json.decode.dispatch(tf.Tensor)
-def _json_decode_tensor(obj: Dict[str, Any]) -> tf.Tensor:
-    tensor = obj['tensor']
-    dtype = tf_str_dtype_bidict[obj['dtype']]
-
-    return tf.io.parse_tensor(tensor, dtype)
 
 
 def save_sliceable_dataset(
