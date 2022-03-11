@@ -1,13 +1,6 @@
-import os
-from typing import Callable, Optional, TypeVar
+from typing import Optional
 
 import modin.pandas as pd
-import tensorflow as tf
-from tensorflow.data import AUTOTUNE
-
-from boiling_learning.utils import PathLike, resolve
-
-T = TypeVar('T')
 
 
 def sync_dataframes(
@@ -55,34 +48,3 @@ def sync_dataframes(
         concat = concat.interpolate(method='time', limit_direction='both')
     concat = concat.loc[dest_df.index]
     return concat
-
-
-def snapshotter(
-    snapshot_folder: PathLike,
-    num_shards: Optional[int] = None,
-    shuffle_size: Optional[int] = None,
-) -> Callable[[tf.data.Dataset], tf.data.Dataset]:
-    snapshot_folder = resolve(snapshot_folder)
-
-    if shuffle_size is None:
-        shuffle_size = os.cpu_count()
-
-    if num_shards is None:
-        num_shards = shuffle_size
-
-    def reader_fn(datasets: tf.data.Dataset) -> tf.data.Dataset:
-        # shuffle the datasets splits
-        datasets = datasets.shuffle(shuffle_size)
-        # read datasets in parallel and interleave their elements
-        return datasets.interleave(lambda x: x, num_parallel_calls=AUTOTUNE)
-
-    def op(ds: tf.data.Dataset) -> tf.data.Dataset:
-        ds = ds.enumerate()
-        ds = ds.snapshot(
-            str(snapshot_folder),
-            reader_func=reader_fn,
-            shard_func=lambda idx, value: idx % num_shards,
-        )
-        return ds.map(lambda idx, value: value)
-
-    return op
