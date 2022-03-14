@@ -659,7 +659,7 @@ summary = "iniconfig: brain-dead simple config-ini parsing"
 
 [[package]]
 name = "ipykernel"
-version = "6.9.1"
+version = "6.9.2"
 requires_python = ">=3.7"
 summary = "IPython Kernel for Jupyter"
 dependencies = [
@@ -669,6 +669,7 @@ dependencies = [
     "jupyter-client<8.0",
     "matplotlib-inline<0.2.0,>=0.1.0",
     "nest-asyncio",
+    "psutil",
     "tornado<7.0,>=4.2",
     "traitlets<6.0,>=5.1.0",
 ]
@@ -1101,7 +1102,7 @@ summary = "Node.js virtual environment builder"
 
 [[package]]
 name = "notebook"
-version = "6.4.8"
+version = "6.4.9"
 requires_python = ">=3.6"
 summary = "A web-based notebook environment for interactive computing"
 dependencies = [
@@ -1112,7 +1113,7 @@ dependencies = [
     "jinja2",
     "jupyter-client>=5.3.4",
     "jupyter-core>=4.6.1",
-    "nbconvert",
+    "nbconvert>=5",
     "nbformat",
     "nest-asyncio>=1.5",
     "prometheus-client",
@@ -2844,9 +2845,9 @@ content_hash = "sha256:5bfe7b899f5f4e4b6f9980f76809e91b2976c97b4e579f8618f087955
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
     {file = "iniconfig-1.1.1.tar.gz", hash = "sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32"},
 ]
-"ipykernel 6.9.1" = [
-    {file = "ipykernel-6.9.1-py3-none-any.whl", hash = "sha256:4fae9df6e192837552b2406a6052d707046dd2e153860be73c68484bacba18ed"},
-    {file = "ipykernel-6.9.1.tar.gz", hash = "sha256:f95070a2dfd3147f8ab19f18ee46733310813758593745e07ec18fb08b409f1d"},
+"ipykernel 6.9.2" = [
+    {file = "ipykernel-6.9.2-py3-none-any.whl", hash = "sha256:c977cff576b8425a68d3a6916510903833f0f25ed8d5c282a0c51c35de27bd47"},
+    {file = "ipykernel-6.9.2.tar.gz", hash = "sha256:4c3cc8cb359f2ead70c30f5504971c0d285e2c1c699d2ce9af0216fe9c9fb17c"},
 ]
 "ipython 7.32.0" = [
     {file = "ipython-7.32.0-py3-none-any.whl", hash = "sha256:86df2cf291c6c70b5be6a7b608650420e89180c8ec74f376a34e2dc15c3400e7"},
@@ -3318,9 +3319,9 @@ content_hash = "sha256:5bfe7b899f5f4e4b6f9980f76809e91b2976c97b4e579f8618f087955
     {file = "nodeenv-1.6.0-py2.py3-none-any.whl", hash = "sha256:621e6b7076565ddcacd2db0294c0381e01fd28945ab36bcf00f41c5daf63bef7"},
     {file = "nodeenv-1.6.0.tar.gz", hash = "sha256:3ef13ff90291ba2a4a7a4ff9a979b63ffdd00a464dbe04acf0ea6471517a4c2b"},
 ]
-"notebook 6.4.8" = [
-    {file = "notebook-6.4.8-py3-none-any.whl", hash = "sha256:3e702fcc54b8ae597533c3864793b7a1e971dec9e112f67235828d8a798fd654"},
-    {file = "notebook-6.4.8.tar.gz", hash = "sha256:1e985c9dc6f678bdfffb9dc657306b5469bfa62d73e03f74e8defbf76d284312"},
+"notebook 6.4.9" = [
+    {file = "notebook-6.4.9-py3-none-any.whl", hash = "sha256:14ebcde55100176d677385deabf4b3c60e97d82cab0ae76d93241872bc368274"},
+    {file = "notebook-6.4.9.tar.gz", hash = "sha256:64d898f0efcec7def4607b686e25d175670f51c701966373b2c5d7b38281d522"},
 ]
 "numpy 1.21.5" = [
     {file = "numpy-1.21.5-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:301e408a052fdcda5cdcf03021ebafc3c6ea093021bf9d1aa47c54d48bdad166"},
