@@ -1,3 +1,10 @@
+## v0.19.4 (2022-03-14)
+
+### Refactor
+
+- **model**: update model definitions to match the rest of the project
+- apply minor refactorings and remove unused functions
+
 ## v0.19.3 (2022-03-10)
 
 ### Refactor
