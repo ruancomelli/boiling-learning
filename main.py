@@ -27,16 +27,6 @@ import ray
 import tensorflow as tf
 import tensorflow_addons as tfa
 from tensorflow.data import AUTOTUNE
-from tensorflow.keras.layers import (  # Conv2D,; MaxPool2D,
-    Activation,
-    AveragePooling2D,
-    Dense,
-    Dropout,
-    Flatten,
-    Input,
-    LayerNormalization,
-)
-from tensorflow.keras.mixed_precision.experimental import Policy
 from typing_extensions import ParamSpec
 
 from boiling_learning.datasets.datasets import DatasetSplits
@@ -56,7 +46,8 @@ from boiling_learning.model.callbacks import (
     ReduceLROnPlateau,
     TimePrinter,
 )
-from boiling_learning.model.model import Model, ProblemType
+from boiling_learning.model.definitions import tiny_convnet
+from boiling_learning.model.model import Model
 from boiling_learning.model.training import (
     CompiledModel,
     CompileModelParams,
@@ -80,7 +71,7 @@ from boiling_learning.scripts import (
     set_condensation_datasets_data,
 )
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist, initialize_gpus
-from boiling_learning.utils import enum_item, print_header, resolve
+from boiling_learning.utils import print_header, resolve
 from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.functional import P
@@ -511,56 +502,11 @@ def fit_model(
     )
 
 
-def small_convnet(
-    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
-    dropout: Optional[float],
-    hidden_layers_policy: Union[str, Policy],
-    output_layer_policy: Union[str, Policy],
-    problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
-    num_classes: Optional[int] = None,
-    normalize_images: bool = False,
-) -> ModelArchitecture:
-    if len(input_shape) == 2:
-        input_shape = input_shape + (1,)
-
-    input_data = Input(shape=input_shape)
-    x = input_data  # start "current layer" as the input layer
-
-    x = AveragePooling2D((10, 10))(x)
-
-    if normalize_images:
-        x = LayerNormalization()(x)
-    # x = Conv2D(
-    #     16,
-    #     (5, 5),
-    #     padding='same',
-    #     activation='relu',
-    #     dtype=hidden_layers_policy,
-    # )(x)
-    # x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
-    x = Flatten(dtype=hidden_layers_policy)(x)
-    # x = Dense(32, activation='relu', dtype=hidden_layers_policy)(x)
-    # x = Dropout(dropout, dtype=hidden_layers_policy)(x)
-
-    problem = enum_item(ProblemType, problem)
-    if problem is ProblemType.CLASSIFICATION:
-        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Activation('softmax', dtype=output_layer_policy)(x)
-    elif problem is ProblemType.REGRESSION:
-        x = Dense(1, dtype=hidden_layers_policy)(x)
-        predictions = Activation('linear', dtype=output_layer_policy)(x)
-    else:
-        raise ValueError(f'unknown problem type: \"{problem}\"')
-
-    return ModelArchitecture(Model(inputs=input_data, outputs=predictions))
-
-
 first_frame = ds_train.flatten()[0][0]
 
 
 model = fit_model(
-    architecture=small_convnet(
+    architecture=tiny_convnet(
         first_frame.shape[:3],
         dropout=0.5,
         hidden_layers_policy='mixed_float16',

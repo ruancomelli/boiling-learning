@@ -37,13 +37,6 @@ class Transformer(SimpleStr, Generic[_X, _Y]):
     def __call__(self, arg: _X, *args: Any, **kwargs: Any) -> _Y:
         return self._call(arg, *args, **kwargs)
 
-    @classmethod
-    def make(cls: Callable[..., C], name: str, *args, **kwargs) -> Callable[[Callable], C]:
-        def _make(f: Callable) -> C:
-            return cls(name, f, *args, **kwargs)
-
-        return _make
-
     def __describe__(self) -> JSONDataType:
         return json.serialize(
             {
@@ -52,25 +45,6 @@ class Transformer(SimpleStr, Generic[_X, _Y]):
                 'pack': self.pack,
             }
         )
-
-
-class Creator(Transformer[Pack, _Y], Generic[_Y]):
-    def __init__(
-        self,
-        name: str,
-        f: Callable[..., _Y],
-        pack: Pack = Pack(),
-        expand_pack_on_call: bool = False,
-    ) -> None:
-        if expand_pack_on_call:
-
-            def g(pack: Pack, *args, **kwargs) -> _Y:
-                return f(*(pack.args + args), **{**pack.kwargs, **kwargs})
-
-        else:
-            g = f
-
-        super().__init__(name, g, pack=pack)
 
 
 class FeatureTransformer(Transformer[Tuple[_X1, _Y], Tuple[_X2, _Y]], Generic[_X1, _X2, _Y]):
@@ -223,22 +197,6 @@ class DictFeatureTransformer(
 
 
 first_argument_transformer = Transformer('first_argument', nth_arg(0))
-
-
-def transformer(*args, **kwargs) -> Callable[[Callable], Transformer]:
-    def decorator(f: Callable) -> Transformer:
-        maker = Transformer.make(f.__name__, *args, **kwargs)
-        return maker(f)
-
-    return decorator
-
-
-def creator(*args, **kwargs) -> Callable[[Callable[..., S]], Creator[S]]:
-    def decorator(f: Callable[..., S]) -> Creator[S]:
-        maker = Creator.make(f.__name__, *args, **kwargs)
-        return maker(f)
-
-    return decorator
 
 
 @json.encode.instance(Transformer)

@@ -3,9 +3,11 @@ from functools import partial
 from typing import Optional, Tuple, Union
 
 import funcy
+from tensorflow.keras.applications import MobileNetV2
 from tensorflow.keras.experimental import LinearModel as _LinearModel
 from tensorflow.keras.layers import (
     Activation,
+    AveragePooling2D,
     Conv2D,
     Dense,
     Dropout,
@@ -24,71 +26,75 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.mixed_precision.experimental import Policy
 from tensorflow.keras.models import Model
 
-from boiling_learning.model.model import ProblemType, make_creator
+from boiling_learning.model.model import ProblemType
+from boiling_learning.model.training import ModelArchitecture
 from boiling_learning.utils import enum_item
-from boiling_learning.utils.functional import P
 
 # Check this guideline:
 # https://docs.nvidia.com/deeplearning/performance/dl-performance-fully-connected/index.html
 # It includes tips and rules-of-thumb for defining layers.
 
 
-class FlatteningMode(enum.Enum):
-    FLATTEN = enum.auto()
-    AVERAGE_POOLING = enum.auto()
-    MAX_POOLING = enum.auto()
-
-
-class ConvolutionType(enum.Enum):
-    CONV = enum.auto()
-    SEPARABLE_CONV = enum.auto()
-
-
-def _apply_policies_to_layers(
-    model: Model,
-    hidden_layers_policy: Union[str, Policy],
-    output_layer_policy: Union[str, Policy],
-) -> Model:
-    hidden_layers_policy = Policy(hidden_layers_policy)
-    output_layer_policy = Policy(output_layer_policy)
-
-    for layer in model.layers[1:-1]:
-        layer.dtype = hidden_layers_policy
-    model.layers[-1].dtype = output_layer_policy
-
-    return model
-
-
-@make_creator('LinearRegression')
-def LinearRegression(input_shape: Tuple, **kwargs) -> Model:
+def linear_regression(input_shape: Tuple[int, ...]) -> ModelArchitecture:
     input_data = Input(shape=input_shape)
     predictions = Dense(1, activation='linear')(input_data)
 
-    return Model(inputs=input_data, outputs=predictions)
+    return ModelArchitecture(Model(inputs=input_data, outputs=predictions))
 
 
-@make_creator(
-    'SmallConvNet',
-    defaults=P(
-        num_classes=3,
-        problem=ProblemType.REGRESSION,
-        fetch=frozenset({'model', 'history'}),
-    ),
-)
-def SmallConvNet(
-    input_shape: Tuple,
+def tiny_convnet(
+    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
     dropout: Optional[float],
     hidden_layers_policy: Union[str, Policy],
     output_layer_policy: Union[str, Policy],
     problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
-) -> Model:
-    '''CNN #1 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.'''
+) -> ModelArchitecture:
+    if len(input_shape) == 2:
+        input_shape = input_shape + (1,)
+
     input_data = Input(shape=input_shape)
     x = input_data  # start "current layer" as the input layer
+
+    x = AveragePooling2D((10, 10))(x)
+
     if normalize_images:
         x = LayerNormalization()(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    x = Flatten(dtype=hidden_layers_policy)(x)
+
+    problem = enum_item(ProblemType, problem)
+    if problem is ProblemType.CLASSIFICATION:
+        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
+        predictions = Activation('softmax', dtype=output_layer_policy)(x)
+    elif problem is ProblemType.REGRESSION:
+        x = Dense(1, dtype=hidden_layers_policy)(x)
+        predictions = Activation('linear', dtype=output_layer_policy)(x)
+    else:
+        raise ValueError(f'unknown problem type: \"{problem}\"')
+
+    return ModelArchitecture(Model(inputs=input_data, outputs=predictions))
+
+
+def small_convnet(
+    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
+    dropout: Optional[float],
+    hidden_layers_policy: Union[str, Policy],
+    output_layer_policy: Union[str, Policy],
+    problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
+    num_classes: Optional[int] = None,
+    normalize_images: bool = False,
+) -> ModelArchitecture:
+    if len(input_shape) == 2:
+        input_shape = input_shape + (1,)
+
+    input_data = Input(shape=input_shape)
+    x = input_data  # start "current layer" as the input layer
+
+    if normalize_images:
+        x = LayerNormalization()(x)
+
     x = Conv2D(
         16,
         (5, 5),
@@ -112,31 +118,31 @@ def SmallConvNet(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=input_data, outputs=predictions)
+    return ModelArchitecture(Model(inputs=input_data, outputs=predictions))
 
 
-@make_creator(
-    'HoboldNet1',
-    defaults=P(
-        num_classes=3,
-        problem=ProblemType.REGRESSION,
-        fetch=frozenset({'model', 'history'}),
-    ),
-)
-def HoboldNet1(
-    input_shape: Tuple,
+def hoboldnet1(
+    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
     dropout: Optional[float],
     hidden_layers_policy: Union[str, Policy],
     output_layer_policy: Union[str, Policy],
     problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
-) -> Model:
-    '''CNN #1 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.'''
+) -> ModelArchitecture:
+    '''CNN #1 implemented according to the paper Hobold and da Silva (2019):
+    Visualization-based nucleate boiling heat flux quantification using machine
+    learning.
+    '''
+    if len(input_shape) == 2:
+        input_shape = input_shape + (1,)
+
     input_data = Input(shape=input_shape)
     x = input_data  # start "current layer" as the input layer
+
     if normalize_images:
         x = LayerNormalization()(x)
+
     x = Conv2D(
         16,
         (5, 5),
@@ -160,31 +166,31 @@ def HoboldNet1(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=input_data, outputs=predictions)
+    return ModelArchitecture(Model(inputs=input_data, outputs=predictions))
 
 
-@make_creator(
-    'HoboldNet2',
-    defaults=P(
-        num_classes=3,
-        problem=ProblemType.REGRESSION,
-        fetch=frozenset({'model', 'history'}),
-    ),
-)
-def HoboldNet2(
-    input_shape: Tuple,
+def hoboldnet2(
+    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
     dropout: Optional[float],
     hidden_layers_policy: Union[str, Policy],
     output_layer_policy: Union[str, Policy],
     problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
-) -> Model:
-    '''CNN #2 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.'''
+) -> ModelArchitecture:
+    '''CNN #2 implemented according to the paper Hobold and da Silva (2019):
+    Visualization-based nucleate boiling heat flux quantification using machine
+    learning.
+    '''
+    if len(input_shape) == 2:
+        input_shape = input_shape + (1,)
+
     input_data = Input(shape=input_shape)
     x = input_data  # start "current layer" as the input layer
+
     if normalize_images:
         x = LayerNormalization()(x)
+
     x = Conv2D(
         32,
         (5, 5),
@@ -208,86 +214,31 @@ def HoboldNet2(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=input_data, outputs=predictions)
+    return ModelArchitecture(Model(inputs=input_data, outputs=predictions))
 
 
-@make_creator(
-    'HoboldNet3',
-    defaults=P(
-        num_classes=3,
-        problem=ProblemType.REGRESSION,
-        fetch=frozenset({'model', 'history'}),
-    ),
-)
-def HoboldNet3(
-    input_shape: Tuple,
+def hoboldnet3(
+    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
     dropout: Optional[float],
     hidden_layers_policy: Union[str, Policy],
     output_layer_policy: Union[str, Policy],
     problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
-) -> Model:
-    '''CNN #3 implemented according to the paper Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning.'''
+) -> ModelArchitecture:
+    '''CNN #3 implemented according to the paper Hobold and da Silva (2019):
+    Visualization-based nucleate boiling heat flux quantification using machine
+    learning.
+    '''
+    if len(input_shape) == 2:
+        input_shape = input_shape + (1,)
+
     input_data = Input(shape=input_shape)
     x = input_data  # start "current layer" as the input layer
+
     if normalize_images:
         x = LayerNormalization()(x)
-    x = Conv2D(
-        32,
-        (5, 5),
-        padding='same',
-        activation='relu',
-        dtype=hidden_layers_policy,
-    )(x)
-    x = Conv2D(
-        64,
-        (5, 5),
-        padding='same',
-        activation='relu',
-        dtype=hidden_layers_policy,
-    )(x)
-    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
-    x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    problem = enum_item(ProblemType, problem)
-    if problem is ProblemType.CLASSIFICATION:
-        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Activation('softmax', dtype=output_layer_policy)(x)
-    elif problem is ProblemType.REGRESSION:
-        x = Dense(1, dtype=hidden_layers_policy)(x)
-        predictions = Activation('linear', dtype=output_layer_policy)(x)
-    else:
-        raise ValueError(f'unknown problem type: \"{problem}\"')
-
-    return Model(inputs=input_data, outputs=predictions)
-
-
-@make_creator(
-    'HoboldNetSupplementary',
-    defaults=P(
-        num_classes=3,
-        problem=ProblemType.REGRESSION,
-        fetch=frozenset({'model', 'history'}),
-    ),
-)
-def HoboldNetSupplementary(
-    input_shape: Tuple,
-    dropout: Optional[float],
-    hidden_layers_policy: Union[str, Policy],
-    output_layer_policy: Union[str, Policy],
-    problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
-    num_classes: Optional[int] = None,
-    normalize_images: bool = False,
-) -> Model:
-    '''See supplementary material for Hobold and da Silva (2019): Visualization-based nucleate boiling heat flux quantification using machine learning'''
-    input_data = Input(shape=input_shape)
-    x = input_data  # start "current layer" as the input layer
-    if normalize_images:
-        x = LayerNormalization()(x)
     x = Conv2D(
         32,
         (5, 5),
@@ -318,26 +269,83 @@ def HoboldNetSupplementary(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=input_data, outputs=predictions)
+    return ModelArchitecture(Model(inputs=input_data, outputs=predictions))
 
 
-@make_creator(
-    'KramerNet',
-    defaults=P(
-        num_classes=3,
-        problem=ProblemType.REGRESSION,
-        fetch=frozenset({'model', 'history'}),
-    ),
-)
-def KramerNet(
-    input_shape: Tuple,
+def hoboldnet_supplementary(
+    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
     dropout: Optional[float],
     hidden_layers_policy: Union[str, Policy],
     output_layer_policy: Union[str, Policy],
     problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
-):
+    normalize_images: bool = False,
+) -> ModelArchitecture:
+    '''See supplementary material for Hobold and da Silva (2019): Visualization-based
+    nucleate boiling heat flux quantification using machine learning.
+    '''
+    if len(input_shape) == 2:
+        input_shape = input_shape + (1,)
+
     input_data = Input(shape=input_shape)
+    x = input_data  # start "current layer" as the input layer
+
+    if normalize_images:
+        x = LayerNormalization()(x)
+
+    x = Conv2D(
+        32,
+        (5, 5),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(x)
+    x = Conv2D(
+        64,
+        (5, 5),
+        padding='same',
+        activation='relu',
+        dtype=hidden_layers_policy,
+    )(x)
+    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    x = Flatten(dtype=hidden_layers_policy)(x)
+    x = Dense(512, activation='relu', dtype=hidden_layers_policy)(x)
+    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+
+    problem = enum_item(ProblemType, problem)
+    if problem is ProblemType.CLASSIFICATION:
+        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
+        predictions = Activation('softmax', dtype=output_layer_policy)(x)
+    elif problem is ProblemType.REGRESSION:
+        x = Dense(1, dtype=hidden_layers_policy)(x)
+        predictions = Activation('linear', dtype=output_layer_policy)(x)
+    else:
+        raise ValueError(f'unknown problem type: \"{problem}\"')
+
+    return ModelArchitecture(Model(inputs=input_data, outputs=predictions))
+
+
+def kramernet(
+    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
+    dropout: Optional[float],
+    hidden_layers_policy: Union[str, Policy],
+    output_layer_policy: Union[str, Policy],
+    problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
+    num_classes: Optional[int] = None,
+    normalize_images: bool = False,
+) -> ModelArchitecture:
+    '''See supplementary material for Hobold and da Silva (2019): Visualization-based
+    nucleate boiling heat flux quantification using machine learning.
+    '''
+    if len(input_shape) == 2:
+        input_shape = input_shape + (1,)
+
+    input_data = Input(shape=input_shape)
+    x = input_data  # start "current layer" as the input layer
+
+    if normalize_images:
+        x = LayerNormalization()(x)
 
     x = Conv2D(
         64,
@@ -404,11 +412,40 @@ def KramerNet(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=input_data, outputs=predictions)
+    return ModelArchitecture(Model(inputs=input_data, outputs=predictions))
 
 
-@make_creator('BoilNet')
-def BoilNet(
+def linear_model(
+    input_shape: Tuple,
+    problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
+    normalize_images: bool = False,
+) -> ModelArchitecture:
+    input_data = Input(shape=input_shape)
+    x = input_data  # start "current layer" as the input layer
+    if normalize_images:
+        x = LayerNormalization()(x)
+
+    problem = enum_item(ProblemType, problem.upper())
+    if problem is not ProblemType.REGRESSION:
+        raise ValueError(f'unsupported problem type: \"{problem}\"')
+
+    predictions = _LinearModel()(x)
+
+    return ModelArchitecture(Model(inputs=input_data, outputs=predictions))
+
+
+class FlatteningMode(enum.Enum):
+    FLATTEN = enum.auto()
+    AVERAGE_POOLING = enum.auto()
+    MAX_POOLING = enum.auto()
+
+
+class ConvolutionType(enum.Enum):
+    CONV = enum.auto()
+    SEPARABLE_CONV = enum.auto()
+
+
+def boilnet(
     image_shape: Tuple[Optional[int], ...],
     hidden_layers_policy: Union[str, Policy],
     output_layer_policy: Union[str, Policy],
@@ -420,7 +457,7 @@ def BoilNet(
     problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
     num_classes: int = 0,
     normalize_images: bool = False,
-) -> Model:
+) -> ModelArchitecture:
     input_shape = (time_window, *image_shape) if time_window > 0 else image_shape
     flattening = enum_item(FlatteningMode, flattening)
     flatten_layer = {
@@ -472,34 +509,51 @@ def BoilNet(
 
     model = _apply_policies_to_layers(model, hidden_layers_policy, output_layer_policy)
 
+    return ModelArchitecture(model)
+
+
+def _apply_policies_to_layers(
+    model: Model,
+    hidden_layers_policy: Union[str, Policy],
+    output_layer_policy: Union[str, Policy],
+) -> Model:
+    hidden_layers_policy = Policy(hidden_layers_policy)
+    output_layer_policy = Policy(output_layer_policy)
+
+    for layer in model.layers[1:-1]:
+        layer.dtype = hidden_layers_policy
+    model.layers[-1].dtype = output_layer_policy
+
     return model
 
 
-@make_creator('LinearModel')
-def LinearModel(
-    input_shape: Tuple,
-    dropout: Optional[float],
+def boiling_mobile_net(
+    image_shape: Tuple[Optional[int], ...],
     hidden_layers_policy: Union[str, Policy],
     output_layer_policy: Union[str, Policy],
     problem: Union[int, str, ProblemType] = ProblemType.REGRESSION,
-    num_classes: Optional[int] = None,
-    normalize_images: bool = False,
-) -> Model:
-    input_data = Input(shape=input_shape)
-    x = input_data  # start "current layer" as the input layer
-    if normalize_images:
-        x = LayerNormalization()(x)
+    num_classes: int = 0,
+) -> ModelArchitecture:
+    mobile_net = MobileNetV2(
+        input_shape=image_shape, include_top=False, weights='imagenet', pooling='avg'
+    )
+    x = Dense(256, activation='relu', dtype=hidden_layers_policy)(mobile_net.output)
 
-    problem = enum_item(ProblemType, problem.upper())
-    if problem is not ProblemType.REGRESSION:
-        raise ValueError(f'unsupported problem type: \"{problem}\"')
+    problem = enum_item(ProblemType, problem)
+    if problem is ProblemType.CLASSIFICATION:
+        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
+        predictions = Activation('softmax', dtype=output_layer_policy)(x)
+    elif problem is ProblemType.REGRESSION:
+        x = Dense(1, dtype=hidden_layers_policy)(x)
+        predictions = Activation('linear', dtype=output_layer_policy)(x)
+    else:
+        raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    predictions = _LinearModel()(x)
-
-    return Model(inputs=input_data, outputs=predictions)
+    return ModelArchitecture(Model(inputs=mobile_net.input, outputs=predictions))
 
 
 # fazer erro em função do y: ver se para maiores ys o erro vai subindo ou diminuindo
-# quem sabe fazer 3 ou mais modelos, um especializado para cada região de y; e quem sabe usar um classificador pra escolher qual estimador não ajude muito
+# quem sabe fazer 3 ou mais modelos, um especializado para cada região de y; e quem sabe
+# usar um classificador pra escolher qual estimador não ajude muito
 # focar na arquitetura da rede, que é mais importante do que hiperparâmetros
 # otimizar as convolucionais pode ser mais importante do que otimizar as fully-connected

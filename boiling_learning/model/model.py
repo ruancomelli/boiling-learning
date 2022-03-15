@@ -1,17 +1,14 @@
 import enum
 from operator import itemgetter
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Optional, Tuple, TypeVar
+from typing import Dict, Iterable, Optional, Tuple, TypeVar
 
-import funcy
 import parse
 import tensorflow as tf
 
 from boiling_learning.io.io import LoaderFunction
 from boiling_learning.io.storage import Metadata, deserialize, serialize
-from boiling_learning.preprocessing.transformers import Creator
 from boiling_learning.utils import PathLike, append, resolve
-from boiling_learning.utils.functional import Pack
 
 T = TypeVar('T')
 _ModelType = TypeVar('_ModelType')
@@ -46,50 +43,6 @@ def restore(
 class ProblemType(enum.Enum):
     CLASSIFICATION = enum.auto()
     REGRESSION = enum.auto()
-
-
-def default_compiler(model, **params):
-    model.compile(**params)
-    return model
-
-
-def default_fitter(model, **params):
-    return model.fit(**params)
-
-
-def make_creator_method(
-    builder: Callable[..., _ModelType],
-    compiler: Callable[[_ModelType], _ModelType] = default_compiler,
-    fitter: Callable[[_ModelType], Any] = default_fitter,
-) -> Callable[..., dict]:
-    def creator_method(
-        num_classes,
-        problem,
-        strategy,
-        architecture_setup,
-        compile_setup,
-        fit_setup,
-        fetch,
-    ):
-        with strategy.scope():
-            model = builder(problem=problem, num_classes=num_classes, **architecture_setup)
-
-            model = compiler(model, **compile_setup['params'])
-
-        history = fitter(model, **fit_setup['params']) if fit_setup.get('do', False) else None
-
-        available_data = {'model': model, 'history': history}
-
-        return {k: available_data[k] for k in fetch}
-
-    return creator_method
-
-
-def make_creator(name: str, defaults: Pack = Pack()) -> Callable[[Callable], Callable]:
-    return funcy.compose(
-        Creator.make(name, pack=defaults, expand_pack_on_call=True),
-        make_creator_method,
-    )
 
 
 def model_checkpoints(pattern: PathLike, *, epoch_key: str = 'epoch') -> Dict[int, Path]:
