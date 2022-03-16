@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json as _json
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, Iterator, List, Optional, Union
 
+import tensorflow as tf
 from dataclassy import dataclass
 from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.losses import Loss
@@ -55,6 +57,13 @@ def _describe_model(instance: Model) -> json.JSONDataType:
 @dataclass(frozen=True)
 class ModelArchitecture:
     model: Model
+    strategy: Optional[Described[tf.distribute.Strategy]] = None
+
+
+def build(
+    builder: Callable[[], Model], strategy: Optional[Described[tf.distribute.Strategy]] = None
+) -> ModelArchitecture:
+    return ModelArchitecture(builder(), strategy)
 
 
 @dataclass(frozen=True)
@@ -72,7 +81,9 @@ class CompiledModel:
 
 def get_compiled_model(architecture: ModelArchitecture, params: CompileModelParams) -> Model:
     model = architecture.model
+
     model.compile(optimizer=params.optimizer, loss=params.loss, metrics=params.metrics)
+
     return model
 
 
@@ -136,3 +147,11 @@ def fit_model(
         compile_params=compiled_model.params,
         fit_params=params,
     )
+
+
+@contextmanager
+def strategy_scope(strategy: Optional[Described[tf.distribute.Strategy, Any]]) -> Iterator[None]:
+    context = strategy.value.scope() if strategy is not None else nullcontext()
+
+    with context:
+        yield

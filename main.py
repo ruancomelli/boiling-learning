@@ -54,8 +54,10 @@ from boiling_learning.model.training import (
     FitModel,
     FitModelParams,
     ModelArchitecture,
+    build,
     compile_model,
     get_fit_model,
+    strategy_scope,
 )
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
@@ -503,62 +505,66 @@ def fit_model(
 
 
 first_frame = ds_train.flatten()[0][0]
+strategy = Described.from_constructor(tf.distribute.MirroredStrategy, P())
 
-
-model = fit_model(
-    architecture=tiny_convnet(
-        first_frame.shape[:3],
-        dropout=0.5,
-        hidden_layers_policy='mixed_float16',
-        output_layer_policy='float32',
-    ),
-    compile_params=CompileModelParams(
-        loss=tf.keras.losses.MeanSquaredError(),
-        optimizer=tf.keras.optimizers.Adam(1e-5),
-        metrics=[
-            tf.keras.metrics.MeanSquaredError('MSE'),
-            tf.keras.metrics.RootMeanSquaredError('RMS'),
-            tf.keras.metrics.MeanAbsoluteError('MAE'),
-            tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
-            tfa.metrics.RSquare('R2', y_shape=(1,)),
-        ],
-    ),
-    fit_model_params=FitModelParams(
-        batch_size=128,
-        epochs=100,
-        callbacks=Described.from_list(
-            [
-                Described.from_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
-                Described.from_constructor(
-                    tf.keras.callbacks.EarlyStopping,
-                    P(
-                        monitor='val_loss',
-                        min_delta=0,
-                        patience=10,
-                        baseline=None,
-                        mode='auto',
-                        restore_best_weights=True,
-                    ),
-                ),
-                Described.from_constructor(
-                    ReduceLROnPlateau,
-                    P(
-                        monitor='val_loss',
-                        factor=0.5,
-                        patience=5,
-                        min_delta=0.01,
-                        min_delta_mode='relative',
-                        min_lr=0,
-                        mode='auto',
-                        cooldown=2,
-                    ),
-                ),
-            ]
+with strategy_scope(strategy):
+    model = fit_model(
+        architecture=build(
+            P(
+                first_frame.shape[:3],
+                dropout=0.5,
+                hidden_layers_policy='mixed_float16',
+                output_layer_policy='float32',
+            ).partial(tiny_convnet),
+            strategy=strategy,
         ),
-    ),
-    image_dataset_get_params=get_image_dataset_params,
-    image_dataset_augment_params=augment_dataset_params,
-)
+        compile_params=CompileModelParams(
+            loss=tf.keras.losses.MeanSquaredError(),
+            optimizer=tf.keras.optimizers.Adam(1e-5),
+            metrics=[
+                tf.keras.metrics.MeanSquaredError('MSE'),
+                tf.keras.metrics.RootMeanSquaredError('RMS'),
+                tf.keras.metrics.MeanAbsoluteError('MAE'),
+                tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
+                tfa.metrics.RSquare('R2', y_shape=(1,)),
+            ],
+        ),
+        fit_model_params=FitModelParams(
+            batch_size=128,
+            epochs=100,
+            callbacks=Described.from_list(
+                [
+                    Described.from_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
+                    Described.from_constructor(
+                        tf.keras.callbacks.EarlyStopping,
+                        P(
+                            monitor='val_loss',
+                            min_delta=0,
+                            patience=10,
+                            baseline=None,
+                            mode='auto',
+                            restore_best_weights=True,
+                        ),
+                    ),
+                    Described.from_constructor(
+                        ReduceLROnPlateau,
+                        P(
+                            monitor='val_loss',
+                            factor=0.5,
+                            patience=5,
+                            min_delta=0.01,
+                            min_delta_mode='relative',
+                            min_lr=0,
+                            mode='auto',
+                            cooldown=2,
+                        ),
+                    ),
+                ]
+            ),
+        ),
+        image_dataset_get_params=get_image_dataset_params,
+        image_dataset_augment_params=augment_dataset_params,
+    )
 
 assert False, 'STOP!'
 
