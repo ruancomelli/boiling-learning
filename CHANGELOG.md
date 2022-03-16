@@ -1,3 +1,13 @@
+## v0.19.6 (2022-03-15)
+
+### Feat
+
+- support distribute strategy
+
+### Refactor
+
+- **utils/descriptions**: simplify description overloads to consider only type, and not contents
+
 ## v0.19.5 (2022-03-14)
 
 ## v0.19.4 (2022-03-14)
