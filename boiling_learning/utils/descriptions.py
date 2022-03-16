@@ -47,47 +47,21 @@ def _describe_has_describe(instance: HasDescribe[_Description]) -> _Description:
     return instance.__describe__()
 
 
-class _ListOfDescribableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
-        return isinstance(instance, list) and all(describe.supports(item) for item in instance)
-
-
-class ListOfDescribable(
-    List[Supports[Describable[_Description]]],
-    Generic[_Description],
-    metaclass=_ListOfDescribableMeta,
-):
-    ...
-
-
-@describe.instance(delegate=ListOfDescribable)
-def _describe_list(instance: ListOfDescribable[_Description]) -> List[_Description]:
+@describe.instance(list)
+def _describe_list(instance: List[Supports[Describable[_Description]]]) -> List[_Description]:
     return [describe(item) for item in instance]
 
 
-class _TupleOfDescribableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
-        return isinstance(instance, tuple) and all(describe.supports(item) for item in instance)
-
-
-class TupleOfDescribable(
-    Tuple[Supports[Describable[_Description]], ...],
-    Generic[_Description],
-    metaclass=_TupleOfDescribableMeta,
-):
-    ...
-
-
-@describe.instance(delegate=TupleOfDescribable)
-def _describe_tuple(instance: TupleOfDescribable[_Description]) -> Tuple[_Description, ...]:
+@describe.instance(tuple)
+def _describe_tuple(
+    instance: Tuple[Supports[Describable[_Description]], ...]
+) -> Tuple[_Description, ...]:
     return tuple(describe(item) for item in instance)
 
 
 class _DictOfDescribableMeta(type):
     def __instancecheck__(cls, instance: Any) -> bool:
-        return isinstance(instance, dict) and all(
-            isinstance(key, str) and describe.supports(value) for key, value in instance.items()
-        )
+        return isinstance(instance, dict) and all(isinstance(key, str) for key in instance)
 
 
 class DictOfDescribable(
@@ -127,65 +101,22 @@ def _describe_fraction(instance: Fraction) -> Tuple[int, int]:
     return instance.numerator, instance.denominator
 
 
-class _FrozenDictOfDescribableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
-        return isinstance(instance, frozendict) and describe.supports(dict(instance))
-
-
-class _FrozenDictMeta(_FrozenDictOfDescribableMeta, type(frozendict)):
-    pass
-
-
-class FrozenDictOfDescribable(
-    frozendict[str, Supports[Describable[_Description]]],
-    Generic[_Description],
-    metaclass=_FrozenDictMeta,
-):
-    ...
-
-
-@describe.instance(delegate=FrozenDictOfDescribable)
+@describe.instance(frozendict)
 def _describe_frozendict(
-    instance: FrozenDictOfDescribable[_Description],
+    instance: frozendict[str, Supports[Describable[_Description]]],
 ) -> Dict[str, _Description]:
     return describe(dict(instance))
 
 
-class _SetOfDescribableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
-        return isinstance(instance, set) and all(describe.supports(item) for item in instance)
-
-
-class SetOfDescribable(
-    Set[Supports[Describable[_Description]]],
-    Generic[_Description],
-    metaclass=_SetOfDescribableMeta,
-):
-    ...
-
-
-@describe.instance(delegate=SetOfDescribable)
-def _describe_set(instance: SetOfDescribable[_Description]) -> Set[_Description]:
+@describe.instance(set)
+def _describe_set(instance: Set[Supports[Describable[_Description]]]) -> Set[_Description]:
     return {describe(item) for item in instance}
 
 
-class _FrozenSetOfDescribableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
-        return isinstance(instance, frozenset) and all(
-            describe.supports(item) for item in instance
-        )
-
-
-class FrozenSetOfDescribable(
-    FrozenSet[Supports[Describable[_Description]]],
-    Generic[_Description],
-    metaclass=_FrozenSetOfDescribableMeta,
-):
-    ...
-
-
-@describe.instance(delegate=FrozenSetOfDescribable)
-def _describe_frozenset(instance: FrozenSetOfDescribable[_Description]) -> FrozenSet[_Description]:
+@describe.instance(frozenset)
+def _describe_frozenset(
+    instance: FrozenSet[Supports[Describable[_Description]]],
+) -> FrozenSet[_Description]:
     return frozenset(describe(item) for item in instance)
 
 
