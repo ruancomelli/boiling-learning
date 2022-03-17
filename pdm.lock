@@ -226,22 +226,22 @@ dependencies = [
 
 [[package]]
 name = "boto3"
-version = "1.21.20"
+version = "1.21.21"
 requires_python = ">= 3.6"
 summary = "The AWS SDK for Python"
 dependencies = [
-    "botocore<1.25.0,>=1.24.20",
-    "jmespath<1.0.0,>=0.7.1",
+    "botocore<1.25.0,>=1.24.21",
+    "jmespath<2.0.0,>=0.7.1",
     "s3transfer<0.6.0,>=0.5.0",
 ]
 
 [[package]]
 name = "botocore"
-version = "1.24.20"
+version = "1.24.21"
 requires_python = ">= 3.6"
 summary = "Low-level, data-driven core of boto 3."
 dependencies = [
-    "jmespath<1.0.0,>=0.7.1",
+    "jmespath<2.0.0,>=0.7.1",
     "python-dateutil<3.0.0,>=2.1",
     "urllib3<1.27,>=1.25.4",
 ]
@@ -764,8 +764,8 @@ dependencies = [
 
 [[package]]
 name = "jmespath"
-version = "0.10.0"
-requires_python = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
+version = "1.0.0"
+requires_python = ">=3.7"
 summary = "JSON Matching Expressions"
 
 [[package]]
@@ -2377,12 +2377,13 @@ content_hash = "sha256:5bfe7b899f5f4e4b6f9980f76809e91b2976c97b4e579f8618f087955
     {file = "bokeh-2.4.2-py3-none-any.whl", hash = "sha256:2a842d717feeee802e668054277c09054b6f1561557a16dddaf5f7c452f2728c"},
     {file = "bokeh-2.4.2.tar.gz", hash = "sha256:f0a4b53364ed3b7eb936c5cb1a4f4132369e394c7ae0a8ef420459410958033d"},
 ]
-"boto3 1.21.20" = [
-    {file = "boto3-1.21.20-py3-none-any.whl", hash = "sha256:b1c90fcdce73e6bc11f6a7a834b89e365257ddd12d8e27e0c2871184d4ceb740"},
-    {file = "boto3-1.21.20.tar.gz", hash = "sha256:c82456100f503f405a7690f9aba1b32182f602b5afec06458522a3d682ab6ca6"},
+"boto3 1.21.21" = [
+    {file = "boto3-1.21.21-py3-none-any.whl", hash = "sha256:8fa32fcc8be38327bd667237223d71e5e4b2475f39d6882aca4dbad19fff8c29"},
+    {file = "boto3-1.21.21.tar.gz", hash = "sha256:6fa0622f308cfd1da758966fc98b52fbd74b80606d14586c8ad82c7a6c4f32d0"},
 ]
-"botocore 1.24.20" = [
-    {file = "botocore-1.24.20-py3-none-any.whl", hash = "sha256:d913c2670799dece00ccd4880e164f8c05df8cfadd7d3fe02e01fe384ad0f8c1"},
+"botocore 1.24.21" = [
+    {file = "botocore-1.24.21-py3-none-any.whl", hash = "sha256:92daca8775e738a9db9b465d533019285f09d541e903233261299fd87c2f842c"},
+    {file = "botocore-1.24.21.tar.gz", hash = "sha256:7e976cfd0a61601e74624ef8f5246b40a01f2cce73a011ef29cf80a6e371d0fa"},
 ]
 "cached-property 1.5.2" = [
     {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
@@ -2883,9 +2884,9 @@ content_hash = "sha256:5bfe7b899f5f4e4b6f9980f76809e91b2976c97b4e579f8618f087955
     {file = "jinxed-1.1.0-py2.py3-none-any.whl", hash = "sha256:6a61ccf963c16aa885304f27e6e5693783676897cea0c7f223270c8b8e78baf8"},
     {file = "jinxed-1.1.0.tar.gz", hash = "sha256:d8f1731f134e9e6b04d95095845ae6c10eb15cb223a5f0cabdea87d4a279c305"},
 ]
-"jmespath 0.10.0" = [
-    {file = "jmespath-0.10.0-py2.py3-none-any.whl", hash = "sha256:cdf6525904cc597730141d61b36f2e4b8ecc257c420fa2f4549bac2c2d0cb72f"},
-    {file = "jmespath-0.10.0.tar.gz", hash = "sha256:b85d0567b8666149a93172712e68920734333c0ce7e89b78b3e987f71e5ed4f9"},
+"jmespath 1.0.0" = [
+    {file = "jmespath-1.0.0-py3-none-any.whl", hash = "sha256:e8dcd576ed616f14ec02eed0005c85973b5890083313860136657e24784e4c04"},
+    {file = "jmespath-1.0.0.tar.gz", hash = "sha256:a490e280edd1f57d6de88636992d05b71e97d69a26a19f058ecf7d304474bf5e"},
 ]
 "joblib 1.1.0" = [
     {file = "joblib-1.1.0-py2.py3-none-any.whl", hash = "sha256:f21f109b3c7ff9d95f8387f752d0d9c34a02aa2f7060c2135f465da0e5160ff6"},
