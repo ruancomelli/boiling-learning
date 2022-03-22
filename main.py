@@ -23,7 +23,6 @@ from typing import (
 import funcy
 import more_itertools as mit
 import numpy as np
-import ray
 import tensorflow as tf
 import tensorflow_addons as tfa
 from tensorflow.data import AUTOTUNE
@@ -54,7 +53,6 @@ from boiling_learning.model.training import (
     FitModel,
     FitModelParams,
     ModelArchitecture,
-    build,
     compile_model,
     get_fit_model,
     strategy_scope,
@@ -79,9 +77,6 @@ from boiling_learning.utils.described import Described
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import Many, typename
-
-ray.init(ignore_reinit_error=True)
-
 
 print_header('Initializing script')
 
@@ -284,7 +279,6 @@ def _get_image_dataset(
     return dss
 
 
-@cache(default_table_allocator(analyses_path / 'datasets' / 'sliceable_image_datasets2'))
 def get_image_dataset(
     params: GetImageDatasetParams,
 ) -> DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]]:
@@ -401,7 +395,20 @@ def augment_datasets(
     )
 
 
+get_image_dataset_params = GetImageDatasetParams(
+    boiling_cases_timed()[0],
+    transformers=boiling_preprocessors,
+    splits=DatasetSplits(
+        train=Fraction(70, 100),
+        val=Fraction(15, 100),
+        test=Fraction(15, 100),
+    ),
+    dataset_size=Fraction(1, 100),
+    target='Flux [W/cm**2]',
+)
 augment_dataset_params = AugmentDatasetParams(augmentors=boiling_augmentors)
+
+
 ds_train, ds_val, ds_test = augment_datasets(
     get_image_dataset(get_image_dataset_params),
     augment_dataset_params,
@@ -442,16 +449,10 @@ class GetFitModel(CachedFunction[_P, Model]):
         path = self.allocate(compiled_model, datasets, params)
         path = resolve(path, parents=True)
 
+        dataset_cache_path = self.allocate(datasets, params.batch_size)
         _, ds_val, _ = datasets.value
-        ds_val_g10 = (
-            sliceable_dataset_to_tensorflow_dataset(ds_val, shuffle=True)
-            .filter(lambda frame, hf: hf >= 10)
-            .take(
-                # the following quantity is defined on
-                # "Visualization-based nucleate boiling heat flux quantification
-                # using machine learning"
-                12614
-            )
+        ds_val_g10 = sliceable_dataset_to_tensorflow_dataset(ds_val, shuffle=True).filter(
+            lambda frame, hf: hf >= 10
         )
 
         if params.batch_size is not None:
@@ -474,7 +475,9 @@ class GetFitModel(CachedFunction[_P, Model]):
             ]
         )
 
-        creator: Callable[[], Model] = P(compiled_model, datasets, params).partial(self.function)
+        creator: Callable[[], Model] = P(
+            compiled_model, datasets, params, cache=dataset_cache_path
+        ).partial(self.function)
 
         return self.provide(creator, path)
 
@@ -509,14 +512,13 @@ strategy = Described.from_constructor(tf.distribute.MirroredStrategy, P())
 
 with strategy_scope(strategy):
     model = fit_model(
-        architecture=build(
-            P(
+        architecture=ModelArchitecture(
+            tiny_convnet(
                 first_frame.shape[:3],
                 dropout=0.5,
                 hidden_layers_policy='mixed_float16',
                 output_layer_policy='float32',
-            ).partial(tiny_convnet),
-            strategy=strategy,
+            )
         ),
         compile_params=CompileModelParams(
             loss=tf.keras.losses.MeanSquaredError(),
@@ -565,6 +567,7 @@ with strategy_scope(strategy):
         image_dataset_get_params=get_image_dataset_params,
         image_dataset_augment_params=augment_dataset_params,
     )
+
 
 assert False, 'STOP!'
 

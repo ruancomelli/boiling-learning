@@ -209,10 +209,7 @@ def features(ds: tf.data.Dataset) -> tf.data.Dataset:
 @triplet_aware
 @none_aware
 def targets(ds: tf.data.Dataset, key: Any = EMPTY) -> tf.data.Dataset:
-    if key is EMPTY:
-        return ds.map(lambda x, y: y)
-    else:
-        return ds.map(lambda x, y: y[key])
+    return ds.map(lambda x, y: y) if key is EMPTY else ds.map(lambda x, y: y[key])
 
 
 @serialize.instance(DatasetTriplet)

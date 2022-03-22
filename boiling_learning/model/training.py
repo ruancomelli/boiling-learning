@@ -3,7 +3,7 @@ from __future__ import annotations
 import json as _json
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 import tensorflow as tf
 from dataclassy import dataclass
@@ -57,13 +57,6 @@ def _describe_model(instance: Model) -> json.JSONDataType:
 @dataclass(frozen=True)
 class ModelArchitecture:
     model: Model
-    strategy: Optional[Described[tf.distribute.Strategy]] = None
-
-
-def build(
-    builder: Callable[[], Model], strategy: Optional[Described[tf.distribute.Strategy]] = None
-) -> ModelArchitecture:
-    return ModelArchitecture(builder(), strategy)
 
 
 @dataclass(frozen=True)
