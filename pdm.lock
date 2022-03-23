@@ -2166,7 +2166,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:19a46490b701a96c8cdfd88ebea269fc3a15e5ed8d6cdff89d4fa036d9839bd7"
+content_hash = "sha256:b8092ca222de5b40366be64755094003d325586ed70b802c4609b483ed1e2420"
 
 [metadata.files]
 "absl-py 1.0.0" = [
@@ -2380,6 +2380,7 @@ content_hash = "sha256:19a46490b701a96c8cdfd88ebea269fc3a15e5ed8d6cdff89d4fa036d
 ]
 "botocore 1.24.23" = [
     {file = "botocore-1.24.23-py3-none-any.whl", hash = "sha256:536d5fcec2dfaf9671b9d361c2479ef435bfb905f73e24f6fbe73bc33ba66dfe"},
+    {file = "botocore-1.24.23.tar.gz", hash = "sha256:1c8a77809dd59bf4084780ea1785c38d0ebcacd385d83fb7f6ad81648bbb22dc"},
 ]
 "cached-property 1.5.2" = [
     {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},

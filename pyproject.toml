@@ -105,10 +105,10 @@ build = [
     "setuptools>=60.7.1"
 ]
 types = [
-    "mypy>=0.931",
+    "mypy>=0.940",
     "types-decorator>=5.1.3",
     "types-frozendict>=2.0.4",
-    "types-PyYAML>=6.0.3"
+    "types-PyYAML>=6.0.3",
 ]
 
 [tool.isort]
@@ -154,7 +154,6 @@ warn_unused_configs = true
 warn_unused_ignores = true
 plugins = [
 	"numpy.typing.mypy_plugin",
-	"classes.contrib.mypy.classes_plugin",
 	"tinydb.mypy_plugin",
 	"dataclassy.mypy"
 ]

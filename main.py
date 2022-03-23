@@ -57,7 +57,6 @@ from boiling_learning.model.training import (
     get_fit_model,
     strategy_scope,
 )
-from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.transformers import DictFeatureTransformer, Transformer
@@ -76,7 +75,7 @@ from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.lazy import Lazy, LazyCallable
-from boiling_learning.utils.typeutils import Many, typename
+from boiling_learning.utils.typeutils import typename
 
 print_header('Initializing script')
 
@@ -106,12 +105,12 @@ OPTIONS = Options()
 for option, value in OPTIONS.items():
     print(f'{option}: {value}')
 
-boiling_learning_path: Path = resolve(os.environ['BOILING_DATA_PATH'])
-boiling_experiments_path: Path = boiling_learning_path / 'experiments'
-boiling_cases_path: Path = boiling_learning_path / 'cases'
-condensation_learning_path: Path = resolve(os.environ['CONDENSATION_DATA_PATH'])
-condensation_cases_path: Path = condensation_learning_path / 'data'
-analyses_path: Path = boiling_learning_path / 'analyses'
+boiling_learning_path = resolve(os.environ['BOILING_DATA_PATH'])
+boiling_experiments_path = boiling_learning_path / 'experiments'
+boiling_cases_path = boiling_learning_path / 'cases'
+condensation_learning_path = resolve(os.environ['CONDENSATION_DATA_PATH'])
+condensation_cases_path = condensation_learning_path / 'data'
+analyses_path = boiling_learning_path / 'analyses'
 
 print_header('Important paths', level=1)
 check_all_paths_exist(
@@ -127,19 +126,19 @@ check_all_paths_exist(
 )
 
 print_header('Checking CPUs and GPUs', level=1)
-strategy: tf.distribute.Strategy = initialize_gpus()
-strategy_name: str = typename(strategy)
+strategy = initialize_gpus()
+strategy_name = typename(strategy)
 print('Using distribute strategy:', strategy_name)
 
-boiling_cases_names: Many[str] = tuple(f'case {idx+1}' for idx in range(2))
+boiling_cases_names = tuple(f'case {idx+1}' for idx in range(2))
 # FIXME: use the following:
-# boiling_cases_names: Many[str] = tuple(f'case {idx+1}' for idx in range(5))
-boiling_cases_names_timed: Many[str] = tuple(funcy.without(boiling_cases_names, 'case 1'))
+# boiling_cases_names = tuple(f'case {idx+1}' for idx in range(5))
+boiling_cases_names_timed = tuple(funcy.without(boiling_cases_names, 'case 1'))
 
 print_header('Preparing datasets')
 print_header('Loading cases', level=1)
 print('Loading boiling cases from', boiling_cases_path)
-boiling_cases: Lazy[Many[Case]] = LazyCallable(load_cases.main)(
+boiling_cases = LazyCallable(load_cases.main)(
     (boiling_cases_path / case_name for case_name in boiling_cases_names),
     video_suffix='.MP4',
     options=load_cases.Options(
@@ -148,7 +147,7 @@ boiling_cases: Lazy[Many[Case]] = LazyCallable(load_cases.main)(
     ),
     verbose=False,
 )
-boiling_cases_timed: Lazy[Many[Case]] = Lazy(
+boiling_cases_timed = Lazy(
     lambda: tuple(case for case in boiling_cases() if case.name in boiling_cases_names_timed)
 )
 
