@@ -502,7 +502,3 @@ def contains(elem):
 
 def is_(x) -> Callable[[Any], bool]:
     return partial(operator.is_, x)
-
-
-def is_not(x) -> Callable[[Any], bool]:
-    return partial(operator.is_not, x)

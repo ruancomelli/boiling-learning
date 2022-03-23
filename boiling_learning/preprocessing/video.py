@@ -114,11 +114,7 @@ class Video(Sequence[VideoFrame]):
         self.video = self.video[: valid_end_frame + 1]
 
     def _valid_end_frame(self) -> int:
-        for index in range(
-            len(self) - 1,  # starting from the last frame
-            -1,  # up until the first frame (frame 0 is included)
-            -1,  # decrementing this index
-        ):
+        for index in reversed(range(len(self))):
             # the following exceptions are "expected" and signify that this candidate end frame is
             # invalid
             with contextlib.suppress(CannotReadFrameError, RuntimeError, AttributeError):

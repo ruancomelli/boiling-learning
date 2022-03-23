@@ -1,3 +1,4 @@
+import contextlib
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple, Union
@@ -14,7 +15,6 @@ from boiling_learning.utils import (
     PathLike,
     VerboseType,
     dataframe_categories_to_int,
-    is_not,
     merge_dicts,
     resolve,
 )
@@ -198,13 +198,11 @@ class ExperimentVideo(Video):
         col_types = funcy.select_keys(set(df.columns), col_types)
         df = df.astype(col_types)
 
-        try:
+        with contextlib.suppress(KeyError):
             if df[self.column_names.elapsed_time].dtype.kind == 'm':
                 df[self.column_names.elapsed_time] = df[
                     self.column_names.elapsed_time
                 ].dt.total_seconds()
-        except KeyError:
-            pass
 
         if categories_as_int:
             df = dataframe_categories_to_int(df, inplace=True)
@@ -235,19 +233,16 @@ class ExperimentVideo(Video):
         indices = range(len(self))
 
         data = merge_dicts(
-            {
-                self.column_names.name: self.name,
-                self.column_names.index: list(indices),
-            },
+            {self.column_names.name: self.name, self.column_names.index: list(indices)},
             self.data.categories,
             latter_precedence=False,
         )
 
-        available_time_info = map(
-            is_not(None),
-            (self.data.fps, self.data.ref_index, self.data.ref_elapsed_time),
-        )
-        if all(available_time_info):
+        if (
+            self.data.fps is not None
+            and self.data.ref_index is not None
+            and self.data.ref_elapsed_time is not None
+        ):
             ref_index = self.data.ref_index
             ref_elapsed_time = pd.to_timedelta(self.data.ref_elapsed_time, unit='s')
             delta = pd.to_timedelta(1 / self.data.fps, unit='s')
