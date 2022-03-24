@@ -96,10 +96,6 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
         image_dataset.update(*others)
         return image_dataset
 
-    def open_videos(self) -> None:
-        for ev in self:
-            ev.open()
-
     def set_video_data(
         self,
         video_data: Mapping[str, Union[Mapping[str, Any], VideoData]],
@@ -182,7 +178,7 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
         if columns is not None:
             columns = tuple(columns)
 
-        for ev in self.values():
+        for ev in self:
             ev.load_df(
                 columns=columns,
                 overwrite=overwrite,

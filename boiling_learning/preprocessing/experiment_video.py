@@ -87,12 +87,11 @@ class ExperimentVideo(Video):
 
         self.df_path: Optional[Path]
         self._data: Optional[self.VideoData] = None
-        self._name: str
-        self.column_names: self.DataFrameColumnNames = column_names
-        self.column_types: self.DataFrameColumnTypes = column_types
+        self.column_names = column_names
+        self.column_types = column_types
         self.df: Optional[pd.DataFrame] = None
         self.ds: Optional[tf.data.Dataset] = None
-        self._name: str = name if name is not None else self.path.stem
+        self._name = name if name is not None else self.path.stem
 
         if None not in {df_dir, df_path}:
             raise ValueError('at most one of (df_dir, df_path) must be given.')
@@ -140,9 +139,6 @@ class ExperimentVideo(Video):
     @data.setter
     def data(self, data: VideoData) -> None:
         self._data = data
-
-        start: int
-        end: Optional[int]
 
         if data.start_index is not None:
             start = data.start_index

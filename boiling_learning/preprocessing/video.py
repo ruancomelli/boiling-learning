@@ -86,7 +86,15 @@ def get_fps(video_path: PathLike) -> float:
 class Video(Sequence[VideoFrame]):
     def __init__(self, path: PathLike) -> None:
         self.path: Path = resolve(path)
-        self.video: Optional[pims.Video] = None
+        self._video: Optional[pims.Video] = None
+
+    @property
+    def video(self) -> pims.Video:
+        return self.open()
+
+    @video.setter
+    def video(self, video: pims.Video) -> pims.Video:
+        self._video = video
 
     def __getitem__(self, key: int) -> VideoFrame:
         return self.open()[key] / 255
@@ -96,18 +104,18 @@ class Video(Sequence[VideoFrame]):
 
     def open(self) -> pims.Video:
         if not self.is_open():
-            self.video = pims.Video(str(self.path))
+            self._video = pims.Video(str(self.path))
             self._shrink_to_valid_end_frames()
 
-        return self.video
+        return self._video
 
     def close(self) -> None:
         if self.is_open():
-            self.video.close()
-            self.video = None
+            self._video.close()
+            self._video = None
 
     def is_open(self) -> bool:
-        return self.video is not None
+        return self._video is not None
 
     def _shrink_to_valid_end_frames(self) -> None:
         valid_end_frame = self._valid_end_frame()

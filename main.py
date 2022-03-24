@@ -141,10 +141,7 @@ print('Loading boiling cases from', boiling_cases_path)
 boiling_cases = LazyCallable(load_cases.main)(
     (boiling_cases_path / case_name for case_name in boiling_cases_names),
     video_suffix='.MP4',
-    options=load_cases.Options(
-        convert_videos=OPTIONS.convert_videos,
-        pre_load_videos=OPTIONS.pre_load_videos,
-    ),
+    convert_videos=OPTIONS.convert_videos,
     verbose=False,
 )
 boiling_cases_timed = Lazy(
@@ -160,13 +157,7 @@ boiling_experiments_map: Dict[str, Path] = {
 }
 
 print('Loading condensation cases from', condensation_cases_path)
-condensation_datasets = LazyCallable(load_dataset_tree.main)(
-    condensation_cases_path,
-    load_dataset_tree.Options(
-        convert_videos=OPTIONS.convert_videos,
-        pre_load_videos=OPTIONS.pre_load_videos,
-    ),
-)
+condensation_datasets = LazyCallable(load_dataset_tree.main)(condensation_cases_path)
 
 print_header('Setting up video data', level=1)
 print('Setting boiling data from experiments path:', boiling_experiments_path)

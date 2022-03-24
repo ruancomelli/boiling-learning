@@ -1,18 +1,10 @@
 from typing import List
 
-from dataclassy import dataclass
-
 from boiling_learning.preprocessing import ExperimentVideo, ImageDataset
-from boiling_learning.utils import PathLike, print_header, print_verbose, resolve
+from boiling_learning.utils import PathLike, print_header, resolve
 
 
-@dataclass(frozen=True)
-class Options:
-    convert_videos: bool = False
-    pre_load_videos: bool = False
-
-
-def main(datapath: PathLike, options: Options, verbose: bool = True) -> List[ImageDataset]:
+def main(datapath: PathLike, verbose: bool = True) -> List[ImageDataset]:
     datapath = resolve(datapath)
 
     datasets: List[ImageDataset] = []
@@ -44,10 +36,6 @@ def main(datapath: PathLike, options: Options, verbose: bool = True) -> List[Ima
 
             if verbose:
                 print_header(dataset.name)
-
-            if options.pre_load_videos:
-                print_verbose(verbose, 'Opening videos')
-                dataset.open_videos()
 
             datasets.append(dataset)
     return datasets

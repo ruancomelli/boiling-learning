@@ -3,10 +3,29 @@ from typing import Iterable, Mapping
 import numpy as np
 
 from boiling_learning.preprocessing.cases import Case
-from boiling_learning.preprocessing.experimental_data import SAMPLES, ExperimentalData
-from boiling_learning.utils import PathLike, print_header, print_verbose
+from boiling_learning.preprocessing.experimental_data import ExperimentalData
+from boiling_learning.utils import PathLike, geometry, print_header, print_verbose
+from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.printing import add_unit_post_fix
 from boiling_learning.utils.units import unit_registry as ureg
+
+SAMPLES = frozendict(
+    {
+        1: geometry.Cylinder(length=6.5 * ureg.centimeter, diameter=0.51 * ureg.millimeter),
+        2: geometry.Cylinder(length=6.5 * ureg.centimeter, diameter=0.51 * ureg.millimeter),
+        3: geometry.Cylinder(length=6.5 * ureg.centimeter, diameter=0.25 * ureg.millimeter),
+        4: geometry.RectangularPrism(
+            length=6.5 * ureg.centimeter,
+            width=1 / 16 * ureg.inch,
+            thickness=0.0031 * ureg.inch,
+        ),
+        5: geometry.RectangularPrism(
+            length=6.5 * ureg.centimeter,
+            width=1 / 16 * ureg.inch,
+            thickness=0.0031 * ureg.inch,
+        ),
+    }
+)
 
 
 def main(
@@ -31,7 +50,7 @@ def main(
             df = df.drop(columns='Time instant').astype({'Elapsed time': 'float64'})
             df = df.set_index('Elapsed time')
 
-            case.sync_time_series(df, inplace=True)
+            case.sync_time_series(df)
             case.make_dataframe(
                 recalculate=False,
                 exist_load=False,
