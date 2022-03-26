@@ -25,7 +25,6 @@ from typing import (
 import more_itertools as mit
 import tensorflow as tf
 from iteround import saferound
-from slicerator import pipeline
 from tensorflow.data import AUTOTUNE
 from typing_extensions import TypeGuard
 
@@ -205,9 +204,10 @@ class SliceableDataset(Sequence[_T]):
                 'and supported only for compatibility with `tf.data.Dataset`s'
             )
 
-        pipeline_map = pipeline(__map_func)
+        def getitem(index: int) -> _U:
+            return __map_func(self[index])
 
-        return SliceableDataset(pipeline_map(self._data))
+        return SliceableDataset.from_func(getitem, length=len(self))
 
     def shuffle(self) -> SliceableDataset[_T]:
         # using `random.sample` as per the docs:

@@ -393,7 +393,7 @@ get_image_dataset_params = GetImageDatasetParams(
         val=Fraction(15, 100),
         test=Fraction(15, 100),
     ),
-    dataset_size=Fraction(1, 100),
+    dataset_size=Fraction(1, 1000),
     target='Flux [W/cm**2]',
 )
 augment_dataset_params = AugmentDatasetParams(augmentors=boiling_augmentors)
@@ -523,7 +523,7 @@ with strategy_scope(strategy):
         ),
         fit_model_params=FitModelParams(
             batch_size=128,
-            epochs=100,
+            epochs=2,
             callbacks=Described.from_list(
                 [
                     Described.from_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
