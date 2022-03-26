@@ -25,6 +25,7 @@ import more_itertools as mit
 import numpy as np
 import tensorflow as tf
 import tensorflow_addons as tfa
+from loguru import logger
 from tensorflow.data import AUTOTUNE
 from typing_extensions import ParamSpec
 
@@ -70,14 +71,14 @@ from boiling_learning.scripts import (
     set_condensation_datasets_data,
 )
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist, initialize_gpus
-from boiling_learning.utils import print_header, resolve
+from boiling_learning.utils import resolve
 from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import typename
 
-print_header('Initializing script')
+logger.info('Initializing script')
 
 
 class Options(NamedTuple):
@@ -100,10 +101,8 @@ class Options(NamedTuple):
         return self._asdict().items()
 
 
-print_header('Options', level=1)
 OPTIONS = Options()
-for option, value in OPTIONS.items():
-    print(f'{option}: {value}')
+logger.info(f'Options: {OPTIONS}')
 
 boiling_learning_path = resolve(os.environ['BOILING_DATA_PATH'])
 boiling_experiments_path = boiling_learning_path / 'experiments'
@@ -112,7 +111,7 @@ condensation_learning_path = resolve(os.environ['CONDENSATION_DATA_PATH'])
 condensation_cases_path = condensation_learning_path / 'data'
 analyses_path = boiling_learning_path / 'analyses'
 
-print_header('Important paths', level=1)
+logger.info('Checking paths')
 check_all_paths_exist(
     (
         ('Boiling learning', boiling_learning_path),
@@ -121,23 +120,23 @@ check_all_paths_exist(
         ('Contensation learning', condensation_learning_path),
         ('Contensation cases', condensation_cases_path),
         ('Analyses', analyses_path),
-    ),
-    verbose=True,
+    )
 )
+logger.success('Succesfully checked paths')
 
-print_header('Checking CPUs and GPUs', level=1)
+logger.info('Checking CPUs and GPUs')
 strategy = initialize_gpus()
 strategy_name = typename(strategy)
-print('Using distribute strategy:', strategy_name)
+logger.success(f'Using distribute strategy: {strategy_name}')
 
 boiling_cases_names = tuple(f'case {idx+1}' for idx in range(2))
 # FIXME: use the following:
 # boiling_cases_names = tuple(f'case {idx+1}' for idx in range(5))
 boiling_cases_names_timed = tuple(funcy.without(boiling_cases_names, 'case 1'))
 
-print_header('Preparing datasets')
-print_header('Loading cases', level=1)
-print('Loading boiling cases from', boiling_cases_path)
+logger.info('Preparing datasets')
+logger.info('Loading cases')
+logger.info(f'Loading boiling cases from {boiling_cases_path}')
 boiling_cases = LazyCallable(load_cases.main)(
     (boiling_cases_path / case_name for case_name in boiling_cases_names),
     video_suffix='.MP4',
@@ -156,11 +155,11 @@ boiling_experiments_map: Dict[str, Path] = {
     'case 5': boiling_experiments_path / 'Experiment 2020-09-10 13-53' / 'data.csv',
 }
 
-print('Loading condensation cases from', condensation_cases_path)
+logger.info(f'Loading condensation cases from {condensation_cases_path}')
 condensation_datasets = LazyCallable(load_dataset_tree.main)(condensation_cases_path)
 
-print_header('Setting up video data', level=1)
-print('Setting boiling data from experiments path:', boiling_experiments_path)
+logger.info('Setting up video data')
+logger.info(f'Setting boiling data from experiments path: {boiling_experiments_path}')
 set_boiling_cases_data.main(
     boiling_cases_timed(),
     case_experiment_map=boiling_experiments_map,
@@ -168,7 +167,7 @@ set_boiling_cases_data.main(
 )
 
 condensation_data_path = condensation_cases_path / 'data_spec.yaml'
-print('Setting condensation data from data path:', condensation_data_path)
+logger.info(f'Setting condensation data from data path: {condensation_data_path}')
 condensation_datasets_dict = set_condensation_datasets_data.main(
     condensation_datasets(),
     condensation_data_path,

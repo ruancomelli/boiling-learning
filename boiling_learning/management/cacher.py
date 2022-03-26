@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Callable, Generic, Iterable, TypeVar, Union
 
+from loguru import logger
 from typing_extensions import ParamSpec
 
 from boiling_learning.io.io import LoaderFunction, SaverFunction
@@ -68,7 +69,13 @@ class CachedFunction(Generic[_P, _R]):
         return provider.provide()
 
     def allocate(self, *args: _P.args, **kwargs: _P.kwargs) -> Path:
-        return self.cacher.allocate(*args, **kwargs)
+        logger.debug(f'Allocating path for args {(args, kwargs)}')
+
+        path = self.cacher.allocate(*args, **kwargs)
+
+        logger.debug(f'Allocated path is {path}')
+
+        return path
 
 
 def cache(

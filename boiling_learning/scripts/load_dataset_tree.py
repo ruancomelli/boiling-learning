@@ -1,31 +1,41 @@
 from typing import List
 
+from loguru import logger
+
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
-from boiling_learning.utils import PathLike, print_header, resolve
+from boiling_learning.utils import PathLike, resolve
 
 
-def main(datapath: PathLike, verbose: bool = True) -> List[ImageDataset]:
+def main(datapath: PathLike) -> List[ImageDataset]:
+    logger.info(f'Loading cases from {datapath}')
+
     datapath = resolve(datapath)
 
     datasets: List[ImageDataset] = []
     for casedir in datapath.iterdir():
+        logger.debug(f'Searching for subcases in {casedir}')
         if not casedir.is_dir():
             continue
 
         case = casedir.name
         for subcasedir in casedir.iterdir():
+            logger.debug(f'Searching for tests in {subcasedir}')
+
             if not subcasedir.is_dir():
                 continue
 
             subcase = subcasedir.name
 
-            dataset: ImageDataset = ImageDataset(f'{case}:{subcase}')
+            dataset = ImageDataset(f'{case}:{subcase}')
             for testdir in subcasedir.iterdir():
+                logger.debug(f'Searching for videos in {testdir}')
+
                 test_name = testdir.name
 
                 videopaths = (testdir / 'videos').glob('*.mp4')
                 for video_path in videopaths:
+                    logger.debug(f'Adding video from {video_path}')
                     video_name = video_path.stem
                     ev_name = ':'.join((case, subcase, test_name, video_name))
                     ev = ExperimentVideo(
@@ -34,9 +44,6 @@ def main(datapath: PathLike, verbose: bool = True) -> List[ImageDataset]:
                         name=ev_name,
                     )
                     dataset.add(ev)
-
-            if verbose:
-                print_header(dataset.name)
 
             datasets.append(dataset)
     return datasets

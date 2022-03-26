@@ -1,9 +1,10 @@
 from contextlib import suppress
-from pathlib import Path
 from typing import Callable, Generic, Iterable, Tuple, TypeVar, Union
 
+from loguru import logger
+
 from boiling_learning.io.io import LoaderFunction, PathLike, SaverFunction
-from boiling_learning.utils import ensure_parent, resolve
+from boiling_learning.utils import resolve
 
 _T = TypeVar('_T')
 CreatorFunction = Callable[[], _T]
@@ -23,8 +24,8 @@ class Persister(Generic[_T]):
 
 class FilePersister(Generic[_T]):
     def __init__(self, filepath: PathLike, persister: Persister[_T]) -> None:
-        self.path: Path = ensure_parent(filepath)
-        self.persister: Persister = persister
+        self.path = resolve(filepath, parents=True)
+        self.persister = persister
 
     def save(self, obj: _T) -> None:
         self.persister.save(obj, self.path)
@@ -54,13 +55,21 @@ class Provider(Persister[_T]):
         self.autosave: bool = autosave
 
     def provide(self, filepath: PathLike) -> _T:
-        resolved: Path = resolve(filepath)
+        logger.debug(f'Providing result for file {filepath}')
+
+        resolved = resolve(filepath)
 
         if resolved.exists():
             with suppress(*self.exceptions):
-                return self.load(resolved)
+                result = self.load(resolved)
+                logger.debug('Result successfully loaded')
+                return result
 
-        obj: _T = self.creator()
+        logger.debug('Unable to load result, creating...')
+
+        obj = self.creator()
+
+        logger.debug('Result created')
 
         if self.autosave:
             self.save(obj, resolved)

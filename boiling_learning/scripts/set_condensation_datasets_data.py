@@ -97,20 +97,9 @@ def main(
     dataspec = yaml.safe_load(dataspecpath.read_text())
 
     if fps_cache_path is not None:
-
-        def verbose_save(obj, path):
-            print('Saving...')
-            print('> obj:', obj)
-            print('> path:', path)
-            return json.dump(obj, path)
-
-        def verbose_load(path):
-            print('Loading from', path)
-            return json.load(path)
-
         fps_cache_path = resolve(fps_cache_path)
         allocator = default_table_allocator(fps_cache_path)
-        cacher = cache(allocator, saver=verbose_save, loader=verbose_load)
+        cacher = cache(allocator, saver=json.dump, loader=json.load)
         fps_getter = cacher(get_fps)
     else:
         fps_getter = get_fps
@@ -155,7 +144,7 @@ def main(
                 continue
 
             videospec = dataspec['cases'][case]['subcases'][subcase]['tests'][test_name]['videos'][
-                video_name + '.mp4'
+                f'{video_name}.mp4'
             ]
 
             print_verbose(verbose >= 2, f'Getting FPS for EV "{ev_name}"')
