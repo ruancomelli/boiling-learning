@@ -1,3 +1,16 @@
+## v0.19.10 (2022-03-26)
+
+### Fix
+
+- **sliceable**: fix mapping function to avoid using `slicerator.pipeline`
+
+### Refactor
+
+- **scripts**: improve typing and importing
+- improve typing for some functions from `funcy`
+- simplify portions of the code
+- **preprocessing**: apply minor refactorings
+
 ## v0.19.9 (2022-03-21)
 
 ## v0.19.8 (2022-03-21)
