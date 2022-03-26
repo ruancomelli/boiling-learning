@@ -155,7 +155,6 @@ class ExperimentVideo(Video):
             end = None
 
         if start != 0 or end is not None:
-            self.open()
             self.video = self.video[start:end]
 
     def convert_video(

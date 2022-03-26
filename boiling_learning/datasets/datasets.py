@@ -7,7 +7,7 @@ import funcy
 import tensorflow as tf
 from dataclassy import dataclass
 from decorator import decorator
-from funcy.funcs import rpartial
+from funcy import rpartial
 
 from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
