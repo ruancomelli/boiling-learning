@@ -1,6 +1,7 @@
 from typing import List
 
-from boiling_learning.preprocessing import ExperimentVideo, ImageDataset
+from boiling_learning.preprocessing.experiment_video import ExperimentVideo
+from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.utils import PathLike, print_header, resolve
 
 

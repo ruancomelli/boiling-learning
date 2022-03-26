@@ -74,7 +74,7 @@ def _interact_dataset_frames(
 
     experiment_videos_widget.observe(update_max_index, 'value')
 
-    def show_frames(dataset: ImageDataset, ev: ExperimentVideo, idx: int):
+    def show_frames(dataset: ImageDataset, ev: ExperimentVideo, idx: int) -> None:
         imshow(ev[idx])
 
     interact(
