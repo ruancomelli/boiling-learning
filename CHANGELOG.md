@@ -1,3 +1,9 @@
+## v0.19.11 (2022-03-26)
+
+### Feat
+
+- add logging thanks to `loguru`
+
 ## v0.19.10 (2022-03-26)
 
 ### Fix
