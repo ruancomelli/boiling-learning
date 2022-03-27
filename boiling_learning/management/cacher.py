@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Callable, Generic, Iterable, TypeVar, Union
+from typing import Callable, Generic, Iterable, TypeVar, Union
 
 from loguru import logger
 from typing_extensions import ParamSpec
@@ -15,7 +15,6 @@ from boiling_learning.utils.functional import Pack
 
 _P = ParamSpec('_P')
 _R = TypeVar('_R')
-_CallableT = TypeVar('_CallableT', bound=Callable[..., Any])
 
 
 class Cacher(Generic[_R]):
@@ -30,11 +29,11 @@ class Cacher(Generic[_R]):
         ),
         autosave: bool = True,
     ) -> None:
-        self.allocator: Callable[[Pack], Path] = allocator
-        self.saver: SaverFunction[_R] = saver
-        self.loader: LoaderFunction[_R] = loader
-        self.exceptions: Union[Exception, Iterable[Exception]] = exceptions
-        self.autosave: bool = autosave
+        self.allocator = allocator
+        self.saver = saver
+        self.loader = loader
+        self.exceptions = exceptions
+        self.autosave = autosave
 
     def allocate(self, *args: _P.args, **kwargs: _P.kwargs) -> Path:
         return self.allocator(Pack(args, kwargs))
@@ -45,8 +44,8 @@ class Cacher(Generic[_R]):
 
 class CachedFunction(Generic[_P, _R]):
     def __init__(self, function: Callable[_P, _R], cacher: Cacher[_R]) -> None:
-        self.function: Callable[_P, _R] = function
-        self.cacher: Cacher[_R] = cacher
+        self.function = function
+        self.cacher = cacher
 
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         path = self.allocate(*args, **kwargs)

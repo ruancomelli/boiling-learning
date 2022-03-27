@@ -1,5 +1,5 @@
 from contextlib import suppress
-from typing import Callable, Generic, Iterable, Tuple, TypeVar, Union
+from typing import Callable, Generic, Iterable, TypeVar, Union
 
 from loguru import logger
 
@@ -12,8 +12,8 @@ CreatorFunction = Callable[[], _T]
 
 class Persister(Generic[_T]):
     def __init__(self, saver: SaverFunction[_T], loader: LoaderFunction[_T]) -> None:
-        self.saver: SaverFunction[_T] = saver
-        self.loader: LoaderFunction[_T] = loader
+        self.saver = saver
+        self.loader = loader
 
     def save(self, obj: _T, filepath: PathLike) -> None:
         self.saver(obj, resolve(filepath))
@@ -50,9 +50,9 @@ class Provider(Persister[_T]):
 
         exceptions = (exceptions,) if isinstance(exceptions, Exception) else tuple(exceptions)
 
-        self.creator: CreatorFunction[_T] = creator
-        self.exceptions: Tuple[Exception, ...] = exceptions
-        self.autosave: bool = autosave
+        self.creator = creator
+        self.exceptions = exceptions
+        self.autosave = autosave
 
     def provide(self, filepath: PathLike) -> _T:
         logger.debug(f'Providing result for file {filepath}')
@@ -81,7 +81,7 @@ class FileProvider(FilePersister[_T]):
     def __init__(self, filepath: PathLike, provider: Provider[_T]) -> None:
         super().__init__(filepath, provider)
 
-        self.provider: Provider[_T] = provider
+        self.provider = provider
 
     def provide(self) -> _T:
         return self.provider.provide(self.path)
