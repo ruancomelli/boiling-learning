@@ -1,3 +1,10 @@
+## v0.19.12 (2022-03-27)
+
+### Refactor
+
+- replace all logging with `loguru`
+- remove type cluttering
+
 ## v0.19.11 (2022-03-26)
 
 ### Feat
