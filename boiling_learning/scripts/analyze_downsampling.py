@@ -28,7 +28,7 @@ def main(
     figsize: Tuple[int, int] = (7, 5),
 ) -> None:
     image = grayscale(image)
-    downscale_factors = sorted(frozenset(downscale_factors) | {1, final_downscale_factor})
+    downscale_factors = sorted({1, final_downscale_factor}.union(downscale_factors))
 
     for name, scorer in metrics.items():
         ev_ds = evaluate_downsampling(
@@ -44,13 +44,7 @@ def main(
         fig, ax = plt.subplots(figsize=figsize)
         ax.scatter(downscale_factors, ev_ds, color='k', s=15)
         ax.scatter(1, original_evaluation, color='r', s=25, label='reference')
-        ax.scatter(
-            final_downscale_factor,
-            final_evaluation,
-            color='b',
-            s=25,
-            label='target',
-        )
+        ax.scatter(final_downscale_factor, final_evaluation, color='b', s=25, label='target')
 
         ax.legend()
         ax.set_xlabel('Downsampling factor')
