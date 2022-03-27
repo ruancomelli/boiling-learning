@@ -1,6 +1,5 @@
 import math
-from operator import itemgetter
-from typing import Callable, Dict, FrozenSet, Iterable, Tuple
+from typing import Callable, Dict, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,25 +8,25 @@ from boiling_learning.preprocessing.image import grayscale
 
 
 def main(
-    frames: Iterable[Tuple[int, np.ndarray]],
-    timeshifts: Iterable[int],
+    frames: Dict[int, np.ndarray],
     metrics: Dict[str, Callable[[np.ndarray, np.ndarray], float]],
     final_timeshift: int = 1,
     xscale: str = 'linear',
     figsize: Tuple[int, int] = (7, 5),
 ) -> None:
-    timeshifts: FrozenSet[int] = frozenset(timeshifts) | {0, final_timeshift}
+    if not {0, final_timeshift}.issubset(frames):
+        raise ValueError(
+            f'frames dictionary must contain the keys `0` and `{final_timeshift}`. '
+            f'Got {tuple(frames)}'
+        )
 
-    frames = ((index, frame) for index, frame in frames if index in timeshifts)
-    frames = ((index, np.squeeze(grayscale(frame))) for index, frame in frames)
-    frames = sorted(frames, key=itemgetter(0))
-    frames: Dict[int, np.ndarray] = dict(frames)
+    frames = {index: np.squeeze(grayscale(frame)) for index, frame in frames.items()}
 
-    ref: np.ndarray = frames[0]
-    final: np.ndarray = frames[final_timeshift]
-
+    # ------------------------------------------
+    # PART 1
+    # ------------------------------------------
     for name, scorer in metrics.items():
-        evaluations = {index: scorer(ref, frame) for index, frame in frames.items()}
+        evaluations = {index: scorer(frames[0], frame) for index, frame in frames.items()}
 
         original_evaluation = evaluations[0]
         final_evaluation = evaluations[final_timeshift]
@@ -59,11 +58,11 @@ def main(
     fig = plt.figure()
 
     ax = fig.add_subplot(1, 2, 1)
-    ax.imshow(ref, cmap='gray')
+    ax.imshow(frames[0], cmap='gray')
     ax.set_title('Frame #0')
 
     ax = fig.add_subplot(1, 2, 2)
-    ax.imshow(final, cmap='gray')
+    ax.imshow(frames[final_timeshift], cmap='gray')
     ax.set_title(f'Frame #{final_timeshift}')
 
 
