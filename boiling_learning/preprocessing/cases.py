@@ -4,7 +4,7 @@ import modin.pandas as pd
 
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
-from boiling_learning.utils import PathLike, VerboseType, resolve
+from boiling_learning.utils import PathLike, resolve
 
 
 class Case(ImageDataset):
@@ -76,11 +76,7 @@ class Case(ImageDataset):
         )
 
     def convert_videos(
-        self,
-        new_suffix: str,
-        new_videos_dir: PathLike,
-        overwrite: bool = False,
-        verbose: VerboseType = False,
+        self, new_suffix: str, new_videos_dir: PathLike, overwrite: bool = False
     ) -> None:
         if not new_suffix.startswith('.'):
             raise ValueError('new_suffix is expected to start with a dot (\'.\')')
@@ -89,7 +85,7 @@ class Case(ImageDataset):
         for experiment_video in self:
             tail = experiment_video.path.relative_to(self.videos_dir)
             dest_path = (new_videos_dir / tail).with_suffix(new_suffix)
-            experiment_video.convert_video(dest_path, overwrite=overwrite, verbose=verbose)
+            experiment_video.convert_video(dest_path, overwrite=overwrite)
         self.videos_dir = new_videos_dir
 
     def sync_time_series(self, source_df: pd.DataFrame) -> None:

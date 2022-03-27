@@ -63,6 +63,7 @@ from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.transformers import DictFeatureTransformer, Transformer
 from boiling_learning.preprocessing.video import Video, VideoFrame
 from boiling_learning.scripts import (
+    connect_gpus,
     load_cases,
     load_dataset_tree,
     make_boiling_processors,
@@ -70,7 +71,7 @@ from boiling_learning.scripts import (
     set_boiling_cases_data,
     set_condensation_datasets_data,
 )
-from boiling_learning.scripts.utils.initialization import check_all_paths_exist, initialize_gpus
+from boiling_learning.scripts.utils.initialization import check_all_paths_exist
 from boiling_learning.utils import resolve
 from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.described import Described
@@ -124,8 +125,7 @@ check_all_paths_exist(
 )
 logger.success('Succesfully checked paths')
 
-logger.info('Checking CPUs and GPUs')
-strategy = initialize_gpus()
+strategy = connect_gpus.main()
 strategy_name = typename(strategy)
 logger.success(f'Using distribute strategy: {strategy_name}')
 
@@ -141,7 +141,6 @@ boiling_cases = LazyCallable(load_cases.main)(
     (boiling_cases_path / case_name for case_name in boiling_cases_names),
     video_suffix='.MP4',
     convert_videos=OPTIONS.convert_videos,
-    verbose=False,
 )
 boiling_cases_timed = Lazy(
     lambda: tuple(case for case in boiling_cases() if case.name in boiling_cases_names_timed)
@@ -160,19 +159,12 @@ condensation_datasets = LazyCallable(load_dataset_tree.main)(condensation_cases_
 
 logger.info('Setting up video data')
 logger.info(f'Setting boiling data from experiments path: {boiling_experiments_path}')
-set_boiling_cases_data.main(
-    boiling_cases_timed(),
-    case_experiment_map=boiling_experiments_map,
-    verbose=True,
-)
+set_boiling_cases_data.main(boiling_cases_timed(), case_experiment_map=boiling_experiments_map)
 
 condensation_data_path = condensation_cases_path / 'data_spec.yaml'
 logger.info(f'Setting condensation data from data path: {condensation_data_path}')
 condensation_datasets_dict = set_condensation_datasets_data.main(
-    condensation_datasets(),
-    condensation_data_path,
-    verbose=2,
-    fps_cache_path=Path('.cache', 'fps'),
+    condensation_datasets(), condensation_data_path, fps_cache_path=Path('.cache', 'fps')
 )
 condensation_all_cases = ImageDataset.make_union(*condensation_datasets_dict.values())
 
@@ -458,9 +450,7 @@ class GetFitModel(CachedFunction[_P, Model]):
                     monitor='val_loss',
                 ),
                 tf.keras.callbacks.BackupAndRestore(str(path.parent / f'backup-{path.name}')),
-                AdditionalValidationSets(
-                    [(ds_val_g10, 'HF10')], batch_size=params.batch_size, verbose=1
-                ),
+                AdditionalValidationSets([(ds_val_g10, 'HF10')], batch_size=params.batch_size),
             ]
         )
 

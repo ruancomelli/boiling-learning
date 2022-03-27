@@ -48,7 +48,6 @@ S = TypeVar('S')
 
 
 # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
-VerboseType = Union[bool, int]
 JSONDataType = Union[
     None,
     bool,
@@ -205,35 +204,6 @@ def dataframe_categories_to_int(df: pd.DataFrame, inplace: bool = False) -> pd.D
 
 
 # ---------------------------------- Printing ----------------------------------
-def print_verbose(verbose: bool, *args, **kwargs) -> None:
-    if verbose:
-        print(*args, **kwargs)
-
-
-def print_header(
-    s: str,
-    level: int = 0,
-    levels: Sequence[str] = ('#', '=', '-', '~', '^', '*', '+'),
-    verbose: bool = True,
-) -> None:
-    """Standardized method for printing a section header.
-
-    Prints the argument s underlined.
-
-    Parameters
-    ----------
-    s       : string to be printed
-    level   : index of level symbol to be used
-    levels  : iterable of level symbols to choose from
-    verbose : verbose mode
-    """
-    if verbose:
-        s = str(s)
-        print()
-        print(s)
-        print(levels[level] * len(s))
-
-
 def shorten_path(path, max_parts=None, max_len=None, prefix='...'):
     def _slice_path(p, slc):
         return Path(*Path(p).parts[slc])

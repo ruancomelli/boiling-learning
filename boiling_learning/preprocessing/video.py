@@ -7,10 +7,11 @@ import cv2
 import numpy as np
 import pims
 from imageio.core import CannotReadFrameError
+from loguru import logger
 
 from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, serialize
-from boiling_learning.utils import PathLike, VerboseType, resolve, shorten_path
+from boiling_learning.utils import PathLike, resolve
 from boiling_learning.utils.descriptions import describe
 
 # VideoFrame = npt.NDArray[np.float32]
@@ -22,7 +23,6 @@ def convert_video(
     out_path: PathLike,
     remove_audio: bool = False,
     fps: Optional[Union[str, int, float]] = None,
-    verbose: VerboseType = False,
     overwrite: bool = False,
 ) -> None:
     # For `fps`, see <https://superuser.com/a/729351>.
@@ -30,23 +30,15 @@ def convert_video(
     in_path = resolve(in_path)
     out_path = resolve(out_path, parents=True)
 
-    if verbose:
-        print(
-            'Converting video',
-            shorten_path(in_path, max_len=50),
-            '->',
-            shorten_path(out_path, max_len=50),
-        )
+    logger.info(f'Converting video: {in_path} -> {out_path}')
 
     if overwrite and out_path.is_file():
-        if verbose:
-            print('Overwriting', shorten_path(out_path, max_len=50))
+        logger.info(f'Overwriting {out_path}')
         out_path.unlink()
         # TO-DO: in Python 3.8, use out_path.unlink(missing_ok=True) and remove one condition
 
     if out_path.is_file():
-        if verbose:
-            print('Destination file already exists. Skipping video conversion.')
+        logger.info(f'Destination file already exists. Skipping video conversion: {out_path}')
     else:
         command_list = ['ffmpeg', '-i', str(in_path), '-vsync', '0']
         if remove_audio:
@@ -55,16 +47,11 @@ def convert_video(
             command_list.extend(['-r', str(fps)])
         command_list.append(str(out_path))
 
-        if verbose:
-            print(
-                'Converting video:',
-                shorten_path(in_path, max_len=40),
-                '->',
-                shorten_path(out_path, max_len=40),
-            )
-            print('Command list =', command_list)
+        logger.debug('Command list =', command_list)
 
+        logger.info('Running conversion...')
         subprocess.run(command_list)
+        logger.info('Succesfully converted video')
 
 
 @contextlib.contextmanager

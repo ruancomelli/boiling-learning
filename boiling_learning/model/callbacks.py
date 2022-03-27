@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, DefaultDict, Dict, FrozenSet, Optional, Set
 
 import numpy as np
+from loguru import logger
 from tensorflow.keras.callbacks import Callback
 from tensorflow.python.keras import backend as K
 from tensorflow.python.platform import tf_logging as logging
@@ -16,15 +17,13 @@ from boiling_learning.utils import PathLike, ensure_parent
 
 # Source: <https://stackoverflow.com/q/47731935/5811400>
 class AdditionalValidationSets(Callback):
-    def __init__(self, validation_sets, verbose=0, batch_size=None):
+    def __init__(self, validation_sets, verbose=True, batch_size=None):
         """
         :param validation_sets:
         a list of 1-tuples (validation_data,)
         or 2-tuples (validation_data, validation_set_name)
         or 3-tuples (validation_data, validation_targets, validation_set_name)
         or 4-tuples (validation_data, validation_targets, sample_weights, validation_set_name)
-        :param verbose:
-        verbosity mode, 1 or 0
         :param batch_size:
         batch size to be used when evaluating on the additional datasets
         """
@@ -94,12 +93,10 @@ class AdditionalValidationSets(Callback):
             for full_name, result in zip(full_names, full_results):
                 self.history.setdefault(full_name, []).append(result)
 
-            if self.verbose >= 1:
-                values_str = ' - '.join(
-                    f'{name}: {result}' for name, result in zip(names, full_results)
-                )
-
-                print(f'{validation_set_name}[{values_str}]')
+            values_str = ' - '.join(
+                f'{name}: {result}' for name, result in zip(names, full_results)
+            )
+            logger.info(f'{validation_set_name}[{values_str}]')
 
 
 class Streamer(Protocol):
@@ -252,7 +249,6 @@ class ReduceLROnPlateau(Callback):
         monitor='val_loss',
         factor=0.1,
         patience=10,
-        verbose=0,
         mode='auto',
         min_delta=1e-4,
         min_delta_mode='absolute',
@@ -269,7 +265,6 @@ class ReduceLROnPlateau(Callback):
         self.min_delta = min_delta
         self.min_delta_mode = min_delta_mode
         self.patience = patience
-        self.verbose = verbose
         self.cooldown = cooldown
         self.cooldown_counter = 0  # Cooldown counter.
         self.wait = 0
@@ -344,10 +339,9 @@ class ReduceLROnPlateau(Callback):
                     new_lr = old_lr * self.factor
                     new_lr = max(new_lr, self.min_lr)
                     K.set_value(self.model.optimizer.lr, new_lr)
-                if self.verbose > 0:
-                    print(
-                        f'\nEpoch {epoch+1:05d}: ReduceLROnPlateau reducing learning rate to {new_lr}.'
-                    )
+                logger.info(
+                    f'Epoch {epoch+1}: ReduceLROnPlateau reducing learning rate to {new_lr}'
+                )
                 self.cooldown_counter = self.cooldown
                 self.wait = 0
 

@@ -11,13 +11,7 @@ from dataclassy import dataclass
 
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
 from boiling_learning.preprocessing.video import Video, convert_video
-from boiling_learning.utils import (
-    PathLike,
-    VerboseType,
-    dataframe_categories_to_int,
-    merge_dicts,
-    resolve,
-)
+from boiling_learning.utils import PathLike, dataframe_categories_to_int, merge_dicts, resolve
 from boiling_learning.utils.dataclasses import dataclass_from_mapping
 from boiling_learning.utils.slicerators import Slicerator
 
@@ -161,11 +155,10 @@ class ExperimentVideo(Video):
         self,
         dest_path: PathLike,
         overwrite: bool = False,
-        verbose: VerboseType = False,
     ) -> None:
         """Use this function to move or convert video"""
         dest_path = resolve(dest_path, parents=True)
-        convert_video(self.path, dest_path, overwrite=overwrite, verbose=verbose)
+        convert_video(self.path, dest_path, overwrite=overwrite)
         self.path = dest_path
 
     def set_video_data(

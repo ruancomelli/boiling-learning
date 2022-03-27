@@ -1,21 +1,21 @@
 from typing import Iterable, Tuple
 
+from loguru import logger
+
 from boiling_learning.preprocessing.cases import Case
-from boiling_learning.utils import PathLike, print_verbose
+from boiling_learning.utils import PathLike
 
 
 def main(
-    casepaths: Iterable[PathLike],
-    video_suffix: str,
-    convert_videos: bool = False,
-    verbose: bool = True,
+    casepaths: Iterable[PathLike], video_suffix: str, convert_videos: bool = False
 ) -> Tuple[Case, ...]:
     cases = tuple(Case(casepath, video_suffix=video_suffix) for casepath in casepaths)
 
     if convert_videos:
         for case in cases:
-            print_verbose(verbose, f'Converting videos for case {case.name}')
-            case.convert_videos('.mp4', 'converted', verbose=True, overwrite=False)
+            logger.info(f'Converting videos for case {case.name}...')
+            case.convert_videos('.mp4', 'converted', overwrite=False)
+            logger.info(f'Successfully converted videos for case {case.name}...')
 
     return cases
 

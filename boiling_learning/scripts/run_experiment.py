@@ -15,7 +15,7 @@ from pyqtgraph import GraphicsWindow
 from pyqtgraph.Qt import QtGui
 
 from boiling_learning.daq import Channel, ChannelType, Device
-from boiling_learning.utils import PathLike, ensure_dir, ensure_parent, print_verbose
+from boiling_learning.utils import PathLike, ensure_dir, ensure_parent
 from boiling_learning.utils.geometry import Cylinder
 from boiling_learning.utils.units import unit_registry as u
 
@@ -204,8 +204,8 @@ def main(
         return dict.fromkeys(local_data, np.array([]))
 
     def print_if_must(keys, *args, conds: Iterable[bool] = (), **kwargs) -> None:
-        cond = all(conds) and all(must_print.get(key, False) for key in keys)
-        print_verbose(cond, *args, **kwargs)
+        if all(conds) and all(must_print.get(key, False) for key in keys):
+            print(*args, **kwargs)
 
     # -------------------------------------------------------
     # Channel definitions

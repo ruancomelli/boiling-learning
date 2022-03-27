@@ -8,6 +8,7 @@ import modin.pandas as pd
 import parse
 import yaml
 from dataclassy import dataclass
+from loguru import logger
 from oauth2client.client import GoogleCredentials
 from sklearn.linear_model import LinearRegression
 
@@ -17,7 +18,7 @@ from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.video import get_fps
-from boiling_learning.utils import KeyedDefaultDict, PathLike, print_header, print_verbose, resolve
+from boiling_learning.utils import KeyedDefaultDict, PathLike, resolve
 
 _subcase_patterns = {
     'T_inf': parse.compile('T_inf {:d}C'),
@@ -90,9 +91,10 @@ def main(
     datasets: Iterable[ImageDataset],
     dataspecpath: PathLike,
     spreadsheet_name: Optional[str] = None,
-    verbose: int = 0,
     fps_cache_path: Optional[PathLike] = None,
 ) -> Dict[str, ImageDataset]:
+    logger.info('Setting condensation data')
+
     dataspecpath = resolve(dataspecpath)
     dataspec = yaml.safe_load(dataspecpath.read_text())
 
@@ -106,14 +108,14 @@ def main(
 
     datasets_dict = KeyedDefaultDict(ImageDataset)
     for dataset in datasets:
-        print_verbose(verbose >= 2, f'Reading dataset {dataset.name}')
+        logger.debug(f'Reading condensation dataset {dataset.name}')
 
         for ev_name, ev in dataset.items():
             case, subcase, test_name, video_name = ev_name.split(':')
 
             # TODO: add average mass rate to categories?
 
-            print_verbose(verbose >= 2, f'Setting categories for EV "{ev_name}"')
+            logger.debug(f'Setting categories for EV "{ev_name}"')
             if case == 'stainless steel' and subcase == 'polished':
                 # those are the standard conditions for polished SS
                 # temperatures are in Celsius
@@ -147,11 +149,11 @@ def main(
                 f'{video_name}.mp4'
             ]
 
-            print_verbose(verbose >= 2, f'Getting FPS for EV "{ev_name}"')
+            logger.debug(f'Getting FPS for EV "{ev_name}"')
 
             fps = fps_getter(ev.path)
 
-            print_verbose(verbose >= 2, f'Getting video data for EV "{ev_name}"')
+            logger.debug(f'Getting video data for EV "{ev_name}"')
 
             videodata = ExperimentVideo.VideoData(
                 categories=categories,
@@ -164,21 +166,19 @@ def main(
                 end_elapsed_time=_parse_timedelta(videospec['end']),
             )
 
-            print_verbose(verbose >= 2, f'Setting video data for EV "{ev_name}"')
+            logger.debug(f'Setting video data for EV "{ev_name}"')
             ev.set_video_data(videodata)
 
             dataset_name = ':'.join((case, subcase))
             datasets_dict[dataset_name].add(ev)
 
     for dataset in datasets_dict.values():
-        if verbose:
-            print_header(dataset.name)
-
         try:
-            print_verbose(verbose, 'Loading')
+            logger.debug(f'Trying to load data for {dataset.name}')
             dataset.load_dfs(overwrite=False, missing_ok=False)
+            logger.debug(f'Succesfully loaded data for {dataset.name}')
         except FileNotFoundError as e:
-            print_verbose(verbose, 'Failed, making dataframes.')
+            logger.debug(f'Failed to load data, making dataframes for {dataset.name}')
 
             dataset.make_dataframe(
                 recalculate=False,
@@ -201,14 +201,13 @@ def main(
             dataset.save_dfs(overwrite=False)
 
     if spreadsheet_name is not None:
-        MASS_COLUMN: str = 'mass_rate'
         mass_data: Optional[Dict[str, pd.DataFrame]] = None
 
         for dataset in datasets_dict.values():
             changed: bool = False
 
             for ev in dataset.values():
-                if MASS_COLUMN in ev.df.columns:
+                if 'mass_rate' in ev.df.columns:
                     continue
 
                 changed = True
@@ -219,14 +218,12 @@ def main(
                 case_name, subcase_name, test_name, _ = ev.name.split(':')
                 df = _parse_mass_timeseries(mass_data, case_name, subcase_name, test_name)
                 coefs = linear_regression(df, 'elapsed_time', 'mass')
-                ev.df[MASS_COLUMN] = coefs.coef
+                ev.df['mass_rate'] = coefs.coef
 
             if changed:
                 dataset.save_dfs(overwrite=True)
 
-    print_verbose(verbose, 'Condensation datasets dict:')
-    for ds_name, ds in datasets_dict.items():
-        print_verbose(verbose, ds_name, '::', ds)
+    logger.debug(f'Condensation datasets dict: {datasets_dict}')
 
     return datasets_dict
 

@@ -1,10 +1,11 @@
 from typing import Iterable, Mapping
 
 import numpy as np
+from loguru import logger
 
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experimental_data import ExperimentalData
-from boiling_learning.utils import PathLike, geometry, print_header, print_verbose
+from boiling_learning.utils import PathLike, geometry
 from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.printing import add_unit_post_fix
 from boiling_learning.utils.units import unit_registry as ureg
@@ -28,22 +29,18 @@ SAMPLES = frozendict(
 )
 
 
-def main(
-    cases: Iterable[Case],
-    case_experiment_map: Mapping[str, PathLike],
-    verbose: bool = False,
-) -> None:
-    for case in cases:
-        if verbose:
-            print_header(case.name)
+def main(cases: Iterable[Case], case_experiment_map: Mapping[str, PathLike]) -> None:
+    logger.info('Setting boiling data')
 
+    for case in cases:
         case.set_video_data_from_file(purge=True, remove_absent=True)
 
         try:
-            print_verbose(verbose, 'Loading')
+            logger.debug(f'Trying to load data for {case.name}')
             case.load_dfs(overwrite=False, missing_ok=False)
+            logger.debug(f'Succesfully loaded data for {case.name}')
         except FileNotFoundError as e:
-            print_verbose(verbose, 'Failed, making dataframes.')
+            logger.debug(f'Failed to load data, making dataframes for {case.name}')
 
             df = ExperimentalData(data_path=case_experiment_map[case.name]).as_dataframe()
 
