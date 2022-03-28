@@ -665,7 +665,7 @@ summary = "iniconfig: brain-dead simple config-ini parsing"
 
 [[package]]
 name = "ipykernel"
-version = "6.9.2"
+version = "6.10.0"
 requires_python = ">=3.7"
 summary = "IPython Kernel for Jupyter"
 dependencies = [
@@ -676,7 +676,7 @@ dependencies = [
     "matplotlib-inline<0.2.0,>=0.1.0",
     "nest-asyncio",
     "psutil",
-    "tornado<7.0,>=4.2",
+    "tornado<7.0,>=5.0",
     "traitlets<6.0,>=5.1.0",
 ]
 
@@ -1062,10 +1062,11 @@ dependencies = [
 
 [[package]]
 name = "nbconvert"
-version = "6.4.4"
+version = "6.4.5"
 requires_python = ">=3.7"
 summary = "Converting Jupyter Notebooks"
 dependencies = [
+    "MarkupSafe>=2.0",
     "beautifulsoup4",
     "bleach",
     "defusedxml",
@@ -1593,8 +1594,8 @@ dependencies = [
 
 [[package]]
 name = "qtconsole"
-version = "5.2.2"
-requires_python = ">= 3.6"
+version = "5.3.0"
+requires_python = ">= 3.7"
 summary = "Jupyter Qt console"
 dependencies = [
     "ipykernel>=4.1",
@@ -1603,7 +1604,7 @@ dependencies = [
     "jupyter-core",
     "pygments",
     "pyzmq>=17.1",
-    "qtpy",
+    "qtpy>=2.0.1",
     "traitlets",
 ]
 
@@ -1781,7 +1782,7 @@ summary = "Send file to trash natively under Mac OS X, Windows and Linux."
 
 [[package]]
 name = "setuptools"
-version = "61.1.1"
+version = "61.2.0"
 requires_python = ">=3.7"
 summary = "Easily download, build, install, upgrade, and uninstall Python packages"
 
@@ -2874,9 +2875,9 @@ content_hash = "sha256:cd109fd00819d382a93fc03b4fce41b055cce10b210623f47e549671b
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
     {file = "iniconfig-1.1.1.tar.gz", hash = "sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32"},
 ]
-"ipykernel 6.9.2" = [
-    {file = "ipykernel-6.9.2-py3-none-any.whl", hash = "sha256:c977cff576b8425a68d3a6916510903833f0f25ed8d5c282a0c51c35de27bd47"},
-    {file = "ipykernel-6.9.2.tar.gz", hash = "sha256:4c3cc8cb359f2ead70c30f5504971c0d285e2c1c699d2ce9af0216fe9c9fb17c"},
+"ipykernel 6.10.0" = [
+    {file = "ipykernel-6.10.0-py3-none-any.whl", hash = "sha256:86ebe63f58cb68f299e06a2add4957df0eaebc7b0864de5711accd9c532d7810"},
+    {file = "ipykernel-6.10.0.tar.gz", hash = "sha256:d1c7d92daea5d9b55a33e523d4d17c09ad38e0df17a4e0ed2fa5c97f07f200ba"},
 ]
 "ipython 7.32.0" = [
     {file = "ipython-7.32.0-py3-none-any.whl", hash = "sha256:86df2cf291c6c70b5be6a7b608650420e89180c8ec74f376a34e2dc15c3400e7"},
@@ -3328,9 +3329,9 @@ content_hash = "sha256:cd109fd00819d382a93fc03b4fce41b055cce10b210623f47e549671b
     {file = "nbclient-0.5.13-py3-none-any.whl", hash = "sha256:47ac905af59379913c1f8f541098d2550153cf8dc58553cbe18c702b181518b0"},
     {file = "nbclient-0.5.13.tar.gz", hash = "sha256:40c52c9b5e3c31faecaee69f202b3f53e38d7c1c563de0fadde9d7eda0fdafe8"},
 ]
-"nbconvert 6.4.4" = [
-    {file = "nbconvert-6.4.4-py3-none-any.whl", hash = "sha256:c0c13d11378e13f72b9cd509c008383dca4051c228e4985f75023b2a5d82fc9f"},
-    {file = "nbconvert-6.4.4.tar.gz", hash = "sha256:ee0dfe34bbd1082ac9bfc750aae3c73fcbc34a70c5574c6986ff83c10a3541fd"},
+"nbconvert 6.4.5" = [
+    {file = "nbconvert-6.4.5-py3-none-any.whl", hash = "sha256:e01d219f55cc79f9701c834d605e8aa3acf35725345d3942e3983937f368ce14"},
+    {file = "nbconvert-6.4.5.tar.gz", hash = "sha256:21163a8e2073c07109ca8f398836e45efdba2aacea68d6f75a8a545fef070d4e"},
 ]
 "nbformat 5.2.0" = [
     {file = "nbformat-5.2.0-py3-none-any.whl", hash = "sha256:3e30424e8291b2188347f5c3ba5273ed3766f12f8c5137c2e456a0815f36e785"},
@@ -3917,9 +3918,9 @@ content_hash = "sha256:cd109fd00819d382a93fc03b4fce41b055cce10b210623f47e549671b
     {file = "pyzmq-22.3.0-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:d6157793719de168b199194f6b6173f0ccd3bf3499e6870fac17086072e39115"},
     {file = "pyzmq-22.3.0.tar.gz", hash = "sha256:8eddc033e716f8c91c6a2112f0a8ebc5e00532b4a6ae1eb0ccc48e027f9c671c"},
 ]
-"qtconsole 5.2.2" = [
-    {file = "qtconsole-5.2.2-py3-none-any.whl", hash = "sha256:4aa6a3e600e0c8cf16853f2378311bc2371f57cb0f22ecfc28994f4cf409ee2e"},
-    {file = "qtconsole-5.2.2.tar.gz", hash = "sha256:8f9db97b27782184efd0a0f2d57ea3bd852d053747a2e442a9011329c082976d"},
+"qtconsole 5.3.0" = [
+    {file = "qtconsole-5.3.0-py3-none-any.whl", hash = "sha256:75f2ded876444454edcb5a53262149e33b53db3a4a53116b7c3df52830905b0f"},
+    {file = "qtconsole-5.3.0.tar.gz", hash = "sha256:8e3520fdc75e46abc4cc6cffeca16fa2652754109b8ae839fa28e27d1eba5625"},
 ]
 "qtpy 2.0.1" = [
     {file = "QtPy-2.0.1-py3-none-any.whl", hash = "sha256:d93f2c98e97387fcc9d623d509772af5b6c15ab9d8f9f4c5dfbad9a73ad34812"},
@@ -4070,9 +4071,9 @@ content_hash = "sha256:cd109fd00819d382a93fc03b4fce41b055cce10b210623f47e549671b
     {file = "Send2Trash-1.8.0-py3-none-any.whl", hash = "sha256:f20eaadfdb517eaca5ce077640cb261c7d2698385a6a0f072a4a5447fd49fa08"},
     {file = "Send2Trash-1.8.0.tar.gz", hash = "sha256:d2c24762fd3759860a0aff155e45871447ea58d2be6bdd39b5c8f966a0c99c2d"},
 ]
-"setuptools 61.1.1" = [
-    {file = "setuptools-61.1.1-py3-none-any.whl", hash = "sha256:92b15f45ab164eb0c410d2bf661a6e9d15e3b78c0dffb0325f2bf0f313071cae"},
-    {file = "setuptools-61.1.1.tar.gz", hash = "sha256:89eef7b71423ab7fccc7dfafdc145410ef170c4a89567427f932448135e08cdf"},
+"setuptools 61.2.0" = [
+    {file = "setuptools-61.2.0-py3-none-any.whl", hash = "sha256:8f4813dd6a4d6cc17bde85fb2e635fe19763f96efbb0ddf5575562e5ee0bc47a"},
+    {file = "setuptools-61.2.0.tar.gz", hash = "sha256:c3d4e2ab578fbf83775755cd76dae73627915a22832cf4ea5de895978767833b"},
 ]
 "six 1.16.0" = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
