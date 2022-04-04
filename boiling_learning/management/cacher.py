@@ -10,6 +10,7 @@ from boiling_learning.io.io import LoaderFunction, SaverFunction
 from boiling_learning.io.storage import load, save
 from boiling_learning.management.persister import FileProvider, Provider
 from boiling_learning.utils.functional import Pack
+from boiling_learning.utils.utils import PathLike
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
@@ -41,6 +42,12 @@ class Cacher(Generic[_R]):
     def decorate(self, function: Callable[_P, _R]) -> CachedFunction[_P, _R]:
         return CachedFunction(function, self)
 
+    def load(self, path: PathLike) -> _R:
+        return self.loader(path)
+
+    def save(self, obj: _R, path: PathLike) -> None:
+        self.saver(obj, path)
+
 
 class CachedFunction(Generic[_P, _R]):
     def __init__(self, function: Callable[_P, _R], cacher: Cacher[_R]) -> None:
@@ -53,12 +60,18 @@ class CachedFunction(Generic[_P, _R]):
 
         return self.provide(creator, path)
 
+    def load(self, path: PathLike) -> _R:
+        return self.cacher.load(path)
+
+    def save(self, obj: _R, path: PathLike) -> None:
+        self.cacher.save(obj, path)
+
     def provide(self, creator: Callable[[], _R], path: Path) -> _R:
         provider = FileProvider(
             path,
             Provider(
-                saver=self.cacher.saver,
-                loader=self.cacher.loader,
+                saver=self.save,
+                loader=self.load,
                 creator=creator,
                 exceptions=self.cacher.exceptions,
                 autosave=self.cacher.autosave,

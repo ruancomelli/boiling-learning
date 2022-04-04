@@ -29,7 +29,7 @@ SAMPLES = frozendict(
 )
 
 
-def main(cases: Iterable[Case], case_experiment_map: Mapping[str, PathLike]) -> None:
+def main(cases: Iterable[Case], *, case_experiment_map: Mapping[str, PathLike]) -> None:
     logger.info('Setting boiling data')
 
     for case in cases:

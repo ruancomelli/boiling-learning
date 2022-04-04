@@ -123,11 +123,11 @@ check_all_paths_exist(
         ('Analyses', analyses_path),
     )
 )
-logger.success('Succesfully checked paths')
+logger.info('Succesfully checked paths')
 
 strategy = connect_gpus.main()
 strategy_name = typename(strategy)
-logger.success(f'Using distribute strategy: {strategy_name}')
+logger.info(f'Using distribute strategy: {strategy_name}')
 
 boiling_cases_names = tuple(f'case {idx+1}' for idx in range(2))
 # FIXME: use the following:
