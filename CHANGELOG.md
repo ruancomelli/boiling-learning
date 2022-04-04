@@ -1,3 +1,14 @@
+## v0.19.13 (2022-04-04)
+
+### Feat
+
+- **management/cacher**: add `load` and `save` methods to `Cacher` and `CachedFunction`
+
+### Refactor
+
+- **scripts/analyze_downsampling**: simplify analysis function
+- **scripts/analyze_consecutive_frames**: simplify analysis function
+
 ## v0.19.12 (2022-03-27)
 
 ### Refactor
