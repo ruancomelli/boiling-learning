@@ -152,11 +152,11 @@ class TimePrinter(Callback):
     def on_epoch_begin(self, epoch: int, *args: Any, **kwargs: Any) -> None:
         self._current_epoch = epoch
         if 'on_epoch_begin' in self.when:
-            self.streamer(f'-- beginning epoch {epoch} at {self._str_now()}')
+            self.streamer(f'-- beginning epoch {epoch + 1} at {self._str_now()}')
 
     def on_epoch_end(self, epoch: int, *args: Any, **kwargs: Any) -> None:
         if 'on_epoch_end' in self.when:
-            self.streamer(f'-- ending epoch {epoch} at {self._str_now()}')
+            self.streamer(f'-- ending epoch {epoch + 1} at {self._str_now()}')
 
     def on_predict_batch_begin(self, *args: Any, **kwargs: Any) -> None:
         if 'on_predict_batch_begin' in self.when:
@@ -193,7 +193,7 @@ class TimePrinter(Callback):
     def on_train_batch_begin(self, batch: int, *args: Any, **kwargs: Any) -> None:
         if 'on_train_batch_begin' in self.when:
             self.streamer(
-                f'--- epoch {self._current_epoch}: '
+                f'--- epoch {self._current_epoch + 1}: '
                 f'beginning train_batch {batch} at {self._str_now()}',
                 end='',
             )
