@@ -8,7 +8,7 @@ from tinydb_smartcache import SmartCacheTable
 from typing_extensions import final
 
 from boiling_learning.io import json
-from boiling_learning.utils import JSONDataType, PathLike, ensure_dir, ensure_parent, resolve
+from boiling_learning.utils import JSONDataType, PathLike, resolve
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import Pack
 
@@ -76,7 +76,7 @@ class JSONTableAllocator:
         self.describer: Callable[[Pack[Any, Any]], JSONDataType] = describer
 
     def _doc_path(self, doc_id: int) -> Path:
-        return ensure_parent(self.path / f'{doc_id}.json')
+        return resolve(self.path / f'{doc_id}.json', parents=True)
 
     def _provide(self, serialized: JSONDataType) -> int:
         for doc in self.db:
@@ -98,8 +98,8 @@ def default_table_allocator(
         JSONDataType,
     ] = json_describe,
 ) -> JSONTableAllocator:
-    root = ensure_dir(root)
-    datapath = ensure_dir(root / 'data')
+    root = resolve(root, dir=True)
+    datapath = resolve(root / 'data', dir=True)
     dbpath = root / 'db.json'
 
     db = TinyDB(str(dbpath))

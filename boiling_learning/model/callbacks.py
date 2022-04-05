@@ -1,7 +1,7 @@
 import datetime
 import enum
 from collections import defaultdict
-from typing import Any, DefaultDict, Dict, FrozenSet, Optional, Set
+from typing import Any, DefaultDict, Dict, Iterable, Optional
 
 import numpy as np
 from loguru import logger
@@ -83,13 +83,13 @@ class TimePrinter(Callback):
         self,
         streamer: Streamer = print,
         fmt: str = '%Y-%m-%d %H:%M:%S',
-        when: Optional[Set[str]] = None,
+        when: Optional[Iterable[str]] = None,
     ):
         super().__init__()
 
-        self.streamer: Streamer = streamer
-        self.fmt: str = fmt
-        self._current_epoch: int = 0
+        self.streamer = streamer
+        self.fmt = fmt
+        self._current_epoch = 0
 
         if when is None:
             when = {
@@ -110,7 +110,7 @@ class TimePrinter(Callback):
                 'on_train_begin',
                 'on_train_end',
             }
-        self.when: FrozenSet[str] = frozenset(when)
+        self.when = frozenset(when)
 
     def _str_now(self) -> str:
         return datetime.datetime.now().strftime(self.fmt)

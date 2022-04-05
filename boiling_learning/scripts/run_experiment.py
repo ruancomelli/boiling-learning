@@ -15,7 +15,7 @@ from pyqtgraph import GraphicsWindow
 from pyqtgraph.Qt import QtGui
 
 from boiling_learning.daq import Channel, ChannelType, Device
-from boiling_learning.utils import PathLike, ensure_dir, ensure_parent
+from boiling_learning.utils import PathLike, resolve
 from boiling_learning.utils.geometry import Cylinder
 from boiling_learning.utils.units import unit_registry as u
 
@@ -295,9 +295,9 @@ def main(
     # -------------------------------------------------------
     # Initialize
     # -------------------------------------------------------
-    output_dir = ensure_dir(format_output_dir(output_dir_pattern))
+    output_dir = resolve(format_output_dir(output_dir_pattern), dir=True)
     filepath = output_dir / format_filename(output_dir, filename_pattern)
-    filepath = ensure_parent(filepath)
+    filepath = resolve(filepath, parents=True)
     print_if_must(('anything', 'info'), f'> File path: {filepath}')
 
     if should_plot:

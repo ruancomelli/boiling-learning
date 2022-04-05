@@ -229,19 +229,6 @@ def shorten_path(path, max_parts=None, max_len=None, prefix='...'):
         return prefix + str(shortened)
 
 
-# ---------------------------------- Iteration ----------------------------------
-def append(iterable: Iterable[_T], value: S) -> Iterator[Union[_T, S]]:
-    yield from iterable
-    yield value
-
-
-def replace(iterable, new_iterable):
-    # Iterates over iterable and new_iterable, yielding only new_iterable values.
-    # This effectively replaces every element in iterable with elements in new_iterable.
-    for _, new_value in zip(iterable, new_iterable):
-        yield new_value
-
-
 # ---------------------------------- Path ----------------------------------
 def relative_path(origin: PathLike, destination: PathLike) -> Path:
     return _relative_path(resolve(destination), start=resolve(origin))
@@ -267,14 +254,6 @@ def resolve(
         path.parent.mkdir(exist_ok=True, parents=True)
 
     return path
-
-
-def ensure_dir(path: PathLike, root: Optional[PathLike] = None) -> Path:
-    return resolve(path, root=root, dir=True)
-
-
-def ensure_parent(path: PathLike, root: Optional[PathLike] = None) -> Path:
-    return resolve(path, root=root, parents=True)
 
 
 # Source: https://stackoverflow.com/a/57892171/5811400

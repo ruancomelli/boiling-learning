@@ -8,35 +8,33 @@ import tensorflow as tf
 
 from boiling_learning.io.io import LoaderFunction
 from boiling_learning.io.storage import Metadata, deserialize, serialize
-from boiling_learning.utils import PathLike, append, resolve
+from boiling_learning.utils import PathLike, resolve
 
 T = TypeVar('T')
 _ModelType = TypeVar('_ModelType')
 
 
 def restore(
-    restore: bool = False,
-    path: Optional[PathLike] = None,
-    load_method: Optional[LoaderFunction[T]] = None,
+    path_pattern: PathLike,
+    load_method: LoaderFunction[T],
     epoch_str: str = 'epoch',
 ) -> Tuple[int, Optional[T]]:
-    last_epoch = -1
-    model = None
-    if restore:
-        path = resolve(path)
-        glob_pattern = path.name.replace(f'{{{epoch_str}}}', '*')
-        parser = parse.compile(path.name).parse
+    path_pattern = resolve(path_pattern)
 
-        paths = path.parent.glob(glob_pattern)
-        parsed = (parser(path_item.name) for path_item in paths)
-        parsed = filter(lambda p: p is not None and epoch_str in p, parsed)
-        epochs = append((int(p[epoch_str]) for p in parsed), last_epoch)
-        last_epoch = max(epochs)
+    glob_pattern = path_pattern.name.replace(f'{{{epoch_str}}}', '*')
+    paths = path_pattern.parent.glob(glob_pattern)
 
-        if last_epoch != -1:
-            path_str = str(path).format(epoch=last_epoch)
-            model = load_method(path_str)
+    parser = parse.compile(path_pattern.name).parse
+    parsed = (parser(path_item.name) for path_item in paths)
 
+    epochs = (int(p[epoch_str]) for p in parsed if p is not None and epoch_str in p)
+    last_epoch = max(epochs, default=-1)
+
+    if last_epoch == -1:
+        return -1, None
+
+    path_str = str(path_pattern).format(epoch=last_epoch)
+    model = load_method(path_str)
     return last_epoch, model
 
 
