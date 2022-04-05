@@ -1,23 +1,28 @@
 import datetime
 import enum
 from collections import defaultdict
-from pathlib import Path
 from typing import Any, DefaultDict, Dict, FrozenSet, Optional, Set
 
 import numpy as np
 from loguru import logger
+from tensorflow.data import Dataset
 from tensorflow.keras.callbacks import Callback
 from tensorflow.python.keras import backend as K
 from tensorflow.python.platform import tf_logging as logging
 from typing_extensions import Protocol
 
 from boiling_learning.io import json
-from boiling_learning.utils import PathLike, ensure_parent
+from boiling_learning.utils import PathLike, resolve
 
 
 # Source: <https://stackoverflow.com/q/47731935/5811400>
 class AdditionalValidationSets(Callback):
-    def __init__(self, validation_sets, verbose=True, batch_size=None):
+    def __init__(
+        self,
+        validation_sets: Dict[str, Dataset],
+        verbose: bool = True,
+        batch_size: Optional[int] = None,
+    ):
         """
         :param validation_sets:
         a list of 1-tuples (validation_data,)
@@ -29,33 +34,11 @@ class AdditionalValidationSets(Callback):
         """
         super().__init__()
 
-        self.validation_sets = [
-            self._expand_validation_set(val_set, idx)
-            for idx, val_set in enumerate(validation_sets)
-        ]
-
+        self.validation_sets = validation_sets
         self.epoch = []
         self.history = {}
         self.verbose = verbose
         self.batch_size = batch_size
-
-    def _expand_validation_set(self, val_set, idx):
-        if len(val_set) == 1:
-            return val_set[0], None, None, f'val_{idx}'
-
-        if len(val_set) == 2:
-            return val_set[0], None, None, val_set[1]
-
-        if len(val_set) == 3:
-            return val_set[0], val_set[1], None, val_set[2]
-
-        if len(val_set) == 4:
-            return val_set
-
-        raise ValueError(
-            'every validation set must be either in the form'
-            ' (data,), (data, name), (x, y, name) or (x, y, sample_weights, name).'
-        )
 
     def on_train_begin(self, logs=None):
         self.epoch = []
@@ -70,19 +53,10 @@ class AdditionalValidationSets(Callback):
             self.history.setdefault(k, []).append(v)
 
         # evaluate on the additional validation sets
-        for validation_set in self.validation_sets:
-            (
-                validation_data,
-                validation_targets,
-                sample_weights,
-                validation_set_name,
-            ) = validation_set
-
+        for validation_set_name, validation_set in self.validation_sets.items():
             results = self.model.evaluate(
-                x=validation_data,
-                y=validation_targets,
+                validation_set,
                 verbose=self.verbose,
-                sample_weight=sample_weights,
                 batch_size=self.batch_size,
             )
 
@@ -351,7 +325,7 @@ class ReduceLROnPlateau(Callback):
 
 class RegisterEpoch(Callback):
     def __init__(self, path: PathLike) -> None:
-        self._path = ensure_parent(path)
+        self._path = resolve(path, parents=True)
 
     def on_epoch_end(self, epoch, logs=None) -> None:
         self._path.write_text(epoch)
@@ -364,7 +338,7 @@ class SaveHistoryMode(enum.Enum):
 
 class SaveHistory(Callback):
     def __init__(self, path: PathLike, mode: SaveHistoryMode) -> None:
-        self.path: Path = ensure_parent(path)
+        self.path = resolve(path, parents=True)
 
         self.history: DefaultDict[str, list] = defaultdict(list)
 
