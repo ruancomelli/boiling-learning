@@ -1,3 +1,9 @@
+## v0.19.17 (2022-04-05)
+
+### Fix
+
+- **model/training**: fix model anonymization
+
 ## v0.19.16 (2022-04-05)
 
 ## v0.19.15 (2022-04-05)
