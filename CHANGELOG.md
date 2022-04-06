@@ -1,3 +1,16 @@
+## v0.19.15 (2022-04-05)
+
+### Fix
+
+- **model/training**: anonymize model layers to allow re-usable descriptions
+- **model/callbacks**: fix `TimePrinter` logged epoch to use natural numbering
+
+### Refactor
+
+- **model/model**: simplify typing and remove further unnecessary custom functions
+- simplify typing and remove further unnecessary custom functions
+- **model/callbacks**: simplify `AdditionalValidationSets` by getting rid of cases we do not cover here
+
 ## v0.19.14 (2022-04-04)
 
 ## v0.19.13 (2022-04-04)
