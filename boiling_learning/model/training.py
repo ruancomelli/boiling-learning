@@ -51,7 +51,7 @@ def _encode_configurable(instance: Union[Loss, Metric, Optimizer]) -> json.JSOND
 @json.encode.instance(Model)
 @describe.instance(Model)
 def _describe_model(instance: Model) -> json.JSONDataType:
-    return _json.loads(instance.to_json())
+    return _anonymize_model(_json.loads(instance.to_json()))
 
 
 @dataclass(frozen=True)
@@ -148,3 +148,19 @@ def strategy_scope(strategy: Optional[Described[tf.distribute.Strategy, Any]]) -
 
     with context:
         yield
+
+
+def _anonymize_model(model_json: Dict[str, Any]) -> Dict[str, Any]:
+    # remove model name
+    del model_json['name']
+
+    layer_indices = {
+        layer['contents']['name']: index for index, layer in enumerate(model_json['layers'])
+    }
+
+    json_str = _json.dumps(model_json)
+
+    for name, index in layer_indices.items():
+        json_str = json_str.replace(name, f'layer_{index}')
+
+    return _json.loads(json_str)
