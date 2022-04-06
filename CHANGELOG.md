@@ -1,3 +1,9 @@
+## v0.19.18 (2022-04-05)
+
+### Refactor
+
+- **model/training**: add logging to `_anonymize_model`
+
 ## v0.19.17 (2022-04-05)
 
 ### Fix
