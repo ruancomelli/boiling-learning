@@ -7,6 +7,7 @@ from typing import Any, Dict, Iterator, List, Optional, Union
 
 import tensorflow as tf
 from dataclassy import dataclass
+from loguru import logger
 from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.losses import Loss
 from tensorflow.keras.metrics import Metric
@@ -151,6 +152,8 @@ def strategy_scope(strategy: Optional[Described[tf.distribute.Strategy, Any]]) -
 
 
 def _anonymize_model(model_json: Dict[str, Any]) -> Dict[str, Any]:
+    logger.debug(model_json)
+
     model_config = model_json['config']
 
     # remove model name
