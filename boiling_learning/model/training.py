@@ -151,12 +151,12 @@ def strategy_scope(strategy: Optional[Described[tf.distribute.Strategy, Any]]) -
 
 
 def _anonymize_model(model_json: Dict[str, Any]) -> Dict[str, Any]:
-    # remove model name
-    del model_json['name']
+    model_config = model_json['config']
 
-    layer_indices = {
-        layer['contents']['name']: index for index, layer in enumerate(model_json['layers'])
-    }
+    # remove model name
+    del model_config['name']
+
+    layer_indices = {layer['name']: index for index, layer in enumerate(model_config['layers'])}
 
     json_str = _json.dumps(model_json)
 

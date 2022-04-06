@@ -450,7 +450,7 @@ class GetFitModel(CachedFunction[_P, Model]):
                     monitor='val_loss',
                 ),
                 tf.keras.callbacks.BackupAndRestore(str(path.parent / f'backup-{path.name}')),
-                AdditionalValidationSets([(ds_val_g10, 'HF10')], batch_size=params.batch_size),
+                AdditionalValidationSets({'HF10': ds_val_g10}, batch_size=params.batch_size),
             ]
         )
 
