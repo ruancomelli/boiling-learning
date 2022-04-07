@@ -7,18 +7,14 @@ from typing_extensions import ParamSpec
 
 from boiling_learning.io import json
 from boiling_learning.utils import JSONDataType, KeyedDefaultDict, SimpleStr
-from boiling_learning.utils.functional import Pack, nth_arg
+from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.typeutils import CallableWithFirst
 
 _X = TypeVar('_X')
 _X1 = TypeVar('_X1')
 _X2 = TypeVar('_X2')
 _Y = TypeVar('_Y')
-_Y1 = TypeVar('_Y1')
-_Y2 = TypeVar('_Y2')
-C = TypeVar('C')
 T = TypeVar('T')
-S = TypeVar('S')
 _P = ParamSpec('_P')
 
 
@@ -62,19 +58,6 @@ class FeatureTransformer(Transformer[Tuple[_X1, _Y], Tuple[_X2, _Y]], Generic[_X
         feature_transformer: Transformer[_X1, _X2] = Transformer(self.name, self.transform_feature)
         feature_transformer.pack = self.pack
         return feature_transformer
-
-
-class PairTransformer(Transformer[Tuple[_X1, _Y1], Tuple[_X2, _Y2]], Generic[_X1, _Y1, _X2, _Y2]):
-    def __init__(
-        self,
-        name: str,
-        feature_transformer: Transformer[_X1, _X2],
-        target_transformer: Transformer[_Y1, _Y2],
-    ) -> None:
-        def f(feature: _X1, target: _Y1) -> Tuple[_X2, _Y2]:
-            return feature_transformer(feature), target_transformer(target)
-
-        super().__init__(name, f)
 
 
 class KeyedFeatureTransformer(
@@ -194,9 +177,6 @@ class DictFeatureTransformer(
                 else self.packer.__name__,
             }
         )
-
-
-first_argument_transformer = Transformer('first_argument', nth_arg(0))
 
 
 @json.encode.instance(Transformer)

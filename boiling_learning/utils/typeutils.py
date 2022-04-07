@@ -1,12 +1,10 @@
-from typing import Any, Tuple, TypeVar
+from typing import Any, TypeVar
 
 from typing_extensions import ParamSpec, Protocol
 
-_T = TypeVar('_T')
 _X_contra = TypeVar('_X_contra', contravariant=True)
 _Y_co = TypeVar('_Y_co', covariant=True)
 _P = ParamSpec('_P')
-Many = Tuple[_T, ...]
 
 
 def typename(obj: Any) -> str:

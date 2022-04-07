@@ -10,7 +10,6 @@ import string
 from collections import ChainMap
 from contextlib import contextmanager
 from functools import partial
-from os.path import relpath as _relative_path
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import (
@@ -44,7 +43,6 @@ _TypeT = TypeVar('_TypeT', bound=Type)
 _T = TypeVar('_T')
 _Key = TypeVar('_Key')
 _Value = TypeVar('_Value')
-S = TypeVar('S')
 
 
 # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
@@ -203,37 +201,7 @@ def dataframe_categories_to_int(df: pd.DataFrame, inplace: bool = False) -> pd.D
     return df
 
 
-# ---------------------------------- Printing ----------------------------------
-def shorten_path(path, max_parts=None, max_len=None, prefix='...'):
-    def _slice_path(p, slc):
-        return Path(*Path(p).parts[slc])
-
-    path = Path(path)
-
-    if max_parts is None:
-        shortened = path
-    else:
-        shortened = _slice_path(path, slice(-max_parts, None))
-
-    if max_len is not None:
-        sep = os.sep
-        prefix = str(prefix) + sep
-        prefix_len = len(prefix)
-
-        while len(str(shortened)) + prefix_len > max_len and len(shortened.parts) > 1:
-            shortened = _slice_path(shortened, slice(1, None))
-
-    if shortened == path:
-        return str(shortened)
-    else:
-        return prefix + str(shortened)
-
-
 # ---------------------------------- Path ----------------------------------
-def relative_path(origin: PathLike, destination: PathLike) -> Path:
-    return _relative_path(resolve(destination), start=resolve(origin))
-
-
 def resolve(
     path: PathLike, root: Optional[PathLike] = None, dir: bool = False, parents: bool = False
 ) -> Path:
