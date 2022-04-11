@@ -225,18 +225,18 @@ dependencies = [
 
 [[package]]
 name = "boto3"
-version = "1.21.37"
+version = "1.21.38"
 requires_python = ">= 3.6"
 summary = "The AWS SDK for Python"
 dependencies = [
-    "botocore<1.25.0,>=1.24.37",
+    "botocore<1.25.0,>=1.24.38",
     "jmespath<2.0.0,>=0.7.1",
     "s3transfer<0.6.0,>=0.5.0",
 ]
 
 [[package]]
 name = "botocore"
-version = "1.24.37"
+version = "1.24.38"
 requires_python = ">= 3.6"
 summary = "Low-level, data-driven core of boto 3."
 dependencies = [
@@ -636,7 +636,6 @@ summary = "Internationalized Domain Names in Applications (IDNA)"
 [[package]]
 name = "imageio"
 version = "2.4.1"
-requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "Library for reading and writing a wide range of image, video, scientific, and volumetric data formats."
 dependencies = [
     "numpy",
@@ -737,7 +736,7 @@ extras = ["requirements_deprecated_finder"]
 requires_python = ">=3.6.1,<4.0"
 summary = "A Python utility / library to sort Python imports."
 dependencies = [
-    "isort>=5.10.1",
+    "isort",
     "pip-api",
     "pipreqs",
 ]
@@ -1010,8 +1009,8 @@ dependencies = [
     "cloudpickle",
     "dask>=2.22.0",
     "distributed>=2.22.0",
+    "modin",
     "modin-spreadsheet>=0.1.0",
-    "modin>=0.12.1",
     "pyarrow>=1.0",
     "ray[default]>=1.4.0",
     "rpyc==4.1.5",
@@ -1278,7 +1277,6 @@ dependencies = [
 [[package]]
 name = "pathspec"
 version = "0.9.0"
-requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 summary = "Utility library for gitignore style pattern matching of file paths."
 
 [[package]]
@@ -1457,7 +1455,6 @@ summary = "Python style guide checker"
 [[package]]
 name = "pycparser"
 version = "2.21"
-requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "C parser in Python"
 
 [[package]]
@@ -1677,7 +1674,7 @@ dependencies = [
     "opencensus",
     "prometheus-client>=0.7.1",
     "py-spy>=0.2.0",
-    "ray>=1.4.0",
+    "ray",
     "requests",
     "smart-open",
 ]
@@ -2408,13 +2405,12 @@ content_hash = "sha256:cd109fd00819d382a93fc03b4fce41b055cce10b210623f47e549671b
     {file = "bokeh-2.4.2-py3-none-any.whl", hash = "sha256:2a842d717feeee802e668054277c09054b6f1561557a16dddaf5f7c452f2728c"},
     {file = "bokeh-2.4.2.tar.gz", hash = "sha256:f0a4b53364ed3b7eb936c5cb1a4f4132369e394c7ae0a8ef420459410958033d"},
 ]
-"boto3 1.21.37" = [
-    {file = "boto3-1.21.37-py3-none-any.whl", hash = "sha256:1e845aa92b3ad70b954329b98835135c28b3000e322ff8d3fc46a956bdb6e94b"},
-    {file = "boto3-1.21.37.tar.gz", hash = "sha256:013ba57295f05da141e364191dd46f4086e8fe3eb83a3cd09730eeb684ffbab3"},
+"boto3 1.21.38" = [
+    {file = "boto3-1.21.38-py3-none-any.whl", hash = "sha256:4bc11350b4d8ebd81bacfb5b2a9613a419dfe05468a61ccafdcaf3fcd2a6d319"},
+    {file = "boto3-1.21.38.tar.gz", hash = "sha256:62dde36a57697b40b4693e0ad0d39013f1e187e5a3c52fdb50dbe710633061bb"},
 ]
-"botocore 1.24.37" = [
-    {file = "botocore-1.24.37-py3-none-any.whl", hash = "sha256:21e164a213beca36033c46026bffa62f2ee2cd2600777271f9a551fb34dba006"},
-    {file = "botocore-1.24.37.tar.gz", hash = "sha256:70c48c4ae3c2b9ec0ca025385979d01f4c7dae4d9a61c82758d4cf7caa7082cd"},
+"botocore 1.24.38" = [
+    {file = "botocore-1.24.38-py3-none-any.whl", hash = "sha256:91d3be3f961b35e80e6eb314c54b0c2563f6c3efbf0615e5822d4f291c551851"},
 ]
 "cached-property 1.5.2" = [
     {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
