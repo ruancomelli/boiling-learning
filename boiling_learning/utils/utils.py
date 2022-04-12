@@ -310,7 +310,7 @@ def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
         write = stream.write
 
         class_name = obj.__class__.__name__
-        write(class_name + '(')
+        write(f'{class_name}(')
 
         if names is None:
             obj_items = obj.__dict__.copy().items()
@@ -391,14 +391,10 @@ class SimpleStr:
 
 class DictEq:
     def __eq__(self, other):
-        if not isinstance(other, __class__):
-            return NotImplemented
-        return vars(self) == vars(other)
+        return vars(self) == vars(other) if isinstance(other, __class__) else NotImplemented
 
     def __ne__(self, other):
-        if not isinstance(other, __class__):
-            return NotImplemented
-        return not self.__eq__(other)
+        return not self.__eq__(other) if isinstance(other, __class__) else NotImplemented
 
 
 # ---------------------------------- Enum ----------------------------------
