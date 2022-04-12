@@ -6,7 +6,7 @@ from typing import Dict, Iterable, Optional, Tuple
 import parse
 import tensorflow as tf
 
-from boiling_learning.io.io import LoaderFunction
+from boiling_learning.io import LoaderFunction
 from boiling_learning.io.storage import Metadata, deserialize, serialize
 from boiling_learning.utils import PathLike, resolve
 

@@ -3,8 +3,8 @@ from typing import Callable, Generic, Iterable, TypeVar, Union
 
 from loguru import logger
 
-from boiling_learning.io.io import LoaderFunction, PathLike, SaverFunction
-from boiling_learning.utils import resolve
+from boiling_learning.io import LoaderFunction, SaverFunction
+from boiling_learning.utils.utils import PathLike, resolve
 
 _T = TypeVar('_T')
 CreatorFunction = Callable[[], _T]

@@ -29,7 +29,7 @@ from loguru import logger
 from tensorflow.data import AUTOTUNE
 from typing_extensions import ParamSpec
 
-from boiling_learning.datasets.datasets import DatasetSplits
+from boiling_learning.datasets.datasets import DatasetSplits, DatasetTriplet
 from boiling_learning.datasets.sliceable import (
     SliceableDataset,
     SupervisedSliceableDataset,
@@ -37,7 +37,6 @@ from boiling_learning.datasets.sliceable import (
     sliceable_dataset_to_tensorflow_dataset,
 )
 from boiling_learning.io import json
-from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.io.storage import load, save
 from boiling_learning.management.allocators import default_table_allocator
 from boiling_learning.management.cacher import CachedFunction, Cacher, cache

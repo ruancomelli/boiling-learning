@@ -6,7 +6,7 @@ from typing import Callable, Generic, Iterable, TypeVar, Union
 from loguru import logger
 from typing_extensions import ParamSpec
 
-from boiling_learning.io.io import LoaderFunction, SaverFunction
+from boiling_learning.io import LoaderFunction, SaverFunction
 from boiling_learning.io.storage import load, save
 from boiling_learning.management.persister import FileProvider, Provider
 from boiling_learning.utils.functional import Pack

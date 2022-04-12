@@ -1,7 +1,7 @@
 from collections import deque
 from fractions import Fraction
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Generic, Iterable, Optional, Tuple, TypeVar, Union
 
 import funcy
 import tensorflow as tf
@@ -9,12 +9,15 @@ from dataclassy import dataclass
 from decorator import decorator
 from funcy import rpartial
 
-from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
 from boiling_learning.utils import mathutils, resolve
 from boiling_learning.utils.sentinels import EMPTY
 
 _T = TypeVar('_T')
+
+
+class DatasetTriplet(Tuple[_T, Optional[_T], _T], Generic[_T]):
+    pass
 
 
 @dataclass(frozen=True, kwargs=True)

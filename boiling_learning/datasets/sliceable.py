@@ -28,8 +28,7 @@ from iteround import saferound
 from tensorflow.data import AUTOTUNE
 from typing_extensions import TypeGuard
 
-from boiling_learning.io import json
-from boiling_learning.io.io import LoaderFunction, SaverFunction
+from boiling_learning.io import LoaderFunction, SaverFunction, json
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
 from boiling_learning.utils import PathLike, resolve
 from boiling_learning.utils.dtypes import NestedTypeSpec, auto_spec

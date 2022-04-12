@@ -13,12 +13,12 @@ from tensorflow.keras.metrics import Metric
 from tensorflow.keras.optimizers import Optimizer
 from typing_extensions import TypedDict
 
+from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import (
     SupervisedSliceableDataset,
     sliceable_dataset_to_tensorflow_dataset,
 )
 from boiling_learning.io import json
-from boiling_learning.io.io import DatasetTriplet
 from boiling_learning.model.model import Model
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.descriptions import describe
