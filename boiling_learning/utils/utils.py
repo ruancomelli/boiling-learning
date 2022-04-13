@@ -224,6 +224,7 @@ def resolve(
 
 def generate_string(length: int = 6, chars: Sequence[str] = string.ascii_lowercase) -> str:
     '''source: <https://stackoverflow.com/a/2257449/5811400>'''
+    # TODO: maybe replace with uuid.uuid4?
     return ''.join(random.choices(chars, k=length))
 
 
