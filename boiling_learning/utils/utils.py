@@ -9,12 +9,10 @@ import random
 import string
 from collections import ChainMap
 from contextlib import contextmanager
-from functools import partial
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import (
     Any,
-    Callable,
     Collection,
     DefaultDict,
     Dict,
@@ -39,7 +37,7 @@ from boiling_learning.utils.iterutils import flaglast
 
 # ---------------------------------- Typing ----------------------------------
 _EnumType = TypeVar('_EnumType', bound=enum.Enum)
-_TypeT = TypeVar('_TypeT', bound=Type)
+_TypeT = TypeVar('_TypeT', bound=Type[Any])
 _T = TypeVar('_T')
 _Key = TypeVar('_Key')
 _Value = TypeVar('_Value')
@@ -224,53 +222,6 @@ def resolve(
     return path
 
 
-# Source: https://stackoverflow.com/a/57892171/5811400
-def rmdir(
-    path: PathLike,
-    recursive: bool = False,
-    missing_ok: bool = False,
-) -> None:
-    path = resolve(path)
-
-    if not path.is_dir():
-        if missing_ok:
-            return
-        else:
-            raise NotADirectoryError(
-                f'path is expected to be a directory when missing_ok={missing_ok}. Got {path}'
-            )
-
-    if recursive:
-        for child in path.iterdir():
-            if child.is_file():
-                child.unlink()
-            elif child.is_dir():
-                rmdir(child, recursive=recursive, missing_ok=True)
-
-    path.rmdir()
-
-
-def dir_as_tree(dir_path, file_pred=None, dir_pred=None):
-    ret_list = []
-    ret_dict = {}
-
-    for path in dir_path.iterdir():
-        if path.is_file() and (file_pred is None or file_pred(path)):
-            ret_list.append(path)
-        elif path.is_dir() and (dir_pred is None or dir_pred(path)):
-            ret_dict[path.name] = dir_as_tree(path, file_pred=file_pred, dir_pred=dir_pred)
-
-    return ret_list, ret_dict
-
-
-def dir_as_tree_apply(dir_path, fs, dir_pred=None):
-    return [f(dir_path) for f in fs], {
-        path.name: dir_as_tree_apply(path, fs, dir_pred=dir_pred)
-        for path in dir_path.iterdir()
-        if path.is_dir() and (dir_pred is None or dir_pred(path))
-    }
-
-
 def generate_string(length: int = 6, chars: Sequence[str] = string.ascii_lowercase) -> str:
     '''source: <https://stackoverflow.com/a/2257449/5811400>'''
     return ''.join(random.choices(chars, k=length))
@@ -395,23 +346,3 @@ class DictEq:
 
     def __ne__(self, other):
         return not self.__eq__(other) if isinstance(other, __class__) else NotImplemented
-
-
-# ---------------------------------- Enum ----------------------------------
-def enum_item(enumeration: Type[_EnumType], item: Union[_EnumType, int, str]) -> _EnumType:
-    if isinstance(item, str):
-        return enumeration[item]
-    elif isinstance(item, int):
-        return enumeration(item)
-    else:
-        return item
-
-
-# ---------------------------------- Operator ----------------------------------
-def contains(elem):
-    '''Return a predicated that tests if a container contains elem.'''
-    return funcy.rpartial(operator.contains, elem)
-
-
-def is_(x) -> Callable[[Any], bool]:
-    return partial(operator.is_, x)
