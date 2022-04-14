@@ -225,18 +225,18 @@ dependencies = [
 
 [[package]]
 name = "boto3"
-version = "1.21.39"
+version = "1.21.40"
 requires_python = ">= 3.6"
 summary = "The AWS SDK for Python"
 dependencies = [
-    "botocore<1.25.0,>=1.24.39",
+    "botocore<1.25.0,>=1.24.40",
     "jmespath<2.0.0,>=0.7.1",
     "s3transfer<0.6.0,>=0.5.0",
 ]
 
 [[package]]
 name = "botocore"
-version = "1.24.39"
+version = "1.24.40"
 requires_python = ">= 3.6"
 summary = "Low-level, data-driven core of boto 3."
 dependencies = [
@@ -392,15 +392,6 @@ name = "defusedxml"
 version = "0.7.1"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 summary = "XML bomb protection for Python stdlib modules"
-
-[[package]]
-name = "deprecated"
-version = "1.2.13"
-requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-summary = "Python @deprecated decorator to deprecate old python classes, functions or methods."
-dependencies = [
-    "wrapt<2,>=1.10",
-]
 
 [[package]]
 name = "dill"
@@ -851,7 +842,7 @@ dependencies = [
 
 [[package]]
 name = "jupyterlab-pygments"
-version = "0.2.1"
+version = "0.2.2"
 requires_python = ">=3.7"
 summary = "Pygments theme using JupyterLab CSS variables"
 
@@ -1385,7 +1376,7 @@ dependencies = [
 
 [[package]]
 name = "prometheus-client"
-version = "0.14.1"
+version = "0.13.1"
 requires_python = ">=3.6"
 summary = "Python client for the Prometheus monitoring system."
 
@@ -1645,12 +1636,14 @@ dependencies = [
 
 [[package]]
 name = "ray"
-version = "1.11.0"
+version = "1.12.0"
 summary = "Ray provides a simple, universal API for building distributed applications."
 dependencies = [
+    "aiosignal",
     "attrs",
     "click>=7.0",
     "filelock",
+    "frozenlist",
     "grpcio<=1.43.0,>=1.28.1",
     "jsonschema",
     "msgpack<2.0.0,>=1.0.0",
@@ -1658,41 +1651,26 @@ dependencies = [
     "numpy>=1.19.3; python_version >= \"3.9\"",
     "protobuf>=3.15.3",
     "pyyaml",
-    "redis>=3.5.0",
+    "requests",
+    "virtualenv",
 ]
 
 [[package]]
 name = "ray"
-version = "1.11.0"
+version = "1.12.0"
 extras = ["default"]
 summary = "Ray provides a simple, universal API for building distributed applications."
 dependencies = [
     "aiohttp-cors",
     "aiohttp>=3.7",
-    "aioredis<2",
-    "aiosignal",
     "colorful",
-    "frozenlist",
     "gpustat>=1.0.0b1",
     "opencensus",
-    "prometheus-client>=0.7.1",
+    "prometheus-client<0.14.0,>=0.7.1",
     "py-spy>=0.2.0",
     "ray>=1.4.0",
     "requests",
     "smart-open",
-]
-
-[[package]]
-name = "redis"
-version = "4.2.2"
-requires_python = ">=3.6"
-summary = "Python client for Redis database and key-value store"
-dependencies = [
-    "async-timeout>=4.0.2",
-    "deprecated>=1.2.3",
-    "importlib-metadata>=1.0; python_version < \"3.8\"",
-    "packaging>=20.4",
-    "typing-extensions; python_version < \"3.8\"",
 ]
 
 [[package]]
@@ -1815,7 +1793,7 @@ summary = "Sorted Containers -- Sorted List, Sorted Dict, Sorted Set"
 
 [[package]]
 name = "soupsieve"
-version = "2.3.2"
+version = "2.3.2.post1"
 requires_python = ">=3.6"
 summary = "A modern CSS selector implementation for Beautiful Soup."
 
@@ -2408,13 +2386,13 @@ content_hash = "sha256:cd109fd00819d382a93fc03b4fce41b055cce10b210623f47e549671b
     {file = "bokeh-2.4.2-py3-none-any.whl", hash = "sha256:2a842d717feeee802e668054277c09054b6f1561557a16dddaf5f7c452f2728c"},
     {file = "bokeh-2.4.2.tar.gz", hash = "sha256:f0a4b53364ed3b7eb936c5cb1a4f4132369e394c7ae0a8ef420459410958033d"},
 ]
-"boto3 1.21.39" = [
-    {file = "boto3-1.21.39-py3-none-any.whl", hash = "sha256:b709cb65ffc4e3f78c590145e2dee40758056c9edafb9ee692f67d170855dfc3"},
-    {file = "boto3-1.21.39.tar.gz", hash = "sha256:56425debf5f1fd2cf5494d9cb110b2a977453888f071898a12e6ab64bdd41796"},
+"boto3 1.21.40" = [
+    {file = "boto3-1.21.40-py3-none-any.whl", hash = "sha256:f99417fb53d0af357eb91152b30686c40dd22381499bfab0d61830eee72d5a0b"},
+    {file = "boto3-1.21.40.tar.gz", hash = "sha256:03fe95333a51e3a14d7ab9644ae702f9feb008a4f5d308724eaa9ab8fd4c7d71"},
 ]
-"botocore 1.24.39" = [
-    {file = "botocore-1.24.39-py3-none-any.whl", hash = "sha256:94f50a544003918270ba726eb5652b2c31f6cb34accbf25e053ed6ea97ecf1fd"},
-    {file = "botocore-1.24.39.tar.gz", hash = "sha256:a0883dfe8b81689060af7bb2ca4ce3048b954b25bef4ed712c6760ce3da51485"},
+"botocore 1.24.40" = [
+    {file = "botocore-1.24.40-py3-none-any.whl", hash = "sha256:fbf7ad87581a888600e5f0f39b19ded2dd668f6cf6abe29a172ac23ba7f39dd6"},
+    {file = "botocore-1.24.40.tar.gz", hash = "sha256:06badf7bbddadc404b5df10e7fd5bd351caccebd151bda29155a94dde789af5c"},
 ]
 "cached-property 1.5.2" = [
     {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
@@ -2598,10 +2576,6 @@ content_hash = "sha256:cd109fd00819d382a93fc03b4fce41b055cce10b210623f47e549671b
 "defusedxml 0.7.1" = [
     {file = "defusedxml-0.7.1-py2.py3-none-any.whl", hash = "sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61"},
     {file = "defusedxml-0.7.1.tar.gz", hash = "sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69"},
-]
-"deprecated 1.2.13" = [
-    {file = "Deprecated-1.2.13-py2.py3-none-any.whl", hash = "sha256:64756e3e14c8c5eea9795d93c524551432a0be75629f8f29e67ab8caf076c76d"},
-    {file = "Deprecated-1.2.13.tar.gz", hash = "sha256:43ac5335da90c31c24ba028af536a91d41d53f9e6901ddb021bcc572ce44e38d"},
 ]
 "dill 0.3.4" = [
     {file = "dill-0.3.4-py2.py3-none-any.whl", hash = "sha256:7e40e4a70304fd9ceab3535d36e58791d9c4a776b38ec7f7ec9afc8d3dca4d4f"},
@@ -2949,9 +2923,9 @@ content_hash = "sha256:cd109fd00819d382a93fc03b4fce41b055cce10b210623f47e549671b
     {file = "jupyter_core-4.9.2-py3-none-any.whl", hash = "sha256:f875e4d27e202590311d468fa55f90c575f201490bd0c18acabe4e318db4a46d"},
     {file = "jupyter_core-4.9.2.tar.gz", hash = "sha256:d69baeb9ffb128b8cd2657fcf2703f89c769d1673c851812119e3a2a0e93ad9a"},
 ]
-"jupyterlab-pygments 0.2.1" = [
-    {file = "jupyterlab_pygments-0.2.1-py2.py3-none-any.whl", hash = "sha256:05f8056a18fec9ebef01f705443d81edb16bb03d27371f23c0ae135a85a76029"},
-    {file = "jupyterlab_pygments-0.2.1.tar.gz", hash = "sha256:121da770930e348895f89d6bdfce7e7e6a8bb574162923f9c9ef5a20c61619c6"},
+"jupyterlab-pygments 0.2.2" = [
+    {file = "jupyterlab_pygments-0.2.2-py2.py3-none-any.whl", hash = "sha256:2405800db07c9f770863bcf8049a529c3dd4d3e28536638bd7c1c01d2748309f"},
+    {file = "jupyterlab_pygments-0.2.2.tar.gz", hash = "sha256:7405d7fde60819d905a9fa8ce89e4cd830e318cdad22a0030f7a901da705585d"},
 ]
 "jupyterlab-widgets 1.1.0" = [
     {file = "jupyterlab_widgets-1.1.0-py3-none-any.whl", hash = "sha256:c2a9bd3789f120f64d73268c066ed3b000c56bc1dda217be5cdc43e7b4ebad3f"},
@@ -3573,9 +3547,9 @@ content_hash = "sha256:cd109fd00819d382a93fc03b4fce41b055cce10b210623f47e549671b
     {file = "pre_commit-2.18.1-py2.py3-none-any.whl", hash = "sha256:02226e69564ebca1a070bd1f046af866aa1c318dbc430027c50ab832ed2b73f2"},
     {file = "pre_commit-2.18.1.tar.gz", hash = "sha256:5d445ee1fa8738d506881c5d84f83c62bb5be6b2838e32207433647e8e5ebe10"},
 ]
-"prometheus-client 0.14.1" = [
-    {file = "prometheus_client-0.14.1-py3-none-any.whl", hash = "sha256:522fded625282822a89e2773452f42df14b5a8e84a86433e3f8a189c1d54dc01"},
-    {file = "prometheus_client-0.14.1.tar.gz", hash = "sha256:5459c427624961076277fdc6dc50540e2bacb98eebde99886e59ec55ed92093a"},
+"prometheus-client 0.13.1" = [
+    {file = "prometheus_client-0.13.1-py3-none-any.whl", hash = "sha256:357a447fd2359b0a1d2e9b311a0c5778c330cfbe186d880ad5a6b39884652316"},
+    {file = "prometheus_client-0.13.1.tar.gz", hash = "sha256:ada41b891b79fca5638bd5cfe149efa86512eaa55987893becd2c6d8d0a5dfc5"},
 ]
 "prompt-toolkit 3.0.29" = [
     {file = "prompt_toolkit-3.0.29-py3-none-any.whl", hash = "sha256:62291dad495e665fca0bda814e342c69952086afb0f4094d0893d357e5c78752"},
@@ -3942,25 +3916,21 @@ content_hash = "sha256:cd109fd00819d382a93fc03b4fce41b055cce10b210623f47e549671b
     {file = "questionary-1.10.0-py3-none-any.whl", hash = "sha256:fecfcc8cca110fda9d561cb83f1e97ecbb93c613ff857f655818839dac74ce90"},
     {file = "questionary-1.10.0.tar.gz", hash = "sha256:600d3aefecce26d48d97eee936fdb66e4bc27f934c3ab6dd1e292c4f43946d90"},
 ]
-"ray 1.11.0" = [
-    {file = "ray-1.11.0-cp36-cp36m-macosx_10_15_intel.whl", hash = "sha256:944b5845b80565fb85fbe554a09be4d5c9781a695c469bafe6f039b8489031bd"},
-    {file = "ray-1.11.0-cp36-cp36m-manylinux2014_x86_64.whl", hash = "sha256:63206bfa7c00eacd140e61e3e369e3db8174aef29fea07fe92a888549d75a081"},
-    {file = "ray-1.11.0-cp36-cp36m-win_amd64.whl", hash = "sha256:bd127b40f3c6c0d9aa5e4423f440ba4bbbbe1405c73fc6b0f52b8e0a3f132182"},
-    {file = "ray-1.11.0-cp37-cp37m-macosx_10_15_intel.whl", hash = "sha256:827ed4b27e54625ab009cbf5f7d34e02825e31808048da0ab60865629f2103b5"},
-    {file = "ray-1.11.0-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:c3bddc9a1e2cfc7289dbfeedd8ab4a36277a8ec07906b27dd4bc56bd0f2e4bb4"},
-    {file = "ray-1.11.0-cp37-cp37m-win_amd64.whl", hash = "sha256:c1245bff4280c0b950a6fb993d1ab1da2dae7663a52009a4e4c9e8bd4cb2060a"},
-    {file = "ray-1.11.0-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:f2bcc2aebac230f7343698c06b7ccc02f15c6ae5f2b47cb06d6c9f1ed5efe6b7"},
-    {file = "ray-1.11.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:2b538e70a6e7f5f7d6b5af21daed114acd26d348e3df053105cd664abfdab614"},
-    {file = "ray-1.11.0-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:ccf0e111d3e08928d5217fcd37ef149b97fe05935cbe8ceee224219730e088b6"},
-    {file = "ray-1.11.0-cp38-cp38-win_amd64.whl", hash = "sha256:81241b495d807e4fa59d5f963d934ddb88bf552b25537fd230dd0a7cd67c2f86"},
-    {file = "ray-1.11.0-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:d586fa699fbe7c26c4a2e4cc44d6e035b8061891245256a25f0d93e9a57aec09"},
-    {file = "ray-1.11.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:67b655029dff5b42b1b4a757b7d58de34537aa5852f3fccec8e70df1c63f3e30"},
-    {file = "ray-1.11.0-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:aaaf8f40718264b01466ad99fa52892a32447122b2438f1e16afdf661829ffae"},
-    {file = "ray-1.11.0-cp39-cp39-win_amd64.whl", hash = "sha256:534b18b39b8b1b44d48ca377b2819857bda89c8d2031eed0b280a7b493462a0c"},
-]
-"redis 4.2.2" = [
-    {file = "redis-4.2.2-py3-none-any.whl", hash = "sha256:4e95f4ec5f49e636efcf20061a5a9110c20852f607cfca6865c07aaa8a739ee2"},
-    {file = "redis-4.2.2.tar.gz", hash = "sha256:0107dc8e98a4f1d1d4aa00100e044287f77121a1e6d2085545c4b7fa94a7a27f"},
+"ray 1.12.0" = [
+    {file = "ray-1.12.0-cp36-cp36m-macosx_10_15_intel.whl", hash = "sha256:6e45f89cb8cc6a63419880eeef2327c8482f3ebe4449f83560c079b78cdeba88"},
+    {file = "ray-1.12.0-cp36-cp36m-manylinux2014_x86_64.whl", hash = "sha256:c2854637cd676fafce9dc9c763b5ace8c7a433a7a37992b94b4444237501ddde"},
+    {file = "ray-1.12.0-cp36-cp36m-win_amd64.whl", hash = "sha256:30368c68957f171e19844b279541f60cb2423d105665c2ac59f05294d522b84d"},
+    {file = "ray-1.12.0-cp37-cp37m-macosx_10_15_intel.whl", hash = "sha256:f8b68b41c92411c874f365314747dd19366576ee06373eb202adb02352ede73f"},
+    {file = "ray-1.12.0-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:eeb036610f41321fbf3800b33350d88c90f1244502049b353d48d4695b329586"},
+    {file = "ray-1.12.0-cp37-cp37m-win_amd64.whl", hash = "sha256:8078b8c983f3575da846fac8da22b3f965eab2fb8e429cb817f91d539555d224"},
+    {file = "ray-1.12.0-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:d373b5a472077fc3a3e7a1fc142b2e5c6e473ec9de3b97b8b0e7e4728793fefc"},
+    {file = "ray-1.12.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:cd4633ae0994c5407d9ee20f125585af4ee9b945733286096e0330c083d7c866"},
+    {file = "ray-1.12.0-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:59f9bcdee032ee350e7391f3fabf2c6ec2690bfed4f1884db1b40429acc660c7"},
+    {file = "ray-1.12.0-cp38-cp38-win_amd64.whl", hash = "sha256:31c2086ba1f4622aaf76c1039f3c5c25f3a35556decbfb9dba5a8382e704c800"},
+    {file = "ray-1.12.0-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:8f2c73eac500432a8f504e9f668ab70b84888931815eb79ef188698d46e36d78"},
+    {file = "ray-1.12.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:d02d97d618fb8e568e758a4cb61ca4193eb33bc60c08e94fdc90080a7934b446"},
+    {file = "ray-1.12.0-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:90dac3e5eec6e69cb5a97c5bb94282a9e369056e8ca53b5490425f07aca416c5"},
+    {file = "ray-1.12.0-cp39-cp39-win_amd64.whl", hash = "sha256:b172a2f97b1372b7599ee089978f67c596a67eaabe292c15c6a2b4a1b673f62f"},
 ]
 "requests 2.27.1" = [
     {file = "requests-2.27.1-py2.py3-none-any.whl", hash = "sha256:f22fa1e554c9ddfd16e6e41ac79759e17be9e492b3587efa038054674760e72d"},
@@ -4099,9 +4069,9 @@ content_hash = "sha256:cd109fd00819d382a93fc03b4fce41b055cce10b210623f47e549671b
     {file = "sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"},
     {file = "sortedcontainers-2.4.0.tar.gz", hash = "sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88"},
 ]
-"soupsieve 2.3.2" = [
-    {file = "soupsieve-2.3.2-py3-none-any.whl", hash = "sha256:a714129d3021ec17ce5be346b1007300558b378332c289a1a20e7d4de6ff18a5"},
-    {file = "soupsieve-2.3.2.tar.gz", hash = "sha256:0bcc6d7432153063e3df09c3ac9442af3eba488715bfcad6a4c38ccb2a523124"},
+"soupsieve 2.3.2.post1" = [
+    {file = "soupsieve-2.3.2.post1-py3-none-any.whl", hash = "sha256:3b2503d3c7084a42b1ebd08116e5f81aadfaea95863628c80a3b774a11b7c759"},
+    {file = "soupsieve-2.3.2.post1.tar.gz", hash = "sha256:fc53893b3da2c33de295667a0e19f078c14bf86544af307354de5fcf12a3f30d"},
 ]
 "tblib 1.7.0" = [
     {file = "tblib-1.7.0-py2.py3-none-any.whl", hash = "sha256:289fa7359e580950e7d9743eab36b0691f0310fce64dee7d9c31065b8f723e23"},
