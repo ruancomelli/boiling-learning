@@ -1,5 +1,7 @@
+import datetime
 import operator
 import os
+import sys
 from fractions import Fraction
 from functools import partial
 from pathlib import Path
@@ -42,6 +44,7 @@ from boiling_learning.management.allocators import default_table_allocator
 from boiling_learning.management.cacher import CachedFunction, Cacher, cache
 from boiling_learning.model.callbacks import (
     AdditionalValidationSets,
+    BackupAndRestore,
     ReduceLROnPlateau,
     TimePrinter,
 )
@@ -78,10 +81,25 @@ from boiling_learning.utils.functional import P
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.typeutils import typename
 
+boiling_learning_path = resolve(os.environ['BOILING_DATA_PATH'])
+boiling_experiments_path = boiling_learning_path / 'experiments'
+boiling_cases_path = boiling_learning_path / 'cases'
+condensation_learning_path = resolve(os.environ['CONDENSATION_DATA_PATH'])
+condensation_cases_path = condensation_learning_path / 'data'
+analyses_path = boiling_learning_path / 'analyses'
+tensorboard_logs_path = resolve(analyses_path / 'models' / 'logs', dir=True)
+
+log_file = resolve(boiling_learning_path / 'logs' / '{time}.log', parents=True)
+
+logger.remove()
+logger.add(sys.stderr, level='DEBUG')
+logger.add(str(log_file), level='DEBUG')
+
 logger.info('Initializing script')
 
 
 class Options(NamedTuple):
+    test: bool = True
     login_user: bool = False
     convert_videos: bool = True
     pre_load_videos: bool = False
@@ -104,13 +122,6 @@ class Options(NamedTuple):
 OPTIONS = Options()
 logger.info(f'Options: {OPTIONS}')
 
-boiling_learning_path = resolve(os.environ['BOILING_DATA_PATH'])
-boiling_experiments_path = boiling_learning_path / 'experiments'
-boiling_cases_path = boiling_learning_path / 'cases'
-condensation_learning_path = resolve(os.environ['CONDENSATION_DATA_PATH'])
-condensation_cases_path = condensation_learning_path / 'data'
-analyses_path = boiling_learning_path / 'analyses'
-
 logger.info('Checking paths')
 check_all_paths_exist(
     (
@@ -128,9 +139,7 @@ strategy = connect_gpus.main()
 strategy_name = typename(strategy)
 logger.info(f'Using distribute strategy: {strategy_name}')
 
-boiling_cases_names = tuple(f'case {idx+1}' for idx in range(2))
-# FIXME: use the following:
-# boiling_cases_names = tuple(f'case {idx+1}' for idx in range(5))
+boiling_cases_names = tuple(f'case {idx+1}' for idx in range(5))
 boiling_cases_names_timed = tuple(funcy.without(boiling_cases_names, 'case 1'))
 
 logger.info('Preparing datasets')
@@ -206,8 +215,9 @@ def get_frame(
     return frame
 
 
-sample_ev = mit.first(boiling_cases_timed()[0])
-sample_frame = get_frame(0, sample_ev, boiling_preprocessors)
+if OPTIONS.test:
+    sample_ev = mit.first(boiling_cases_timed()[0])
+    sample_frame = get_frame(0, sample_ev, boiling_preprocessors)
 
 
 def sliceable_dataset_from_video_and_transformers(
@@ -220,9 +230,10 @@ def sliceable_dataset_from_video_and_transformers(
     return SupervisedSliceableDataset.from_features_and_targets(features, targets)
 
 
-sds = sliceable_dataset_from_video_and_transformers(sample_ev, boiling_preprocessors)
-sample_frame2 = sds[0][0]
-assert np.allclose(sample_frame, sample_frame2)
+if OPTIONS.test:
+    sds = sliceable_dataset_from_video_and_transformers(sample_ev, boiling_preprocessors)
+    sample_frame2 = sds[0][0]
+    assert np.allclose(sample_frame, sample_frame2)
 
 
 @dataclass(frozen=True)
@@ -271,29 +282,30 @@ def get_image_dataset(
     )
 
 
-get_image_dataset_params = GetImageDatasetParams(
-    boiling_cases_timed()[0],
-    transformers=boiling_preprocessors,
-    splits=DatasetSplits(
-        train=Fraction(70, 100),
-        val=Fraction(15, 100),
-        test=Fraction(15, 100),
-    ),
-    dataset_size=Fraction(1, 1000),
-    target='Flux [W/cm**2]',
-)
-ds_train, ds_val, ds_test = get_image_dataset(get_image_dataset_params)
-ds_train_len = len(ds_train)
-ds_val_len = len(ds_val)
-ds_test_len = len(ds_test)
-expected_length = sum(len(ev) for ev in boiling_cases_timed()[0]) // 1000
-assert ds_train_len > ds_test_len > 0
-assert (
-    ds_train_len + ds_val_len + ds_test_len == expected_length
-), f'{ds_train_len} + {ds_val_len} + {ds_test_len} != {expected_length}'
-sample_element = ds_train[0]
-assert isinstance(sample_element[0], np.ndarray)
-assert isinstance(sample_element[1], float)
+if OPTIONS.test:
+    get_image_dataset_params = GetImageDatasetParams(
+        boiling_cases_timed()[0],
+        transformers=boiling_preprocessors,
+        splits=DatasetSplits(
+            train=Fraction(70, 100),
+            val=Fraction(15, 100),
+            test=Fraction(15, 100),
+        ),
+        dataset_size=Fraction(1, 1000),
+        target='Flux [W/cm**2]',
+    )
+    ds_train, ds_val, ds_test = get_image_dataset(get_image_dataset_params)
+    ds_train_len = len(ds_train)
+    ds_val_len = len(ds_val)
+    ds_test_len = len(ds_test)
+    expected_length = sum(len(ev) for ev in boiling_cases_timed()[0]) // 1000
+    assert ds_train_len > ds_test_len > 0
+    assert (
+        ds_train_len + ds_val_len + ds_test_len == expected_length
+    ), f'{ds_train_len} + {ds_val_len} + {ds_test_len} != {expected_length}'
+    sample_element = ds_train[0]
+    assert isinstance(sample_element[0], np.ndarray)
+    assert isinstance(sample_element[1], float)
 
 
 @dataclass(frozen=True)
@@ -316,14 +328,15 @@ def apply_transformers_to_supervised_sliceable_dataset(
     return dataset
 
 
-ds_train = apply_transformers_to_supervised_sliceable_dataset(ds_train, boiling_augmentors)
-ds_val = apply_transformers_to_supervised_sliceable_dataset(ds_val, boiling_augmentors)
-ds_test = apply_transformers_to_supervised_sliceable_dataset(ds_test, boiling_augmentors)
+if OPTIONS.test:
+    ds_train = apply_transformers_to_supervised_sliceable_dataset(ds_train, boiling_augmentors)
+    ds_val = apply_transformers_to_supervised_sliceable_dataset(ds_val, boiling_augmentors)
+    ds_test = apply_transformers_to_supervised_sliceable_dataset(ds_test, boiling_augmentors)
 
-assert len(ds_train) == ds_train_len
-sample_element = ds_train[0]
-assert isinstance(sample_element[0], np.ndarray)
-assert isinstance(sample_element[1], float)
+    assert len(ds_train) == ds_train_len
+    sample_element = ds_train[0]
+    assert isinstance(sample_element[0], np.ndarray)
+    assert isinstance(sample_element[1], float)
 
 
 def _augment_datasets(
@@ -375,43 +388,42 @@ def augment_datasets(
     )
 
 
-get_image_dataset_params = GetImageDatasetParams(
-    boiling_cases_timed()[0],
-    transformers=boiling_preprocessors,
-    splits=DatasetSplits(
-        train=Fraction(70, 100),
-        val=Fraction(15, 100),
-        test=Fraction(15, 100),
-    ),
-    dataset_size=Fraction(1, 1000),
-    target='Flux [W/cm**2]',
-)
-augment_dataset_params = AugmentDatasetParams(augmentors=boiling_augmentors)
+if OPTIONS.test:
+    get_image_dataset_params = GetImageDatasetParams(
+        boiling_cases_timed()[0],
+        transformers=boiling_preprocessors,
+        splits=DatasetSplits(
+            train=Fraction(70, 100),
+            val=Fraction(15, 100),
+            test=Fraction(15, 100),
+        ),
+        dataset_size=Fraction(1, 10_000),
+        target='Flux [W/cm**2]',
+    )
+    augment_dataset_params = AugmentDatasetParams(augmentors=boiling_augmentors)
 
+    ds_train, ds_val, ds_test = augment_datasets(
+        get_image_dataset(get_image_dataset_params),
+        augment_dataset_params,
+    )
 
-ds_train, ds_val, ds_test = augment_datasets(
-    get_image_dataset(get_image_dataset_params),
-    augment_dataset_params,
-)
+    sample_element = ds_train[0]
+    assert isinstance(sample_element[0], np.ndarray)
+    assert isinstance(sample_element[1], float)
+    sample_frame = sample_element[0]
+    path = analyses_path / 'temp' / 'random_frame'
+    save(sample_frame, path)
+    other_frame = load(path)
+    assert np.allclose(sample_frame, other_frame, 1e-8)
 
-sample_element = ds_train[0]
-assert isinstance(sample_element[0], np.ndarray)
-assert isinstance(sample_element[1], float)
-sample_frame = sample_element[0]
-path = analyses_path / 'temp' / 'random_frame'
-save(sample_frame, path)
-other_frame = load(path)
-assert np.allclose(sample_frame, other_frame, 1e-8)
+    items = ds_train[:4]
+    path = analyses_path / 'temp' / 'random_items'
+    save(items, path)
+    other_items = load(path)
 
-
-items = ds_train[:4]
-path = analyses_path / 'temp' / 'random_items'
-save(items, path)
-other_items = load(path)
-
-for (feature1, target1), (feature2, target2) in zip(items, other_items):
-    assert np.allclose(feature1, feature2, 1e-8)
-    assert target1 == target2
+    for (feature1, target1), (feature2, target2) in zip(items, other_items):
+        assert np.allclose(feature1, feature2, 1e-8)
+        assert target1 == target2
 
 _P = ParamSpec('_P')
 
@@ -444,12 +456,16 @@ class GetFitModel(CachedFunction[_P, Model]):
             [
                 TimePrinter(),
                 tf.keras.callbacks.ModelCheckpoint(
-                    filepath=str(path.parent / f'last-trained-{path.name}'),
+                    filepath=str(path / 'checkpoints' / f'last-trained-{path.name}'),
                     save_best_only=False,
                     monitor='val_loss',
                 ),
-                tf.keras.callbacks.BackupAndRestore(str(path.parent / f'backup-{path.name}')),
+                BackupAndRestore(path / 'backup' / f'backup-{path.name}'),
                 AdditionalValidationSets({'HF10': ds_val_g10}, batch_size=params.batch_size),
+                tf.keras.callbacks.TensorBoard(
+                    tensorboard_logs_path / datetime.datetime.now().strftime('%Y%m%d-%H%M%S'),
+                    histogram_freq=1,
+                ),
             ]
         )
 
@@ -460,45 +476,52 @@ class GetFitModel(CachedFunction[_P, Model]):
         return self.provide(creator, path)
 
 
-_get_fit_model = GetFitModel(
-    Cacher(allocator=default_table_allocator(analyses_path / 'models' / 'trained_models4'))
-)
-
-
-def fit_model(
-    architecture: ModelArchitecture,
-    compile_params: CompileModelParams,
-    fit_model_params: FitModelParams,
-    image_dataset_get_params: GetImageDatasetParams,
-    image_dataset_augment_params: AugmentDatasetParams,
-) -> FitModel:
-    datasets = Described(
-        value=augment_datasets(
-            get_image_dataset(image_dataset_get_params), image_dataset_augment_params
-        ),
-        description=(image_dataset_get_params, image_dataset_augment_params),
-    )
-    compiled_model = compile_model(architecture, compile_params)
-    model = _get_fit_model(compiled_model, datasets, fit_model_params)
-    return FitModel(
-        model, datasets, compile_params=compiled_model.params, fit_params=fit_model_params
-    )
-
-
-first_frame = ds_train.flatten()[0][0]
 strategy = Described.from_constructor(tf.distribute.MirroredStrategy, P())
 
-with strategy_scope(strategy):
-    model = fit_model(
-        architecture=ModelArchitecture(
+fit_model = GetFitModel(
+    Cacher(
+        allocator=default_table_allocator(analyses_path / '_temp_trained_models'),
+        # exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError)
+        exceptions=(FileNotFoundError, NotADirectoryError),
+    )
+)
+
+if OPTIONS.test:
+    get_image_dataset_params = GetImageDatasetParams(
+        boiling_cases_timed()[0],
+        transformers=boiling_preprocessors,
+        splits=DatasetSplits(
+            train=Fraction(70, 100),
+            val=Fraction(15, 100),
+            test=Fraction(15, 100),
+        ),
+        dataset_size=Fraction(1, 1000),
+        target='Flux [W/cm**2]',
+    )
+    augment_dataset_params = AugmentDatasetParams(augmentors=boiling_augmentors)
+
+    ds_train, ds_val, ds_test = augment_datasets(
+        get_image_dataset(get_image_dataset_params),
+        augment_dataset_params,
+    )
+
+    first_frame, _ = ds_train.flatten()[0]
+
+    datasets = Described(
+        value=(ds_train, ds_val, ds_test),
+        description=(get_image_dataset_params, augment_dataset_params),
+    )
+
+    with strategy_scope(strategy):
+        architecture = ModelArchitecture(
             tiny_convnet(
                 first_frame.shape[:3],
                 dropout=0.5,
                 hidden_layers_policy='mixed_float16',
                 output_layer_policy='float32',
             )
-        ),
-        compile_params=CompileModelParams(
+        )
+        compile_params = CompileModelParams(
             loss=tf.keras.losses.MeanSquaredError(),
             optimizer=tf.keras.optimizers.Adam(1e-5),
             metrics=[
@@ -508,42 +531,48 @@ with strategy_scope(strategy):
                 tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
                 tfa.metrics.RSquare('R2', y_shape=(1,)),
             ],
-        ),
-        fit_model_params=FitModelParams(
-            batch_size=128,
-            epochs=2,
-            callbacks=Described.from_list(
-                [
-                    Described.from_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
-                    Described.from_constructor(
-                        tf.keras.callbacks.EarlyStopping,
-                        P(
-                            monitor='val_loss',
-                            min_delta=0,
-                            patience=10,
-                            baseline=None,
-                            mode='auto',
-                            restore_best_weights=True,
-                        ),
+        )
+        compiled_model = compile_model(architecture, compile_params)
+
+    fit_model_params = FitModelParams(
+        batch_size=1024,
+        epochs=3,
+        callbacks=Described.from_list(
+            [
+                Described.from_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
+                Described.from_constructor(
+                    tf.keras.callbacks.EarlyStopping,
+                    P(
+                        monitor='val_loss',
+                        min_delta=0,
+                        patience=10,
+                        baseline=None,
+                        mode='auto',
+                        restore_best_weights=True,
                     ),
-                    Described.from_constructor(
-                        ReduceLROnPlateau,
-                        P(
-                            monitor='val_loss',
-                            factor=0.5,
-                            patience=5,
-                            min_delta=0.01,
-                            min_delta_mode='relative',
-                            min_lr=0,
-                            mode='auto',
-                            cooldown=2,
-                        ),
+                ),
+                Described.from_constructor(
+                    ReduceLROnPlateau,
+                    P(
+                        monitor='val_loss',
+                        factor=0.5,
+                        patience=5,
+                        min_delta=0.01,
+                        min_delta_mode='relative',
+                        min_lr=0,
+                        mode='auto',
+                        cooldown=2,
                     ),
-                ]
-            ),
+                ),
+            ]
         ),
-        image_dataset_get_params=get_image_dataset_params,
-        image_dataset_augment_params=augment_dataset_params,
+    )
+
+    model = FitModel(
+        fit_model(compiled_model, datasets, fit_model_params),
+        datasets,
+        compile_params=compiled_model.params,
+        fit_params=fit_model_params,
     )
 
 
