@@ -362,14 +362,16 @@ class SaveHistory(Callback):
 
 
 class BackupAndRestore(_BackupAndRestore):
-    def __init__(self, backup_dir: PathLike) -> None:
+    def __init__(self, backup_dir: PathLike, delete_on_end: bool = True) -> None:
+        self.delete_on_end = delete_on_end
         backup_dir = resolve(backup_dir, dir=True)
         super().__init__(str(backup_dir))
 
     def on_train_end(self, logs=None):
         # Based on https://github.com/keras-team/keras/blob/v2.8.0/keras/callbacks.py#L1709-L1713
 
-        shutil.rmtree(self.backup_dir)
+        if self.delete_on_end:
+            shutil.rmtree(self.backup_dir)
 
         del self._training_state
         del self.model._training_state

@@ -460,7 +460,7 @@ class GetFitModel(CachedFunction[_P, Model]):
                     save_best_only=False,
                     monitor='val_loss',
                 ),
-                BackupAndRestore(path / 'backup' / f'backup-{path.name}'),
+                BackupAndRestore(path / 'backup'),
                 AdditionalValidationSets({'HF10': ds_val_g10}, batch_size=params.batch_size),
                 tf.keras.callbacks.TensorBoard(
                     tensorboard_logs_path / datetime.datetime.now().strftime('%Y%m%d-%H%M%S'),
