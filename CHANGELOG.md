@@ -1,3 +1,13 @@
+## v0.20.3 (2022-04-15)
+
+### Feat
+
+- **model/callbacks**: make deletion option on training end in `BackupAndRestore`
+
+### Refactor
+
+- **main**: align functionality with Google Colab script
+
 ## v0.20.2 (2022-04-15)
 
 ### Feat
