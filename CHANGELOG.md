@@ -1,3 +1,14 @@
+## v0.20.0 (2022-04-15)
+
+### Refactor
+
+- **preprocessing/experiment_video**: add logging to `ExperimentVideo.load_df`
+- remove unused functions and simplify code
+- **io**: remove `io.io` submodule
+- remove unused functions and apply minor refactoring
+- remove unused functions and variables
+- **model/training**: remove unnecessary logging
+
 ## v0.19.18 (2022-04-05)
 
 ### Refactor
