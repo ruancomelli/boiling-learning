@@ -90,6 +90,7 @@ class TimePrinter(Callback):
         self.streamer = streamer
         self.fmt = fmt
         self._current_epoch = 0
+        self.start: datetime.datetime
 
         if when is None:
             when = {
@@ -177,12 +178,16 @@ class TimePrinter(Callback):
             self.streamer(f' | ending train_batch {batch} at {self._str_now()}')
 
     def on_train_begin(self, *args: Any, **kwargs: Any) -> None:
+        self.start = datetime.datetime.now()
         if 'on_train_begin' in self.when:
             self.streamer(f'- beginning train at {self._str_now()}')
 
     def on_train_end(self, *args: Any, **kwargs: Any) -> None:
+        end = datetime.datetime.now()
+        duration = end - self.start
         if 'on_train_end' in self.when:
             self.streamer(f'- ending train at {self._str_now()}')
+        self.streamer(f'Training took {duration.total_seconds()} seconds')
 
 
 class ReduceLROnPlateau(Callback):
