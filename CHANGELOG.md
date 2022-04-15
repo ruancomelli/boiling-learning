@@ -1,3 +1,10 @@
+## v0.20.2 (2022-04-15)
+
+### Feat
+
+- **model/callbacks**: add adaptation for `BackupAndRestore` that correctly removes the backup without errors
+- **model/callbacks**: add total training time info to `TimePrinter`
+
 ## v0.20.1 (2022-04-15)
 
 ## v0.20.0 (2022-04-15)
