@@ -1,11 +1,13 @@
 import datetime
 import enum
+import shutil
 from collections import defaultdict
 from typing import Any, DefaultDict, Dict, Iterable, Optional
 
 import numpy as np
 from loguru import logger
 from tensorflow.data import Dataset
+from tensorflow.keras.callbacks import BackupAndRestore as _BackupAndRestore
 from tensorflow.keras.callbacks import Callback
 from tensorflow.python.keras import backend as K
 from tensorflow.python.platform import tf_logging as logging
@@ -357,3 +359,17 @@ class SaveHistory(Callback):
     def on_epoch_end(self, epoch: int, logs: Dict[str, Any]):
         self._append_to_history(logs)
         json.dump(self.history, self.path)
+
+
+class BackupAndRestore(_BackupAndRestore):
+    def __init__(self, backup_dir: PathLike) -> None:
+        backup_dir = resolve(backup_dir, dir=True)
+        super().__init__(str(backup_dir))
+
+    def on_train_end(self, logs=None):
+        # Based on https://github.com/keras-team/keras/blob/v2.8.0/keras/callbacks.py#L1709-L1713
+
+        shutil.rmtree(self.backup_dir)
+
+        del self._training_state
+        del self.model._training_state
