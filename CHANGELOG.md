@@ -1,3 +1,13 @@
+## v0.20.4 (2022-04-15)
+
+### Refactor
+
+- **scripts/set_boiling_cases_data**: refactor module and split functions
+
+### Feat
+
+- **datasets/sliceable**: allow memory caching in `sliceable_dataset_to_tensorflow_dataset`
+
 ## v0.20.3 (2022-04-15)
 
 ### Feat
