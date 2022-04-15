@@ -8,6 +8,7 @@ import modin.pandas as pd
 import numpy as np
 import tensorflow as tf
 from dataclassy import dataclass
+from loguru import logger
 
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
 from boiling_learning.preprocessing.video import Video, convert_video
@@ -274,16 +275,21 @@ class ExperimentVideo(Video):
         missing_ok: bool = False,
         inplace: bool = True,
     ) -> Optional[pd.DataFrame]:
-        if self.df_path is None and path is None:
-            raise ValueError('*df_path* is not defined yet, so *path* must be given as argument.')
-
-        if not overwrite and self.df is not None:
-            return self.df
-
         if path is None:
+            if self.df_path is None:
+                raise ValueError(
+                    '*df_path* is not defined yet, so *path* must be given as argument.'
+                )
             path = self.df_path
         else:
             self.df_path = resolve(path)
+
+        logger.debug(
+            f'Loading dataframe for experiment video {self.name} from file {self.df_path}'
+        )
+
+        if not overwrite and self.df is not None:
+            return self.df
 
         if missing_ok and not self.df_path.is_file():
             return None
