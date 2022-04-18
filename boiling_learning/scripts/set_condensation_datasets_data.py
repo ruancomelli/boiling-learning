@@ -19,21 +19,16 @@ from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.video import get_fps
 from boiling_learning.utils import KeyedDefaultDict, PathLike, resolve
+from boiling_learning.utils.frozendict import frozendict
 
-_subcase_patterns = {
-    'T_inf': parse.compile('T_inf {:d}C'),
-    'T_s': parse.compile('T_s {:d}C'),
-    'rh': parse.compile('rh {:d}%'),
-}
-_timedelta_pattern = re.compile(r'(?P<h>\d{2}):(?P<min>\d{2}):(?P<s>\d{2})')
-
-
-def _parse_timedelta(s: Optional[str]) -> Optional[timedelta]:
-    if s is None:
-        return None
-
-    m = _timedelta_pattern.fullmatch(s)
-    return timedelta(hours=int(m['h']), minutes=int(m['min']), seconds=int(m['s']))
+_SUBCASE_PATTERNS = frozendict(
+    {
+        'T_inf': parse.compile('T_inf {:d}C'),
+        'T_s': parse.compile('T_s {:d}C'),
+        'rh': parse.compile('rh {:d}%'),
+    }
+)
+_TIMEDELTA_PATTERN = re.compile(r'(?P<h>\d{2}):(?P<min>\d{2}):(?P<s>\d{2})')
 
 
 def dataframes_from_gspread(
@@ -43,28 +38,12 @@ def dataframes_from_gspread(
         credentials = GoogleCredentials.get_application_default()
 
     gc = gspread.authorize(credentials)
-    spreadsheet: gspread.Spreadsheet = gc.open(spreadsheet_name)
+    spreadsheet = gc.open(spreadsheet_name)
 
     return {
         worksheet.title: pd.DataFrame(worksheet.get_all_values())
         for worksheet in spreadsheet.worksheets()
     }
-
-
-def _parse_mass_timeseries(
-    dfs: Dict[str, pd.DataFrame], case: str, subcase: str, test: str
-) -> pd.DataFrame:
-    df = dfs[case]
-    df = df.loc[:, (df.loc[0] == subcase) & (df.loc[1] == test)][2:]
-    df, df.columns = df[1:], df.iloc[0]
-
-    df['datetime'] = pd.to_datetime(df.pop('date').astype(str) + ' ' + df.pop('time').astype(str))
-    datetime_secs = df.datetime.apply(lambda dt: time.mktime(dt.timetuple()))
-    df['elapsed_time'] = datetime_secs - datetime_secs.min()
-    mass = pd.to_numeric(df.pop('mass [g]').str.replace(',', '.'))
-    df['mass'] = mass - mass.min()
-
-    return df
 
 
 def main(
@@ -85,7 +64,9 @@ def main(
         _set_dataset_data(dataset, dataspec, fps_getter)
 
     grouped_datasets = _group_datasets(datasets)
-    _make_dataframes(grouped_datasets)
+
+    for dataset in grouped_datasets:
+        _make_dataframe(dataset)
 
     if spreadsheet_name is not None:
         _set_mass_rate(grouped_datasets, spreadsheet_name)
@@ -104,21 +85,15 @@ def _generate_fps_getter(fps_cache_path: Optional[PathLike]) -> Callable[[Path],
     return cacher(get_fps)
 
 
-def _set_mass_rate(
-    grouped_datasets: Tuple[ImageDataset, ...], spreadsheet_name: Optional[str] = None
-) -> None:
+def _set_mass_rate(grouped_datasets: Tuple[ImageDataset, ...], spreadsheet_name: str) -> None:
     mass_data: Optional[Dict[str, pd.DataFrame]] = None
 
     for dataset in grouped_datasets:
-        changed = False
-
         for ev in dataset.values():
             if 'mass_rate' in ev.df.columns:
                 continue
 
-            changed = True
-
-            if mass_data is None and spreadsheet_name is not None:
+            if mass_data is None:
                 mass_data = dataframes_from_gspread(spreadsheet_name)
 
             case_name, subcase_name, test_name, _ = ev.name.split(':')
@@ -126,9 +101,23 @@ def _set_mass_rate(
             ev.df['mass_rate'] = _calculate_mass_rate(
                 df, elapsed_time_column='elapsed_time', mass_column='mass'
             )
+            ev.save_df(overwrite=True)
 
-        if changed:
-            dataset.save_dfs(overwrite=True)
+
+def _parse_mass_timeseries(
+    dfs: Dict[str, pd.DataFrame], case: str, subcase: str, test: str
+) -> pd.DataFrame:
+    df = dfs[case]
+    df = df.loc[:, (df.loc[0] == subcase) & (df.loc[1] == test)][2:]
+    df, df.columns = df[1:], df.iloc[0]
+
+    df['datetime'] = pd.to_datetime(df.pop('date').astype(str) + ' ' + df.pop('time').astype(str))
+    datetime_secs = df.datetime.apply(lambda dt: time.mktime(dt.timetuple()))
+    df['elapsed_time'] = datetime_secs - datetime_secs.min()
+    mass = pd.to_numeric(df.pop('mass [g]').str.replace(',', '.'))
+    df['mass'] = mass - mass.min()
+
+    return df
 
 
 def _set_dataset_data(
@@ -163,7 +152,7 @@ def _set_dataset_data(
                     'T_s': 10,
                     'rh': 80,
                 }
-                for change, pattern in _subcase_patterns.items():
+                for change, pattern in _SUBCASE_PATTERNS.items():
                     match = pattern.search(subcase)
                     if match is not None:
                         categories[change] = match[0]
@@ -196,9 +185,12 @@ def _set_dataset_data(
         ev.set_video_data(videodata)
 
 
-def _make_dataframes(grouped_datasets: Tuple[ImageDataset, ...]) -> None:
-    for dataset in grouped_datasets:
-        _make_dataframe(dataset)
+def _parse_timedelta(s: Optional[str]) -> Optional[timedelta]:
+    if s is None:
+        return None
+
+    m = _TIMEDELTA_PATTERN.fullmatch(s)
+    return timedelta(hours=int(m['h']), minutes=int(m['min']), seconds=int(m['s']))
 
 
 def _make_dataframe(dataset: ImageDataset) -> None:

@@ -34,24 +34,15 @@ from typing_extensions import overload
 
 from boiling_learning.utils.iterutils import flaglast
 
-# ---------------------------------- Typing ----------------------------------
 _TypeT = TypeVar('_TypeT', bound=Type[Any])
 _T = TypeVar('_T')
 _Key = TypeVar('_Key')
 _Value = TypeVar('_Value')
 
 
+# ---------------------------------- Typing ----------------------------------
 # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
-JSONDataType = Union[
-    None,
-    bool,
-    int,
-    float,
-    str,
-    List['JSONDataType'],
-    Dict[str, 'JSONDataType'],
-]
-
+JSONDataType = Union[None, bool, int, float, str, List['JSONDataType'], Dict[str, 'JSONDataType']]
 
 PathLike = Union[str, os.PathLike]
 
