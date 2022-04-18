@@ -1,45 +1,23 @@
-from pathlib import Path
-from typing import Optional
-
 import modin.pandas as pd
 
 from boiling_learning.utils import PathLike, resolve
 
 
 class ExperimentalData:
-    def __init__(
-        self,
-        path: Optional[PathLike] = None,
-        data_path: Optional[PathLike] = None,
-        description_path: Optional[PathLike] = None,
-    ) -> None:
-        if (path, data_path).count(None) != 1:
-            raise ValueError('exactly one of path or data_path must be given as parameter.')
+    def __init__(self, path: PathLike) -> None:
+        self.path = resolve(path)
 
-        self.data_path: Path
-        self.description_path: Optional[Path] = None
-        if path is None:
-            self.data_path = resolve(data_path)
-            if description_path is not None:
-                self.description_path = resolve(description_path)
-        else:
-            path = resolve(path)
-            self.data_path = path / 'data.csv'
-            self.description_path = path / 'description.md'
-
-        if not self.data_path.is_file():
+        if not self.path.is_file():
             raise ValueError(
                 'data path is not a valid file. Please pass a valid one as input. '
-                f'Got {self.data_path}'
+                f'Got {self.path}'
             )
-        if self.description_path is not None and not self.description_path.is_file():
-            self.description_path = None
 
     def as_dataframe(self) -> pd.DataFrame:
-        if not self.data_path.is_file():
+        try:
+            return pd.read_csv(self.path)
+        except FileNotFoundError as e:
             raise ValueError(
                 'data path is not a valid file. Please pass a valid one as input. '
-                f'Got {self.data_path}'
-            )
-
-        return pd.read_csv(self.data_path)
+                f'Got {self.path}'
+            ) from e

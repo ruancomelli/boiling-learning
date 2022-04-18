@@ -51,25 +51,23 @@ class Case(ImageDataset):
                 column_names=column_names,
                 column_types=column_types,
             )
-            for video_path in self.videos_dir.rglob('*' + video_suffix)
+            for video_path in self.videos_dir.rglob(f'*{video_suffix}')
         )
 
-        if video_data_path is None:
-            video_data_path = self.path / 'data.json'
-        self.video_data_path = video_data_path
+        self.video_data_path = video_data_path or self.path / 'data.json'
 
     def set_video_data_from_file(
         self,
-        video_data_path: Optional[PathLike] = None,
+        data_path: Optional[PathLike] = None,
         purge: bool = False,
-        keys: VideoDataKeys = VideoDataKeys(),
         remove_absent: bool = False,
+        keys: VideoDataKeys = VideoDataKeys(),
     ) -> None:
-        if video_data_path is None:
-            video_data_path = self.video_data_path
+        if data_path is None:
+            data_path = self.video_data_path
 
         super().set_video_data_from_file(
-            video_data_path,
+            data_path,
             purge=purge,
             keys=keys,
             remove_absent=remove_absent,

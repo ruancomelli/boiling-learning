@@ -158,9 +158,7 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
         )
 
     def save(self, path: Optional[PathLike] = None, overwrite: bool = False) -> None:
-        if path is None:
-            path = self.df_path
-        path = resolve(path, parents=True)
+        path = resolve(path or self.df_path, parents=True)
 
         if overwrite or not path.is_file():
             self.df.to_csv(path, index=False)

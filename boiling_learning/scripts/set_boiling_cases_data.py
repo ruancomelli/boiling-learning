@@ -46,31 +46,34 @@ def set_case(case: Case, *, case_experiment_path: PathLike) -> None:
         logger.debug(f'Succesfully loaded data for {case.name}')
     except FileNotFoundError:
         logger.debug(f'Failed to load data, making dataframes for {case.name}')
+        _set_case_data(case, case_experiment_path=case_experiment_path)
 
-        df = (
-            ExperimentalData(data_path=case_experiment_path)
-            .as_dataframe()
-            .drop(columns='Time instant')
-            .astype({'Elapsed time': 'float64'})
-            .set_index('Elapsed time')
-        )
 
-        case.sync_time_series(df)
-        case.make_dataframe(
-            recalculate=False,
-            exist_load=False,
-            enforce_time=True,
-            categories_as_int=True,
-            inplace=True,
-        )
+def _set_case_data(case: Case, *, case_experiment_path: PathLike) -> None:
+    df = (
+        ExperimentalData(case_experiment_path)
+        .as_dataframe()
+        .drop(columns='Time instant')
+        .astype({'Elapsed time': 'float64'})
+        .set_index('Elapsed time')
+    )
 
-        for ev in case:
-            _check_experiment_video(ev)
+    case.sync_time_series(df)
+    case.make_dataframe(
+        recalculate=False,
+        exist_load=False,
+        enforce_time=True,
+        categories_as_int=True,
+        inplace=True,
+    )
 
-        for ev in case:
-            _regularize_experiment_video_dataframe(ev)
+    for ev in case:
+        _check_experiment_video(ev)
 
-        case.save_dfs(overwrite=False)
+    for ev in case:
+        _regularize_experiment_video_dataframe(ev)
+
+    case.save_dfs(overwrite=False)
 
 
 def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> None:
