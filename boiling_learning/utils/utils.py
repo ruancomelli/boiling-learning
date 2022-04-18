@@ -177,7 +177,7 @@ def concatenate_dataframes(dfs: Iterable[pd.DataFrame]) -> pd.DataFrame:
     dfs = tuple(dfs)
 
     # Iterate on categorical columns common to all dfs
-    for col in set.intersection(
+    for col in set().intersection(
         *(set(df.select_dtypes(include='category').columns) for df in dfs)
     ):
         # Generate the union category across dfs for this column
@@ -189,7 +189,8 @@ def concatenate_dataframes(dfs: Iterable[pd.DataFrame]) -> pd.DataFrame:
 
 
 def dataframe_categories_to_int(df: pd.DataFrame, inplace: bool = False) -> pd.DataFrame:
-    # See <https://www.tensorflow.org/tutorials/load_data/pandas_dataframe> for the reasoning behind this
+    # See <https://www.tensorflow.org/tutorials/load_data/pandas_dataframe> for the reasoning
+    # behind this
 
     if not inplace:
         df = df.copy(deep=True)
