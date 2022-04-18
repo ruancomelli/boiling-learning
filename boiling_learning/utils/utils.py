@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import enum
 import itertools
 import operator
 import os
@@ -36,7 +35,6 @@ from typing_extensions import overload
 from boiling_learning.utils.iterutils import flaglast
 
 # ---------------------------------- Typing ----------------------------------
-_EnumType = TypeVar('_EnumType', bound=enum.Enum)
 _TypeT = TypeVar('_TypeT', bound=Type[Any])
 _T = TypeVar('_T')
 _Key = TypeVar('_Key')
