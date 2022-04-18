@@ -1,11 +1,11 @@
 from nidaqmx.task import Task
 
-from boiling_learning.utils import DictEq, SimpleRepr, SimpleStr
+from boiling_learning.utils.dataclasses import dataclass
 
 
-class Device(SimpleRepr, SimpleStr, DictEq):
-    def __init__(self, name: str = '') -> None:
-        self.name = name
+@dataclass
+class Device:
+    name: str = ''
 
     @property
     def path(self) -> str:

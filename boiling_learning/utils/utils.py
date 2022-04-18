@@ -60,12 +60,12 @@ PathLike = Union[str, os.PathLike]
 
 # ---------------------------------- Utility functions ----------------------------------
 @overload
-def indexify(arg: Iterable) -> Iterable[int]:
+def indexify(arg: Collection) -> range:
     ...
 
 
 @overload
-def indexify(arg: Collection) -> range:
+def indexify(arg: Iterable) -> Iterable[int]:
     ...
 
 
@@ -340,11 +340,3 @@ class SimpleStr:
         attrs = ', '.join(f'{key}={value}' for key, value in self.__dict__.items())
 
         return f'{class_name}({attrs})'
-
-
-class DictEq:
-    def __eq__(self, other):
-        return vars(self) == vars(other) if isinstance(other, __class__) else NotImplemented
-
-    def __ne__(self, other):
-        return not self.__eq__(other) if isinstance(other, __class__) else NotImplemented

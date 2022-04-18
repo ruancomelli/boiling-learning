@@ -6,26 +6,29 @@ from nidaqmx.task import Task
 
 from boiling_learning.daq.devices import Device
 from boiling_learning.utils import SimpleRepr, SimpleStr
+from boiling_learning.utils.frozendict import frozendict
 
 T = TypeVar('T')
 
-ChannelType = enum.Enum('ChannelType', 'UNDEFINED ANALOG COUNTER DIGITAL INPUT OUTPUT')
+
+class ChannelType(enum.Enum):
+    UNDEFINED = enum.auto()
+    ANALOG = enum.auto()
+    COUNTER = enum.auto()
+    DIGITAL = enum.auto()
+    INPUT = enum.auto()
+    OUTPUT = enum.auto()
 
 
-class Channel(SimpleRepr, SimpleStr):
-    channel_table: Dict[str, str] = {}
+EXCLUSIVE_GROUPS = (
+    frozenset(
+        {ChannelType.UNDEFINED, ChannelType.ANALOG, ChannelType.COUNTER, ChannelType.DIGITAL}
+    ),
+    frozenset({ChannelType.UNDEFINED, ChannelType.INPUT, ChannelType.OUTPUT}),
+)
 
-    exclusive_types = [
-        [
-            ChannelType.UNDEFINED,
-            ChannelType.ANALOG,
-            ChannelType.COUNTER,
-            ChannelType.DIGITAL,
-        ],
-        [ChannelType.UNDEFINED, ChannelType.INPUT, ChannelType.OUTPUT],
-    ]
-
-    channel_type_keys = {
+CHANNEL_TYPE_KEYS = frozendict(
+    {
         NIChannelType.ANALOG_INPUT: 'ai',
         NIChannelType.DIGITAL_INPUT: 'di',
         NIChannelType.COUNTER_INPUT: 'ci',
@@ -33,6 +36,11 @@ class Channel(SimpleRepr, SimpleStr):
         NIChannelType.DIGITAL_OUTPUT: 'do',
         NIChannelType.COUNTER_OUTPUT: 'co',
     }
+)
+
+
+class Channel(SimpleRepr, SimpleStr):
+    channel_table: Dict[str, str] = {}
 
     def __init__(
         self,
@@ -51,7 +59,7 @@ class Channel(SimpleRepr, SimpleStr):
 
     @property
     def path(self) -> str:
-        return self.device.path + '/' + self.name
+        return f'{self.device.path}/{self.name}'
 
     def exists(self, task: Task) -> bool:
         return self.device.exists(task) and (
@@ -69,10 +77,10 @@ class Channel(SimpleRepr, SimpleStr):
             if type1 == ChannelType.UNDEFINED:
                 self.type = (ChannelType.UNDEFINED, ChannelType.UNDEFINED)
             else:
-                for type_idx in range(len(self.exclusive_types)):
-                    if type1 in self.exclusive_types[type_idx]:
+                for type_idx, exclusive_group in enumerate(EXCLUSIVE_GROUPS):
+                    if type1 in exclusive_group:
                         self.type = tuple(
-                            self.type[i] if i != type_idx else type1 for i in range(len(self.type))
+                            type_ if i != type_idx else type1 for i, type_ in enumerate(self.type)
                         )
 
         elif type2 != ChannelType.UNDEFINED:
@@ -87,14 +95,17 @@ class Channel(SimpleRepr, SimpleStr):
         if ChannelType.UNDEFINED in self.type:
             return None
 
-        for ni_channel_type in NIChannelType:
-            if all(t.name in ni_channel_type.name for t in self.type):
-                return ni_channel_type
-
-        return None
+        return next(
+            (
+                ni_channel_type
+                for ni_channel_type in NIChannelType
+                if all(t.name in ni_channel_type.name for t in self.type)
+            ),
+            None,
+        )
 
     def ni_type_key(self) -> Optional[str]:
-        return Channel.channel_type_keys[self.ni_type] if self.ni_type is not None else None
+        return CHANNEL_TYPE_KEYS[self.ni_type] if self.ni_type is not None else None
 
     def add_to_task_table(self, task: Task) -> None:
         if task.name not in Channel.channel_table:
@@ -109,18 +120,15 @@ class Channel(SimpleRepr, SimpleStr):
         )
 
     def call_ni(self, task: Task, method_name: str, *args, **kwargs):
-        self.ni = getattr(getattr(task, self.ni_type_key() + '_channels'), method_name)(
-            self.path, self.description, *args, **kwargs
-        )
+        channels = getattr(task, f'{self.ni_type_key()}_channels')
+        method = getattr(channels, method_name)
+        self.ni = method(self.path, self.description, *args, **kwargs)
+
         return self.ni
 
     def add_to_task(self, task: Task, channel_specification: str, *args, **kwargs):
-        self.call_ni(
-            task,
-            'add_' + self.ni_type_key() + '_' + channel_specification,
-            *args,
-            **kwargs,
-        )
+        self.call_ni(task, f'add_{self.ni_type_key()}_{channel_specification}', *args, **kwargs)
+
         self.add_to_task_table(task)
         return self.ni
 
@@ -128,15 +136,13 @@ class Channel(SimpleRepr, SimpleStr):
         self,
         task: Task,
         readings: Union[List[float], List[List[float]]],
-        dtype: Optional[Type[T]] = None,
+        dtype: Type[T] = list,
     ) -> Optional[T]:
-        if dtype is None:
-            dtype = list
-
-        if len(Channel.channel_table[task.name]) > 0:
-            if len(Channel.channel_table[task.name]) == 1:
-                return dtype(readings[task.name])
-            else:
-                return dtype(readings[task.name][self.index_in_table(task)])
-        else:
+        if not Channel.channel_table[task.name]:
             return None
+
+        return (
+            dtype(readings[task.name])
+            if len(Channel.channel_table[task.name]) == 1
+            else dtype(readings[task.name][self.index_in_table(task)])
+        )
