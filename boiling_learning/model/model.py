@@ -1,4 +1,5 @@
 import enum
+import itertools
 from operator import itemgetter
 from pathlib import Path
 from typing import Dict, Iterable, Optional, Tuple
@@ -79,10 +80,9 @@ def eval_with(
         for metric in metrics:
             metric.reset_states()
 
-    for metric in metrics:
-        for x, y_true in ds_val:
-            y_pred = model.predict(x, use_multiprocessing=True, workers=-1)
-            metric.update_state(y_true, y_pred)
+    for metric, (x, y_true) in itertools.product(metrics, ds_val):
+        y_pred = model.predict(x, use_multiprocessing=True, workers=-1)
+        metric.update_state(y_true, y_pred)
 
     return {metric.name: metric.result().numpy() for metric in metrics}
 

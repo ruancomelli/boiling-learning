@@ -171,10 +171,10 @@ set_boiling_cases_data.main(boiling_cases_timed(), case_experiment_map=boiling_e
 
 condensation_data_path = condensation_cases_path / 'data_spec.yaml'
 logger.info(f'Setting condensation data from data path: {condensation_data_path}')
-condensation_datasets_dict = set_condensation_datasets_data.main(
+condensation_datasets_merged = set_condensation_datasets_data.main(
     condensation_datasets(), condensation_data_path, fps_cache_path=Path('.cache', 'fps')
 )
-condensation_all_cases = ImageDataset.make_union(*condensation_datasets_dict.values())
+condensation_datasets_merged_all = ImageDataset.make_union(*condensation_datasets_merged)
 
 boiling_preprocessors, boiling_augmentors = make_boiling_processors.main(
     direct_visualization=True,
@@ -252,7 +252,7 @@ def _get_image_dataset(
     dataset_size: Optional[Union[int, Fraction]] = None,
     target: Optional[str] = None,
 ) -> DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]]:
-    ds: SupervisedSliceableDataset[VideoFrame, Dict[str, Any]] = SupervisedSliceableDataset(
+    ds = SupervisedSliceableDataset[VideoFrame, Dict[str, Any]](
         concatenate(
             sliceable_dataset_from_video_and_transformers(video, transformers)
             for video in image_dataset.values()

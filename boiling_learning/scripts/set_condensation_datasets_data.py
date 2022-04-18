@@ -1,13 +1,12 @@
 import re
 import time
 from datetime import timedelta
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, Optional, Tuple
 
 import gspread
 import modin.pandas as pd
 import parse
 import yaml
-from dataclassy import dataclass
 from loguru import logger
 from oauth2client.client import GoogleCredentials
 from sklearn.linear_model import LinearRegression
@@ -67,32 +66,12 @@ def _parse_mass_timeseries(
     return df
 
 
-@dataclass
-class LinearRegressionCoefficients:
-    coef: float
-    intercept: float
-
-
-def linear_regression(
-    df: pd.DataFrame, x_column: str, y_column: str
-) -> LinearRegressionCoefficients:
-    X = df[x_column].values.reshape(-1, 1)
-    y = df[y_column].values.reshape(-1, 1)
-    linear_regressor = LinearRegression()
-    linear_regressor.fit(X, y)
-
-    return LinearRegressionCoefficients(
-        coef=float(linear_regressor.coef_.squeeze()),
-        intercept=float(linear_regressor.intercept_.squeeze()),
-    )
-
-
 def main(
     datasets: Iterable[ImageDataset],
     dataspecpath: PathLike,
     spreadsheet_name: Optional[str] = None,
     fps_cache_path: Optional[PathLike] = None,
-) -> Dict[str, ImageDataset]:
+) -> Tuple[ImageDataset, ...]:
     logger.info('Setting condensation data')
 
     dataspecpath = resolve(dataspecpath)
@@ -172,12 +151,14 @@ def main(
             dataset_name = ':'.join((case, subcase))
             datasets_dict[dataset_name].add(ev)
 
-    for dataset in datasets_dict.values():
+    grouped_datasets = tuple(datasets_dict.values())
+
+    for dataset in grouped_datasets:
         try:
             logger.debug(f'Trying to load data for {dataset.name}')
             dataset.load_dfs(overwrite=False, missing_ok=False)
             logger.debug(f'Succesfully loaded data for {dataset.name}')
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             logger.debug(f'Failed to load data, making dataframes for {dataset.name}')
 
             dataset.make_dataframe(
@@ -189,22 +170,15 @@ def main(
             )
 
             for ev in dataset.values():
-                _indices = tuple(map(int, ev.df[ev.column_names.index]))
-                _expected = tuple(range(len(ev.video)))
-                if _indices != _expected:
-                    raise ValueError(
-                        f'expected indices != indices for {ev.name}.'
-                        f' Got expected: {_expected}'
-                        f' Got indices: {_indices}'
-                    ) from e
+                _check_experiment_video(ev)
 
             dataset.save_dfs(overwrite=False)
 
     if spreadsheet_name is not None:
         mass_data: Optional[Dict[str, pd.DataFrame]] = None
 
-        for dataset in datasets_dict.values():
-            changed: bool = False
+        for dataset in grouped_datasets:
+            changed = False
 
             for ev in dataset.values():
                 if 'mass_rate' in ev.df.columns:
@@ -217,15 +191,36 @@ def main(
 
                 case_name, subcase_name, test_name, _ = ev.name.split(':')
                 df = _parse_mass_timeseries(mass_data, case_name, subcase_name, test_name)
-                coefs = linear_regression(df, 'elapsed_time', 'mass')
-                ev.df['mass_rate'] = coefs.coef
+                ev.df['mass_rate'] = _calculate_mass_rate(
+                    df, elapsed_time_column='elapsed_time', mass_column='mass'
+                )
 
             if changed:
                 dataset.save_dfs(overwrite=True)
 
-    logger.debug(f'Condensation datasets dict: {datasets_dict}')
+    logger.debug(f'Condensation datasets: {grouped_datasets}')
 
-    return datasets_dict
+    return grouped_datasets
+
+
+def _calculate_mass_rate(df: pd.DataFrame, *, elapsed_time_column: str, mass_column: str) -> float:
+    X = df[elapsed_time_column].values.reshape(-1, 1)
+    y = df[mass_column].values.reshape(-1, 1)
+    linear_regressor = LinearRegression()
+    linear_regressor.fit(X, y)
+
+    return float(linear_regressor.coef_.squeeze())
+
+
+def _check_experiment_video(ev: ExperimentVideo) -> None:
+    indices = tuple(map(int, ev.df[ev.column_names.index]))
+    expected = tuple(range(len(ev.video)))
+    if indices != expected:
+        raise ValueError(
+            f'expected indices != indices for {ev.name}.'
+            f' Got expected: {expected}.'
+            f' Got indices: {indices}.'
+        )
 
 
 if __name__ == '__main__':

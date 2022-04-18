@@ -1,6 +1,9 @@
+from pathlib import Path
+
 import modin.pandas as pd
 
 from boiling_learning.utils import PathLike, resolve
+from boiling_learning.utils.descriptions import describe
 
 
 class ExperimentalData:
@@ -21,3 +24,8 @@ class ExperimentalData:
                 'data path is not a valid file. Please pass a valid one as input. '
                 f'Got {self.path}'
             ) from e
+
+
+@describe.instance(ExperimentalData)
+def _describe_image_dataset(obj: ExperimentalData) -> Path:
+    return describe(obj.path)
