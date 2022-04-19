@@ -265,9 +265,8 @@ def _get_image_dataset(
     if target is not None:
         ds = ds.map_targets(operator.itemgetter(target))
 
-    dss = ds.shuffle().split(splits.train, splits.val, splits.test)
-    assert len(dss) == 3
-    return dss
+    ds_train, ds_val, ds_test = ds.shuffle().split(splits.train, splits.val, splits.test)
+    return ds_train, ds_val, ds_test
 
 
 def get_image_dataset(

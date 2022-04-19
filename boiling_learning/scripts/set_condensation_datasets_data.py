@@ -1,6 +1,7 @@
 import re
 import time
 from datetime import timedelta
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, Optional, Tuple
 
@@ -31,6 +32,7 @@ _SUBCASE_PATTERNS = frozendict(
 _TIMEDELTA_PATTERN = re.compile(r'(?P<h>\d{2}):(?P<min>\d{2}):(?P<s>\d{2})')
 
 
+@lru_cache
 def dataframes_from_gspread(
     spreadsheet_name: str, credentials: Optional[GoogleCredentials] = None
 ) -> Dict[str, pd.DataFrame]:
@@ -86,16 +88,12 @@ def _generate_fps_getter(fps_cache_path: Optional[PathLike]) -> Callable[[Path],
 
 
 def _set_mass_rate(grouped_datasets: Tuple[ImageDataset, ...], spreadsheet_name: str) -> None:
-    mass_data: Optional[Dict[str, pd.DataFrame]] = None
-
     for dataset in grouped_datasets:
         for ev in dataset.values():
             if 'mass_rate' in ev.df.columns:
                 continue
 
-            if mass_data is None:
-                mass_data = dataframes_from_gspread(spreadsheet_name)
-
+            mass_data = dataframes_from_gspread(spreadsheet_name)
             case_name, subcase_name, test_name, _ = ev.name.split(':')
             df = _parse_mass_timeseries(mass_data, case_name, subcase_name, test_name)
             ev.df['mass_rate'] = _calculate_mass_rate(
@@ -126,63 +124,59 @@ def _set_dataset_data(
     logger.debug(f'Reading condensation dataset {dataset.name}')
 
     for ev in dataset.values():
-        case, subcase, test_name, video_name = ev.name.split(':')
+        _set_ev_data(ev, dataspec, fps_getter)
 
-        # TODO: add average mass rate to categories?
 
-        logger.debug(f'Setting categories for EV "{ev.name}"')
-        if case == 'stainless steel' and subcase == 'polished':
-            # those are the standard conditions for polished SS
-            # temperatures are in Celsius
-            # relative humidity is in percentage
-            # age can be either "new" or "old"
-            categories = {'age': 'new', 'T_inf': 50, 'T_s': 10, 'rh': 80}
-        elif case == 'parametric':
-            if subcase == 'old':
-                categories = {
-                    'age': 'old',
-                    'T_inf': 50,
-                    'T_s': 10,
-                    'rh': 80,
-                }
-            else:
-                categories = {
-                    'age': 'new',
-                    'T_inf': 50,
-                    'T_s': 10,
-                    'rh': 80,
-                }
-                for change, pattern in _SUBCASE_PATTERNS.items():
-                    match = pattern.search(subcase)
-                    if match is not None:
-                        categories[change] = match[0]
-                        break
+def _set_ev_data(
+    ev: ExperimentVideo, dataspec: Dict[str, Any], fps_getter: Callable[[Path], float]
+) -> None:
+    case, subcase, test_name, video_name = ev.name.split(':')
+
+    # TODO: add average mass rate to categories?
+
+    logger.debug(f'Setting categories for EV "{ev.name}"')
+    if case == 'stainless steel' and subcase == 'polished':
+        # those are the standard conditions for polished SS
+        # temperatures are in Celsius
+        # relative humidity is in percentage
+        # age can be either "new" or "old"
+        categories = {'age': 'new', 'T_inf': 50, 'T_s': 10, 'rh': 80}
+    elif case == 'parametric':
+        if subcase == 'old':
+            categories = {'age': 'old', 'T_inf': 50, 'T_s': 10, 'rh': 80}
         else:
-            continue
+            categories = {'age': 'new', 'T_inf': 50, 'T_s': 10, 'rh': 80}
+            for change, pattern in _SUBCASE_PATTERNS.items():
+                match = pattern.search(subcase)
+                if match is not None:
+                    categories[change] = match[0]
+                    break
+    else:
+        return
 
-        videospec = dataspec['cases'][case]['subcases'][subcase]['tests'][test_name]['videos'][
-            f'{video_name}.mp4'
-        ]
+    videospec = dataspec['cases'][case]['subcases'][subcase]['tests'][test_name]['videos'][
+        f'{video_name}.mp4'
+    ]
 
-        logger.debug(f'Getting FPS for EV "{ev.name}"')
+    logger.debug(f'Getting FPS for EV "{ev.name}"')
 
-        fps = fps_getter(ev.path)
+    fps = fps_getter(ev.path)
 
-        logger.debug(f'Getting video data for EV "{ev.name}"')
+    logger.debug(f'Getting video data for EV "{ev.name}"')
 
-        videodata = ExperimentVideo.VideoData(
-            categories=categories,
-            fps=fps,
-            # since there is no syncing between video and experimental data here,
-            # we simply set the first frame as the reference
-            ref_index=0,
-            ref_elapsed_time=0,
-            start_elapsed_time=_parse_timedelta(videospec['start']),
-            end_elapsed_time=_parse_timedelta(videospec['end']),
-        )
+    videodata = ExperimentVideo.VideoData(
+        categories=categories,
+        fps=fps,
+        # since there is no syncing between video and experimental data here,
+        # we simply set the first frame as the reference
+        ref_index=0,
+        ref_elapsed_time=0,
+        start_elapsed_time=_parse_timedelta(videospec['start']),
+        end_elapsed_time=_parse_timedelta(videospec['end']),
+    )
 
-        logger.debug(f'Setting video data for EV "{ev.name}"')
-        ev.set_video_data(videodata)
+    logger.debug(f'Setting video data for EV "{ev.name}"')
+    ev.set_video_data(videodata)
 
 
 def _parse_timedelta(s: Optional[str]) -> Optional[timedelta]:
@@ -215,6 +209,17 @@ def _make_dataframe(dataset: ImageDataset) -> None:
         dataset.save_dfs(overwrite=False)
 
 
+def _check_experiment_video(ev: ExperimentVideo) -> None:
+    indices = tuple(map(int, ev.df[ev.column_names.index]))
+    expected = tuple(range(len(ev.video)))
+    if indices != expected:
+        raise ValueError(
+            f'expected indices != indices for {ev.name}.'
+            f' Got expected: {expected}.'
+            f' Got indices: {indices}.'
+        )
+
+
 def _group_datasets(datasets: Iterable[ImageDataset]) -> Tuple[ImageDataset, ...]:
     datasets_dict = KeyedDefaultDict[str, ImageDataset](ImageDataset)
     for dataset in datasets:
@@ -235,17 +240,6 @@ def _calculate_mass_rate(df: pd.DataFrame, *, elapsed_time_column: str, mass_col
     linear_regressor.fit(X, y)
 
     return float(linear_regressor.coef_.squeeze())
-
-
-def _check_experiment_video(ev: ExperimentVideo) -> None:
-    indices = tuple(map(int, ev.df[ev.column_names.index]))
-    expected = tuple(range(len(ev.video)))
-    if indices != expected:
-        raise ValueError(
-            f'expected indices != indices for {ev.name}.'
-            f' Got expected: {expected}.'
-            f' Got indices: {indices}.'
-        )
 
 
 if __name__ == '__main__':

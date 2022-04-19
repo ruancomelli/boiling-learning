@@ -1,5 +1,6 @@
-from typing import Iterable, Mapping
+from typing import Iterable, List, Mapping
 
+import modin.pandas as pd
 import numpy as np
 from loguru import logger
 
@@ -40,40 +41,53 @@ def main(cases: Iterable[Case], *, case_experiment_map: Mapping[str, PathLike]) 
 def set_case(case: Case, *, case_experiment_path: PathLike) -> None:
     case.set_video_data_from_file(purge=True, remove_absent=True)
 
-    try:
-        logger.debug(f'Trying to load data for {case.name}')
-        case.load_dfs(overwrite=False, missing_ok=False)
-        logger.debug(f'Succesfully loaded data for {case.name}')
-    except FileNotFoundError:
-        logger.debug(f'Failed to load data, making dataframes for {case.name}')
-        _set_case_data(case, case_experiment_path=case_experiment_path)
+    missing: List[ExperimentVideo] = []
+
+    for ev in case:
+        try:
+            logger.debug(f'Trying to load data for {ev.name}')
+            ev.load_df(overwrite=False, missing_ok=False, inplace=True)
+            logger.debug(f'Succesfully loaded data for {ev.name}')
+        except FileNotFoundError:
+            logger.debug(f'Failed to load data for {ev.name}')
+            missing.append(ev)
+
+    if missing:
+        df = (
+            ExperimentalData(case_experiment_path)
+            .as_dataframe()
+            .drop(columns='Time instant')
+            .astype({'Elapsed time': 'float64'})
+            .set_index('Elapsed time')
+        )
+
+        for ev in case:
+            _set_experiment_video_data(ev, df)
 
 
-def _set_case_data(case: Case, *, case_experiment_path: PathLike) -> None:
-    df = (
-        ExperimentalData(case_experiment_path)
-        .as_dataframe()
-        .drop(columns='Time instant')
-        .astype({'Elapsed time': 'float64'})
-        .set_index('Elapsed time')
-    )
-
-    case.sync_time_series(df)
-    case.make_dataframe(
+def _set_experiment_video_data(ev: ExperimentVideo, df: pd.DataFrame) -> None:
+    ev.sync_time_series(df, inplace=True)
+    ev.make_dataframe(
         recalculate=False,
         exist_load=False,
         enforce_time=True,
         categories_as_int=True,
         inplace=True,
     )
+    _check_experiment_video(ev)
+    _regularize_experiment_video_dataframe(ev)
+    ev.save_df(overwrite=False)
 
-    for ev in case:
-        _check_experiment_video(ev)
 
-    for ev in case:
-        _regularize_experiment_video_dataframe(ev)
-
-    case.save_dfs(overwrite=False)
+def _check_experiment_video(ev: ExperimentVideo) -> None:
+    indices = tuple(map(int, ev.df[ev.column_names.index]))
+    expected = tuple(range(len(ev.video)))
+    if indices != expected:
+        raise ValueError(
+            f'expected indices != indices for {ev.name}.'
+            f' Got expected: {expected}.'
+            f' Got indices: {indices}.'
+        )
 
 
 def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> None:
@@ -101,17 +115,6 @@ def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> None:
     flux = power / lateral_area
 
     ev.df[full_heat_flux_key] = flux.to(heat_flux_unit).magnitude
-
-
-def _check_experiment_video(ev: ExperimentVideo) -> None:
-    indices = tuple(map(int, ev.df[ev.column_names.index]))
-    expected = tuple(range(len(ev.video)))
-    if indices != expected:
-        raise ValueError(
-            f'expected indices != indices for {ev.name}.'
-            f' Got expected: {expected}.'
-            f' Got indices: {indices}.'
-        )
 
 
 if __name__ == '__main__':

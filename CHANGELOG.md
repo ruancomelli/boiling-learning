@@ -1,3 +1,13 @@
+## v0.20.5 (2022-04-18)
+
+### Refactor
+
+- **scripts/set_condensation_datasets_data**: re-order functions and fix typing
+- **scripts/set_condensation_datasets_data**: split monolith into small functions
+- simplify scripts-related functionality
+- **preprocessing**: simplify pre-processing module
+- **daq**: simplify DAQ module
+
 ## v0.20.4 (2022-04-15)
 
 ### Refactor
