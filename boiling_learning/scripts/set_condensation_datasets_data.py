@@ -32,7 +32,7 @@ _SUBCASE_PATTERNS = frozendict(
 _TIMEDELTA_PATTERN = re.compile(r'(?P<h>\d{2}):(?P<min>\d{2}):(?P<s>\d{2})')
 
 
-@lru_cache
+@lru_cache(maxsize=None)
 def dataframes_from_gspread(
     spreadsheet_name: str, credentials: Optional[GoogleCredentials] = None
 ) -> Dict[str, pd.DataFrame]:
