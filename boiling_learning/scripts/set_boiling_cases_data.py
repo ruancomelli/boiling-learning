@@ -1,4 +1,6 @@
-from typing import Iterable, List, Mapping
+from functools import lru_cache
+from pathlib import Path
+from typing import Iterable, Mapping
 
 import modin.pandas as pd
 import numpy as np
@@ -7,10 +9,12 @@ from loguru import logger
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.experimental_data import ExperimentalData
+from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
 from boiling_learning.utils import PathLike, geometry
 from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.printing import add_unit_post_fix
 from boiling_learning.utils.units import unit_registry as ureg
+from boiling_learning.utils.utils import resolve
 
 SAMPLES = frozendict(
     {
@@ -41,7 +45,7 @@ def main(cases: Iterable[Case], *, case_experiment_map: Mapping[str, PathLike]) 
 def set_case(case: Case, *, case_experiment_path: PathLike) -> None:
     case.set_video_data_from_file(purge=True, remove_absent=True)
 
-    missing: List[ExperimentVideo] = []
+    case_experiment_path = resolve(case_experiment_path)
 
     for ev in case:
         try:
@@ -50,19 +54,20 @@ def set_case(case: Case, *, case_experiment_path: PathLike) -> None:
             logger.debug(f'Succesfully loaded data for {ev.name}')
         except FileNotFoundError:
             logger.debug(f'Failed to load data for {ev.name}')
-            missing.append(ev)
 
-    if missing:
-        df = (
-            ExperimentalData(case_experiment_path)
-            .as_dataframe()
-            .drop(columns='Time instant')
-            .astype({'Elapsed time': 'float64'})
-            .set_index('Elapsed time')
-        )
-
-        for ev in case:
+            df = _get_experimental_data_from_path(case_experiment_path)
             _set_experiment_video_data(ev, df)
+
+
+@lru_cache(maxsize=None)
+def _get_experimental_data_from_path(case_experiment_path: Path) -> pd.DataFrame:
+    return (
+        ExperimentalData(case_experiment_path)
+        .as_dataframe()
+        .drop(columns='Time instant')
+        .astype({'Elapsed time': 'float64'})
+        .set_index('Elapsed time')
+    )
 
 
 def _set_experiment_video_data(ev: ExperimentVideo, df: pd.DataFrame) -> None:
@@ -74,20 +79,9 @@ def _set_experiment_video_data(ev: ExperimentVideo, df: pd.DataFrame) -> None:
         categories_as_int=True,
         inplace=True,
     )
-    _check_experiment_video(ev)
+    check_experiment_video_dataframe_indices(ev)
     _regularize_experiment_video_dataframe(ev)
     ev.save_df(overwrite=False)
-
-
-def _check_experiment_video(ev: ExperimentVideo) -> None:
-    indices = tuple(map(int, ev.df[ev.column_names.index]))
-    expected = tuple(range(len(ev.video)))
-    if indices != expected:
-        raise ValueError(
-            f'expected indices != indices for {ev.name}.'
-            f' Got expected: {expected}.'
-            f' Got indices: {indices}.'
-        )
 
 
 def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> None:

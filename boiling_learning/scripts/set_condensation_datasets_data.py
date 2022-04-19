@@ -3,7 +3,7 @@ import time
 from datetime import timedelta
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 import gspread
 import modin.pandas as pd
@@ -19,6 +19,7 @@ from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.video import get_fps
+from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
 from boiling_learning.utils import KeyedDefaultDict, PathLike, resolve
 from boiling_learning.utils.frozendict import frozendict
 
@@ -188,14 +189,20 @@ def _parse_timedelta(s: Optional[str]) -> Optional[timedelta]:
 
 
 def _make_dataframe(dataset: ImageDataset) -> None:
-    try:
-        logger.debug(f'Trying to load data for {dataset.name}')
-        dataset.load_dfs(overwrite=False, missing_ok=False)
-        logger.debug(f'Succesfully loaded data for {dataset.name}')
-    except FileNotFoundError:
-        logger.debug(f'Failed to load data, making dataframes for {dataset.name}')
+    missing: List[ExperimentVideo] = []
+    for ev in dataset:
+        try:
+            logger.debug(f'Trying to load data for {ev.name}')
+            ev.load_df(overwrite=False, missing_ok=False, inplace=True)
+            logger.debug(f'Succesfully loaded data for {ev.name}')
+        except FileNotFoundError:
+            logger.debug(f'Failed to load data for {ev.name}')
+            missing.append(ev)
 
-        dataset.make_dataframe(
+    for ev in missing:
+        logger.debug(f'Making dataframe for {ev.name}')
+
+        ev.make_dataframe(
             recalculate=False,
             exist_load=True,
             enforce_time=True,
@@ -203,21 +210,9 @@ def _make_dataframe(dataset: ImageDataset) -> None:
             inplace=True,
         )
 
-        for ev in dataset.values():
-            _check_experiment_video(ev)
+        check_experiment_video_dataframe_indices(ev)
 
-        dataset.save_dfs(overwrite=False)
-
-
-def _check_experiment_video(ev: ExperimentVideo) -> None:
-    indices = tuple(map(int, ev.df[ev.column_names.index]))
-    expected = tuple(range(len(ev.video)))
-    if indices != expected:
-        raise ValueError(
-            f'expected indices != indices for {ev.name}.'
-            f' Got expected: {expected}.'
-            f' Got indices: {indices}.'
-        )
+        ev.save_df(overwrite=False)
 
 
 def _group_datasets(datasets: Iterable[ImageDataset]) -> Tuple[ImageDataset, ...]:
