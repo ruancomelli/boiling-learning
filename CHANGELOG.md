@@ -1,3 +1,9 @@
+## v0.20.7 (2022-04-19)
+
+### Feat
+
+- **scripts/utils**: commit new utility method `setting_data`
+
 ## v0.20.6 (2022-04-18)
 
 ### Refactor
