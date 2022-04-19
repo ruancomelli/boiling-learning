@@ -1,3 +1,13 @@
+## v0.20.6 (2022-04-18)
+
+### Refactor
+
+- **scripts**: reduce need for pre-computing experiment video dataframes
+
+### Fix
+
+- **scripts/set_condensation_datasets_data**: fir `lru_cache` by explicitly adding `maxsize=None`
+
 ## v0.20.5 (2022-04-18)
 
 ### Refactor
