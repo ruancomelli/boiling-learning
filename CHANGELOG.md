@@ -1,5 +1,15 @@
 
 
+## v0.20.12 (2022-04-21)
+
+### Fix
+
+- **preprocessing/image**: convert `tf.float64` frames to `tf.float32` in `random_jpeg_quality` because of errors in `albumentations`
+
+### Refactor
+
+- **preprocessing**: apply small refactorings
+
 ## v0.20.11 (2022-04-21)
 
 ### Refactor
