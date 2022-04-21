@@ -159,6 +159,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "av"
+version = "8.1.0"
+summary = "Pythonic bindings for FFmpeg's libraries."
+
+[[package]]
 name = "backcall"
 version = "0.2.0"
 summary = "Specifications for callback functions passed in to an API"
@@ -225,18 +230,18 @@ dependencies = [
 
 [[package]]
 name = "boto3"
-version = "1.21.44"
+version = "1.21.45"
 requires_python = ">= 3.6"
 summary = "The AWS SDK for Python"
 dependencies = [
-    "botocore<1.25.0,>=1.24.44",
+    "botocore<1.25.0,>=1.24.45",
     "jmespath<2.0.0,>=0.7.1",
     "s3transfer<0.6.0,>=0.5.0",
 ]
 
 [[package]]
 name = "botocore"
-version = "1.24.44"
+version = "1.24.45"
 requires_python = ">= 3.6"
 summary = "Low-level, data-driven core of boto 3."
 dependencies = [
@@ -468,7 +473,7 @@ summary = "The FlatBuffers serialization format for Python"
 
 [[package]]
 name = "fonttools"
-version = "4.32.0"
+version = "4.33.0"
 requires_python = ">=3.7"
 summary = "Tools to manipulate font files"
 
@@ -627,7 +632,6 @@ summary = "Internationalized Domain Names in Applications (IDNA)"
 [[package]]
 name = "imageio"
 version = "2.4.1"
-requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "Library for reading and writing a wide range of image, video, scientific, and volumetric data formats."
 dependencies = [
     "numpy",
@@ -1269,7 +1273,6 @@ dependencies = [
 [[package]]
 name = "pathspec"
 version = "0.9.0"
-requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 summary = "Utility library for gitignore style pattern matching of file paths."
 
 [[package]]
@@ -1448,7 +1451,6 @@ summary = "Python style guide checker"
 [[package]]
 name = "pycparser"
 version = "2.21"
-requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "C parser in Python"
 
 [[package]]
@@ -2178,7 +2180,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:c856c68547f7fe2552729289f600ffc17405d847f1db15e6b78b93cab15f032c"
+content_hash = "sha256:ffd9512b49532d4a7641cf2f81c356fcbc3ce588be01b55b5074456463a49d13"
 
 [metadata.files]
 "absl-py 1.0.0" = [
@@ -2341,6 +2343,32 @@ content_hash = "sha256:c856c68547f7fe2552729289f600ffc17405d847f1db15e6b78b93cab
 "autoflake 1.4" = [
     {file = "autoflake-1.4.tar.gz", hash = "sha256:61a353012cff6ab94ca062823d1fb2f692c4acda51c76ff83a8d77915fba51ea"},
 ]
+"av 8.1.0" = [
+    {file = "av-8.1.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:c5e2313c5495b84c6fffedab852334e967b31686ba4249274339f67c2b89b11d"},
+    {file = "av-8.1.0-cp310-cp310-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:183a5b3a949152d23dfdcca3053ba2e452d121a03951637781a41d27f0c15002"},
+    {file = "av-8.1.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:17ee3493b4d05e2a4bf6e0f431c22dfaf8dfc64489fb58d6178a9c47d5c0c68e"},
+    {file = "av-8.1.0-cp310-cp310-win_amd64.whl", hash = "sha256:bf1cfa4bb762ae6bfe76a0335bf22e4532a7f6c94d3480e358a3e68147dc20a9"},
+    {file = "av-8.1.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:f53fab6d78f61d022d0c21d685ad21289a3d6e99e87b79e8bbc799ea5c964b0c"},
+    {file = "av-8.1.0-cp37-cp37m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:26b1d4fdd0b467f8dc0cb4ba6c398a48b9f92078c9c07fd69e496c5e507d1668"},
+    {file = "av-8.1.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0f626f92dc85b5387f7c7109b5a2dfda2d81ae3f9ae11745fa7c25c90e15ff8c"},
+    {file = "av-8.1.0-cp37-cp37m-win_amd64.whl", hash = "sha256:a32adb5fb8490d2f9328c75ed2d24e7a27ddcac836681b7c4fee897e6ea59cfd"},
+    {file = "av-8.1.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:03af796e04737856cb791001f9c687c0df2d90c9598f3d824e8cb59988676fa6"},
+    {file = "av-8.1.0-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:51c0fed82d23a85b46b26ee5b608425497540685aa63e95f1e46c2a8b3c9fb34"},
+    {file = "av-8.1.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1d1b77f39aeac1c9d3743a32771d36d70b4d4ba794896b1b67cff3a1c1bde22f"},
+    {file = "av-8.1.0-cp38-cp38-win_amd64.whl", hash = "sha256:18a3c1f3ed48e4606b8412f4aa3d86ce3d15abc876100da23e38648c086f5ced"},
+    {file = "av-8.1.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:6734e7ced6d141567ce34fe9cde635c71e85efbc9121858fa3b62ff7ef01f3b8"},
+    {file = "av-8.1.0-cp39-cp39-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:0c714c7b4a76df1095f3522c4c6d4b03fc0634cefba91abbfea409522619ffed"},
+    {file = "av-8.1.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:717aa577ae55a4af040d9d942652edfd98095671e17a819e5c17fa5f46020418"},
+    {file = "av-8.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:9f2dd21dd5a154a1d7370728aac771318a1eea805e6665b82441b58e569c6053"},
+    {file = "av-8.1.0-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:a3138879d3816ea1d23b8ca4cb1d0f5370f90b6019b658ad4d1e5a578f6acc1a"},
+    {file = "av-8.1.0-pp37-pypy37_pp73-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:57c8e39ee687a49bc87ecff1e991cbe5ba3851e681032d678563fa8c42564b95"},
+    {file = "av-8.1.0-pp37-pypy37_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:13cefb9069adb0d5a1acade1b8aaa46a210d3a10fea7683ac979832d36f9f91a"},
+    {file = "av-8.1.0-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:2e728a6c229dffd07ad0d275eedeae37b4d375c8b2cc438ab6c6b36fcd58cdd4"},
+    {file = "av-8.1.0-pp38-pypy38_pp73-macosx_10_9_x86_64.whl", hash = "sha256:b6e30dabf3bad5258f19a3c9b4114ac9cec67c0b2541d65a110f8b2c52ae3d1d"},
+    {file = "av-8.1.0-pp38-pypy38_pp73-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:4a0588993a9f4bb893cec0dd1ac0ab649d5ee2632ce2e2ee9c840566f44411c3"},
+    {file = "av-8.1.0-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:652837011da4783184706361b2d41dd1d71895f395bbd9fd9ae28b9a69044c53"},
+    {file = "av-8.1.0.tar.gz", hash = "sha256:0402169bc27e38e0f44e0e0e1854cf488337e86206b6d25d6dae2bfd7a1a0230"},
+]
 "backcall 0.2.0" = [
     {file = "backcall-0.2.0-py2.py3-none-any.whl", hash = "sha256:fbbce6a29f263178a1f7915c1940bde0ec2b2a967566fe1c65c1dfb7422bd255"},
     {file = "backcall-0.2.0.tar.gz", hash = "sha256:5cbdbf27be5e7cfadb448baf0aa95508f91f2bbc6c6437cd9cd06e2a4c215e1e"},
@@ -2386,13 +2414,13 @@ content_hash = "sha256:c856c68547f7fe2552729289f600ffc17405d847f1db15e6b78b93cab
     {file = "bokeh-2.4.2-py3-none-any.whl", hash = "sha256:2a842d717feeee802e668054277c09054b6f1561557a16dddaf5f7c452f2728c"},
     {file = "bokeh-2.4.2.tar.gz", hash = "sha256:f0a4b53364ed3b7eb936c5cb1a4f4132369e394c7ae0a8ef420459410958033d"},
 ]
-"boto3 1.21.44" = [
-    {file = "boto3-1.21.44-py3-none-any.whl", hash = "sha256:0789842ca7d722723d7e9fae2158aea6f304c14df08929f9c62b6a277705ff39"},
-    {file = "boto3-1.21.44.tar.gz", hash = "sha256:1300661bd4defa42d7e019d515fbfd2984170cf3f5c0bf6bc275fbd9498faf5f"},
+"boto3 1.21.45" = [
+    {file = "boto3-1.21.45-py3-none-any.whl", hash = "sha256:cffdd39e824a51ef7cec4e744d764ee14cccf6a7045126cf0c7990f399ccf809"},
+    {file = "boto3-1.21.45.tar.gz", hash = "sha256:2f2a8d9c44cacac32d258532c6b87d2e0a1549b38e0a559bfb786023f10733b3"},
 ]
-"botocore 1.24.44" = [
-    {file = "botocore-1.24.44-py3-none-any.whl", hash = "sha256:ed07772c924984e5b3c1005f7ba4600cebd4169c23307cf6e92cccadf0b5d2e7"},
-    {file = "botocore-1.24.44.tar.gz", hash = "sha256:0030a11eac972be46859263820885ba650503622c5acfe58966f482d42cc538d"},
+"botocore 1.24.45" = [
+    {file = "botocore-1.24.45-py3-none-any.whl", hash = "sha256:b57a75dc4eadf33d299dabbe11c989fb4553b66331f4580a9aae4316dc6ff198"},
+    {file = "botocore-1.24.45.tar.gz", hash = "sha256:4bd7c6ca50cffbfb2386c7a43b4205e7a20e85083b0cd2b71fdc8a3d612deca0"},
 ]
 "cached-property 1.5.2" = [
     {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
@@ -2612,9 +2640,9 @@ content_hash = "sha256:c856c68547f7fe2552729289f600ffc17405d847f1db15e6b78b93cab
     {file = "flatbuffers-2.0-py2.py3-none-any.whl", hash = "sha256:3751954f0604580d3219ae49a85fafec9d85eec599c0b96226e1bc0b48e57474"},
     {file = "flatbuffers-2.0.tar.gz", hash = "sha256:12158ab0272375eab8db2d663ae97370c33f152b27801fa6024e1d6105fd4dd2"},
 ]
-"fonttools 4.32.0" = [
-    {file = "fonttools-4.32.0-py3-none-any.whl", hash = "sha256:b038d1a0dee0079de7ade57071e2e2aced6e35bd697de244ac62938b2b1628c1"},
-    {file = "fonttools-4.32.0.zip", hash = "sha256:59a90de72149893167e3d552ae2402c6874e006b9adc3feaf5f6d706fe20d392"},
+"fonttools 4.33.0" = [
+    {file = "fonttools-4.33.0-py3-none-any.whl", hash = "sha256:14b94aab22439b9bd46c8f44b057b1d2f4b7ebe86556f9b15a1b25694bb12519"},
+    {file = "fonttools-4.33.0.zip", hash = "sha256:65d14ab1fe70cbd2f18fca538d98bd45d73e9b065defb843da71dc3c454deb45"},
 ]
 "frozendict 1.2" = [
     {file = "frozendict-1.2.tar.gz", hash = "sha256:774179f22db2ef8a106e9c38d4d1f8503864603db08de2e33be5b778230f6e45"},
