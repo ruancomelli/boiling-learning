@@ -37,7 +37,7 @@ def sync_dataframes(
 
     if type(source_df.index) is not type(dest_df.index):
         raise ValueError(
-            f'the source and dest DataFrames indices must be the same type.'
+            f'the source and dest DataFrames indices must have the same type.'
             f' Got {type(source_df.index)} and {type(dest_df.index)}'
         )
 
