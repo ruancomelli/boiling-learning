@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 import tensorflow as tf
-from dataclassy import dataclass
 from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.losses import Loss
 from tensorflow.keras.metrics import Metric
@@ -20,6 +19,7 @@ from boiling_learning.datasets.sliceable import (
 )
 from boiling_learning.io import json
 from boiling_learning.model.model import Model
+from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.typeutils import typename

@@ -1,22 +1,20 @@
 import math
 
-from dataclassy import dataclass
 from pint import Quantity
+
+from boiling_learning.utils.dataclasses import dataclass
 
 
 @dataclass(kwargs=True)
-class Solid:
-    surface_area: Quantity = None
-    volume: Quantity = None
-
-
-class Prism(Solid):
+class Prism:
     length: Quantity
 
     cross_section_perimeter: Quantity
     cross_section_area: Quantity
 
     lateral_area: Quantity = None
+    surface_area: Quantity = None
+    volume: Quantity = None
 
     def __post_init__(self) -> None:
         self.lateral_area = self.cross_section_perimeter * self.length
@@ -26,6 +24,7 @@ class Prism(Solid):
 class Cylinder(Prism):
     diameter: Quantity
 
+    radius: Quantity = None
     cross_section_perimeter: Quantity = None
     cross_section_area: Quantity = None
 

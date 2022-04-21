@@ -3,7 +3,6 @@ from typing import Optional, Tuple, Union, overload
 
 import albumentations as A
 import numpy as np
-from dataclassy import dataclass
 from scipy.stats import entropy
 from skimage.color import rgb2gray as _grayscale
 from skimage.exposure import histogram
@@ -11,6 +10,8 @@ from skimage.measure import shannon_entropy
 from skimage.metrics import structural_similarity as ssim
 from skimage.transform import downscale_local_mean as _downscale
 from skimage.transform import resize
+
+from boiling_learning.utils.dataclasses import dataclass
 
 
 @dataclass
@@ -121,9 +122,7 @@ def crop(
 
 
 def grayscale(image: np.ndarray) -> np.ndarray:
-    if image.ndim > 2 and image.shape[2] != 1:
-        return _grayscale(image)
-    return image
+    return _grayscale(image) if image.ndim > 2 and image.shape[2] != 1 else image
 
 
 def downscale(image: np.ndarray, factors: Union[int, Tuple[int, int]]) -> np.ndarray:

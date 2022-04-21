@@ -90,7 +90,7 @@ def _generate_fps_getter(fps_cache_path: Optional[PathLike]) -> Callable[[Path],
 
 def _set_mass_rate(grouped_datasets: Tuple[ImageDataset, ...], spreadsheet_name: str) -> None:
     for dataset in grouped_datasets:
-        for ev in dataset.values():
+        for ev in dataset:
             if 'mass_rate' in ev.df.columns:
                 continue
 
@@ -124,7 +124,7 @@ def _set_dataset_data(
 ) -> None:
     logger.debug(f'Reading condensation dataset {dataset.name}')
 
-    for ev in dataset.values():
+    for ev in dataset:
         _set_ev_data(ev, dataspec, fps_getter)
 
 
@@ -220,7 +220,7 @@ def _group_datasets(datasets: Iterable[ImageDataset]) -> Tuple[ImageDataset, ...
     for dataset in datasets:
         logger.debug(f'Reading condensation dataset {dataset.name}')
 
-        for ev in dataset.items():
+        for ev in dataset:
             case, subcase, _test_name, _video_name = ev.name.split(':')
             dataset_name = ':'.join((case, subcase))
             datasets_dict[dataset_name].add(ev)

@@ -7,13 +7,12 @@ import funcy
 import modin.pandas as pd
 import numpy as np
 import tensorflow as tf
-from dataclassy import dataclass
 from loguru import logger
 
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
 from boiling_learning.preprocessing.video import Video, convert_video
 from boiling_learning.utils import PathLike, dataframe_categories_to_int, merge_dicts, resolve
-from boiling_learning.utils.dataclasses import dataclass_from_mapping
+from boiling_learning.utils.dataclasses import dataclass, dataclass_from_mapping
 from boiling_learning.utils.slicerators import Slicerator
 
 

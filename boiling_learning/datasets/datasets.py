@@ -5,12 +5,12 @@ from typing import Any, Callable, Generic, Iterable, Optional, Tuple, TypeVar, U
 
 import funcy
 import tensorflow as tf
-from dataclassy import dataclass
 from decorator import decorator
 from funcy import rpartial
 
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
 from boiling_learning.utils import mathutils, resolve
+from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.sentinels import EMPTY
 
 _T = TypeVar('_T')
@@ -42,7 +42,7 @@ class DatasetSplits:
                     others = funcy.omit(dct, [name])
                     others_sum = sum(others.values())
 
-                    if not (0 < others_sum <= 1):
+                    if not 0 < others_sum <= 1:
                         raise ValueError(
                             'it is required that 0 < '
                             + ' + '.join(f'*{other}*' for other in others.keys())

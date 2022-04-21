@@ -6,12 +6,12 @@ from typing import Any, Callable, Iterable, List, Mapping, Optional, Type, Union
 
 import funcy
 import modin.pandas as pd
-from dataclassy import dataclass
 
 from boiling_learning.io import json
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.utils import PathLike, concatenate_dataframes, resolve, simple_pprint_class
 from boiling_learning.utils.collections import KeyedSet
+from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.descriptions import describe
 
 
