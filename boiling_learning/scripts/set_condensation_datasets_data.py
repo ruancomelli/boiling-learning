@@ -177,7 +177,7 @@ def _set_ev_data(
     )
 
     logger.debug(f'Setting video data for EV "{ev.name}"')
-    ev.set_video_data(videodata)
+    ev.data = videodata
 
 
 def _parse_timedelta(s: Optional[str]) -> Optional[timedelta]:

@@ -12,7 +12,7 @@ from loguru import logger
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
 from boiling_learning.preprocessing.video import Video, convert_video
 from boiling_learning.utils import PathLike, dataframe_categories_to_int, merge_dicts, resolve
-from boiling_learning.utils.dataclasses import dataclass, dataclass_from_mapping
+from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.slicerators import Slicerator
 
 
@@ -70,7 +70,7 @@ class ExperimentVideo(Video):
     def __init__(
         self,
         video_path: PathLike,
-        name: Optional[str] = None,
+        name: str = '',
         df_dir: Optional[PathLike] = None,
         df_suffix: str = '.csv',
         df_path: Optional[PathLike] = None,
@@ -85,7 +85,7 @@ class ExperimentVideo(Video):
         self.column_types = column_types
         self.df: Optional[pd.DataFrame] = None
         self.ds: Optional[tf.data.Dataset] = None
-        self._name = name if name is not None else self.path.stem
+        self._name = name or self.path.stem
 
         if None not in {df_dir, df_path}:
             raise ValueError('at most one of (df_dir, df_path) must be given.')
@@ -160,16 +160,6 @@ class ExperimentVideo(Video):
         dest_path = resolve(dest_path, parents=True)
         convert_video(self.path, dest_path, overwrite=overwrite)
         self.path = dest_path
-
-    def set_video_data(
-        self,
-        data: Union[Mapping[str, Any], VideoData],
-        keys: VideoDataKeys = VideoDataKeys(),
-    ) -> None:
-        if isinstance(data, self.VideoData):
-            self.data = data
-        else:
-            self.data = dataclass_from_mapping(data, self.VideoData, key_map=keys)
 
     def convert_dataframe_type(
         self, df: pd.DataFrame, categories_as_int: bool = False
@@ -293,13 +283,15 @@ class ExperimentVideo(Video):
         if missing_ok and not self.df_path.is_file():
             return None
 
-        if columns is None:
-            df = pd.read_csv(self.df_path, skipinitialspace=True)
-        else:
-            df = pd.read_csv(self.df_path, skipinitialspace=True, usecols=tuple(columns))
+        df = pd.read_csv(
+            self.df_path,
+            skipinitialspace=True,
+            usecols=tuple(columns) if columns is not None else None,
+        )
 
         if inplace:
             self.df = df
+
         return df
 
     def save_df(self, path: Optional[PathLike] = None, overwrite: bool = False) -> None:

@@ -11,7 +11,7 @@ from boiling_learning.io import json
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.utils import PathLike, concatenate_dataframes, resolve, simple_pprint_class
 from boiling_learning.utils.collections import KeyedSet
-from boiling_learning.utils.dataclasses import dataclass
+from boiling_learning.utils.dataclasses import dataclass, dataclass_from_mapping
 from boiling_learning.utils.descriptions import describe
 
 
@@ -105,7 +105,9 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
         video_data_keys = frozenset(video_data.keys())
         self_keys = frozenset(self.keys())
         for name in self_keys & video_data_keys:
-            self[name].set_video_data(video_data[name], keys)
+            self[name].data = dataclass_from_mapping(
+                video_data[name], ExperimentVideo.VideoData, key_map=keys
+            )
 
         if remove_absent:
             for name in self_keys - video_data_keys:
