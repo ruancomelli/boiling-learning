@@ -221,9 +221,12 @@ def _group_datasets(datasets: Iterable[ImageDataset]) -> Tuple[ImageDataset, ...
         logger.debug(f'Reading condensation dataset {dataset.name}')
 
         for ev in dataset:
-            case, subcase, _test_name, _video_name = ev.name.split(':')
-            dataset_name = ':'.join((case, subcase))
-            datasets_dict[dataset_name].add(ev)
+            # avoid including experiment videos that didn't have their data correctly
+            # set
+            if ev.data is not None:
+                case, subcase, _test_name, _video_name = ev.name.split(':')
+                dataset_name = ':'.join((case, subcase))
+                datasets_dict[dataset_name].add(ev)
 
     return tuple(datasets_dict.values())
 
