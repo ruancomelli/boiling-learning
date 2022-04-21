@@ -1,3 +1,9 @@
+## v0.20.8 (2022-04-21)
+
+### Refactor
+
+- **preprocessing/video**: improve error message when opening invalid videos
+
 ## v0.20.7 (2022-04-19)
 
 ### Feat
