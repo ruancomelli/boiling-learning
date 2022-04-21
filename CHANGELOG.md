@@ -1,3 +1,13 @@
+## v0.20.10 (2022-04-21)
+
+### Fix
+
+- **scripts/set_condensation_datasets_data**: fix wrong iteration over `ImageDataset`s
+
+### Refactor
+
+- **preprocessing/video**: remove printing cause exception when opening invalid videos
+
 ## v0.20.9 (2022-04-21)
 
 ## v0.20.8 (2022-04-21)
