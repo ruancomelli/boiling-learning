@@ -288,11 +288,13 @@ class ExperimentVideo(Video):
         return df
 
     def save_df(self, path: Optional[PathLike] = None, overwrite: bool = False) -> None:
-        if self.df_path is None:
-            raise ValueError('*df_path* is not defined yet, so *path* must be given as argument.')
-
         if path is None:
+            if self.df_path is None:
+                raise ValueError(
+                    '*df_path* is not defined yet, so *path* must be given as argument.'
+                )
             path = self.df_path
+
         path = resolve(path, parents=True)
 
         if overwrite or not path.is_file():

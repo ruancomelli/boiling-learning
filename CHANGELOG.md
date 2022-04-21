@@ -1,3 +1,14 @@
+## v0.20.11 (2022-04-21)
+
+### Refactor
+
+- **preprocessing/experiment_video**: refactor `ExperimentVideo` class and remove `as_pairs` method
+- **preprocessing/experiment_video**: remove `set_video_data` method
+
+### Fix
+
+- **scripts/set_condensation_datasets_data**: avoid using experiment videos that didn't have their data set
+
 ## v0.20.10 (2022-04-21)
 
 ### Fix
