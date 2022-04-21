@@ -1,11 +1,10 @@
 import contextlib
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Union
 
 import funcy
 import modin.pandas as pd
-import numpy as np
 import tensorflow as tf
 from loguru import logger
 
@@ -13,7 +12,6 @@ from boiling_learning.preprocessing.preprocessing import sync_dataframes
 from boiling_learning.preprocessing.video import Video, convert_video
 from boiling_learning.utils import PathLike, dataframe_categories_to_int, merge_dicts, resolve
 from boiling_learning.utils.dataclasses import dataclass
-from boiling_learning.utils.slicerators import Slicerator
 
 
 class ExperimentVideo(Video):
@@ -112,15 +110,8 @@ class ExperimentVideo(Video):
             'column_names': self.column_names,
             'column_types': self.column_types,
         }
-
-        return ''.join(
-            (
-                self.__class__.__name__,
-                '(',
-                ', '.join(f'{k}={v}' for k, v in kwargs.items() if v is not None),
-                ')',
-            )
-        )
+        joined_kwargs = ', '.join(f'{k}={v}' for k, v in kwargs.items() if v is not None)
+        return f'{self.__class__.__name__}({joined_kwargs})'
 
     @property
     def name(self) -> str:
@@ -133,18 +124,20 @@ class ExperimentVideo(Video):
     @data.setter
     def data(self, data: VideoData) -> None:
         self._data = data
+        self._shrink_video_to_data()
 
-        if data.start_index is not None:
-            start = data.start_index
-        elif data.start_elapsed_time is not None:
-            start = round(data.start_elapsed_time.total_seconds() * data.fps)
+    def _shrink_video_to_data(self) -> None:
+        if self.data.start_index is not None:
+            start = self.data.start_index
+        elif self.data.start_elapsed_time is not None:
+            start = round(self.data.start_elapsed_time.total_seconds() * self.data.fps)
         else:
             start = 0
 
-        if data.end_index is not None:
-            end = data.end_index
-        elif data.end_elapsed_time is not None:
-            end = round(data.end_elapsed_time.total_seconds() * data.fps)
+        if self.data.end_index is not None:
+            end = self.data.end_index
+        elif self.data.end_elapsed_time is not None:
+            end = round(self.data.end_elapsed_time.total_seconds() * self.data.fps)
         else:
             end = None
 
@@ -316,23 +309,3 @@ class ExperimentVideo(Video):
             df = df[select_columns]
 
         return df.to_dict('records')
-
-    def as_pairs(
-        self,
-        *,
-        image_preprocessor: Optional[Callable[[np.ndarray], np.ndarray]] = None,
-        select_columns: Optional[Union[str, List[str]]] = None,
-    ) -> Slicerator[Tuple[np.ndarray, Dict[str, Any]]]:
-        targets = self.targets(select_columns)
-
-        if image_preprocessor is not None:
-
-            def get_item(i: int) -> Tuple[np.ndarray, Dict[str, Any]]:
-                return image_preprocessor(self[i]), targets[i]
-
-        else:
-
-            def get_item(i: int) -> Tuple[np.ndarray, Dict[str, Any]]:
-                return self[i], targets[i]
-
-        return Slicerator.from_func(get_item, length=len(self))
