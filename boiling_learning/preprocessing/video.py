@@ -76,7 +76,7 @@ class OpenVideoError(Exception):
 
 class Video(Sequence[VideoFrame]):
     def __init__(self, path: PathLike) -> None:
-        self.path: Path = resolve(path)
+        self.path = resolve(path)
         self._video: Optional[pims.Video] = None
 
     @property

@@ -122,17 +122,16 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
     ) -> None:
         data_path = resolve(data_path)
         video_data = _json.loads(data_path.read_text())
-        purged = not purge
 
         if isinstance(video_data, list):
-            if not purged:
+            if purge:
                 video_data = [item for item in video_data if not item.pop(keys.ignore, False)]
-                purged = True
+                purge = False
 
             video_data = {item.pop(keys.name): item for item in video_data}
 
         if isinstance(video_data, dict):
-            if not purged:
+            if purge:
                 video_data = {
                     key: value
                     for key, value in video_data.items()
@@ -158,12 +157,6 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
             skipinitialspace=True,
             usecols=tuple(columns) if columns is not None else None,
         )
-
-    def save(self, path: Optional[PathLike] = None, overwrite: bool = False) -> None:
-        path = resolve(path or self.df_path, parents=True)
-
-        if overwrite or not path.is_file():
-            self.df.to_csv(path, index=False)
 
     def save_dfs(self, overwrite: bool = False) -> None:
         for ev in self:
