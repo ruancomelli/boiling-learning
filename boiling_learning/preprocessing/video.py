@@ -70,6 +70,10 @@ def get_fps(video_path: PathLike) -> float:
         return cap.get(cv2.CAP_PROP_FPS)
 
 
+class OpenVideoError(Exception):
+    pass
+
+
 class Video(Sequence[VideoFrame]):
     def __init__(self, path: PathLike) -> None:
         self.path: Path = resolve(path)
@@ -91,7 +95,11 @@ class Video(Sequence[VideoFrame]):
 
     def open(self) -> pims.Video:
         if not self.is_open():
-            self._video = pims.Video(str(self.path))
+            try:
+                self._video = pims.Video(str(self.path))
+            except Exception as e:
+                raise OpenVideoError(f'Error while opening video {self.path}:\n{e}') from e
+
             self._shrink_to_valid_end_frames()
 
         return self._video
