@@ -1,7 +1,10 @@
+
+
 ## v0.20.11 (2022-04-21)
 
 ### Refactor
 
+- **preprocessing/experiment_video**: refactor module a bit
 - **preprocessing/experiment_video**: refactor `ExperimentVideo` class and remove `as_pairs` method
 - **preprocessing/experiment_video**: remove `set_video_data` method
 
