@@ -98,7 +98,7 @@ class Video(Sequence[VideoFrame]):
             try:
                 self._video = pims.Video(str(self.path))
             except Exception as e:
-                raise OpenVideoError(f'Error while opening video {self.path}:\n{e}') from e
+                raise OpenVideoError(f'Error while opening video {self.path}') from e
 
             self._shrink_to_valid_end_frames()
 
