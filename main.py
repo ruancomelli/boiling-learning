@@ -79,6 +79,7 @@ from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.lazy import Lazy, LazyCallable
+from boiling_learning.utils.random import random_state
 from boiling_learning.utils.typeutils import typename
 
 boiling_learning_path = resolve(os.environ['BOILING_DATA_PATH'])
@@ -265,7 +266,8 @@ def _get_image_dataset(
     if target is not None:
         ds = ds.map_targets(operator.itemgetter(target))
 
-    ds_train, ds_val, ds_test = ds.shuffle().split(splits.train, splits.val, splits.test)
+    with random_state(1997):
+        ds_train, ds_val, ds_test = ds.shuffle().split(splits.train, splits.val, splits.test)
     return ds_train, ds_val, ds_test
 
 
