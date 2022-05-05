@@ -1,5 +1,15 @@
 
 
+## v0.20.13 (2022-05-04)
+
+### Refactor
+
+- **preprocessing/experiment_video**: add logging to `ExperimentVideo._shrink_video_to_data`
+
+### Fix
+
+- **main**: set specific random state in main
+
 ## v0.20.12 (2022-04-21)
 
 ### Fix
