@@ -156,27 +156,6 @@ class KeyedDefaultDict(DefaultDict[_Key, _Value]):
         return ret
 
 
-def concatenate_dataframes(dfs: Iterable[pd.DataFrame]) -> pd.DataFrame:
-    """Concatenate while preserving categorical columns.
-
-    Source: <https://stackoverflow.com/a/57809778/5811400>
-
-    NB: We change the categories in-place for the input dataframes"""
-
-    dfs = tuple(dfs)
-
-    # Iterate on categorical columns common to all dfs
-    for col in set().intersection(
-        *(set(df.select_dtypes(include='category').columns) for df in dfs)
-    ):
-        # Generate the union category across dfs for this column
-        uc = pd.api.types.union_categoricals(tuple(df[col] for df in dfs))
-        # Change to union category for all dataframes
-        for df in dfs:
-            df[col] = pd.Categorical(df[col].values, categories=uc.categories)
-    return pd.concat(dfs)
-
-
 def dataframe_categories_to_int(df: pd.DataFrame, inplace: bool = False) -> pd.DataFrame:
     # See <https://www.tensorflow.org/tutorials/load_data/pandas_dataframe> for the reasoning
     # behind this

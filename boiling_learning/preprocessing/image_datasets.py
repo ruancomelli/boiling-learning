@@ -9,7 +9,7 @@ import modin.pandas as pd
 
 from boiling_learning.io import json
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
-from boiling_learning.utils import PathLike, concatenate_dataframes, resolve, simple_pprint_class
+from boiling_learning.utils import PathLike, resolve, simple_pprint_class
 from boiling_learning.utils.collections import KeyedSet
 from boiling_learning.utils.dataclasses import dataclass, dataclass_from_mapping
 from boiling_learning.utils.descriptions import describe
@@ -147,55 +147,13 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
         path: Optional[PathLike] = None,
         columns: Optional[Iterable[str]] = None,
     ) -> None:
-        if path is None:
-            path = self.df_path
-        else:
+        if path is not None:
             self.df_path = resolve(path)
 
         self.df = pd.read_csv(
             self.df_path,
             skipinitialspace=True,
             usecols=tuple(columns) if columns is not None else None,
-        )
-
-    def save_dfs(self, overwrite: bool = False) -> None:
-        for ev in self:
-            ev.save_df(overwrite=overwrite)
-
-    def load_dfs(
-        self,
-        columns: Optional[Iterable[str]] = None,
-        overwrite: bool = False,
-        missing_ok: bool = False,
-    ) -> None:
-        if columns is not None:
-            columns = tuple(columns)
-
-        for ev in self:
-            ev.load_df(
-                columns=columns,
-                overwrite=overwrite,
-                missing_ok=missing_ok,
-                inplace=True,
-            )
-
-    def make_dataframe(
-        self,
-        recalculate: bool = False,
-        exist_load: bool = False,
-        enforce_time: bool = False,
-        categories_as_int: bool = False,
-        inplace: bool = True,
-    ) -> pd.DataFrame:
-        return concatenate_dataframes(
-            ev.make_dataframe(
-                recalculate=recalculate,
-                exist_load=exist_load,
-                enforce_time=enforce_time,
-                categories_as_int=categories_as_int,
-                inplace=inplace,
-            )
-            for ev in self
         )
 
 

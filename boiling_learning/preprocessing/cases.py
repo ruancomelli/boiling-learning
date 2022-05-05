@@ -27,15 +27,12 @@ class Case(ImageDataset):
 
         self.path = resolve(path, dir=True)
 
-        if name is None:
-            name = self.path.name
-
         df_path = self.path / df_name
         self.dataframes_dir = resolve(self.path / dataframes_dir_name, dir=True)
         self.videos_dir = resolve(self.path / videos_dir_name, dir=True)
 
         super().__init__(
-            name=name,
+            name=name or self.path.name,
             column_names=column_names,
             column_types=column_types,
             df_path=df_path,
@@ -61,11 +58,8 @@ class Case(ImageDataset):
         remove_absent: bool = False,
         keys: VideoDataKeys = VideoDataKeys(),
     ) -> None:
-        if data_path is None:
-            data_path = self.video_data_path
-
         super().set_video_data_from_file(
-            data_path,
+            data_path or self.video_data_path,
             purge=purge,
             keys=keys,
             remove_absent=remove_absent,
