@@ -127,6 +127,8 @@ class ExperimentVideo(Video):
         self._shrink_video_to_data()
 
     def _shrink_video_to_data(self) -> None:
+        logger.debug(f"Shrinking video to data for EV \"{self.name}\"")
+
         if self.data.start_index is not None:
             start = self.data.start_index
         elif self.data.start_elapsed_time is not None:
@@ -143,6 +145,8 @@ class ExperimentVideo(Video):
 
         if start != 0 or end is not None:
             self.video = self.video[start:end]
+
+        logger.debug(f"Video in range {start}-{end} for EV \"{self.name}\"")
 
     def convert_video(
         self,
