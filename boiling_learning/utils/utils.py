@@ -149,10 +149,10 @@ class KeyedDefaultDict(DefaultDict[_Key, _Value]):
     '''
 
     def __missing__(self, key: _Key) -> _Value:
-        if self.default_factory is None:
+        if self.default_factory is None or not callable(self.default_factory):
             raise KeyError(key)
 
-        ret = self[key] = self.default_factory(key)
+        ret = self[key] = self.default_factory(key)  # pylint: disable=not-callable
         return ret
 
 

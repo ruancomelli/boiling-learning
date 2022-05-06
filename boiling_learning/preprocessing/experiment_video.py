@@ -1,11 +1,9 @@
 import contextlib
 from datetime import timedelta
-from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Union
 
 import funcy
 import modin.pandas as pd
-import tensorflow as tf
 from loguru import logger
 
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
@@ -77,12 +75,10 @@ class ExperimentVideo(Video):
     ) -> None:
         super().__init__(video_path)
 
-        self.df_path: Optional[Path]
         self._data: Optional[self.VideoData] = None
         self.column_names = column_names
         self.column_types = column_types
         self.df: Optional[pd.DataFrame] = None
-        self.ds: Optional[tf.data.Dataset] = None
         self._name = name or self.path.stem
 
         if None not in {df_dir, df_path}:
@@ -91,7 +87,7 @@ class ExperimentVideo(Video):
         if not df_suffix.startswith('.'):
             raise ValueError('argument *df_suffix* must start with a dot \'.\'')
 
-        self.df_path: Optional[Path] = (
+        self.df_path = (
             resolve(df_path)
             if df_path is not None
             else (
@@ -261,14 +257,10 @@ class ExperimentVideo(Video):
         missing_ok: bool = False,
         inplace: bool = True,
     ) -> Optional[pd.DataFrame]:
-        if path is None:
-            if self.df_path is None:
-                raise ValueError(
-                    '*df_path* is not defined yet, so *path* must be given as argument.'
-                )
-            path = self.df_path
-        else:
+        if path is not None:
             self.df_path = resolve(path)
+        elif self.df_path is None:
+            raise ValueError('*df_path* is not defined yet, so *path* must be given as argument.')
 
         logger.debug(
             f'Loading dataframe for experiment video {self.name} from file {self.df_path}'

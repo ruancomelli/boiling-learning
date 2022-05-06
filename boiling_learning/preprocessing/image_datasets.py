@@ -53,7 +53,6 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
         self.column_names: self.DataFrameColumnNames = column_names
         self.column_types: self.DataFrameColumnTypes = column_types
         self.df: Optional[pd.DataFrame] = None
-        self.ds = None
 
         if df_path is not None:
             df_path = resolve(df_path)
