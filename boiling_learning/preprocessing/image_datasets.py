@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json as _json
 from pathlib import Path
-from typing import Any, Callable, Iterable, List, Mapping, Optional, Type, Union
+from typing import Any, Callable, Iterable, List, Mapping, Optional, TypeAlias, Union
 
 import funcy
 import modin.pandas as pd
@@ -26,13 +26,9 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
     or the test sets.
     '''
 
-    VideoData: Type[ExperimentVideo.VideoData] = ExperimentVideo.VideoData
-    DataFrameColumnNames: Type[
-        ExperimentVideo.DataFrameColumnNames
-    ] = ExperimentVideo.DataFrameColumnNames
-    DataFrameColumnTypes: Type[
-        ExperimentVideo.DataFrameColumnTypes
-    ] = ExperimentVideo.DataFrameColumnTypes
+    VideoData: TypeAlias = ExperimentVideo.VideoData
+    DataFrameColumnNames: TypeAlias = ExperimentVideo.DataFrameColumnNames
+    DataFrameColumnTypes: TypeAlias = ExperimentVideo.DataFrameColumnTypes
 
     @dataclass(frozen=True, kwargs=True)
     class VideoDataKeys(ExperimentVideo.VideoDataKeys):
@@ -49,14 +45,11 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
     ) -> None:
         super().__init__(_get_experiment_video_name)
 
-        self._name: str = name
-        self.column_names: self.DataFrameColumnNames = column_names
-        self.column_types: self.DataFrameColumnTypes = column_types
+        self._name = name
+        self.column_names = column_names
+        self.column_types = column_types
         self.df: Optional[pd.DataFrame] = None
-
-        if df_path is not None:
-            df_path = resolve(df_path)
-        self.df_path = df_path
+        self.df_path = resolve(df_path) if df_path is not None else None
 
         if exist_load and self.df_path.is_file():
             self.load()
@@ -124,7 +117,7 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
 
         if isinstance(video_data, list):
             if purge:
-                video_data = [item for item in video_data if not item.pop(keys.ignore, False)]
+                video_data = (item for item in video_data if not item.pop(keys.ignore, False))
                 purge = False
 
             video_data = {item.pop(keys.name): item for item in video_data}

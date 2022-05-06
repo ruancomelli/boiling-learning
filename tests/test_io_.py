@@ -4,7 +4,6 @@ from unittest import TestCase
 import pytest
 
 from boiling_learning.io import json
-from boiling_learning.io.json import JSONDataType
 from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.functional import P
 
@@ -23,7 +22,7 @@ def _json_encode(obj: X) -> Dict[str, int]:
 
 
 @json.decode.dispatch(X)
-def _json_decode(obj: JSONDataType) -> X:
+def _json_decode(obj: json.JSONDataType) -> X:
     return X(obj['value'])
 
 

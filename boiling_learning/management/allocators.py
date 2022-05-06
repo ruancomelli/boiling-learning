@@ -8,13 +8,13 @@ from tinydb_smartcache import SmartCacheTable
 from typing_extensions import final
 
 from boiling_learning.io import json
-from boiling_learning.utils import JSONDataType, PathLike, resolve
+from boiling_learning.utils import PathLike, resolve
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import Pack
 
 Allocator = Callable[[Pack[Any, Any]], Path]
 
-_JSONDescription = TypeVar('_JSONDescription', bound=JSONDataType)
+_JSONDescription = TypeVar('_JSONDescription', bound=json.JSONDataType)
 
 
 @final
@@ -28,7 +28,7 @@ def json_describe(instance: Supports[JSONDescribable[_JSONDescription]]) -> _JSO
 
 
 @json_describe.instance(delegate=json.SupportsJSONSerializable)
-def _json_describe_json_serializable(instance: json.SupportsJSONSerializable) -> JSONDataType:
+def _json_describe_json_serializable(instance: json.SupportsJSONSerializable) -> json.JSONDataType:
     return json.serialize(instance)
 
 
@@ -69,23 +69,23 @@ class JSONTableAllocator:
         path: PathLike,
         db: Table,
         *,
-        describer: Callable[[Pack[Any, Any]], JSONDataType] = json_describe,
+        describer: Callable[[Pack[Any, Any]], json.JSONDataType] = json_describe,
     ) -> None:
         self.path: Path = resolve(path)
         self.db: Table = db
-        self.describer: Callable[[Pack[Any, Any]], JSONDataType] = describer
+        self.describer: Callable[[Pack[Any, Any]], json.JSONDataType] = describer
 
     def _doc_path(self, doc_id: int) -> Path:
         return resolve(self.path / f'{doc_id}.json', parents=True)
 
-    def _provide(self, serialized: JSONDataType) -> int:
+    def _provide(self, serialized: json.JSONDataType) -> int:
         for doc in self.db:
             if doc == serialized:
                 return doc.doc_id
         return self.db.insert(serialized)
 
     def __call__(self, pack: Pack[Any, Any]) -> Path:
-        serialized: JSONDataType = self.describer(pack)
+        serialized: json.JSONDataType = self.describer(pack)
         doc_id: int = self._provide(serialized)
         return self._doc_path(doc_id)
 
@@ -94,8 +94,13 @@ def default_table_allocator(
     root: PathLike,
     *,
     describer: Callable[
-        [Pack[Supports[JSONDescribable[JSONDataType]], Supports[JSONDescribable[JSONDataType]]]],
-        JSONDataType,
+        [
+            Pack[
+                Supports[JSONDescribable[json.JSONDataType]],
+                Supports[JSONDescribable[json.JSONDataType]],
+            ]
+        ],
+        json.JSONDataType,
     ] = json_describe,
 ) -> JSONTableAllocator:
     root = resolve(root, dir=True)

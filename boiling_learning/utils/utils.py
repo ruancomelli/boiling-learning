@@ -14,10 +14,8 @@ from typing import (
     Any,
     Collection,
     DefaultDict,
-    Dict,
     Iterable,
     Iterator,
-    List,
     Mapping,
     Optional,
     Sequence,
@@ -41,9 +39,6 @@ _Value = TypeVar('_Value')
 
 
 # ---------------------------------- Typing ----------------------------------
-# see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
-JSONDataType = Union[None, bool, int, float, str, List['JSONDataType'], Dict[str, 'JSONDataType']]
-
 PathLike = Union[str, os.PathLike]
 
 

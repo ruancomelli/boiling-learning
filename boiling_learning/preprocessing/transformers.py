@@ -6,7 +6,7 @@ import funcy
 from typing_extensions import ParamSpec
 
 from boiling_learning.io import json
-from boiling_learning.utils import JSONDataType, KeyedDefaultDict, SimpleStr
+from boiling_learning.utils import KeyedDefaultDict, SimpleStr
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.typeutils import CallableWithFirst
 
@@ -33,7 +33,7 @@ class Transformer(SimpleStr, Generic[_X, _Y]):
     def __call__(self, arg: _X, *args: Any, **kwargs: Any) -> _Y:
         return self._call(arg, *args, **kwargs)
 
-    def __describe__(self) -> JSONDataType:
+    def __describe__(self) -> json.JSONDataType:
         return json.serialize(
             {
                 'type': self.__class__.__name__,
@@ -103,7 +103,7 @@ class KeyedFeatureTransformer(
     ) -> Callable[[_X1], _X2]:
         return self.packer[key].rpartial(f)
 
-    def __describe__(self) -> JSONDataType:
+    def __describe__(self) -> json.JSONDataType:
         return json.serialize(funcy.merge(super().__describe__(), {'packer': self.packer}))
 
 
@@ -167,7 +167,7 @@ class DictFeatureTransformer(
     def __getitem__(self, key: str) -> FeatureTransformer[_X1, _X2, _Y]:
         return self._transformer_mapping[key]
 
-    def __describe__(self) -> JSONDataType:
+    def __describe__(self) -> json.JSONDataType:
         return json.serialize(
             {
                 'type': self.__class__.__name__,
