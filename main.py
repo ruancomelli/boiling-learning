@@ -173,7 +173,10 @@ set_boiling_cases_data.main(boiling_cases_timed(), case_experiment_map=boiling_e
 condensation_data_path = condensation_cases_path / 'data_spec.yaml'
 logger.info(f'Setting condensation data from data path: {condensation_data_path}')
 condensation_datasets_merged = set_condensation_datasets_data.main(
-    condensation_datasets(), condensation_data_path, fps_cache_path=Path('.cache', 'fps')
+    condensation_datasets(),
+    condensation_data_path,
+    fps_cache_path=Path('.cache', 'fps'),
+    end_frame_index_cache_path=Path('.cache', 'end_frame_index'),
 )
 condensation_datasets_merged_all = ImageDataset.make_union(*condensation_datasets_merged)
 
