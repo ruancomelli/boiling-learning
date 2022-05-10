@@ -1,5 +1,15 @@
 
 
+## v0.20.15 (2022-05-10)
+
+### Refactor
+
+- **scripts/set_condensation_datasets_data**: cache EV shrinking length
+
+### Feat
+
+- **preprocessing/video**: allow locally disabling automatic video shrinking
+
 ## v0.20.14 (2022-05-10)
 
 ### Refactor
