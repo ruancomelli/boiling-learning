@@ -78,6 +78,7 @@ class Video(Sequence[VideoFrame]):
     def __init__(self, path: PathLike) -> None:
         self.path = resolve(path)
         self._video: Optional[pims.Video] = None
+        self._should_shrink_to_valid_end_frames: bool = True
 
     @property
     def video(self) -> pims.Video:
@@ -100,7 +101,8 @@ class Video(Sequence[VideoFrame]):
             except Exception as e:
                 raise OpenVideoError(f'Error while opening video {self.path}') from e
 
-            self._shrink_to_valid_end_frames()
+            if self._should_shrink_to_valid_end_frames:
+                self._shrink_to_valid_end_frames()
 
         return self._video
 
@@ -130,6 +132,16 @@ class Video(Sequence[VideoFrame]):
                 # if access is successful (by not raising any errors), we found a valid end frame
                 return index
         return -1
+
+    @contextlib.contextmanager
+    def disable_auto_shrinking(self) -> Iterator[None]:
+        previous_value = self._should_shrink_to_valid_end_frames
+        self._should_shrink_to_valid_end_frames = False
+
+        try:
+            yield
+        finally:
+            self._should_shrink_to_valid_end_frames = previous_value
 
 
 @json.encode.instance(Video)
