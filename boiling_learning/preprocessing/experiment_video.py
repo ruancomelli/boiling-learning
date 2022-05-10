@@ -284,6 +284,9 @@ class ExperimentVideo(Video):
         return df
 
     def save_df(self, path: Optional[PathLike] = None, overwrite: bool = False) -> None:
+        if self.df is None:
+            raise ValueError('*df* is not defined.')
+
         if path is None:
             if self.df_path is None:
                 raise ValueError(

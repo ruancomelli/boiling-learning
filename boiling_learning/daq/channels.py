@@ -40,7 +40,7 @@ CHANNEL_TYPE_KEYS = frozendict(
 
 
 class Channel(SimpleRepr, SimpleStr):
-    channel_table: Dict[str, str] = {}
+    channel_table: Dict[str, List[str]] = {}
 
     def __init__(
         self,

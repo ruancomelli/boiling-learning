@@ -1,14 +1,16 @@
 from typing import Optional
 
+from typing_extensions import TypeAlias
+
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.utils import PathLike, resolve
 
 
 class Case(ImageDataset):
-    VideoDataKeys = ImageDataset.VideoDataKeys
-    DataFrameColumnNames = ImageDataset.DataFrameColumnNames
-    DataFrameColumnTypes = ImageDataset.DataFrameColumnTypes
+    VideoDataKeys: TypeAlias = ImageDataset.VideoDataKeys
+    DataFrameColumnNames: TypeAlias = ImageDataset.DataFrameColumnNames
+    DataFrameColumnTypes: TypeAlias = ImageDataset.DataFrameColumnTypes
 
     def __init__(
         self,

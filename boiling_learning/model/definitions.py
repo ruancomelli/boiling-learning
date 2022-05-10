@@ -48,10 +48,8 @@ def tiny_convnet(
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
 ) -> Model:
-    if len(input_shape) == 2:
-        input_shape = input_shape + (1,)
 
-    input_data = Input(shape=input_shape)
+    input_data = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
     x = input_data  # start "current layer" as the input layer
 
     x = AveragePooling2D((10, 10))(x)

@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import json as _json
 from pathlib import Path
-from typing import Any, Callable, Iterable, List, Mapping, Optional, TypeAlias, Union
+from typing import Any, Callable, Iterable, List, Mapping, Optional, Union
 
 import funcy
 import modin.pandas as pd
+from typing_extensions import TypeAlias
 
 from boiling_learning.io import json
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo

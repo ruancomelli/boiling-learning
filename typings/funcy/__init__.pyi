@@ -23,6 +23,7 @@ _Any3 = TypeVar('_Any3')
 _Any4 = TypeVar('_Any4')
 _Any5 = TypeVar('_Any5')
 
+def identity(x: _Any) -> _Any: ...
 @overload
 def isa(__type1: Type[_Any1]) -> Callable[[Any], TypeGuard[_Any1]]: ...
 @overload

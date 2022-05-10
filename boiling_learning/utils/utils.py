@@ -235,7 +235,7 @@ def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
                 values = ()
             else:
                 values = operator.attrgetter(*names)
-                if len(names == 1):
+                if len(names) == 1:
                     values = (values,)
             obj_items = zip(names, values)
 

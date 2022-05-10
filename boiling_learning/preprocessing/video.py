@@ -113,8 +113,12 @@ class Video(Sequence[VideoFrame]):
         return self._video is not None
 
     def _shrink_to_valid_end_frames(self) -> None:
+        logger.debug(f"Shrinking video to valid end frame at \"{self.path}\"")
+
         valid_end_frame = self._valid_end_frame()
         self.video = self.video[: valid_end_frame + 1]
+
+        logger.debug(f"Video kept with {len(self)} frames at \"{self.path}\"")
 
     def _valid_end_frame(self) -> int:
         for index in reversed(range(len(self))):

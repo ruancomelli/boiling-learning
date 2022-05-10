@@ -188,7 +188,7 @@ def main(
         return format_time(full_dir_pattern, counter)
 
     def format_filename(output_dir, file_pattern):
-        def format_time(fpattern, counter):
+        def format_time(fpattern: str, counter: int):
             return datetime.now().strftime(fpattern.format(index=counter))
 
         def substituted_filepath(fpattern, counter):

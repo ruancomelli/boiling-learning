@@ -171,7 +171,7 @@ def _set_ev_data(
         # since there is no syncing between video and experimental data here,
         # we simply set the first frame as the reference
         ref_index=0,
-        ref_elapsed_time=0,
+        ref_elapsed_time=timedelta(0),
         start_elapsed_time=_parse_timedelta(videospec['start']),
         end_elapsed_time=_parse_timedelta(videospec['end']),
     )

@@ -104,7 +104,7 @@ def get_fit_model(
     datasets: Described[DatasetTriplet[SupervisedSliceableDataset], json.JSONDataType],
     params: FitModelParams,
     *,
-    cache: Optional[Path] = None,
+    cache: Union[bool, Path] = False,
 ) -> Model:
     model = compiled_model.model
 
