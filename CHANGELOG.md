@@ -1,5 +1,11 @@
 
 
+## v0.20.16 (2022-05-10)
+
+### Refactor
+
+- **main**: cache EV shrinking length in `main`
+
 ## v0.20.15 (2022-05-10)
 
 ### Refactor
