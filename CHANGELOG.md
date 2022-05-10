@@ -1,5 +1,15 @@
 
 
+## v0.20.14 (2022-05-10)
+
+### Refactor
+
+- **preprocessing/video**: add logging to video shrinking
+- **io/json**: move `JSONDataType` to this module, out of `utils.utils`
+- **preprocessing**: simplify preprocessing module by removing unnecessary functionality
+- **preprocessing**: remove no-longer needed methods for operating with dataframes
+- **preprocessing/cases**: remove unused method for syncing dataframes
+
 ## v0.20.13 (2022-05-04)
 
 ### Refactor
