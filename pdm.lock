@@ -230,18 +230,18 @@ dependencies = [
 
 [[package]]
 name = "boto3"
-version = "1.22.9"
+version = "1.22.10"
 requires_python = ">= 3.6"
 summary = "The AWS SDK for Python"
 dependencies = [
-    "botocore<1.26.0,>=1.25.9",
+    "botocore<1.26.0,>=1.25.10",
     "jmespath<2.0.0,>=0.7.1",
     "s3transfer<0.6.0,>=0.5.0",
 ]
 
 [[package]]
 name = "botocore"
-version = "1.25.9"
+version = "1.25.10"
 requires_python = ">= 3.6"
 summary = "Low-level, data-driven core of boto 3."
 dependencies = [
@@ -1771,7 +1771,7 @@ summary = "Send file to trash natively under Mac OS X, Windows and Linux."
 
 [[package]]
 name = "setuptools"
-version = "62.1.0"
+version = "62.2.0"
 requires_python = ">=3.7"
 summary = "Easily download, build, install, upgrade, and uninstall Python packages"
 
@@ -2020,7 +2020,7 @@ dependencies = [
 
 [[package]]
 name = "traitlets"
-version = "5.1.1"
+version = "5.2.0"
 requires_python = ">=3.7"
 summary = "Traitlets Python configuration system"
 
@@ -2419,13 +2419,13 @@ content_hash = "sha256:ffd9512b49532d4a7641cf2f81c356fcbc3ce588be01b55b507445646
     {file = "bokeh-2.4.2-py3-none-any.whl", hash = "sha256:2a842d717feeee802e668054277c09054b6f1561557a16dddaf5f7c452f2728c"},
     {file = "bokeh-2.4.2.tar.gz", hash = "sha256:f0a4b53364ed3b7eb936c5cb1a4f4132369e394c7ae0a8ef420459410958033d"},
 ]
-"boto3 1.22.9" = [
-    {file = "boto3-1.22.9-py3-none-any.whl", hash = "sha256:65e45029d234ff94ba8aa3bacb9df00fbbb2f1d9ee7fd1c2e40f4815d12ec3f5"},
-    {file = "boto3-1.22.9.tar.gz", hash = "sha256:441b619067cb205bfcd0e66fe085c16989ab65bd348823013e11bef991c00a5c"},
+"boto3 1.22.10" = [
+    {file = "boto3-1.22.10-py3-none-any.whl", hash = "sha256:f32f35ea86b0d9ff408279f8e9903e4d0711475bbbd07003ccdf01fac7788e0a"},
+    {file = "boto3-1.22.10.tar.gz", hash = "sha256:3edf68bdd1b95576c04cb7f69b9759a75b169fa13bb567271cb4d742f60accad"},
 ]
-"botocore 1.25.9" = [
-    {file = "botocore-1.25.9-py3-none-any.whl", hash = "sha256:71962de55b053a0124a0514155f4cdcf0bce81795ffc2bd6e000c1594e99125a"},
-    {file = "botocore-1.25.9.tar.gz", hash = "sha256:a1d26b95aaa5b2e126df74b223d774fae7e6597bb55c363782178f5b87f0cad3"},
+"botocore 1.25.10" = [
+    {file = "botocore-1.25.10-py3-none-any.whl", hash = "sha256:a4e9dd2b7ce4bf41200108af6b9d3f21ff53a95324f8a66638c4afdf27da44d3"},
+    {file = "botocore-1.25.10.tar.gz", hash = "sha256:d4738b1c6ae3a905be39422e7a5ca99e4028efc9017c2694cbebbe12c899fc78"},
 ]
 "cached-property 1.5.2" = [
     {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
@@ -4078,9 +4078,9 @@ content_hash = "sha256:ffd9512b49532d4a7641cf2f81c356fcbc3ce588be01b55b507445646
     {file = "Send2Trash-1.8.0-py3-none-any.whl", hash = "sha256:f20eaadfdb517eaca5ce077640cb261c7d2698385a6a0f072a4a5447fd49fa08"},
     {file = "Send2Trash-1.8.0.tar.gz", hash = "sha256:d2c24762fd3759860a0aff155e45871447ea58d2be6bdd39b5c8f966a0c99c2d"},
 ]
-"setuptools 62.1.0" = [
-    {file = "setuptools-62.1.0-py3-none-any.whl", hash = "sha256:26ead7d1f93efc0f8c804d9fafafbe4a44b179580a7105754b245155f9af05a8"},
-    {file = "setuptools-62.1.0.tar.gz", hash = "sha256:47c7b0c0f8fc10eec4cf1e71c6fdadf8decaa74ffa087e68cd1c20db7ad6a592"},
+"setuptools 62.2.0" = [
+    {file = "setuptools-62.2.0-py3-none-any.whl", hash = "sha256:5534570b9980fc650d45c62877ff603c7aaaf24893371708736cc016bd221c3c"},
+    {file = "setuptools-62.2.0.tar.gz", hash = "sha256:ca6ba73b7fd5f734ae70ece8c4c1f7062b07f3352f6428f6277e27c8f5c64237"},
 ]
 "six 1.16.0" = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
@@ -4270,9 +4270,9 @@ content_hash = "sha256:ffd9512b49532d4a7641cf2f81c356fcbc3ce588be01b55b507445646
     {file = "tox_pdm-0.3.4-py3-none-any.whl", hash = "sha256:0e019f6d41eed594fcf9a134b285d316c9d8ecf78343347a37d30c166b6390f0"},
     {file = "tox-pdm-0.3.4.tar.gz", hash = "sha256:84db46a29b645221db97ac678267c66e7ad65ea3e0d70db39a755118a650022f"},
 ]
-"traitlets 5.1.1" = [
-    {file = "traitlets-5.1.1-py3-none-any.whl", hash = "sha256:2d313cc50a42cd6c277e7d7dc8d4d7fedd06a2c215f78766ae7b1a66277e0033"},
-    {file = "traitlets-5.1.1.tar.gz", hash = "sha256:059f456c5a7c1c82b98c2e8c799f39c9b8128f6d0d46941ee118daace9eb70c7"},
+"traitlets 5.2.0" = [
+    {file = "traitlets-5.2.0-py3-none-any.whl", hash = "sha256:9dd4025123fbe018a2092b2ad6984792f53ea3362c698f37473258b1fa97b0bc"},
+    {file = "traitlets-5.2.0.tar.gz", hash = "sha256:60474f39bf1d39a11e0233090b99af3acee93bbc2281777e61dd8c87da8a0014"},
 ]
 "typed-ast 1.5.3" = [
     {file = "typed_ast-1.5.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:9ad3b48cf2b487be140072fb86feff36801487d4abb7382bb1929aaac80638ea"},
