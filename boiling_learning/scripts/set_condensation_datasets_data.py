@@ -53,7 +53,9 @@ def main(
     datasets: Iterable[ImageDataset],
     dataspecpath: PathLike,
     spreadsheet_name: Optional[str] = None,
+    *,
     fps_cache_path: Optional[PathLike] = None,
+    end_frame_index_cache_path: Optional[PathLike] = None,
 ) -> Tuple[ImageDataset, ...]:
     logger.info('Setting condensation data')
 
@@ -62,9 +64,12 @@ def main(
     dataspec = yaml.safe_load(dataspecpath.read_text())
 
     fps_getter = _generate_fps_getter(fps_cache_path)
+    end_frame_index_getter = _generate_end_frame_index_getter(end_frame_index_cache_path)
 
     for dataset in datasets:
-        _set_dataset_data(dataset, dataspec, fps_getter)
+        _set_dataset_data(
+            dataset, dataspec, fps_getter=fps_getter, end_frame_index_getter=end_frame_index_getter
+        )
 
     grouped_datasets = _group_datasets(datasets)
 
@@ -83,9 +88,20 @@ def _generate_fps_getter(fps_cache_path: Optional[PathLike]) -> Callable[[Path],
     if fps_cache_path is None:
         return get_fps
 
-    allocator = default_table_allocator(resolve(fps_cache_path))
+    allocator = default_table_allocator(fps_cache_path)
     cacher = cache(allocator, saver=json.dump, loader=json.load)
     return cacher(get_fps)
+
+
+def _generate_end_frame_index_getter(
+    end_frame_index_cache_path: Optional[PathLike],
+) -> Callable[[ExperimentVideo], int]:
+    if end_frame_index_cache_path is None:
+        return len
+
+    allocator = default_table_allocator(end_frame_index_cache_path)
+    cacher = cache(allocator, saver=json.dump, loader=json.load)
+    return cacher(len)
 
 
 def _set_mass_rate(grouped_datasets: Tuple[ImageDataset, ...], spreadsheet_name: str) -> None:
@@ -120,16 +136,26 @@ def _parse_mass_timeseries(
 
 
 def _set_dataset_data(
-    dataset: ImageDataset, dataspec: Dict[str, Any], fps_getter: Callable[[Path], float]
+    dataset: ImageDataset,
+    dataspec: Dict[str, Any],
+    *,
+    fps_getter: Callable[[Path], float],
+    end_frame_index_getter: Callable[[ExperimentVideo], int],
 ) -> None:
     logger.debug(f'Reading condensation dataset {dataset.name}')
 
     for ev in dataset:
-        _set_ev_data(ev, dataspec, fps_getter)
+        _set_ev_data(
+            ev, dataspec, fps_getter=fps_getter, end_frame_index_getter=end_frame_index_getter
+        )
 
 
 def _set_ev_data(
-    ev: ExperimentVideo, dataspec: Dict[str, Any], fps_getter: Callable[[Path], float]
+    ev: ExperimentVideo,
+    dataspec: Dict[str, Any],
+    *,
+    fps_getter: Callable[[Path], float],
+    end_frame_index_getter: Callable[[ExperimentVideo], int],
 ) -> None:
     case, subcase, test_name, video_name = ev.name.split(':')
 
@@ -177,7 +203,11 @@ def _set_ev_data(
     )
 
     logger.debug(f'Setting video data for EV "{ev.name}"')
-    ev.data = videodata
+
+    end_frame_index = end_frame_index_getter(ev)
+    with ev.disable_auto_shrinking():
+        ev.video = ev.video[:end_frame_index]
+        ev.data = videodata
 
 
 def _parse_timedelta(s: Optional[str]) -> Optional[timedelta]:
