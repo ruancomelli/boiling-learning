@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import math
 import random
 import warnings
@@ -347,14 +348,11 @@ class SliceableDataset(Sequence[_T]):
 
         return SliceableDataset.from_func(new_data, length=new_length)
 
-    def unbatch(self) -> SliceableDataset[Any]:
+    def unbatch(self: SliceableDataset[SliceableDataset[_U]]) -> SliceableDataset[_U]:
         return reduce(lambda left, right: left.concatenate(right), self)
 
     def flatten(self) -> SliceableDataset[Any]:
-        flat = self
-        while flat and isinstance(flat[0], SliceableDataset):
-            flat = flat.unbatch()
-        return flat
+        return self.unbatch().flatten() if _is_nested_sliceable_dataset(self) else self
 
     @property
     def element_spec(self) -> NestedTypeSpec:
@@ -370,8 +368,9 @@ class SliceableDataset(Sequence[_T]):
         if not self._is_boolean_mask(mask):
             raise ValueError(f'not a valid boolean mask: {mask}')
 
-        indices = [index for index, boolean in enumerate(mask) if boolean]
-        return self.getitem_from_indices(indices)
+        indices = range(len(self))
+        filtered_indices = tuple(itertools.compress(indices, mask))
+        return self.getitem_from_indices(filtered_indices)
 
     def getitem_from_slice(self, slice_: slice) -> SliceableDataset[_T]:
         return self.getitem_from_indices(slice_)
@@ -553,7 +552,7 @@ def load_supervised_sliceable_dataset(
     feature_loader: LoaderFunction[_X],
     target_loader: LoaderFunction[_Y],
 ) -> SupervisedSliceableDataset[_X, _Y]:
-    def element_loader(path: PathLike) -> None:
+    def element_loader(path: PathLike) -> Tuple[_X, _Y]:
         resolved_path = resolve(path)
         feature = feature_loader(resolved_path / 'feature')
         target = target_loader(resolved_path / 'target')
@@ -598,3 +597,9 @@ def _deserialize_supervised_sliceable_dataset(
 ) -> SupervisedSliceableDataset[Any, Any]:  # pylint: disable=unused-argument
     path = resolve(path, dir=True)
     return load_supervised_sliceable_dataset(path, feature_loader=load, target_loader=load)
+
+
+def _is_nested_sliceable_dataset(
+    ds: SliceableDataset[Any],
+) -> TypeGuard[SliceableDataset[SliceableDataset[Any]]]:
+    return bool(ds) and isinstance(ds[0], SliceableDataset)

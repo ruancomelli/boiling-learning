@@ -404,7 +404,7 @@ def kramernet(
 
 
 def linear_model(
-    input_shape: Tuple,
+    input_shape: Tuple[int, ...],
     problem: ProblemType = ProblemType.REGRESSION,
     normalize_images: bool = False,
 ) -> Model:

@@ -37,18 +37,15 @@ class AdditionalValidationSets(Callback):
         super().__init__()
 
         self.validation_sets = validation_sets
-        self.epoch = []
         self.history = {}
         self.verbose = verbose
         self.batch_size = batch_size
 
-    def on_train_begin(self, logs=None):
-        self.epoch = []
+    def on_train_begin(self, logs=None) -> None:
         self.history = {}
 
-    def on_epoch_end(self, epoch, logs=None):
+    def on_epoch_end(self, epoch: int, logs=None) -> None:
         logs = logs or {}
-        self.epoch.append(epoch)
 
         # record the same values as History() as well
         for k, v in logs.items():
