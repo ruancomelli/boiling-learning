@@ -447,7 +447,7 @@ class GetFitModel(CachedFunction[_P, Model]):
 
         dataset_cache_path = self.allocate(datasets, params.batch_size)
         _, ds_val, _ = datasets.value
-        ds_val_g10 = sliceable_dataset_to_tensorflow_dataset(ds_val, shuffle=True).filter(
+        ds_val_g10 = sliceable_dataset_to_tensorflow_dataset(ds_val.shuffle()).filter(
             lambda frame, hf: hf >= 10
         )
 
