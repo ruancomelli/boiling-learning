@@ -48,9 +48,9 @@ def tiny_convnet(
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
 ) -> Model:
-
+    # start "current layer" as the input layer
     input_data = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
-    x = input_data  # start "current layer" as the input layer
+    x = input_data
 
     x = AveragePooling2D((10, 10))(x)
 
@@ -80,11 +80,9 @@ def small_convnet(
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
 ) -> Model:
-    if len(input_shape) == 2:
-        input_shape = input_shape + (1,)
-
-    input_data = Input(shape=input_shape)
-    x = input_data  # start "current layer" as the input layer
+    # start "current layer" as the input layer
+    input_data = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    x = input_data
 
     if normalize_images:
         x = LayerNormalization()(x)
@@ -127,11 +125,9 @@ def hoboldnet1(
     Visualization-based nucleate boiling heat flux quantification using machine
     learning.
     '''
-    if len(input_shape) == 2:
-        input_shape = input_shape + (1,)
-
-    input_data = Input(shape=input_shape)
-    x = input_data  # start "current layer" as the input layer
+    # start "current layer" as the input layer
+    input_data = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    x = input_data
 
     if normalize_images:
         x = LayerNormalization()(x)
@@ -174,11 +170,9 @@ def hoboldnet2(
     Visualization-based nucleate boiling heat flux quantification using machine
     learning.
     '''
-    if len(input_shape) == 2:
-        input_shape = input_shape + (1,)
-
-    input_data = Input(shape=input_shape)
-    x = input_data  # start "current layer" as the input layer
+    # start "current layer" as the input layer
+    input_data = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    x = input_data
 
     if normalize_images:
         x = LayerNormalization()(x)
@@ -221,11 +215,9 @@ def hoboldnet3(
     Visualization-based nucleate boiling heat flux quantification using machine
     learning.
     '''
-    if len(input_shape) == 2:
-        input_shape = input_shape + (1,)
-
-    input_data = Input(shape=input_shape)
-    x = input_data  # start "current layer" as the input layer
+    # start "current layer" as the input layer
+    input_data = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    x = input_data
 
     if normalize_images:
         x = LayerNormalization()(x)
@@ -274,11 +266,9 @@ def hoboldnet_supplementary(
     '''See supplementary material for Hobold and da Silva (2019): Visualization-based
     nucleate boiling heat flux quantification using machine learning.
     '''
-    if len(input_shape) == 2:
-        input_shape = input_shape + (1,)
-
-    input_data = Input(shape=input_shape)
-    x = input_data  # start "current layer" as the input layer
+    # start "current layer" as the input layer
+    input_data = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    x = input_data
 
     if normalize_images:
         x = LayerNormalization()(x)
@@ -327,11 +317,9 @@ def kramernet(
     '''See supplementary material for Hobold and da Silva (2019): Visualization-based
     nucleate boiling heat flux quantification using machine learning.
     '''
-    if len(input_shape) == 2:
-        input_shape = input_shape + (1,)
-
-    input_data = Input(shape=input_shape)
-    x = input_data  # start "current layer" as the input layer
+    # start "current layer" as the input layer
+    input_data = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    x = input_data
 
     if normalize_images:
         x = LayerNormalization()(x)
