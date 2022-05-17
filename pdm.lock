@@ -257,7 +257,7 @@ summary = "A decorator for caching properties in classes."
 
 [[package]]
 name = "cachetools"
-version = "5.0.0"
+version = "5.1.0"
 requires_python = "~=3.7"
 summary = "Extensible memoizing collections and decorators"
 
@@ -1881,13 +1881,13 @@ summary = "ANSII Color formatting for output in terminal."
 
 [[package]]
 name = "terminado"
-version = "0.13.3"
+version = "0.15.0"
 requires_python = ">=3.7"
 summary = "Tornado websocket backend for the Xterm.js Javascript terminal emulator library."
 dependencies = [
     "ptyprocess; os_name != \"nt\"",
     "pywinpty>=1.1.0; os_name == \"nt\"",
-    "tornado>=4",
+    "tornado>=6.1.0",
 ]
 
 [[package]]
@@ -2011,7 +2011,7 @@ dependencies = [
 
 [[package]]
 name = "traitlets"
-version = "5.2.0"
+version = "5.2.1.post0"
 requires_python = ">=3.7"
 summary = ""
 
@@ -2422,9 +2422,9 @@ content_hash = "sha256:6b1807b0dc684a13fc24c66c90aa44543fa146bd1841a5d00cae8373b
     {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
     {file = "cached-property-1.5.2.tar.gz", hash = "sha256:9fa5755838eecbb2d234c3aa390bd80fbd3ac6b6869109bfc1b499f7bd89a130"},
 ]
-"cachetools 5.0.0" = [
-    {file = "cachetools-5.0.0-py3-none-any.whl", hash = "sha256:8fecd4203a38af17928be7b90689d8083603073622229ca7077b72d8e5a976e4"},
-    {file = "cachetools-5.0.0.tar.gz", hash = "sha256:486471dfa8799eb7ec503a8059e263db000cdda20075ce5e48903087f79d5fd6"},
+"cachetools 5.1.0" = [
+    {file = "cachetools-5.1.0-py3-none-any.whl", hash = "sha256:4ebbd38701cdfd3603d1f751d851ed248ab4570929f2d8a7ce69e30c420b141c"},
+    {file = "cachetools-5.1.0.tar.gz", hash = "sha256:8b3b8fa53f564762e5b221e9896798951e7f915513abf2ba072ce0f07f3f5a98"},
 ]
 "certifi 2021.10.8" = [
     {file = "certifi-2021.10.8-py2.py3-none-any.whl", hash = "sha256:d62a0163eb4c2344ac042ab2bdf75399a71a2d8c7d47eac2e2ee91b9d6339569"},
@@ -4155,9 +4155,9 @@ content_hash = "sha256:6b1807b0dc684a13fc24c66c90aa44543fa146bd1841a5d00cae8373b
 "termcolor 1.1.0" = [
     {file = "termcolor-1.1.0.tar.gz", hash = "sha256:1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b"},
 ]
-"terminado 0.13.3" = [
-    {file = "terminado-0.13.3-py3-none-any.whl", hash = "sha256:874d4ea3183536c1782d13c7c91342ef0cf4e5ee1d53633029cbc972c8760bd8"},
-    {file = "terminado-0.13.3.tar.gz", hash = "sha256:94d1cfab63525993f7d5c9b469a50a18d0cdf39435b59785715539dd41e36c0d"},
+"terminado 0.15.0" = [
+    {file = "terminado-0.15.0-py3-none-any.whl", hash = "sha256:0d5f126fbfdb5887b25ae7d9d07b0d716b1cc0ccaacc71c1f3c14d228e065197"},
+    {file = "terminado-0.15.0.tar.gz", hash = "sha256:ab4eeedccfcc1e6134bfee86106af90852c69d602884ea3a1e8ca6d4486e9bfe"},
 ]
 "tf-estimator-nightly 2.8.0.dev2021122109" = [
     {file = "tf_estimator_nightly-2.8.0.dev2021122109-py2.py3-none-any.whl", hash = "sha256:0065a04e396b2890bd19761fc1de7559ceafeba12839f8db2c7e7473afaaf612"},
@@ -4257,9 +4257,9 @@ content_hash = "sha256:6b1807b0dc684a13fc24c66c90aa44543fa146bd1841a5d00cae8373b
     {file = "tox_pdm-0.3.4-py3-none-any.whl", hash = "sha256:0e019f6d41eed594fcf9a134b285d316c9d8ecf78343347a37d30c166b6390f0"},
     {file = "tox-pdm-0.3.4.tar.gz", hash = "sha256:84db46a29b645221db97ac678267c66e7ad65ea3e0d70db39a755118a650022f"},
 ]
-"traitlets 5.2.0" = [
-    {file = "traitlets-5.2.0-py3-none-any.whl", hash = "sha256:9dd4025123fbe018a2092b2ad6984792f53ea3362c698f37473258b1fa97b0bc"},
-    {file = "traitlets-5.2.0.tar.gz", hash = "sha256:60474f39bf1d39a11e0233090b99af3acee93bbc2281777e61dd8c87da8a0014"},
+"traitlets 5.2.1.post0" = [
+    {file = "traitlets-5.2.1.post0-py3-none-any.whl", hash = "sha256:f44b708d33d98b0addb40c29d148a761f44af740603a8fd0e2f8b5b27cf0f087"},
+    {file = "traitlets-5.2.1.post0.tar.gz", hash = "sha256:70815ecb20ec619d1af28910ade523383be13754283aef90528eb3d47b77c5db"},
 ]
 "typed-ast 1.5.3" = [
     {file = "typed_ast-1.5.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:9ad3b48cf2b487be140072fb86feff36801487d4abb7382bb1929aaac80638ea"},
