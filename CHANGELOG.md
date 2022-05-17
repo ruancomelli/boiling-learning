@@ -1,5 +1,15 @@
 
 
+## v0.20.17 (2022-05-16)
+
+### Refactor
+
+- **scripts/set_boiling_cases_data**: support caching EV valid frames
+- **preprocessing/video**: remove automatic video shrinking
+- **datasets/sliceable**: remove unnecessary `shuffle` parameter from `sliceable_dataset_to_tensorflow_dataset`
+- **model/definitions**: improve typing in module `model.definitions`
+- improve typing accross some bits of the project
+
 ## v0.20.16 (2022-05-10)
 
 ### Refactor
