@@ -1,47 +1,72 @@
+import abc
 import math
 
 from pint import Quantity
 
-from boiling_learning.utils.dataclasses import dataclass
 
+class Prism(abc.ABC):
+    @abc.abstractmethod
+    def length(self) -> Quantity[float]:
+        pass
 
-@dataclass(kwargs=True)
-class Prism:
-    length: Quantity
+    @abc.abstractmethod
+    def cross_section_perimeter(self) -> Quantity[float]:
+        pass
 
-    cross_section_perimeter: Quantity
-    cross_section_area: Quantity
+    @abc.abstractmethod
+    def cross_section_area(self) -> Quantity[float]:
+        pass
 
-    lateral_area: Quantity = None
-    surface_area: Quantity = None
-    volume: Quantity = None
+    def lateral_area(self) -> Quantity[float]:
+        return self.cross_section_perimeter() * self.length()
 
-    def __post_init__(self) -> None:
-        self.lateral_area = self.cross_section_perimeter * self.length
-        self.surface_area = self.lateral_area + 2 * self.cross_section_area
+    def surface_area(self) -> Quantity[float]:
+        return self.lateral_area() + 2 * self.cross_section_area()
+
+    def volume(self) -> Quantity[float]:
+        return self.cross_section_area() * self.length()
 
 
 class Cylinder(Prism):
-    diameter: Quantity
+    def __init__(self, length: Quantity[float], diameter: Quantity[float]) -> None:
+        self._length = length
+        self._diameter = diameter
 
-    radius: Quantity = None
-    cross_section_perimeter: Quantity = None
-    cross_section_area: Quantity = None
+    def length(self) -> Quantity[float]:
+        return self._length
 
-    def __post_init__(self) -> None:
-        self.radius = self.diameter / 2
-        self.cross_section_perimeter = math.pi * self.diameter
-        self.cross_section_area = math.pi * self.radius**2
-        super().__post_init__()
+    def diameter(self) -> Quantity[float]:
+        return self._diameter
+
+    def radius(self) -> Quantity[float]:
+        return self._diameter / 2
+
+    def cross_section_perimeter(self) -> Quantity[float]:
+        return math.pi * self.diameter()
+
+    def cross_section_area(self) -> Quantity[float]:
+        return math.pi * self.radius() ** 2
 
 
 class RectangularPrism(Prism):
-    width: Quantity
-    thickness: Quantity
+    def __init__(
+        self, length: Quantity[float], width: Quantity[float], thickness: Quantity[float]
+    ) -> None:
+        self._length = length
+        self._width = width
+        self._thickness = thickness
 
-    cross_section_perimeter: Quantity = None
-    cross_section_area: Quantity = None
+    def length(self) -> Quantity[float]:
+        return self._length
 
-    def __post_init__(self) -> None:
-        self.cross_section_perimeter = 2 * (self.width + self.thickness)
-        self.cross_section_area = self.width * self.thickness
+    def width(self) -> Quantity[float]:
+        return self._width
+
+    def thickness(self) -> Quantity[float]:
+        return self._thickness
+
+    def cross_section_perimeter(self) -> Quantity[float]:
+        return 2 * (self.width() + self.thickness())
+
+    def cross_section_area(self) -> Quantity[float]:
+        return self.width() * self.thickness()

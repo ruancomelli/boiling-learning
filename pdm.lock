@@ -369,12 +369,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dataclassy"
-version = "0.11.1"
-requires_python = ">=3.6"
-summary = "A fast and flexible reimplementation of data classes"
-
-[[package]]
 name = "debugpy"
 version = "1.6.0"
 requires_python = ">=3.7"
@@ -2182,7 +2176,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:ffd9512b49532d4a7641cf2f81c356fcbc3ce588be01b55b5074456463a49d13"
+content_hash = "sha256:6b1807b0dc684a13fc24c66c90aa44543fa146bd1841a5d00cae8373bd91b6fa"
 
 [metadata.files]
 "absl-py 1.0.0" = [
@@ -2570,10 +2564,6 @@ content_hash = "sha256:ffd9512b49532d4a7641cf2f81c356fcbc3ce588be01b55b507445646
 "dask 2022.2.0" = [
     {file = "dask-2022.2.0-py3-none-any.whl", hash = "sha256:feaf838faa23150faadaeb2483e8612cfb8fed51f62e635a1a6dd55d1d793ba4"},
     {file = "dask-2022.2.0.tar.gz", hash = "sha256:cefb5c63d1e26f6dfa650ddd1eb1a53e0cef623141b838820c6b34e6534ea409"},
-]
-"dataclassy 0.11.1" = [
-    {file = "dataclassy-0.11.1-py3-none-any.whl", hash = "sha256:bcb030d3d700cf9b1597042bbc8375b92773e6f68f65675a7071862c0ddb87f5"},
-    {file = "dataclassy-0.11.1.tar.gz", hash = "sha256:ad6622cb91e644d13f68768558983fbc22c90a8ff7e355638485d18b9baf1198"},
 ]
 "debugpy 1.6.0" = [
     {file = "debugpy-1.6.0-cp310-cp310-macosx_10_15_x86_64.whl", hash = "sha256:eb1946efac0c0c3d411cea0b5ac772fbde744109fd9520fb0c5a51979faf05ad"},

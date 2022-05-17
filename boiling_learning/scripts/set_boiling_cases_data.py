@@ -20,7 +20,7 @@ from boiling_learning.utils.printing import add_unit_post_fix
 from boiling_learning.utils.units import unit_registry as ureg
 from boiling_learning.utils.utils import resolve
 
-SAMPLES = frozendict(
+SAMPLES = frozendict[int, geometry.Prism](
     {
         1: geometry.Cylinder(length=6.5 * ureg.centimeter, diameter=0.51 * ureg.millimeter),
         2: geometry.Cylinder(length=6.5 * ureg.centimeter, diameter=0.51 * ureg.millimeter),
@@ -129,7 +129,7 @@ def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> None:
     full_power_key = add_unit_post_fix('Power', power_unit)
     full_heat_flux_key = add_unit_post_fix('Flux', heat_flux_unit)
 
-    lateral_area = SAMPLES[sample_id].lateral_area
+    lateral_area = SAMPLES[sample_id].lateral_area()
     power = np.array(ev.df[full_power_key]) * power_unit
     flux = power / lateral_area
 

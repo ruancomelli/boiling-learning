@@ -1,8 +1,9 @@
+import math
 from unittest.case import TestCase
 
 from boiling_learning.utils import indexify
 from boiling_learning.utils.collections import KeyedSet
-from boiling_learning.utils.geometry import Cylinder, Prism, RectangularPrism
+from boiling_learning.utils.geometry import Cylinder, RectangularPrism
 from boiling_learning.utils.iterutils import EvenlySpacedGoal, evenly_spaced_indices
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 
@@ -32,30 +33,17 @@ class utils_collections_test(TestCase):
 
 
 class geometry_test(TestCase):
-    def test_Prism(self):
-        # consider a triangular prism
-
-        side = 3
-        length = 10
-
-        prism = Prism(
-            cross_section_perimeter=3 * side,
-            cross_section_area=side**2 * 3**0.5 / 4,
-            length=length,
-        )
-
-        self.assertAlmostEqual(prism.lateral_area, 90, delta=0.1)
-
     def test_Cylinder(self):
         cylinder = Cylinder(length=10, diameter=2)
 
-        self.assertEqual(cylinder.radius, 1)
+        assert cylinder.radius() == 1
+        assert cylinder.volume() == math.pi * 1 ** 2 * 10
 
     def test_RectangularPrism(self):
         prism = RectangularPrism(width=5, thickness=3, length=10)
 
-        self.assertEqual(prism.cross_section_area, 15)
-        self.assertEqual(prism.cross_section_perimeter, 16)
+        self.assertEqual(prism.cross_section_area(), 15)
+        self.assertEqual(prism.cross_section_perimeter(), 16)
 
 
 class LazyTest(TestCase):

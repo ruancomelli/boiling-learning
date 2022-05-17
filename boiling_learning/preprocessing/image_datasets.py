@@ -31,7 +31,7 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
     DataFrameColumnNames: TypeAlias = ExperimentVideo.DataFrameColumnNames
     DataFrameColumnTypes: TypeAlias = ExperimentVideo.DataFrameColumnTypes
 
-    @dataclass(frozen=True, kwargs=True)
+    @dataclass(frozen=True)
     class VideoDataKeys(ExperimentVideo.VideoDataKeys):
         name: str = 'name'
         ignore: str = 'ignore'

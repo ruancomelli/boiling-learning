@@ -20,7 +20,7 @@ class DatasetTriplet(Tuple[_T, Optional[_T], _T], Generic[_T]):
     pass
 
 
-@dataclass(frozen=True, kwargs=True)
+@dataclass(frozen=True)
 class DatasetSplits:
     train: Optional[Fraction] = None
     test: Optional[Fraction] = None

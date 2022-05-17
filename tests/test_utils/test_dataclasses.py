@@ -1,6 +1,9 @@
-from dataclassy.functions import is_dataclass_instance
-
-from boiling_learning.utils.dataclasses import dataclass, is_dataclass, is_dataclass_class
+from boiling_learning.utils.dataclasses import (
+    dataclass,
+    is_dataclass,
+    is_dataclass_class,
+    is_dataclass_instance,
+)
 
 
 @dataclass

@@ -9,7 +9,7 @@ from loguru import logger
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
 from boiling_learning.preprocessing.video import Video, convert_video
 from boiling_learning.utils import PathLike, dataframe_categories_to_int, merge_dicts, resolve
-from boiling_learning.utils.dataclasses import dataclass
+from boiling_learning.utils.dataclasses import dataclass, field
 
 
 class ExperimentVideo(Video):
@@ -29,7 +29,7 @@ class ExperimentVideo(Video):
         ref_elapsed_time: [...]. Example: 12103
         '''
 
-        categories: Mapping[str, Any] = {}
+        categories: Mapping[str, Any] = field(default_factory=dict)
         fps: Optional[float] = None
         ref_index: Optional[int] = None
         ref_elapsed_time: Optional[timedelta] = None
@@ -38,7 +38,7 @@ class ExperimentVideo(Video):
         end_elapsed_time: Optional[timedelta] = None
         end_index: Optional[int] = None
 
-    @dataclass(frozen=True, kwargs=True)
+    @dataclass(frozen=True)
     class VideoDataKeys:
         categories: str = 'categories'
         fps: str = 'fps'
@@ -49,13 +49,13 @@ class ExperimentVideo(Video):
         end_elapsed_time: str = 'end_elapsed_time'
         end_index: str = 'end_index'
 
-    @dataclass(frozen=True, kwargs=True)
+    @dataclass(frozen=True)
     class DataFrameColumnNames:
         index: str = 'index'
         name: str = 'name'
         elapsed_time: str = 'elapsed_time'
 
-    @dataclass(frozen=True, kwargs=True)
+    @dataclass(frozen=True)
     class DataFrameColumnTypes:
         index = int
         path = str

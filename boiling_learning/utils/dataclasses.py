@@ -1,28 +1,28 @@
-from typing import Any, Callable, Mapping, Optional, TypeVar, Union
+from dataclasses import asdict, dataclass, field, fields, is_dataclass
+from typing import Any, Callable, Mapping, Optional, Type, TypeVar, Union
 
-import dataclassy
 import funcy
-from dataclassy import dataclass
-from dataclassy.dataclass import DataClass
-from dataclassy.functions import as_dict as asdict
-from dataclassy.functions import is_dataclass
+from typing_extensions import TypeGuard
 
 __all__ = (
     'asdict',
     'dataclass',
+    'field',
+    'fields',
     'is_dataclass',
     'is_dataclass_class',
     'is_dataclass_instance',
 )
 
 _T = TypeVar('_T')
+DataClass = Any
 
 
-def is_dataclass_class(obj: Any) -> bool:
+def is_dataclass_class(obj: Any) -> TypeGuard[Type[DataClass]]:
     return isinstance(obj, type) and is_dataclass(obj)
 
 
-def is_dataclass_instance(obj: Any) -> bool:
+def is_dataclass_instance(obj: Any) -> TypeGuard[DataClass]:
     return not isinstance(obj, type) and is_dataclass(obj)
 
 
@@ -34,13 +34,13 @@ def dataclass_from_mapping(
     if not is_dataclass_class(dataclass_factory):
         raise ValueError('*dataclass_factory* must be a dataclass.')
 
-    dataclass_field_names = frozenset(dataclassy.fields(dataclass_factory))
+    dataclass_field_names = frozenset(fields(dataclass_factory))
 
     if key_map is None:
         return dataclass_factory(**funcy.select_keys(dataclass_field_names, mapping))
 
     if is_dataclass_instance(key_map):
-        key_map = dataclassy.as_dict(key_map)
+        key_map = asdict(key_map)
 
     key_map = funcy.select_keys(dataclass_field_names, key_map)
     translator = {v: k for k, v in key_map.items()}.get
@@ -58,4 +58,4 @@ def to_parent_dataclass(obj: DataClass, parent: Callable[..., DataClass]) -> Dat
     if not isinstance(obj, parent):
         raise ValueError('*obj* must be an instance of *parent*.')
 
-    return dataclass_from_mapping(dataclassy.as_dict(obj), parent)
+    return dataclass_from_mapping(asdict(obj), parent)
