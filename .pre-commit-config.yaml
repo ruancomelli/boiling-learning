@@ -13,10 +13,10 @@ repos:
     args: [--check, --gitignore, --ignore-init, --include-star-import, boiling_learning, tests]
 
 - repo: https://github.com/psf/black
-  rev: 22.1.0
+  rev: 22.3.0
   hooks:
   - id: black
-    args: [--config, pyproject.toml, --check]
+    args: [--config, pyproject.toml]
 
 - repo: https://github.com/pycqa/isort
   rev: 5.10.1

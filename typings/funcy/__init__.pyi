@@ -21,7 +21,6 @@ _Any1 = TypeVar('_Any1')
 _Any2 = TypeVar('_Any2')
 _Any3 = TypeVar('_Any3')
 _Any4 = TypeVar('_Any4')
-_Any5 = TypeVar('_Any5')
 
 def identity(x: _Any) -> _Any: ...
 def constantly(x: _Any) -> Callable[..., _Any]: ...

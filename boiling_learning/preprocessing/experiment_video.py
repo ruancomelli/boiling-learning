@@ -75,7 +75,7 @@ class ExperimentVideo(Video):
     ) -> None:
         super().__init__(video_path)
 
-        self._data: Optional[self.VideoData] = None
+        self._data: Optional[ExperimentVideo.VideoData] = None
         self.column_names = column_names
         self.column_types = column_types
         self.df: Optional[pd.DataFrame] = None
@@ -123,19 +123,27 @@ class ExperimentVideo(Video):
         self._shrink_video_to_data()
 
     def _shrink_video_to_data(self) -> None:
+        video_data = self.data
+
+        assert video_data is not None
+
         logger.debug(f"Shrinking video to data for EV \"{self.name}\"")
 
-        if self.data.start_index is not None:
-            start = self.data.start_index
-        elif self.data.start_elapsed_time is not None:
-            start = round(self.data.start_elapsed_time.total_seconds() * self.data.fps)
+        if video_data.start_index is not None:
+            start = video_data.start_index
+        elif video_data.start_elapsed_time is not None:
+            assert video_data.fps is not None
+
+            start = round(video_data.start_elapsed_time.total_seconds() * video_data.fps)
         else:
             start = 0
 
-        if self.data.end_index is not None:
-            end = self.data.end_index
-        elif self.data.end_elapsed_time is not None:
-            end = round(self.data.end_elapsed_time.total_seconds() * self.data.fps)
+        if video_data.end_index is not None:
+            end = video_data.end_index
+        elif video_data.end_elapsed_time is not None:
+            assert video_data.fps is not None
+
+            end = round(video_data.end_elapsed_time.total_seconds() * video_data.fps)
         else:
             end = None
 
@@ -157,8 +165,12 @@ class ExperimentVideo(Video):
     def convert_dataframe_type(
         self, df: pd.DataFrame, categories_as_int: bool = False
     ) -> pd.DataFrame:
+        video_data = self.data
+
+        assert video_data is not None
+
         col_types = funcy.merge(
-            dict.fromkeys(self.data.categories, 'category'),
+            dict.fromkeys(video_data.categories, 'category'),
             {
                 self.column_names.index: self.column_types.index,
                 self.column_names.name: self.column_types.name,
@@ -170,10 +182,9 @@ class ExperimentVideo(Video):
         df = df.astype(col_types)
 
         with contextlib.suppress(KeyError):
-            if df[self.column_names.elapsed_time].dtype.kind == 'm':
-                df[self.column_names.elapsed_time] = df[
-                    self.column_names.elapsed_time
-                ].dt.total_seconds()
+            elapsed_time_column = self.column_names.elapsed_time
+            if df[elapsed_time_column].dtype.kind == 'm':
+                df[elapsed_time_column] = df[elapsed_time_column].dt.total_seconds()
 
         if categories_as_int:
             df = dataframe_categories_to_int(df, inplace=True)

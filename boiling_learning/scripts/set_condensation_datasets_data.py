@@ -18,7 +18,7 @@ from boiling_learning.management.allocators import default_table_allocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
-from boiling_learning.preprocessing.video import get_fps
+from boiling_learning.preprocessing.video import get_fps, valid_end_frame
 from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
 from boiling_learning.utils import KeyedDefaultDict, PathLike, resolve
 from boiling_learning.utils.frozendict import frozendict
@@ -97,11 +97,11 @@ def _generate_end_frame_index_getter(
     end_frame_index_cache_path: Optional[PathLike],
 ) -> Callable[[ExperimentVideo], int]:
     if end_frame_index_cache_path is None:
-        return len
+        return valid_end_frame
 
     allocator = default_table_allocator(end_frame_index_cache_path)
     cacher = cache(allocator, saver=json.dump, loader=json.load)
-    return cacher(len)
+    return cacher(valid_end_frame)
 
 
 def _set_mass_rate(grouped_datasets: Tuple[ImageDataset, ...], spreadsheet_name: str) -> None:
@@ -205,9 +205,8 @@ def _set_ev_data(
     logger.debug(f'Setting video data for EV "{ev.name}"')
 
     end_frame_index = end_frame_index_getter(ev)
-    with ev.disable_auto_shrinking():
-        ev.video = ev.video[:end_frame_index]
-        ev.data = videodata
+    ev.video = ev.video[: end_frame_index + 1]
+    ev.data = videodata
 
 
 def _parse_timedelta(s: Optional[str]) -> Optional[timedelta]:

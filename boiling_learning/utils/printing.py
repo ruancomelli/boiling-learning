@@ -10,4 +10,4 @@ def unit_post_fix(unit: pint.Unit) -> str:
 
 
 def add_unit_post_fix(text: str, unit: pint.Unit) -> str:
-    return ' '.join((text, unit_post_fix(unit)))
+    return f'{text} {unit_post_fix(unit)}'

@@ -85,6 +85,9 @@ def _set_experiment_video_data(ev: ExperimentVideo, df: pd.DataFrame) -> None:
 
 
 def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> None:
+    assert ev.df is not None
+    assert ev.data is not None
+
     ev.df = ev.df.drop(
         columns=[
             'Time instant',
@@ -98,7 +101,7 @@ def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> None:
     )
 
     power_unit = ureg.watt
-    heat_flux_unit = ureg.watt / ureg.centimeter**2
+    heat_flux_unit = ureg.watt / ureg.centimeter ** 2
     sample_id = ev.data.categories['sample_id']
 
     full_power_key = add_unit_post_fix('Power', power_unit)

@@ -101,9 +101,6 @@ class Video(Sequence[VideoFrame]):
             except Exception as e:
                 raise OpenVideoError(f'Error while opening video {self.path}') from e
 
-            if self._should_shrink_to_valid_end_frames:
-                self._shrink_to_valid_end_frames()
-
         return self._video
 
     def close(self) -> None:
@@ -113,35 +110,6 @@ class Video(Sequence[VideoFrame]):
 
     def is_open(self) -> bool:
         return self._video is not None
-
-    def _shrink_to_valid_end_frames(self) -> None:
-        logger.debug(f"Shrinking video to valid end frame at \"{self.path}\"")
-
-        valid_end_frame = self._valid_end_frame()
-        self.video = self.video[: valid_end_frame + 1]
-
-        logger.debug(f"Video kept with {len(self)} frames at \"{self.path}\"")
-
-    def _valid_end_frame(self) -> int:
-        for index in reversed(range(len(self))):
-            # the following exceptions are "expected" and signify that this candidate end frame is
-            # invalid
-            with contextlib.suppress(CannotReadFrameError, RuntimeError, AttributeError):
-                # try to access frame at `index`
-                self[index]
-                # if access is successful (by not raising any errors), we found a valid end frame
-                return index
-        return -1
-
-    @contextlib.contextmanager
-    def disable_auto_shrinking(self) -> Iterator[None]:
-        previous_value = self._should_shrink_to_valid_end_frames
-        self._should_shrink_to_valid_end_frames = False
-
-        try:
-            yield
-        finally:
-            self._should_shrink_to_valid_end_frames = previous_value
 
 
 @json.encode.instance(Video)
@@ -162,3 +130,23 @@ def _serialize_video_frame(instance: VideoFrame, path: Path) -> None:
 @deserialize.dispatch(VideoFrame)
 def _deserialize_video_frame(path: Path, metadata: Metadata) -> VideoFrame:
     return np.load(path.with_suffix('.npy'))
+
+
+def shrink_to_valid_end_frames(video: Video) -> None:
+    logger.debug(f"Shrinking video to valid end frame at \"{video.path}\"")
+
+    video.video = video.video[: valid_end_frame(video) + 1]
+
+    logger.debug(f"Video kept with {len(video)} frames at \"{video.path}\"")
+
+
+def valid_end_frame(video: Video) -> int:
+    for index in reversed(range(len(video))):
+        # the following exceptions are "expected" and signify that this candidate end frame is
+        # invalid
+        with contextlib.suppress(CannotReadFrameError, RuntimeError, AttributeError):
+            # try to access frame at `index`
+            video[index]
+            # if access is successful (by not raising any errors), we found a valid end frame
+            return index
+    return -1
