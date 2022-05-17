@@ -168,7 +168,11 @@ condensation_datasets = LazyCallable(load_dataset_tree.main)(condensation_cases_
 
 logger.info('Setting up video data')
 logger.info(f'Setting boiling data from experiments path: {boiling_experiments_path}')
-set_boiling_cases_data.main(boiling_cases_timed(), case_experiment_map=boiling_experiments_map)
+set_boiling_cases_data.main(
+    boiling_cases_timed(),
+    case_experiment_map=boiling_experiments_map,
+    end_frame_index_cache_path=Path('.cache', 'end_frame_index'),
+)
 
 condensation_data_path = condensation_cases_path / 'data_spec.yaml'
 logger.info(f'Setting condensation data from data path: {condensation_data_path}')
