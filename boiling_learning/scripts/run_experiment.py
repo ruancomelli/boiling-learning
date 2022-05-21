@@ -10,9 +10,9 @@ import modin.pandas as pd
 import nidaqmx
 import numpy as np
 import pyqtgraph as pg
-import scipy.interpolate
 from pyqtgraph import GraphicsWindow
 from pyqtgraph.Qt import QtGui
+from scipy.interpolate import interp1d
 
 from boiling_learning.daq import Channel, ChannelType, Device
 from boiling_learning.utils import PathLike, resolve
@@ -117,13 +117,13 @@ def main(
         }
     )
 
-    f_to_T = scipy.interpolate.interp1d(
+    f_to_T = interp1d(
         factor_table['Factor'],
         factor_table['Temperature'],
         copy=False,
         fill_value='extrapolate',
     )
-    T_to_f = scipy.interpolate.interp1d(
+    T_to_f = interp1d(
         factor_table['Temperature'],
         factor_table['Factor'],
         copy=False,
@@ -439,8 +439,8 @@ def main(
                 'Voltage [V]': voltage.m_as(u.V),
                 'Current [A]': current.m_as(u.A),
                 'Power [W]': power.m_as(u.W),
-                'Flux [W/m^2]': flux.m_as(u.W / u.m**2),
-                'Flux [W/cm^2]': flux.m_as(u.W / u.cm**2),
+                'Flux [W/m^2]': flux.m_as(u.W / u.m ** 2),
+                'Flux [W/cm^2]': flux.m_as(u.W / u.cm ** 2),
                 # 'Resistance [Ohm]': resistance,
                 'Bulk Temperature [deg C]': rtd_temperature,
                 'LED Voltage [V]': led_voltage,

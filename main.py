@@ -494,6 +494,8 @@ fit_model = GetFitModel(
     )
 )
 
+logger.info('Training model')
+
 if OPTIONS.test:
     get_image_dataset_params = GetImageDatasetParams(
         boiling_cases_timed()[0],

@@ -16,6 +16,7 @@ __all__ = (
 
 _T = TypeVar('_T')
 DataClass = Any
+_DataClass = TypeVar('_DataClass')
 
 
 def is_dataclass_class(obj: Any) -> TypeGuard[Type[DataClass]]:
@@ -48,7 +49,7 @@ def dataclass_from_mapping(
     return dataclass_from_mapping(mapping, dataclass_factory)
 
 
-def to_parent_dataclass(obj: DataClass, parent: Callable[..., DataClass]) -> DataClass:
+def to_parent_dataclass(obj: _DataClass, parent: Callable[..., _DataClass]) -> _DataClass:
     if not is_dataclass_class(parent):
         raise ValueError('*parent* must be a dataclass.')
 
