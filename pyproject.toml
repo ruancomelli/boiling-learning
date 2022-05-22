@@ -1,6 +1,6 @@
 [project]
 name = "boiling-learning"
-version = "0.20.18"
+version = "0.20.19"
 description = "Deep learning models for phase-change quantification and classification."
 authors = [
     {name = "Ruan Comelli", email = "ruancomelli@gmail.com"}
@@ -15,7 +15,6 @@ dependencies = [
     "gspread<6.0.0,>=5.1.1",
     "imageio==2.4.1",
     "ipywidgets<8.0.0,>=7.6.5",
-    "lazy<2.0,>=1.4",
     "matplotlib<4.0.0,>=3.5.1",
     "more-itertools>=8.11.0",
     "nidaqmx<1.0.0,>=0.5.7",
@@ -160,5 +159,5 @@ plugins = [
 [tool.commitizen]
 tag_format = "v$major.$minor.$patch$prerelease"
 update_changelog_on_bump = true
-version = "0.20.18"
+version = "0.20.19"
 version_files = ["pyproject.toml:version"]

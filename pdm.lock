@@ -874,11 +874,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lazy"
-version = "1.4"
-summary = "Lazy attributes for Python objects"
-
-[[package]]
 name = "lazy-object-proxy"
 version = "1.7.1"
 requires_python = ">=3.6"
@@ -2176,7 +2171,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:a0673bd352a225dc8754ac71086b3d8954165003253a56f25da62762842be380"
+content_hash = "sha256:8cc7b1e8458cc80e907ba8c65c311f27017b7931b5ad35614b5bf6a4bf9c8e15"
 
 [metadata.files]
 "absl-py 1.0.0" = [
@@ -3001,10 +2996,6 @@ content_hash = "sha256:a0673bd352a225dc8754ac71086b3d8954165003253a56f25da627628
     {file = "kiwisolver-1.4.2-pp37-pypy37_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0e8afdf533b613122e4bbaf3c1e42c2a5e9e2d1dd3a0a017749a7658757cb377"},
     {file = "kiwisolver-1.4.2-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:42f6ef9b640deb6f7d438e0a371aedd8bef6ddfde30683491b2e6f568b4e884e"},
     {file = "kiwisolver-1.4.2.tar.gz", hash = "sha256:7f606d91b8a8816be476513a77fd30abe66227039bd6f8b406c348cb0247dcc9"},
-]
-"lazy 1.4" = [
-    {file = "lazy-1.4-py2.py3-none-any.whl", hash = "sha256:9f293fd531546f3eda039da8f919b513b94f219e562764e3ceefc26fa503bf03"},
-    {file = "lazy-1.4.zip", hash = "sha256:2c6d27a5ab130fb85435320651a47403adcb37ecbcc501b0c6606391f65f5b43"},
 ]
 "lazy-object-proxy 1.7.1" = [
     {file = "lazy_object_proxy-1.7.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:bb8c5fd1684d60a9902c60ebe276da1f2281a318ca16c1d0a96db28f62e9166b"},

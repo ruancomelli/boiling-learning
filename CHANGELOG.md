@@ -1,5 +1,12 @@
 
 
+## v0.20.19 (2022-05-22)
+
+### Refactor
+
+- **utils/lazy**: simplify implementation of laziness
+- **utils/utils**: remove unused function `missing_ints`
+
 ## v0.20.18 (2022-05-21)
 
 ### Refactor
