@@ -31,7 +31,6 @@ dependencies = [
     "sortedcontainers<3.0.0,>=2.4.0",
     "tensorflow-addons<1.0.0,>=0.15.0",
     "tinydb<5.0.0,>=4.5.2",
-    "typeguard<3.0.0,>=2.13.3",
     "typing-extensions<4.0.0.0,>=3.10.0.2",
     "tensorflow<3.0.0,>=2.7.0",
     "slicerator<2.0.0,>=1.0.0",
