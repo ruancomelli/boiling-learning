@@ -1,5 +1,13 @@
 
 
+## v0.20.18 (2022-05-21)
+
+### Refactor
+
+- **model**: remove unused custom metric `RSquare` and dependency on `typeguard`
+- apply minor refactorings
+- replace `dataclassy` with the built-in `dataclasses`
+
 ## v0.20.17 (2022-05-16)
 
 ### Refactor
