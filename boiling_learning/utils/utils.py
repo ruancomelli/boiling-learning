@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 import operator
 import os
 import pprint
@@ -27,7 +26,6 @@ from typing import (
 
 import funcy
 import modin.pandas as pd
-from sortedcontainers import SortedSet
 from typing_extensions import overload
 
 from boiling_learning.utils.iterutils import flaglast
@@ -74,17 +72,6 @@ def argmax(iterable: Iterable) -> int:
 
 def argsorted(iterable: Iterable) -> Iterable[int]:
     return funcy.pluck(0, sorted(enumerate(iterable), key=operator.itemgetter(1)))
-
-
-def missing_ints(ints: Iterable[int]) -> Iterable[int]:
-    # source: adapted from <https://stackoverflow.com/questions/16974047/efficient-way-to-find-missing-elements-in-an-integer-sequence>
-    ints = SortedSet(ints)
-    if ints:
-        start, end = ints[0], ints[-1]
-        full = range(start, end + 1)
-        return itertools.filterfalse(ints.__contains__, full)
-    else:
-        return ()
 
 
 def merge_dicts(*dict_args: Mapping, latter_precedence: bool = True) -> dict:
