@@ -28,7 +28,6 @@ dependencies = [
     "scikit-image<1.0.0,>=0.19.1",
     "scikit-learn<2.0.0,>=1.0.2",
     "scipy<2.0.0,>=1.7.3",
-    "sortedcontainers<3.0.0,>=2.4.0",
     "tensorflow-addons==0.16.1",
     "tinydb<5.0.0,>=4.5.2",
     "typing-extensions<4.0.0.0,>=3.10.0.2",
@@ -41,8 +40,7 @@ dependencies = [
     "pyqtgraph==0.12.3",
     "PyQt6<7.0.0,>=6.2.2",
     "modin[all]>=0.12.1",
-    "loguru>=0.6.0",
-]
+    "loguru>=0.6.0"]
 
 requires-python = ">=3.7.12,<3.10"
 license = {text = "MIT"}
