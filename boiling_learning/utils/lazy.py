@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from functools import partial
+from functools import lru_cache, partial
 from typing import Any, Callable, Generic, TypeVar
 
 import funcy
-from lazy import lazy as lazy_property
 
-__all__ = ('Lazy', 'LazyCallable', 'lazy_property')
+__all__ = ('Lazy', 'LazyCallable')
 
 _T = TypeVar('_T')
 _S = TypeVar('_S')
@@ -16,15 +15,12 @@ class Lazy(Generic[_T]):
     def __init__(self, creator: Callable[[], _T]) -> None:
         self._creator: Callable[[], _T] = creator
 
-    @lazy_property
-    def __value(self) -> _T:
+    @lru_cache(maxsize=1)
+    def __call__(self) -> _T:
         return self._creator()
 
-    def __call__(self) -> _T:
-        return self.__value
-
     @classmethod
-    def from_value(self, value: _T) -> Lazy[_T]:
+    def from_value(cls, value: _T) -> Lazy[_T]:
         return Lazy(lambda: value)
 
 
