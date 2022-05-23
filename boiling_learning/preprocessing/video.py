@@ -141,6 +141,8 @@ def shrink_to_valid_end_frames(video: Video) -> None:
 
 
 def valid_end_frame(video: Video) -> int:
+    logger.debug(f"Searching for valid end frame for video at \"{video.path}\"")
+
     for index in reversed(range(len(video))):
         # the following exceptions are "expected" and signify that this candidate end frame is
         # invalid
@@ -148,5 +150,6 @@ def valid_end_frame(video: Video) -> int:
             # try to access frame at `index`
             video[index]
             # if access is successful (by not raising any errors), we found a valid end frame
+            logger.debug(f"Valid end frame is {index} for video at \"{video.path}\"")
             return index
     return -1
