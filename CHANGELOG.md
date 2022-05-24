@@ -1,5 +1,11 @@
 
 
+## v0.20.21 (2022-05-24)
+
+### Fix
+
+- **management/persister**: fix wrong `issubclass` for input exceptions
+
 ## v0.20.20 (2022-05-24)
 
 ### Refactor
