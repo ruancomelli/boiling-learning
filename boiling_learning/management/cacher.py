@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Generic, Iterable, TypeVar, Union
+from typing import Callable, Generic, Iterable, Type, TypeVar
 
 from loguru import logger
 from typing_extensions import ParamSpec
@@ -24,7 +24,7 @@ class Cacher(Generic[_R]):
         allocator: Callable[[Pack], Path],
         saver: SaverFunction[_R] = save,
         loader: LoaderFunction[_R] = load,
-        exceptions: Union[Exception, Iterable[Exception]] = (
+        exceptions: Iterable[Type[Exception]] = (
             FileNotFoundError,
             NotADirectoryError,
         ),
@@ -33,7 +33,7 @@ class Cacher(Generic[_R]):
         self.allocator = allocator
         self.saver = saver
         self.loader = loader
-        self.exceptions = exceptions
+        self.exceptions = tuple(exceptions)
         self.autosave = autosave
 
     def allocate(self, *args: _P.args, **kwargs: _P.kwargs) -> Path:
@@ -94,7 +94,7 @@ def cache(
     allocator: Callable[[Pack], Path],
     saver: SaverFunction[_R] = save,
     loader: LoaderFunction[_R] = load,
-    exceptions: Union[Exception, Iterable[Exception]] = (
+    exceptions: Iterable[Type[Exception]] = (
         FileNotFoundError,
         NotADirectoryError,
     ),

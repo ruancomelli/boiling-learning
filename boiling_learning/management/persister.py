@@ -1,5 +1,5 @@
 from contextlib import suppress
-from typing import Callable, Generic, Iterable, TypeVar, Union
+from typing import Callable, Generic, Iterable, Type, TypeVar, Union
 
 from loguru import logger
 
@@ -40,7 +40,7 @@ class Provider(Persister[_T]):
         saver: SaverFunction[_T],
         loader: LoaderFunction[_T],
         creator: CreatorFunction[_T],
-        exceptions: Union[Exception, Iterable[Exception]] = (
+        exceptions: Union[Type[Exception], Iterable[Type[Exception]]] = (
             FileNotFoundError,
             NotADirectoryError,
         ),
@@ -48,10 +48,8 @@ class Provider(Persister[_T]):
     ) -> None:
         super().__init__(saver, loader)
 
-        exceptions = (exceptions,) if isinstance(exceptions, Exception) else tuple(exceptions)
-
         self.creator = creator
-        self.exceptions = exceptions
+        self.exceptions = (exceptions,) if issubclass(exceptions, Exception) else tuple(exceptions)
         self.autosave = autosave
 
     def provide(self, filepath: PathLike) -> _T:
@@ -72,7 +70,9 @@ class Provider(Persister[_T]):
         logger.debug('Result created')
 
         if self.autosave:
+            logger.debug(f'Saving result to {resolved}')
             self.save(obj, resolved)
+            logger.debug('Result saved')
 
         return obj
 
