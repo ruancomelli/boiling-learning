@@ -1,5 +1,12 @@
 
 
+## v0.20.20 (2022-05-24)
+
+### Refactor
+
+- add logging for saving cached objects
+- **preprocessing/video**: add debug logging messages to `valid_end_frame`
+
 ## v0.20.19 (2022-05-22)
 
 ### Refactor
