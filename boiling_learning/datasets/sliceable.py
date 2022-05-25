@@ -400,13 +400,13 @@ def sliceable_dataset_to_tensorflow_dataset(
     ds = tf.data.Dataset.from_generator(lambda: dataset, output_signature=typespec)
 
     if snapshot_path is not None:
-        ds = ds.snapshot(str(snapshot_path))
+        ds = ds.snapshot(str(resolve(snapshot_path, parents=True)))
 
     if batch_size is not None:
         ds = ds.batch(batch_size)
 
     if cache:
-        ds = ds.cache() if isinstance(cache, bool) else ds.cache(str(cache))
+        ds = ds.cache() if isinstance(cache, bool) else ds.cache(str(resolve(cache, parents=True)))
 
     if prefetch:
         ds = ds.prefetch(AUTOTUNE)
