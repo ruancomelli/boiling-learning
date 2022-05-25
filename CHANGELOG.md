@@ -1,5 +1,11 @@
 
 
+## v0.20.23 (2022-05-25)
+
+### Feat
+
+- **model/training**: correctly accept snapshot and cache paths
+
 ## v0.20.22 (2022-05-24)
 
 ### Fix
