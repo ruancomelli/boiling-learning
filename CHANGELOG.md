@@ -1,5 +1,11 @@
 
 
+## v0.20.22 (2022-05-24)
+
+### Fix
+
+- **utils/descriptions**: use a shallow-copier version of `asdict` to describe and serialize objects to JSON
+
 ## v0.20.21 (2022-05-24)
 
 ### Fix
