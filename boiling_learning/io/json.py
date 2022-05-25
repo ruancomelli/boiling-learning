@@ -12,7 +12,7 @@ from classes import typeclass as _typeclass
 from typing_extensions import Protocol, TypedDict, runtime_checkable
 
 from boiling_learning.utils import PathLike, resolve
-from boiling_learning.utils.dataclasses import asdict, is_dataclass_instance
+from boiling_learning.utils.dataclasses import is_dataclass_instance, shallow_asdict
 from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.functional import P, Pack
 from boiling_learning.utils.table_dispatch import TableDispatcher
@@ -274,7 +274,7 @@ def _decode_frozendict(obj: Dict[str, Any]) -> frozendict:
 
 class DataclassOfJSONSerializableFieldsMeta(type):
     def __instancecheck__(cls, instance: Any) -> bool:
-        return is_dataclass_instance(instance) and serialize.supports(asdict(instance))
+        return is_dataclass_instance(instance) and serialize.supports(shallow_asdict(instance))
 
 
 class DataclassOfJSONSerializableFields(
@@ -287,7 +287,7 @@ class DataclassOfJSONSerializableFields(
 def _encode_dataclass(
     instance: DataclassOfJSONSerializableFields,
 ) -> Dict[str, SerializedJSONObject]:
-    return serialize(asdict(instance))
+    return serialize(shallow_asdict(instance))
 
 
 @encode.instance(Fraction)

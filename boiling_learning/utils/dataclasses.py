@@ -1,5 +1,5 @@
 from dataclasses import asdict, dataclass, field, fields, is_dataclass
-from typing import Any, Callable, Mapping, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Dict, Mapping, Optional, Type, TypeVar, Union
 
 import funcy
 from typing_extensions import TypeGuard
@@ -60,3 +60,12 @@ def to_parent_dataclass(obj: _DataClass, parent: Callable[..., _DataClass]) -> _
         raise ValueError('*obj* must be an instance of *parent*.')
 
     return dataclass_from_mapping(asdict(obj), parent)
+
+
+def shallow_asdict(obj: _DataClass) -> Dict[str, Any]:
+    """Version of `asdict` that does not deepcopy objects.
+
+    See https://docs.python.org/3/library/dataclasses.html#dataclasses.asdict for this
+    suggestion and its implementation.
+    """
+    return {field.name: getattr(obj, field.name) for field in fields(obj)}

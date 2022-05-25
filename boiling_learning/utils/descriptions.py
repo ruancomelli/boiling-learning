@@ -5,7 +5,7 @@ from typing import Any, Dict, FrozenSet, Generic, List, Set, Tuple, Type, TypeVa
 from classes import AssociatedType, Supports, typeclass
 from typing_extensions import Protocol, final, runtime_checkable
 
-from boiling_learning.utils.dataclasses import asdict, is_dataclass_instance
+from boiling_learning.utils.dataclasses import is_dataclass_instance, shallow_asdict
 from boiling_learning.utils.frozendict import frozendict
 
 _AnyType = TypeVar('_AnyType', bound=Type[Any])
@@ -79,7 +79,7 @@ def _describe_dict(instance: DictOfDescribable[_Description]) -> Dict[str, _Desc
 
 class _DataclassOfDescribableFieldsMeta(type):
     def __instancecheck__(cls, instance: Any) -> bool:
-        return is_dataclass_instance(instance) and describe.supports(asdict(instance))
+        return is_dataclass_instance(instance) and describe.supports(shallow_asdict(instance))
 
 
 class DataclassOfDescribableFields(
@@ -93,7 +93,7 @@ class DataclassOfDescribableFields(
 def _describe_dataclass(
     instance: DataclassOfDescribableFields[_Description],
 ) -> Dict[str, _Description]:
-    return describe(asdict(instance))
+    return describe(shallow_asdict(instance))
 
 
 @describe.instance(Fraction)
