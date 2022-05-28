@@ -446,10 +446,11 @@ class GetFitModel(CachedFunction[_P, Model]):
         datasets: Described[DatasetTriplet[SupervisedSliceableDataset], json.JSONDataType],
         params: FitModelParams,
     ) -> Model:
-        path = self.allocate(compiled_model, datasets, params)
+        path = self.allocate('model', compiled_model, datasets, params)
         path = resolve(path, parents=True)
 
-        dataset_cache_path = self.allocate(datasets, params.batch_size)
+        dataset_cache_path = self.allocate('cache', datasets, params.batch_size)
+        dataset_snapshot_path = self.allocate('snapshot', datasets)
         _, ds_val, _ = datasets.value
         ds_val_g10 = sliceable_dataset_to_tensorflow_dataset(ds_val.shuffle()).filter(
             lambda frame, hf: hf >= 10
@@ -468,7 +469,7 @@ class GetFitModel(CachedFunction[_P, Model]):
                     save_best_only=False,
                     monitor='val_loss',
                 ),
-                BackupAndRestore(path / 'backup'),
+                BackupAndRestore(path / 'backup', delete_on_end=False),
                 AdditionalValidationSets({'HF10': ds_val_g10}, batch_size=params.batch_size),
                 tf.keras.callbacks.TensorBoard(
                     tensorboard_logs_path / datetime.datetime.now().strftime('%Y%m%d-%H%M%S'),
@@ -478,7 +479,11 @@ class GetFitModel(CachedFunction[_P, Model]):
         )
 
         creator: Callable[[], Model] = P(
-            compiled_model, datasets, params, cache=dataset_cache_path
+            compiled_model,
+            datasets,
+            params,
+            cache=dataset_cache_path,
+            snapshot_path=dataset_snapshot_path,
         ).partial(self.function)
 
         return self.provide(creator, path)
@@ -494,9 +499,9 @@ fit_model = GetFitModel(
     )
 )
 
-logger.info('Training model')
-
 if OPTIONS.test:
+    logger.info('Training model')
+
     get_image_dataset_params = GetImageDatasetParams(
         boiling_cases_timed()[0],
         transformers=boiling_preprocessors,
