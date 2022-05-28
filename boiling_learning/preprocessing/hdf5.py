@@ -18,12 +18,12 @@ def video_to_hdf5(
     *,
     dataset_name: str,
     batch_size: int = 1,
-    batch_transformers: Tuple[Transformer[np.ndarray, np.ndarray], ...] = (),
+    transformers: Tuple[Transformer[VideoFrame, VideoFrame], ...] = (),
 ) -> None:
     """Save video as an HDF5 file
 
     Arguments:
-        batch_transformers: a tuple of batch_transformers mapping a batch of frames to
+        transformers: a tuple of transformers mapping a batch of frames to
         another batch of frames. Suitable for broadcasting image transformers.
     """
     destination = str(resolve(dest))
@@ -46,8 +46,10 @@ def video_to_hdf5(
 
             logger.debug(f'Writing frames {start}:{end} from {video.path} to {destination}')
 
-            for transformer in batch_transformers:
-                batch = transformer(batch)
+            for transformer in transformers:
+                batch = map(transformer, batch)
+
+            batch = np.array(batch)
 
             dataset.write_direct(batch, dest_sel=np.s_[start:end])
             dataset.flush()
@@ -57,7 +59,7 @@ def video_to_hdf5(
 def get_frame_from_hdf5(path: PathLike, index: int, *, dataset_name: str) -> VideoFrame:
     resolved = str(resolve(path))
 
-    with h5py.File(resolved) as f:
+    with h5py.File(resolved, 'r', swmr=True) as f:
         return typing.cast(VideoFrame, f[dataset_name][index])
 
 
