@@ -1,5 +1,22 @@
 
 
+## v0.20.24 (2022-05-28)
+
+### Perf
+
+- **main**: replace individual JSON caching for images with HDF5 caching
+- **preprocessing/hdf5**: refactor loop-independent expression out of loop
+
+### Refactor
+
+- **main**: align `main` with code on Google Colab
+
+### Feat
+
+- **proprocessing/hdf5**: add support for transformers of batches to conversion to HDF5
+- **preprocessing/video**: add utility function for getting frame from HDF5 file
+- **preprocessing/video**: add video conversion method to HDF5
+
 ## v0.20.23 (2022-05-25)
 
 ### Feat
