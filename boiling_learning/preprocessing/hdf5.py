@@ -34,14 +34,14 @@ def video_to_hdf5(
     array_chunks = map(np.array, frame_chunks)
 
     with h5py.File(destination, 'a') as file:
+        dataset = file.require_dataset(
+            dataset_name,
+            video.shape,
+            dtype='f',
+            # best compression algorithm I found - good compression, fastest decompression
+            **hdf5plugin.LZ4(),
+        )
         for index, batch in enumerate(array_chunks):
-            dataset = file.require_dataset(
-                dataset_name,
-                video.shape,
-                dtype='f',
-                # best compression algorithm I found - good compression, fastest decompression
-                **hdf5plugin.LZ4(),
-            )
             start, end = index * batch_size, (index + 1) * batch_size
 
             logger.debug(f'Writing frames {start}:{end} from {video.path} to {destination}')
