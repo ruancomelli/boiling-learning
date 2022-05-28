@@ -5,9 +5,6 @@ from pathlib import Path
 from typing import Iterator, Optional, Sequence, Tuple, Union
 
 import cv2
-import h5py
-import hdf5plugin
-import more_itertools as mit
 import numpy as np
 import pims
 from imageio.core import CannotReadFrameError
@@ -73,17 +70,6 @@ def get_fps(video_path: PathLike) -> float:
         return typing.cast(float, cap.get(cv2.CAP_PROP_FPS))
 
 
-def video_frames(video_path: PathLike) -> Iterator[VideoFrame]:
-    with open_video(video_path) as cap:
-        while True:
-            ret, frame = cap.read()
-
-            if not ret:
-                break
-
-            yield frame
-
-
 class OpenVideoError(Exception):
     pass
 
@@ -131,36 +117,6 @@ class Video(Sequence[VideoFrame]):
             return (len(self), *self[0].shape)
         except IndexError:
             return ()
-
-
-def video_to_hdf5(video: Video, dest: PathLike, *, dataset_name: str, batch_size: int = 1) -> None:
-    destination = str(resolve(dest))
-
-    # use OpenCV reader because it is much more memory efficient than PIMS
-    frames = video_frames(video.path)
-    frame_chunks = mit.chunked(frames, batch_size)
-    array_chunks = map(np.array, frame_chunks)
-
-    with h5py.File(destination, 'a') as file:
-        for index, batch in enumerate(array_chunks):
-            dataset = file.require_dataset(
-                dataset_name,
-                video.shape,
-                dtype='f',
-                # best compression algorithm I found - good compression, fastest decompression
-                **hdf5plugin.LZ4(),
-            )
-            start, end = index * batch_size, (index + 1) * batch_size
-            dataset.write_direct(batch, dest_sel=np.s_[start:end])
-            dataset.flush()
-            file.flush()
-
-
-def get_frame_from_hdf5(path: PathLike, index: int, *, dataset_name: str) -> VideoFrame:
-    resolved = str(resolve(path))
-
-    with h5py.File(resolved) as f:
-        return typing.cast(VideoFrame, f[dataset_name][index])
 
 
 @json.encode.instance(Video)
