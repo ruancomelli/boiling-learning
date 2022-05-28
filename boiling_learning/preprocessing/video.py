@@ -1,9 +1,13 @@
 import contextlib
 import subprocess
+import typing
 from pathlib import Path
-from typing import Iterator, Optional, Sequence, Union
+from typing import Iterator, Optional, Sequence, Tuple, Union
 
 import cv2
+import h5py
+import hdf5plugin
+import more_itertools as mit
 import numpy as np
 import pims
 from imageio.core import CannotReadFrameError
@@ -11,8 +15,8 @@ from loguru import logger
 
 from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, serialize
-from boiling_learning.utils import PathLike, resolve
 from boiling_learning.utils.descriptions import describe
+from boiling_learning.utils.utils import PathLike, resolve
 
 # VideoFrame = npt.NDArray[np.float32]
 VideoFrame = np.ndarray
@@ -56,8 +60,7 @@ def convert_video(
 
 @contextlib.contextmanager
 def open_video(video_path: PathLike) -> Iterator[cv2.VideoCapture]:
-    video_path = resolve(video_path)
-    cap = cv2.VideoCapture(str(video_path))
+    cap = cv2.VideoCapture(str(resolve(video_path)))
 
     try:
         yield cap
@@ -67,7 +70,18 @@ def open_video(video_path: PathLike) -> Iterator[cv2.VideoCapture]:
 
 def get_fps(video_path: PathLike) -> float:
     with open_video(video_path) as cap:
-        return cap.get(cv2.CAP_PROP_FPS)
+        return typing.cast(float, cap.get(cv2.CAP_PROP_FPS))
+
+
+def video_frames(video_path: PathLike) -> Iterator[VideoFrame]:
+    with open_video(video_path) as cap:
+        while True:
+            ret, frame = cap.read()
+
+            if not ret:
+                break
+
+            yield frame
 
 
 class OpenVideoError(Exception):
@@ -110,6 +124,36 @@ class Video(Sequence[VideoFrame]):
 
     def is_open(self) -> bool:
         return self._video is not None
+
+    @property
+    def shape(self) -> Tuple[int, ...]:
+        try:
+            return (len(self), *self[0].shape)
+        except IndexError:
+            return ()
+
+
+def video_to_hdf5(video: Video, dest: PathLike, *, dataset_name: str, batch_size: int = 1) -> None:
+    destination = str(resolve(dest))
+
+    # use OpenCV reader because it is much more memory efficient than PIMS
+    frames = video_frames(video.path)
+    frame_chunks = mit.chunked(frames, batch_size)
+    array_chunks = map(np.array, frame_chunks)
+
+    with h5py.File(destination, 'a') as file:
+        for index, batch in enumerate(array_chunks):
+            dataset = file.require_dataset(
+                dataset_name,
+                video.shape,
+                dtype='f',
+                # best compression algorithm I found - good compression, fastest decompression
+                **hdf5plugin.LZ4(),
+            )
+            start, end = index * batch_size, (index + 1) * batch_size
+            dataset.write_direct(batch, dest_sel=np.s_[start:end])
+            dataset.flush()
+            file.flush()
 
 
 @json.encode.instance(Video)
