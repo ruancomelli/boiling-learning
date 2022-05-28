@@ -156,6 +156,13 @@ def video_to_hdf5(video: Video, dest: PathLike, *, dataset_name: str, batch_size
             file.flush()
 
 
+def get_frame_from_hdf5(path: PathLike, index: int, *, dataset_name: str) -> VideoFrame:
+    resolved = str(resolve(path))
+
+    with h5py.File(resolved) as f:
+        return typing.cast(VideoFrame, f[dataset_name][index])
+
+
 @json.encode.instance(Video)
 def _encode_video(obj: Video) -> json.JSONDataType:
     return json.serialize(obj.path)
