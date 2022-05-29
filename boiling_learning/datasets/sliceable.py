@@ -339,7 +339,7 @@ class SliceableDataset(Sequence[_T]):
                 'and supported only for compatibility with `tf.data.Dataset`s'
             )
 
-        new_length: int = math.ceil(len(self) / batch_size)
+        new_length = math.ceil(len(self) / batch_size)
 
         def new_data(index: int) -> SliceableDataset[_T]:
             start = index * batch_size
