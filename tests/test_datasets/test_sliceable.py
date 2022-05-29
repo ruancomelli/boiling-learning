@@ -4,11 +4,8 @@ from random import sample
 import numpy as np
 import tensorflow as tf
 
-from boiling_learning.datasets.sliceable import (
-    SliceableDataset,
-    concatenate,
-    sliceable_dataset_to_tensorflow_dataset,
-)
+from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_dataset
+from boiling_learning.datasets.sliceable import SliceableDataset, concatenate
 from boiling_learning.utils.random import random_state
 
 
@@ -38,7 +35,7 @@ class TestSliceableDataset:
         sds = SliceableDataset([0, 10, 200, 3, 45])
 
         assert isinstance(sds[[False, True, False, False, True]], SliceableDataset)
-        assert list(sds[[False, False, False, False, False]]) == []
+        assert not list(sds[[False, False, False, False, False]])
         assert list(sds[[False, True, False, False, True]]) == [10, 45]
         assert list(sds[[True, True, True, True, True]]) == [0, 10, 200, 3, 45]
 
@@ -47,7 +44,7 @@ class TestSliceableDataset:
 
         assert isinstance(sds[[0, 3, 3, -1, 2, -1]], SliceableDataset)
         assert list(sds[[2, 2, 0, -1, 2, -1]]) == [200, 200, 0, 45, 200, 45]
-        assert list(sds[[]]) == []
+        assert not list(sds[[]])
 
     def test_zip(self) -> None:
         sds1 = SliceableDataset([10, 5, 2, 8])
@@ -93,7 +90,7 @@ class TestSliceableDataset:
         splits = sds.split(5, 0, None, Fraction(1, 4))
 
         assert ''.join(splits[0]) == 'abcde'
-        assert ''.join(splits[1]) == ''
+        assert not ''.join(splits[1])
         assert ''.join(splits[2]) == 'fghijklmnopqrst'
         assert ''.join(splits[3]) == 'uvwxyz'
 

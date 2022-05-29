@@ -24,9 +24,7 @@ from typing import (
 )
 
 import more_itertools as mit
-import tensorflow as tf
 from iteround import saferound
-from tensorflow.data import AUTOTUNE
 from typing_extensions import TypeGuard
 
 from boiling_learning.io import LoaderFunction, SaverFunction, json
@@ -384,34 +382,6 @@ class SliceableDataset(Sequence[_T]):
             and len(key) == len(self)
             and all(isinstance(elem, bool) for elem in key)
         )
-
-
-def sliceable_dataset_to_tensorflow_dataset(
-    dataset: SliceableDataset[Any],
-    *,
-    batch_size: Optional[int] = None,
-    prefetch: bool = False,
-    snapshot_path: Optional[Path] = None,
-    cache: Union[bool, Path] = False,
-) -> tf.data.Dataset:
-    sample = dataset.flatten()[0]
-    typespec = auto_spec(sample)
-
-    ds = tf.data.Dataset.from_generator(lambda: dataset, output_signature=typespec)
-
-    if snapshot_path is not None:
-        ds = ds.snapshot(str(resolve(snapshot_path, parents=True)))
-
-    if batch_size is not None:
-        ds = ds.batch(batch_size)
-
-    if cache:
-        ds = ds.cache() if isinstance(cache, bool) else ds.cache(str(resolve(cache, parents=True)))
-
-    if prefetch:
-        ds = ds.prefetch(AUTOTUNE)
-
-    return ds
 
 
 class SupervisedSliceableDataset(SliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y]):
