@@ -229,3 +229,4 @@ and think of other things.
   [ConvLSTM2D](https://www.tensorflow.org/api_docs/python/tf/keras/layers/ConvLSTM2D)
   for timeseries of images!
 - \[ \] take a look at [`ndindex`](https://quansight-labs.github.io/ndindex/index.html)
+- \[ \] Take a look at [Probabilistic Layers Regression](https://www.tensorflow.org/probability/examples/Probabilistic_Layers_Regression)
