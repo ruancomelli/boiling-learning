@@ -245,8 +245,8 @@ def sliceable_dataset_from_video_and_transformers(
 ) -> SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]:
     frame_getter = partial(get_frame, video=video, transformers=list(transformers))
 
-    features = SliceableDataset.from_func(frame_getter, length=len(video))
-    targets = SliceableDataset(video.targets())
+    features = SliceableDataset.from_getitem(frame_getter, length=len(video))
+    targets = SliceableDataset.from_sequence(video.targets())
     return SupervisedSliceableDataset.from_features_and_targets(features, targets)
 
 

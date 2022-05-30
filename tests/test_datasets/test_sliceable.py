@@ -13,7 +13,7 @@ class TestSliceableDataset:
     def test_basics(self) -> None:
         data = [0, 10, 200, 3, 45]
 
-        sds = SliceableDataset(data)
+        sds = SliceableDataset.from_sequence(data)
 
         assert len(sds) == len(data) == 5
         assert list(sds) == data
@@ -22,7 +22,7 @@ class TestSliceableDataset:
         assert sds[-1] == 45
 
     def test_slicing(self) -> None:
-        sds = SliceableDataset([0, 10, 200, 3, 45])
+        sds = SliceableDataset.from_sequence([0, 10, 200, 3, 45])
 
         assert isinstance(sds[1:3], SliceableDataset)
 
@@ -32,7 +32,7 @@ class TestSliceableDataset:
         assert list(sds[3:]) == [3, 45]
 
     def test_masking(self) -> None:
-        sds = SliceableDataset([0, 10, 200, 3, 45])
+        sds = SliceableDataset.from_sequence([0, 10, 200, 3, 45])
 
         assert isinstance(sds[[False, True, False, False, True]], SliceableDataset)
         assert not list(sds[[False, False, False, False, False]])
@@ -40,16 +40,16 @@ class TestSliceableDataset:
         assert list(sds[[True, True, True, True, True]]) == [0, 10, 200, 3, 45]
 
     def test_selecting(self) -> None:
-        sds = SliceableDataset([0, 10, 200, 3, 45])
+        sds = SliceableDataset.from_sequence([0, 10, 200, 3, 45])
 
         assert isinstance(sds[[0, 3, 3, -1, 2, -1]], SliceableDataset)
         assert list(sds[[2, 2, 0, -1, 2, -1]]) == [200, 200, 0, 45, 200, 45]
         assert not list(sds[[]])
 
     def test_zip(self) -> None:
-        sds1 = SliceableDataset([10, 5, 2, 8])
-        sds2 = SliceableDataset('abcd')
-        sds3 = SliceableDataset(range(4))
+        sds1 = SliceableDataset.from_sequence([10, 5, 2, 8])
+        sds2 = SliceableDataset.from_sequence('abcd')
+        sds3 = SliceableDataset.from_sequence(range(4))
 
         sds = SliceableDataset.zip(sds1, sds2, sds3)
         assert sds[0] == (10, 'a', 0)
@@ -62,31 +62,31 @@ class TestSliceableDataset:
 
     def test_apply(self) -> None:
         def stringify(sds: SliceableDataset[int]) -> SliceableDataset[str]:
-            return SliceableDataset([str(elem) for elem in sds])
+            return SliceableDataset.from_sequence([str(elem) for elem in sds])
 
-        sds = SliceableDataset([3, 1, 4, 1, 5])
+        sds = SliceableDataset.from_sequence([3, 1, 4, 1, 5])
         assert list(sds.apply(stringify)) == list(stringify(sds)) == ['3', '1', '4', '1', '5']
 
     def test_concatenate(self) -> None:
-        sds1 = SliceableDataset([4, 3, 2, 1])
-        sds2 = SliceableDataset('abcd')
+        sds1 = SliceableDataset.from_sequence([4, 3, 2, 1])
+        sds2 = SliceableDataset.from_sequence('abcd')
         sds = sds1.concatenate(sds2)
 
         assert isinstance(sds, SliceableDataset)
         assert list(sds) == [4, 3, 2, 1, 'a', 'b', 'c', 'd']
 
     def test_enumerate(self) -> None:
-        sds = SliceableDataset('abcd')
+        sds = SliceableDataset.from_sequence('abcd')
 
         assert isinstance(sds.enumerate(), SliceableDataset)
         assert list(sds.enumerate()) == [(0, 'a'), (1, 'b'), (2, 'c'), (3, 'd')]
 
     def test_map(self) -> None:
-        sds = SliceableDataset('abcd')
+        sds = SliceableDataset.from_sequence('abcd')
         assert list(sds.map(str.upper)) == ['A', 'B', 'C', 'D']
 
     def test_split(self) -> None:
-        sds = SliceableDataset('abcdefghijklmnopqrstuvwxyz')
+        sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
         splits = sds.split(5, 0, None, Fraction(1, 4))
 
         assert ''.join(splits[0]) == 'abcde'
@@ -99,29 +99,29 @@ class TestSliceableDataset:
         with random_state(1997):
             shuffled_data = ''.join(sample(data, k=len(data)))
 
-        sds = SliceableDataset(data)
+        sds = SliceableDataset.from_sequence(data)
         with random_state(1997):
             shuffled = sds.shuffle()
 
         assert ''.join(shuffled) == shuffled_data == 'yhczewmkouqnaglvxrtsibjpdf'
 
     def test_skip(self) -> None:
-        sds = SliceableDataset('abcdefghijklmnopqrstuvwxyz')
+        sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
         assert ''.join(sds.skip(10)) == 'klmnopqrstuvwxyz'
 
     def test_take(self) -> None:
-        sds = SliceableDataset('abcdefghijklmnopqrstuvwxyz')
+        sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
         assert ''.join(sds.take(10)) == 'abcdefghij'
 
     def test_prefetch(self) -> None:
-        sds = SliceableDataset('abcdefghijklmnopqrstuvwxyz')
+        sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
 
         # make sure that this placeholder method at least returns the exact same
         # dataset
         assert sds.prefetch() is sds
 
     def test_batch(self) -> None:
-        sds = SliceableDataset('abcdefghijklmnopqrstuvwxyz')
+        sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
         batched = sds.batch(4)
 
         assert isinstance(batched[0], SliceableDataset)
@@ -137,14 +137,14 @@ class TestSliceableDataset:
         ]
 
     def test_unbatch(self) -> None:
-        sds = SliceableDataset('abcdefghijklmnopqrstuvwxyz')
+        sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
         batched = sds.batch(4)
         unbatched = batched.unbatch()
 
         assert ''.join(unbatched) == 'abcdefghijklmnopqrstuvwxyz'
 
     def test_flatten(self) -> None:
-        sds = SliceableDataset('abcdefghijklmnopqrstuvwxyz')
+        sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
         batched = sds.batch(3)
         batched2 = batched.batch(2)
         batched3 = batched2.batch(5)
@@ -153,22 +153,22 @@ class TestSliceableDataset:
         # assert ''.join(flatten) == 'abcdefghijklmnopqrstuvwxyz'
 
     def test_element_spec(self) -> None:
-        sds1 = SliceableDataset('abcd')
+        sds1 = SliceableDataset.from_sequence('abcd')
         assert sds1.element_spec == tf.TensorSpec(shape=(), dtype=tf.string)
 
-        sds2 = SliceableDataset([0, 1, 2])
+        sds2 = SliceableDataset.from_sequence([0, 1, 2])
         assert sds2.element_spec == tf.TensorSpec(shape=(), dtype=tf.int32)
 
-        sds3 = SliceableDataset([(0, 'a'), (1, 'b'), (2, 'c')])
+        sds3 = SliceableDataset.from_sequence([(0, 'a'), (1, 'b'), (2, 'c')])
         assert sds3.element_spec == (
             tf.TensorSpec(shape=(), dtype=tf.int32),
             tf.TensorSpec(shape=(), dtype=tf.string),
         )
 
-        sds4 = SliceableDataset([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
+        sds4 = SliceableDataset.from_sequence([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
         assert sds4.element_spec == (tf.TensorSpec(shape=(3), dtype=tf.int32))
 
-        sds5 = SliceableDataset(
+        sds5 = SliceableDataset.from_sequence(
             [
                 (
                     np.random.rand(3, 4),
@@ -202,16 +202,16 @@ class TestSliceableDataset:
 
 
 def test_concatenate() -> None:
-    sds1 = SliceableDataset('abcd')
-    sds2 = SliceableDataset('efg')
-    sds3 = SliceableDataset('hijkl')
+    sds1 = SliceableDataset.from_sequence('abcd')
+    sds2 = SliceableDataset.from_sequence('efg')
+    sds3 = SliceableDataset.from_sequence('hijkl')
 
     concat = concatenate((sds1, sds2, sds3))
     assert ''.join(concat) == 'abcdefghijkl'
 
 
 def test_sliceable_to_tensorflow() -> None:
-    sds = SliceableDataset(
+    sds = SliceableDataset.from_sequence(
         [np.random.rand(3, 4), np.random.rand(3, 4), np.random.rand(3, 4), np.random.rand(3, 4)]
     )
     ds = sliceable_dataset_to_tensorflow_dataset(sds)

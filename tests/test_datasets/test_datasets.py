@@ -7,7 +7,9 @@ from boiling_learning.utils import tempfilepath
 
 
 def test_io() -> None:
-    ds = SliceableDataset.zip(SliceableDataset.range(2, 6), SliceableDataset(['a', 'b', 'c', 'd']))
+    ds = SliceableDataset.zip(
+        SliceableDataset.range(2, 6), SliceableDataset.from_sequence(['a', 'b', 'c', 'd'])
+    )
     original_data = list(ds)
 
     with tempfilepath() as path:
