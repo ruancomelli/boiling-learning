@@ -60,13 +60,6 @@ class TestSliceableDataset:
             (8, 'd', 3),
         ]
 
-    def test_apply(self) -> None:
-        def stringify(sds: SliceableDataset[int]) -> SliceableDataset[str]:
-            return SliceableDataset.from_sequence([str(elem) for elem in sds])
-
-        sds = SliceableDataset.from_sequence([3, 1, 4, 1, 5])
-        assert list(sds.apply(stringify)) == list(stringify(sds)) == ['3', '1', '4', '1', '5']
-
     def test_concatenate(self) -> None:
         sds1 = SliceableDataset.from_sequence([4, 3, 2, 1])
         sds2 = SliceableDataset.from_sequence('abcd')
@@ -74,12 +67,6 @@ class TestSliceableDataset:
 
         assert isinstance(sds, SliceableDataset)
         assert list(sds) == [4, 3, 2, 1, 'a', 'b', 'c', 'd']
-
-    def test_enumerate(self) -> None:
-        sds = SliceableDataset.from_sequence('abcd')
-
-        assert isinstance(sds.enumerate(), SliceableDataset)
-        assert list(sds.enumerate()) == [(0, 'a'), (1, 'b'), (2, 'c'), (3, 'd')]
 
     def test_map(self) -> None:
         sds = SliceableDataset.from_sequence('abcd')

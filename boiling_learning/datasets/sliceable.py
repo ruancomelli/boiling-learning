@@ -26,7 +26,7 @@ from typing import (
 
 import more_itertools as mit
 from iteround import saferound
-from typing_extensions import TypeGuard
+from typing_extensions import TypeGuard, TypeVarTuple, Unpack
 
 from boiling_learning.io import LoaderFunction, SaverFunction, json
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
@@ -42,6 +42,7 @@ _X = TypeVar('_X')
 _X2 = TypeVar('_X2')
 _Y = TypeVar('_Y')
 _Y2 = TypeVar('_Y2')
+_Ts = TypeVarTuple('_Ts')
 BooleanMask = List[bool]
 
 
@@ -117,7 +118,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
     @staticmethod
     def range(
         start: int, stop: Optional[int] = None, step: Optional[int] = None
-    ) -> SliceableDataset[int]:
+    ) -> SequenceSliceableDataset[int]:
         return SliceableDataset.from_sequence(
             range(start, stop, step)
             if step is not None and stop is not None
@@ -126,120 +127,17 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
             else range(start)
         )
 
-    @overload
-    @staticmethod
-    def zip(dataset: SliceableDataset[_X], *, strict: bool = False) -> SliceableDataset[Tuple[_X]]:
-        ...
-
-    @overload
     @staticmethod
     def zip(
-        dataset: SliceableDataset[_X], __ds1: SliceableDataset[_Y], *, strict: bool = False
-    ) -> SliceableDataset[Tuple[_X, _Y]]:
-        ...
+        *datasets: Unpack[Tuple[SliceableDataset[Unpack[_Ts]]]], strict: bool = True
+    ) -> ZippedSliceableDataset[Unpack[_Ts]]:
+        return ZippedSliceableDataset(*datasets, strict=strict)
 
-    @overload
-    @staticmethod
-    def zip(
-        dataset: SliceableDataset[_X],
-        __ds1: SliceableDataset[_Y],
-        __ds2: SliceableDataset[_T],
-        *,
-        strict: bool = False,
-    ) -> SliceableDataset[Tuple[_X, _Y, _T]]:
-        ...
+    def concatenate(self, dataset: SliceableDataset[_U]) -> ConcatenateSliceableDataset[_T, _U]:
+        return ConcatenateSliceableDataset(self, dataset)
 
-    @overload
-    @staticmethod
-    def zip(
-        dataset: SliceableDataset[_X],
-        __ds1: SliceableDataset[_Y],
-        __ds2: SliceableDataset[_T],
-        __ds3: SliceableDataset[_U],
-        *,
-        strict: bool = False,
-    ) -> SliceableDataset[Tuple[_X, _Y, _T, _U]]:
-        ...
-
-    @overload
-    @staticmethod
-    def zip(
-        dataset: SliceableDataset[Any],
-        __ds1: SliceableDataset[Any],
-        __ds2: SliceableDataset[Any],
-        __ds3: SliceableDataset[Any],
-        __ds4: SliceableDataset[Any],
-        *datasets: SliceableDataset[Any],
-        strict: bool = False,
-    ) -> SliceableDataset[Tuple[Any, ...]]:
-        ...
-
-    @staticmethod
-    def zip(
-        dataset: SliceableDataset[Any], *datasets: SliceableDataset[Any], strict: bool = False
-    ) -> SliceableDataset[Tuple[Any, ...]]:
-        all_datasets = (dataset, *datasets)
-
-        lengths = list(map(len, all_datasets))
-        min_len = min(lengths)
-        if strict:
-            if not mit.all_equal(lengths):
-                raise ValueError(f'all datasets must have the same length. Got lengths={lengths}')
-        else:
-            all_datasets = tuple(ds[:min_len] for ds in all_datasets)
-
-        def getitem(i: int) -> Tuple[Any, ...]:
-            return tuple(ds[i] for ds in all_datasets)
-
-        return SliceableDataset.from_getitem(getitem, length=min_len)
-
-    def apply(
-        self,
-        transformation_func: Callable[[SliceableDataset[_T]], _U],
-    ) -> _U:
-        return transformation_func(self)
-
-    def concatenate(self, dataset: SliceableDataset[_U]) -> SliceableDataset[Union[_T, _U]]:
-        current_length = len(self)
-        other_length = len(dataset)
-        total_length = current_length + other_length
-
-        def getitem(index: int) -> Union[_T, _U]:
-            if index < current_length:
-                return self[index]
-            elif index < total_length:
-                new_index = index - current_length
-                return dataset[new_index]
-
-            raise IndexError(
-                f'current dataset length is {current_length}. '
-                f'Other dataset length is {other_length}. '
-                f'Total length is {total_length}. '
-                f'Got index {index}.'
-            )
-
-        return SliceableDataset.from_getitem(getitem, length=total_length)
-
-    def enumerate(self) -> SliceableDataset[Tuple[int, _T]]:
-        def getitem(index: int) -> Tuple[int, _T]:
-            absolute_index = _absolute_index_for_dataset(self, index)
-            return absolute_index, self[absolute_index]
-
-        return SliceableDataset.from_getitem(getitem, length=len(self))
-
-    def map(
-        self, __map_func: Callable[[_T], _U], *, num_parallel_calls: Optional[int] = None
-    ) -> SliceableDataset[_U]:
-        if num_parallel_calls is not None:
-            warnings.warn(
-                '`num_parallel_calls` is ignored in `SliceableDataset.map` '
-                'and supported only for compatibility with `tf.data.Dataset`s'
-            )
-
-        def getitem(index: int) -> _U:
-            return __map_func(self[index])
-
-        return SliceableDataset.from_getitem(getitem, length=len(self))
+    def map(self, __map_func: Callable[[_T], _U]) -> SliceableDataset[_U]:
+        return MapSliceableDataset(__map_func, self)
 
     def shuffle(self) -> SliceableDataset[_T]:
         # using `random.sample` as per the docs:
@@ -356,32 +254,19 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
         return tuple(splits)
 
     def prefetch(self, _buffer_size: Optional[int] = None) -> SliceableDataset[_T]:
+        # TODO: return a custom PrefetchedDataset that allows us to better iterate over
+        # it by pre-fetching `_buffer_size` items before
         warnings.warn(
             '`SliceableDataset.prefetch` is a no-op, kept only for consistency'
             ' with `tf.data.Dataset`s.'
         )
         return self
 
-    def batch(
-        self, batch_size: int, *, num_parallel_calls: Optional[int] = None
-    ) -> SliceableDataset[SliceableDataset[_T]]:
-        if num_parallel_calls is not None:
-            warnings.warn(
-                '`num_parallel_calls` is ignored in `SliceableDataset.batch` '
-                'and supported only for compatibility with `tf.data.Dataset`s'
-            )
-
-        new_length = math.ceil(len(self) / batch_size)
-
-        def new_data(index: int) -> SliceableDataset[_T]:
-            start = index * batch_size
-            end = start + batch_size
-            return self[start:end]
-
-        return SliceableDataset.from_getitem(new_data, length=new_length)
+    def batch(self, batch_size: int) -> BatchSliceableDataset[_T]:
+        return BatchSliceableDataset(self, batch_size)
 
     def unbatch(self: SliceableDataset[SliceableDataset[_U]]) -> SliceableDataset[_U]:
-        return reduce(lambda left, right: left.concatenate(right), self)
+        return reduce(ConcatenateSliceableDataset, self)
 
     def flatten(self) -> SliceableDataset[Any]:
         return self.unbatch().flatten() if _is_nested_sliceable_dataset(self) else self
@@ -413,6 +298,9 @@ class SequenceSliceableDataset(SliceableDataset[_T]):
 
     def getitem_from_index(self, index: int) -> _T:
         return self._ancestor[index]
+
+    def getitem_from_slice(self, slice_: slice) -> SliceableDataset[_T]:
+        return SequenceSliceableDataset(self._ancestor[slice_])
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self._ancestor})'
@@ -473,6 +361,117 @@ class ComposedIndicesSliceableDataset(SliceableDataset[_T]):
 
     def _rebase_indices(self, indices: Iterable[int]) -> Tuple[int, ...]:
         return tuple(self._indices[index] for index in indices)
+
+
+class ZippedSliceableDataset(SliceableDataset[Tuple[Unpack[_Ts]]], Generic[Unpack[_Ts]]):
+    def __init__(self, *datasets: Unpack[Tuple[Unpack[_Ts]]], strict: bool = True) -> None:
+        self._datasets = datasets
+
+        lengths = [len(dataset) for dataset in datasets]
+        if strict and not mit.all_equal(lengths):
+            raise ValueError(f'all datasets must have the same length. Got lengths={lengths}')
+
+        self._length = min(lengths)
+
+    def __len__(self) -> int:
+        return self._length
+
+    def getitem_from_index(self, index: int) -> Tuple[Unpack[_Ts]]:
+        return tuple(dataset[index] for dataset in self._datasets)
+
+    def getitem_from_indices(self, indices: Iterable[int]) -> SliceableDataset[Tuple[Unpack[_Ts]]]:
+        return ZippedSliceableDataset(*(dataset[indices] for dataset in self._datasets))
+
+    def __repr__(self) -> str:
+        reprs = ', '.join(repr(dataset) for dataset in self._datasets)
+        return f'{self.__class__.__name__}({reprs})'
+
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[Tuple[Unpack[_Ts]]]:
+        return tuple(zip(*(dataset.fetch(indices) for dataset in self._datasets)))
+
+
+class ConcatenateSliceableDataset(SliceableDataset[Union[_T, _U]], Generic[_T, _U]):
+    # TODO: make this variadic!
+    def __init__(self, left: SliceableDataset[_T], right: SliceableDataset[_U]) -> None:
+        self._left = left
+        self._right = right
+
+        self._left_length = len(self._left)
+        self._right_length = len(self._right)
+
+    def __len__(self) -> int:
+        return self._left_length + self._right_length
+
+    def getitem_from_index(self, index: int) -> Union[_T, _U]:
+        if index < self._left_length:
+            return self._left[index]
+        else:
+            return self._right[index - self._left_length]
+
+    def getitem_from_indices(self, indices: Iterable[int]) -> ConcatenateSliceableDataset[_T, _U]:
+        left_indices, right_indices = self._normalize_indices(indices)
+        return ConcatenateSliceableDataset(self._left[left_indices], self._right[right_indices])
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self._left}, {self._right})'
+
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[Union[_T, _U], ...]:
+        if indices is None:
+            return self._left.fetch() + self._right.fetch()
+
+        left_indices, right_indices = self._normalize_indices(indices)
+        return self._left.fetch(left_indices) + self._right.fetch(right_indices)
+
+    def _normalize_indices(self, indices: Iterable[int]) -> Tuple[List[int], List[int]]:
+        left_indices = []
+        right_indices = []
+
+        for index in indices:
+            if index < self._left_length:
+                left_indices.append(index)
+            else:
+                right_indices.append(index - self._left_length)
+
+        return left_indices, right_indices
+
+
+class MapSliceableDataset(SliceableDataset[_U]):
+    def __init__(self, map_func: Callable[[_T], _U], dataset: SliceableDataset[_T]) -> None:
+        self._map = map_func
+        self._dataset = dataset
+
+    def __len__(self) -> int:
+        return len(self._dataset)
+
+    def getitem_from_index(self, index: int) -> _U:
+        return self._map(self._dataset[index])
+
+    def getitem_from_indices(self, indices: Iterable[int]) -> MapSliceableDataset[_U]:
+        return MapSliceableDataset(self._map, self._dataset[indices])
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self._map}, {self._dataset})'
+
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_U, ...]:
+        fetched = self._dataset.fetch(indices)
+        return tuple(map(self._map, fetched))
+
+
+class BatchSliceableDataset(SliceableDataset[SliceableDataset[_T]], Generic[_T]):
+    def __init__(self, dataset: SliceableDataset[_T], batch_size: int) -> None:
+        self._dataset = dataset
+        self._batch_size = batch_size
+
+    def __len__(self) -> int:
+        return math.ceil(len(self._dataset) / self._batch_size)
+
+    def getitem_from_index(self, index: int) -> SliceableDataset[_T]:
+        start = index * self._batch_size
+        end = start + self._batch_size
+        return self._dataset[start:end]
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self._dataset}, {self._batch_size})'
 
 
 class SupervisedSliceableDataset(SliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y]):
