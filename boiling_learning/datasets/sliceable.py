@@ -4,7 +4,6 @@ import abc
 import itertools
 import math
 import random
-import warnings
 from fractions import Fraction
 from functools import reduce
 from operator import itemgetter
@@ -253,14 +252,8 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
 
         return tuple(splits)
 
-    def prefetch(self, _buffer_size: Optional[int] = None) -> SliceableDataset[_T]:
-        # TODO: return a custom PrefetchedDataset that allows us to better iterate over
-        # it by pre-fetching `_buffer_size` items before
-        warnings.warn(
-            '`SliceableDataset.prefetch` is a no-op, kept only for consistency'
-            ' with `tf.data.Dataset`s.'
-        )
-        return self
+    def prefetch(self, buffer_size: Optional[int]) -> PrefetchedDataset[_T]:
+        return PrefetchedDataset(self, buffer_size)
 
     def batch(self, batch_size: int) -> BatchSliceableDataset[_T]:
         return BatchSliceableDataset(self, batch_size)
@@ -284,6 +277,35 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
             and len(key) == len(self)
             and all(isinstance(elem, bool) for elem in key)
         )
+
+
+class ProxySliceableDataset(SliceableDataset[_T]):
+    def __init__(self, ancestor: SliceableDataset[_T]) -> None:
+        self._ancestor = ancestor
+
+    def __iter__(self) -> Iterator[_T]:
+        return iter(self._ancestor)
+
+    def __len__(self) -> int:
+        return len(self._ancestor)
+
+    def getitem_from_index(self, index: int) -> _T:
+        return self._ancestor[index]
+
+    def getitem_from_indices(self, indices: Iterable[int]) -> SliceableDataset[_T]:
+        return self._ancestor[indices]
+
+    def getitem_from_slice(self, slice_: slice) -> SliceableDataset[_T]:
+        return self._ancestor[slice_]
+
+    def getitem_from_boolean_mask(self, mask: BooleanMask) -> SliceableDataset[_T]:
+        return self._ancestor[mask]
+
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_T, ...]:
+        return self._ancestor.fetch(indices)
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self._ancestor})'
 
 
 class SequenceSliceableDataset(SliceableDataset[_T]):
@@ -474,6 +496,16 @@ class BatchSliceableDataset(SliceableDataset[SliceableDataset[_T]], Generic[_T])
         return f'{self.__class__.__name__}({self._dataset}, {self._batch_size})'
 
 
+class PrefetchedDataset(ProxySliceableDataset[_T]):
+    def __init__(self, ancestor: SliceableDataset[_T], buffer_size: Optional[int]) -> None:
+        super().__init__(ancestor)
+        self._buffer_size = buffer_size if buffer_size is not None else len(self)
+
+    def __iter__(self) -> Iterator[_T]:
+        for buffer_indices in SliceableDataset.range(len(self)).batch(self._buffer_size):
+            yield from self._ancestor.fetch(buffer_indices)
+
+
 class SupervisedSliceableDataset(SliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y]):
     @staticmethod
     def from_pairs(dataset: SliceableDataset[Tuple[_X, _Y]]) -> SupervisedSliceableDataset[_X, _Y]:
@@ -619,10 +651,6 @@ def load_supervised_sliceable_dataset(
 
 def _sliceable_dataset_element_path(root: PathLike, index: int) -> Path:
     return resolve(root) / str(index)
-
-
-def _absolute_index_for_dataset(dataset: SliceableDataset[Any], index: int) -> int:
-    return len(dataset) + index if index < 0 else index
 
 
 @serialize.instance(SliceableDataset)

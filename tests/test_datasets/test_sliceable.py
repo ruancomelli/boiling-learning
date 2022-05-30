@@ -1,5 +1,6 @@
 from fractions import Fraction
 from random import sample
+from typing import Iterable, List, Optional, Tuple
 
 import numpy as np
 import tensorflow as tf
@@ -101,11 +102,46 @@ class TestSliceableDataset:
         assert ''.join(sds.take(10)) == 'abcdefghij'
 
     def test_prefetch(self) -> None:
-        sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
+        database_fetches: List[List[int]] = []
 
-        # make sure that this placeholder method at least returns the exact same
-        # dataset
-        assert sds.prefetch() is sds
+        class MockDatabaseDataset(SliceableDataset[int]):
+            def __len__(self) -> int:
+                return 20
+
+            def getitem_from_index(self, index: int) -> int:
+                return index ** 2
+
+            def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[int, ...]:
+                if indices is None:
+                    indices = range(len(self))
+
+                indices = list(indices)
+                database_fetches.append(indices)
+                return tuple(self[indices])
+
+        prefetched = MockDatabaseDataset().prefetch(3)
+        it = iter(prefetched)
+
+        assert not database_fetches
+
+        assert next(it) == 0
+        assert database_fetches == [[0, 1, 2]]
+        assert next(it) == 1
+        assert database_fetches == [[0, 1, 2]]
+        assert next(it) == 4
+        assert database_fetches == [[0, 1, 2]]
+        assert next(it) == 9
+        assert database_fetches == [[0, 1, 2], [3, 4, 5]]
+        assert next(it) == 16
+        assert database_fetches == [[0, 1, 2], [3, 4, 5]]
+        assert next(it) == 25
+        assert database_fetches == [[0, 1, 2], [3, 4, 5]]
+        assert next(it) == 36
+        assert database_fetches == [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+        assert next(it) == 49
+        assert database_fetches == [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+        assert next(it) == 64
+        assert database_fetches == [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
 
     def test_batch(self) -> None:
         sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
