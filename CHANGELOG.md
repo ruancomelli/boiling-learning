@@ -1,5 +1,15 @@
 
 
+## v0.20.26 (2022-05-30)
+
+### Refactor
+
+- **preprocessing/hdf5**: improve sliceable dataset and add logging
+
+### Fix
+
+- **preprocessing/hdf5**: divide image pixels by 255
+
 ## v0.20.25 (2022-05-30)
 
 ### Feat
