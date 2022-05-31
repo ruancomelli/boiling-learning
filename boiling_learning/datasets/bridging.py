@@ -17,7 +17,7 @@ def sliceable_dataset_to_tensorflow_dataset(
     snapshot_path: Optional[PathLike] = None,
     cache: Union[bool, PathLike] = False,
 ) -> tf.data.Dataset:
-    sample = dataset.flatten()[0]
+    sample = dataset[0]
     typespec = auto_spec(sample)
 
     ds = tf.data.Dataset.from_generator(lambda: dataset, output_signature=typespec)

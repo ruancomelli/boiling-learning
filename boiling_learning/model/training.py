@@ -108,15 +108,16 @@ def get_fit_model(
     model = compiled_model.model
 
     ds_train, ds_val, _ = datasets.value
+
     ds_train = sliceable_dataset_to_tensorflow_dataset(
-        ds_train.shuffle(),
+        ds_train.shuffle().prefetch(params.batch_size),
         batch_size=params.batch_size,
         prefetch=True,
         cache=(cache if isinstance(cache, bool) else cache / 'train'),
         snapshot_path=(snapshot_path / 'train' if snapshot_path is not None else None),
     )
     ds_val = sliceable_dataset_to_tensorflow_dataset(
-        ds_val.shuffle(),
+        ds_val.shuffle().prefetch(params.batch_size),
         batch_size=params.batch_size,
         prefetch=True,
         cache=(cache if isinstance(cache, bool) else cache / 'val'),
