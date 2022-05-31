@@ -341,26 +341,6 @@ class GetItemSliceableDataset(SliceableDataset[_T]):
         return self._getitem(index)
 
 
-class GetIndicesSliceableDataset(SliceableDataset[_T]):
-    def __init__(
-        self, getindices: Callable[[Iterable[int]], SliceableDataset[_T]], length: int
-    ) -> None:
-        self._getindices = getindices
-        self._length = length
-
-    def __len__(self) -> int:
-        return self._length
-
-    def getitem_from_index(self, index: int) -> _T:
-        return mit.one(self[[index]])
-
-    def getitem_from_indices(self, indices: Iterable[int]) -> SliceableDataset[_T]:
-        return self._getindices(indices)
-
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_T, ...]:
-        return self._getindices(indices if indices is not None else range(len(self))).fetch()
-
-
 class ComposedIndicesSliceableDataset(SliceableDataset[_T]):
     def __init__(self, ancestor: SliceableDataset[_T], indices: Iterable[int]) -> None:
         self._ancestor = ancestor

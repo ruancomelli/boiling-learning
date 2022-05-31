@@ -16,25 +16,39 @@ from boiling_learning.utils.utils import PathLike, resolve
 
 class HDF5VideoSliceableDataset(SliceableDataset[VideoFrame]):
     def __init__(self, filepath: PathLike, dataset_name: str) -> None:
-        self._file = h5py.File(str(resolve(filepath)), 'r', swmr=True)
+        self._filepath = filepath
+        self._file = h5py.File(str(resolve(self._filepath, parents=True)), 'r', swmr=True)
         self._dataset_name = dataset_name
+        self._is_open: bool = False
 
     def getitem_from_index(self, index: int) -> VideoFrame:
         return typing.cast(VideoFrame, self.dataset()[index] / 255)
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrame, ...]:
+        logger.debug(f'Fetching frames {indices} from {self}')
         return tuple(
             (self.dataset()[:] if indices is None else self.dataset()[list(indices)]) / 255
         )
 
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self._dataset_name}@{self._filepath})'
+
     def __enter__(self) -> None:
         self._file.__enter__()
+        self._is_open = True
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
+        self._is_open = False
         self._file.__exit__(exc_type, exc_value, traceback)
 
     def dataset(self) -> h5py.Dataset:
+        if not self._is_open:
+            self.__enter__()
+
         return self._file[self._dataset_name]
+
+    def close(self) -> None:
+        self._file.close()
 
 
 def video_to_hdf5(
