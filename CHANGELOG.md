@@ -1,5 +1,23 @@
 
 
+## v0.20.25 (2022-05-30)
+
+### Feat
+
+- **preprocessing/hdf5**: provide a sliceable dataset based on HDF5 files
+- **datasets/sliceable**: add `PrefetchDataset`
+- **model/layers**: add backport for layer `RandomBrightness` from TF 2.9
+
+### Fix
+
+- **datasets/sliceable**: fix `SupervisedSliceableDataset` to account for the newest changes
+
+### Refactor
+
+- **datasets/sliceable**: refactor more sliceable dataset functionality into separate dedicated classes
+- **datasets/sliceable**: refactor sliceable dataset functionality into separate dedicated classes
+- **datasets**: move `sliceable_dataset_to_tensorflow_dataset` to a new `bridging` module
+
 ## v0.20.24 (2022-05-28)
 
 ### Perf
