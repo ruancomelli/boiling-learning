@@ -1,6 +1,7 @@
 import typing
 from typing import Iterable, Iterator, Optional, Tuple
 
+import funcy
 import h5py
 import hdf5plugin
 import more_itertools as mit
@@ -19,10 +20,12 @@ class HDF5VideoSliceableDataset(SliceableDataset[VideoFrame]):
         self._dataset_name = dataset_name
 
     def getitem_from_index(self, index: int) -> VideoFrame:
-        return typing.cast(VideoFrame, self.dataset()[index])
+        return typing.cast(VideoFrame, self.dataset()[index] / 255)
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrame, ...]:
-        return tuple(self.dataset() if indices is None else self.dataset()[list(indices)])
+        return tuple(
+            (self.dataset()[:] if indices is None else self.dataset()[list(indices)]) / 255
+        )
 
     def __enter__(self) -> None:
         self._file.__enter__()
@@ -42,23 +45,21 @@ def video_to_hdf5(
     batch_size: int = 1,
     transformers: Tuple[Transformer[VideoFrame, VideoFrame], ...] = (),
 ) -> None:
-    """Save video as an HDF5 file
-
-    Arguments:
-        transformers: a tuple of transformers mapping a batch of frames to
-        another batch of frames. Suitable for broadcasting image transformers.
-    """
+    """Save video as an HDF5 file."""
     destination = str(resolve(dest))
+
+    composed_transformer = funcy.rcompose(*transformers)
+    example_frame = composed_transformer(video[0])
 
     # use OpenCV reader because it is much more memory efficient than PIMS
     frames = video_frames(video.path)
     frame_chunks = mit.chunked(frames, batch_size)
     array_chunks = map(np.array, frame_chunks)
 
-    with h5py.File(destination, 'a') as file:
+    with h5py.File(destination, 'w') as file:
         dataset = file.require_dataset(
             dataset_name,
-            video.shape,
+            (len(video), *example_frame.shape),
             dtype='f',
             # best compression algorithm I found - good compression, fastest decompression
             **hdf5plugin.LZ4(),
@@ -66,12 +67,8 @@ def video_to_hdf5(
         for index, batch in enumerate(array_chunks):
             start, end = index * batch_size, (index + 1) * batch_size
 
+            batch = np.array([composed_transformer(frame) for frame in batch], dtype=batch.dtype)
             logger.debug(f'Writing frames {start}:{end} from {video.path} to {destination}')
-
-            for transformer in transformers:
-                batch = map(transformer, batch)
-
-            batch = np.array(batch)
 
             dataset.write_direct(batch, dest_sel=np.s_[start:end])
             dataset.flush()
