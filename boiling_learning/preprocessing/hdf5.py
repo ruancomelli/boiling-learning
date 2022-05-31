@@ -21,6 +21,9 @@ class HDF5VideoSliceableDataset(SliceableDataset[VideoFrame]):
         self._dataset_name = dataset_name
         self._is_open: bool = False
 
+    def __len__(self) -> int:
+        return len(self.dataset())
+
     def getitem_from_index(self, index: int) -> VideoFrame:
         return typing.cast(VideoFrame, self.dataset()[index] / 255)
 
