@@ -1,5 +1,5 @@
 import typing
-from typing import Iterator, Tuple
+from typing import Iterable, Iterator, Optional, Tuple
 
 import h5py
 import hdf5plugin
@@ -7,9 +7,31 @@ import more_itertools as mit
 import numpy as np
 from loguru import logger
 
+from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.preprocessing.video import Video, VideoFrame, open_video
 from boiling_learning.utils.utils import PathLike, resolve
+
+
+class HDF5VideoSliceableDataset(SliceableDataset[VideoFrame]):
+    def __init__(self, filepath: PathLike, dataset_name: str) -> None:
+        self._file = h5py.File(str(resolve(filepath)), 'r', swmr=True)
+        self._dataset_name = dataset_name
+
+    def getitem_from_index(self, index: int) -> VideoFrame:
+        return typing.cast(VideoFrame, self.dataset()[index])
+
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrame, ...]:
+        return tuple(self.dataset() if indices is None else self.dataset()[list(indices)])
+
+    def __enter__(self) -> None:
+        self._file.__enter__()
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        self._file.__exit__(exc_type, exc_value, traceback)
+
+    def dataset(self) -> h5py.Dataset:
+        return self._file[self._dataset_name]
 
 
 def video_to_hdf5(
@@ -54,13 +76,6 @@ def video_to_hdf5(
             dataset.write_direct(batch, dest_sel=np.s_[start:end])
             dataset.flush()
             file.flush()
-
-
-def get_frame_from_hdf5(path: PathLike, index: int, *, dataset_name: str) -> VideoFrame:
-    resolved = str(resolve(path))
-
-    with h5py.File(resolved, 'r', swmr=True) as f:
-        return typing.cast(VideoFrame, f[dataset_name][index])
 
 
 def video_frames(video_path: PathLike) -> Iterator[VideoFrame]:
