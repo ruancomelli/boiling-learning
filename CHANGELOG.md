@@ -1,5 +1,11 @@
 
 
+## v0.20.28 (2022-05-30)
+
+### Fix
+
+- **preprocessing/hdf5**: add `__len__` to `HDF5VideoSliceableDataset`
+
 ## v0.20.27 (2022-05-30)
 
 ### Feat
