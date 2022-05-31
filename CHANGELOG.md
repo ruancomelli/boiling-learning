@@ -1,5 +1,11 @@
 
 
+## v0.20.27 (2022-05-30)
+
+### Feat
+
+- **model/training**: add prefetch to sliceable datasets
+
 ## v0.20.26 (2022-05-30)
 
 ### Refactor
