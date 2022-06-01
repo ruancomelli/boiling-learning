@@ -23,6 +23,8 @@ class utils_utils_test(TestCase):
 
         assert [sorted_items[index] for index in unsorters] == unsorted_items
 
+        assert unsort(()) == ((), ())
+
 
 class utils_collections_test(TestCase):
     def test_KeyedSet(self):

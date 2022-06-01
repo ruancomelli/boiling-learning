@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import operator
 import os
 import pprint
@@ -76,8 +77,13 @@ def argsorted(iterable: Iterable) -> Iterable[int]:
 
 
 def unsort(iterable: Iterable[_T]) -> Tuple[Iterable[int], Iterable[_T]]:
-    sorters, sorted_indices = mit.unzip(sorted(enumerate(iterable), key=operator.itemgetter(1)))
-    unsorters = map(operator.itemgetter(0), sorted(enumerate(sorters), key=operator.itemgetter(1)))
+    peekable = mit.peekable(iterable)
+
+    if not peekable:
+        return (), ()
+
+    sorted_indices, sorters = mit.sort_together((peekable, itertools.count()))
+    _, unsorters = mit.sort_together((sorters, itertools.count()))
     return unsorters, sorted_indices
 
 
