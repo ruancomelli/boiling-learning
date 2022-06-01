@@ -1,5 +1,11 @@
 
 
+## v0.20.31 (2022-05-31)
+
+### Fix
+
+- **preprocessing/hdf5**: sort indices and unsort frames to avoid HDF5 access errors
+
 ## v0.20.30 (2022-05-31)
 
 ### Fix
