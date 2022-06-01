@@ -7,6 +7,7 @@ import hdf5plugin
 import more_itertools as mit
 import numpy as np
 from loguru import logger
+from typing_extensions import Literal
 
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.preprocessing.transformers import Transformer
@@ -66,6 +67,7 @@ def video_to_hdf5(
     dataset_name: str,
     batch_size: int = 1,
     transformers: Tuple[Transformer[VideoFrame, VideoFrame], ...] = (),
+    open_mode: Literal['w', 'a'] = 'a',
 ) -> None:
     """Save video as an HDF5 file."""
     destination = str(resolve(dest))
@@ -78,7 +80,7 @@ def video_to_hdf5(
     frame_chunks = mit.chunked(frames, batch_size)
     array_chunks = map(np.array, frame_chunks)
 
-    with h5py.File(destination, 'w') as file:
+    with h5py.File(destination, open_mode) as file:
         dataset = file.require_dataset(
             dataset_name,
             (len(video), *example_frame.shape),
