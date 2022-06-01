@@ -1,5 +1,11 @@
 
 
+## v0.20.34 (2022-06-01)
+
+### Fix
+
+- **utils**: handle empty iterables in `unsort`
+
 ## v0.20.33 (2022-06-01)
 
 ### Feat
