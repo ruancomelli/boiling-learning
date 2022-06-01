@@ -1,5 +1,11 @@
 
 
+## v0.20.29 (2022-05-31)
+
+### Feat
+
+- **datasets/sliceable**: accept different strictness levels in `ZippedSliceableDataset`
+
 ## v0.20.28 (2022-05-30)
 
 ### Fix
