@@ -1,5 +1,11 @@
 
 
+## v0.20.32 (2022-06-01)
+
+### Refactor
+
+- **preprocessing/hdf5**: convert frames to the 0-1 scale before saving to HDF5, not after
+
 ## v0.20.31 (2022-05-31)
 
 ### Fix
