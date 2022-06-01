@@ -26,7 +26,7 @@ from typing import (
 import funcy
 import more_itertools as mit
 from iteround import saferound
-from typing_extensions import TypeGuard, TypeVarTuple, Unpack
+from typing_extensions import Literal, TypeGuard, TypeVarTuple, Unpack
 
 from boiling_learning.io import LoaderFunction, SaverFunction, json
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
@@ -129,9 +129,10 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
 
     @staticmethod
     def zip(
-        *datasets: Unpack[Tuple[SliceableDataset[Unpack[_Ts]]]], strict: bool = True
+        *datasets: Unpack[Tuple[SliceableDataset[Unpack[_Ts]]]],
+        strictness: Literal['none', 'one-off', 'strict'] = 'strict',
     ) -> ZippedSliceableDataset[Unpack[_Ts]]:
-        return ZippedSliceableDataset(*datasets, strict=strict)
+        return ZippedSliceableDataset(*datasets, strictness=strictness)
 
     def concatenate(self, dataset: SliceableDataset[_U]) -> ConcatenateSliceableDataset[_T, _U]:
         return ConcatenateSliceableDataset(self, dataset)
@@ -367,12 +368,16 @@ class ComposedIndicesSliceableDataset(SliceableDataset[_T]):
 
 
 class ZippedSliceableDataset(SliceableDataset[Tuple[Unpack[_Ts]]], Generic[Unpack[_Ts]]):
-    def __init__(self, *datasets: Unpack[Tuple[Unpack[_Ts]]], strict: bool = True) -> None:
+    def __init__(
+        self,
+        *datasets: Unpack[Tuple[Unpack[_Ts]]],
+        strictness: Literal['none', 'one-off', 'strict'] = 'strict',
+    ) -> None:
         self._datasets = datasets
+        self._strictness = strictness
 
         lengths = [len(dataset) for dataset in datasets]
-        if strict and not mit.all_equal(lengths):
-            raise ValueError(f'all datasets must have the same length. Got lengths={lengths}')
+        self._check_lengths(lengths)
 
         self._length = min(lengths)
 
@@ -391,6 +396,31 @@ class ZippedSliceableDataset(SliceableDataset[Tuple[Unpack[_Ts]]], Generic[Unpac
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[Tuple[Unpack[_Ts]]]:
         return tuple(zip(*(dataset.fetch(indices) for dataset in self._datasets)))
+
+    def _check_lengths(self, lengths: List[int]) -> None:
+        if self._strictness == 'one-off':
+            self._check_one_off(lengths)
+        elif self._strictness == 'strict':
+            self._check_strict(lengths)
+
+    def _check_strict(self, lengths: List[int]) -> None:
+        minimum = min(lengths)
+        maximum = max(lengths)
+        if maximum - minimum > 1:
+            raise ValueError(
+                f'[strictness={self._strictness}] '
+                'Datasets may differ by at most one element. '
+                f'Shorter has {minimum}, longer has {maximum}. '
+                f'Got lengths={lengths}.'
+            )
+
+    def _check_one_off(self, lengths: List[int]) -> None:
+        if not mit.all_equal(lengths):
+            raise ValueError(
+                f'[strictness={self._strictness}] '
+                'All datasets must have the same length. '
+                f'Got lengths={lengths}.'
+            )
 
 
 class ConcatenateSliceableDataset(SliceableDataset[Union[_T, _U]], Generic[_T, _U]):
@@ -493,9 +523,14 @@ class PrefetchedDataset(ProxySliceableDataset[_T]):
 class SupervisedSliceableDataset(ProxySliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y]):
     @staticmethod
     def from_features_and_targets(
-        features: SliceableDataset[_X], targets: SliceableDataset[_Y]
+        features: SliceableDataset[_X],
+        targets: SliceableDataset[_Y],
+        *,
+        strictness: Literal['none', 'one-off', 'strict'] = 'strict',
     ) -> SupervisedSliceableDataset[_X, _Y]:
-        return SupervisedSliceableDataset(SliceableDataset.zip(features, targets))
+        return SupervisedSliceableDataset(
+            SliceableDataset.zip(features, targets, strictness=strictness)
+        )
 
     def getitem_from_indices(self, indices: Iterable[int]) -> SupervisedSliceableDataset[_X, _Y]:
         return SupervisedSliceableDataset(super().getitem_from_indices(indices))

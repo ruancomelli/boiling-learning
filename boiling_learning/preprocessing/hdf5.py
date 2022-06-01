@@ -16,8 +16,8 @@ from boiling_learning.utils.utils import PathLike, resolve
 
 class HDF5VideoSliceableDataset(SliceableDataset[VideoFrame]):
     def __init__(self, filepath: PathLike, dataset_name: str) -> None:
-        self._filepath = filepath
-        self._file = h5py.File(str(resolve(self._filepath, parents=True)), 'r', swmr=True)
+        self._filepath = resolve(filepath, parents=True)
+        self._file = h5py.File(str(self._filepath), 'r', swmr=True)
         self._dataset_name = dataset_name
         self._is_open: bool = False
 
@@ -82,7 +82,8 @@ def video_to_hdf5(
             **hdf5plugin.LZ4(),
         )
         for index, batch in enumerate(array_chunks):
-            start, end = index * batch_size, (index + 1) * batch_size
+            start = index * batch_size
+            end = start + len(batch)
 
             batch = np.array([composed_transformer(frame) for frame in batch], dtype=batch.dtype)
             logger.debug(f'Writing frames {start}:{end} from {video.path} to {destination}')

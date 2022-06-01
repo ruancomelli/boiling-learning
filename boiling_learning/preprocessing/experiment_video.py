@@ -244,6 +244,7 @@ class ExperimentVideo(Video):
 
         if inplace:
             self.df = df
+
         return df
 
     def sync_time_series(self, source_df: pd.DataFrame, inplace: bool = True) -> pd.DataFrame:
