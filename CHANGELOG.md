@@ -1,5 +1,11 @@
 
 
+## v0.20.30 (2022-05-31)
+
+### Fix
+
+- **datasets/sliceable**: unswap strictness checking methods
+
 ## v0.20.29 (2022-05-31)
 
 ### Feat
