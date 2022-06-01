@@ -1,16 +1,27 @@
 import math
 from unittest.case import TestCase
 
-from boiling_learning.utils import indexify
 from boiling_learning.utils.collections import KeyedSet
 from boiling_learning.utils.geometry import Cylinder, RectangularPrism
 from boiling_learning.utils.iterutils import EvenlySpacedGoal, evenly_spaced_indices
 from boiling_learning.utils.lazy import Lazy, LazyCallable
+from boiling_learning.utils.utils import indexify, unsort
 
 
 class utils_utils_test(TestCase):
-    def test_indexify(self):
+    def test_indexify(self) -> None:
         self.assertEqual(tuple(indexify('abc')), (0, 1, 2))
+
+    def test_unsort(self) -> None:
+        unsorted_items = [50, 30, 20, 10, 40]
+
+        unsorters, sorted_items = unsort(unsorted_items)
+        unsorters = list(unsorters)
+        sorted_items = list(sorted_items)
+        assert sorted_items == [10, 20, 30, 40, 50]
+        assert unsorters == [4, 2, 1, 0, 3]
+
+        assert [sorted_items[index] for index in unsorters] == unsorted_items
 
 
 class utils_collections_test(TestCase):

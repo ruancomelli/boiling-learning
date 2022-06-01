@@ -11,7 +11,7 @@ from loguru import logger
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.preprocessing.video import Video, VideoFrame, open_video
-from boiling_learning.utils.utils import PathLike, resolve
+from boiling_learning.utils.utils import PathLike, resolve, unsort
 
 
 class HDF5VideoSliceableDataset(SliceableDataset[VideoFrame]):
@@ -29,9 +29,14 @@ class HDF5VideoSliceableDataset(SliceableDataset[VideoFrame]):
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrame, ...]:
         logger.debug(f'Fetching frames {indices} from {self}')
-        return tuple(
-            (self.dataset()[:] if indices is None else self.dataset()[list(indices)]) / 255
-        )
+
+        if indices is None:
+            return tuple(self.dataset())
+
+        # sort the indices, fetch the frames and unsort them back
+        unsorters, sorted_indices = unsort(indices)
+        frames = self.dataset()[list(sorted_indices)]
+        return tuple(frames[unsorter] / 255 for unsorter in unsorters)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self._dataset_name}@{self._filepath})'

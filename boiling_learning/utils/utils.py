@@ -26,6 +26,7 @@ from typing import (
 
 import funcy
 import modin.pandas as pd
+import more_itertools as mit
 from typing_extensions import overload
 
 from boiling_learning.utils.iterutils import flaglast
@@ -72,6 +73,12 @@ def argmax(iterable: Iterable) -> int:
 
 def argsorted(iterable: Iterable) -> Iterable[int]:
     return funcy.pluck(0, sorted(enumerate(iterable), key=operator.itemgetter(1)))
+
+
+def unsort(iterable: Iterable[_T]) -> Tuple[Iterable[int], Iterable[_T]]:
+    sorters, sorted_indices = mit.unzip(sorted(enumerate(iterable), key=operator.itemgetter(1)))
+    unsorters = map(operator.itemgetter(0), sorted(enumerate(sorters), key=operator.itemgetter(1)))
+    return unsorters, sorted_indices
 
 
 def merge_dicts(*dict_args: Mapping, latter_precedence: bool = True) -> dict:
