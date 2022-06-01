@@ -25,7 +25,7 @@ class HDF5VideoSliceableDataset(SliceableDataset[VideoFrame]):
         return len(self.dataset())
 
     def getitem_from_index(self, index: int) -> VideoFrame:
-        return typing.cast(VideoFrame, self.dataset()[index] / 255)
+        return typing.cast(VideoFrame, self.dataset()[index])
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrame, ...]:
         logger.debug(f'Fetching frames {indices} from {self}')
@@ -36,7 +36,7 @@ class HDF5VideoSliceableDataset(SliceableDataset[VideoFrame]):
         # sort the indices, fetch the frames and unsort them back
         unsorters, sorted_indices = unsort(indices)
         frames = self.dataset()[list(sorted_indices)]
-        return tuple(frames[unsorter] / 255 for unsorter in unsorters)
+        return tuple(frames[unsorter] for unsorter in unsorters)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self._dataset_name}@{self._filepath})'
@@ -90,7 +90,9 @@ def video_to_hdf5(
             start = index * batch_size
             end = start + len(batch)
 
-            batch = np.array([composed_transformer(frame) for frame in batch], dtype=batch.dtype)
+            batch = np.array(
+                [composed_transformer(frame) / 255 for frame in batch], dtype=batch.dtype
+            )
             logger.debug(f'Writing frames {start}:{end} from {video.path} to {destination}')
 
             dataset.write_direct(batch, dest_sel=np.s_[start:end])
