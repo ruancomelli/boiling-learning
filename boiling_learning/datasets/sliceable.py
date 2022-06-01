@@ -403,7 +403,7 @@ class ZippedSliceableDataset(SliceableDataset[Tuple[Unpack[_Ts]]], Generic[Unpac
         elif self._strictness == 'strict':
             self._check_strict(lengths)
 
-    def _check_strict(self, lengths: List[int]) -> None:
+    def _check_one_off(self, lengths: List[int]) -> None:
         minimum = min(lengths)
         maximum = max(lengths)
         if maximum - minimum > 1:
@@ -414,7 +414,7 @@ class ZippedSliceableDataset(SliceableDataset[Tuple[Unpack[_Ts]]], Generic[Unpac
                 f'Got lengths={lengths}.'
             )
 
-    def _check_one_off(self, lengths: List[int]) -> None:
+    def _check_strict(self, lengths: List[int]) -> None:
         if not mit.all_equal(lengths):
             raise ValueError(
                 f'[strictness={self._strictness}] '
