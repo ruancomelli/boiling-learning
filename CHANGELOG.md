@@ -1,5 +1,11 @@
 
 
+## v0.20.33 (2022-06-01)
+
+### Feat
+
+- **preprocessing/hdf5**: support different HDF5 file opening modes
+
 ## v0.20.32 (2022-06-01)
 
 ### Refactor
