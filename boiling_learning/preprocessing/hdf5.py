@@ -1,5 +1,5 @@
 import typing
-from typing import Iterable, Iterator, Optional, Tuple
+from typing import Iterable, Optional, Tuple
 
 import funcy
 import h5py
@@ -11,7 +11,7 @@ from typing_extensions import Literal
 
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.preprocessing.transformers import Transformer
-from boiling_learning.preprocessing.video import Video, VideoFrame, open_video
+from boiling_learning.preprocessing.video import Video, VideoFrame
 from boiling_learning.utils.utils import PathLike, resolve, unsort
 
 
@@ -75,39 +75,24 @@ def video_to_hdf5(
     composed_transformer = funcy.rcompose(*transformers)
     example_frame = composed_transformer(video[0])
 
-    # use OpenCV reader because it is much more memory efficient than PIMS
-    frames = video_frames(video.path)
-    frame_chunks = mit.chunked(frames, batch_size)
-    array_chunks = map(np.array, frame_chunks)
+    length = len(video)
+    chunks = (*range(0, length, batch_size), length)
 
     with h5py.File(destination, open_mode) as file:
         dataset = file.require_dataset(
             dataset_name,
-            (len(video), *example_frame.shape),
+            (length, *example_frame.shape),
             dtype='f',
             # best compression algorithm I found - good compression, fastest decompression
             **hdf5plugin.LZ4(),
         )
-        for index, batch in enumerate(array_chunks):
-            start = index * batch_size
-            end = start + len(batch)
-
-            batch = np.array(
-                [composed_transformer(frame) / 255 for frame in batch], dtype=batch.dtype
-            )
+        for start, end in mit.pairwise(chunks):
             logger.debug(f'Writing frames {start}:{end} from {video.path} to {destination}')
+            batch = np.stack([composed_transformer(video[i]) for i in range(start, end)])
 
             dataset.write_direct(batch, dest_sel=np.s_[start:end])
+
+            # flush data and close video to release memory as soon as possible
             dataset.flush()
             file.flush()
-
-
-def video_frames(video_path: PathLike) -> Iterator[VideoFrame]:
-    with open_video(video_path) as cap:
-        while True:
-            ret, frame = cap.read()
-
-            if not ret:
-                break
-
-            yield frame
+            video.close()

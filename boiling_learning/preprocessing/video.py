@@ -78,7 +78,6 @@ class Video(Sequence[VideoFrame]):
     def __init__(self, path: PathLike) -> None:
         self.path = resolve(path)
         self._video: Optional[pims.Video] = None
-        self._should_shrink_to_valid_end_frames: bool = True
 
     @property
     def video(self) -> pims.Video:
@@ -105,7 +104,10 @@ class Video(Sequence[VideoFrame]):
 
     def close(self) -> None:
         if self.is_open():
-            self._video.close()
+            with contextlib.suppress(AttributeError):
+                # try to close the video. But, since some PIMS readers don't provide a
+                # `close` method, suppress `AttributeError`s
+                self._video.close()
             self._video = None
 
     def is_open(self) -> bool:
