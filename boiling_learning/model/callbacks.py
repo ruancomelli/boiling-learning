@@ -53,23 +53,26 @@ class AdditionalValidationSets(Callback):
 
         # evaluate on the additional validation sets
         for validation_set_name, validation_set in self.validation_sets.items():
-            results = self.model.evaluate(
-                validation_set,
-                verbose=self.verbose,
-                batch_size=self.batch_size,
-            )
+            try:
+                results = self.model.evaluate(
+                    validation_set,
+                    verbose=self.verbose,
+                    batch_size=self.batch_size,
+                )
 
-            names = ['loss'] + [m.name for m in self.model.metrics]
-            full_names = [f'{validation_set_name}_{name}' for name in names]
-            full_results = [logs['loss']] + results
+                names = ['loss'] + [m.name for m in self.model.metrics]
+                full_names = [f'{validation_set_name}_{name}' for name in names]
+                full_results = [logs['loss']] + results
 
-            for full_name, result in zip(full_names, full_results):
-                self.history.setdefault(full_name, []).append(result)
+                for full_name, result in zip(full_names, full_results):
+                    self.history.setdefault(full_name, []).append(result)
 
-            values_str = ' - '.join(
-                f'{name}: {result}' for name, result in zip(names, full_results)
-            )
-            logger.info(f'{validation_set_name}[{values_str}]')
+                values_str = ' - '.join(
+                    f'{name}: {result}' for name, result in zip(names, full_results)
+                )
+                logger.info(f'{validation_set_name}[{values_str}]')
+            except (ValueError, TypeError, ArithmeticError) as e:
+                logger.info(f'{validation_set_name}[{e}]')
 
 
 class Streamer(Protocol):
