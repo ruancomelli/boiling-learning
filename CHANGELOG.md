@@ -1,5 +1,11 @@
 
 
+## v0.20.36 (2022-06-02)
+
+### Fix
+
+- **model/callbacks**: add error handling to `AdditionalValidationSets`
+
 ## v0.20.35 (2022-06-01)
 
 ### Fix
