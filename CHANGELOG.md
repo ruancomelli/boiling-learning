@@ -1,5 +1,11 @@
 
 
+## v0.20.35 (2022-06-01)
+
+### Fix
+
+- **preprocessing/hdf5**: replace OpenCV reader with PIMS for correct frame generation
+
 ## v0.20.34 (2022-06-01)
 
 ### Fix
