@@ -2,7 +2,7 @@ import datetime
 import gc
 import shutil
 from collections import defaultdict
-from typing import Any, DefaultDict, Dict, Iterable, Optional
+from typing import Any, Callable, DefaultDict, Dict, Iterable, Optional
 
 import numpy as np
 from loguru import logger
@@ -11,7 +11,7 @@ from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import BackupAndRestore as _BackupAndRestore
 from tensorflow.keras.callbacks import Callback
 from tensorflow.python.platform import tf_logging as logging
-from typing_extensions import Literal, Protocol
+from typing_extensions import Literal
 
 from boiling_learning.io import json
 from boiling_learning.utils import PathLike, resolve
@@ -63,15 +63,10 @@ class AdditionalValidationSets(Callback):
                 logger.info(e)
 
 
-class Streamer(Protocol):
-    def __call__(self, arg: Any, end: str = '\n') -> Any:
-        pass
-
-
 class TimePrinter(Callback):
     def __init__(
         self,
-        streamer: Streamer = print,
+        streamer: Callable[[str], None] = print,
         fmt: str = '%Y-%m-%d %H:%M:%S',
         when: Optional[Iterable[str]] = None,
     ):
@@ -326,7 +321,7 @@ class RegisterEpoch(Callback):
 
 
 class SaveHistory(Callback):
-    def __init__(self, path: PathLike, mode: Literal['a', 'w']) -> None:
+    def __init__(self, path: PathLike, *, mode: Literal['a', 'w']) -> None:
         self.path = resolve(path, parents=True)
 
         self.history: DefaultDict[str, list] = defaultdict(list)
