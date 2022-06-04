@@ -74,11 +74,14 @@ class AllocatorsTest(TestCase):
             db = TinyDB(directory / 'db.json')
             allocator = JSONTableAllocator(directory / 'allocator', db)
 
-            p1 = P(3.14, 0, name='pi')
+            p1 = P('3.14', 0, name='pi')
             p2 = P('hello')
 
             self.assertEqual(allocator(p1), allocator(p1))
+            self.assertEqual(allocator(P('3.14', 0, name='pi')), allocator(p1))
             self.assertNotEqual(allocator(p1), allocator(p2))
+            self.assertEqual(allocator.allocate('3.14', 0, name='pi'), allocator(p1))
+            self.assertEqual(allocator.allocate('hello'), allocator(p2))
 
 
 class CacherTest(TestCase):

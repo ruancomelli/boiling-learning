@@ -15,6 +15,7 @@ from boiling_learning.utils.functional import Pack
 
 
 class Allocator(abc.ABC):
+    @abc.abstractmethod
     def __call__(self, pack: Pack[Any, Any]) -> Path:
         pass
 
@@ -93,7 +94,7 @@ class JSONTableAllocator(Allocator):
         return self.db.insert(serialized)
 
     def __call__(self, pack: Pack[Any, Any]) -> Path:
-        serialized: json.JSONDataType = self.describer(pack)
+        serialized: json.JSONDataType = self.describer(pack.pair())
         doc_id: int = self._provide(serialized)
         return self._doc_path(doc_id)
 
