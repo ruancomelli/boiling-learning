@@ -1,3 +1,4 @@
+import abc
 from pathlib import Path
 from typing import Any, Callable, Generic, TypeVar
 
@@ -12,7 +13,14 @@ from boiling_learning.utils import PathLike, resolve
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import Pack
 
-Allocator = Callable[[Pack[Any, Any]], Path]
+
+class Allocator(abc.ABC):
+    def __call__(self, pack: Pack[Any, Any]) -> Path:
+        pass
+
+    def allocate(self, *args: Any, **kwargs: Any) -> Path:
+        return self(Pack(args, kwargs))
+
 
 _JSONDescription = TypeVar('_JSONDescription', bound=json.JSONDataType)
 
@@ -63,7 +71,7 @@ def _json_describe_describable(
     return json_describe(describe(instance))
 
 
-class JSONTableAllocator:
+class JSONTableAllocator(Allocator):
     def __init__(
         self,
         path: PathLike,
