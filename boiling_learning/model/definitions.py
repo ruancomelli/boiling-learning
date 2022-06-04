@@ -19,6 +19,7 @@ from tensorflow.keras.layers import (
     Layer,
     LayerNormalization,
     MaxPool2D,
+    ReLU,
     SeparableConv2D,
     SpatialDropout2D,
     TimeDistributed,
@@ -33,10 +34,10 @@ from boiling_learning.model.model import Model, ProblemType
 
 
 def linear_regression(input_shape: Tuple[int, ...]) -> Model:
-    input_data = Input(shape=input_shape)
-    predictions = Dense(1, activation='linear')(input_data)
+    inputs = Input(shape=input_shape)
+    predictions = Dense(1, activation='linear')(inputs)
 
-    return Model(inputs=input_data, outputs=predictions)
+    return Model(inputs=inputs, outputs=predictions)
 
 
 def tiny_convnet(
@@ -49,8 +50,8 @@ def tiny_convnet(
     normalize_images: bool = False,
 ) -> Model:
     # start "current layer" as the input layer
-    input_data = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
-    x = input_data
+    inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    x = inputs
 
     x = AveragePooling2D((10, 10))(x)
 
@@ -68,7 +69,7 @@ def tiny_convnet(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=input_data, outputs=predictions)
+    return Model(inputs=inputs, outputs=predictions)
 
 
 def small_convnet(
@@ -81,8 +82,8 @@ def small_convnet(
     normalize_images: bool = False,
 ) -> Model:
     # start "current layer" as the input layer
-    input_data = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
-    x = input_data
+    inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    x = inputs
 
     if normalize_images:
         x = LayerNormalization()(x)
@@ -91,13 +92,14 @@ def small_convnet(
         16,
         (5, 5),
         padding='same',
-        activation='relu',
         dtype=hidden_layers_policy,
     )(x)
+    x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(32, activation='relu', dtype=hidden_layers_policy)(x)
+    x = Dense(32, dtype=hidden_layers_policy)(x)
+    x = ReLU()(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     if problem is ProblemType.CLASSIFICATION:
@@ -109,7 +111,7 @@ def small_convnet(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=input_data, outputs=predictions)
+    return Model(inputs=inputs, outputs=predictions)
 
 
 def hoboldnet1(
@@ -126,8 +128,8 @@ def hoboldnet1(
     learning.
     '''
     # start "current layer" as the input layer
-    input_data = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
-    x = input_data
+    inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    x = inputs
 
     if normalize_images:
         x = LayerNormalization()(x)
@@ -136,13 +138,14 @@ def hoboldnet1(
         16,
         (5, 5),
         padding='same',
-        activation='relu',
         dtype=hidden_layers_policy,
     )(x)
+    x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
+    x = Dense(200, dtype=hidden_layers_policy)(x)
+    x = ReLU()(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     if problem is ProblemType.CLASSIFICATION:
@@ -154,7 +157,7 @@ def hoboldnet1(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=input_data, outputs=predictions)
+    return Model(inputs=inputs, outputs=predictions)
 
 
 def hoboldnet2(
@@ -171,8 +174,8 @@ def hoboldnet2(
     learning.
     '''
     # start "current layer" as the input layer
-    input_data = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
-    x = input_data
+    inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    x = inputs
 
     if normalize_images:
         x = LayerNormalization()(x)
@@ -181,13 +184,14 @@ def hoboldnet2(
         32,
         (5, 5),
         padding='same',
-        activation='relu',
         dtype=hidden_layers_policy,
     )(x)
+    x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(200, activation='relu', dtype=hidden_layers_policy)(x)
+    x = Dense(200, dtype=hidden_layers_policy)(x)
+    x = ReLU()(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     if problem is ProblemType.CLASSIFICATION:
@@ -199,7 +203,7 @@ def hoboldnet2(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=input_data, outputs=predictions)
+    return Model(inputs=inputs, outputs=predictions)
 
 
 def hoboldnet3(
@@ -216,8 +220,8 @@ def hoboldnet3(
     learning.
     '''
     # start "current layer" as the input layer
-    input_data = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
-    x = input_data
+    inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    x = inputs
 
     if normalize_images:
         x = LayerNormalization()(x)
@@ -226,20 +230,22 @@ def hoboldnet3(
         32,
         (5, 5),
         padding='same',
-        activation='relu',
         dtype=hidden_layers_policy,
     )(x)
+    x = ReLU()(x)
+    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Conv2D(
         64,
         (5, 5),
         padding='same',
-        activation='relu',
         dtype=hidden_layers_policy,
     )(x)
+    x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(512, activation='relu', dtype=hidden_layers_policy)(x)
+    x = Dense(512, dtype=hidden_layers_policy)(x)
+    x = ReLU()(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     if problem is ProblemType.CLASSIFICATION:
@@ -251,7 +257,7 @@ def hoboldnet3(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=input_data, outputs=predictions)
+    return Model(inputs=inputs, outputs=predictions)
 
 
 def hoboldnet_supplementary(
@@ -267,8 +273,8 @@ def hoboldnet_supplementary(
     nucleate boiling heat flux quantification using machine learning.
     '''
     # start "current layer" as the input layer
-    input_data = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
-    x = input_data
+    inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    x = inputs
 
     if normalize_images:
         x = LayerNormalization()(x)
@@ -277,20 +283,22 @@ def hoboldnet_supplementary(
         32,
         (5, 5),
         padding='same',
-        activation='relu',
         dtype=hidden_layers_policy,
     )(x)
+    x = ReLU()(x)
+    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Conv2D(
         64,
         (5, 5),
         padding='same',
-        activation='relu',
         dtype=hidden_layers_policy,
     )(x)
+    x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(512, activation='relu', dtype=hidden_layers_policy)(x)
+    x = Dense(512, dtype=hidden_layers_policy)(x)
+    x = ReLU()(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     if problem is ProblemType.CLASSIFICATION:
@@ -302,7 +310,7 @@ def hoboldnet_supplementary(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=input_data, outputs=predictions)
+    return Model(inputs=inputs, outputs=predictions)
 
 
 def kramernet(
@@ -318,8 +326,8 @@ def kramernet(
     nucleate boiling heat flux quantification using machine learning.
     '''
     # start "current layer" as the input layer
-    input_data = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
-    x = input_data
+    inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    x = inputs
 
     if normalize_images:
         x = LayerNormalization()(x)
@@ -328,16 +336,17 @@ def kramernet(
         64,
         (3, 3),
         padding='same',
-        activation='relu',
         dtype=hidden_layers_policy,
-    )(input_data)
+    )(inputs)
+    x = ReLU()(x)
+    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Conv2D(
         64,
         (3, 3),
         padding='same',
-        activation='relu',
         dtype=hidden_layers_policy,
     )(x)
+    x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
@@ -345,16 +354,17 @@ def kramernet(
         64,
         (3, 3),
         padding='same',
-        activation='relu',
         dtype=hidden_layers_policy,
-    )(input_data)
+    )(x)
+    x = ReLU()(x)
+    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Conv2D(
         64,
         (3, 3),
         padding='same',
-        activation='relu',
         dtype=hidden_layers_policy,
     )(x)
+    x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
@@ -362,21 +372,23 @@ def kramernet(
         128,
         (3, 3),
         padding='same',
-        activation='relu',
         dtype=hidden_layers_policy,
-    )(input_data)
+    )(x)
+    x = ReLU()(x)
+    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Conv2D(
         128,
         (3, 3),
         padding='same',
-        activation='relu',
         dtype=hidden_layers_policy,
     )(x)
+    x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(256, activation='relu', dtype=hidden_layers_policy)(x)
+    x = Dense(256, dtype=hidden_layers_policy)(x)
+    x = ReLU()(x)
     x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     if problem is ProblemType.CLASSIFICATION:
@@ -388,7 +400,7 @@ def kramernet(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=input_data, outputs=predictions)
+    return Model(inputs=inputs, outputs=predictions)
 
 
 def linear_model(
@@ -396,8 +408,8 @@ def linear_model(
     problem: ProblemType = ProblemType.REGRESSION,
     normalize_images: bool = False,
 ) -> Model:
-    input_data = Input(shape=input_shape)
-    x = input_data  # start "current layer" as the input layer
+    inputs = Input(shape=input_shape)
+    x = inputs  # start "current layer" as the input layer
     if normalize_images:
         x = LayerNormalization()(x)
 
@@ -406,7 +418,7 @@ def linear_model(
 
     predictions = _LinearModel()(x)
 
-    return Model(inputs=input_data, outputs=predictions)
+    return Model(inputs=inputs, outputs=predictions)
 
 
 class FlatteningMode(enum.Enum):
@@ -468,7 +480,8 @@ def boilnet(
         dropouter = funcy.constantly(Lambda(funcy.identity))
 
     head = dropouter()(flatten)
-    head = Dense(256, activation='relu')(head)
+    head = Dense(256)(head)
+    head = ReLU()(head)
     head = dropouter()(head)
 
     head_size, activation = {
@@ -509,7 +522,8 @@ def boiling_mobile_net(
     mobile_net = MobileNetV2(
         input_shape=image_shape, include_top=False, weights='imagenet', pooling='avg'
     )
-    x = Dense(256, activation='relu', dtype=hidden_layers_policy)(mobile_net.output)
+    x = Dense(256, dtype=hidden_layers_policy)(mobile_net.output)
+    x = ReLU()(x)
 
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
@@ -523,8 +537,10 @@ def boiling_mobile_net(
     return Model(inputs=mobile_net.input, outputs=predictions)
 
 
-# fazer erro em função do y: ver se para maiores ys o erro vai subindo ou diminuindo
+# TODO: fazer erro em função do y: ver se para maiores ys o erro vai subindo ou diminuindo
 # quem sabe fazer 3 ou mais modelos, um especializado para cada região de y; e quem sabe
 # usar um classificador pra escolher qual estimador não ajude muito
 # focar na arquitetura da rede, que é mais importante do que hiperparâmetros
 # otimizar as convolucionais pode ser mais importante do que otimizar as fully-connected
+
+# TODO: ReLU or LeakyReLU? https://www.quora.com/What-are-the-advantages-of-using-Leaky-Rectified-Linear-Units-Leaky-ReLU-over-normal-ReLU-in-deep-learning
