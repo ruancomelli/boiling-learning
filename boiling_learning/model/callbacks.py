@@ -26,11 +26,6 @@ class AdditionalValidationSets(Callback):
         batch_size: Optional[int] = None,
     ):
         """
-        :param validation_sets:
-        a list of 1-tuples (validation_data,)
-        or 2-tuples (validation_data, validation_set_name)
-        or 3-tuples (validation_data, validation_targets, validation_set_name)
-        or 4-tuples (validation_data, validation_targets, sample_weights, validation_set_name)
         :param batch_size:
         batch size to be used when evaluating on the additional datasets
         """
@@ -54,25 +49,29 @@ class AdditionalValidationSets(Callback):
         # evaluate on the additional validation sets
         for validation_set_name, validation_set in self.validation_sets.items():
             try:
+                logger.info(f'Evaluating model on additional dataset {validation_set_name}')
+
                 results = self.model.evaluate(
                     validation_set,
                     verbose=self.verbose,
                     batch_size=self.batch_size,
                 )
 
-                names = ['loss'] + [m.name for m in self.model.metrics]
-                full_names = [f'{validation_set_name}_{name}' for name in names]
-                full_results = [logs['loss']] + results
+                metric_names = ['loss'] + [m.name for m in self.model.metrics]
 
+                full_names = [
+                    f'{validation_set_name}_{metric_name}' for metric_name in metric_names
+                ]
+                full_results = [logs['loss']] + results
                 for full_name, result in zip(full_names, full_results):
                     self.history.setdefault(full_name, []).append(result)
 
                 values_str = ' - '.join(
-                    f'{name}: {result}' for name, result in zip(names, full_results)
+                    f'{name}: {result}' for name, result in zip(metric_names, full_results)
                 )
                 logger.info(f'{validation_set_name}[{values_str}]')
             except (ValueError, TypeError, ArithmeticError) as e:
-                logger.info(f'{validation_set_name}[{e}]')
+                logger.info(e)
 
 
 class Streamer(Protocol):
@@ -120,7 +119,7 @@ class TimePrinter(Callback):
 
     def on_batch_begin(self, *args: Any, **kwargs: Any) -> None:
         if 'on_batch_begin' in self.when:
-            self.streamer(f'--- beginning batch at {self._str_now()}', end='')
+            self.streamer(f'--- beginning batch at {self._str_now()}')
 
     def on_batch_end(self, *args: Any, **kwargs: Any) -> None:
         if 'on_batch_end' in self.when:
@@ -137,7 +136,7 @@ class TimePrinter(Callback):
 
     def on_predict_batch_begin(self, *args: Any, **kwargs: Any) -> None:
         if 'on_predict_batch_begin' in self.when:
-            self.streamer(f'--- beginning predict_batch at {self._str_now()}', end='')
+            self.streamer(f'--- beginning predict_batch at {self._str_now()}')
 
     def on_predict_batch_end(self, *args: Any, **kwargs: Any) -> None:
         if 'on_predict_batch_end' in self.when:
@@ -153,7 +152,7 @@ class TimePrinter(Callback):
 
     def on_test_batch_begin(self, *args: Any, **kwargs: Any) -> None:
         if 'on_test_batch_begin' in self.when:
-            self.streamer(f'--- beginning test_batch at {self._str_now()}', end='')
+            self.streamer(f'--- beginning test_batch at {self._str_now()}')
 
     def on_test_batch_end(self, *args: Any, **kwargs: Any) -> None:
         if 'on_test_batch_end' in self.when:
@@ -172,7 +171,6 @@ class TimePrinter(Callback):
             self.streamer(
                 f'--- epoch {self._current_epoch + 1}: '
                 f'beginning train_batch {batch} at {self._str_now()}',
-                end='',
             )
 
     def on_train_batch_end(self, batch: int, *args: Any, **kwargs: Any) -> None:
