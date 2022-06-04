@@ -156,9 +156,9 @@ def _get_experiment_video_name(experiment_video: ExperimentVideo) -> str:
 
 @json.encode.instance(ImageDataset)
 def _encode_image_dataset(obj: ImageDataset) -> List[json.JSONDataType]:
-    return json.serialize(list(obj))
+    return json.serialize(sorted(obj, key=lambda ev: ev.name))
 
 
 @describe.instance(ImageDataset)
 def _describe_image_dataset(obj: ImageDataset) -> List[Path]:
-    return describe(list(obj))
+    return describe(sorted(obj, key=lambda ev: ev.name))
