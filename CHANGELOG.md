@@ -1,5 +1,20 @@
 
 
+## v0.20.37 (2022-06-04)
+
+### Fix
+
+- **preprocessing/hdf5**: ensure correct HDF5 opening and closing on every access to data
+- **model/definitions**: fix memory leaks by avoiding stacking convnets without pooling
+
+### Feat
+
+- **model/callbacks**: add memory clean-up callback
+
+### Refactor
+
+- **model/callbacks**: improve typing
+
 ## v0.20.36 (2022-06-02)
 
 ### Fix
