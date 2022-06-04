@@ -18,46 +18,29 @@ from boiling_learning.utils.utils import PathLike, resolve, unsort
 class HDF5VideoSliceableDataset(SliceableDataset[VideoFrame]):
     def __init__(self, filepath: PathLike, dataset_name: str) -> None:
         self._filepath = resolve(filepath, parents=True)
-        self._file = h5py.File(str(self._filepath), 'r', swmr=True)
         self._dataset_name = dataset_name
-        self._is_open: bool = False
 
     def __len__(self) -> int:
-        return len(self.dataset())
+        with h5py.File(str(self._filepath), 'r', swmr=True) as file:
+            return len(file[self._dataset_name])
 
     def getitem_from_index(self, index: int) -> VideoFrame:
-        return typing.cast(VideoFrame, self.dataset()[index])
+        with h5py.File(str(self._filepath), 'r', swmr=True) as file:
+            return typing.cast(VideoFrame, file[self._dataset_name][index])
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrame, ...]:
-        logger.debug(f'Fetching frames {indices} from {self}')
-
         if indices is None:
-            return tuple(self.dataset())
+            with h5py.File(str(self._filepath), 'r', swmr=True) as file:
+                return tuple(file[self._dataset_name])
 
         # sort the indices, fetch the frames and unsort them back
         unsorters, sorted_indices = unsort(indices)
-        frames = self.dataset()[list(sorted_indices)]
-        return tuple(frames[unsorter] for unsorter in unsorters)
+        with h5py.File(str(self._filepath), 'r', swmr=True) as file:
+            frames = file[self._dataset_name][list(sorted_indices)]
+            return tuple(frames[unsorter] for unsorter in unsorters)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self._dataset_name}@{self._filepath})'
-
-    def __enter__(self) -> None:
-        self._file.__enter__()
-        self._is_open = True
-
-    def __exit__(self, exc_type, exc_value, traceback) -> None:
-        self._is_open = False
-        self._file.__exit__(exc_type, exc_value, traceback)
-
-    def dataset(self) -> h5py.Dataset:
-        if not self._is_open:
-            self.__enter__()
-
-        return self._file[self._dataset_name]
-
-    def close(self) -> None:
-        self._file.close()
 
 
 def video_to_hdf5(
