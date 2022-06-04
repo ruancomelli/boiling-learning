@@ -1,5 +1,4 @@
 import datetime
-import enum
 import shutil
 from collections import defaultdict
 from typing import Any, DefaultDict, Dict, Iterable, Optional
@@ -11,7 +10,7 @@ from tensorflow.keras.callbacks import BackupAndRestore as _BackupAndRestore
 from tensorflow.keras.callbacks import Callback
 from tensorflow.python.keras import backend as K
 from tensorflow.python.platform import tf_logging as logging
-from typing_extensions import Protocol
+from typing_extensions import Literal, Protocol
 
 from boiling_learning.io import json
 from boiling_learning.utils import PathLike, resolve
@@ -227,15 +226,15 @@ class ReduceLROnPlateau(Callback):
 
     def __init__(
         self,
-        monitor='val_loss',
-        factor=0.1,
-        patience=10,
-        mode='auto',
-        min_delta=1e-4,
-        min_delta_mode='absolute',
-        cooldown=0,
-        min_lr=0,
-    ):
+        monitor: str = 'val_loss',
+        factor: float = 0.1,
+        patience: int = 10,
+        mode: Literal['auto', 'min', 'max'] = 'auto',
+        min_delta: float = 1e-4,
+        min_delta_mode: str = 'absolute',
+        cooldown: int = 0,
+        min_lr: float = 0,
+    ) -> None:
         super(ReduceLROnPlateau, self).__init__()
 
         self.monitor = monitor
@@ -249,12 +248,12 @@ class ReduceLROnPlateau(Callback):
         self.cooldown = cooldown
         self.cooldown_counter = 0  # Cooldown counter.
         self.wait = 0
-        self.best = 0
+        self.best = 0.0
         self.mode = mode
         self.monitor_op = None
         self._reset()
 
-    def _reset(self):
+    def _reset(self) -> None:
         """Resets wait counter and cooldown counter."""
         if self.mode not in {'auto', 'min', 'max'}:
             logging.warning(
@@ -338,18 +337,13 @@ class RegisterEpoch(Callback):
         self._path.write_text(epoch)
 
 
-class SaveHistoryMode(enum.Enum):
-    APPEND = enum.auto()
-    OVERWRITE = enum.auto()
-
-
 class SaveHistory(Callback):
-    def __init__(self, path: PathLike, mode: SaveHistoryMode) -> None:
+    def __init__(self, path: PathLike, mode: Literal['a', 'w']) -> None:
         self.path = resolve(path, parents=True)
 
         self.history: DefaultDict[str, list] = defaultdict(list)
 
-        if mode is SaveHistoryMode.APPEND and self.path.is_file():
+        if mode == 'a' and self.path.is_file():
             self.history.update(json.load(self.path))
 
     def _append_to_history(self, logs: Dict[str, Any]) -> None:
