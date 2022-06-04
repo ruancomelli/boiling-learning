@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Callable, Generic, Iterable, Type, TypeVar
 
 from loguru import logger
-from typing_extensions import ParamSpec
+from typing_extensions import Concatenate, ParamSpec
 
 from boiling_learning.io import LoaderFunction, SaverFunction
 from boiling_learning.io.storage import load, save
@@ -37,11 +37,25 @@ class Cacher(Generic[_R]):
         self.exceptions = tuple(exceptions)
         self.autosave = autosave
 
-    def allocate(self, *args: _P.args, **kwargs: _P.kwargs) -> Path:
-        return self.allocator.allocate(*args, **kwargs)
+    def provide(self, creator: Callable[[], _R], path: Path) -> _R:
+        provider = FileProvider(
+            path,
+            Provider(
+                saver=self.save,
+                loader=self.load,
+                creator=creator,
+                exceptions=self.exceptions,
+                autosave=self.autosave,
+            ),
+        )
+
+        return provider.provide()
 
     def decorate(self, function: Callable[_P, _R]) -> CachedFunction[_P, _R]:
         return CachedFunction(function, self)
+
+    def allocate(self, *args: _P.args, **kwargs: _P.kwargs) -> Path:
+        return self.allocator.allocate(*args, **kwargs)
 
     def load(self, path: PathLike) -> _R:
         return self.loader(path)
@@ -68,18 +82,7 @@ class CachedFunction(Generic[_P, _R]):
         self.cacher.save(obj, path)
 
     def provide(self, creator: Callable[[], _R], path: Path) -> _R:
-        provider = FileProvider(
-            path,
-            Provider(
-                saver=self.save,
-                loader=self.load,
-                creator=creator,
-                exceptions=self.cacher.exceptions,
-                autosave=self.cacher.autosave,
-            ),
-        )
-
-        return provider.provide()
+        return self.cacher.provide(creator, path)
 
     def allocate(self, *args: _P.args, **kwargs: _P.kwargs) -> Path:
         logger.debug(f'Allocating path for args {(args, kwargs)}')
@@ -108,3 +111,30 @@ def cache(
         exceptions=exceptions,
         autosave=autosave,
     ).decorate
+
+
+def cacher_aware(
+    allocator: Allocator,
+    saver: SaverFunction[_R] = save,
+    loader: LoaderFunction[_R] = load,
+    exceptions: Iterable[Type[Exception]] = (
+        FileNotFoundError,
+        NotADirectoryError,
+    ),
+    autosave: bool = True,
+) -> Callable[[Callable[Concatenate[Cacher[_R], _P], _R]], CachedFunction[_P, _R]]:
+    cacher = Cacher(
+        allocator=allocator,
+        saver=saver,
+        loader=loader,
+        exceptions=exceptions,
+        autosave=autosave,
+    )
+
+    def _wrapper(wrapped: Callable[Concatenate[Cacher[_R], _P], _R]) -> CachedFunction[_P, _R]:
+        def _wrapped(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+            return wrapped(cacher, *args, **kwargs)
+
+        return cacher.decorate(_wrapped)
+
+    return _wrapper
