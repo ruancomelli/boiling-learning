@@ -1,5 +1,25 @@
 
 
+## v0.20.38 (2022-06-04)
+
+### Refactor
+
+- **model/training**: remove unnecessary arguments to `model.fit` and use new functionality from the bridging module
+- **model/callbacks**: make "mode" mandatory and keyword-only in `SaveHistory`
+- **model/callbacks**: remove extraneous arguments
+- **model/callbacks**: improve time printer
+
+### Feat
+
+- **datasets/bridging**: add support for shuffling and auto-fixing batch size issues to `sliceable_dataset_to_tensorflow_dataset`
+- **datasets/bridging**: add support for filtering in `sliceable_dataset_to_tensorflow_dataset`
+- **management/cacher**: add decorator for cacher-aware functions
+- **management/allocators**: add support for `allocate` method
+
+### Fix
+
+- **preprocessing/image_datasets**: fix image datasets description to be order-insensitive
+
 ## v0.20.37 (2022-06-04)
 
 ### Fix
