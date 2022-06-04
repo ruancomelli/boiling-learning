@@ -19,12 +19,7 @@ from boiling_learning.utils import PathLike, resolve
 
 # Source: <https://stackoverflow.com/q/47731935/5811400>
 class AdditionalValidationSets(Callback):
-    def __init__(
-        self,
-        validation_sets: Dict[str, Dataset],
-        verbose: bool = True,
-        batch_size: Optional[int] = None,
-    ):
+    def __init__(self, validation_sets: Dict[str, Dataset]) -> None:
         """
         :param batch_size:
         batch size to be used when evaluating on the additional datasets
@@ -33,8 +28,6 @@ class AdditionalValidationSets(Callback):
 
         self.validation_sets = validation_sets
         self.history = {}
-        self.verbose = verbose
-        self.batch_size = batch_size
 
     def on_train_begin(self, logs=None) -> None:
         self.history = {}
@@ -51,11 +44,7 @@ class AdditionalValidationSets(Callback):
             try:
                 logger.info(f'Evaluating model on additional dataset {validation_set_name}')
 
-                results = self.model.evaluate(
-                    validation_set,
-                    verbose=self.verbose,
-                    batch_size=self.batch_size,
-                )
+                results = self.model.evaluate(validation_set)
 
                 metric_names = ['loss'] + [m.name for m in self.model.metrics]
 
@@ -345,13 +334,13 @@ class SaveHistory(Callback):
         if mode == 'a' and self.path.is_file():
             self.history.update(json.load(self.path))
 
-    def _append_to_history(self, logs: Dict[str, Any]) -> None:
-        for key, value in logs.items():
-            self.history[key].append(value)
-
     def on_epoch_end(self, epoch: int, logs: Dict[str, Any]):
         self._append_to_history(logs)
         json.dump(self.history, self.path)
+
+    def _append_to_history(self, logs: Dict[str, Any]) -> None:
+        for key, value in logs.items():
+            self.history[key].append(value)
 
 
 class BackupAndRestore(_BackupAndRestore):
