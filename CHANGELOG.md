@@ -1,5 +1,17 @@
 
 
+## v0.21.0 (2022-06-05)
+
+### Refactor
+
+- **datasets/bridging**: re-use `SliceableDataset.element_spec`
+- **model/training**: remove cache and snapshot parameters
+- **model/callbacks**: avoid printing when evaluating models in `AdditionalValidationSets`
+
+### Fix
+
+- **datasets/bridging**: fix dataset expansion to batch size when there is filtering
+
 ## v0.20.41 (2022-06-05)
 
 ### Perf
