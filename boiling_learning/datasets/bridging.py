@@ -14,7 +14,7 @@ def sliceable_dataset_to_tensorflow_dataset(
     dataset: SliceableDataset[Any],
     *,
     batch_size: Optional[int] = None,
-    filters: Iterable[Callable[[Any], bool]] = (),
+    filters: Iterable[Callable[..., bool]] = (),
     prefetch: bool = False,
     shuffle: bool = False,
     expand_to_batch_size: bool = False,
