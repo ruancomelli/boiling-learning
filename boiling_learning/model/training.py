@@ -3,7 +3,6 @@ from __future__ import annotations
 import json as _json
 from contextlib import contextmanager, nullcontext
 from datetime import timedelta
-from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 import tensorflow as tf
@@ -13,7 +12,6 @@ from tensorflow.keras.metrics import Metric
 from tensorflow.keras.optimizers import Optimizer
 from typing_extensions import TypedDict
 
-from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_dataset
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import SupervisedSliceableDataset
 from boiling_learning.io import json
@@ -110,31 +108,10 @@ def get_fit_model(
     *,
     epoch_registry: RegisterEpoch,
     history_registry: SaveHistory,
-    cache: Union[bool, Path] = False,
-    snapshot_path: Optional[Path] = None,
 ) -> FitModel:
     model = compiled_model.model
 
     ds_train, ds_val, _ = datasets.value
-
-    ds_train = sliceable_dataset_to_tensorflow_dataset(
-        ds_train,
-        batch_size=params.batch_size,
-        prefetch=True,
-        shuffle=True,
-        expand_to_batch_size=True,
-        cache=(cache if isinstance(cache, bool) else cache / 'train'),
-        snapshot_path=(snapshot_path / 'train' if snapshot_path is not None else None),
-    )
-    ds_val = sliceable_dataset_to_tensorflow_dataset(
-        ds_val,
-        batch_size=params.batch_size,
-        prefetch=True,
-        shuffle=True,
-        expand_to_batch_size=True,
-        cache=(cache if isinstance(cache, bool) else cache / 'val'),
-        snapshot_path=(snapshot_path / 'val' if snapshot_path is not None else None),
-    )
 
     with Timer() as timer:
         model.fit(
