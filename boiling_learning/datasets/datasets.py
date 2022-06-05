@@ -17,6 +17,8 @@ _T = TypeVar('_T')
 
 
 class DatasetTriplet(Tuple[_T, Optional[_T], _T], Generic[_T]):
+    # TODO: does the validation set need to be optional? It could well be mandatory,
+    # even if empty.
     pass
 
 
