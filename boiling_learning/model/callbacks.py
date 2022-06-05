@@ -43,7 +43,7 @@ class AdditionalValidationSets(Callback):
             try:
                 logger.info(f'Evaluating model on additional dataset {validation_set_name}')
 
-                results = self.model.evaluate(validation_set)
+                results = self.model.evaluate(validation_set, verbose=0)
 
                 metric_names = ['loss'] + [m.name for m in self.model.metrics]
 
