@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import json as _json
 from contextlib import contextmanager, nullcontext
+from datetime import timedelta
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
@@ -16,10 +17,12 @@ from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_d
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import SupervisedSliceableDataset
 from boiling_learning.io import json
+from boiling_learning.model.callbacks import RegisterEpoch, SaveHistory
 from boiling_learning.model.model import Model
 from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.descriptions import describe
+from boiling_learning.utils.timing import Timer
 from boiling_learning.utils.typeutils import typename
 
 
@@ -95,6 +98,9 @@ class FitModel:
     datasets: Described[DatasetTriplet[SupervisedSliceableDataset], json.JSONDataType]
     compile_params: CompileModelParams
     fit_params: FitModelParams
+    trained_epochs: int
+    history: Tuple[Dict[str, Any], ...]
+    train_time: timedelta
 
 
 def get_fit_model(
@@ -102,9 +108,11 @@ def get_fit_model(
     datasets: Described[DatasetTriplet[SupervisedSliceableDataset], json.JSONDataType],
     params: FitModelParams,
     *,
+    epoch_registry: RegisterEpoch,
+    history_registry: SaveHistory,
     cache: Union[bool, Path] = False,
     snapshot_path: Optional[Path] = None,
-) -> Model:
+) -> FitModel:
     model = compiled_model.model
 
     ds_train, ds_val, _ = datasets.value
@@ -128,23 +136,25 @@ def get_fit_model(
         snapshot_path=(snapshot_path / 'val' if snapshot_path is not None else None),
     )
 
-    model.fit(
-        ds_train, validation_data=ds_val, epochs=params.epochs, callbacks=params.callbacks.value
-    )
+    with Timer() as timer:
+        model.fit(
+            ds_train,
+            validation_data=ds_val,
+            epochs=params.epochs,
+            callbacks=params.callbacks.value + [history_registry, epoch_registry],
+        )
 
-    return model
+    duration = timer.duration
+    assert duration is not None
 
-
-def fit_model(
-    compiled_model: CompiledModel,
-    datasets: Described[DatasetTriplet[SupervisedSliceableDataset], json.JSONDataType],
-    params: FitModelParams,
-) -> FitModel:
     return FitModel(
-        get_fit_model(compiled_model=compiled_model, datasets=datasets, params=params),
-        datasets,
+        model=model,
+        datasets=datasets,
         compile_params=compiled_model.params,
         fit_params=params,
+        trained_epochs=epoch_registry.last_epoch(),
+        history=tuple(history_registry.history),
+        train_time=duration,
     )
 
 

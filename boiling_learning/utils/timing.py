@@ -7,12 +7,12 @@ from typing import Dict, Iterator, Optional, Type
 
 class Timer:
     def __init__(self) -> None:
-        self.start: Optional[float] = None
-        self.end: Optional[float] = None
+        self._start: Optional[float] = None
+        self._end: Optional[float] = None
 
     def __enter__(self) -> 'Timer':
-        self.start = default_timer()
-        self.end = None
+        self._start = default_timer()
+        self._end = None
         return self
 
     def __exit__(
@@ -21,14 +21,17 @@ class Timer:
         exc_value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> None:
-        self.end = default_timer()
+        self._end = default_timer()
 
     @property
-    def duration(self) -> Optional[float]:
-        if self.start is not None and self.end is not None:
-            return self.end - self.start
-        else:
+    def duration(self) -> Optional[timedelta]:
+        if self._start is None:
             return None
+
+        if self._end is None:
+            return timedelta(seconds=default_timer() - self._start)
+
+        return timedelta(seconds=self._end - self._start)
 
 
 class CasesTimer(Dict[str, timedelta]):

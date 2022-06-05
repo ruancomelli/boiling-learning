@@ -1,8 +1,7 @@
 import datetime
 import gc
 import shutil
-from collections import defaultdict
-from typing import Any, Callable, DefaultDict, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 import numpy as np
 from loguru import logger
@@ -316,26 +315,31 @@ class RegisterEpoch(Callback):
     def __init__(self, path: PathLike) -> None:
         self._path = resolve(path, parents=True)
 
-    def on_epoch_end(self, epoch, logs=None) -> None:
-        self._path.write_text(epoch)
+    def on_epoch_end(self, epoch: int, logs=None) -> None:
+        self._path.write_text(str(epoch), encoding='utf8')
+
+    def last_epoch(self) -> int:
+        return int(self._path.read_text(encoding='utf8'))
+
+    def __describe__(self) -> str:
+        return str(self._path)
 
 
 class SaveHistory(Callback):
     def __init__(self, path: PathLike, *, mode: Literal['a', 'w']) -> None:
-        self.path = resolve(path, parents=True)
+        self._path = resolve(path, parents=True)
 
-        self.history: DefaultDict[str, list] = defaultdict(list)
+        self.history: List[Dict[str, Any]] = []
 
-        if mode == 'a' and self.path.is_file():
-            self.history.update(json.load(self.path))
+        if mode == 'a' and self._path.is_file():
+            self.history.extend(json.load(self._path))
 
     def on_epoch_end(self, epoch: int, logs: Dict[str, Any]):
-        self._append_to_history(logs)
-        json.dump(self.history, self.path)
+        self.history.append(logs)
+        json.dump(self.history, self._path)
 
-    def _append_to_history(self, logs: Dict[str, Any]) -> None:
-        for key, value in logs.items():
-            self.history[key].append(value)
+    def __describe__(self) -> str:
+        return str(self._path)
 
 
 class BackupAndRestore(_BackupAndRestore):
