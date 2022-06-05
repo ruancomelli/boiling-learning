@@ -43,6 +43,10 @@ def sliceable_dataset_to_tensorflow_dataset(
     if snapshot_path is not None:
         ds = ds.snapshot(str(resolve(snapshot_path, parents=True)))
 
+    if cache:
+        # cache before batching to allow easier re-use of the same cached dataset
+        ds = ds.cache() if isinstance(cache, bool) else ds.cache(str(resolve(cache, parents=True)))
+
     if batch_size is not None:
         ds = ds.batch(
             batch_size,
@@ -50,9 +54,6 @@ def sliceable_dataset_to_tensorflow_dataset(
             num_parallel_calls=tf.data.AUTOTUNE,
             deterministic=False,
         )
-
-    if cache:
-        ds = ds.cache() if isinstance(cache, bool) else ds.cache(str(resolve(cache, parents=True)))
 
     if prefetch:
         ds = ds.prefetch(tf.data.AUTOTUNE)
