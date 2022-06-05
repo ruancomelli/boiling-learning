@@ -6,7 +6,6 @@ from typing import Any, Callable, Iterable, Optional, Union
 import tensorflow as tf
 
 from boiling_learning.datasets.sliceable import SliceableDataset
-from boiling_learning.utils.dtypes import auto_spec
 from boiling_learning.utils.mathutils import round_to_multiple
 from boiling_learning.utils.utils import PathLike, resolve
 
@@ -28,10 +27,7 @@ def sliceable_dataset_to_tensorflow_dataset(
     if prefetch:
         dataset = dataset.prefetch(batch_size)
 
-    sample = dataset[0]
-    typespec = auto_spec(sample)
-
-    ds = tf.data.Dataset.from_generator(lambda: dataset, output_signature=typespec)
+    ds = tf.data.Dataset.from_generator(lambda: dataset, output_signature=dataset.element_spec)
 
     for pred in filters:
         ds = ds.filter(pred)
