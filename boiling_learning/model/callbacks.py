@@ -316,7 +316,7 @@ class RegisterEpoch(Callback):
         self._path = resolve(path, parents=True)
 
     def on_epoch_end(self, epoch: int, logs=None) -> None:
-        self._path.write_text(str(epoch), encoding='utf8')
+        self._path.write_text(str(epoch + 1), encoding='utf8')
 
     def last_epoch(self) -> int:
         return int(self._path.read_text(encoding='utf8'))
