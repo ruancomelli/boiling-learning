@@ -1,5 +1,15 @@
 
 
+## v0.21.1 (2022-06-05)
+
+### Feat
+
+- **model/training**: make the return from `get_fit_model` serializable
+
+### Fix
+
+- **datasets/bridging**: fix type annotation for filters
+
 ## v0.21.0 (2022-06-05)
 
 ### Refactor
