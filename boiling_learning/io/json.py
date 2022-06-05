@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import json as _json
+from datetime import timedelta
 from fractions import Fraction
 from importlib import import_module
 from pathlib import Path
@@ -299,6 +300,16 @@ def _encode_fraction(instance: Fraction) -> List[int]:
 def _decode_fraction(instance: List[int]) -> Fraction:
     numerator, denominator = instance
     return Fraction(deserialize(numerator), deserialize(denominator))
+
+
+@encode.instance(timedelta)
+def _encode_timedelta(instance: timedelta) -> float:
+    return serialize(instance.total_seconds())
+
+
+@decode.dispatch(timedelta)
+def _decode_timedelta(instance: float) -> timedelta:
+    return timedelta(seconds=instance)
 
 
 @encode.instance(type)

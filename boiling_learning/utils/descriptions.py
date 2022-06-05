@@ -1,3 +1,4 @@
+from datetime import timedelta
 from fractions import Fraction
 from pathlib import Path
 from typing import Any, Dict, FrozenSet, Generic, List, Set, Tuple, Type, TypeVar, Union
@@ -99,6 +100,11 @@ def _describe_dataclass(
 @describe.instance(Fraction)
 def _describe_fraction(instance: Fraction) -> Tuple[int, int]:
     return instance.numerator, instance.denominator
+
+
+@describe.instance(timedelta)
+def _describe_timedelta(instance: timedelta) -> float:
+    return instance.total_seconds()
 
 
 @describe.instance(frozendict)
