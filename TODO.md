@@ -230,3 +230,4 @@ and think of other things.
   for timeseries of images!
 - \[ \] take a look at [`ndindex`](https://quansight-labs.github.io/ndindex/index.html)
 - \[ \] Take a look at [Probabilistic Layers Regression](https://www.tensorflow.org/probability/examples/Probabilistic_Layers_Regression)
+- \[ \] make [LeakyReLU trainable](https://www.tensorflow.org/guide/intro_to_modules#the_build_step)?
