@@ -3,6 +3,7 @@ from __future__ import annotations
 import json as _json
 from contextlib import contextmanager, nullcontext
 from datetime import timedelta
+from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 import tensorflow as tf
@@ -13,11 +14,11 @@ from tensorflow.keras.optimizers import Optimizer
 from typing_extensions import TypedDict
 
 from boiling_learning.datasets.datasets import DatasetTriplet
-from boiling_learning.datasets.sliceable import SupervisedSliceableDataset
 from boiling_learning.io import json
+from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
 from boiling_learning.model.callbacks import RegisterEpoch, SaveHistory
 from boiling_learning.model.model import Model
-from boiling_learning.utils.dataclasses import dataclass
+from boiling_learning.utils.dataclasses import dataclass, shallow_asdict
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.timing import Timer
@@ -91,24 +92,31 @@ class FitModelParams:
 
 
 @dataclass(frozen=True)
-class FitModel:
+class FitModelReturn:
     model: Model
-    datasets: Described[DatasetTriplet[SupervisedSliceableDataset], json.JSONDataType]
-    compile_params: CompileModelParams
-    fit_params: FitModelParams
     trained_epochs: int
     history: Tuple[Dict[str, Any], ...]
     train_time: timedelta
 
 
+@serialize.instance(FitModelReturn)
+def _serialize_fit_model_return(instance: FitModelReturn, path: Path) -> None:
+    return save(shallow_asdict(instance), path)
+
+
+@deserialize.dispatch(FitModelReturn)
+def _deserialize_fit_model_return(path: Path, _metadata: Metadata) -> FitModelReturn:
+    return FitModelReturn(**load(path))
+
+
 def get_fit_model(
     compiled_model: CompiledModel,
-    datasets: Described[DatasetTriplet[SupervisedSliceableDataset], json.JSONDataType],
+    datasets: Described[DatasetTriplet[tf.data.Dataset], json.JSONDataType],
     params: FitModelParams,
     *,
     epoch_registry: RegisterEpoch,
     history_registry: SaveHistory,
-) -> FitModel:
+) -> FitModelReturn:
     model = compiled_model.model
 
     ds_train, ds_val, _ = datasets.value
@@ -124,11 +132,8 @@ def get_fit_model(
     duration = timer.duration
     assert duration is not None
 
-    return FitModel(
+    return FitModelReturn(
         model=model,
-        datasets=datasets,
-        compile_params=compiled_model.params,
-        fit_params=params,
         trained_epochs=epoch_registry.last_epoch(),
         history=tuple(history_registry.history),
         train_time=duration,
