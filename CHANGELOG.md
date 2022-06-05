@@ -1,5 +1,11 @@
 
 
+## v0.20.40 (2022-06-05)
+
+### Feat
+
+- **model/training**: register training time, end epoch and history
+
 ## v0.20.39 (2022-06-04)
 
 ## v0.20.38 (2022-06-04)
