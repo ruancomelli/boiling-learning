@@ -1,22 +1,21 @@
 from __future__ import annotations
 
-import random
-from typing import Any, Callable, Optional, TypeVar, Union
+import math
+from typing import Any, Callable, Iterable, Optional, Union
 
 import tensorflow as tf
 
 from boiling_learning.datasets.sliceable import SliceableDataset
-from boiling_learning.utils import PathLike, resolve
 from boiling_learning.utils.dtypes import auto_spec
-
-_T = TypeVar('_T')
+from boiling_learning.utils.mathutils import round_to_multiple
+from boiling_learning.utils.utils import PathLike, resolve
 
 
 def sliceable_dataset_to_tensorflow_dataset(
     dataset: SliceableDataset[Any],
     *,
     batch_size: Optional[int] = None,
-    filter_predicate: Optional[Callable[[Any], bool]] = None,
+    filters: Iterable[Callable[[Any], bool]] = (),
     prefetch: bool = False,
     shuffle: bool = False,
     expand_to_batch_size: bool = False,
@@ -26,9 +25,6 @@ def sliceable_dataset_to_tensorflow_dataset(
     if shuffle:
         dataset = dataset.shuffle()
 
-    if expand_to_batch_size and batch_size is not None:
-        dataset = _expand_to_batch_size(dataset, batch_size=batch_size)
-
     if prefetch:
         dataset = dataset.prefetch(batch_size)
 
@@ -37,8 +33,8 @@ def sliceable_dataset_to_tensorflow_dataset(
 
     ds = tf.data.Dataset.from_generator(lambda: dataset, output_signature=typespec)
 
-    if filter_predicate is not None:
-        ds = ds.filter(filter_predicate)
+    for pred in filters:
+        ds = ds.filter(pred)
 
     if snapshot_path is not None:
         ds = ds.snapshot(str(resolve(snapshot_path, parents=True)))
@@ -48,24 +44,18 @@ def sliceable_dataset_to_tensorflow_dataset(
         ds = ds.cache() if isinstance(cache, bool) else ds.cache(str(resolve(cache, parents=True)))
 
     if batch_size is not None:
+        if expand_to_batch_size:
+            expanded_size = round_to_multiple(len(dataset), batch_size, rounder=math.ceil)
+            ds = ds.repeat().take(expanded_size)
+
         ds = ds.batch(
             batch_size,
             drop_remainder=expand_to_batch_size,
             num_parallel_calls=tf.data.AUTOTUNE,
-            deterministic=False,
+            deterministic=not shuffle,
         )
 
     if prefetch:
         ds = ds.prefetch(tf.data.AUTOTUNE)
 
     return ds
-
-
-def _expand_to_batch_size(
-    dataset: SliceableDataset[_T], *, batch_size: int
-) -> SliceableDataset[_T]:
-    dataset_size = len(dataset)
-    missing_count = batch_size - dataset_size % batch_size
-    all_indices = range(dataset_size)
-    some_indices = random.sample(all_indices, missing_count)
-    return dataset.concatenate(dataset[some_indices])

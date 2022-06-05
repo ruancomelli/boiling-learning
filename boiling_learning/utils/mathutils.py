@@ -1,7 +1,7 @@
 import math
 from fractions import Fraction
 from functools import reduce
-from typing import Tuple
+from typing import Callable, Tuple
 
 import funcy
 
@@ -32,3 +32,7 @@ def proportional_ints(*args: Fraction) -> Tuple[int, ...]:
 
     ints = map(_proportional_int, args)
     return tuple(ints)
+
+
+def round_to_multiple(number: int, base: int, rounder: Callable[[float], int] = round) -> int:
+    return base * rounder(number / base)
