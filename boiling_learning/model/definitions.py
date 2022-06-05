@@ -58,7 +58,8 @@ def tiny_convnet(
 
     if normalize_images:
         x = LayerNormalization()(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    if dropout is not None:
+        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
 
     if problem is ProblemType.CLASSIFICATION:
@@ -97,11 +98,13 @@ def small_convnet(
     )(x)
     x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    if dropout is not None:
+        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
     x = Dense(32, dtype=hidden_layers_policy)(x)
     x = ReLU()(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    if dropout is not None:
+        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
@@ -143,11 +146,13 @@ def hoboldnet1(
     )(x)
     x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    if dropout is not None:
+        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
     x = Dense(200, dtype=hidden_layers_policy)(x)
     x = ReLU()(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    if dropout is not None:
+        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
@@ -189,11 +194,13 @@ def hoboldnet2(
     )(x)
     x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    if dropout is not None:
+        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
     x = Dense(200, dtype=hidden_layers_policy)(x)
     x = ReLU()(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    if dropout is not None:
+        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
@@ -243,11 +250,13 @@ def hoboldnet3(
     )(x)
     x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    if dropout is not None:
+        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
     x = Dense(512, dtype=hidden_layers_policy)(x)
     x = ReLU()(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    if dropout is not None:
+        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
@@ -296,11 +305,13 @@ def hoboldnet_supplementary(
     )(x)
     x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    if dropout is not None:
+        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
     x = Dense(512, dtype=hidden_layers_policy)(x)
     x = ReLU()(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    if dropout is not None:
+        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
@@ -349,7 +360,8 @@ def kramernet(
     )(x)
     x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    if dropout is not None:
+        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     x = Conv2D(
         64,
@@ -367,7 +379,8 @@ def kramernet(
     )(x)
     x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    if dropout is not None:
+        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     x = Conv2D(
         128,
@@ -385,12 +398,14 @@ def kramernet(
     )(x)
     x = ReLU()(x)
     x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    if dropout is not None:
+        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     x = Flatten(dtype=hidden_layers_policy)(x)
     x = Dense(256, dtype=hidden_layers_policy)(x)
     x = ReLU()(x)
-    x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+    if dropout is not None:
+        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
