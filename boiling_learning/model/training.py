@@ -32,7 +32,7 @@ def _describe_typename(instance: Metric) -> str:
 
 
 class TypeAndConfig(TypedDict):
-    type: str
+    typename: str
     config: Dict[str, Any]
 
 

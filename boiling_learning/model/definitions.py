@@ -21,6 +21,7 @@ from tensorflow.keras.layers import (
     MaxPool2D,
     ReLU,
     SeparableConv2D,
+    Softmax,
     SpatialDropout2D,
     TimeDistributed,
 )
@@ -62,7 +63,7 @@ def tiny_convnet(
 
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Activation('softmax', dtype=output_layer_policy)(x)
+        predictions = Softmax(dtype=output_layer_policy)(x)
     elif problem is ProblemType.REGRESSION:
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
@@ -104,7 +105,7 @@ def small_convnet(
 
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Activation('softmax', dtype=output_layer_policy)(x)
+        predictions = Softmax(dtype=output_layer_policy)(x)
     elif problem is ProblemType.REGRESSION:
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
@@ -150,7 +151,7 @@ def hoboldnet1(
 
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Activation('softmax', dtype=output_layer_policy)(x)
+        predictions = Softmax(dtype=output_layer_policy)(x)
     elif problem is ProblemType.REGRESSION:
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
@@ -196,7 +197,7 @@ def hoboldnet2(
 
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Activation('softmax', dtype=output_layer_policy)(x)
+        predictions = Softmax(dtype=output_layer_policy)(x)
     elif problem is ProblemType.REGRESSION:
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
@@ -250,7 +251,7 @@ def hoboldnet3(
 
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Activation('softmax', dtype=output_layer_policy)(x)
+        predictions = Softmax(dtype=output_layer_policy)(x)
     elif problem is ProblemType.REGRESSION:
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
@@ -303,7 +304,7 @@ def hoboldnet_supplementary(
 
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Activation('softmax', dtype=output_layer_policy)(x)
+        predictions = Softmax(dtype=output_layer_policy)(x)
     elif problem is ProblemType.REGRESSION:
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
@@ -393,7 +394,7 @@ def kramernet(
 
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Activation('softmax', dtype=output_layer_policy)(x)
+        predictions = Softmax(dtype=output_layer_policy)(x)
     elif problem is ProblemType.REGRESSION:
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
@@ -527,7 +528,7 @@ def boiling_mobile_net(
 
     if problem is ProblemType.CLASSIFICATION:
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Activation('softmax', dtype=output_layer_policy)(x)
+        predictions = Softmax(dtype=output_layer_policy)(x)
     elif problem is ProblemType.REGRESSION:
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
