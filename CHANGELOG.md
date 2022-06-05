@@ -1,5 +1,24 @@
 
 
+## v0.20.41 (2022-06-05)
+
+### Perf
+
+- **datasets/bridging**: cache dataset before batching for easier re-use
+
+### Feat
+
+- support JSON serialization and description of `datetime.timedelta` objects
+- **model/definitions**: allow disabling droupout by passing `None`
+
+### Fix
+
+- **model/callbacks**: support numpy floats in `SaveHistory`
+
+### Refactor
+
+- **model/definitions**: replace `Activation("softmax")` with `Softmax()`
+
 ## v0.20.40 (2022-06-05)
 
 ### Feat
