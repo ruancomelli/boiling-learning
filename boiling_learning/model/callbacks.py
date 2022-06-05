@@ -334,12 +334,15 @@ class SaveHistory(Callback):
         if mode == 'a' and self._path.is_file():
             self.history.extend(json.load(self._path))
 
-    def on_epoch_end(self, epoch: int, logs: Dict[str, Any]):
-        self.history.append(logs)
+    def on_epoch_end(self, epoch: int, logs: Dict[str, Any]) -> None:
+        self._append_to_history(logs)
         json.dump(self.history, self._path)
 
     def __describe__(self) -> str:
         return str(self._path)
+
+    def _append_to_history(self, logs: Dict[str, Any]) -> None:
+        self.history.append({key: float(value) for key, value in logs.items()})
 
 
 class BackupAndRestore(_BackupAndRestore):
