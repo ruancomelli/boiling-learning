@@ -1,5 +1,16 @@
 
 
+## v0.22.1 (2022-06-06)
+
+### Refactor
+
+- **datasets/sliceable**: rename ancestor datasets as `_ancestor` in `MapSliceableDataset` and `BatchSliceableDataset`
+- **datasets/sliceable**: reduce method indirection
+
+### Fix
+
+- **datasets/sliceable**: turn indices into tuple before sending to component datasets in `ZippedSliceableDataset`
+
 ## v0.22.0 (2022-06-06)
 
 ### Refactor
