@@ -1,5 +1,11 @@
 
 
+## v0.22.2 (2022-06-06)
+
+### Feat
+
+- **datasets/bridging**: add support for post-caching filters and mappers
+
 ## v0.22.1 (2022-06-06)
 
 ### Refactor
