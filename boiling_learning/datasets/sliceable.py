@@ -3,7 +3,6 @@ from __future__ import annotations
 import abc
 import itertools
 import math
-import operator
 import random
 from fractions import Fraction
 from functools import reduce
@@ -12,6 +11,7 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
+    Dict,
     Generic,
     Iterable,
     Iterator,
@@ -33,7 +33,7 @@ from boiling_learning.io import LoaderFunction, SaverFunction, json
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
 from boiling_learning.utils import PathLike, resolve
 from boiling_learning.utils.dtypes import NestedTypeSpec, auto_spec
-from boiling_learning.utils.iterutils import distance_maximized_evenly_spaced_indices, groupby
+from boiling_learning.utils.iterutils import distance_maximized_evenly_spaced_indices
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
@@ -443,21 +443,19 @@ class ConcatenateSliceableDataset(SliceableDataset[Union[_T, _U]], Generic[_T, _
             return self._right[index - self._left_length]
 
     def getitem_from_indices(self, indices: Iterable[int]) -> SliceableDataset[Union[_T, _U]]:
-        # TODO: refactor this!
-        normalized_indices = [
-            (position, *self._normalize_index(index)) for position, index in enumerate(indices)
-        ]
-        grouped_indices = groupby(normalized_indices, key=operator.itemgetter(1))
+        grouped_indices = self._relative_absolute_left_right_groups(indices)
 
-        left_indices_group = grouped_indices[False]
-        left_positions = [normalize_index[0] for normalize_index in left_indices_group]
-        left_indices = [normalize_index[2] for normalize_index in left_indices_group]
-        left_values = self._left[left_indices]
+        _left_positions, _left_indices = (
+            mit.unzip(grouped_indices[False]) if grouped_indices[False] else ((), ())
+        )
+        left_positions = list(_left_positions)
+        left_values = self._left[list(_left_indices)]
 
-        right_indices_group = grouped_indices[True]
-        right_positions = [normalize_index[0] for normalize_index in right_indices_group]
-        right_indices = [normalize_index[2] for normalize_index in right_indices_group]
-        right_values = self._right[right_indices]
+        _right_positions, _right_indices = (
+            mit.unzip(grouped_indices[True]) if grouped_indices[True] else ((), ())
+        )
+        right_positions = list(_right_positions)
+        right_values = self._right[list(_right_indices)]
 
         def _getitem(index: int) -> Union[_T, _U]:
             if index in left_positions:
@@ -467,49 +465,48 @@ class ConcatenateSliceableDataset(SliceableDataset[Union[_T, _U]], Generic[_T, _
             else:
                 raise IndexError(index)
 
-        return SliceableDataset.from_getitem(_getitem, length=len(normalized_indices))
+        return SliceableDataset.from_getitem(_getitem, length=len(left_values) + len(right_values))
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self._left}, {self._right})'
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[Union[_T, _U], ...]:
-        # TODO: refactor this!
         if indices is None:
             return self._left.fetch() + self._right.fetch()
 
-        normalized_indices = [
-            (position, *self._normalize_index(index)) for position, index in enumerate(indices)
-        ]
-        grouped_indices = groupby(
-            normalized_indices, key=lambda normalize_index: normalize_index[1]
+        grouped_indices = self._relative_absolute_left_right_groups(indices)
+
+        _left_positions, _left_indices = (
+            mit.unzip(grouped_indices[False]) if grouped_indices[False] else ((), ())
+        )
+        left_positions = list(_left_positions)
+        left_values = self._left.fetch(list(_left_indices))
+
+        _right_positions, _right_indices = (
+            mit.unzip(grouped_indices[True]) if grouped_indices[True] else ((), ())
+        )
+        right_positions = list(_right_positions)
+        right_values = self._right.fetch(list(_right_indices))
+
+        return tuple(
+            value
+            for _, value in sorted(
+                itertools.chain(
+                    zip(left_positions, left_values), zip(right_positions, right_values)
+                ),
+                key=itemgetter(0),
+            )
         )
 
-        left_indices_group = grouped_indices[False]
-        left_positions = [normalize_index[0] for normalize_index in left_indices_group]
-        left_indices = [normalize_index[2] for normalize_index in left_indices_group]
-        left_values = self._left.fetch(left_indices)
-
-        right_indices_group = grouped_indices[True]
-        right_positions = [normalize_index[0] for normalize_index in right_indices_group]
-        right_indices = [normalize_index[2] for normalize_index in right_indices_group]
-        right_values = self._right.fetch(right_indices)
-
-        pos_values = itertools.chain(
-            zip(left_positions, left_values), zip(right_positions, right_values)
-        )
-        return tuple(pos_value[1] for pos_value in sorted(pos_values, key=itemgetter(0)))
-
-    def _normalize_indices(self, indices: Iterable[int]) -> Tuple[List[int], List[int]]:
-        left_indices = []
-        right_indices = []
-
-        for index in indices:
-            if index < self._left_length:
-                left_indices.append(index)
-            else:
-                right_indices.append(index - self._left_length)
-
-        return left_indices, right_indices
+    def _relative_absolute_left_right_groups(
+        self, indices: Iterable[int]
+    ) -> Dict[bool, List[Tuple[int, int]]]:
+        groups: Dict[bool, List[Tuple[int, int]]] = {False: [], True: []}
+        for position, index in enumerate(indices):
+            is_right = index >= self._left_length
+            relative_index = (index - self._left_length) if is_right else index
+            groups[is_right].append((position, relative_index))
+        return groups
 
     def _normalize_index(self, index: int) -> Tuple[int, int]:
         return (0, index) if index < self._left_length else (1, index - self._left_length)
