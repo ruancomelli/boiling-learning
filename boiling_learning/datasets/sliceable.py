@@ -442,31 +442,6 @@ class ConcatenateSliceableDataset(SliceableDataset[Union[_T, _U]], Generic[_T, _
         else:
             return self._right[index - self._left_length]
 
-    def getitem_from_indices(self, indices: Iterable[int]) -> SliceableDataset[Union[_T, _U]]:
-        grouped_indices = self._relative_absolute_left_right_groups(indices)
-
-        _left_positions, _left_indices = (
-            mit.unzip(grouped_indices[False]) if grouped_indices[False] else ((), ())
-        )
-        left_positions = list(_left_positions)
-        left_values = self._left[list(_left_indices)]
-
-        _right_positions, _right_indices = (
-            mit.unzip(grouped_indices[True]) if grouped_indices[True] else ((), ())
-        )
-        right_positions = list(_right_positions)
-        right_values = self._right[list(_right_indices)]
-
-        def _getitem(index: int) -> Union[_T, _U]:
-            if index in left_positions:
-                return left_values[left_positions.index(index)]
-            elif index in right_positions:
-                return right_values[right_positions.index(index)]
-            else:
-                raise IndexError(index)
-
-        return SliceableDataset.from_getitem(_getitem, length=len(left_values) + len(right_values))
-
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self._left}, {self._right})'
 
@@ -476,27 +451,21 @@ class ConcatenateSliceableDataset(SliceableDataset[Union[_T, _U]], Generic[_T, _
 
         grouped_indices = self._relative_absolute_left_right_groups(indices)
 
-        _left_positions, _left_indices = (
+        left_positions, left_indices = (
             mit.unzip(grouped_indices[False]) if grouped_indices[False] else ((), ())
         )
-        left_positions = list(_left_positions)
-        left_values = self._left.fetch(list(_left_indices))
+        left_values = self._left.fetch(left_indices)
 
-        _right_positions, _right_indices = (
+        right_positions, right_indices = (
             mit.unzip(grouped_indices[True]) if grouped_indices[True] else ((), ())
         )
-        right_positions = list(_right_positions)
-        right_values = self._right.fetch(list(_right_indices))
+        right_values = self._right.fetch(right_indices)
 
-        return tuple(
-            value
-            for _, value in sorted(
-                itertools.chain(
-                    zip(left_positions, left_values), zip(right_positions, right_values)
-                ),
-                key=itemgetter(0),
-            )
+        position_value_pairs = itertools.chain(
+            zip(left_positions, left_values), zip(right_positions, right_values)
         )
+
+        return tuple(value for _, value in sorted(position_value_pairs, key=itemgetter(0)))
 
     def _relative_absolute_left_right_groups(
         self, indices: Iterable[int]
@@ -507,9 +476,6 @@ class ConcatenateSliceableDataset(SliceableDataset[Union[_T, _U]], Generic[_T, _
             relative_index = (index - self._left_length) if is_right else index
             groups[is_right].append((position, relative_index))
         return groups
-
-    def _normalize_index(self, index: int) -> Tuple[int, int]:
-        return (0, index) if index < self._left_length else (1, index - self._left_length)
 
 
 class MapSliceableDataset(SliceableDataset[_U]):
