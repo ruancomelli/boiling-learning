@@ -370,7 +370,7 @@ class ZippedSliceableDataset(SliceableDataset[Tuple[Unpack[_Ts]]], Generic[Unpac
         *datasets: Unpack[Tuple[Unpack[_Ts]]],
         strictness: Literal['none', 'one-off', 'strict'] = 'strict',
     ) -> None:
-        self._datasets = datasets
+        self._ancestors = datasets
         self._strictness = strictness
 
         lengths = [len(dataset) for dataset in datasets]
@@ -382,17 +382,21 @@ class ZippedSliceableDataset(SliceableDataset[Tuple[Unpack[_Ts]]], Generic[Unpac
         return self._length
 
     def getitem_from_index(self, index: int) -> Tuple[Unpack[_Ts]]:
-        return tuple(dataset[index] for dataset in self._datasets)
+        return tuple(dataset[index] for dataset in self._ancestors)
 
     def getitem_from_indices(self, indices: Iterable[int]) -> SliceableDataset[Tuple[Unpack[_Ts]]]:
-        return ZippedSliceableDataset(*(dataset[indices] for dataset in self._datasets))
+        return ZippedSliceableDataset(*(dataset[indices] for dataset in self._ancestors))
 
     def __repr__(self) -> str:
-        reprs = ', '.join(repr(dataset) for dataset in self._datasets)
+        reprs = ', '.join(repr(dataset) for dataset in self._ancestors)
         return f'{self.__class__.__name__}({reprs})'
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[Tuple[Unpack[_Ts]]]:
-        return tuple(zip(*(dataset.fetch(indices) for dataset in self._datasets)))
+        if indices is None:
+            return tuple(zip(*(dataset.fetch() for dataset in self._ancestors)))
+
+        indices = tuple(indices)
+        return tuple(zip(*(dataset.fetch(indices) for dataset in self._ancestors)))
 
     def _check_lengths(self, lengths: List[int]) -> None:
         if self._strictness == 'one-off':
