@@ -481,43 +481,43 @@ class ConcatenateSliceableDataset(SliceableDataset[Union[_T, _U]], Generic[_T, _
 class MapSliceableDataset(SliceableDataset[_U]):
     def __init__(self, map_func: Callable[[_T], _U], dataset: SliceableDataset[_T]) -> None:
         self._map = map_func
-        self._dataset = dataset
+        self._ancestor = dataset
 
     def __iter__(self) -> Iterator[_U]:
-        return (self._map(element) for element in self._dataset)
+        return (self._map(element) for element in self._ancestor)
 
     def __len__(self) -> int:
-        return len(self._dataset)
+        return len(self._ancestor)
 
     def getitem_from_index(self, index: int) -> _U:
-        return self._map(self._dataset[index])
+        return self._map(self._ancestor[index])
 
     def getitem_from_indices(self, indices: Iterable[int]) -> MapSliceableDataset[_U]:
-        return MapSliceableDataset(self._map, self._dataset[indices])
+        return MapSliceableDataset(self._map, self._ancestor[indices])
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self._map}, {self._dataset})'
+        return f'{self.__class__.__name__}({self._map}, {self._ancestor})'
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_U, ...]:
-        fetched = self._dataset.fetch(indices)
+        fetched = self._ancestor.fetch(indices)
         return tuple(map(self._map, fetched))
 
 
 class BatchSliceableDataset(SliceableDataset[SliceableDataset[_T]], Generic[_T]):
     def __init__(self, dataset: SliceableDataset[_T], batch_size: int) -> None:
-        self._dataset = dataset
+        self._ancestor = dataset
         self._batch_size = batch_size
 
     def __len__(self) -> int:
-        return math.ceil(len(self._dataset) / self._batch_size)
+        return math.ceil(len(self._ancestor) / self._batch_size)
 
     def getitem_from_index(self, index: int) -> SliceableDataset[_T]:
         start = index * self._batch_size
         end = start + self._batch_size
-        return self._dataset[start:end]
+        return self._ancestor[start:end]
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self._dataset}, {self._batch_size})'
+        return f'{self.__class__.__name__}({self._ancestor}, {self._batch_size})'
 
 
 class PrefetchedDataset(ProxySliceableDataset[_T]):
