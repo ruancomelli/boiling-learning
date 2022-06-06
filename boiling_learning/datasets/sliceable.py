@@ -523,7 +523,7 @@ class PrefetchedDataset(ProxySliceableDataset[_T]):
 
     def __iter__(self) -> Iterator[_T]:
         for buffer_indices in SliceableDataset.range(len(self)).batch(self._buffer_size):
-            yield from self._ancestor.fetch(buffer_indices)
+            yield from self.fetch(buffer_indices)
 
 
 class SupervisedSliceableDataset(ProxySliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y]):
@@ -551,10 +551,10 @@ class SupervisedSliceableDataset(ProxySliceableDataset[Tuple[_X, _Y]], Generic[_
         return SupervisedSliceableDataset(super().take(count))
 
     def features(self) -> SliceableDataset[_X]:
-        return super().map(itemgetter(0))
+        return self.map(itemgetter(0))
 
     def targets(self) -> SliceableDataset[_Y]:
-        return super().map(itemgetter(1))
+        return self.map(itemgetter(1))
 
     def unzip(self) -> Tuple[SliceableDataset[_X], SliceableDataset[_Y]]:
         return self.features(), self.targets()
