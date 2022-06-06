@@ -92,6 +92,7 @@ class TestSliceableDataset:
             shuffled = sds.shuffle()
 
         assert ''.join(shuffled) == shuffled_data == 'yhczewmkouqnaglvxrtsibjpdf'
+        assert ''.join(shuffled.fetch(range(5, 10))) == 'wmkou'
 
     def test_skip(self) -> None:
         sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
@@ -231,6 +232,10 @@ def test_concatenate() -> None:
 
     concat = concatenate((sds1, sds2, sds3))
     assert ''.join(concat) == 'abcdefghijkl'
+    assert concat[0] == 'a'
+    assert concat[5] == 'f'
+    assert concat[11] == 'l'
+    assert len(concat) == len(sds1) + len(sds2) + len(sds3)
 
 
 def test_sliceable_to_tensorflow() -> None:
