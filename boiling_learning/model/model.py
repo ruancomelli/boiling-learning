@@ -16,6 +16,16 @@ class Model(tf.keras.models.Model):
     pass
 
 
+@serialize.instance(Model)
+def _serialize_model(instance: Model, path: Path) -> None:
+    tf.keras.models.save_model(instance, resolve(path))
+
+
+@deserialize.dispatch(Model)
+def _deserialize_model(path: Path, _metadata: Metadata) -> Model:
+    return tf.keras.models.load_model(path)
+
+
 class ProblemType(enum.Enum):
     CLASSIFICATION = enum.auto()
     REGRESSION = enum.auto()
@@ -85,13 +95,3 @@ def eval_with(
         metric.update_state(y_true, y_pred)
 
     return {metric.name: metric.result().numpy() for metric in metrics}
-
-
-@serialize.instance(Model)
-def _serialize_model(instance: Model, path: Path) -> None:
-    tf.keras.models.save_model(instance, resolve(path))
-
-
-@deserialize.dispatch(Model)
-def _deserialize_model(path: Path, _metadata: Metadata) -> Model:
-    return tf.keras.models.load_model(path)

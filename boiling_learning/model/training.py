@@ -18,11 +18,12 @@ from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
 from boiling_learning.model.callbacks import RegisterEpoch, SaveHistory
 from boiling_learning.model.model import Model
-from boiling_learning.utils.dataclasses import dataclass, shallow_asdict
+from boiling_learning.utils.dataclasses import dataclass, fields, shallow_asdict
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.timing import Timer
 from boiling_learning.utils.typeutils import typename
+from boiling_learning.utils.utils import resolve
 
 
 @describe.instance(Metric)
@@ -101,12 +102,16 @@ class FitModelReturn:
 
 @serialize.instance(FitModelReturn)
 def _serialize_fit_model_return(instance: FitModelReturn, path: Path) -> None:
-    return save(shallow_asdict(instance), path)
+    path = resolve(path, dir=True)
+    for field_name, field in shallow_asdict(instance).items():
+        save(field, path / field_name)
 
 
 @deserialize.dispatch(FitModelReturn)
 def _deserialize_fit_model_return(path: Path, _metadata: Metadata) -> FitModelReturn:
-    return FitModelReturn(**load(path))
+    return FitModelReturn(
+        **{field.name: load(path / field.name) for field in fields(FitModelReturn)}
+    )
 
 
 def get_fit_model(
