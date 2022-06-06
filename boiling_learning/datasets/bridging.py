@@ -20,6 +20,8 @@ def sliceable_dataset_to_tensorflow_dataset(
     expand_to_batch_size: bool = False,
     snapshot_path: Optional[PathLike] = None,
     cache: Union[bool, PathLike] = False,
+    post_filters: Iterable[Callable[..., bool]] = (),
+    post_mappers: Iterable[Callable[..., bool]] = (),
 ) -> tf.data.Dataset:
     if shuffle:
         dataset = dataset.shuffle()
@@ -38,6 +40,12 @@ def sliceable_dataset_to_tensorflow_dataset(
     if cache:
         # cache before batching to allow easier re-use of the same cached dataset
         ds = ds.cache() if isinstance(cache, bool) else ds.cache(str(resolve(cache, parents=True)))
+
+    for pred in post_filters:
+        ds = ds.filter(pred)
+
+    for mapper in post_mappers:
+        ds = ds.map(mapper)
 
     if batch_size is not None:
         if expand_to_batch_size:
