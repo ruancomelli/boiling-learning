@@ -1,5 +1,11 @@
 
 
+## v0.21.3 (2022-06-06)
+
+### Fix
+
+- **model/training**: fix `FitModelReturn` (de)serialization
+
 ## v0.21.2 (2022-06-05)
 
 ### Refactor
