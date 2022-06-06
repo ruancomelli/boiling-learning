@@ -1,5 +1,15 @@
 
 
+## v0.22.0 (2022-06-06)
+
+### Refactor
+
+- **datasets/sliceable**: remove unused IO functions with sliceable datasets
+
+### Fix
+
+- **datasets/sliceable**: remove useless and inefficient `getitem_from_indices` specialization in `ConcatenateSliceableDataset`
+
 ## v0.21.3 (2022-06-06)
 
 ### Fix
