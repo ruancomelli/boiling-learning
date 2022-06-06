@@ -1,5 +1,16 @@
 
 
+## v0.21.2 (2022-06-05)
+
+### Refactor
+
+- **datasets/sliceable**: refactor fix for `ConcatenateSliceableDataset`
+
+### Fix
+
+- **datasets/sliceable**: fix `get_from_indices` and `fetch` in `ConcatenateSliceableDataset`
+- **model/callbacks**: use natural indexing when registering epochs
+
 ## v0.21.1 (2022-06-05)
 
 ### Feat
