@@ -236,6 +236,8 @@ def test_concatenate() -> None:
     assert concat[5] == 'f'
     assert concat[11] == 'l'
     assert len(concat) == len(sds1) + len(sds2) + len(sds3)
+    assert ''.join(concat[[0, 11, 5, 11]]) == 'alfl'
+    assert ''.join(concat.fetch([0, 11, 5, 11])) == 'alfl'
 
 
 def test_sliceable_to_tensorflow() -> None:

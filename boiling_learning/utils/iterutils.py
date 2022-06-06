@@ -1,14 +1,17 @@
 import enum
-from typing import Any, Callable, Iterable, Iterator, List, Tuple, TypeVar
+from collections import defaultdict
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Tuple, TypeVar
 
 import more_itertools as mit
 import numpy as np
 
 _T = TypeVar('_T')
+_U = TypeVar('_U')
 
 
 def flaglast(iterable: Iterable[_T]) -> Iterator[Tuple[bool, _T]]:
-    """Return pairs `(flag, element)` for each `element` in `iterable` where `flag` is `False` for all elements except the last one, for which it is `True`.
+    """Return pairs `(flag, element)` for each `element` in `iterable` where `flag` is
+    `False` for all elements except the last one, for which it is `True`.
 
     Example:
     >>> flagged = list(flaglast(range(4)))
@@ -23,7 +26,8 @@ def flaglast(iterable: Iterable[_T]) -> Iterator[Tuple[bool, _T]]:
         iterable (Iterable[_T]): Iterable whose last element we want to be flagged.
 
     Yields:
-        Iterator[Tuple[bool, _T]]: Iterable of elements `(flag, elem)` for each `elem` in `iterable` with `flag` being `True` for the last element.
+        Iterator[Tuple[bool, _T]]: Iterable of elements `(flag, elem)` for each `elem`
+        in `iterable` with `flag` being `True` for the last element.
     """
     it = iter(iterable)
 
@@ -42,7 +46,9 @@ def flaglast(iterable: Iterable[_T]) -> Iterator[Tuple[bool, _T]]:
 def apply(side_effect: Callable[[_T], Any], iterable: Iterable[_T]) -> None:
     """Apply side effect to elements in iterable.
 
-    This function is very similar to `list(map(side_effect, iterable))` or `[side_effect(element) for element in iterable]`, except that it is faster and does not store values. This is why the mapped function is called `side_effect`.
+    This function is very similar to `list(map(side_effect, iterable))` or
+    `[side_effect(element) for element in iterable]`, except that it is faster and does
+    not store values. This is why the mapped function is called `side_effect`.
 
     Examples:
 
@@ -58,8 +64,10 @@ def apply(side_effect: Callable[[_T], Any], iterable: Iterable[_T]) -> None:
     ['a', 'b', 'c']
 
     Args:
-        side_effect (Callable[[_T], Any]): side effect to be applied to iterable. Should be a function accepting the elements yielded by the iterable.
-        iterable (Iterable[_T]): iterable containing elements to be fed to the side effect function.
+        side_effect (Callable[[_T], Any]): side effect to be applied to iterable.
+        Should be a function accepting the elements yielded by the iterable.
+        iterable (Iterable[_T]): iterable containing elements to be fed to the side
+        effect function.
     """
     mit.consume(map(side_effect, iterable))
 
@@ -84,7 +92,6 @@ def evenly_spaced_indices(total: int, count: int, *, goal: EvenlySpacedGoal) -> 
     if count == total:
         return list(range(total))
 
-    points: np.ndarray
     if goal is EvenlySpacedGoal.DISTANCE:
         # maximizing distance means:
         # 1 0 0 0 0 0 0 1
@@ -101,3 +108,11 @@ def evenly_spaced_indices(total: int, count: int, *, goal: EvenlySpacedGoal) -> 
 
 def distance_maximized_evenly_spaced_indices(total: int, count: int) -> List[int]:
     return evenly_spaced_indices(total, count, goal=EvenlySpacedGoal.DISTANCE)
+
+
+def groupby(items: Iterable[_T], *, key: Callable[[_T], _U]) -> Dict[_U, List[_T]]:
+    """Groups input items according to the key calculated by key_func."""
+    groups: Dict[_U, List[_T]] = defaultdict(list)
+    for item in items:
+        groups[key(item)].append(item)
+    return groups
