@@ -7,7 +7,6 @@ import random
 from fractions import Fraction
 from functools import reduce
 from operator import itemgetter
-from pathlib import Path
 from typing import (
     Any,
     Callable,
@@ -29,9 +28,6 @@ import more_itertools as mit
 from iteround import saferound
 from typing_extensions import Literal, TypeGuard, TypeVarTuple, Unpack
 
-from boiling_learning.io import LoaderFunction, SaverFunction, json
-from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
-from boiling_learning.utils import PathLike, resolve
 from boiling_learning.utils.dtypes import NestedTypeSpec, auto_spec
 from boiling_learning.utils.iterutils import distance_maximized_evenly_spaced_indices
 
@@ -592,99 +588,6 @@ class SupervisedSliceableDataset(ProxySliceableDataset[Tuple[_X, _Y]], Generic[_
 
 def concatenate(datasets: Iterable[SliceableDataset[_T]]) -> SliceableDataset[_T]:
     return reduce(SliceableDataset[_T].concatenate, datasets)
-
-
-def save_sliceable_dataset(
-    obj: SliceableDataset[_T], path: PathLike, element_saver: SaverFunction[_T] = json.dump
-) -> None:
-    path = resolve(path, dir=True)
-
-    spec = {'length': len(obj)}
-    json.dump(spec, path / 'spec.json')
-
-    for index, element in enumerate(obj):
-        element_saver(element, path / str(index))
-
-
-def load_sliceable_dataset(
-    path: PathLike, element_loader: LoaderFunction[_T] = json.load
-) -> SliceableDataset[_T]:
-    resolved_path: Path = resolve(path)
-
-    spec = json.load(resolved_path / 'spec.json')
-    length = spec['length']
-
-    for index in range(length):
-        if not _sliceable_dataset_element_path(resolved_path, index).exists():
-            raise FileNotFoundError
-
-    def _get_element(index: int) -> Any:
-        return element_loader(_sliceable_dataset_element_path(resolved_path, index))
-
-    return SliceableDataset.from_getitem(_get_element, length=spec['length'])
-
-
-def save_supervised_sliceable_dataset(
-    obj: SupervisedSliceableDataset[_X, _Y],
-    path: PathLike,
-    feature_saver: SaverFunction[_X],
-    target_saver: SaverFunction[_Y],
-) -> None:
-    def element_saver(element: Tuple[_X, _Y], path: PathLike) -> None:
-        resolved_path = resolve(path, dir=True)
-        feature, target = element
-        feature_saver(feature, resolved_path / 'feature')
-        target_saver(target, resolved_path / 'target')
-
-    save_sliceable_dataset(obj, path, element_saver)
-
-
-def load_supervised_sliceable_dataset(
-    path: PathLike,
-    feature_loader: LoaderFunction[_X],
-    target_loader: LoaderFunction[_Y],
-) -> SupervisedSliceableDataset[_X, _Y]:
-    def element_loader(path: PathLike) -> Tuple[_X, _Y]:
-        resolved_path = resolve(path)
-        feature = feature_loader(resolved_path / 'feature')
-        target = target_loader(resolved_path / 'target')
-        return feature, target
-
-    return SupervisedSliceableDataset(load_sliceable_dataset(path, element_loader))
-
-
-def _sliceable_dataset_element_path(root: PathLike, index: int) -> Path:
-    return resolve(root) / str(index)
-
-
-@serialize.instance(SliceableDataset)
-def _serialize_sliceable_dataset(instance: SliceableDataset[Any], path: Path) -> None:
-    path = resolve(path, dir=True)
-    save_sliceable_dataset(instance, path, element_saver=save)
-
-
-@deserialize.dispatch(SliceableDataset)
-def _deserialize_sliceable_dataset(
-    path: Path, metadata: Metadata
-) -> SliceableDataset[Any]:  # pylint: disable=unused-argument
-    path = resolve(path, dir=True)
-    return load_sliceable_dataset(path, element_loader=load)
-
-
-@serialize.instance(SupervisedSliceableDataset)
-def _serialize_supervised_sliceable_dataset(
-    instance: SupervisedSliceableDataset[Any, Any], path: Path
-) -> None:
-    path = resolve(path, dir=True)
-    save_supervised_sliceable_dataset(instance, path, feature_saver=save, target_saver=save)
-
-
-@deserialize.dispatch(SupervisedSliceableDataset)
-def _deserialize_supervised_sliceable_dataset(
-    path: Path, metadata: Metadata
-) -> SupervisedSliceableDataset[Any, Any]:  # pylint: disable=unused-argument
-    path = resolve(path, dir=True)
-    return load_supervised_sliceable_dataset(path, feature_loader=load, target_loader=load)
 
 
 def _is_nested_sliceable_dataset(
