@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -216,3 +217,13 @@ def _deserialize_dict(path: Path, metadata: Metadata) -> dict:
 @deserialize.dispatch(tuple)
 def _deserialize_tuple(path: Path, metadata: Metadata) -> tuple:
     return tuple(deserialize[list](path, metadata))
+
+
+@serialize.instance(timedelta)
+def _serialize_timedelta(instance: timedelta, path: Path) -> None:
+    save(instance.total_seconds(), path)
+
+
+@deserialize.dispatch(timedelta)
+def _deserialize_timedelta(path: Path) -> timedelta:
+    return timedelta(seconds=load(path))
