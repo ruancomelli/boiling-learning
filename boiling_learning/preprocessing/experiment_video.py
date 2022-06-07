@@ -1,6 +1,6 @@
 import contextlib
 from datetime import timedelta
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Union
+from typing import Any, Iterable, List, Mapping, Optional, Union
 
 import funcy
 import modin.pandas as pd
@@ -311,9 +311,7 @@ class ExperimentVideo(Video):
         if overwrite or not path.is_file():
             self.df.to_csv(path, index=False)
 
-    def targets(
-        self, select_columns: Optional[Union[str, List[str]]] = None
-    ) -> List[Dict[str, Any]]:
+    def targets(self, select_columns: Optional[Union[str, List[str]]] = None) -> pd.DataFrame:
         df = self.make_dataframe(recalculate=False)
         df = self.convert_dataframe_type(df)
         df.sort_values(by=self.column_names.index, inplace=True)
@@ -321,4 +319,4 @@ class ExperimentVideo(Video):
         if select_columns is not None:
             df = df[select_columns]
 
-        return df.to_dict('records')
+        return df
