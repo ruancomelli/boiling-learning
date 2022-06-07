@@ -1,5 +1,12 @@
 
 
+## v0.22.3 (2022-06-06)
+
+### Refactor
+
+- **preprocessing/experiment_video**: refactor `targets` method to return a dataframe
+- **preprocessing/hdf5**: make HDF5 dataset generic
+
 ## v0.22.2 (2022-06-06)
 
 ### Feat
