@@ -1,5 +1,5 @@
 import typing
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional, Tuple, TypeVar
 
 import funcy
 import h5py
@@ -14,8 +14,10 @@ from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.preprocessing.video import Video, VideoFrame
 from boiling_learning.utils.utils import PathLike, resolve, unsort
 
+_T = TypeVar('_T')
 
-class HDF5VideoSliceableDataset(SliceableDataset[VideoFrame]):
+
+class HDF5SliceableDataset(SliceableDataset[_T]):
     def __init__(self, filepath: PathLike, dataset_name: str) -> None:
         self._filepath = resolve(filepath, parents=True)
         self._dataset_name = dataset_name
@@ -24,11 +26,11 @@ class HDF5VideoSliceableDataset(SliceableDataset[VideoFrame]):
         with h5py.File(str(self._filepath), 'r', swmr=True) as file:
             return len(file[self._dataset_name])
 
-    def getitem_from_index(self, index: int) -> VideoFrame:
+    def getitem_from_index(self, index: int) -> _T:
         with h5py.File(str(self._filepath), 'r', swmr=True) as file:
-            return typing.cast(VideoFrame, file[self._dataset_name][index])
+            return typing.cast(_T, file[self._dataset_name][index])
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrame, ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_T, ...]:
         if indices is None:
             with h5py.File(str(self._filepath), 'r', swmr=True) as file:
                 return tuple(file[self._dataset_name])
