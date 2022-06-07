@@ -3,6 +3,7 @@ from random import sample
 from typing import Iterable, List, Optional, Tuple
 
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_dataset
@@ -107,7 +108,7 @@ class TestSliceableDataset:
 
         class MockDatabaseDataset(SliceableDataset[int]):
             def __len__(self) -> int:
-                return 20
+                return 8
 
             def getitem_from_index(self, index: int) -> int:
                 return index ** 2
@@ -138,11 +139,14 @@ class TestSliceableDataset:
         assert next(it) == 25
         assert database_fetches == [[0, 1, 2], [3, 4, 5]]
         assert next(it) == 36
-        assert database_fetches == [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+        assert database_fetches == [[0, 1, 2], [3, 4, 5], [6, 7]]
         assert next(it) == 49
-        assert database_fetches == [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
-        assert next(it) == 64
-        assert database_fetches == [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+        assert database_fetches == [[0, 1, 2], [3, 4, 5], [6, 7]]
+
+        with pytest.raises(StopIteration):
+            next(it)
+
+        assert database_fetches == [[0, 1, 2], [3, 4, 5], [6, 7]]
 
     def test_batch(self) -> None:
         sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
