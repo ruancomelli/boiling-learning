@@ -10,13 +10,12 @@ import tensorflow as tf
 
 from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, serialize
-from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.utils import resolve
 
 
-@dataclass(frozen=True)
 class ModelArchitecture:
-    model: tf.keras.models.Model
+    def __init__(self, model: tf.keras.models.Model) -> None:
+        self.model = model
 
     @classmethod
     def from_inputs_and_outputs(
