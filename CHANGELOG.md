@@ -1,5 +1,11 @@
 
 
+## v0.23.6 (2022-06-08)
+
+### Fix
+
+- **io/storage**: add `_metadata` to `_deserialize_timedelta`
+
 ## v0.23.5 (2022-06-08)
 
 ### Fix
