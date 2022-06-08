@@ -49,13 +49,11 @@ from boiling_learning.model.callbacks import (
     TimePrinter,
 )
 from boiling_learning.model.definitions import tiny_convnet
-from boiling_learning.model.model import Model
+from boiling_learning.model.model import Model, ModelArchitecture
 from boiling_learning.model.training import (
     CompiledModel,
     CompileModelParams,
-    FitModel,
     FitModelParams,
-    ModelArchitecture,
     compile_model,
     get_fit_model,
     strategy_scope,
@@ -595,12 +593,13 @@ if OPTIONS.test:
         ),
     )
 
-    model = FitModel(
-        fit_model(compiled_model, datasets, fit_model_params),
-        datasets,
-        compile_params=compiled_model.params,
-        fit_params=fit_model_params,
-    )
+    # TODO: fix this:
+    # model = FitModel(
+    #     fit_model(compiled_model, datasets, fit_model_params),
+    #     datasets,
+    #     compile_params=compiled_model.params,
+    #     fit_params=fit_model_params,
+    # )
 
 
 assert False, 'STOP!'

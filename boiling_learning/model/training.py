@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json as _json
 from contextlib import contextmanager, nullcontext
 from datetime import timedelta
 from pathlib import Path
@@ -17,7 +16,7 @@ from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
 from boiling_learning.model.callbacks import RegisterEpoch, SaveHistory
-from boiling_learning.model.model import Model
+from boiling_learning.model.model import Model, ModelArchitecture
 from boiling_learning.utils.dataclasses import dataclass, fields, shallow_asdict
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.descriptions import describe
@@ -47,17 +46,6 @@ def _describe_configurable(instance: Union[Loss, Optimizer]) -> TypeAndConfig:
 @json.encode.instance(Optimizer)
 def _encode_configurable(instance: Union[Loss, Metric, Optimizer]) -> json.JSONDataType:
     return json.serialize(describe(instance))
-
-
-@json.encode.instance(Model)
-@describe.instance(Model)
-def _describe_model(instance: Model) -> json.JSONDataType:
-    return _anonymize_model(_json.loads(instance.to_json()))
-
-
-@dataclass(frozen=True)
-class ModelArchitecture:
-    model: Model
 
 
 @dataclass(frozen=True)
@@ -151,19 +139,3 @@ def strategy_scope(strategy: Optional[Described[tf.distribute.Strategy, Any]]) -
 
     with context:
         yield
-
-
-def _anonymize_model(model_json: Dict[str, Any]) -> Dict[str, Any]:
-    model_config = model_json['config']
-
-    # remove model name
-    del model_config['name']
-
-    layer_indices = {layer['name']: index for index, layer in enumerate(model_config['layers'])}
-
-    json_str = _json.dumps(model_json)
-
-    for name, index in layer_indices.items():
-        json_str = json_str.replace(name, f'layer_{index}')
-
-    return _json.loads(json_str)
