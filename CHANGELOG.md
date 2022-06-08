@@ -1,5 +1,11 @@
 
 
+## v0.23.3 (2022-06-07)
+
+### Fix
+
+- **datasets/bridging**: remove extraneous keyword parameter
+
 ## v0.23.2 (2022-06-07)
 
 ### Fix
