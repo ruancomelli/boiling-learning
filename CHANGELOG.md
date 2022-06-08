@@ -1,5 +1,21 @@
 
 
+## v0.23.0 (2022-06-07)
+
+### Refactor
+
+- **datasets/bridging**: remove trivially redundant parameter `shuffle`
+- **utils/dtypes**: remove unused functions
+- **model/callbacks**: simplify `MemoryCleanUp` to do only garbage collection
+
+### Fix
+
+- **datasets/bridging**: allow safe bridging to TF datasets when using save paths
+
+### Feat
+
+- **io/storage**: support (de)serialization of timedelta objects
+
 ## v0.22.3 (2022-06-06)
 
 ### Refactor
