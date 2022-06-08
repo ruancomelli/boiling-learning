@@ -21,6 +21,9 @@ def sliceable_dataset_to_tensorflow_dataset(
     filterer: Optional[Callable[[_T], bool]] = None,
     prefetch: int = 0,
     expand_to_batch_size: bool = False,
+    # experimental parameters
+    deterministic: bool = True,
+    parallel_calls: bool = False,
 ) -> tf.data.Dataset:
     creator = partial(
         _create_tensorflow_dataset,
@@ -52,10 +55,10 @@ def sliceable_dataset_to_tensorflow_dataset(
         ds = ds.batch(
             batch_size,
             drop_remainder=expand_to_batch_size,
-            # FIXME: I am not sure if the following options were causing all sorts of
-            # graph errors. Probably worth trying out:
             # num_parallel_calls=tf.data.AUTOTUNE,
+            num_parallel_calls=tf.data.AUTOTUNE if parallel_calls else None,
             # deterministic=not shuffle,
+            deterministic=deterministic,
         )
 
     if prefetch:
