@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Callable, Iterable, Optional, Union
+from functools import partial
+from typing import Callable, Optional, TypeVar
 
 import tensorflow as tf
 
@@ -9,43 +10,39 @@ from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.utils.mathutils import round_to_multiple
 from boiling_learning.utils.utils import PathLike, resolve
 
+_T = TypeVar('_T')
+
 
 def sliceable_dataset_to_tensorflow_dataset(
-    dataset: SliceableDataset[Any],
+    dataset: SliceableDataset[_T],
     *,
+    save_path: Optional[PathLike] = None,
     batch_size: Optional[int] = None,
-    filters: Iterable[Callable[..., bool]] = (),
+    filterer: Optional[Callable[[_T], bool]] = None,
     prefetch: bool = False,
     shuffle: bool = False,
     expand_to_batch_size: bool = False,
-    snapshot_path: Optional[PathLike] = None,
-    cache: Union[bool, PathLike] = False,
-    post_filters: Iterable[Callable[..., bool]] = (),
-    post_mappers: Iterable[Callable[..., bool]] = (),
 ) -> tf.data.Dataset:
-    if shuffle:
-        dataset = dataset.shuffle()
+    creator = partial(
+        _create_tensorflow_dataset,
+        dataset,
+        batch_size=batch_size,
+        filterer=filterer,
+        prefetch=prefetch,
+        shuffle=shuffle,
+    )
 
-    if prefetch:
-        dataset = dataset.prefetch(batch_size)
+    if save_path is None:
+        ds = creator()
+    else:
+        save_path = str(resolve(save_path, parents=True))
 
-    ds = tf.data.Dataset.from_generator(lambda: dataset, output_signature=dataset.element_spec)
-
-    for pred in filters:
-        ds = ds.filter(pred)
-
-    if snapshot_path is not None:
-        ds = ds.snapshot(str(resolve(snapshot_path, parents=True)))
-
-    if cache:
-        # cache before batching to allow easier re-use of the same cached dataset
-        ds = ds.cache() if isinstance(cache, bool) else ds.cache(str(resolve(cache, parents=True)))
-
-    for pred in post_filters:
-        ds = ds.filter(pred)
-
-    for mapper in post_mappers:
-        ds = ds.map(mapper)
+        try:
+            ds = tf.data.experimental.load(save_path, dataset.element_spec)
+        except FileNotFoundError:
+            ds = creator()
+            tf.data.experimental.save(ds, save_path)
+            ds = tf.data.experimental.load(save_path, dataset.element_spec)
 
     if batch_size is not None:
         if expand_to_batch_size:
@@ -55,11 +52,33 @@ def sliceable_dataset_to_tensorflow_dataset(
         ds = ds.batch(
             batch_size,
             drop_remainder=expand_to_batch_size,
-            num_parallel_calls=tf.data.AUTOTUNE,
-            deterministic=not shuffle,
+            # FIXME: I am not sure if the following options were causing all sorts of
+            # graph errors. Probably worth trying out:
+            # num_parallel_calls=tf.data.AUTOTUNE,
+            # deterministic=not shuffle,
         )
 
     if prefetch:
         ds = ds.prefetch(tf.data.AUTOTUNE)
 
     return ds
+
+
+def _create_tensorflow_dataset(
+    dataset: SliceableDataset[_T],
+    *,
+    batch_size: Optional[int] = None,
+    filterer: Optional[Callable[[_T], bool]] = None,
+    prefetch: bool = False,
+    shuffle: bool = False,
+) -> tf.data.Dataset:
+    if shuffle:
+        dataset = dataset.shuffle()
+
+    if prefetch:
+        dataset = dataset.prefetch(batch_size)
+
+    return tf.data.Dataset.from_generator(
+        lambda: iter(dataset if filterer is None else filter(filterer, dataset)),
+        output_signature=dataset.element_spec,
+    )
