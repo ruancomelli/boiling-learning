@@ -362,18 +362,6 @@ class BackupAndRestore(_BackupAndRestore):
 
 
 class MemoryCleanUp(Callback):
-    def __init__(self, clean_device: Optional[int] = None) -> None:
-        self._clean_device = clean_device
-
     def on_epoch_end(self, epoch: int, logs=None) -> None:
         # Housekeeping
         gc.collect()
-        K.clear_session()
-
-    # TODO: add numba as dependency and `from numba import cuda`
-    # def on_train_end(self, logs=None) -> None:
-    #     # Based on https://github.com/keras-team/keras/blob/v2.8.0/keras/callbacks.py#L1709-L1713
-
-    #     if self._clean_device is not None:
-    #         cuda.select_device(0)
-    #         cuda.close()
