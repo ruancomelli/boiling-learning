@@ -1,5 +1,20 @@
 
 
+## v0.23.4 (2022-06-08)
+
+### Fix
+
+- **model/model**: fix model from JSON call
+
+### Refactor
+
+- **model**: wrap TF models in `ModelArchitecture`
+- **model**: move `ModelArchitecture` to `boiling_learning.model.model`
+
+### Feat
+
+- **datasets/bridging**: accept experimental parameters for reading datasets in parallel
+
 ## v0.23.3 (2022-06-07)
 
 ### Fix
