@@ -19,7 +19,7 @@ def sliceable_dataset_to_tensorflow_dataset(
     save_path: Optional[PathLike] = None,
     batch_size: Optional[int] = None,
     filterer: Optional[Callable[[_T], bool]] = None,
-    prefetch: bool = False,
+    prefetch: int = 0,
     expand_to_batch_size: bool = False,
 ) -> tf.data.Dataset:
     creator = partial(
@@ -65,12 +65,11 @@ def sliceable_dataset_to_tensorflow_dataset(
 def _create_tensorflow_dataset(
     dataset: SliceableDataset[_T],
     *,
-    batch_size: Optional[int] = None,
     filterer: Optional[Callable[[_T], bool]] = None,
-    prefetch: bool = False,
+    prefetch: int = 0,
 ) -> tf.data.Dataset:
     if prefetch:
-        dataset = dataset.prefetch(batch_size)
+        dataset = dataset.prefetch(prefetch)
 
     return tf.data.Dataset.from_generator(
         lambda: iter(dataset if filterer is None else filter(filterer, dataset)),
