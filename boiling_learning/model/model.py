@@ -53,7 +53,7 @@ def _deserialize_model(path: Path, _metadata: Metadata) -> ModelArchitecture:
     if not model_weights_path.is_file():
         raise FileNotFoundError(str(model_weights_path))
 
-    architecture = ModelArchitecture(tf.keras.models.model_from_json(str(model_json_path)))
+    architecture = ModelArchitecture(tf.keras.models.model_from_json(model_json_path.read_text()))
     architecture.model.load_weights(str(model_weights_path))
     return architecture
 
