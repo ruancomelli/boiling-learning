@@ -25,7 +25,6 @@ def sliceable_dataset_to_tensorflow_dataset(
     creator = partial(
         _create_tensorflow_dataset,
         dataset,
-        batch_size=batch_size,
         filterer=filterer,
         prefetch=prefetch,
     )
