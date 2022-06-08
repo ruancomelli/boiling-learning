@@ -1,5 +1,11 @@
 
 
+## v0.23.5 (2022-06-08)
+
+### Fix
+
+- **model/model**: revert making `ModelArchitecture` a dataclass
+
 ## v0.23.4 (2022-06-08)
 
 ### Fix
