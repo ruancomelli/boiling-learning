@@ -33,14 +33,17 @@ def sliceable_dataset_to_tensorflow_dataset(
     if save_path is None:
         ds = creator()
     else:
-        save_path = str(resolve(save_path, parents=True))
+        save_path = resolve(save_path, parents=True)
 
         try:
-            ds = tf.data.experimental.load(save_path, dataset.element_spec)
+            if not save_path.exists():
+                raise FileNotFoundError
+
+            ds = tf.data.experimental.load(str(save_path), dataset.element_spec)
         except FileNotFoundError:
             ds = creator()
-            tf.data.experimental.save(ds, save_path)
-            ds = tf.data.experimental.load(save_path, dataset.element_spec)
+            tf.data.experimental.save(ds, str(save_path))
+            ds = tf.data.experimental.load(str(save_path), dataset.element_spec)
 
     if batch_size is not None:
         if expand_to_batch_size:
