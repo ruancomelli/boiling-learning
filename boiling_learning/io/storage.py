@@ -224,5 +224,5 @@ def _serialize_timedelta(instance: timedelta, path: Path) -> None:
 
 
 @deserialize.dispatch(timedelta)
-def _deserialize_timedelta(path: Path) -> timedelta:
+def _deserialize_timedelta(path: Path, _metadata: Metadata) -> timedelta:
     return timedelta(seconds=load(path))
