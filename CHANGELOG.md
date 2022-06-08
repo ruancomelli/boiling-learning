@@ -1,5 +1,11 @@
 
 
+## v0.23.1 (2022-06-07)
+
+### Feat
+
+- **datasets/bridging**: make `prefetch` an integer
+
 ## v0.23.0 (2022-06-07)
 
 ### Refactor
