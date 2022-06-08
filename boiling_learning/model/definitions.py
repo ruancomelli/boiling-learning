@@ -27,18 +27,18 @@ from tensorflow.keras.layers import (
 )
 from tensorflow.keras.mixed_precision.experimental import Policy
 
-from boiling_learning.model.model import Model, ProblemType
+from boiling_learning.model.model import ModelArchitecture, ProblemType
 
 # Check this guideline:
 # https://docs.nvidia.com/deeplearning/performance/dl-performance-fully-connected/index.html
 # It includes tips and rules-of-thumb for defining layers.
 
 
-def linear_regression(input_shape: Tuple[int, ...]) -> Model:
+def linear_regression(input_shape: Tuple[int, ...]) -> ModelArchitecture:
     inputs = Input(shape=input_shape)
     predictions = Dense(1, activation='linear')(inputs)
 
-    return Model(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
 
 
 def tiny_convnet(
@@ -49,7 +49,7 @@ def tiny_convnet(
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
-) -> Model:
+) -> ModelArchitecture:
     # start "current layer" as the input layer
     inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
     x = inputs
@@ -71,7 +71,7 @@ def tiny_convnet(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
 
 
 def small_convnet(
@@ -82,7 +82,7 @@ def small_convnet(
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
-) -> Model:
+) -> ModelArchitecture:
     # start "current layer" as the input layer
     inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
     x = inputs
@@ -115,7 +115,7 @@ def small_convnet(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
 
 
 def hoboldnet1(
@@ -126,7 +126,7 @@ def hoboldnet1(
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
-) -> Model:
+) -> ModelArchitecture:
     '''CNN #1 implemented according to the paper Hobold and da Silva (2019):
     Visualization-based nucleate boiling heat flux quantification using machine
     learning.
@@ -163,7 +163,7 @@ def hoboldnet1(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
 
 
 def hoboldnet2(
@@ -174,7 +174,7 @@ def hoboldnet2(
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
-) -> Model:
+) -> ModelArchitecture:
     '''CNN #2 implemented according to the paper Hobold and da Silva (2019):
     Visualization-based nucleate boiling heat flux quantification using machine
     learning.
@@ -211,7 +211,7 @@ def hoboldnet2(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
 
 
 def hoboldnet3(
@@ -222,7 +222,7 @@ def hoboldnet3(
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
-) -> Model:
+) -> ModelArchitecture:
     '''CNN #3 implemented according to the paper Hobold and da Silva (2019):
     Visualization-based nucleate boiling heat flux quantification using machine
     learning.
@@ -267,7 +267,7 @@ def hoboldnet3(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
 
 
 def hoboldnet_supplementary(
@@ -278,7 +278,7 @@ def hoboldnet_supplementary(
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
-) -> Model:
+) -> ModelArchitecture:
     '''See supplementary material for Hobold and da Silva (2019): Visualization-based
     nucleate boiling heat flux quantification using machine learning.
     '''
@@ -322,7 +322,7 @@ def hoboldnet_supplementary(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
 
 
 def kramernet(
@@ -333,7 +333,7 @@ def kramernet(
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
-) -> Model:
+) -> ModelArchitecture:
     '''See supplementary material for Hobold and da Silva (2019): Visualization-based
     nucleate boiling heat flux quantification using machine learning.
     '''
@@ -416,14 +416,14 @@ def kramernet(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
 
 
 def linear_model(
     input_shape: Tuple[int, ...],
     problem: ProblemType = ProblemType.REGRESSION,
     normalize_images: bool = False,
-) -> Model:
+) -> ModelArchitecture:
     inputs = Input(shape=input_shape)
     x = inputs  # start "current layer" as the input layer
     if normalize_images:
@@ -434,7 +434,7 @@ def linear_model(
 
     predictions = _LinearModel()(x)
 
-    return Model(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
 
 
 class FlatteningMode(enum.Enum):
@@ -460,7 +460,7 @@ def boilnet(
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: int = 0,
     normalize_images: bool = False,
-) -> Model:
+) -> ModelArchitecture:
     input_shape = (time_window, *image_shape) if time_window > 0 else image_shape
     flatten_layer = {
         FlatteningMode.FLATTEN: Flatten,
@@ -506,24 +506,24 @@ def boilnet(
     }[problem]
     outputs = Dense(head_size, activation=activation)(flatten)
 
-    model = Model(inputs=inputs, outputs=outputs)
-
-    model = _apply_policies_to_layers(model, hidden_layers_policy, output_layer_policy)
-
-    return model
+    return _apply_policies_to_layers(
+        ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs),
+        hidden_layers_policy,
+        output_layer_policy,
+    )
 
 
 def _apply_policies_to_layers(
-    model: Model,
+    model: ModelArchitecture,
     hidden_layers_policy: Union[str, Policy],
     output_layer_policy: Union[str, Policy],
-) -> Model:
+) -> ModelArchitecture:
     hidden_layers_policy = Policy(hidden_layers_policy)
     output_layer_policy = Policy(output_layer_policy)
 
-    for layer in model.layers[1:-1]:
+    for layer in model.model.layers[1:-1]:
         layer.dtype = hidden_layers_policy
-    model.layers[-1].dtype = output_layer_policy
+    model.model.layers[-1].dtype = output_layer_policy
 
     return model
 
@@ -534,7 +534,7 @@ def boiling_mobile_net(
     output_layer_policy: Union[str, Policy],
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: int = 0,
-) -> Model:
+) -> ModelArchitecture:
     mobile_net = MobileNetV2(
         input_shape=image_shape, include_top=False, weights='imagenet', pooling='avg'
     )
@@ -550,7 +550,7 @@ def boiling_mobile_net(
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return Model(inputs=mobile_net.input, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=mobile_net.input, outputs=predictions)
 
 
 # TODO: fazer erro em função do y: ver se para maiores ys o erro vai subindo ou diminuindo

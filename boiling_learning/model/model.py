@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import enum
 import json as _json
+import typing
 from pathlib import Path
 from typing import Any, Dict
 
@@ -10,33 +11,51 @@ import tensorflow as tf
 from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, serialize
 from boiling_learning.utils.dataclasses import dataclass
-from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.utils import resolve
-
-
-class Model(tf.keras.models.Model):
-    pass
-
-
-@serialize.instance(Model)
-def _serialize_model(instance: Model, path: Path) -> None:
-    tf.keras.models.save_model(instance, resolve(path))
-
-
-@deserialize.dispatch(Model)
-def _deserialize_model(path: Path, _metadata: Metadata) -> Model:
-    return tf.keras.models.load_model(path)
-
-
-@json.encode.instance(Model)
-@describe.instance(Model)
-def _describe_model(instance: Model) -> json.JSONDataType:
-    return _anonymize_model(_json.loads(instance.to_json()))
 
 
 @dataclass(frozen=True)
 class ModelArchitecture:
-    model: Model
+    model: tf.keras.models.Model
+
+    @classmethod
+    def from_inputs_and_outputs(
+        cls, inputs: tf.keras.layers.Layer, outputs: tf.keras.layers.Layer
+    ) -> ModelArchitecture:
+        return cls(tf.keras.models.Model(inputs=inputs, outputs=outputs))
+
+    def __json_encode__(self) -> Dict[str, Any]:
+        return _anonymize_model(_json.loads(self.model.to_json()))
+
+    def __describe__(self) -> Dict[str, Any]:
+        return typing.cast(Dict[str, Any], json.encode(self))
+
+
+@serialize.instance(ModelArchitecture)
+def _serialize_model(instance: ModelArchitecture, path: Path) -> None:
+    path = resolve(path, dir=True)
+    model_json_path = path / 'model.json'
+    model_weights_path = path / 'weights.h5'
+
+    instance.model.save_weights(str(model_weights_path))
+    model_json_path.write_text(instance.model.to_json())
+
+
+@deserialize.dispatch(ModelArchitecture)
+def _deserialize_model(path: Path, _metadata: Metadata) -> ModelArchitecture:
+    path = resolve(path)
+    model_json_path = path / 'model.json'
+    model_weights_path = path / 'weights.h5'
+
+    if not model_json_path.is_file():
+        raise FileNotFoundError(str(model_json_path))
+
+    if not model_weights_path.is_file():
+        raise FileNotFoundError(str(model_weights_path))
+
+    architecture = ModelArchitecture(tf.keras.models.model_from_json(str(model_json_path)))
+    architecture.model.load_weights(str(model_weights_path))
+    return architecture
 
 
 class ProblemType(enum.Enum):

@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any
 
 from classes import AssociatedType, Supports, typeclass
 from typing_extensions import final
@@ -14,7 +14,6 @@ from boiling_learning.utils.table_dispatch import TableDispatcher
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
-_T = TypeVar('_T')
 Metadata = json.JSONDataType
 
 

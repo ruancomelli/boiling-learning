@@ -16,7 +16,7 @@ from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
 from boiling_learning.model.callbacks import RegisterEpoch, SaveHistory
-from boiling_learning.model.model import Model, ModelArchitecture
+from boiling_learning.model.model import ModelArchitecture
 from boiling_learning.utils.dataclasses import dataclass, fields, shallow_asdict
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.descriptions import describe
@@ -57,20 +57,15 @@ class CompileModelParams:
 
 @dataclass(frozen=True)
 class CompiledModel:
-    model: Model
+    architecture: ModelArchitecture
     params: CompileModelParams
 
 
-def get_compiled_model(architecture: ModelArchitecture, params: CompileModelParams) -> Model:
-    model = architecture.model
-
-    model.compile(optimizer=params.optimizer, loss=params.loss, metrics=params.metrics)
-
-    return model
-
-
 def compile_model(architecture: ModelArchitecture, params: CompileModelParams) -> CompiledModel:
-    return CompiledModel(get_compiled_model(architecture, params), params)
+    architecture.model.compile(
+        optimizer=params.optimizer, loss=params.loss, metrics=params.metrics
+    )
+    return CompiledModel(architecture, params)
 
 
 @dataclass(frozen=True)
@@ -82,7 +77,7 @@ class FitModelParams:
 
 @dataclass(frozen=True)
 class FitModelReturn:
-    model: Model
+    architecture: ModelArchitecture
     trained_epochs: int
     history: Tuple[Dict[str, Any], ...]
     train_time: timedelta
@@ -110,12 +105,10 @@ def get_fit_model(
     epoch_registry: RegisterEpoch,
     history_registry: SaveHistory,
 ) -> FitModelReturn:
-    model = compiled_model.model
-
     ds_train, ds_val, _ = datasets.value
 
     with Timer() as timer:
-        model.fit(
+        compiled_model.architecture.model.fit(
             ds_train,
             validation_data=ds_val,
             epochs=params.epochs,
@@ -126,7 +119,7 @@ def get_fit_model(
     assert duration is not None
 
     return FitModelReturn(
-        model=model,
+        architecture=compiled_model.architecture,
         trained_epochs=epoch_registry.last_epoch(),
         history=tuple(history_registry.history),
         train_time=duration,
