@@ -1,5 +1,11 @@
 
 
+## v0.23.2 (2022-06-07)
+
+### Fix
+
+- **datasets/bridging**: correctly capture non-existing save files
+
 ## v0.23.1 (2022-06-07)
 
 ### Feat
