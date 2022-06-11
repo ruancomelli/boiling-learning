@@ -44,8 +44,8 @@ def linear_regression(input_shape: Tuple[int, ...]) -> ModelArchitecture:
 def tiny_convnet(
     input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
     dropout: Optional[float],
-    hidden_layers_policy: Union[str, Policy],
-    output_layer_policy: Union[str, Policy],
+    hidden_layers_policy: Optional[Union[str, Policy]] = None,
+    output_layer_policy: Optional[Union[str, Policy]] = None,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
@@ -77,8 +77,8 @@ def tiny_convnet(
 def small_convnet(
     input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
     dropout: Optional[float],
-    hidden_layers_policy: Union[str, Policy],
-    output_layer_policy: Union[str, Policy],
+    hidden_layers_policy: Optional[Union[str, Policy]] = None,
+    output_layer_policy: Optional[Union[str, Policy]] = None,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
@@ -121,8 +121,8 @@ def small_convnet(
 def hoboldnet1(
     input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
     dropout: Optional[float],
-    hidden_layers_policy: Union[str, Policy],
-    output_layer_policy: Union[str, Policy],
+    hidden_layers_policy: Optional[Union[str, Policy]] = None,
+    output_layer_policy: Optional[Union[str, Policy]] = None,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
@@ -169,8 +169,8 @@ def hoboldnet1(
 def hoboldnet2(
     input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
     dropout: Optional[float],
-    hidden_layers_policy: Union[str, Policy],
-    output_layer_policy: Union[str, Policy],
+    hidden_layers_policy: Optional[Union[str, Policy]] = None,
+    output_layer_policy: Optional[Union[str, Policy]] = None,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
@@ -217,8 +217,8 @@ def hoboldnet2(
 def hoboldnet3(
     input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
     dropout: Optional[float],
-    hidden_layers_policy: Union[str, Policy],
-    output_layer_policy: Union[str, Policy],
+    hidden_layers_policy: Optional[Union[str, Policy]] = None,
+    output_layer_policy: Optional[Union[str, Policy]] = None,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
@@ -273,8 +273,8 @@ def hoboldnet3(
 def hoboldnet_supplementary(
     input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
     dropout: Optional[float],
-    hidden_layers_policy: Union[str, Policy],
-    output_layer_policy: Union[str, Policy],
+    hidden_layers_policy: Optional[Union[str, Policy]] = None,
+    output_layer_policy: Optional[Union[str, Policy]] = None,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
@@ -328,8 +328,8 @@ def hoboldnet_supplementary(
 def kramernet(
     input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
     dropout: Optional[float],
-    hidden_layers_policy: Union[str, Policy],
-    output_layer_policy: Union[str, Policy],
+    hidden_layers_policy: Optional[Union[str, Policy]] = None,
+    output_layer_policy: Optional[Union[str, Policy]] = None,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
     normalize_images: bool = False,
@@ -450,8 +450,8 @@ class ConvolutionType(enum.Enum):
 
 def boilnet(
     image_shape: Tuple[Optional[int], ...],
-    hidden_layers_policy: Union[str, Policy],
-    output_layer_policy: Union[str, Policy],
+    hidden_layers_policy: Optional[Union[str, Policy]] = None,
+    output_layer_policy: Optional[Union[str, Policy]] = None,
     dropout: Optional[float] = None,
     spatial_dropout: Optional[float] = None,
     time_window: int = 0,
@@ -515,8 +515,8 @@ def boilnet(
 
 def _apply_policies_to_layers(
     model: ModelArchitecture,
-    hidden_layers_policy: Union[str, Policy],
-    output_layer_policy: Union[str, Policy],
+    hidden_layers_policy: Optional[Union[str, Policy]] = None,
+    output_layer_policy: Optional[Union[str, Policy]] = None,
 ) -> ModelArchitecture:
     hidden_layers_policy = Policy(hidden_layers_policy)
     output_layer_policy = Policy(output_layer_policy)
@@ -530,8 +530,8 @@ def _apply_policies_to_layers(
 
 def boiling_mobile_net(
     image_shape: Tuple[Optional[int], ...],
-    hidden_layers_policy: Union[str, Policy],
-    output_layer_policy: Union[str, Policy],
+    hidden_layers_policy: Optional[Union[str, Policy]] = None,
+    output_layer_policy: Optional[Union[str, Policy]] = None,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: int = 0,
 ) -> ModelArchitecture:
