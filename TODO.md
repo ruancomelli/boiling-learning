@@ -231,3 +231,4 @@ and think of other things.
 - \[ \] take a look at [`ndindex`](https://quansight-labs.github.io/ndindex/index.html)
 - \[ \] Take a look at [Probabilistic Layers Regression](https://www.tensorflow.org/probability/examples/Probabilistic_Layers_Regression)
 - \[ \] make [LeakyReLU trainable](https://www.tensorflow.org/guide/intro_to_modules#the_build_step)?
+- \[ \] [quantize models](https://www.tensorflow.org/model_optimization/guide/quantization/training_example#clone_and_fine-tune_pre-trained_model_with_quantization_aware_training)?
