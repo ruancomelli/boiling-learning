@@ -44,8 +44,15 @@ def sliceable_dataset_to_tensorflow_dataset(
             ds = tf.data.experimental.load(str(save_path), dataset.element_spec)
         except FileNotFoundError:
             ds = creator()
+
             tf.data.experimental.save(ds, str(save_path))
-            ds = tf.data.experimental.load(str(save_path), dataset.element_spec)
+            ds = tf.data.experimental.load(
+                str(save_path),
+                dataset.element_spec,
+                reader_func=_make_reader_func(
+                    deterministic=deterministic, parallel_calls=parallel_calls
+                ),
+            )
 
     if batch_size is not None:
         if expand_to_batch_size:
@@ -65,6 +72,19 @@ def sliceable_dataset_to_tensorflow_dataset(
         ds = ds.prefetch(tf.data.AUTOTUNE)
 
     return ds
+
+
+def _make_reader_func(
+    *, deterministic: bool = True, parallel_calls: bool = False
+) -> Callable[[tf.data.Dataset], tf.data.Dataset]:
+    def _reader_func(datasets: tf.data.Dataset) -> tf.data.Dataset:
+        return datasets.interleave(
+            lambda dataset: dataset,
+            num_parallel_calls=tf.data.AUTOTUNE if parallel_calls else None,
+            deterministic=deterministic,
+        )
+
+    return _reader_func
 
 
 def _create_tensorflow_dataset(
