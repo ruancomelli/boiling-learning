@@ -26,17 +26,10 @@ class AdditionalValidationSets(Callback):
         super().__init__()
 
         self.validation_sets = validation_sets
-        self.history = {}
 
-    def on_train_begin(self, logs=None) -> None:
-        self.history = {}
-
-    def on_epoch_end(self, epoch: int, logs=None) -> None:
-        logs = logs or {}
-
-        # record the same values as History() as well
-        for k, v in logs.items():
-            self.history.setdefault(k, []).append(v)
+    def on_epoch_end(self, epoch: int, logs: Optional[Dict[str, Any]] = None) -> None:
+        if logs is None:
+            return
 
         # evaluate on the additional validation sets
         for validation_set_name, validation_set in self.validation_sets.items():
@@ -46,13 +39,12 @@ class AdditionalValidationSets(Callback):
                 results = self.model.evaluate(validation_set, verbose=0)
 
                 metric_names = ['loss'] + [m.name for m in self.model.metrics]
-
                 full_names = [
                     f'{validation_set_name}_{metric_name}' for metric_name in metric_names
                 ]
                 full_results = [logs['loss']] + results
-                for full_name, result in zip(full_names, full_results):
-                    self.history.setdefault(full_name, []).append(result)
+
+                logs.update(zip(full_names, full_results))
 
                 values_str = ' - '.join(
                     f'{name}: {result}' for name, result in zip(metric_names, full_results)
