@@ -214,6 +214,10 @@ def _parse_timedelta(s: Optional[str]) -> Optional[timedelta]:
         return None
 
     m = _TIMEDELTA_PATTERN.fullmatch(s)
+
+    if m is None:
+        return None
+
     return timedelta(hours=int(m['h']), minutes=int(m['min']), seconds=int(m['s']))
 
 
