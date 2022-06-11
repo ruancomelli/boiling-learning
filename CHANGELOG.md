@@ -1,5 +1,21 @@
 
 
+## v0.23.7 (2022-06-11)
+
+### Feat
+
+- **datasets/bridging**: support reading dataset shards in parallel
+- **model/model**: add utility methods for counting the number of parameters and the size of a model
+
+### Refactor
+
+- **model/definitions**: set layers policies as the default policy by default
+- **model/callbacks**: improve displaying of metrics in `TimePrinter` and `AdditionalValidationSets`
+
+### Fix
+
+- **scripts/set_condensation_datasets_data**: correctly return `None` when the timestamp regex match fails
+
 ## v0.23.6 (2022-06-08)
 
 ### Fix
