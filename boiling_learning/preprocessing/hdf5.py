@@ -51,7 +51,6 @@ def frames_to_hdf5(
     buffer_size: int = 1,
     open_mode: Literal['w', 'a'] = 'a',
     # experimental parameters
-    indices: Optional[Iterable[int]] = None,
     compress: bool = True,
 ) -> None:
     """Save frames as an HDF5 file."""
@@ -59,8 +58,8 @@ def frames_to_hdf5(
 
     example_frame = frames[0]
 
-    indices = range(len(frames)) if indices is None else tuple(indices)
-    length = len(indices)
+    length = len(frames)
+    indices = range(length)
 
     with h5py.File(destination, open_mode) as file:
         dataset = file.require_dataset(
