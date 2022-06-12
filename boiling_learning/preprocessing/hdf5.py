@@ -3,7 +3,6 @@ from typing import Iterable, Optional, Tuple, TypeVar
 
 import h5py
 import hdf5plugin
-import more_itertools as mit
 import numpy as np
 from loguru import logger
 from typing_extensions import Literal
@@ -54,31 +53,28 @@ def frames_to_hdf5(
     compress: bool = True,
 ) -> None:
     """Save frames as an HDF5 file."""
-    destination = str(resolve(dest))
+    destination = resolve(dest, parents=True)
 
-    example_frame = frames[0]
-
-    length = len(frames)
-    indices = range(length)
-
-    with h5py.File(destination, open_mode) as file:
+    with h5py.File(str(destination), open_mode) as file:
         dataset = file.require_dataset(
             dataset_name,
-            (length, *example_frame.shape),
+            (len(frames), *frames[0].shape),
             dtype='f',
             # best compression algorithm I found - good compression, fastest decompression
             **(hdf5plugin.LZ4() if compress else {}),
         )
 
-        for chunk_index, chunk_indices in enumerate(mit.chunked(indices, buffer_size)):
+        for chunk_index, frames_batch in enumerate(frames.batch(buffer_size)):
+            n_frames = len(frames_batch)
+
             start = chunk_index * buffer_size
-            end = start + buffer_size
+            end = start + n_frames
 
             logger.debug(
-                f'Writing {len(chunk_indices)} frames to {destination}: ' f'{chunk_indices}'
+                f'Writing frames {start}:{end} ({n_frames}) to {dataset_name}@{destination}'
             )
 
-            batch = np.stack(frames.fetch(chunk_indices))
+            batch = np.stack(frames_batch.fetch())
             dataset.write_direct(batch, dest_sel=np.s_[start:end])
 
             # flush data and close video to release memory as soon as possible
