@@ -1,5 +1,24 @@
 
 
+## v0.24.0 (2022-06-12)
+
+### Refactor
+
+- **preprocessing/hdf5**: use further sliceable dataset methods in `frames_to_hdf5`
+- **preprocessing/hdf5**: remove unnecessarily added `indices` parameter
+- **preprocessing/hdf5**: rename `batch_size` as `buffer_size` in `frames_to_hdf5`
+- **preprocessing/hdf5**: generalize `video_to_hdf5` as `frames_to_hdf5` accepting any dataset of frames
+- **preprocessing/hdf5**: make compressing data optional
+- **preprocessing/hdf5**: remove SWMR configuration since we will never write to `HDF5SliceableDataset`s
+- **preprocessing/hdf5**: make use of the new sliceable interface for videos
+- **preprocessing/video**: make `fps` a method in `Video`
+- **preprocessing/video**: convert `Video` to a `SliceableDataset`
+- **preprocessing/video**: remove unused functionality
+
+### Feat
+
+- **datasets/sliceable**: add `enumerate` method to sliceable datasets
+
 ## v0.23.7 (2022-06-11)
 
 ### Feat
