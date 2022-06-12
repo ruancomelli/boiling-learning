@@ -2,7 +2,6 @@ import re
 import time
 from datetime import timedelta
 from functools import lru_cache
-from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 import gspread
@@ -18,7 +17,7 @@ from boiling_learning.management.allocators import default_table_allocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
-from boiling_learning.preprocessing.video import get_fps, valid_end_frame
+from boiling_learning.preprocessing.video import Video, valid_end_frame
 from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
 from boiling_learning.utils import KeyedDefaultDict, PathLike, resolve
 from boiling_learning.utils.frozendict import frozendict
@@ -84,13 +83,13 @@ def main(
     return grouped_datasets
 
 
-def _generate_fps_getter(fps_cache_path: Optional[PathLike]) -> Callable[[Path], float]:
+def _generate_fps_getter(fps_cache_path: Optional[PathLike]) -> Callable[[Video], float]:
     if fps_cache_path is None:
-        return get_fps
+        return Video.fps
 
     allocator = default_table_allocator(fps_cache_path)
     cacher = cache(allocator, saver=json.dump, loader=json.load)
-    return cacher(get_fps)
+    return cacher(Video.fps)
 
 
 def _generate_end_frame_index_getter(
@@ -139,7 +138,7 @@ def _set_dataset_data(
     dataset: ImageDataset,
     dataspec: Dict[str, Any],
     *,
-    fps_getter: Callable[[Path], float],
+    fps_getter: Callable[[Video], float],
     end_frame_index_getter: Callable[[ExperimentVideo], int],
 ) -> None:
     logger.debug(f'Reading condensation dataset {dataset.name}')
@@ -154,7 +153,7 @@ def _set_ev_data(
     ev: ExperimentVideo,
     dataspec: Dict[str, Any],
     *,
-    fps_getter: Callable[[Path], float],
+    fps_getter: Callable[[Video], float],
     end_frame_index_getter: Callable[[ExperimentVideo], int],
 ) -> None:
     case, subcase, test_name, video_name = ev.name.split(':')
@@ -187,7 +186,7 @@ def _set_ev_data(
 
     logger.debug(f'Getting FPS for EV "{ev.name}"')
 
-    fps = fps_getter(ev.path)
+    fps = fps_getter(ev)
 
     logger.debug(f'Getting video data for EV "{ev.name}"')
 

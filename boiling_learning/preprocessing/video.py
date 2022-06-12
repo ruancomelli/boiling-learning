@@ -62,21 +62,6 @@ def convert_video(
         logger.info('Succesfully converted video')
 
 
-@contextlib.contextmanager
-def open_video(video_path: PathLike) -> Iterator[cv2.VideoCapture]:
-    cap = cv2.VideoCapture(str(resolve(video_path)))
-
-    try:
-        yield cap
-    finally:
-        cap.release()
-
-
-def get_fps(video_path: PathLike) -> float:
-    with open_video(video_path) as cap:
-        return typing.cast(float, cap.get(cv2.CAP_PROP_FPS))
-
-
 class Video(SliceableDataset[VideoFrame]):
     def __init__(self, path: PathLike) -> None:
         self.path = resolve(path)
@@ -94,6 +79,14 @@ class Video(SliceableDataset[VideoFrame]):
         with self:
             for frame in self.video:
                 yield frame / 255
+
+    def fps(self) -> float:
+        cap = cv2.VideoCapture(str(resolve(self.path)))
+
+        try:
+            return typing.cast(float, cap.get(cv2.CAP_PROP_FPS))
+        finally:
+            cap.release()
 
     def getitem_from_index(self, index: int) -> VideoFrame:
         with self:
