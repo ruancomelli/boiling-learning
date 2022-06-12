@@ -62,6 +62,17 @@ class TestSliceableDataset:
             (8, 'd', 3),
         ]
 
+    def test_enumerate(self) -> None:
+        sds = SliceableDataset.from_sequence('abcd')
+        sds_enum = sds.enumerate()
+
+        assert list(sds_enum) == [
+            (0, 'a'),
+            (1, 'b'),
+            (2, 'c'),
+            (3, 'd'),
+        ]
+
     def test_concatenate(self) -> None:
         sds1 = SliceableDataset.from_sequence([4, 3, 2, 1])
         sds2 = SliceableDataset.from_sequence('abcd')

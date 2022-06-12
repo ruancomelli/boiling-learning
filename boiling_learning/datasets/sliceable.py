@@ -131,6 +131,9 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
     ) -> ZippedSliceableDataset[Unpack[_Ts]]:
         return ZippedSliceableDataset(*datasets, strictness=strictness)
 
+    def enumerate(self) -> ZippedSliceableDataset[int, _T]:
+        return SliceableDataset.zip(SliceableDataset.range(len(self)), self)
+
     def concatenate(self, dataset: SliceableDataset[_U]) -> ConcatenateSliceableDataset[_T, _U]:
         return ConcatenateSliceableDataset(self, dataset)
 
