@@ -2,7 +2,7 @@ import contextlib
 import subprocess
 import typing
 from pathlib import Path
-from typing import Iterator, Optional, Sequence, Tuple, Union
+from typing import Iterator, Optional, Sequence, Union
 
 import cv2
 import numpy as np
@@ -94,7 +94,7 @@ class Video(Sequence[VideoFrame]):
         return len(self.open())
 
     def open(self) -> pims.Video:
-        if not self.is_open():
+        if self._video is None:
             try:
                 self._video = pims.Video(str(self.path))
             except Exception as e:
@@ -103,22 +103,12 @@ class Video(Sequence[VideoFrame]):
         return self._video
 
     def close(self) -> None:
-        if self.is_open():
+        if self._video is not None:
             with contextlib.suppress(AttributeError):
                 # try to close the video. But, since some PIMS readers don't provide a
                 # `close` method, suppress `AttributeError`s
                 self._video.close()
             self._video = None
-
-    def is_open(self) -> bool:
-        return self._video is not None
-
-    @property
-    def shape(self) -> Tuple[int, ...]:
-        try:
-            return (len(self), *self[0].shape)
-        except IndexError:
-            return ()
 
 
 @json.encode.instance(Video)
@@ -139,14 +129,6 @@ def _serialize_video_frame(instance: VideoFrame, path: Path) -> None:
 @deserialize.dispatch(VideoFrame)
 def _deserialize_video_frame(path: Path, metadata: Metadata) -> VideoFrame:
     return np.load(path.with_suffix('.npy'))
-
-
-def shrink_to_valid_end_frames(video: Video) -> None:
-    logger.debug(f"Shrinking video to valid end frame at \"{video.path}\"")
-
-    video.video = video.video[: valid_end_frame(video) + 1]
-
-    logger.debug(f"Video kept with {len(video)} frames at \"{video.path}\"")
 
 
 def valid_end_frame(video: Video) -> int:
