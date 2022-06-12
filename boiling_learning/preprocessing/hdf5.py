@@ -53,7 +53,9 @@ def video_to_hdf5(
     batch_size: int = 1,
     transformers: Tuple[Transformer[VideoFrame, VideoFrame], ...] = (),
     open_mode: Literal['w', 'a'] = 'a',
+    # experimental parameters
     indices: Optional[Iterable[int]] = None,
+    compress: bool = True,
 ) -> None:
     """Save video as an HDF5 file."""
     destination = str(resolve(dest))
@@ -71,7 +73,7 @@ def video_to_hdf5(
             (length, *example_frame.shape),
             dtype='f',
             # best compression algorithm I found - good compression, fastest decompression
-            **hdf5plugin.LZ4(),
+            **(hdf5plugin.LZ4() if compress else {}),
         )
 
         for chunk_index, chunk_indices in enumerate(mit.chunked(indices, batch_size)):
