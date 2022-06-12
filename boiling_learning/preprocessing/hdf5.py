@@ -1,7 +1,6 @@
 import typing
 from typing import Iterable, Optional, Tuple, TypeVar
 
-import funcy
 import h5py
 import hdf5plugin
 import more_itertools as mit
@@ -10,8 +9,7 @@ from loguru import logger
 from typing_extensions import Literal
 
 from boiling_learning.datasets.sliceable import SliceableDataset
-from boiling_learning.preprocessing.transformers import Transformer
-from boiling_learning.preprocessing.video import Video, VideoFrame
+from boiling_learning.preprocessing.video import VideoFrame
 from boiling_learning.utils.utils import PathLike, resolve, unsort
 
 _T = TypeVar('_T')
@@ -45,26 +43,23 @@ class HDF5SliceableDataset(SliceableDataset[_T]):
         return f'{self.__class__.__name__}({self._dataset_name}@{self._filepath})'
 
 
-def video_to_hdf5(
-    video: Video,
+def frames_to_hdf5(
+    frames: SliceableDataset[VideoFrame],
     dest: PathLike,
     *,
     dataset_name: str,
     batch_size: int = 1,
-    transformers: Tuple[Transformer[VideoFrame, VideoFrame], ...] = (),
     open_mode: Literal['w', 'a'] = 'a',
     # experimental parameters
     indices: Optional[Iterable[int]] = None,
     compress: bool = True,
 ) -> None:
-    """Save video as an HDF5 file."""
+    """Save frames as an HDF5 file."""
     destination = str(resolve(dest))
 
-    composed_transformer = funcy.rcompose(*transformers)
-    transformed_video = video.map(composed_transformer)
-    example_frame = transformed_video[0]
+    example_frame = frames[0]
 
-    indices = range(len(video)) if indices is None else tuple(indices)
+    indices = range(len(frames)) if indices is None else tuple(indices)
     length = len(indices)
 
     with h5py.File(destination, open_mode) as file:
@@ -81,11 +76,10 @@ def video_to_hdf5(
             end = start + batch_size
 
             logger.debug(
-                f'Writing {len(chunk_indices)} frames from {video.path} to {destination}: '
-                f'{chunk_indices}'
+                f'Writing {len(chunk_indices)} frames to {destination}: ' f'{chunk_indices}'
             )
-            batch = np.stack(transformed_video.fetch(chunk_indices))
 
+            batch = np.stack(frames.fetch(chunk_indices))
             dataset.write_direct(batch, dest_sel=np.s_[start:end])
 
             # flush data and close video to release memory as soon as possible
