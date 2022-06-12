@@ -23,21 +23,21 @@ class HDF5SliceableDataset(SliceableDataset[_T]):
         self._dataset_name = dataset_name
 
     def __len__(self) -> int:
-        with h5py.File(str(self._filepath), 'r', swmr=True) as file:
+        with h5py.File(str(self._filepath), 'r') as file:
             return len(file[self._dataset_name])
 
     def getitem_from_index(self, index: int) -> _T:
-        with h5py.File(str(self._filepath), 'r', swmr=True) as file:
+        with h5py.File(str(self._filepath), 'r') as file:
             return typing.cast(_T, file[self._dataset_name][index])
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_T, ...]:
         if indices is None:
-            with h5py.File(str(self._filepath), 'r', swmr=True) as file:
+            with h5py.File(str(self._filepath), 'r') as file:
                 return tuple(file[self._dataset_name])
 
         # sort the indices, fetch the frames and unsort them back
         unsorters, sorted_indices = unsort(indices)
-        with h5py.File(str(self._filepath), 'r', swmr=True) as file:
+        with h5py.File(str(self._filepath), 'r') as file:
             frames = file[self._dataset_name][list(sorted_indices)]
             return tuple(frames[unsorter] for unsorter in unsorters)
 
