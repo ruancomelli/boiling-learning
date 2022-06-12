@@ -48,7 +48,7 @@ def frames_to_hdf5(
     dest: PathLike,
     *,
     dataset_name: str,
-    batch_size: int = 1,
+    buffer_size: int = 1,
     open_mode: Literal['w', 'a'] = 'a',
     # experimental parameters
     indices: Optional[Iterable[int]] = None,
@@ -71,9 +71,9 @@ def frames_to_hdf5(
             **(hdf5plugin.LZ4() if compress else {}),
         )
 
-        for chunk_index, chunk_indices in enumerate(mit.chunked(indices, batch_size)):
-            start = chunk_index * batch_size
-            end = start + batch_size
+        for chunk_index, chunk_indices in enumerate(mit.chunked(indices, buffer_size)):
+            start = chunk_index * buffer_size
+            end = start + buffer_size
 
             logger.debug(
                 f'Writing {len(chunk_indices)} frames to {destination}: ' f'{chunk_indices}'
