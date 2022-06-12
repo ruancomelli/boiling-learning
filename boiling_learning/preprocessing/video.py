@@ -1,22 +1,29 @@
+from __future__ import annotations
+
 import contextlib
 import subprocess
 import typing
 from pathlib import Path
-from typing import Iterator, Optional, Sequence, Union
+from types import TracebackType
+from typing import Iterable, Iterator, Optional, Tuple, Type, Union
 
 import cv2
 import numpy as np
+import numpy.typing as npt
 import pims
 from imageio.core import CannotReadFrameError
 from loguru import logger
 
+from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, serialize
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.utils import PathLike, resolve
 
-# VideoFrame = npt.NDArray[np.float32]
-VideoFrame = np.ndarray
+if typing.TYPE_CHECKING:
+    VideoFrame = npt.NDArray[np.float32]
+else:
+    VideoFrame = np.ndarray
 
 
 def convert_video(
@@ -70,11 +77,7 @@ def get_fps(video_path: PathLike) -> float:
         return typing.cast(float, cap.get(cv2.CAP_PROP_FPS))
 
 
-class OpenVideoError(Exception):
-    pass
-
-
-class Video(Sequence[VideoFrame]):
+class Video(SliceableDataset[VideoFrame]):
     def __init__(self, path: PathLike) -> None:
         self.path = resolve(path)
         self._video: Optional[pims.Video] = None
@@ -87,11 +90,28 @@ class Video(Sequence[VideoFrame]):
     def video(self, video: pims.Video) -> pims.Video:
         self._video = video
 
-    def __getitem__(self, key: int) -> VideoFrame:
-        return self.open()[key] / 255
+    def __iter__(self) -> Iterator[VideoFrame]:
+        with self:
+            for frame in self.video:
+                yield frame / 255
+
+    def getitem_from_index(self, index: int) -> VideoFrame:
+        with self:
+            return typing.cast(VideoFrame, self.video[index]) / 255
+
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrame, ...]:
+        if indices is None:
+            return tuple(self)
+
+        with self:
+            return tuple(self[index] for index in indices)
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self.path})'
 
     def __len__(self) -> int:
-        return len(self.open())
+        with self:
+            return len(self.video)
 
     def open(self) -> pims.Video:
         if self._video is None:
@@ -109,6 +129,22 @@ class Video(Sequence[VideoFrame]):
                 # `close` method, suppress `AttributeError`s
                 self._video.close()
             self._video = None
+
+    def __enter__(self) -> Video:
+        self.open()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
+        self.close()
+
+
+class OpenVideoError(Exception):
+    pass
 
 
 @json.encode.instance(Video)
