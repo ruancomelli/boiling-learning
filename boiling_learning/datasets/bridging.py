@@ -21,9 +21,7 @@ def sliceable_dataset_to_tensorflow_dataset(
     filterer: Optional[Callable[[_T], bool]] = None,
     prefetch: int = 0,
     expand_to_batch_size: bool = False,
-    # experimental parameters
-    deterministic: bool = True,
-    parallel_calls: bool = False,
+    deterministic: bool = False,
 ) -> tf.data.Dataset:
     creator = partial(
         _create_tensorflow_dataset,
@@ -49,9 +47,7 @@ def sliceable_dataset_to_tensorflow_dataset(
             ds = tf.data.experimental.load(
                 str(save_path),
                 dataset.element_spec,
-                reader_func=_make_reader_func(
-                    deterministic=deterministic, parallel_calls=parallel_calls
-                ),
+                reader_func=_make_reader_func(deterministic=deterministic),
             )
 
     if batch_size is not None:
@@ -62,8 +58,7 @@ def sliceable_dataset_to_tensorflow_dataset(
         ds = ds.batch(
             batch_size,
             drop_remainder=expand_to_batch_size,
-            # num_parallel_calls=tf.data.AUTOTUNE,
-            num_parallel_calls=tf.data.AUTOTUNE if parallel_calls else None,
+            num_parallel_calls=tf.data.AUTOTUNE,
             # deterministic=not shuffle,
             deterministic=deterministic,
         )
@@ -75,12 +70,12 @@ def sliceable_dataset_to_tensorflow_dataset(
 
 
 def _make_reader_func(
-    *, deterministic: bool = True, parallel_calls: bool = False
+    *, deterministic: bool = True
 ) -> Callable[[tf.data.Dataset], tf.data.Dataset]:
     def _reader_func(datasets: tf.data.Dataset) -> tf.data.Dataset:
         return datasets.interleave(
             lambda dataset: dataset,
-            num_parallel_calls=tf.data.AUTOTUNE if parallel_calls else None,
+            num_parallel_calls=tf.data.AUTOTUNE,
             deterministic=deterministic,
         )
 
