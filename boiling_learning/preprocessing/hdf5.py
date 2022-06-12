@@ -53,15 +53,17 @@ def video_to_hdf5(
     batch_size: int = 1,
     transformers: Tuple[Transformer[VideoFrame, VideoFrame], ...] = (),
     open_mode: Literal['w', 'a'] = 'a',
+    indices: Optional[Iterable[int]] = None,
 ) -> None:
     """Save video as an HDF5 file."""
     destination = str(resolve(dest))
 
     composed_transformer = funcy.rcompose(*transformers)
-    example_frame = composed_transformer(video[0])
+    transformed_video = video.map(composed_transformer)
+    example_frame = transformed_video[0]
 
-    length = len(video)
-    chunks = (*range(0, length, batch_size), length)
+    indices = range(len(video)) if indices is None else tuple(indices)
+    length = len(indices)
 
     with h5py.File(destination, open_mode) as file:
         dataset = file.require_dataset(
@@ -71,13 +73,19 @@ def video_to_hdf5(
             # best compression algorithm I found - good compression, fastest decompression
             **hdf5plugin.LZ4(),
         )
-        for start, end in mit.pairwise(chunks):
-            logger.debug(f'Writing frames {start}:{end} from {video.path} to {destination}')
-            batch = np.stack([composed_transformer(video[i]) for i in range(start, end)])
+
+        for chunk_index, chunk_indices in enumerate(mit.chunked(indices, batch_size)):
+            start = chunk_index * batch_size
+            end = start + batch_size
+
+            logger.debug(
+                f'Writing {len(chunk_indices)} frames from {video.path} to {destination}: '
+                f'{chunk_indices}'
+            )
+            batch = np.stack(transformed_video.fetch(chunk_indices))
 
             dataset.write_direct(batch, dest_sel=np.s_[start:end])
 
             # flush data and close video to release memory as soon as possible
             dataset.flush()
             file.flush()
-            video.close()
