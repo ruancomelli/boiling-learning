@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import gc
+import os
 import subprocess
 import typing
 from pathlib import Path
@@ -130,6 +131,9 @@ class PimsVideo(Video):
 
 class DecordVideo(Video):
     def __init__(self, path: PathLike) -> None:
+        # workaround for limiting memory usage
+        os.environ['DECORD_EOF_RETRY_MAX'] = '128'
+
         self.path = resolve(path)
         self._video: Optional[decord.VideoReader] = None
 
