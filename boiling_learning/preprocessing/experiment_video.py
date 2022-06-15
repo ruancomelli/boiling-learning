@@ -8,10 +8,17 @@ import modin.pandas as pd
 from loguru import logger
 
 from boiling_learning.datasets.sliceable import SliceableDataset
+from boiling_learning.io import json
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
 from boiling_learning.preprocessing.video import PimsVideo, VideoFrame, convert_video
-from boiling_learning.utils import PathLike, dataframe_categories_to_int, merge_dicts, resolve
 from boiling_learning.utils.dataclasses import dataclass, field
+from boiling_learning.utils.descriptions import describe
+from boiling_learning.utils.utils import (
+    PathLike,
+    dataframe_categories_to_int,
+    merge_dicts,
+    resolve,
+)
 
 
 class ExperimentVideo:
@@ -338,3 +345,13 @@ class ExperimentVideo:
             df = df[select_columns]
 
         return df
+
+
+@json.encode.instance(ExperimentVideo)
+def _encode_video(obj: ExperimentVideo) -> json.JSONDataType:
+    return json.serialize(obj.path)
+
+
+@describe.instance(ExperimentVideo)
+def _describe_video(obj: ExperimentVideo) -> Path:
+    return obj.path
