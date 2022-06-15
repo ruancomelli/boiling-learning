@@ -1,5 +1,17 @@
 
 
+## v0.25.0 (2022-06-15)
+
+### Feat
+
+- **preprocessing/video**: implement decord-based video class
+
+### Refactor
+
+- **preprocessing/video**: make `Video` class more compact
+- **preprocessing/experiment_video**: prefer composition over inheritance
+- **datasets/bridging**: make parameters stable
+
 ## v0.24.0 (2022-06-12)
 
 ### Refactor
