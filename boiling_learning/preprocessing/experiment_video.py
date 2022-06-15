@@ -1,18 +1,20 @@
 import contextlib
 from datetime import timedelta
-from typing import Any, Iterable, List, Mapping, Optional, Union
+from pathlib import Path
+from typing import Any, Iterable, Iterator, List, Mapping, Optional, Union
 
 import funcy
 import modin.pandas as pd
 from loguru import logger
 
+from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
-from boiling_learning.preprocessing.video import Video, convert_video
+from boiling_learning.preprocessing.video import Video, VideoFrame, convert_video
 from boiling_learning.utils import PathLike, dataframe_categories_to_int, merge_dicts, resolve
 from boiling_learning.utils.dataclasses import dataclass, field
 
 
-class ExperimentVideo(Video):
+class ExperimentVideo:
     @dataclass
     class VideoData:
         '''Class for video data representation.
@@ -73,7 +75,8 @@ class ExperimentVideo(Video):
         column_names: DataFrameColumnNames = DataFrameColumnNames(),
         column_types: DataFrameColumnTypes = DataFrameColumnTypes(),
     ) -> None:
-        super().__init__(video_path)
+        self.path = resolve(video_path)
+        self.video: SliceableDataset[VideoFrame] = Video(self.path)
 
         self._data: Optional[ExperimentVideo.VideoData] = None
         self.column_names = column_names
@@ -97,6 +100,12 @@ class ExperimentVideo(Video):
             )
         )
 
+    def __len__(self) -> int:
+        return len(self.video)
+
+    def __iter__(self) -> Iterator[VideoFrame]:
+        return iter(self.video)
+
     def __str__(self) -> str:
         kwargs = {
             'name': self.name,
@@ -112,6 +121,15 @@ class ExperimentVideo(Video):
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def path(self) -> Path:
+        return self._path
+
+    @path.setter
+    def path(self, path: PathLike) -> None:
+        self._path = resolve(path)
+        self.video = Video(self._path)
 
     @property
     def data(self) -> Optional[VideoData]:
