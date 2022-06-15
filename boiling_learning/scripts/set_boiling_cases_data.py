@@ -10,9 +10,8 @@ from boiling_learning.io import json
 from boiling_learning.management.allocators import default_table_allocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.cases import Case
-from boiling_learning.preprocessing.experiment_video import ExperimentVideo
+from boiling_learning.preprocessing.experiment_video import ExperimentVideo, valid_end_frame
 from boiling_learning.preprocessing.experimental_data import ExperimentalData
-from boiling_learning.preprocessing.video import valid_end_frame
 from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
 from boiling_learning.utils import PathLike, geometry
 from boiling_learning.utils.frozendict import frozendict

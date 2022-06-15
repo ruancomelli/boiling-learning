@@ -5,6 +5,7 @@ from typing import Any, Iterable, Iterator, List, Mapping, Optional, Union
 
 import funcy
 import modin.pandas as pd
+from imageio.core import CannotReadFrameError
 from loguru import logger
 
 from boiling_learning.datasets.sliceable import SliceableDataset
@@ -401,3 +402,18 @@ def _sync_dataframes(
         concat = concat.interpolate(method='time', limit_direction='both')
     concat = concat.loc[dest_df.index]
     return concat
+
+
+def valid_end_frame(ev: ExperimentVideo) -> int:
+    logger.debug(f"Searching for valid end frame for ev at \"{ev.path}\"")
+
+    for index in reversed(range(len(ev))):
+        # the following exceptions are "expected" and signify that this candidate end frame is
+        # invalid
+        with contextlib.suppress(CannotReadFrameError, RuntimeError, AttributeError):
+            # try to access frame at `index`
+            ev[index]
+            # if access is successful (by not raising any errors), we found a valid end frame
+            logger.debug(f"Valid end frame is {index} for ev at \"{ev.path}\"")
+            return index
+    return -1

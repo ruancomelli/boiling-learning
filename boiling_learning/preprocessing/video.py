@@ -14,7 +14,6 @@ import decord
 import numpy as np
 import numpy.typing as npt
 import pims
-from imageio.core import CannotReadFrameError
 from loguru import logger
 
 from boiling_learning.datasets.sliceable import SliceableDataset
@@ -203,18 +202,3 @@ def _serialize_video_frame(instance: VideoFrame, path: Path) -> None:
 @deserialize.dispatch(VideoFrame)
 def _deserialize_video_frame(path: Path, metadata: Metadata) -> VideoFrame:
     return np.load(path.with_suffix('.npy'))
-
-
-def valid_end_frame(video: Video) -> int:
-    logger.debug(f"Searching for valid end frame for video at \"{video.path}\"")
-
-    for index in reversed(range(len(video))):
-        # the following exceptions are "expected" and signify that this candidate end frame is
-        # invalid
-        with contextlib.suppress(CannotReadFrameError, RuntimeError, AttributeError):
-            # try to access frame at `index`
-            video[index]
-            # if access is successful (by not raising any errors), we found a valid end frame
-            logger.debug(f"Valid end frame is {index} for video at \"{video.path}\"")
-            return index
-    return -1

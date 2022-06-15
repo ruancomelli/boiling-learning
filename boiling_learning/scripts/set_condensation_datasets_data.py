@@ -15,9 +15,9 @@ from sklearn.linear_model import LinearRegression
 from boiling_learning.io import json
 from boiling_learning.management.allocators import default_table_allocator
 from boiling_learning.management.cacher import cache
-from boiling_learning.preprocessing.experiment_video import ExperimentVideo
+from boiling_learning.preprocessing.experiment_video import ExperimentVideo, valid_end_frame
 from boiling_learning.preprocessing.image_datasets import ImageDataset
-from boiling_learning.preprocessing.video import Video, valid_end_frame
+from boiling_learning.preprocessing.video import Video
 from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
 from boiling_learning.utils import KeyedDefaultDict, PathLike, resolve
 from boiling_learning.utils.frozendict import frozendict
