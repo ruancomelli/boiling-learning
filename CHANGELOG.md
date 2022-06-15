@@ -1,5 +1,15 @@
 
 
+## v0.25.5 (2022-06-15)
+
+### Feat
+
+- **preprocessing/experiment_video**: use `DecordVideo` instead of `PimsVideo`
+
+### Fix
+
+- **preprocessing/experiment_video**: get frame from video, not from experiment-video
+
 ## v0.25.4 (2022-06-15)
 
 ### Fix
