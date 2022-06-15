@@ -67,17 +67,9 @@ class Video(SliceableDataset[VideoFrame]):
         self.path = resolve(path)
         self._video: Optional[pims.Video] = None
 
-    @property
-    def video(self) -> pims.Video:
-        return self.open()
-
-    @video.setter
-    def video(self, video: pims.Video) -> pims.Video:
-        self._video = video
-
     def __iter__(self) -> Iterator[VideoFrame]:
-        with self:
-            for frame in self.video:
+        with self as frames:
+            for frame in frames:
                 yield frame / 255
 
     def fps(self) -> float:
@@ -89,24 +81,24 @@ class Video(SliceableDataset[VideoFrame]):
             cap.release()
 
     def getitem_from_index(self, index: int) -> VideoFrame:
-        with self:
-            return typing.cast(VideoFrame, self.video[index]) / 255
+        with self as frames:
+            return typing.cast(VideoFrame, frames[index]) / 255
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrame, ...]:
         if indices is None:
             return tuple(self)
 
-        with self:
-            return tuple(self[index] for index in indices)
+        with self as frames:
+            return tuple(frames[index] for index in indices)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.path})'
 
     def __len__(self) -> int:
-        with self:
-            return len(self.video)
+        with self as frames:
+            return len(frames)
 
-    def open(self) -> pims.Video:
+    def _open(self) -> pims.Video:
         if self._video is None:
             try:
                 self._video = pims.Video(str(self.path))
@@ -115,17 +107,17 @@ class Video(SliceableDataset[VideoFrame]):
 
         return self._video
 
-    def close(self) -> None:
+    def _close(self) -> None:
         if self._video is not None:
             with contextlib.suppress(AttributeError):
                 # try to close the video. But, since some PIMS readers don't provide a
                 # `close` method, suppress `AttributeError`s
                 self._video.close()
+            del self._video
             self._video = None
 
-    def __enter__(self) -> Video:
-        self.open()
-        return self
+    def __enter__(self) -> pims.Video:
+        return self._open()
 
     def __exit__(
         self,
@@ -133,7 +125,7 @@ class Video(SliceableDataset[VideoFrame]):
         exc_value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> None:
-        self.close()
+        self._close()
 
 
 class OpenVideoError(Exception):
