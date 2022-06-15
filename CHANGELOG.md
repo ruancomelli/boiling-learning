@@ -1,5 +1,15 @@
 
 
+## v0.25.3 (2022-06-15)
+
+### Refactor
+
+- **preprocessing**: remove unnecessary module `preprocessing` by moving its utility functionality to where needed
+
+### Fix
+
+- **preprocessing/experiment_video**: add descriptor and JSON serializer for `ExperimentVideo`
+
 ## v0.25.2 (2022-06-15)
 
 ### Fix
