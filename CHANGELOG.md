@@ -1,5 +1,11 @@
 
 
+## v0.25.2 (2022-06-15)
+
+### Fix
+
+- **preprocessing/video**: add one environment variable for trying to limit decord memory usage
+
 ## v0.25.1 (2022-06-15)
 
 ### Fix
