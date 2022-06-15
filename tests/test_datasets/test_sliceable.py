@@ -175,6 +175,10 @@ class TestSliceableDataset:
             'yz',
         ]
 
+        sds = SliceableDataset.from_sequence('abc')
+        for batch in sds.batch(5):
+            assert list(batch) == ['a', 'b', 'c']
+
     def test_unbatch(self) -> None:
         sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
         batched = sds.batch(4)
