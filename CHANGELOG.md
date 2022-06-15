@@ -1,5 +1,11 @@
 
 
+## v0.25.1 (2022-06-15)
+
+### Fix
+
+- **preprocessing/video**: fix frame scaling to the 0-1 range
+
 ## v0.25.0 (2022-06-15)
 
 ### Feat
