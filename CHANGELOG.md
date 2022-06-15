@@ -1,5 +1,11 @@
 
 
+## v0.25.4 (2022-06-15)
+
+### Fix
+
+- **scripts**: fix last valid frame getting to support experiment videos
+
 ## v0.25.3 (2022-06-15)
 
 ### Refactor
