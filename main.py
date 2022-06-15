@@ -62,7 +62,7 @@ from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.hdf5 import get_frame_from_hdf5, video_to_hdf5
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.transformers import DictFeatureTransformer, Transformer
-from boiling_learning.preprocessing.video import Video, VideoFrame
+from boiling_learning.preprocessing.video import PimsVideo, VideoFrame
 from boiling_learning.scripts import (
     connect_gpus,
     load_cases,
@@ -198,7 +198,7 @@ condensation_preprocessors, condensation_augmentors = make_condensation_processo
 
 
 def _compile_transformers_to_video(
-    transformers: Iterable[Transformer[VideoFrame, VideoFrame]], video: Video
+    transformers: Iterable[Transformer[VideoFrame, VideoFrame]], video: PimsVideo
 ) -> List[Transformer[VideoFrame, VideoFrame]]:
     return [
         (
@@ -215,7 +215,7 @@ hdf5_allocator = default_table_allocator(analyses_path / 'datasets' / 'hdf5')
 
 def get_frame(
     index: int,
-    video: Video,
+    video: PimsVideo,
     transformers: Iterable[Transformer[VideoFrame, VideoFrame]],
 ) -> VideoFrame:
     h5path = hdf5_allocator(P(video, transformers))

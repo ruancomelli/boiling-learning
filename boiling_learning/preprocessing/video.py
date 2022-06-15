@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import gc
 import subprocess
 import typing
 from pathlib import Path
@@ -8,6 +9,7 @@ from types import TracebackType
 from typing import Iterable, Iterator, Optional, Tuple, Type, Union
 
 import cv2
+import decord
 import numpy as np
 import numpy.typing as npt
 import pims
@@ -63,14 +65,10 @@ def convert_video(
 
 
 class Video(SliceableDataset[VideoFrame]):
-    def __init__(self, path: PathLike) -> None:
-        self.path = resolve(path)
-        self._video: Optional[pims.Video] = None
+    path: Path
 
-    def __iter__(self) -> Iterator[VideoFrame]:
-        with self as frames:
-            for frame in frames:
-                yield frame / 255
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self.path})'
 
     def fps(self) -> float:
         cap = cv2.VideoCapture(str(resolve(self.path)))
@@ -79,6 +77,12 @@ class Video(SliceableDataset[VideoFrame]):
             return typing.cast(float, cap.get(cv2.CAP_PROP_FPS))
         finally:
             cap.release()
+
+
+class PimsVideo(Video):
+    def __init__(self, path: PathLike) -> None:
+        self.path = resolve(path)
+        self._video: Optional[pims.Video] = None
 
     def getitem_from_index(self, index: int) -> VideoFrame:
         with self as frames:
@@ -91,14 +95,16 @@ class Video(SliceableDataset[VideoFrame]):
         with self as frames:
             return tuple(frames[index] for index in indices)
 
-    def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self.path})'
+    def __iter__(self) -> Iterator[VideoFrame]:
+        with self as frames:
+            for frame in frames:
+                yield frame / 255
 
     def __len__(self) -> int:
         with self as frames:
             return len(frames)
 
-    def _open(self) -> pims.Video:
+    def __enter__(self) -> pims.Video:
         if self._video is None:
             try:
                 self._video = pims.Video(str(self.path))
@@ -107,7 +113,12 @@ class Video(SliceableDataset[VideoFrame]):
 
         return self._video
 
-    def _close(self) -> None:
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
         if self._video is not None:
             with contextlib.suppress(AttributeError):
                 # try to close the video. But, since some PIMS readers don't provide a
@@ -116,8 +127,41 @@ class Video(SliceableDataset[VideoFrame]):
             del self._video
             self._video = None
 
-    def __enter__(self) -> pims.Video:
-        return self._open()
+
+class DecordVideo(Video):
+    def __init__(self, path: PathLike) -> None:
+        self.path = resolve(path)
+        self._video: Optional[decord.VideoReader] = None
+
+    def getitem_from_index(self, index: int) -> VideoFrame:
+        with self as frames:
+            return typing.cast(VideoFrame, frames[index]) / 255
+
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrame, ...]:
+        indices = range(len(self)) if indices is None else list(indices)
+
+        with self as frames:
+            return tuple(frames.get_batch(indices))
+
+    def __iter__(self) -> Iterator[VideoFrame]:
+        with self as frames:
+            for frame in frames:
+                yield frame / 255
+
+    def __len__(self) -> int:
+        with self as frames:
+            return len(frames)
+
+    def __enter__(self) -> decord.VideoReader:
+        if self._video is None:
+            try:
+                self._video = decord.VideoReader(str(self.path))
+                # workaround for limiting memory usage
+                self._video.seek(0)
+            except Exception as e:
+                raise OpenVideoError(f'Error while opening video {self.path}') from e
+
+        return self._video
 
     def __exit__(
         self,
@@ -125,7 +169,12 @@ class Video(SliceableDataset[VideoFrame]):
         exc_value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> None:
-        self._close()
+        if self._video is not None:
+            # workaround for limiting memory usage
+            self._video.seek(0)
+            del self._video
+            gc.collect()
+            self._video = None
 
 
 class OpenVideoError(Exception):

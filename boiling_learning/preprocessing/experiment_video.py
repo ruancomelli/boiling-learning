@@ -9,7 +9,7 @@ from loguru import logger
 
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.preprocessing.preprocessing import sync_dataframes
-from boiling_learning.preprocessing.video import Video, VideoFrame, convert_video
+from boiling_learning.preprocessing.video import PimsVideo, VideoFrame, convert_video
 from boiling_learning.utils import PathLike, dataframe_categories_to_int, merge_dicts, resolve
 from boiling_learning.utils.dataclasses import dataclass, field
 
@@ -76,7 +76,7 @@ class ExperimentVideo:
         column_types: DataFrameColumnTypes = DataFrameColumnTypes(),
     ) -> None:
         self.path = resolve(video_path)
-        self.video: SliceableDataset[VideoFrame] = Video(self.path)
+        self.video: SliceableDataset[VideoFrame] = PimsVideo(self.path)
 
         self._data: Optional[ExperimentVideo.VideoData] = None
         self.column_names = column_names
@@ -129,7 +129,7 @@ class ExperimentVideo:
     @path.setter
     def path(self, path: PathLike) -> None:
         self._path = resolve(path)
-        self.video = Video(self._path)
+        self.video = PimsVideo(self._path)
 
     @property
     def data(self) -> Optional[VideoData]:
