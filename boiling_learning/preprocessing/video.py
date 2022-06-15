@@ -135,18 +135,18 @@ class DecordVideo(Video):
 
     def getitem_from_index(self, index: int) -> VideoFrame:
         with self as frames:
-            return typing.cast(VideoFrame, frames[index]) / 255
+            return typing.cast(VideoFrame, frames[index].asnumpy().astype(np.float32)) / 255
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrame, ...]:
         indices = range(len(self)) if indices is None else list(indices)
 
         with self as frames:
-            return tuple(frames.get_batch(indices))
+            return tuple(frames.get_batch(indices).asnumpy().astype(np.float32) / 255)
 
     def __iter__(self) -> Iterator[VideoFrame]:
         with self as frames:
             for frame in frames:
-                yield frame / 255
+                yield frame.asnumpy().astype(np.float32) / 255
 
     def __len__(self) -> int:
         with self as frames:
