@@ -412,7 +412,7 @@ def valid_end_frame(ev: ExperimentVideo) -> int:
         # invalid
         with contextlib.suppress(CannotReadFrameError, RuntimeError, AttributeError):
             # try to access frame at `index`
-            ev[index]
+            ev.video[index]
             # if access is successful (by not raising any errors), we found a valid end frame
             logger.debug(f"Valid end frame is {index} for ev at \"{ev.path}\"")
             return index
