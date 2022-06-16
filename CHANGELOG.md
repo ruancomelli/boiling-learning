@@ -1,5 +1,11 @@
 
 
+## v0.26.1 (2022-06-16)
+
+### Fix
+
+- **preprocessing/video**: define `VideoFrameU8` and `VideoFrameF32` even when not type-checking
+
 ## v0.26.0 (2022-06-16)
 
 ### Fix
