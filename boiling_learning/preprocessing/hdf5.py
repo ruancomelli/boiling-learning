@@ -2,7 +2,6 @@ import typing
 from typing import Iterable, Optional, Tuple, TypeVar
 
 import h5py
-import hdf5plugin
 import numpy as np
 from loguru import logger
 from typing_extensions import Literal
@@ -47,21 +46,23 @@ def frames_to_hdf5(
     dest: PathLike,
     *,
     dataset_name: str,
-    buffer_size: int = 1,
+    buffer_size: Optional[int] = None,
     open_mode: Literal['w', 'a'] = 'a',
-    # experimental parameters
-    compress: bool = True,
 ) -> None:
     """Save frames as an HDF5 file."""
     destination = resolve(dest, parents=True)
 
+    first_frame = frames[0]
+    frames_count = len(frames)
+
+    if buffer_size is None:
+        buffer_size = frames_count
+
     with h5py.File(str(destination), open_mode) as file:
         dataset = file.require_dataset(
             dataset_name,
-            (len(frames), *frames[0].shape),
-            dtype='f',
-            # best compression algorithm I found - good compression, fastest decompression
-            **(hdf5plugin.LZ4() if compress else {}),
+            (frames_count, *first_frame.shape),
+            dtype=first_frame.dtype,
         )
 
         for chunk_index, frames_batch in enumerate(frames.batch(buffer_size)):

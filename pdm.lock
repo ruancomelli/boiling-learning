@@ -595,15 +595,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hdf5plugin"
-version = "3.3.1"
-requires_python = ">=3.4"
-summary = "HDF5 Plugins for Windows, MacOS, and Linux"
-dependencies = [
-    "h5py",
-]
-
-[[package]]
 name = "heapdict"
 version = "1.0.1"
 summary = "a heap with decrease-key and increase-key operations"
@@ -2161,7 +2152,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:17887dc950cfb9a43aa2c307b1d45102de97eb6fa94a35361e189a6f31c322ed"
+content_hash = "sha256:0c5a94d1d8049e432414180e4fbbbccd3db5814b3cb6ec6eb15860fca713422f"
 
 [metadata.files]
 "absl-py 1.0.0" = [
@@ -2795,15 +2786,6 @@ content_hash = "sha256:17887dc950cfb9a43aa2c307b1d45102de97eb6fa94a35361e189a6f3
     {file = "h5py-3.7.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:9e7535df5ee3dc3e5d1f408fdfc0b33b46bc9b34db82743c82cd674d8239b9ad"},
     {file = "h5py-3.7.0-cp39-cp39-win_amd64.whl", hash = "sha256:9e2ad2aa000f5b1e73b5dfe22f358ca46bf1a2b6ca394d9659874d7fc251731a"},
     {file = "h5py-3.7.0.tar.gz", hash = "sha256:3fcf37884383c5da64846ab510190720027dca0768def34dd8dcb659dbe5cbf3"},
-]
-"hdf5plugin 3.3.1" = [
-    {file = "hdf5plugin-3.3.1-py3-none-macosx_10_9_universal2.whl", hash = "sha256:852e1d74557f259cc025b85bc7d269ecdf3608b289cda8b8ad8690d47e028387"},
-    {file = "hdf5plugin-3.3.1-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:04acad0f44870251809586ed7118aa73da4837e317218a6e892fa31cd093b26f"},
-    {file = "hdf5plugin-3.3.1-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:6e733f37a48e8e1be6221cee275c70bd14a2051601ea4c77c696138274ad5b48"},
-    {file = "hdf5plugin-3.3.1-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c9764325fc8643add90d7cd95dbf411c9654c751361e18825ad3f19b72f02b2d"},
-    {file = "hdf5plugin-3.3.1-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:b06b46c448af878be46d4cf480b03b1d576b7bf04d3d8f4cbf40f8fd75086fb4"},
-    {file = "hdf5plugin-3.3.1-py3-none-win_amd64.whl", hash = "sha256:e741973284bd44a95ac98cc4f30cf7897d1ce9abe4849838314f4827e06b040a"},
-    {file = "hdf5plugin-3.3.1.tar.gz", hash = "sha256:28c97ddd938843fd64a363ce57b0e1f643bef74af627d1278cba99972381dd3c"},
 ]
 "heapdict 1.0.1" = [
     {file = "HeapDict-1.0.1-py3-none-any.whl", hash = "sha256:6065f90933ab1bb7e50db403b90cab653c853690c5992e69294c2de2b253fc92"},

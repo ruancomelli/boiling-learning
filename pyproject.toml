@@ -38,7 +38,6 @@ dependencies = [
     "modin[all]>=0.12.1",
     "loguru>=0.6.0",
     "h5py>=3.7.0",
-    "hdf5plugin>=3.3.0",
     "mypy>=0.960",
     "decord==0.6.0"]
 
