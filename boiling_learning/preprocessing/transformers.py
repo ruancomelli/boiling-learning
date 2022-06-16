@@ -1,4 +1,3 @@
-import operator
 from pydoc import describe
 from typing import Any, Callable, Generic, Iterator, Mapping, Optional, Tuple, TypeVar, Union
 
@@ -58,53 +57,6 @@ class FeatureTransformer(Transformer[Tuple[_X1, _Y], Tuple[_X2, _Y]], Generic[_X
         feature_transformer: Transformer[_X1, _X2] = Transformer(self.name, self.transform_feature)
         feature_transformer.pack = self.pack
         return feature_transformer
-
-
-class KeyedFeatureTransformer(
-    Transformer[Tuple[_X1, _Y], Tuple[Union[_X1, _X2], _Y]],
-    Generic[_X1, _X2, _Y],
-):
-    def __init__(
-        self,
-        name: str,
-        f: Callable[..., _X2],
-        packer: Union[Callable[[str], Pack], Mapping[Optional[str], Pack]],
-        key_getter: Callable[[_Y], Optional[str]] = operator.itemgetter('name'),
-    ) -> None:
-        self.packer = packer
-
-        def g(pair: Tuple[_X1, _Y], *args, **kwargs) -> Tuple[Union[_X1, _X2], _Y]:
-            def mapped_f(feature: _X1, target: _Y) -> Tuple[Union[_X1, _X2], _Y]:
-                key = key_getter(target)
-                featre_transformer = self.get_feature_transformer(f, key)
-                return featre_transformer(feature), target
-
-            return mapped_f(*pair)
-
-        super().__init__(name, g)
-
-    def get_feature_transformer(
-        self, f: Callable[..., _X2], key: Optional[str]
-    ) -> Callable[[_X1], Union[_X1, _X2]]:
-        if callable(self.packer):
-            pack = self.packer(key)
-            return pack.rpartial(f)
-
-        if key in self.packer:
-            return self._get_partial_transformer(f, key)
-
-        if None in self.packer:
-            return self._get_partial_transformer(f, None)
-
-        return funcy.identity
-
-    def _get_partial_transformer(
-        self, f: Callable[..., _X2], key: Optional[str]
-    ) -> Callable[[_X1], _X2]:
-        return self.packer[key].rpartial(f)
-
-    def __describe__(self) -> json.JSONDataType:
-        return json.serialize(funcy.merge(super().__describe__(), {'packer': self.packer}))
 
 
 class DictFeatureTransformer(
