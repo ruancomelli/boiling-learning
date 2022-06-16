@@ -177,10 +177,10 @@ def main(
                 bottom_border=(0 if direct_visualization else indirect_height_ratio),
             ),
         ),
+        Transformer('random_cropper', random_crop, pack=P(width=width)),
     ]
 
     augmentors = [
-        Transformer('random_cropper', random_crop, pack=P(width=width)),
         Transformer('random_left_right_flipper', random_flip_left_right),
         Transformer(
             'random_brightness_contrast',

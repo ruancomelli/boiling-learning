@@ -82,14 +82,14 @@ def main(
             },
         ),
         Transformer('downscaler', downscale, pack=P(factors=downscale_factor)),
-    ]
-
-    augmentors = [
         Transformer(
             'random_cropper',
             random_crop,
             pack=P(height=height, width=width),
         ),
+    ]
+
+    augmentors = [
         Transformer('random_left_right_flipper', random_flip_left_right),
         Transformer(
             'random_brightness_contrast',
