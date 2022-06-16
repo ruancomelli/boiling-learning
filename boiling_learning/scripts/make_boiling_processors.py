@@ -23,7 +23,6 @@ def main(
     width: int = 128,
 ) -> Tuple[List[Transformer[VideoFrame, VideoFrame]], List[Transformer[VideoFrame, VideoFrame]]]:
     preprocessors = [
-        Transformer('grayscaler', grayscale),
         DictTransformer(
             'region_cropper',
             crop,
@@ -163,6 +162,7 @@ def main(
                 'GOPR2960': P(left=980, right=1810, top=400, bottom=1350),
             },
         ),
+        Transformer('grayscaler', grayscale),
         Transformer('downscaler', downscale, pack=P(factors=downscale_factor)),
         Transformer(
             'visualization_shrinker',

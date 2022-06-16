@@ -18,7 +18,6 @@ def main(
     downscale_factor: int = 5, height: int = 8 * 12, width: int = 8 * 12
 ) -> Tuple[List[Transformer[VideoFrame, VideoFrame]], List[Transformer[VideoFrame, VideoFrame]]]:
     preprocessors = [
-        Transformer('grayscaler', grayscale),
         DictTransformer(
             'region_cropper',
             crop,
@@ -81,6 +80,7 @@ def main(
                 'parametric:rh 90%:test 5:00012': P(left=744, right=1312, top=226, bottom=806),
             },
         ),
+        Transformer('grayscaler', grayscale),
         Transformer('downscaler', downscale, pack=P(factors=downscale_factor)),
         Transformer('random_cropper', random_crop, pack=P(height=height, width=width)),
     ]
