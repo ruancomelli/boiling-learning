@@ -1,8 +1,9 @@
 from fractions import Fraction
-from typing import Optional, Tuple, Union, overload
+from typing import Optional, Sequence, Tuple, Union, overload
 
 import albumentations as A
 import numpy as np
+import tensorflow as tf
 from scipy.stats import entropy
 from skimage.color import rgb2gray as _grayscale
 from skimage.exposure import histogram
@@ -11,7 +12,26 @@ from skimage.metrics import structural_similarity as ssim
 from skimage.transform import downscale_local_mean as _downscale
 from skimage.transform import resize
 
+from boiling_learning.preprocessing.transformers import Transformer
+from boiling_learning.preprocessing.video import VideoFrame
 from boiling_learning.utils.dataclasses import dataclass
+
+VideoFrames = Sequence[VideoFrame]
+
+
+class TensorToArrays(Transformer[tf.Tensor, VideoFrames]):
+    def __init__(self) -> None:
+        super().__init__('tensor_to_array', lambda tensor: tensor.numpy())
+
+
+class Grayscaler(
+    Transformer[
+        Union[VideoFrame, VideoFrames, tf.Tensor],
+        tf.Tensor,
+    ]
+):
+    def __init__(self) -> None:
+        super().__init__('grayscale', tf.image.rgb_to_grayscale)
 
 
 @dataclass
@@ -121,15 +141,15 @@ def crop(
     return _crop(image, left=left, right=right, top=top, bottom=bottom)
 
 
-def grayscale(image: np.ndarray) -> np.ndarray:
-    return _grayscale(image) if image.ndim > 2 and image.shape[2] != 1 else image
-
-
 def downscale(image: np.ndarray, factors: Union[int, Tuple[int, int]]) -> np.ndarray:
     if isinstance(factors, int):
         factors = (factors, factors)
 
     return _downscale(image, factors)
+
+
+def grayscale(image: np.ndarray) -> np.ndarray:
+    return _grayscale(image) if image.ndim > 2 and image.shape[2] != 1 else image
 
 
 def random_crop(

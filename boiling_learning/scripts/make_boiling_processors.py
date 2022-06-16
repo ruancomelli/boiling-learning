@@ -1,7 +1,5 @@
 from typing import List, Tuple
 
-import numpy as np
-
 from boiling_learning.preprocessing.image import (
     crop,
     downscale,
@@ -25,7 +23,6 @@ def main(
     width: int = 128,
 ) -> Tuple[List[Transformer[VideoFrame, VideoFrame]], List[Transformer[VideoFrame, VideoFrame]]]:
     preprocessors = [
-        Transformer('dtyper', np.ndarray.astype, P(np.float32)),
         Transformer('grayscaler', grayscale),
         DictTransformer(
             'region_cropper',

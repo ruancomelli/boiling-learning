@@ -82,11 +82,7 @@ def main(
             },
         ),
         Transformer('downscaler', downscale, pack=P(factors=downscale_factor)),
-        Transformer(
-            'random_cropper',
-            random_crop,
-            pack=P(height=height, width=width),
-        ),
+        Transformer('random_cropper', random_crop, pack=P(height=height, width=width)),
     ]
 
     augmentors = [
