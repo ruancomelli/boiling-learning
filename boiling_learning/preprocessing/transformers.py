@@ -58,7 +58,7 @@ class DictTransformer(
         self.__name__: str = name
         self.packer: Mapping[Optional[str], Pack] = packer
         self._transformer_mapping: KeyedDefaultDict[str, Transformer[_X1, _X2]] = KeyedDefaultDict(
-            lambda key: Transformer(f'{self.name}_{key}', self.func, self.packer[key])
+            self._transformer_for_key
         )
         self.func: Callable[..., _X2] = f
 
@@ -83,6 +83,9 @@ class DictTransformer(
                 'packer': self.packer,
             }
         )
+
+    def _transformer_for_key(self, key: str) -> Transformer[_X1, _X2]:
+        return Transformer(f'{self.name}_{key}', self.func, self.packer[key])
 
 
 @json.encode.instance(Transformer)

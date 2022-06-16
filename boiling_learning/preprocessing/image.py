@@ -1,3 +1,4 @@
+import typing
 from fractions import Fraction
 from typing import Optional, Sequence, Tuple, Union, overload
 
@@ -40,39 +41,39 @@ class Shape:
     width: int
 
 
-def shape(image: np.ndarray) -> Shape:
+def shape(image: VideoFrame) -> Shape:
     return Shape(height=image.shape[0], width=image.shape[1])
 
 
 @overload
-def _ratio_to_size(image: np.ndarray, x: Union[int, float, Fraction], *, axis: int) -> int:
+def _ratio_to_size(image: VideoFrame, x: Union[int, float, Fraction], *, axis: int) -> int:
     ...
 
 
 @overload
-def _ratio_to_size(image: np.ndarray, x: None, *, axis: int) -> None:
+def _ratio_to_size(image: VideoFrame, x: None, *, axis: int) -> None:
     ...
 
 
 def _ratio_to_size(
-    image: np.ndarray, x: Optional[Union[int, float, Fraction]], *, axis: int
+    image: VideoFrame, x: Optional[Union[int, float, Fraction]], *, axis: int
 ) -> Optional[int]:
     return int(x * image.shape[axis]) if isinstance(x, (float, Fraction)) else x
 
 
 def _crop(
-    image: np.ndarray,
+    image: VideoFrame,
     *,
     left: Optional[int],
     right: Optional[int],
     top: Optional[int],
     bottom: Optional[int],
-) -> np.ndarray:
+) -> VideoFrame:
     return image[top:bottom, left:right, ...]
 
 
 def crop(
-    image: np.ndarray,
+    image: VideoFrame,
     *,
     left: Optional[Union[int, float, Fraction]] = None,
     right: Optional[Union[int, float, Fraction]] = None,
@@ -82,7 +83,7 @@ def crop(
     bottom: Optional[Union[int, float, Fraction]] = None,
     bottom_border: Optional[Union[int, float, Fraction]] = None,
     height: Optional[Union[int, float, Fraction]] = None,
-) -> np.ndarray:
+) -> VideoFrame:
     total_height: int = image.shape[0]
     total_width: int = image.shape[1]
 
@@ -141,67 +142,68 @@ def crop(
     return _crop(image, left=left, right=right, top=top, bottom=bottom)
 
 
-def downscale(image: np.ndarray, factors: Union[int, Tuple[int, int]]) -> np.ndarray:
+def downscale(image: VideoFrame, factors: Union[int, Tuple[int, int]]) -> VideoFrame:
     if isinstance(factors, int):
         factors = (factors, factors)
 
-    return _downscale(image, factors)
+    return typing.cast(VideoFrame, _downscale(image, factors))
 
 
-def grayscale(image: np.ndarray) -> np.ndarray:
+def grayscale(image: VideoFrame) -> VideoFrame:
     return _grayscale(image) if image.ndim > 2 and image.shape[2] != 1 else image
 
 
 def random_crop(
-    image: np.ndarray,
+    image: VideoFrame,
     *,
     height: Optional[int] = None,
     width: Optional[int] = None,
-) -> np.ndarray:
+) -> VideoFrame:
     default_height, default_width = image.shape[:2]
-    return A.RandomCrop(
-        height=height if height is not None else default_height,
-        width=width if width is not None else default_width,
-        always_apply=True,
-    ).apply(image)
-
-
-def random_flip_left_right(image: np.ndarray) -> np.ndarray:
-    return A.HorizontalFlip(p=0.5).apply(image)
-
-
-def random_brightness_contrast(
-    image: np.ndarray,
-    brightness_delta: Union[float, Tuple[float, float]],
-    contrast_delta: Union[float, Tuple[float, float]],
-) -> np.ndarray:
-    return A.RandomBrightnessContrast(brightness_delta, contrast_delta, always_apply=True).apply(
-        image
+    return typing.cast(
+        VideoFrame,
+        A.RandomCrop(
+            height=height if height is not None else default_height,
+            width=width if width is not None else default_width,
+            always_apply=True,
+        ).apply(image),
     )
 
 
-def random_jpeg_quality(image: np.ndarray, min_quality: int, max_quality: int = 100) -> np.ndarray:
+def random_flip_left_right(image: VideoFrame) -> VideoFrame:
+    return typing.cast(VideoFrame, A.HorizontalFlip(p=0.5).apply(image))
+
+
+def random_brightness_contrast(
+    image: VideoFrame,
+    brightness_delta: Union[float, Tuple[float, float]],
+    contrast_delta: Union[float, Tuple[float, float]],
+) -> VideoFrame:
+    return typing.cast(
+        VideoFrame,
+        A.RandomBrightnessContrast(brightness_delta, contrast_delta, always_apply=True).apply(
+            image
+        ),
+    )
+
+
+def random_jpeg_quality(image: VideoFrame, min_quality: int, max_quality: int = 100) -> VideoFrame:
     if image.dtype.type is np.float64:
         image = image.astype(np.float32)
 
-    return A.ImageCompression(
-        min_quality,
-        max_quality,
-        compression_type=A.ImageCompression.ImageCompressionType.JPEG,
-        always_apply=True,
-    ).apply(image)
-
-
-def reshape_to_largest(image0: np.ndarray, image1: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    if image0.shape != image1.shape:
-        max_shape = np.maximum(image0.shape, image1.shape)
-        image0 = resize(image0, max_shape)
-        image1 = resize(image1, max_shape)
-    return image0, image1
+    return typing.cast(
+        VideoFrame,
+        A.ImageCompression(
+            min_quality,
+            max_quality,
+            compression_type=A.ImageCompression.ImageCompressionType.JPEG,
+            always_apply=True,
+        ).apply(image),
+    )
 
 
 def normalized_mutual_information(
-    image0: np.ndarray, image1: np.ndarray, bins: int = 100
+    image0: VideoFrame, image1: VideoFrame, bins: int = 100
 ) -> float:
     """Compute the normalized mutual information (NMI).
 
@@ -248,7 +250,7 @@ def normalized_mutual_information(
             f'Got {image0.ndim}D for `image0` and {image1.ndim}D for `image1`.'
         )
 
-    image0, image1 = reshape_to_largest(image0, image1)
+    image0, image1 = _reshape_to_largest(image0, image1)
 
     hist, _ = np.histogramdd(
         [np.reshape(image0, -1), np.reshape(image1, -1)],
@@ -260,33 +262,35 @@ def normalized_mutual_information(
     H1 = entropy(np.sum(hist, axis=1))
     H01 = entropy(np.reshape(hist, -1))
 
-    return (H0 + H1) / H01 - 1
+    return typing.cast(float, (H0 + H1) / H01 - 1)
 
 
-def structural_similarity_ratio(ref: np.ndarray, image: np.ndarray) -> float:
+def structural_similarity_ratio(ref: VideoFrame, image: VideoFrame) -> float:
     # see
     # <https://www.wikiwand.com/en/Structural_similarity#/Application_of_the_formula>
-    WINDOW_SIZE: int = 11
+    WINDOW_SIZE = 11
 
-    ref, image = reshape_to_largest(ref, image)
+    ref, image = _reshape_to_largest(ref, image)
     ref = np.squeeze(ref)
     image = np.squeeze(image)
 
-    return ssim(ref, image, win_size=WINDOW_SIZE) / ssim(ref, ref, win_size=WINDOW_SIZE)
+    return typing.cast(
+        float, ssim(ref, image, win_size=WINDOW_SIZE) / ssim(ref, ref, win_size=WINDOW_SIZE)
+    )
 
 
-def variance(image: np.ndarray) -> float:
+def variance(image: VideoFrame) -> float:
     return float(np.var(image, axis=(0, 1)))
 
 
-def retained_variance(ref: np.ndarray, image: np.ndarray) -> float:
+def retained_variance(ref: VideoFrame, image: VideoFrame) -> float:
     return variance(image) / variance(ref)
 
 
 def shannon_cross_entropy(
-    ref: np.ndarray, image: np.ndarray, nbins: int = 100, epsilon: float = 1e-9
+    ref: VideoFrame, image: VideoFrame, nbins: int = 100, epsilon: float = 1e-9
 ) -> float:
-    ref, image = reshape_to_largest(ref, image)
+    ref, image = _reshape_to_largest(ref, image)
     ref = np.squeeze(ref)
     image = np.squeeze(image)
 
@@ -300,12 +304,20 @@ def shannon_cross_entropy(
 
 
 def shannon_cross_entropy_ratio(
-    ref: np.ndarray, image: np.ndarray, nbins: int = 100, epsilon: float = 1e-9
+    ref: VideoFrame, image: VideoFrame, nbins: int = 100, epsilon: float = 1e-9
 ) -> float:
     return shannon_cross_entropy(ref, image, nbins=nbins, epsilon=epsilon) / shannon_cross_entropy(
         ref, ref, nbins=nbins, epsilon=epsilon
     )
 
 
-def shannon_entropy_ratio(ref: np.ndarray, image: np.ndarray) -> float:
-    return shannon_entropy(image) / shannon_entropy(ref)
+def shannon_entropy_ratio(ref: VideoFrame, image: VideoFrame) -> float:
+    return typing.cast(float, shannon_entropy(image) / shannon_entropy(ref))
+
+
+def _reshape_to_largest(image0: VideoFrame, image1: VideoFrame) -> Tuple[VideoFrame, VideoFrame]:
+    if image0.shape != image1.shape:
+        max_shape = np.maximum(image0.shape, image1.shape)
+        image0 = resize(image0, max_shape)
+        image1 = resize(image1, max_shape)
+    return image0, image1
