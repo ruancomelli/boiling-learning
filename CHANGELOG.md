@@ -1,5 +1,21 @@
 
 
+## v0.26.0 (2022-06-16)
+
+### Fix
+
+- **scripts/make_boiling_processors**: remove conversion to float32
+- **scripts**: move random cropper to the "preprocessing" group since it is mandatory to enforce equal image size
+
+### Refactor
+
+- **preprocessing/hdf5**: remove compression option
+- **preprocessing/video**: improve `VideoFrame` type annotations
+- **preprocessing/video**: replace PIMS with Decord
+- remove more unused functionality
+- **preprocessing/transformers**: remove unnecessary class `FeatureTransformer` and adapt module
+- **preprocessing/transformers**: remove unused class `KeyedFeatureTransformer`
+
 ## v0.25.5 (2022-06-15)
 
 ### Feat
