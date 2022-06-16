@@ -1,5 +1,15 @@
 
 
+## v0.26.2 (2022-06-16)
+
+### Refactor
+
+- **preprocessing**: improve type-annotations in `image` and `transformers` modules
+
+### Perf
+
+- **scripts**: re-order processors to run the faster and most memory-saving operation first
+
 ## v0.26.1 (2022-06-16)
 
 ### Fix
