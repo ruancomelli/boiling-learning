@@ -1,5 +1,11 @@
 
 
+## v0.26.4 (2022-06-16)
+
+### Feat
+
+- **datasets/bridging**: support caching
+
 ## v0.26.3 (2022-06-16)
 
 ### Fix
