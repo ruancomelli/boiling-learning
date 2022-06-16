@@ -13,16 +13,13 @@ dependencies = [
     "frozendict<2.0,>=1.2",
     "funcy<2.0,>=1.17",
     "gspread<6.0.0,>=5.1.1",
-    "imageio==2.4.1",
     "ipywidgets<8.0.0,>=7.6.5",
     "matplotlib<4.0.0,>=3.5.1",
     "more-itertools>=8.11.0",
     "nidaqmx<1.0.0,>=0.5.7",
     "numpy<1.22.0,>=1.19.5",
     "oauth2client<5.0.0,>=4.1.3",
-    "opencv-python<5.0.0.0,>=4.5.5.62",
     "parse<2.0.0,>=1.19.0",
-    "PIMS<1.0,>=0.5",
     "Pint<1.0,>=0.18",
     "scikit-image<1.0.0,>=0.19.1",
     "scikit-learn<2.0.0,>=1.0.2",
@@ -43,8 +40,7 @@ dependencies = [
     "h5py>=3.7.0",
     "hdf5plugin>=3.3.0",
     "mypy>=0.960",
-    "decord==0.6.0",
-]
+    "decord==0.6.0"]
 
 requires-python = ">=3.7.12,<3.10"
 license = {text = "MIT"}

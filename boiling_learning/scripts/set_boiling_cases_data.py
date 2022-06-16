@@ -1,16 +1,13 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Iterable, Mapping, Optional
+from typing import Iterable, Mapping
 
 import modin.pandas as pd
 import numpy as np
 from loguru import logger
 
-from boiling_learning.io import json
-from boiling_learning.management.allocators import default_table_allocator
-from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.cases import Case
-from boiling_learning.preprocessing.experiment_video import ExperimentVideo, valid_end_frame
+from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.experimental_data import ExperimentalData
 from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
 from boiling_learning.utils import PathLike, geometry
@@ -42,33 +39,23 @@ def main(
     cases: Iterable[Case],
     *,
     case_experiment_map: Mapping[str, PathLike],
-    end_frame_index_cache_path: Optional[PathLike],
 ) -> None:
     logger.info('Setting boiling data')
 
-    end_frame_index_getter = _generate_end_frame_index_getter(end_frame_index_cache_path)
-
     for case in cases:
-        set_case(
-            case,
-            case_experiment_path=case_experiment_map[case.name],
-            end_frame_index_getter=end_frame_index_getter,
-        )
+        set_case(case, case_experiment_path=case_experiment_map[case.name])
 
 
 def set_case(
     case: Case,
     *,
     case_experiment_path: PathLike,
-    end_frame_index_getter: Callable[[ExperimentVideo], int],
 ) -> None:
     case.set_video_data_from_file(purge=True, remove_absent=True)
 
     case_experiment_path = resolve(case_experiment_path)
 
     for ev in case:
-        end_frame_index = end_frame_index_getter(ev)
-        ev.video = ev.video[: end_frame_index + 1]
         try:
             logger.debug(f'Trying to load data for {ev.name}')
             ev.load_df(overwrite=False, missing_ok=False, inplace=True)
@@ -133,17 +120,6 @@ def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> None:
     flux = power / lateral_area
 
     ev.df[full_heat_flux_key] = flux.to(heat_flux_unit).magnitude
-
-
-def _generate_end_frame_index_getter(
-    end_frame_index_cache_path: Optional[PathLike],
-) -> Callable[[ExperimentVideo], int]:
-    if end_frame_index_cache_path is None:
-        return valid_end_frame
-
-    allocator = default_table_allocator(end_frame_index_cache_path)
-    cacher = cache(allocator, saver=json.dump, loader=json.load)
-    return cacher(valid_end_frame)
 
 
 if __name__ == '__main__':

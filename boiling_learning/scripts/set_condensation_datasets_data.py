@@ -15,7 +15,7 @@ from sklearn.linear_model import LinearRegression
 from boiling_learning.io import json
 from boiling_learning.management.allocators import default_table_allocator
 from boiling_learning.management.cacher import cache
-from boiling_learning.preprocessing.experiment_video import ExperimentVideo, valid_end_frame
+from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.video import Video
 from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
@@ -54,7 +54,6 @@ def main(
     spreadsheet_name: Optional[str] = None,
     *,
     fps_cache_path: Optional[PathLike] = None,
-    end_frame_index_cache_path: Optional[PathLike] = None,
 ) -> Tuple[ImageDataset, ...]:
     logger.info('Setting condensation data')
 
@@ -63,12 +62,9 @@ def main(
     dataspec = yaml.safe_load(dataspecpath.read_text())
 
     fps_getter = _generate_fps_getter(fps_cache_path)
-    end_frame_index_getter = _generate_end_frame_index_getter(end_frame_index_cache_path)
 
     for dataset in datasets:
-        _set_dataset_data(
-            dataset, dataspec, fps_getter=fps_getter, end_frame_index_getter=end_frame_index_getter
-        )
+        _set_dataset_data(dataset, dataspec, fps_getter=fps_getter)
 
     grouped_datasets = _group_datasets(datasets)
 
@@ -90,17 +86,6 @@ def _generate_fps_getter(fps_cache_path: Optional[PathLike]) -> Callable[[Video]
     allocator = default_table_allocator(fps_cache_path)
     cacher = cache(allocator, saver=json.dump, loader=json.load)
     return cacher(Video.fps)
-
-
-def _generate_end_frame_index_getter(
-    end_frame_index_cache_path: Optional[PathLike],
-) -> Callable[[ExperimentVideo], int]:
-    if end_frame_index_cache_path is None:
-        return valid_end_frame
-
-    allocator = default_table_allocator(end_frame_index_cache_path)
-    cacher = cache(allocator, saver=json.dump, loader=json.load)
-    return cacher(valid_end_frame)
 
 
 def _set_mass_rate(grouped_datasets: Tuple[ImageDataset, ...], spreadsheet_name: str) -> None:
@@ -135,26 +120,16 @@ def _parse_mass_timeseries(
 
 
 def _set_dataset_data(
-    dataset: ImageDataset,
-    dataspec: Dict[str, Any],
-    *,
-    fps_getter: Callable[[Video], float],
-    end_frame_index_getter: Callable[[ExperimentVideo], int],
+    dataset: ImageDataset, dataspec: Dict[str, Any], *, fps_getter: Callable[[Video], float]
 ) -> None:
     logger.debug(f'Reading condensation dataset {dataset.name}')
 
     for ev in dataset:
-        _set_ev_data(
-            ev, dataspec, fps_getter=fps_getter, end_frame_index_getter=end_frame_index_getter
-        )
+        _set_ev_data(ev, dataspec, fps_getter=fps_getter)
 
 
 def _set_ev_data(
-    ev: ExperimentVideo,
-    dataspec: Dict[str, Any],
-    *,
-    fps_getter: Callable[[Video], float],
-    end_frame_index_getter: Callable[[ExperimentVideo], int],
+    ev: ExperimentVideo, dataspec: Dict[str, Any], *, fps_getter: Callable[[Video], float]
 ) -> None:
     case, subcase, test_name, video_name = ev.name.split(':')
 
@@ -202,9 +177,6 @@ def _set_ev_data(
     )
 
     logger.debug(f'Setting video data for EV "{ev.name}"')
-
-    end_frame_index = end_frame_index_getter(ev)
-    ev.video = ev.video[: end_frame_index + 1]
     ev.data = videodata
 
 

@@ -5,12 +5,11 @@ from typing import Any, Iterable, Iterator, List, Mapping, Optional, Union
 
 import funcy
 import modin.pandas as pd
-from imageio.core import CannotReadFrameError
 from loguru import logger
 
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.io import json
-from boiling_learning.preprocessing.video import DecordVideo, VideoFrame, convert_video
+from boiling_learning.preprocessing.video import Video, VideoFrame, convert_video
 from boiling_learning.utils.dataclasses import dataclass, field
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.utils import (
@@ -83,7 +82,7 @@ class ExperimentVideo:
         column_types: DataFrameColumnTypes = DataFrameColumnTypes(),
     ) -> None:
         self.path = resolve(video_path)
-        self.video: SliceableDataset[VideoFrame] = DecordVideo(self.path)
+        self.video: SliceableDataset[VideoFrame] = Video(self.path)
         # self.video: SliceableDataset[VideoFrame] = PimsVideo(self.path)
 
         self._data: Optional[ExperimentVideo.VideoData] = None
@@ -137,7 +136,7 @@ class ExperimentVideo:
     @path.setter
     def path(self, path: PathLike) -> None:
         self._path = resolve(path)
-        self.video = DecordVideo(self._path)
+        self.video = Video(self._path)
 
     @property
     def data(self) -> Optional[VideoData]:
@@ -403,18 +402,3 @@ def _sync_dataframes(
         concat = concat.interpolate(method='time', limit_direction='both')
     concat = concat.loc[dest_df.index]
     return concat
-
-
-def valid_end_frame(ev: ExperimentVideo) -> int:
-    logger.debug(f"Searching for valid end frame for ev at \"{ev.path}\"")
-
-    for index in reversed(range(len(ev))):
-        # the following exceptions are "expected" and signify that this candidate end frame is
-        # invalid
-        with contextlib.suppress(CannotReadFrameError, RuntimeError, AttributeError):
-            # try to access frame at `index`
-            ev.video[index]
-            # if access is successful (by not raising any errors), we found a valid end frame
-            logger.debug(f"Valid end frame is {index} for ev at \"{ev.path}\"")
-            return index
-    return -1

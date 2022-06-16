@@ -1188,19 +1188,6 @@ version = "0.1.2"
 summary = "OpenCensus Runtime Context"
 
 [[package]]
-name = "opencv-python"
-version = "4.5.5.64"
-requires_python = ">=3.6"
-summary = "Wrapper package for OpenCV python bindings."
-dependencies = [
-    "numpy>=1.14.5; python_version >= \"3.7\"",
-    "numpy>=1.17.3; python_version >= \"3.8\"",
-    "numpy>=1.19.3; python_version >= \"3.6\" and platform_system == \"Linux\" and platform_machine == \"aarch64\"",
-    "numpy>=1.19.3; python_version >= \"3.9\"",
-    "numpy>=1.21.2; python_version >= \"3.6\" and platform_system == \"Darwin\" and platform_machine == \"arm64\"",
-]
-
-[[package]]
 name = "opencv-python-headless"
 version = "4.5.5.64"
 requires_python = ">=3.6"
@@ -1294,17 +1281,6 @@ name = "pillow"
 version = "9.1.1"
 requires_python = ">=3.7"
 summary = "Python Imaging Library (Fork)"
-
-[[package]]
-name = "pims"
-version = "0.6.1"
-requires_python = ">=3.7"
-summary = "Python Image Sequence"
-dependencies = [
-    "imageio",
-    "numpy>=1.19",
-    "slicerator>=0.9.8",
-]
 
 [[package]]
 name = "pint"
@@ -2185,7 +2161,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:a4e3257a32d9c2fa65541a82a97994c5dadd874d0767f53d163c6795c82475a8"
+content_hash = "sha256:17887dc950cfb9a43aa2c307b1d45102de97eb6fa94a35361e189a6f31c322ed"
 
 [metadata.files]
 "absl-py 1.0.0" = [
@@ -3426,15 +3402,6 @@ content_hash = "sha256:a4e3257a32d9c2fa65541a82a97994c5dadd874d0767f53d163c6795c
     {file = "opencensus_context-0.1.2-py2.py3-none-any.whl", hash = "sha256:8bfb461d18f1dd243420224603c71544d7ac888bb236cf0d0a58545942561478"},
     {file = "opencensus-context-0.1.2.tar.gz", hash = "sha256:8cf64ce901e6b35f491bd1521e6541676e034c52d00c95500e9364600f835c06"},
 ]
-"opencv-python 4.5.5.64" = [
-    {file = "opencv_python-4.5.5.64-cp36-abi3-macosx_10_15_x86_64.whl", hash = "sha256:a512a0c59b6fec0fac3844b2f47d6ecb1a9d18d235e6c5491ce8dbbe0663eae8"},
-    {file = "opencv_python-4.5.5.64-cp36-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ca6138b6903910e384067d001763d40f97656875487381aed32993b076f44375"},
-    {file = "opencv_python-4.5.5.64-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b293ced62f4360d9f11cf72ae7e9df95320ff7bf5b834d87546f844e838c0c35"},
-    {file = "opencv_python-4.5.5.64-cp36-abi3-win32.whl", hash = "sha256:6247e584813c00c3b9ed69a795da40d2c153dc923d0182e957e1c2f00a554ac2"},
-    {file = "opencv_python-4.5.5.64-cp36-abi3-win_amd64.whl", hash = "sha256:408d5332550287aa797fd06bef47b2dfed163c6787668cc82ef9123a9484b56a"},
-    {file = "opencv_python-4.5.5.64-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:7787bb017ae93d5f9bb1b817ac8e13e45dd193743cb648498fcab21d00cf20a3"},
-    {file = "opencv-python-4.5.5.64.tar.gz", hash = "sha256:f65de0446a330c3b773cd04ba10345d8ce1b15dcac3f49770204e37602d0b3f7"},
-]
 "opencv-python-headless 4.5.5.64" = [
     {file = "opencv_python_headless-4.5.5.64-cp36-abi3-macosx_10_15_x86_64.whl", hash = "sha256:62e31878641a8f96e773118d1eea9f34bdda87c9990a0faab04ebaafb5ae015c"},
     {file = "opencv_python_headless-4.5.5.64-cp36-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:567a54c1919bcf5b3d20a9830e3c511e57134de8def286ce137c3544a892f98c"},
@@ -3545,9 +3512,6 @@ content_hash = "sha256:a4e3257a32d9c2fa65541a82a97994c5dadd874d0767f53d163c6795c
     {file = "Pillow-9.1.1-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:937a54e5694684f74dcbf6e24cc453bfc5b33940216ddd8f4cd8f0f79167f765"},
     {file = "Pillow-9.1.1-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:baf3be0b9446a4083cc0c5bb9f9c964034be5374b5bc09757be89f5d2fa247b8"},
     {file = "Pillow-9.1.1.tar.gz", hash = "sha256:7502539939b53d7565f3d11d87c78e7ec900d3c72945d4ee0e2f250d598309a0"},
-]
-"pims 0.6.1" = [
-    {file = "PIMS-0.6.1.tar.gz", hash = "sha256:e2b704461d4ea9bce8b6a22ca35836fe67d6d34537736b405341ae5547194f3b"},
 ]
 "pint 0.18" = [
     {file = "Pint-0.18-py2.py3-none-any.whl", hash = "sha256:4b37f3c470639ea6f96b0026c3364bde30631fa737092bdaf18ad3f4f76f252f"},

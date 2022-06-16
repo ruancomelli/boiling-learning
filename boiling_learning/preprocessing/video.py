@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import contextlib
 import gc
 import os
 import subprocess
@@ -9,11 +8,9 @@ from pathlib import Path
 from types import TracebackType
 from typing import Iterable, Iterator, Optional, Tuple, Type, Union
 
-import cv2
 import decord
 import numpy as np
 import numpy.typing as npt
-import pims
 from loguru import logger
 
 from boiling_learning.datasets.sliceable import SliceableDataset
@@ -65,70 +62,6 @@ def convert_video(
 
 
 class Video(SliceableDataset[VideoFrame]):
-    path: Path
-
-    def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self.path})'
-
-    def fps(self) -> float:
-        cap = cv2.VideoCapture(str(resolve(self.path)))
-
-        try:
-            return typing.cast(float, cap.get(cv2.CAP_PROP_FPS))
-        finally:
-            cap.release()
-
-
-class PimsVideo(Video):
-    def __init__(self, path: PathLike) -> None:
-        self.path = resolve(path)
-        self._video: Optional[pims.Video] = None
-
-    def getitem_from_index(self, index: int) -> VideoFrame:
-        with self as frames:
-            return typing.cast(VideoFrame, frames[index]) / 255
-
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrame, ...]:
-        if indices is None:
-            return tuple(self)
-
-        with self as frames:
-            return tuple(frames[index] for index in indices)
-
-    def __iter__(self) -> Iterator[VideoFrame]:
-        with self as frames:
-            for frame in frames:
-                yield frame / 255
-
-    def __len__(self) -> int:
-        with self as frames:
-            return len(frames)
-
-    def __enter__(self) -> pims.Video:
-        if self._video is None:
-            try:
-                self._video = pims.Video(str(self.path))
-            except Exception as e:
-                raise OpenVideoError(f'Error while opening video {self.path}') from e
-
-        return self._video
-
-    def __exit__(
-        self,
-        _exc_type: Optional[Type[BaseException]],
-        _exc_value: Optional[BaseException],
-        _traceback: Optional[TracebackType],
-    ) -> None:
-        if self._video is not None:
-            with contextlib.suppress(AttributeError):
-                # try to close the video. But, since some PIMS readers don't provide a
-                # `close` method, suppress `AttributeError`s
-                self._video.close()
-            del self._video
-            self._video = None
-
-
-class DecordVideo(Video):
     def __init__(self, path: PathLike) -> None:
         # workaround for limiting memory usage
         os.environ['DECORD_EOF_RETRY_MAX'] = '128'
@@ -155,6 +88,10 @@ class DecordVideo(Video):
         with self as frames:
             return len(frames)
 
+    def fps(self) -> float:
+        with self as frames:
+            return typing.cast(float, frames.get_avg_fps())
+
     def __enter__(self) -> decord.VideoReader:
         if self._video is None:
             try:
@@ -178,6 +115,9 @@ class DecordVideo(Video):
             del self._video
             gc.collect()
             self._video = None
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self.path})'
 
 
 class OpenVideoError(Exception):
