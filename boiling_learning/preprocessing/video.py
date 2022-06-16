@@ -24,6 +24,8 @@ if typing.TYPE_CHECKING:
     VideoFrameF32 = npt.NDArray[np.float32]
     VideoFrame = Union[VideoFrameU8, VideoFrameF32]
 else:
+    VideoFrameU8 = np.ndarray
+    VideoFrameF32 = np.ndarray
     VideoFrame = np.ndarray
 
 
