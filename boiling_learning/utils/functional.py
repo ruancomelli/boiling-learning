@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from functools import partial, wraps
+from functools import partial
 from typing import (
     Any,
     Callable,
@@ -10,7 +10,6 @@ from typing import (
     Iterator,
     Mapping,
     Optional,
-    Sequence,
     Tuple,
     TypeVar,
     Union,
@@ -246,37 +245,6 @@ class Kwargs(Pack[_T, _S], Generic[_T, _S]):
 class P(Pack[_T, _S], Generic[_T, _S]):
     def __init__(self, *args: _T, cls: Any = Sentinel.INSTANCE, **kwargs: _S) -> None:
         super().__init__(args, kwargs)
-
-
-def unpack(f: Callable[..., _U], packed_param: Pack[_T, _S]) -> _U:
-    return packed(f)(packed_param)
-
-
-def pack_combinations(
-    combinator: Callable[..., Iterator], pack: Pack[Sequence, Sequence]
-) -> Iterator[Pack]:
-    keys = tuple(pack.kwargs.keys())
-    values = tuple(pack.kwargs.values())
-    n_args = len(pack.args)
-
-    for combination in combinator(*pack.args, *values):
-        yield Pack(combination[:n_args], funcy.zipdict(keys, combination[n_args:]))
-
-
-def packed(f: Callable[..., _U]) -> Callable[[Pack], _U]:
-    @wraps(f)
-    def wrapper(pack: Pack) -> _U:
-        return pack.feed(f)
-
-    return wrapper
-
-
-def unpacked(f: Callable[[Pack[_T, _S]], _U]) -> Callable[..., _U]:
-    @wraps(f)
-    def wrapper(*args: _T, **kwargs: _S) -> _U:
-        return f(Pack(args, kwargs))
-
-    return wrapper
 
 
 def map_values(f: Callable[[_T], _S], iterable: Iterable[_T]) -> Iterable[_S]:

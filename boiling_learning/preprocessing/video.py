@@ -115,9 +115,9 @@ class PimsVideo(Video):
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_value: Optional[BaseException],
-        traceback: Optional[TracebackType],
+        _exc_type: Optional[Type[BaseException]],
+        _exc_value: Optional[BaseException],
+        _traceback: Optional[TracebackType],
     ) -> None:
         if self._video is not None:
             with contextlib.suppress(AttributeError):
@@ -168,9 +168,9 @@ class DecordVideo(Video):
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_value: Optional[BaseException],
-        traceback: Optional[TracebackType],
+        _exc_type: Optional[Type[BaseException]],
+        _exc_value: Optional[BaseException],
+        _traceback: Optional[TracebackType],
     ) -> None:
         if self._video is not None:
             # workaround for limiting memory usage

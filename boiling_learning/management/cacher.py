@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Callable, Generic, Iterable, Type, TypeVar
 
 from loguru import logger
-from typing_extensions import Concatenate, ParamSpec
+from typing_extensions import ParamSpec
 
 from boiling_learning.io import LoaderFunction, SaverFunction
 from boiling_learning.io.storage import load, save
@@ -111,30 +111,3 @@ def cache(
         exceptions=exceptions,
         autosave=autosave,
     ).decorate
-
-
-def cacher_aware(
-    allocator: Allocator,
-    saver: SaverFunction[_R] = save,
-    loader: LoaderFunction[_R] = load,
-    exceptions: Iterable[Type[Exception]] = (
-        FileNotFoundError,
-        NotADirectoryError,
-    ),
-    autosave: bool = True,
-) -> Callable[[Callable[Concatenate[Cacher[_R], _P], _R]], CachedFunction[_P, _R]]:
-    cacher = Cacher(
-        allocator=allocator,
-        saver=saver,
-        loader=loader,
-        exceptions=exceptions,
-        autosave=autosave,
-    )
-
-    def _wrapper(wrapped: Callable[Concatenate[Cacher[_R], _P], _R]) -> CachedFunction[_P, _R]:
-        def _wrapped(*args: _P.args, **kwargs: _P.kwargs) -> _R:
-            return wrapped(cacher, *args, **kwargs)
-
-        return cacher.decorate(_wrapped)
-
-    return _wrapper
