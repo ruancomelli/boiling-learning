@@ -61,7 +61,7 @@ from boiling_learning.model.training import (
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.hdf5 import get_frame_from_hdf5, video_to_hdf5
 from boiling_learning.preprocessing.image_datasets import ImageDataset
-from boiling_learning.preprocessing.transformers import DictFeatureTransformer, Transformer
+from boiling_learning.preprocessing.transformers import DictTransformer, Transformer
 from boiling_learning.preprocessing.video import PimsVideo, VideoFrame
 from boiling_learning.scripts import (
     connect_gpus,
@@ -202,9 +202,7 @@ def _compile_transformers_to_video(
 ) -> List[Transformer[VideoFrame, VideoFrame]]:
     return [
         (
-            transformer[video.name]
-            if isinstance(transformer, DictFeatureTransformer)
-            else transformer
+            transformer[video.name] if isinstance(transformer, DictTransformer) else transformer
         ).as_transformer()
         for transformer in transformers
     ]

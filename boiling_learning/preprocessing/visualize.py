@@ -14,7 +14,7 @@ from matplotlib.colors import NoNorm
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import SupervisedSliceableDataset
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
-from boiling_learning.preprocessing.transformers import DictFeatureTransformer, Transformer
+from boiling_learning.preprocessing.transformers import DictTransformer, Transformer
 from boiling_learning.preprocessing.video import VideoFrame
 from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.functional import P, Pack, nth_arg
@@ -260,7 +260,7 @@ def _visualize_transformations_plt(
     for transformer in transformers:
         transformer_name = transformer.name
         print(transformer_name)
-        if isinstance(transformer, DictFeatureTransformer):
+        if isinstance(transformer, DictTransformer):
             transformer = transformer[ev.name]
 
         visualizer = visualizers[transformer_name]
@@ -372,7 +372,7 @@ def _visualize_transformations_bokeh(
     for first, _, transformer in mit.mark_ends(transformers):
         transformer_name = transformer.name
         print(transformer_name)
-        if isinstance(transformer, DictFeatureTransformer):
+        if isinstance(transformer, DictTransformer):
             transformer = transformer[ev.name]
 
         annotator = annotators[transformer_name]

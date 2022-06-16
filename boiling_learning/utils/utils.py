@@ -12,6 +12,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import (
     Any,
+    Callable,
     Collection,
     DefaultDict,
     Iterable,
@@ -139,9 +140,11 @@ def one_factor_at_a_time(
 
 class KeyedDefaultDict(DefaultDict[_Key, _Value]):
     '''
-
     Source: https://stackoverflow.com/a/2912455/5811400
     '''
+
+    def __init__(self, default_factory: Callable[[_Key], _Value]):
+        super().__init__(default_factory)
 
     def __missing__(self, key: _Key) -> _Value:
         if self.default_factory is None or not callable(self.default_factory):

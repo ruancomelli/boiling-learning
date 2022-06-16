@@ -11,11 +11,8 @@ from boiling_learning.preprocessing.image import (
     random_flip_left_right,
     random_jpeg_quality,
 )
-from boiling_learning.preprocessing.transformers import (
-    DictFeatureTransformer,
-    FeatureTransformer,
-    Transformer,
-)
+from boiling_learning.preprocessing.transformers import DictTransformer, Transformer
+from boiling_learning.preprocessing.video import VideoFrame
 from boiling_learning.utils.functional import P
 
 
@@ -26,11 +23,11 @@ def main(
     indirect_height: int = 108,
     indirect_height_ratio: float = 0.4,
     width: int = 128,
-) -> Tuple[List[Transformer], List[Transformer]]:
+) -> Tuple[List[Transformer[VideoFrame, VideoFrame]], List[Transformer[VideoFrame, VideoFrame]]]:
     preprocessors = [
-        FeatureTransformer('dtyper', np.ndarray.astype, P(np.float32)),
-        FeatureTransformer('grayscaler', grayscale),
-        DictFeatureTransformer(
+        Transformer('dtyper', np.ndarray.astype, P(np.float32)),
+        Transformer('grayscaler', grayscale),
+        DictTransformer(
             'region_cropper',
             crop,
             {
@@ -169,8 +166,8 @@ def main(
                 'GOPR2960': P(left=980, right=1810, top=400, bottom=1350),
             },
         ),
-        FeatureTransformer('downscaler', downscale, pack=P(factors=downscale_factor)),
-        FeatureTransformer(
+        Transformer('downscaler', downscale, pack=P(factors=downscale_factor)),
+        Transformer(
             'visualization_shrinker',
             crop,
             pack=P(
@@ -183,14 +180,14 @@ def main(
     ]
 
     augmentors = [
-        FeatureTransformer('random_cropper', random_crop, pack=P(width=width)),
-        FeatureTransformer('random_left_right_flipper', random_flip_left_right),
-        FeatureTransformer(
+        Transformer('random_cropper', random_crop, pack=P(width=width)),
+        Transformer('random_left_right_flipper', random_flip_left_right),
+        Transformer(
             'random_brightness_contrast',
             random_brightness_contrast,
             pack=P((-0.2, 0.2), (0.6, 1.4)),
         ),
-        FeatureTransformer('random_quality', random_jpeg_quality, pack=P(30, 100)),
+        Transformer('random_quality', random_jpeg_quality, pack=P(30, 100)),
     ]
 
     return preprocessors, augmentors
