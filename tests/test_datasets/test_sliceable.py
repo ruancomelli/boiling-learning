@@ -194,6 +194,15 @@ class TestSliceableDataset:
 
         assert ''.join(unbatched) == 'abcdefghijklmnopqrstuvwxyz'
 
+    def test_map_batched(self) -> None:
+        sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
+
+        def _mapper(batch: SliceableDataset[str]) -> SliceableDataset[str]:
+            return SliceableDataset.from_sequence(batch[::-1])
+
+        mapped = sds.batch(4).map(_mapper).unbatch()
+        assert ''.join(mapped) == 'dcbahgfelkjiponmtsrqxwvuzy'
+
     def test_flatten(self) -> None:
         sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
         batched = sds.batch(3)
