@@ -1,5 +1,11 @@
 
 
+## v0.26.3 (2022-06-16)
+
+### Fix
+
+- **datasets/sliceable**: avoid index errors when slicing sliceable datasets
+
 ## v0.26.2 (2022-06-16)
 
 ### Refactor
