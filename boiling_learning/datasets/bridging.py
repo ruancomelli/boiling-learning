@@ -16,6 +16,7 @@ _T = TypeVar('_T')
 def sliceable_dataset_to_tensorflow_dataset(
     dataset: SliceableDataset[_T],
     *,
+    cache: bool = False,
     save_path: Optional[PathLike] = None,
     batch_size: Optional[int] = None,
     filterer: Optional[Callable[[_T], bool]] = None,
@@ -49,6 +50,9 @@ def sliceable_dataset_to_tensorflow_dataset(
                 dataset.element_spec,
                 reader_func=_make_reader_func(deterministic=deterministic),
             )
+
+    if cache:
+        ds = ds.cache()
 
     if batch_size is not None:
         if expand_to_batch_size:
