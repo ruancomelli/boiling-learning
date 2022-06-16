@@ -20,7 +20,9 @@ from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.utils import PathLike, resolve
 
 if typing.TYPE_CHECKING:
-    VideoFrame = npt.NDArray[np.float32]
+    VideoFrameU8 = npt.NDArray[np.uint8]
+    VideoFrameF32 = npt.NDArray[np.float32]
+    VideoFrame = Union[VideoFrameU8, VideoFrameF32]
 else:
     VideoFrame = np.ndarray
 
@@ -69,20 +71,20 @@ class Video(SliceableDataset[VideoFrame]):
         self.path = resolve(path)
         self._video: Optional[decord.VideoReader] = None
 
-    def getitem_from_index(self, index: int) -> VideoFrame:
+    def getitem_from_index(self, index: int) -> VideoFrameU8:
         with self as frames:
-            return typing.cast(VideoFrame, frames[index].asnumpy().astype(np.float32)) / 255
+            return typing.cast(VideoFrameU8, frames[index].asnumpy())
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrame, ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrameU8, ...]:
         indices = range(len(self)) if indices is None else list(indices)
 
         with self as frames:
-            return tuple(frames.get_batch(indices).asnumpy().astype(np.float32) / 255)
+            return tuple(frames.get_batch(indices).asnumpy())
 
-    def __iter__(self) -> Iterator[VideoFrame]:
+    def __iter__(self) -> Iterator[VideoFrameU8]:
         with self as frames:
             for frame in frames:
-                yield frame.asnumpy().astype(np.float32) / 255
+                yield frame.asnumpy()
 
     def __len__(self) -> int:
         with self as frames:
