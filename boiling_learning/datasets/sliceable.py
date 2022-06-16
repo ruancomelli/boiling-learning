@@ -98,7 +98,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
         return self.getitem_from_indices(
             range(
                 start if start is not None else 0,
-                stop if stop is not None else len(self),
+                min(stop, len(self)) if stop is not None else len(self),
                 step if step is not None else 1,
             )
         )
@@ -149,16 +149,6 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
 
         return self[indices]
 
-    def skip(self, count: Union[int, Fraction]) -> SliceableDataset[_T]:
-        if isinstance(count, int):
-            return self[count:]
-
-        total = len(self)
-        keep_indices = distance_maximized_evenly_spaced_indices(
-            total=total, count=total - int(count * total)
-        )
-        return self[keep_indices]
-
     def take(self, count: Union[int, Fraction]) -> SliceableDataset[_T]:
         if isinstance(count, int):
             return self[:count]
@@ -168,6 +158,12 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
             total=total, count=int(count * total)
         )
         return self[keep_indices]
+
+    def skip(self, count: Union[int, Fraction]) -> SliceableDataset[_T]:
+        if isinstance(count, int):
+            return self[count:]
+
+        return self.take(1 - count)
 
     @overload
     def split(
@@ -529,8 +525,8 @@ class PrefetchedDataset(ProxySliceableDataset[_T]):
         self._buffer_size = buffer_size if buffer_size is not None else len(self)
 
     def __iter__(self) -> Iterator[_T]:
-        for buffer_indices in SliceableDataset.range(len(self)).batch(self._buffer_size):
-            yield from self.fetch(buffer_indices)
+        for batch in self.batch(self._buffer_size):
+            yield from batch.fetch()
 
 
 class SupervisedSliceableDataset(ProxySliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y]):

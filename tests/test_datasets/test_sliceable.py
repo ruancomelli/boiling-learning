@@ -11,6 +11,26 @@ from boiling_learning.datasets.sliceable import SliceableDataset, concatenate
 from boiling_learning.utils.random import random_state
 
 
+class MockDatabaseDataset(SliceableDataset[int]):
+    def __init__(self) -> None:
+        self.items = [index ** 2 for index in range(8)]
+        self.database_fetches: List[List[int]] = []
+
+    def __len__(self) -> int:
+        return len(self.items)
+
+    def getitem_from_index(self, index: int) -> int:
+        return self.items[index]
+
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[int, ...]:
+        if indices is None:
+            indices = range(len(self))
+
+        indices = list(indices)
+        self.database_fetches.append(indices)
+        return tuple(self[index] for index in indices)
+
+
 class TestSliceableDataset:
     def test_basics(self) -> None:
         data = [0, 10, 200, 3, 45]
@@ -24,14 +44,15 @@ class TestSliceableDataset:
         assert sds[-1] == 45
 
     def test_slicing(self) -> None:
-        sds = SliceableDataset.from_sequence([0, 10, 200, 3, 45])
+        sds = MockDatabaseDataset()
 
         assert isinstance(sds[1:3], SliceableDataset)
 
-        assert list(sds[:]) == [0, 10, 200, 3, 45]
-        assert list(sds[:3]) == [0, 10, 200]
-        assert list(sds[2:4]) == [200, 3]
-        assert list(sds[3:]) == [3, 45]
+        assert list(sds[:]) == [0, 1, 4, 9, 16, 25, 36, 49]
+        assert list(sds[:3]) == [0, 1, 4]
+        assert list(sds[2:4]) == [4, 9]
+        assert list(sds[3:]) == [9, 16, 25, 36, 49]
+        assert list(sds[3:100]) == [9, 16, 25, 36, 49]
 
     def test_masking(self) -> None:
         sds = SliceableDataset.from_sequence([0, 10, 200, 3, 45])
@@ -106,58 +127,45 @@ class TestSliceableDataset:
         assert ''.join(shuffled) == shuffled_data == 'yhczewmkouqnaglvxrtsibjpdf'
         assert ''.join(shuffled.fetch(range(5, 10))) == 'wmkou'
 
-    def test_skip(self) -> None:
-        sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
-        assert ''.join(sds.skip(10)) == 'klmnopqrstuvwxyz'
-
     def test_take(self) -> None:
         sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
         assert ''.join(sds.take(10)) == 'abcdefghij'
+        assert ''.join(sds.take(Fraction(1, 3))) == 'aehlosvz'
+
+    def test_skip(self) -> None:
+        sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
+        assert ''.join(sds.skip(10)) == 'klmnopqrstuvwxyz'
+        assert ''.join(sds.skip(Fraction(1, 3))) == 'acdfgijlmoqrtuwxz'
 
     def test_prefetch(self) -> None:
-        database_fetches: List[List[int]] = []
+        db = MockDatabaseDataset()
 
-        class MockDatabaseDataset(SliceableDataset[int]):
-            def __len__(self) -> int:
-                return 8
-
-            def getitem_from_index(self, index: int) -> int:
-                return index ** 2
-
-            def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[int, ...]:
-                if indices is None:
-                    indices = range(len(self))
-
-                indices = list(indices)
-                database_fetches.append(indices)
-                return tuple(self[indices])
-
-        prefetched = MockDatabaseDataset().prefetch(3)
+        prefetched = db.prefetch(3)
         it = iter(prefetched)
 
-        assert not database_fetches
+        assert not db.database_fetches
 
         assert next(it) == 0
-        assert database_fetches == [[0, 1, 2]]
+        assert db.database_fetches == [[0, 1, 2]]
         assert next(it) == 1
-        assert database_fetches == [[0, 1, 2]]
+        assert db.database_fetches == [[0, 1, 2]]
         assert next(it) == 4
-        assert database_fetches == [[0, 1, 2]]
+        assert db.database_fetches == [[0, 1, 2]]
         assert next(it) == 9
-        assert database_fetches == [[0, 1, 2], [3, 4, 5]]
+        assert db.database_fetches == [[0, 1, 2], [3, 4, 5]]
         assert next(it) == 16
-        assert database_fetches == [[0, 1, 2], [3, 4, 5]]
+        assert db.database_fetches == [[0, 1, 2], [3, 4, 5]]
         assert next(it) == 25
-        assert database_fetches == [[0, 1, 2], [3, 4, 5]]
+        assert db.database_fetches == [[0, 1, 2], [3, 4, 5]]
         assert next(it) == 36
-        assert database_fetches == [[0, 1, 2], [3, 4, 5], [6, 7]]
+        assert db.database_fetches == [[0, 1, 2], [3, 4, 5], [6, 7]]
         assert next(it) == 49
-        assert database_fetches == [[0, 1, 2], [3, 4, 5], [6, 7]]
+        assert db.database_fetches == [[0, 1, 2], [3, 4, 5], [6, 7]]
 
         with pytest.raises(StopIteration):
             next(it)
 
-        assert database_fetches == [[0, 1, 2], [3, 4, 5], [6, 7]]
+        assert db.database_fetches == [[0, 1, 2], [3, 4, 5], [6, 7]]
 
     def test_batch(self) -> None:
         sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
