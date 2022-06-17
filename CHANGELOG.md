@@ -1,5 +1,11 @@
 
 
+## v0.26.5 (2022-06-16)
+
+### Fix
+
+- **scripts**: do not convert categories to integers
+
 ## v0.26.4 (2022-06-16)
 
 ### Feat
