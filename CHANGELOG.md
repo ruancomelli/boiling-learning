@@ -1,5 +1,11 @@
 
 
+## v0.26.7 (2022-06-16)
+
+### Feat
+
+- **datasets/bridging**: support pre-filtering and post-filtering datasets
+
 ## v0.26.6 (2022-06-16)
 
 ### Feat
