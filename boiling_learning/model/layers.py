@@ -30,3 +30,8 @@ class RandomBrightness(tf.keras.layers.Layer):
 
     def get_config(self) -> Dict[str, Any]:
         return {**super().get_config(), 'factor': self._factor}
+
+
+class ImageNormalization(tf.keras.layers.Layer):
+    def call(self, images: Any, training: bool = False) -> Any:
+        return tf.image.per_image_standardization(images)
