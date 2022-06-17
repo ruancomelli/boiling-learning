@@ -6,7 +6,6 @@ import albumentations as A
 import numpy as np
 import tensorflow as tf
 from scipy.stats import entropy
-from skimage.color import rgb2gray as _grayscale
 from skimage.exposure import histogram
 from skimage.measure import shannon_entropy
 from skimage.metrics import structural_similarity as ssim
@@ -16,23 +15,24 @@ from skimage.transform import resize
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.preprocessing.video import VideoFrame
 from boiling_learning.utils.dataclasses import dataclass
+from boiling_learning.utils.functional import P
 
 VideoFrames = Sequence[VideoFrame]
 
 
-class TensorToArrays(Transformer[tf.Tensor, VideoFrames]):
+class Grayscaler(Transformer[VideoFrame, VideoFrame]):
     def __init__(self) -> None:
-        super().__init__('tensor_to_array', lambda tensor: tensor.numpy())
+        super().__init__('grayscale', grayscale, P())
 
 
-class Grayscaler(
-    Transformer[
-        Union[VideoFrame, VideoFrames, tf.Tensor],
-        tf.Tensor,
-    ]
-):
+class ImageNormalizer(Transformer[VideoFrame, VideoFrame]):
     def __init__(self) -> None:
-        super().__init__('grayscale', tf.image.rgb_to_grayscale)
+        super().__init__('normalize_image', normalize_image, P())
+
+
+class Downscaler(Transformer[VideoFrame, VideoFrame]):
+    def __init__(self, factors: Union[int, Tuple[int, int]]) -> None:
+        super().__init__('downscaler', downscale, pack=P(factors=factors))
 
 
 @dataclass
@@ -150,7 +150,19 @@ def downscale(image: VideoFrame, factors: Union[int, Tuple[int, int]]) -> VideoF
 
 
 def grayscale(image: VideoFrame) -> VideoFrame:
-    return _grayscale(image) if image.ndim > 2 and image.shape[2] != 1 else image
+    return (
+        tf.image.rgb_to_grayscale(image).numpy()
+        if image.ndim > 2 and image.shape[2] != 1
+        else image
+    )
+
+
+def normalize_image(image: VideoFrame) -> VideoFrame:
+    mean = image.mean()
+    centered = tf.image.adjust_brightness(image, delta=-mean).numpy()
+
+    std = centered.std()
+    return tf.image.adjust_contrast(centered, 1 / std).numpy()
 
 
 def random_crop(

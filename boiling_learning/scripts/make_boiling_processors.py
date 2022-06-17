@@ -1,9 +1,9 @@
 from typing import List, Tuple
 
 from boiling_learning.preprocessing.image import (
+    Downscaler,
+    Grayscaler,
     crop,
-    downscale,
-    grayscale,
     random_brightness_contrast,
     random_crop,
     random_flip_left_right,
@@ -162,8 +162,8 @@ def main(
                 'GOPR2960': P(left=980, right=1810, top=400, bottom=1350),
             },
         ),
-        Transformer('grayscaler', grayscale),
-        Transformer('downscaler', downscale, pack=P(factors=downscale_factor)),
+        Grayscaler(),
+        Downscaler(downscale_factor),
         Transformer(
             'visualization_shrinker',
             crop,

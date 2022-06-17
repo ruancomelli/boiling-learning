@@ -1,9 +1,9 @@
 from typing import List, Tuple
 
 from boiling_learning.preprocessing.image import (
+    Downscaler,
+    Grayscaler,
     crop,
-    downscale,
-    grayscale,
     random_brightness_contrast,
     random_crop,
     random_flip_left_right,
@@ -80,8 +80,8 @@ def main(
                 'parametric:rh 90%:test 5:00012': P(left=744, right=1312, top=226, bottom=806),
             },
         ),
-        Transformer('grayscaler', grayscale),
-        Transformer('downscaler', downscale, pack=P(factors=downscale_factor)),
+        Grayscaler(),
+        Downscaler(downscale_factor),
         Transformer('random_cropper', random_crop, pack=P(height=height, width=width)),
     ]
 
