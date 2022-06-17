@@ -1,5 +1,19 @@
 
 
+## v0.27.0 (2022-06-17)
+
+### Refactor
+
+- **preprocessing/transformers**: remove `DictTransformer`
+- **scripts**: remove image augmentation steps
+- **datasets/sliceable**: replace `SupervisedSliceableDataset` functionality with static functions
+- **preprocessing/image**: add transformers for downscaling and grayscaling images
+
+### Feat
+
+- **preprocessing/image**: add `Cropper` transformer
+- **datasets/sliceable**: add `repeat` method and `constantly` constructor
+
 ## v0.26.7 (2022-06-16)
 
 ### Feat
