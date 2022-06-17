@@ -1,5 +1,11 @@
 
 
+## v0.28.1 (2022-06-17)
+
+### Feat
+
+- **model/layers**: add image normalization preprocessing layer
+
 ## v0.28.0 (2022-06-17)
 
 ### Refactor
