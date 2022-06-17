@@ -1,5 +1,12 @@
 
 
+## v0.28.0 (2022-06-17)
+
+### Refactor
+
+- **datasets/datasets**: remove unused functionality
+- **preprocessing/transformers**: remove transformer names
+
 ## v0.27.1 (2022-06-17)
 
 ### Fix
