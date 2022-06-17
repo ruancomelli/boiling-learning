@@ -19,7 +19,8 @@ def sliceable_dataset_to_tensorflow_dataset(
     cache: bool = False,
     save_path: Optional[PathLike] = None,
     batch_size: Optional[int] = None,
-    filterer: Optional[Callable[[_T], bool]] = None,
+    prefilterer: Optional[Callable[[_T], bool]] = None,
+    filterer: Optional[Callable[..., bool]] = None,
     prefetch: int = 0,
     expand_to_batch_size: bool = False,
     deterministic: bool = False,
@@ -28,7 +29,7 @@ def sliceable_dataset_to_tensorflow_dataset(
     creator = partial(
         _create_tensorflow_dataset,
         dataset,
-        filterer=filterer,
+        prefilterer=prefilterer,
         prefetch=prefetch,
     )
 
@@ -51,6 +52,9 @@ def sliceable_dataset_to_tensorflow_dataset(
                 dataset.element_spec,
                 reader_func=_make_reader_func(deterministic=deterministic),
             )
+
+    if filterer is not None:
+        ds = ds.filter(filterer)
 
     if target is not None:
         ds = ds.map(lambda feature, targets: (feature, targets[target]))
@@ -93,13 +97,13 @@ def _make_reader_func(
 def _create_tensorflow_dataset(
     dataset: SliceableDataset[_T],
     *,
-    filterer: Optional[Callable[[_T], bool]] = None,
+    prefilterer: Optional[Callable[[_T], bool]] = None,
     prefetch: int = 0,
 ) -> tf.data.Dataset:
     if prefetch:
         dataset = dataset.prefetch(prefetch)
 
     return tf.data.Dataset.from_generator(
-        lambda: iter(dataset if filterer is None else filter(filterer, dataset)),
+        lambda: iter(dataset if prefilterer is None else filter(prefilterer, dataset)),
         output_signature=dataset.element_spec,
     )
