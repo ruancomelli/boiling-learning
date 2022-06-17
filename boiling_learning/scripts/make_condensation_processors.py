@@ -1,14 +1,6 @@
-from typing import List, Tuple
+from typing import List
 
-from boiling_learning.preprocessing.image import (
-    Downscaler,
-    Grayscaler,
-    crop,
-    random_brightness_contrast,
-    random_crop,
-    random_flip_left_right,
-    random_jpeg_quality,
-)
+from boiling_learning.preprocessing.image import Downscaler, Grayscaler, crop, random_crop
 from boiling_learning.preprocessing.transformers import DictTransformer, Transformer
 from boiling_learning.preprocessing.video import VideoFrame
 from boiling_learning.utils.functional import P
@@ -16,8 +8,8 @@ from boiling_learning.utils.functional import P
 
 def main(
     downscale_factor: int = 5, height: int = 8 * 12, width: int = 8 * 12
-) -> Tuple[List[Transformer[VideoFrame, VideoFrame]], List[Transformer[VideoFrame, VideoFrame]]]:
-    preprocessors = [
+) -> List[Transformer[VideoFrame, VideoFrame]]:
+    return [
         DictTransformer(
             'region_cropper',
             crop,
@@ -84,18 +76,6 @@ def main(
         Downscaler(downscale_factor),
         Transformer('random_cropper', random_crop, pack=P(height=height, width=width)),
     ]
-
-    augmentors = [
-        Transformer('random_left_right_flipper', random_flip_left_right),
-        Transformer(
-            'random_brightness_contrast',
-            random_brightness_contrast,
-            pack=P((-0.2, 0.2), (0.6, 1.4)),
-        ),
-        Transformer('random_quality', random_jpeg_quality, pack=P(30, 100)),
-    ]
-
-    return preprocessors, augmentors
 
 
 if __name__ == '__main__':
