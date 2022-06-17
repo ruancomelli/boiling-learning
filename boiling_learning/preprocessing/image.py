@@ -94,17 +94,6 @@ def _ratio_to_size(
     return int(x * image.shape[axis]) if isinstance(x, (float, Fraction)) else x
 
 
-def _crop(
-    image: VideoFrame,
-    *,
-    left: Optional[int],
-    right: Optional[int],
-    top: Optional[int],
-    bottom: Optional[int],
-) -> VideoFrame:
-    return image[top:bottom, left:right, ...]
-
-
 def crop(
     image: VideoFrame,
     *,
@@ -139,20 +128,19 @@ def crop(
             incompatible_arguments_error_message.format('left', 'right', 'right_border', 'width')
         )
 
-    if None not in {right, right_border}:
-        raise TypeError(incompatible_pair_error_message.format('right', 'right_border'))
-
     if (top, bottom, bottom_border, height).count(None) < 2:
         raise TypeError(
             incompatible_arguments_error_message.format('top', 'bottom', 'bottom_border', 'height')
         )
 
-    if None not in {bottom, bottom_border}:
-        raise TypeError(incompatible_pair_error_message.format('bottom', 'bottom_border'))
-
     if right_border is not None:
+        if right is not None:
+            raise TypeError(incompatible_pair_error_message.format('right', 'right_border'))
         right = total_width - right_border
+
     if bottom_border is not None:
+        if bottom is not None:
+            raise TypeError(incompatible_pair_error_message.format('bottom', 'bottom_border'))
         bottom = total_height - bottom_border
 
     if width is not None:
@@ -167,12 +155,25 @@ def crop(
         elif top is not None:
             bottom = top + height
 
-    assert left is None or left >= 0 and ((right is None or left <= right))
-    assert right is None or 0 <= right <= total_width
-    assert top is None or top >= 0 and ((bottom is None or top <= bottom))
-    assert bottom is None or 0 <= bottom <= total_height
+    left = left if left is not None else 0
+    right = right if right is not None else total_width
+    top = top if top is not None else 0
+    bottom = bottom if bottom is not None else total_height
+    height = height if height is not None else bottom - top
+    width = width if width is not None else right - left
 
-    return _crop(image, left=left, right=right, top=top, bottom=bottom)
+    assert 0 <= left <= right
+    assert 0 <= right <= total_width
+    assert 0 <= top <= bottom
+    assert 0 <= bottom <= total_height
+
+    return tf.image.crop_to_bounding_box(
+        image,
+        offset_height=top if top is not None else 0,
+        offset_width=left if left is not None else 0,
+        target_height=bottom - top,
+        target_width=right - left,
+    ).numpy()
 
 
 def downscale(image: VideoFrame, factors: Union[int, Tuple[int, int]]) -> VideoFrame:
@@ -183,19 +184,12 @@ def downscale(image: VideoFrame, factors: Union[int, Tuple[int, int]]) -> VideoF
 
 
 def grayscale(image: VideoFrame) -> VideoFrame:
-    return (
-        tf.image.rgb_to_grayscale(image).numpy()
-        if image.ndim > 2 and image.shape[2] != 1
-        else image
-    )
+    image = image.squeeze()
+    return (tf.image.rgb_to_grayscale(image).numpy() if image.ndim > 2 else image).squeeze()
 
 
 def normalize_image(image: VideoFrame) -> VideoFrame:
-    mean = image.mean()
-    centered = tf.image.adjust_brightness(image, delta=-mean).numpy()
-
-    std = centered.std()
-    return tf.image.adjust_contrast(centered, 1 / std).numpy()
+    return tf.image.per_image_standardization(image).numpy().squeeze()
 
 
 def random_crop(
