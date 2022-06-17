@@ -23,7 +23,6 @@ from typing import (
     overload,
 )
 
-import funcy
 import more_itertools as mit
 from iteround import saferound
 from typing_extensions import Literal, TypeGuard, TypeVarTuple, Unpack
@@ -536,68 +535,57 @@ class PrefetchedDataset(ProxySliceableDataset[_T]):
             yield from batch.fetch()
 
 
-class SupervisedSliceableDataset(ProxySliceableDataset[Tuple[_X, _Y]], Generic[_X, _Y]):
-    @staticmethod
-    def from_features_and_targets(
-        features: SliceableDataset[_X],
-        targets: SliceableDataset[_Y],
-        *,
-        strictness: Literal['none', 'one-off', 'strict'] = 'strict',
-    ) -> SupervisedSliceableDataset[_X, _Y]:
-        return SupervisedSliceableDataset(
-            SliceableDataset.zip(features, targets, strictness=strictness)
-        )
-
-    def getitem_from_indices(self, indices: Iterable[int]) -> SupervisedSliceableDataset[_X, _Y]:
-        return SupervisedSliceableDataset(super().getitem_from_indices(indices))
-
-    def shuffle(self) -> SupervisedSliceableDataset[_X, _Y]:
-        return SupervisedSliceableDataset(super().shuffle())
-
-    def skip(self, count: Union[int, Fraction]) -> SupervisedSliceableDataset[_X, _Y]:
-        return SupervisedSliceableDataset(super().skip(count))
-
-    def take(self, count: Union[int, Fraction]) -> SupervisedSliceableDataset[_X, _Y]:
-        return SupervisedSliceableDataset(super().take(count))
-
-    def features(self) -> SliceableDataset[_X]:
-        return self.map(itemgetter(0))
-
-    def targets(self) -> SliceableDataset[_Y]:
-        return self.map(itemgetter(1))
-
-    def unzip(self) -> Tuple[SliceableDataset[_X], SliceableDataset[_Y]]:
-        return self.features(), self.targets()
-
-    def map_features(
-        self, __map_features: Callable[[_X], _X2]
-    ) -> SupervisedSliceableDataset[_X2, _Y]:
-        return self.map_pair(__map_features, funcy.identity)
-
-    def map_targets(
-        self, __map_targets: Callable[[_Y], _Y2]
-    ) -> SupervisedSliceableDataset[_X, _Y2]:
-        return self.map_pair(funcy.identity, __map_targets)
-
-    def map_pair(
-        self,
-        __map_features: Callable[[_X], _X2],
-        __map_targets: Callable[[_Y], _Y2],
-    ) -> SupervisedSliceableDataset[_X2, _Y2]:
-        def map_func(pair: Tuple[_X, _Y]) -> Tuple[_X2, _Y2]:
-            feature, target = pair
-            return __map_features(feature), __map_targets(target)
-
-        return SupervisedSliceableDataset(self.map(map_func))
-
-    def split(
-        self, *sizes: Optional[Union[int, Fraction]]
-    ) -> Tuple[SupervisedSliceableDataset[_X, _Y], ...]:
-        return tuple(SupervisedSliceableDataset(split) for split in super().split(*sizes))
+SupervisedSliceableDataset = SliceableDataset[Tuple[_X, _Y]]
 
 
 def concatenate(datasets: Iterable[SliceableDataset[_T]]) -> SliceableDataset[_T]:
     return reduce(SliceableDataset[_T].concatenate, datasets)
+
+
+def features(dataset: SupervisedSliceableDataset[_X, _Y]) -> SliceableDataset[_X]:
+    return dataset.map(itemgetter(0))
+
+
+def targets(dataset: SupervisedSliceableDataset[_X, _Y]) -> SliceableDataset[_Y]:
+    return dataset.map(itemgetter(1))
+
+
+def unzip(
+    dataset: SupervisedSliceableDataset[_X, _Y]
+) -> Tuple[SliceableDataset[_X], SliceableDataset[_Y]]:
+    return features(dataset), targets(dataset)
+
+
+def map_features(
+    dataset: SupervisedSliceableDataset[_X, _Y], __map_features: Callable[[_X], _X2]
+) -> SupervisedSliceableDataset[_X2, _Y]:
+    def map_func(pair: Tuple[_X, _Y]) -> Tuple[_X2, _Y]:
+        feature, target = pair
+        return __map_features(feature), target
+
+    return dataset.map(map_func)
+
+
+def map_targets(
+    dataset: SupervisedSliceableDataset[_X, _Y], __map_targets: Callable[[_Y], _Y2]
+) -> SupervisedSliceableDataset[_X, _Y2]:
+    def map_func(pair: Tuple[_X, _Y]) -> Tuple[_X, _Y2]:
+        feature, target = pair
+        return feature, __map_targets(target)
+
+    return dataset.map(map_func)
+
+
+def map_pair(
+    dataset: SupervisedSliceableDataset[_X, _Y],
+    __map_features: Callable[[_X], _X2],
+    __map_targets: Callable[[_Y], _Y2],
+) -> SupervisedSliceableDataset[_X2, _Y2]:
+    def map_func(pair: Tuple[_X, _Y]) -> Tuple[_X2, _Y2]:
+        feature, target = pair
+        return __map_features(feature), __map_targets(target)
+
+    return dataset.map(map_func)
 
 
 def _is_nested_sliceable_dataset(
