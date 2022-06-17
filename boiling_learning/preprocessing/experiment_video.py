@@ -12,12 +12,7 @@ from boiling_learning.io import json
 from boiling_learning.preprocessing.video import Video, VideoFrame, convert_video
 from boiling_learning.utils.dataclasses import dataclass, field
 from boiling_learning.utils.descriptions import describe
-from boiling_learning.utils.utils import (
-    PathLike,
-    dataframe_categories_to_int,
-    merge_dicts,
-    resolve,
-)
+from boiling_learning.utils.utils import PathLike, merge_dicts, resolve
 
 
 class ExperimentVideo:
@@ -187,9 +182,7 @@ class ExperimentVideo:
         convert_video(self.path, dest_path, overwrite=overwrite)
         self.path = dest_path
 
-    def convert_dataframe_type(
-        self, df: pd.DataFrame, categories_as_int: bool = False
-    ) -> pd.DataFrame:
+    def convert_dataframe_type(self, df: pd.DataFrame) -> pd.DataFrame:
         video_data = self.data
 
         assert video_data is not None
@@ -211,9 +204,6 @@ class ExperimentVideo:
             if df[elapsed_time_column].dtype.kind == 'm':
                 df[elapsed_time_column] = df[elapsed_time_column].dt.total_seconds()
 
-        if categories_as_int:
-            df = dataframe_categories_to_int(df, inplace=True)
-
         return df
 
     def make_dataframe(
@@ -221,7 +211,6 @@ class ExperimentVideo:
         recalculate: bool = False,
         exist_load: bool = False,
         enforce_time: bool = False,
-        categories_as_int: bool = False,
         inplace: bool = True,
     ) -> pd.DataFrame:
         if self.df_path is None:
@@ -265,7 +254,7 @@ class ExperimentVideo:
             )
 
         df = pd.DataFrame(data)
-        df = self.convert_dataframe_type(df, categories_as_int=categories_as_int)
+        df = self.convert_dataframe_type(df)
 
         if inplace:
             self.df = df

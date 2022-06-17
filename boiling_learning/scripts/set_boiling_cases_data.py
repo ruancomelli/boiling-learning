@@ -84,7 +84,6 @@ def _set_experiment_video_data(ev: ExperimentVideo, df: pd.DataFrame) -> None:
         recalculate=False,
         exist_load=False,
         enforce_time=True,
-        categories_as_int=True,
         inplace=True,
     )
     check_experiment_video_dataframe_indices(ev)

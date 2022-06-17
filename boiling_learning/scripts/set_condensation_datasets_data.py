@@ -33,14 +33,9 @@ _TIMEDELTA_PATTERN = re.compile(r'(?P<h>\d{2}):(?P<min>\d{2}):(?P<s>\d{2})')
 
 
 @lru_cache(maxsize=None)
-def dataframes_from_gspread(
-    spreadsheet_name: str, credentials: Optional[GoogleCredentials] = None
-) -> Dict[str, pd.DataFrame]:
-    if credentials is None:
-        credentials = GoogleCredentials.get_application_default()
-
-    gc = gspread.authorize(credentials)
-    spreadsheet = gc.open(spreadsheet_name)
+def dataframes_from_gspread(spreadsheet_name: str) -> Dict[str, pd.DataFrame]:
+    auth = gspread.authorize(GoogleCredentials.get_application_default())
+    spreadsheet = auth.open(spreadsheet_name)
 
     return {
         worksheet.title: pd.DataFrame(worksheet.get_all_values())
@@ -210,7 +205,6 @@ def _make_dataframe(dataset: ImageDataset) -> None:
             recalculate=False,
             exist_load=True,
             enforce_time=True,
-            categories_as_int=True,
             inplace=True,
         )
 

@@ -27,7 +27,6 @@ from typing import (
 )
 
 import funcy
-import modin.pandas as pd
 import more_itertools as mit
 from typing_extensions import overload
 
@@ -152,18 +151,6 @@ class KeyedDefaultDict(DefaultDict[_Key, _Value]):
 
         ret = self[key] = self.default_factory(key)  # pylint: disable=not-callable
         return ret
-
-
-def dataframe_categories_to_int(df: pd.DataFrame, inplace: bool = False) -> pd.DataFrame:
-    # See <https://www.tensorflow.org/tutorials/load_data/pandas_dataframe> for the reasoning
-    # behind this
-
-    if not inplace:
-        df = df.copy(deep=True)
-
-    for column in df.select_dtypes(include='category').columns:
-        df[column] = pd.Categorical(list(df[column])).codes
-    return df
 
 
 # ---------------------------------- Path ----------------------------------
