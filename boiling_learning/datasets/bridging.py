@@ -23,6 +23,7 @@ def sliceable_dataset_to_tensorflow_dataset(
     prefetch: int = 0,
     expand_to_batch_size: bool = False,
     deterministic: bool = False,
+    target: Optional[str] = None,
 ) -> tf.data.Dataset:
     creator = partial(
         _create_tensorflow_dataset,
@@ -50,6 +51,9 @@ def sliceable_dataset_to_tensorflow_dataset(
                 dataset.element_spec,
                 reader_func=_make_reader_func(deterministic=deterministic),
             )
+
+    if target is not None:
+        ds = ds.map(lambda feature, targets: (feature, targets[target]))
 
     if cache:
         ds = ds.cache()
