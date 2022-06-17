@@ -105,6 +105,10 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
 
     # Constructors:
     @staticmethod
+    def constantly(value: _T, *, count: int) -> SliceableDataset[_T]:
+        return SliceableDataset.from_sequence((value,)).repeat(count)
+
+    @staticmethod
     def from_getitem(func: Callable[[int], _T], *, length: int) -> GetItemSliceableDataset[_T]:
         return GetItemSliceableDataset(func, length)
 
@@ -136,6 +140,9 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
 
     def concatenate(self, dataset: SliceableDataset[_U]) -> ConcatenateSliceableDataset[_T, _U]:
         return ConcatenateSliceableDataset(self, dataset)
+
+    def repeat(self, count: int) -> SliceableDataset[_T]:
+        return concatenate(self for _ in range(count))
 
     def map(self, __map_func: Callable[[_T], _U]) -> SliceableDataset[_U]:
         return MapSliceableDataset(__map_func, self)

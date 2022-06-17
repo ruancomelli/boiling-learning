@@ -208,9 +208,9 @@ class TestSliceableDataset:
         batched = sds.batch(3)
         batched2 = batched.batch(2)
         batched3 = batched2.batch(5)
-        batched3.flatten()
+        flatten = batched3.flatten()
 
-        # assert ''.join(flatten) == 'abcdefghijklmnopqrstuvwxyz'
+        assert ''.join(flatten) == 'abcdefghijklmnopqrstuvwxyz'
 
     def test_element_spec(self) -> None:
         sds1 = SliceableDataset.from_sequence('abcd')
@@ -259,6 +259,29 @@ class TestSliceableDataset:
             },
             tf.TensorSpec(shape=(), dtype=tf.bool),
         )
+
+    def test_repeat(self) -> None:
+        db = MockDatabaseDataset()
+        repeated = db.repeat(4)
+
+        # fmt: off
+        assert list(repeated) == [
+            0, 1, 4, 9, 16, 25, 36, 49,
+            0, 1, 4, 9, 16, 25, 36, 49,
+            0, 1, 4, 9, 16, 25, 36, 49,
+            0, 1, 4, 9, 16, 25, 36, 49
+        ]
+        # fmt: on
+
+    def test_constantly(self) -> None:
+        constant_dataset = SliceableDataset.constantly(3, count=4)
+
+        assert list(constant_dataset) == [3, 3, 3, 3]
+        assert constant_dataset[0] == 3
+        assert constant_dataset[1] == 3
+        assert constant_dataset[2] == 3
+        assert constant_dataset[3] == 3
+        assert constant_dataset.fetch() == (3, 3, 3, 3)
 
 
 def test_concatenate() -> None:
