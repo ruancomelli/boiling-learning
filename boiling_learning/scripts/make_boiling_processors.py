@@ -1,6 +1,7 @@
 from typing import List, Tuple
 
 from boiling_learning.preprocessing.image import (
+    Cropper,
     Downscaler,
     Grayscaler,
     crop,
@@ -164,15 +165,11 @@ def main(
         ),
         Grayscaler(),
         Downscaler(downscale_factor),
-        Transformer(
-            'visualization_shrinker',
-            crop,
-            pack=P(
-                left=0,
-                right_border=0,
-                height=(direct_height if direct_visualization else indirect_height),
-                bottom_border=(0 if direct_visualization else indirect_height_ratio),
-            ),
+        Cropper(
+            left=0,
+            right_border=0,
+            height=(direct_height if direct_visualization else indirect_height),
+            bottom_border=(0 if direct_visualization else indirect_height_ratio),
         ),
         Transformer('random_cropper', random_crop, pack=P(width=width)),
     ]

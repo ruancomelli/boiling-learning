@@ -35,6 +35,39 @@ class Downscaler(Transformer[VideoFrame, VideoFrame]):
         super().__init__('downscaler', downscale, pack=P(factors=factors))
 
 
+class Cropper(Transformer[VideoFrame, VideoFrame]):
+    def __init__(
+        self,
+        left: Optional[Union[int, float, Fraction]] = None,
+        right: Optional[Union[int, float, Fraction]] = None,
+        right_border: Optional[Union[int, float, Fraction]] = None,
+        width: Optional[Union[int, float, Fraction]] = None,
+        top: Optional[Union[int, float, Fraction]] = None,
+        bottom: Optional[Union[int, float, Fraction]] = None,
+        bottom_border: Optional[Union[int, float, Fraction]] = None,
+        height: Optional[Union[int, float, Fraction]] = None,
+    ) -> None:
+        pack = P(
+            **{
+                key: value
+                for key, value in {
+                    'left': left,
+                    'right': right,
+                    'right_border': right_border,
+                    'width': width,
+                    'top': top,
+                    'bottom': bottom,
+                    'bottom_border': bottom_border,
+                    'height': height,
+                }.items()
+                # remove `None`s to avoid polluting the `pack` argument
+                if value is not None
+            }
+        )
+
+        super().__init__('cropper', crop, pack=pack)
+
+
 @dataclass
 class Shape:
     height: int
