@@ -1,5 +1,11 @@
 
 
+## v0.26.6 (2022-06-16)
+
+### Feat
+
+- **datasets/bridging**: support getting targets
+
 ## v0.26.5 (2022-06-16)
 
 ### Fix
