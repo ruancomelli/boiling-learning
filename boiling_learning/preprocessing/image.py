@@ -2,7 +2,6 @@ import typing
 from fractions import Fraction
 from typing import Optional, Sequence, Tuple, Union, overload
 
-import albumentations as A
 import numpy as np
 import tensorflow as tf
 from scipy.stats import entropy
@@ -13,7 +12,6 @@ from skimage.transform import resize
 
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.preprocessing.video import VideoFrame
-from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.functional import P
 
 VideoFrames = Sequence[VideoFrame]
@@ -79,16 +77,6 @@ class RandomCropper(Transformer[VideoFrame, VideoFrame]):
         )
 
         super().__init__('random_cropper', random_crop, pack=pack)
-
-
-@dataclass
-class Shape:
-    height: int
-    width: int
-
-
-def shape(image: VideoFrame) -> Shape:
-    return Shape(height=image.shape[0], width=image.shape[1])
 
 
 @overload
@@ -258,38 +246,6 @@ def random_crop(
         raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
 
     return typing.cast(VideoFrame, tf.image.random_crop(image, size).numpy())
-
-
-def random_flip_left_right(image: VideoFrame) -> VideoFrame:
-    return typing.cast(VideoFrame, A.HorizontalFlip(p=0.5).apply(image))
-
-
-def random_brightness_contrast(
-    image: VideoFrame,
-    brightness_delta: Union[float, Tuple[float, float]],
-    contrast_delta: Union[float, Tuple[float, float]],
-) -> VideoFrame:
-    return typing.cast(
-        VideoFrame,
-        A.RandomBrightnessContrast(brightness_delta, contrast_delta, always_apply=True).apply(
-            image
-        ),
-    )
-
-
-def random_jpeg_quality(image: VideoFrame, min_quality: int, max_quality: int = 100) -> VideoFrame:
-    if image.dtype.type is np.float64:
-        image = image.astype(np.float32)
-
-    return typing.cast(
-        VideoFrame,
-        A.ImageCompression(
-            min_quality,
-            max_quality,
-            compression_type=A.ImageCompression.ImageCompressionType.JPEG,
-            always_apply=True,
-        ).apply(image),
-    )
 
 
 def normalized_mutual_information(
