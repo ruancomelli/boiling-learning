@@ -75,7 +75,13 @@ DEFAULT_ANNOTATORS = frozendict(
     }
 )
 
-_first_arg_getter = Transformer('first_argument', nth_arg(0))
+
+class FirstArgGetter(Transformer):
+    def __init__(self) -> None:
+        super().__init__(nth_arg(0))
+
+
+_first_arg_getter = FirstArgGetter()
 
 DEFAULT_VISUALIZERS = frozendict(
     {
