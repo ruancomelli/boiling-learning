@@ -1,9 +1,8 @@
 from typing import Dict, List, Union
 
-from boiling_learning.preprocessing.image import Cropper, Downscaler, Grayscaler, random_crop
+from boiling_learning.preprocessing.image import Cropper, Downscaler, Grayscaler, RandomCropper
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.preprocessing.video import VideoFrame
-from boiling_learning.utils.functional import P
 
 ExperimentVideoName = str
 
@@ -165,7 +164,7 @@ def main(
             height=(direct_height if direct_visualization else indirect_height),
             bottom_border=(0 if direct_visualization else indirect_height_ratio),
         ),
-        Transformer('random_cropper', random_crop, pack=P(width=width)),
+        RandomCropper(width=width),
     ]
 
 

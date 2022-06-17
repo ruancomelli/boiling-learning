@@ -9,7 +9,6 @@ from scipy.stats import entropy
 from skimage.exposure import histogram
 from skimage.measure import shannon_entropy
 from skimage.metrics import structural_similarity as ssim
-from skimage.transform import downscale_local_mean as _downscale
 from skimage.transform import resize
 
 from boiling_learning.preprocessing.transformers import Transformer
@@ -68,6 +67,20 @@ class Cropper(Transformer[VideoFrame, VideoFrame]):
         super().__init__('cropper', crop, pack=pack)
 
 
+class RandomCropper(Transformer[VideoFrame, VideoFrame]):
+    def __init__(self, width: Optional[int] = None, height: Optional[int] = None) -> None:
+        pack = P(
+            **{
+                key: value
+                for key, value in {'width': width, 'height': height}.items()
+                # remove `None`s to avoid polluting the `pack` argument
+                if value is not None
+            }
+        )
+
+        super().__init__('random_cropper', random_crop, pack=pack)
+
+
 @dataclass
 class Shape:
     height: int
@@ -106,8 +119,14 @@ def crop(
     bottom_border: Optional[Union[int, float, Fraction]] = None,
     height: Optional[Union[int, float, Fraction]] = None,
 ) -> VideoFrame:
-    total_height: int = image.shape[0]
-    total_width: int = image.shape[1]
+    if image.ndim == 3:
+        total_height = image.shape[0]
+        total_width = image.shape[1]
+    elif image.ndim == 4:
+        total_height = image.shape[1]
+        total_width = image.shape[2]
+    else:
+        raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
 
     left = _ratio_to_size(image, left, axis=1)
     right = _ratio_to_size(image, right, axis=1)
@@ -177,19 +196,43 @@ def crop(
 
 
 def downscale(image: VideoFrame, factors: Union[int, Tuple[int, int]]) -> VideoFrame:
-    if isinstance(factors, int):
-        factors = (factors, factors)
+    # 4-D Tensor of shape [batch, height, width, channels] or 3-D Tensor of shape
+    # [height, width, channels].
+    if image.ndim == 3:
+        height = image.shape[0]
+        width = image.shape[1]
+    elif image.ndim == 4:
+        height = image.shape[1]
+        width = image.shape[2]
+    else:
+        raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
 
-    return typing.cast(VideoFrame, _downscale(image, factors))
+    if isinstance(factors, int):
+        height_factor, width_factor = factors, factors
+    else:
+        height_factor, width_factor = factors
+
+    return typing.cast(
+        VideoFrame,
+        tf.image.resize(
+            image,
+            (height // height_factor, width // width_factor),
+        ).numpy(),
+    )
 
 
 def grayscale(image: VideoFrame) -> VideoFrame:
-    image = image.squeeze()
-    return (tf.image.rgb_to_grayscale(image).numpy() if image.ndim > 2 else image).squeeze()
+    if image.ndim not in {3, 4}:
+        raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
+
+    if image.shape[-1] != 3:
+        raise RuntimeError('expected image to contain 3 color channels')
+
+    return tf.image.rgb_to_grayscale(image).numpy()
 
 
 def normalize_image(image: VideoFrame) -> VideoFrame:
-    return tf.image.per_image_standardization(image).numpy().squeeze()
+    return tf.image.per_image_standardization(image).numpy()
 
 
 def random_crop(
@@ -198,15 +241,23 @@ def random_crop(
     height: Optional[int] = None,
     width: Optional[int] = None,
 ) -> VideoFrame:
-    default_height, default_width = image.shape[:2]
-    return typing.cast(
-        VideoFrame,
-        A.RandomCrop(
-            height=height if height is not None else default_height,
-            width=width if width is not None else default_width,
-            always_apply=True,
-        ).apply(image),
-    )
+    if image.ndim == 3:
+        total_height = image.shape[0]
+        total_width = image.shape[1]
+        number_of_channels = image.shape[2]
+
+        size = (height or total_height, width or total_width, number_of_channels)
+    elif image.ndim == 4:
+        batch_size = image.shape[0]
+        total_height = image.shape[1]
+        total_width = image.shape[2]
+        number_of_channels = image.shape[3]
+
+        size = (batch_size, height or total_height, width or total_width, number_of_channels)
+    else:
+        raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
+
+    return typing.cast(VideoFrame, tf.image.random_crop(image, size).numpy())
 
 
 def random_flip_left_right(image: VideoFrame) -> VideoFrame:
@@ -305,6 +356,7 @@ def normalized_mutual_information(
 
 
 def structural_similarity_ratio(ref: VideoFrame, image: VideoFrame) -> float:
+    # TODO: use https://www.tensorflow.org/api_docs/python/tf/image/ssim?
     # see
     # <https://www.wikiwand.com/en/Structural_similarity#/Application_of_the_formula>
     WINDOW_SIZE = 11
