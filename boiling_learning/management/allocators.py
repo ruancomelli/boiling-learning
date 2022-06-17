@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Callable, Generic, TypeVar
 
 from classes import AssociatedType, Supports, typeclass
+from loguru import logger
 from tinydb import TinyDB
 from tinydb.table import Table
 from tinydb_smartcache import SmartCacheTable
@@ -94,9 +95,15 @@ class JSONTableAllocator(Allocator):
         return self.db.insert(serialized)
 
     def __call__(self, pack: Pack[Any, Any]) -> Path:
-        serialized: json.JSONDataType = self.describer(pack.pair())
+        logger.debug(f'Allocating path for args {pack}')
+
+        serialized = self.describer(pack.pair())
+        logger.debug(f'Described arguments: {serialized}')
+
         doc_id: int = self._provide(serialized)
-        return self._doc_path(doc_id)
+        path = self._doc_path(doc_id)
+        logger.debug(f'Allocated path is {path}')
+        return path
 
 
 def default_table_allocator(
