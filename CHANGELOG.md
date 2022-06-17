@@ -1,5 +1,15 @@
 
 
+## v0.28.2 (2022-06-17)
+
+### Refactor
+
+- **scripts/run_experiment**: comment out currently unused script
+
+### Feat
+
+- **management/allocators**: add logging to `JSONTableAllocator`
+
 ## v0.28.1 (2022-06-17)
 
 ### Feat
