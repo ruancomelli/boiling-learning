@@ -1,5 +1,13 @@
 
 
+## v0.27.1 (2022-06-17)
+
+### Fix
+
+- **preprocessing/visualize**: remove usage of `DictTransformer`
+- **preprocessing/image**: use TF to transform all images
+- **preprocessing/image**: correctly convert all transformed data to numpy and squeeze arrays
+
 ## v0.27.0 (2022-06-17)
 
 ### Refactor
