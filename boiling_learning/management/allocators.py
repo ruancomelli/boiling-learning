@@ -97,7 +97,8 @@ class JSONTableAllocator(Allocator):
     def __call__(self, pack: Pack[Any, Any]) -> Path:
         logger.debug(f'Allocating path for args {pack}')
 
-        serialized = self.describer(pack.pair())
+        args, kwargs = pack.pair()  # this normalizes `Pack` and `P`
+        serialized = self.describer(Pack(args, kwargs))
         logger.debug(f'Described arguments: {serialized}')
 
         doc_id: int = self._provide(serialized)

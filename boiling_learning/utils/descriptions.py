@@ -60,21 +60,10 @@ def _describe_tuple(
     return tuple(describe(item) for item in instance)
 
 
-class _DictOfDescribableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
-        return isinstance(instance, dict) and all(isinstance(key, str) for key in instance)
-
-
-class DictOfDescribable(
-    Dict[str, Supports[Describable[_Description]]],
-    Generic[_Description],
-    metaclass=_DictOfDescribableMeta,
-):
-    ...
-
-
-@describe.instance(delegate=DictOfDescribable)
-def _describe_dict(instance: DictOfDescribable[_Description]) -> Dict[str, _Description]:
+@describe.instance(dict)
+def _describe_dict(
+    instance: Dict[str, Supports[Describable[_Description]]]
+) -> Dict[str, _Description]:
     return {key: describe(value) for key, value in instance.items()}
 
 
