@@ -1,6 +1,6 @@
 import typing
 from fractions import Fraction
-from typing import Optional, Sequence, Tuple, Union, overload
+from typing import Optional, Tuple, Union, overload
 
 import numpy as np
 import tensorflow as tf
@@ -14,22 +14,20 @@ from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.preprocessing.video import VideoFrame
 from boiling_learning.utils.functional import P
 
-VideoFrames = Sequence[VideoFrame]
-
 
 class Grayscaler(Transformer[VideoFrame, VideoFrame]):
     def __init__(self) -> None:
-        super().__init__('grayscale', grayscale, P())
+        super().__init__(grayscale, P())
 
 
 class ImageNormalizer(Transformer[VideoFrame, VideoFrame]):
     def __init__(self) -> None:
-        super().__init__('normalize_image', normalize_image, P())
+        super().__init__(normalize_image, P())
 
 
 class Downscaler(Transformer[VideoFrame, VideoFrame]):
     def __init__(self, factors: Union[int, Tuple[int, int]]) -> None:
-        super().__init__('downscaler', downscale, pack=P(factors=factors))
+        super().__init__(downscale, pack=P(factors=factors))
 
 
 class Cropper(Transformer[VideoFrame, VideoFrame]):
@@ -62,7 +60,7 @@ class Cropper(Transformer[VideoFrame, VideoFrame]):
             }
         )
 
-        super().__init__('cropper', crop, pack=pack)
+        super().__init__(crop, pack=pack)
 
 
 class RandomCropper(Transformer[VideoFrame, VideoFrame]):
@@ -76,23 +74,7 @@ class RandomCropper(Transformer[VideoFrame, VideoFrame]):
             }
         )
 
-        super().__init__('random_cropper', random_crop, pack=pack)
-
-
-@overload
-def _ratio_to_size(image: VideoFrame, x: Union[int, float, Fraction], *, axis: int) -> int:
-    ...
-
-
-@overload
-def _ratio_to_size(image: VideoFrame, x: None, *, axis: int) -> None:
-    ...
-
-
-def _ratio_to_size(
-    image: VideoFrame, x: Optional[Union[int, float, Fraction]], *, axis: int
-) -> Optional[int]:
-    return int(x * image.shape[axis]) if isinstance(x, (float, Fraction)) else x
+        super().__init__(random_crop, pack=pack)
 
 
 def crop(
@@ -181,6 +163,22 @@ def crop(
         target_height=bottom - top,
         target_width=right - left,
     ).numpy()
+
+
+@overload
+def _ratio_to_size(image: VideoFrame, x: Union[int, float, Fraction], *, axis: int) -> int:
+    ...
+
+
+@overload
+def _ratio_to_size(image: VideoFrame, x: None, *, axis: int) -> None:
+    ...
+
+
+def _ratio_to_size(
+    image: VideoFrame, x: Optional[Union[int, float, Fraction]], *, axis: int
+) -> Optional[int]:
+    return int(x * image.shape[axis]) if isinstance(x, (float, Fraction)) else x
 
 
 def downscale(image: VideoFrame, factors: Union[int, Tuple[int, int]]) -> VideoFrame:

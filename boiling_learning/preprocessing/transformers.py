@@ -16,31 +16,15 @@ _Y = TypeVar('_Y')
 
 
 class Transformer(SimpleStr, Generic[_X, _Y]):
-    def __init__(
-        self,
-        name: str,
-        f: CallableWithFirst[_X, _Y],
-        pack: Pack[Any, Any] = Pack(),
-    ) -> None:
-        self.__name__ = name
+    def __init__(self, f: CallableWithFirst[_X, _Y], pack: Pack[Any, Any] = Pack()) -> None:
         self._call: Callable[[_X], _Y] = pack.rpartial(f)
         self.pack: Pack[Any, Any] = pack
-
-    @property
-    def name(self) -> str:
-        return self.__name__
 
     def __call__(self, arg: _X) -> _Y:
         return self._call(arg)
 
     def __describe__(self) -> json.JSONDataType:
-        return json.serialize(
-            {
-                'type': self.__class__.__name__,
-                'name': self.name,
-                'pack': self.pack,
-            }
-        )
+        return json.serialize({'type': self.__class__.__name__, 'pack': self.pack})
 
 
 @json.encode.instance(Transformer)
