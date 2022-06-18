@@ -11,8 +11,11 @@ from pint import Quantity
 
 from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, serialize
+from boiling_learning.model.layers import ImageNormalization, RandomBrightness
 from boiling_learning.utils.units import unit_registry as ureg
 from boiling_learning.utils.utils import resolve
+
+_CUSTOM_LAYERS = (ImageNormalization, RandomBrightness)
 
 
 class ModelArchitecture:
@@ -54,7 +57,12 @@ def _deserialize_model(path: Path, _metadata: Metadata) -> ModelArchitecture:
     if not model_weights_path.is_file():
         raise FileNotFoundError(str(model_weights_path))
 
-    architecture = ModelArchitecture(tf.keras.models.model_from_json(model_json_path.read_text()))
+    architecture = ModelArchitecture(
+        tf.keras.models.model_from_json(
+            model_json_path.read_text(),
+            custom_objects={layer.__name__: layer for layer in _CUSTOM_LAYERS},
+        )
+    )
     architecture.model.load_weights(str(model_weights_path))
     return architecture
 
