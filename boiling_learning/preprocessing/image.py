@@ -8,6 +8,7 @@ from scipy.stats import entropy
 from skimage.exposure import histogram
 from skimage.measure import shannon_entropy
 from skimage.metrics import structural_similarity as ssim
+from skimage.transform import downscale_local_mean as _downscale
 from skimage.transform import resize
 
 from boiling_learning.preprocessing.transformers import Transformer
@@ -191,6 +192,27 @@ def _ratio_to_size(
 
 
 def downscale(image: VideoFrame, factors: Union[int, Tuple[int, int]]) -> VideoFrame:
+    # 4-D Tensor of shape [batch, height, width, channels] or 3-D Tensor of shape
+    # [height, width, channels].
+
+    if isinstance(factors, int):
+        height_factor, width_factor = factors, factors
+    else:
+        height_factor, width_factor = factors
+
+    CHANNEL_FACTOR = 1
+    if image.ndim == 3:
+        downscale_factors = (height_factor, width_factor, CHANNEL_FACTOR)
+    elif image.ndim == 4:
+        BATCH_FACTOR = 1
+        downscale_factors = (BATCH_FACTOR, height_factor, width_factor, CHANNEL_FACTOR)
+    else:
+        raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
+
+    return typing.cast(VideoFrame, _downscale(image, downscale_factors))
+
+
+def _downscale_tf(image: VideoFrame, factors: Union[int, Tuple[int, int]]) -> VideoFrame:
     # 4-D Tensor of shape [batch, height, width, channels] or 3-D Tensor of shape
     # [height, width, channels].
     if image.ndim == 3:
