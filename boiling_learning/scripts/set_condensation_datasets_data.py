@@ -74,13 +74,17 @@ def main(
     return grouped_datasets
 
 
-def _generate_fps_getter(fps_cache_path: Optional[PathLike]) -> Callable[[Video], float]:
+def _generate_fps_getter(fps_cache_path: Optional[PathLike]) -> Callable[[ExperimentVideo], float]:
     if fps_cache_path is None:
-        return Video.fps
+        return _get_ev_fps
 
     allocator = default_table_allocator(fps_cache_path)
     cacher = cache(allocator, saver=json.dump, loader=json.load)
-    return cacher(Video.fps)
+    return cacher(_get_ev_fps)
+
+
+def _get_ev_fps(ev: ExperimentVideo) -> float:
+    return Video(ev.path).fps()
 
 
 def _set_mass_rate(grouped_datasets: Tuple[ImageDataset, ...], spreadsheet_name: str) -> None:
@@ -115,7 +119,10 @@ def _parse_mass_timeseries(
 
 
 def _set_dataset_data(
-    dataset: ImageDataset, dataspec: Dict[str, Any], *, fps_getter: Callable[[Video], float]
+    dataset: ImageDataset,
+    dataspec: Dict[str, Any],
+    *,
+    fps_getter: Callable[[ExperimentVideo], float],
 ) -> None:
     logger.debug(f'Reading condensation dataset {dataset.name}')
 
@@ -124,7 +131,10 @@ def _set_dataset_data(
 
 
 def _set_ev_data(
-    ev: ExperimentVideo, dataspec: Dict[str, Any], *, fps_getter: Callable[[Video], float]
+    ev: ExperimentVideo,
+    dataspec: Dict[str, Any],
+    *,
+    fps_getter: Callable[[ExperimentVideo], float],
 ) -> None:
     case, subcase, test_name, video_name = ev.name.split(':')
 
