@@ -1,5 +1,12 @@
 
 
+## v0.29.1 (2022-06-18)
+
+### Fix
+
+- **preprocessing/image**: re-use skimage downscale function
+- **model/model**: pass custom layers to `tf.keras.models.model_from_json` as `custom_objects`
+
 ## v0.29.0 (2022-06-18)
 
 ### Feat
