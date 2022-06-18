@@ -129,9 +129,13 @@ def _set_ev_data(ev: ExperimentVideo, dataspec: Dict[str, Any]) -> None:
 
     categories['case'] = f'{case}:{subcase}'
 
-    videospec = dataspec['cases'][case]['subcases'][subcase]['tests'][test_name]['videos'][
-        f'{video_name}.mp4'
-    ]
+    try:
+        videospec = dataspec['cases'][case]['subcases'][subcase]['tests'][test_name]['videos'][
+            f'{video_name}.mp4'
+        ]
+    except KeyError:
+        # skip cases for which no data is available
+        return
 
     logger.debug(f'Getting video data for EV "{ev.name}"')
 
