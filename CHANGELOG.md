@@ -1,5 +1,23 @@
 
 
+## v0.29.0 (2022-06-18)
+
+### Feat
+
+- **scripts/set_condensation_datasets_data**: add experiment video case:subcase to its categories
+- **preprocessing/transformers**: add `__str__` method to transformers
+
+### Refactor
+
+- **scripts**: remove unnecessary FPS cache
+
+### Fix
+
+- **model/definitions**: normalize images by default
+- **scripts**: correctly get FPS from experiment videos
+- **scripts**: add step for converting images to `float32`
+- **management/allocators**: normalize packs to facilitate description matches
+
 ## v0.28.2 (2022-06-17)
 
 ### Refactor
