@@ -26,6 +26,12 @@ class Transformer(SimpleStr, Generic[_X, _Y]):
     def __describe__(self) -> json.JSONDataType:
         return json.serialize({'type': self.__class__.__name__, 'pack': self.pack})
 
+    def __str__(self) -> str:
+        args = ', '.join(str(arg) for arg in self.pack.args)
+        kwargs = ', '.join(f'{key}={value}' for key, value in self.pack.kwargs.items())
+        arguments = f'{args}, {kwargs}' if args and kwargs else args or kwargs
+        return f'<{self.__class__.__name__} ({arguments})>'
+
 
 @json.encode.instance(Transformer)
 def _encode_transformer(instance: Transformer[Any, Any]) -> json.JSONDataType:
