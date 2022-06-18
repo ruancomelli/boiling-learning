@@ -17,7 +17,6 @@ from tensorflow.keras.layers import (
     Input,
     Lambda,
     Layer,
-    LayerNormalization,
     MaxPool2D,
     ReLU,
     SeparableConv2D,
@@ -27,6 +26,7 @@ from tensorflow.keras.layers import (
 )
 from tensorflow.keras.mixed_precision.experimental import Policy
 
+from boiling_learning.model.layers import ImageNormalization
 from boiling_learning.model.model import ModelArchitecture, ProblemType
 
 # Check this guideline:
@@ -48,7 +48,7 @@ def tiny_convnet(
     output_layer_policy: Optional[Union[str, Policy]] = None,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
-    normalize_images: bool = False,
+    normalize_images: bool = True,
 ) -> ModelArchitecture:
     # start "current layer" as the input layer
     inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
@@ -57,7 +57,7 @@ def tiny_convnet(
     x = AveragePooling2D((10, 10))(x)
 
     if normalize_images:
-        x = LayerNormalization()(x)
+        x = ImageNormalization()(x)
     if dropout is not None:
         x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
@@ -81,14 +81,14 @@ def small_convnet(
     output_layer_policy: Optional[Union[str, Policy]] = None,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
-    normalize_images: bool = False,
+    normalize_images: bool = True,
 ) -> ModelArchitecture:
     # start "current layer" as the input layer
     inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
     x = inputs
 
     if normalize_images:
-        x = LayerNormalization()(x)
+        x = ImageNormalization()(x)
 
     x = Conv2D(
         16,
@@ -125,7 +125,7 @@ def hoboldnet1(
     output_layer_policy: Optional[Union[str, Policy]] = None,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
-    normalize_images: bool = False,
+    normalize_images: bool = True,
 ) -> ModelArchitecture:
     '''CNN #1 implemented according to the paper Hobold and da Silva (2019):
     Visualization-based nucleate boiling heat flux quantification using machine
@@ -136,7 +136,7 @@ def hoboldnet1(
     x = inputs
 
     if normalize_images:
-        x = LayerNormalization()(x)
+        x = ImageNormalization()(x)
 
     x = Conv2D(
         16,
@@ -173,7 +173,7 @@ def hoboldnet2(
     output_layer_policy: Optional[Union[str, Policy]] = None,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
-    normalize_images: bool = False,
+    normalize_images: bool = True,
 ) -> ModelArchitecture:
     '''CNN #2 implemented according to the paper Hobold and da Silva (2019):
     Visualization-based nucleate boiling heat flux quantification using machine
@@ -184,7 +184,7 @@ def hoboldnet2(
     x = inputs
 
     if normalize_images:
-        x = LayerNormalization()(x)
+        x = ImageNormalization()(x)
 
     x = Conv2D(
         32,
@@ -221,7 +221,7 @@ def hoboldnet3(
     output_layer_policy: Optional[Union[str, Policy]] = None,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
-    normalize_images: bool = False,
+    normalize_images: bool = True,
 ) -> ModelArchitecture:
     '''CNN #3 implemented according to the paper Hobold and da Silva (2019):
     Visualization-based nucleate boiling heat flux quantification using machine
@@ -232,7 +232,7 @@ def hoboldnet3(
     x = inputs
 
     if normalize_images:
-        x = LayerNormalization()(x)
+        x = ImageNormalization()(x)
 
     x = Conv2D(
         32,
@@ -277,7 +277,7 @@ def hoboldnet_supplementary(
     output_layer_policy: Optional[Union[str, Policy]] = None,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
-    normalize_images: bool = False,
+    normalize_images: bool = True,
 ) -> ModelArchitecture:
     '''See supplementary material for Hobold and da Silva (2019): Visualization-based
     nucleate boiling heat flux quantification using machine learning.
@@ -287,7 +287,7 @@ def hoboldnet_supplementary(
     x = inputs
 
     if normalize_images:
-        x = LayerNormalization()(x)
+        x = ImageNormalization()(x)
 
     x = Conv2D(
         32,
@@ -332,7 +332,7 @@ def kramernet(
     output_layer_policy: Optional[Union[str, Policy]] = None,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: Optional[int] = None,
-    normalize_images: bool = False,
+    normalize_images: bool = True,
 ) -> ModelArchitecture:
     '''See supplementary material for Hobold and da Silva (2019): Visualization-based
     nucleate boiling heat flux quantification using machine learning.
@@ -342,7 +342,7 @@ def kramernet(
     x = inputs
 
     if normalize_images:
-        x = LayerNormalization()(x)
+        x = ImageNormalization()(x)
 
     x = Conv2D(
         64,
@@ -422,12 +422,12 @@ def kramernet(
 def linear_model(
     input_shape: Tuple[int, ...],
     problem: ProblemType = ProblemType.REGRESSION,
-    normalize_images: bool = False,
+    normalize_images: bool = True,
 ) -> ModelArchitecture:
     inputs = Input(shape=input_shape)
     x = inputs  # start "current layer" as the input layer
     if normalize_images:
-        x = LayerNormalization()(x)
+        x = ImageNormalization()(x)
 
     if problem is not ProblemType.REGRESSION:
         raise ValueError(f'unsupported problem type: \"{problem}\"')
@@ -459,7 +459,7 @@ def boilnet(
     flattening: FlatteningMode = FlatteningMode.FLATTEN,
     problem: ProblemType = ProblemType.REGRESSION,
     num_classes: int = 0,
-    normalize_images: bool = False,
+    normalize_images: bool = True,
 ) -> ModelArchitecture:
     input_shape = (time_window, *image_shape) if time_window > 0 else image_shape
     flatten_layer = {
@@ -470,7 +470,7 @@ def boilnet(
 
     inputs = Input(shape=input_shape)
 
-    normalized = LayerNormalization()(inputs) if normalize_images else inputs
+    normalized = ImageNormalization()(inputs) if normalize_images else inputs
     distribute = TimeDistributed if time_window > 0 else funcy.identity
     if spatial_dropout is not None:
         spatial_dropouter = partial(SpatialDropout2D, spatial_dropout)
