@@ -2,7 +2,7 @@ import re
 import time
 from datetime import timedelta
 from functools import lru_cache
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import gspread
 import modin.pandas as pd
@@ -12,9 +12,6 @@ from loguru import logger
 from oauth2client.client import GoogleCredentials
 from sklearn.linear_model import LinearRegression
 
-from boiling_learning.io import json
-from boiling_learning.management.allocators import default_table_allocator
-from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.video import Video
@@ -32,23 +29,11 @@ _SUBCASE_PATTERNS = frozendict(
 _TIMEDELTA_PATTERN = re.compile(r'(?P<h>\d{2}):(?P<min>\d{2}):(?P<s>\d{2})')
 
 
-@lru_cache(maxsize=None)
-def dataframes_from_gspread(spreadsheet_name: str) -> Dict[str, pd.DataFrame]:
-    auth = gspread.authorize(GoogleCredentials.get_application_default())
-    spreadsheet = auth.open(spreadsheet_name)
-
-    return {
-        worksheet.title: pd.DataFrame(worksheet.get_all_values())
-        for worksheet in spreadsheet.worksheets()
-    }
-
-
 def main(
     datasets: Iterable[ImageDataset],
     dataspecpath: PathLike,
-    spreadsheet_name: Optional[str] = None,
     *,
-    fps_cache_path: Optional[PathLike] = None,
+    spreadsheet_name: Optional[str] = None,
 ) -> Tuple[ImageDataset, ...]:
     logger.info('Setting condensation data')
 
@@ -56,10 +41,11 @@ def main(
     dataspecpath = resolve(dataspecpath)
     dataspec = yaml.safe_load(dataspecpath.read_text())
 
-    fps_getter = _generate_fps_getter(fps_cache_path)
-
     for dataset in datasets:
-        _set_dataset_data(dataset, dataspec, fps_getter=fps_getter)
+        logger.debug(f'Reading condensation dataset {dataset.name}')
+
+        for ev in dataset:
+            _set_ev_data(ev, dataspec)
 
     grouped_datasets = _group_datasets(datasets)
 
@@ -74,32 +60,30 @@ def main(
     return grouped_datasets
 
 
-def _generate_fps_getter(fps_cache_path: Optional[PathLike]) -> Callable[[ExperimentVideo], float]:
-    if fps_cache_path is None:
-        return _get_ev_fps
-
-    allocator = default_table_allocator(fps_cache_path)
-    cacher = cache(allocator, saver=json.dump, loader=json.load)
-    return cacher(_get_ev_fps)
-
-
-def _get_ev_fps(ev: ExperimentVideo) -> float:
-    return Video(ev.path).fps()
-
-
 def _set_mass_rate(grouped_datasets: Tuple[ImageDataset, ...], spreadsheet_name: str) -> None:
     for dataset in grouped_datasets:
         for ev in dataset:
             if 'mass_rate' in ev.df.columns:
                 continue
 
-            mass_data = dataframes_from_gspread(spreadsheet_name)
+            mass_data = _dataframes_from_gspread(spreadsheet_name)
             case_name, subcase_name, test_name, _ = ev.name.split(':')
             df = _parse_mass_timeseries(mass_data, case_name, subcase_name, test_name)
             ev.df['mass_rate'] = _calculate_mass_rate(
                 df, elapsed_time_column='elapsed_time', mass_column='mass'
             )
             ev.save_df(overwrite=True)
+
+
+@lru_cache(maxsize=None)
+def _dataframes_from_gspread(spreadsheet_name: str) -> Dict[str, pd.DataFrame]:
+    auth = gspread.authorize(GoogleCredentials.get_application_default())
+    spreadsheet = auth.open(spreadsheet_name)
+
+    return {
+        worksheet.title: pd.DataFrame(worksheet.get_all_values())
+        for worksheet in spreadsheet.worksheets()
+    }
 
 
 def _parse_mass_timeseries(
@@ -118,24 +102,7 @@ def _parse_mass_timeseries(
     return df
 
 
-def _set_dataset_data(
-    dataset: ImageDataset,
-    dataspec: Dict[str, Any],
-    *,
-    fps_getter: Callable[[ExperimentVideo], float],
-) -> None:
-    logger.debug(f'Reading condensation dataset {dataset.name}')
-
-    for ev in dataset:
-        _set_ev_data(ev, dataspec, fps_getter=fps_getter)
-
-
-def _set_ev_data(
-    ev: ExperimentVideo,
-    dataspec: Dict[str, Any],
-    *,
-    fps_getter: Callable[[ExperimentVideo], float],
-) -> None:
+def _set_ev_data(ev: ExperimentVideo, dataspec: Dict[str, Any]) -> None:
     case, subcase, test_name, video_name = ev.name.split(':')
 
     # TODO: add average mass rate to categories?
@@ -164,15 +131,11 @@ def _set_ev_data(
         f'{video_name}.mp4'
     ]
 
-    logger.debug(f'Getting FPS for EV "{ev.name}"')
-
-    fps = fps_getter(ev)
-
     logger.debug(f'Getting video data for EV "{ev.name}"')
 
     videodata = ExperimentVideo.VideoData(
         categories=categories,
-        fps=fps,
+        fps=Video(ev.path).fps(),
         # since there is no syncing between video and experimental data here,
         # we simply set the first frame as the reference
         ref_index=0,
