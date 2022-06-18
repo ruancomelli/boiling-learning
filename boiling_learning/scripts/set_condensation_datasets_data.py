@@ -125,7 +125,9 @@ def _set_ev_data(ev: ExperimentVideo, dataspec: Dict[str, Any]) -> None:
                     categories[change] = match[0]
                     break
     else:
-        return
+        categories = {}
+
+    categories['case'] = f'{case}:{subcase}'
 
     videospec = dataspec['cases'][case]['subcases'][subcase]['tests'][test_name]['videos'][
         f'{video_name}.mp4'
