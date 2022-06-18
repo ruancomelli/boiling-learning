@@ -1,5 +1,11 @@
 
 
+## v0.29.2 (2022-06-18)
+
+### Fix
+
+- **scripts/set_condensation_datasets_data**: skip cases for which no data is available
+
 ## v0.29.1 (2022-06-18)
 
 ### Fix
