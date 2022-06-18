@@ -1,6 +1,12 @@
 from typing import Dict, List, Union
 
-from boiling_learning.preprocessing.image import Cropper, Downscaler, Grayscaler, RandomCropper
+from boiling_learning.preprocessing.image import (
+    ConvertImageDType,
+    Cropper,
+    Downscaler,
+    Grayscaler,
+    RandomCropper,
+)
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.preprocessing.video import VideoFrame
 
@@ -156,6 +162,7 @@ def main(
             'GOPR2959': Cropper(left=980, right=1810, top=400, bottom=1350),
             'GOPR2960': Cropper(left=980, right=1810, top=400, bottom=1350),
         },
+        ConvertImageDType('float32'),
         Grayscaler(),
         Downscaler(downscale_factor),
         Cropper(

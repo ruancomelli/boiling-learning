@@ -1,6 +1,12 @@
 from typing import Dict, List, Union
 
-from boiling_learning.preprocessing.image import Cropper, Downscaler, Grayscaler, RandomCropper
+from boiling_learning.preprocessing.image import (
+    ConvertImageDType,
+    Cropper,
+    Downscaler,
+    Grayscaler,
+    RandomCropper,
+)
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.preprocessing.video import VideoFrame
 
@@ -100,6 +106,7 @@ def main(
             'parametric:rh 90%:test 5:00013': Cropper(left=744, right=1307, top=231, bottom=802),
             'parametric:rh 90%:test 5:00012': Cropper(left=744, right=1312, top=226, bottom=806),
         },
+        ConvertImageDType('float32'),
         Grayscaler(),
         Downscaler(downscale_factor),
         RandomCropper(height=height, width=width),

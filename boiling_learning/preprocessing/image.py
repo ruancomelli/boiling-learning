@@ -63,6 +63,15 @@ class Cropper(Transformer[VideoFrame, VideoFrame]):
         super().__init__(crop, pack=pack)
 
 
+class ConvertImageDType(Transformer[VideoFrame, VideoFrame]):
+    def __init__(self, dtype: str) -> None:
+        super().__init__(convert_image_dtype, P(dtype=dtype))
+
+
+def convert_image_dtype(image: VideoFrame, *, dtype: str) -> VideoFrame:
+    return tf.image.convert_image_dtype(image, tf.dtypes.as_dtype(dtype)).numpy()
+
+
 class RandomCropper(Transformer[VideoFrame, VideoFrame]):
     def __init__(self, width: Optional[int] = None, height: Optional[int] = None) -> None:
         pack = P(
