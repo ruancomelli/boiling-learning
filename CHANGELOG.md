@@ -1,5 +1,11 @@
 
 
+## v0.29.3 (2022-06-18)
+
+### Feat
+
+- **model/training**: add `load_with_strategy` function for loading models using a specific distributed strategy
+
 ## v0.29.2 (2022-06-18)
 
 ### Fix
