@@ -4,13 +4,14 @@ import abc
 import itertools
 import math
 import random
+from collections import defaultdict
 from fractions import Fraction
 from functools import reduce
 from operator import itemgetter
 from typing import (
     Any,
     Callable,
-    Dict,
+    DefaultDict,
     Generic,
     Iterable,
     Iterator,
@@ -104,6 +105,12 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
 
     # Constructors:
     @staticmethod
+    def concatenate(
+        *datasets: Unpack[SliceableDataset[Unpack[_Ts]]],
+    ) -> ConcatenateSliceableDataset[Unpack[_Ts]]:
+        return ConcatenateSliceableDataset(*datasets)
+
+    @staticmethod
     def constantly(value: _T, *, count: int) -> SliceableDataset[_T]:
         return SliceableDataset.from_sequence((value,)).repeat(count)
 
@@ -137,11 +144,11 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
     def enumerate(self) -> ZippedSliceableDataset[int, _T]:
         return SliceableDataset.zip(SliceableDataset.range(len(self)), self)
 
-    def concatenate(self, dataset: SliceableDataset[_U]) -> ConcatenateSliceableDataset[_T, _U]:
+    def extend(self, dataset: SliceableDataset[_U]) -> ConcatenateSliceableDataset[_T, _U]:
         return ConcatenateSliceableDataset(self, dataset)
 
     def repeat(self, count: int) -> SliceableDataset[_T]:
-        return concatenate(self for _ in range(count))
+        return SliceableDataset.concatenate(*(self for _ in range(count)))
 
     def map(self, __map_func: Callable[[_T], _U]) -> SliceableDataset[_U]:
         return MapSliceableDataset(__map_func, self)
@@ -429,58 +436,54 @@ class ZippedSliceableDataset(SliceableDataset[Tuple[Unpack[_Ts]]], Generic[Unpac
             )
 
 
-class ConcatenateSliceableDataset(SliceableDataset[Union[_T, _U]], Generic[_T, _U]):
-    # TODO: make this variadic!
-    def __init__(self, left: SliceableDataset[_T], right: SliceableDataset[_U]) -> None:
-        self._left = left
-        self._right = right
-
-        self._left_length = len(self._left)
-        self._right_length = len(self._right)
+class ConcatenateSliceableDataset(SliceableDataset[Union[Unpack[_Ts]]], Generic[Unpack[_Ts]]):
+    def __init__(self, *datasets: Unpack[SliceableDataset[_Ts]]) -> None:
+        self._ancestors = datasets
 
     def __len__(self) -> int:
-        return self._left_length + self._right_length
-
-    def getitem_from_index(self, index: int) -> Union[_T, _U]:
-        if index < self._left_length:
-            return self._left[index]
-        else:
-            return self._right[index - self._left_length]
+        return sum(len(ancestor) for ancestor in self._ancestors)
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self._left}, {self._right})'
+        ancestors = ', '.join(repr(ancestor) for ancestor in self._ancestors)
+        return f'{self.__class__.__name__}({ancestors})'
+
+    def getitem_from_index(self, index: int) -> Union[Unpack[_Ts]]:
+        ancestor_index, relative_index = self._absolute_index_to_ancestor_and_relative_index(index)
+        return self._ancestors[ancestor_index][relative_index]
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[Union[_T, _U], ...]:
         if indices is None:
-            return self._left.fetch() + self._right.fetch()
+            return tuple(
+                itertools.chain.from_iterable(ancestor.fetch() for ancestor in self._ancestors)
+            )
 
-        grouped_indices = self._relative_absolute_left_right_groups(indices)
+        grouped_indices: DefaultDict[int, List[Tuple[int, int]]] = defaultdict(list)
+        for position, index in enumerate(indices):
+            ancestor_index, relative_index = self._absolute_index_to_ancestor_and_relative_index(
+                index
+            )
+            grouped_indices[ancestor_index].append((position, relative_index))
 
-        left_positions, left_indices = (
-            mit.unzip(grouped_indices[False]) if grouped_indices[False] else ((), ())
-        )
-        left_values = self._left.fetch(left_indices)
+        position_value_pairs: List[Tuple[int, Union[Unpack[_Ts]]]] = []
+        for ancestor_index, position_relative_index_pairs in grouped_indices.items():
+            if not position_relative_index_pairs:
+                continue
 
-        right_positions, right_indices = (
-            mit.unzip(grouped_indices[True]) if grouped_indices[True] else ((), ())
-        )
-        right_values = self._right.fetch(right_indices)
-
-        position_value_pairs = itertools.chain(
-            zip(left_positions, left_values), zip(right_positions, right_values)
-        )
+            positions, replative_indices = mit.unzip(position_relative_index_pairs)
+            values = self._ancestors[ancestor_index].fetch(replative_indices)
+            position_value_pairs.extend(zip(positions, values))
 
         return tuple(value for _, value in sorted(position_value_pairs, key=itemgetter(0)))
 
-    def _relative_absolute_left_right_groups(
-        self, indices: Iterable[int]
-    ) -> Dict[bool, List[Tuple[int, int]]]:
-        groups: Dict[bool, List[Tuple[int, int]]] = {False: [], True: []}
-        for position, index in enumerate(indices):
-            is_right = index >= self._left_length
-            relative_index = (index - self._left_length) if is_right else index
-            groups[is_right].append((position, relative_index))
-        return groups
+    def _absolute_index_to_ancestor_and_relative_index(self, index: int) -> Tuple[int, int]:
+        relative_index = index
+        for ancestor_index, ancestor in enumerate(self._ancestors):
+            ancestor_length = len(ancestor)
+            if relative_index < ancestor_length:
+                return ancestor_index, relative_index
+            relative_index -= ancestor_length
+
+        raise IndexError(index)
 
 
 class MapSliceableDataset(SliceableDataset[_U]):
@@ -536,10 +539,6 @@ class PrefetchedDataset(ProxySliceableDataset[_T]):
 
 
 SupervisedSliceableDataset = SliceableDataset[Tuple[_X, _Y]]
-
-
-def concatenate(datasets: Iterable[SliceableDataset[_T]]) -> SliceableDataset[_T]:
-    return reduce(SliceableDataset[_T].concatenate, datasets)
 
 
 def features(dataset: SupervisedSliceableDataset[_X, _Y]) -> SliceableDataset[_X]:

@@ -7,7 +7,7 @@ import pytest
 import tensorflow as tf
 
 from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_dataset
-from boiling_learning.datasets.sliceable import SliceableDataset, concatenate
+from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.utils.random import random_state
 
 
@@ -94,10 +94,10 @@ class TestSliceableDataset:
             (3, 'd'),
         ]
 
-    def test_concatenate(self) -> None:
+    def test_extend(self) -> None:
         sds1 = SliceableDataset.from_sequence([4, 3, 2, 1])
         sds2 = SliceableDataset.from_sequence('abcd')
-        sds = sds1.concatenate(sds2)
+        sds = sds1.extend(sds2)
 
         assert isinstance(sds, SliceableDataset)
         assert list(sds) == [4, 3, 2, 1, 'a', 'b', 'c', 'd']
@@ -289,7 +289,7 @@ def test_concatenate() -> None:
     sds2 = SliceableDataset.from_sequence('efg')
     sds3 = SliceableDataset.from_sequence('hijkl')
 
-    concat = concatenate((sds1, sds2, sds3))
+    concat = SliceableDataset.concatenate(sds1, sds2, sds3)
     assert ''.join(concat) == 'abcdefghijkl'
     assert concat[0] == 'a'
     assert concat[5] == 'f'
@@ -297,6 +297,7 @@ def test_concatenate() -> None:
     assert len(concat) == len(sds1) + len(sds2) + len(sds3)
     assert ''.join(concat[[0, 11, 5, 11]]) == 'alfl'
     assert ''.join(concat.fetch([0, 11, 5, 11])) == 'alfl'
+    assert concat.fetch() == tuple('abcdefghijkl')
 
 
 def test_sliceable_to_tensorflow() -> None:
