@@ -1,5 +1,12 @@
 
 
+## v0.29.4 (2022-06-19)
+
+### Refactor
+
+- **datasets/sliceable**: make `__repr__` a mandatory method
+- **datasets/sliceable**: make `ConcatenateSliceableDataset`s variadic
+
 ## v0.29.3 (2022-06-18)
 
 ### Feat
