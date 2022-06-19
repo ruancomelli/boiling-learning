@@ -537,8 +537,11 @@ class PrefetchedDataset(ProxySliceableDataset[_T]):
         self._buffer_size = buffer_size if buffer_size is not None else len(self)
 
     def __iter__(self) -> Iterator[_T]:
-        for batch in self.batch(self._buffer_size):
-            yield from batch.fetch()
+        # for batch in self.batch(self._buffer_size):
+        #     yield from batch.fetch()
+
+        for buffer_indices in SliceableDataset.range(len(self)).batch(self._buffer_size):
+            yield from self.fetch(buffer_indices)
 
 
 SupervisedSliceableDataset = SliceableDataset[Tuple[_X, _Y]]
