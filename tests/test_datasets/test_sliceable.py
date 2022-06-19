@@ -16,6 +16,9 @@ class MockDatabaseDataset(SliceableDataset[int]):
         self.items = [index ** 2 for index in range(8)]
         self.database_fetches: List[List[int]] = []
 
+    def __repr__(self) -> str:
+        return f'MockDatabaseDataset({self.items})'
+
     def __len__(self) -> int:
         return len(self.items)
 

@@ -6,7 +6,6 @@ import math
 import random
 from collections import defaultdict
 from fractions import Fraction
-from functools import reduce
 from operator import itemgetter
 from typing import (
     Any,
@@ -45,6 +44,10 @@ BooleanMask = List[bool]
 
 class SliceableDataset(abc.ABC, Sequence[_T]):
     # Methods to overwrite in derived classes:
+    @abc.abstractmethod
+    def __repr__(self) -> str:
+        pass
+
     @abc.abstractmethod
     def __len__(self) -> int:
         pass
@@ -270,7 +273,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
         return BatchSliceableDataset(self, batch_size)
 
     def unbatch(self: SliceableDataset[SliceableDataset[_U]]) -> SliceableDataset[_U]:
-        return reduce(ConcatenateSliceableDataset, self)
+        return SliceableDataset.concatenate(*self)
 
     def flatten(self) -> SliceableDataset[Any]:
         return self.unbatch().flatten() if _is_nested_sliceable_dataset(self) else self
