@@ -284,6 +284,14 @@ class TestSliceableDataset:
         assert constant_dataset.fetch() == (3, 3, 3, 3)
 
 
+class TestComposedSliceableDataset:
+    def test_fetch(self) -> None:
+        db = MockDatabaseDataset()
+        ds = db[[3, 1, 4, 1, 5]]
+        assert ds.fetch() == (9, 1, 16, 1, 25)
+        assert ds.fetch((2, 0, 0, 1)) == (16, 9, 9, 1)
+
+
 def test_concatenate() -> None:
     sds1 = SliceableDataset.from_sequence('abcd')
     sds2 = SliceableDataset.from_sequence('efg')
