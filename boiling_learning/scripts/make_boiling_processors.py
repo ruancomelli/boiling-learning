@@ -27,6 +27,8 @@ def main(
     ]
 ]:
     return [
+        ConvertImageDType('float32'),
+        Grayscaler(),
         {
             'GOPR2819': Cropper(left=861, right=1687, top=321, bottom=1273),
             'GOPR2820': Cropper(left=861, right=1678, top=321, bottom=1267),
@@ -162,8 +164,6 @@ def main(
             'GOPR2959': Cropper(left=980, right=1810, top=400, bottom=1350),
             'GOPR2960': Cropper(left=980, right=1810, top=400, bottom=1350),
         },
-        ConvertImageDType('float32'),
-        Grayscaler(),
         Downscaler(downscale_factor),
         Cropper(
             left=0,

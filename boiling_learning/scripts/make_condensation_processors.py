@@ -24,6 +24,8 @@ def main(
     ]
 ]:
     return [
+        ConvertImageDType('float32'),
+        Grayscaler(),
         {
             'stainless steel:polished:test 6:00003': Cropper(
                 left=849, right=1427, top=307, bottom=900
@@ -106,8 +108,6 @@ def main(
             'parametric:rh 90%:test 5:00013': Cropper(left=744, right=1307, top=231, bottom=802),
             'parametric:rh 90%:test 5:00012': Cropper(left=744, right=1312, top=226, bottom=806),
         },
-        ConvertImageDType('float32'),
-        Grayscaler(),
         Downscaler(downscale_factor),
         RandomCropper(height=height, width=width),
     ]
