@@ -1,5 +1,11 @@
 
 
+## v0.29.6 (2022-06-19)
+
+### Fix
+
+- **scripts**: move grayscaling back to the first operation to avoid having color distortion near the edges
+
 ## v0.29.5 (2022-06-19)
 
 ## v0.29.4 (2022-06-19)
