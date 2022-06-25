@@ -133,6 +133,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "autokeras"
+version = "1.0.19"
+summary = "AutoML for deep learning"
+dependencies = [
+    "keras-tuner>=1.1.0",
+    "packaging",
+    "pandas",
+    "tensorflow>=2.8.0",
+]
+
+[[package]]
 name = "backcall"
 version = "0.2.0"
 summary = "Specifications for callback functions passed in to an API"
@@ -819,6 +830,24 @@ dependencies = [
     "numpy>=1.9.1",
     "six>=1.9.0",
 ]
+
+[[package]]
+name = "keras-tuner"
+version = "1.1.2"
+summary = "Hypertuner for Keras"
+dependencies = [
+    "ipython",
+    "kt-legacy",
+    "numpy",
+    "packaging",
+    "requests",
+    "tensorboard",
+]
+
+[[package]]
+name = "kt-legacy"
+version = "1.0.4"
+summary = "Legacy import names for Keras Tuner"
 
 [[package]]
 name = "lazy-object-proxy"
@@ -2057,7 +2086,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:b43e5ffc0c85b5adde39da78b8decce208853b3290aedce27d915f47c313d2ab"
+content_hash = "sha256:4dcbc60f687216373ee3c08be10ef7042aba40a3674a09291fb0a709bbedb414"
 
 [metadata.files]
 "absl-py 1.1.0" = [
@@ -2211,6 +2240,10 @@ content_hash = "sha256:b43e5ffc0c85b5adde39da78b8decce208853b3290aedce27d915f47c
 ]
 "autoflake 1.4" = [
     {file = "autoflake-1.4.tar.gz", hash = "sha256:61a353012cff6ab94ca062823d1fb2f692c4acda51c76ff83a8d77915fba51ea"},
+]
+"autokeras 1.0.19" = [
+    {file = "autokeras-1.0.19-py3-none-any.whl", hash = "sha256:2931bb3e21c985bd8674b45427703382ed18aef39df9b257839b20c726d136f4"},
+    {file = "autokeras-1.0.19.tar.gz", hash = "sha256:d0b7407fbda40fa025d11cd350b0ac1ca0df13101433efea5e770baf625f96aa"},
 ]
 "backcall 0.2.0" = [
     {file = "backcall-0.2.0-py2.py3-none-any.whl", hash = "sha256:fbbce6a29f263178a1f7915c1940bde0ec2b2a967566fe1c65c1dfb7422bd255"},
@@ -2760,6 +2793,14 @@ content_hash = "sha256:b43e5ffc0c85b5adde39da78b8decce208853b3290aedce27d915f47c
 "keras-preprocessing 1.1.2" = [
     {file = "Keras_Preprocessing-1.1.2-py2.py3-none-any.whl", hash = "sha256:7b82029b130ff61cc99b55f3bd27427df4838576838c5b2f65940e4fcec99a7b"},
     {file = "Keras_Preprocessing-1.1.2.tar.gz", hash = "sha256:add82567c50c8bc648c14195bf544a5ce7c1f76761536956c3d2978970179ef3"},
+]
+"keras-tuner 1.1.2" = [
+    {file = "keras_tuner-1.1.2-py3-none-any.whl", hash = "sha256:782c13c93fb9513240e3a692694b6e8bc63b5e62e82284079f1e08a27738baa7"},
+    {file = "keras-tuner-1.1.2.tar.gz", hash = "sha256:3ff5f4fc081fe1c2f1869b274950b9d82d7ae175ab8c7d872fd84156565c05e8"},
+]
+"kt-legacy 1.0.4" = [
+    {file = "kt_legacy-1.0.4-py3-none-any.whl", hash = "sha256:8b6eaff78b01b3cf1d71390cbcc6498208433e2ae0ce4d3c6e072f980b9fc625"},
+    {file = "kt-legacy-1.0.4.tar.gz", hash = "sha256:a94112e42a50e7cc3aad31f3287aa384c23555ea1432c55b5823852e09e706cf"},
 ]
 "lazy-object-proxy 1.7.1" = [
     {file = "lazy_object_proxy-1.7.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:bb8c5fd1684d60a9902c60ebe276da1f2281a318ca16c1d0a96db28f62e9166b"},
