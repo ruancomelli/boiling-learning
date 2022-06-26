@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import enum
 import json as _json
+import operator
 import typing
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List, Mapping, TypeVar
 
+import more_itertools as mit
 import tensorflow as tf
 from pint import Quantity
 
@@ -16,6 +18,8 @@ from boiling_learning.utils.units import unit_registry as ureg
 from boiling_learning.utils.utils import resolve
 
 _CUSTOM_LAYERS = (ImageNormalization, RandomBrightness)
+
+_Any = TypeVar('_Any')
 
 
 class ModelArchitecture:
@@ -29,7 +33,7 @@ class ModelArchitecture:
         return cls(tf.keras.models.Model(inputs=inputs, outputs=outputs))
 
     def __json_encode__(self) -> Dict[str, Any]:
-        return _anonymize_model(_json.loads(self.model.to_json()))
+        return _anonymize_model_json(_json.loads(self.model.to_json()))
 
     def __describe__(self) -> Dict[str, Any]:
         return typing.cast(Dict[str, Any], json.encode(self))
@@ -127,17 +131,32 @@ class ProblemType(enum.Enum):
     REGRESSION = enum.auto()
 
 
-def _anonymize_model(model_json: Dict[str, Any]) -> Dict[str, Any]:
-    model_config = model_json['config']
+def _anonymize_model_json(model_json: Dict[str, Any]) -> Dict[str, Any]:
+    names = _collect_names(model_json, name_key='name')
+    translator = {name: f'layer_{index}' for index, name in enumerate(mit.unique_everseen(names))}
+    return _rename_layers(model_json, translator)
 
-    # remove model name
-    del model_config['name']
 
-    layer_indices = {layer['name']: index for index, layer in enumerate(model_config['layers'])}
+def _collect_names(config: Any, *, name_key: str = 'name') -> List[str]:
+    names: List[str] = []
+    if isinstance(config, dict):
+        # sort keys and values here to ensure that they are always iterated over in the
+        # same order for different models
+        for key, value in sorted(config.items(), key=operator.itemgetter(0)):
+            if key == name_key and isinstance(value, str):
+                names.append(value)
+            else:
+                names.extend(_collect_names(value))
+    elif isinstance(config, list):
+        for value in config:
+            names.extend(_collect_names(value))
+    return names
 
-    json_str = _json.dumps(model_json)
 
-    for name, index in layer_indices.items():
-        json_str = json_str.replace(name, f'layer_{index}')
-
-    return _json.loads(json_str)
+def _rename_layers(config: _Any, translator: Mapping[str, str]) -> _Any:
+    if isinstance(config, dict):
+        return {key: _rename_layers(value, translator) for key, value in config.items()}
+    elif isinstance(config, list):
+        return [_rename_layers(value, translator) for value in config]
+    else:
+        return translator[config] if isinstance(config, str) and config in translator else config
