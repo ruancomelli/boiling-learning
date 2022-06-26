@@ -18,6 +18,7 @@ from boiling_learning.utils.units import unit_registry as ureg
 from boiling_learning.utils.utils import resolve
 
 _CUSTOM_LAYERS = (ImageNormalization, RandomBrightness)
+_CUSTOM_OBJECTS = {layer.__name__: layer for layer in _CUSTOM_LAYERS}
 
 _Any = TypeVar('_Any')
 
@@ -31,6 +32,15 @@ class ModelArchitecture:
         cls, inputs: tf.keras.layers.Layer, outputs: tf.keras.layers.Layer
     ) -> ModelArchitecture:
         return cls(tf.keras.models.Model(inputs=inputs, outputs=outputs))
+
+    def get_config(self) -> Dict[str, Any]:
+        return json.encode(self)
+
+    @classmethod
+    def from_config(cls, config: Dict[str, Any]) -> ModelArchitecture:
+        return cls(
+            tf.keras.models.model_from_json(_json.dumps(config), custom_objects=_CUSTOM_OBJECTS)
+        )
 
     def __json_encode__(self) -> Dict[str, Any]:
         model_json = _json.loads(self.model.to_json())
@@ -74,12 +84,7 @@ def _deserialize_model(path: Path, _metadata: Metadata) -> ModelArchitecture:
     if not model_weights_path.is_file():
         raise FileNotFoundError(str(model_weights_path))
 
-    architecture = ModelArchitecture(
-        tf.keras.models.model_from_json(
-            model_json_path.read_text(),
-            custom_objects={layer.__name__: layer for layer in _CUSTOM_LAYERS},
-        )
-    )
+    architecture = ModelArchitecture.from_config(_json.loads(model_json_path.read_text()))
     architecture.model.load_weights(str(model_weights_path))
     return architecture
 
