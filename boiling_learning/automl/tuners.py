@@ -1,4 +1,5 @@
 import contextlib
+import gc
 import typing
 from typing import Any, Dict, List, Optional
 
@@ -6,9 +7,8 @@ import autokeras as ak
 import keras_tuner as kt
 import tensorflow as tf
 from loguru import logger
+from tensorflow.keras import backend as K
 from typing_extensions import TypedDict
-
-from boiling_learning.model.model import ModelArchitecture
 
 
 class PopulateSpaceReturn(TypedDict):
@@ -58,13 +58,16 @@ class _FixedMaxModelSizeGreedy(ak.engine.tuner.AutoTuner):
     def _build_and_fit_model(
         self, trial: kt.engine.trial.Trial, *fit_args: Any, **fit_kwargs: Any
     ) -> Dict[str, List[Any]]:
+        print('BUILDING AND FITTING MODEL'.center(80, '='))
         with contextlib.suppress(tf.errors.ResourceExhaustedError, tf.errors.InternalError):
             with self.distribution_strategy.scope():
                 model = self.hypermodel.build(trial.hyperparameters)
 
             model_size = self.maybe_compute_model_size(model)
 
-            if model_size <= self.max_model_size:
+            print('Got here!!!')
+
+            if self.max_model_size is None or model_size <= self.max_model_size:
                 logger.info(f'Building model with size: {model_size}')
 
                 # TODO: may be required to avoid errors:
@@ -84,10 +87,27 @@ class _FixedMaxModelSizeGreedy(ak.engine.tuner.AutoTuner):
         dummy_history_obj.history.setdefault('val_loss', []).append(_HUGE_NUMBER)
         return typing.cast(Dict[str, List[Any]], dummy_history_obj)
 
+    def _try_build(self, hp: kt.HyperParameters) -> tf.keras.Model:
+        # clean-up TF graph from previously stored (defunct) graph
+        K.clear_session()
+        gc.collect()
+
+        # Build a model - failed attempts are handled elsewhere
+        model = self._build_hypermodel(hp)
+
+        # Stop if `build()` does not return a valid model.
+        if not isinstance(model, tf.keras.models.Model):
+            raise RuntimeError(
+                'Model-building function did not return a valid Keras Model instance, '
+                f'found {model}'
+            )
+
+        return model
+
     def maybe_compute_model_size(self, model: tf.keras.models.Model) -> int:
         """Compute the size of a given model, if it has been built."""
         if model.built:
-            return ModelArchitecture(model).count_parameters(trainable=True, non_trainable=False)
+            return sum(tf.keras.backend.count_params(p) for p in model.trainable_weights)
         return 0
 
 
