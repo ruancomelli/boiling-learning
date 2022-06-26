@@ -1,16 +1,10 @@
 import re
-import time
 from datetime import timedelta
-from functools import lru_cache
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-import gspread
-import modin.pandas as pd
 import parse
 import yaml
 from loguru import logger
-from oauth2client.client import GoogleCredentials
-from sklearn.linear_model import LinearRegression
 
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
@@ -29,12 +23,7 @@ _SUBCASE_PATTERNS = frozendict(
 _TIMEDELTA_PATTERN = re.compile(r'(?P<h>\d{2}):(?P<min>\d{2}):(?P<s>\d{2})')
 
 
-def main(
-    datasets: Iterable[ImageDataset],
-    dataspecpath: PathLike,
-    *,
-    spreadsheet_name: Optional[str] = None,
-) -> Tuple[ImageDataset, ...]:
+def main(datasets: Iterable[ImageDataset], dataspecpath: PathLike) -> Tuple[ImageDataset, ...]:
     logger.info('Setting condensation data')
 
     datasets = tuple(datasets)
@@ -52,54 +41,9 @@ def main(
     for dataset in grouped_datasets:
         _make_dataframe(dataset)
 
-    if spreadsheet_name is not None:
-        _set_mass_rate(grouped_datasets, spreadsheet_name)
-
     logger.debug(f'Condensation datasets: {grouped_datasets}')
 
     return grouped_datasets
-
-
-def _set_mass_rate(grouped_datasets: Tuple[ImageDataset, ...], spreadsheet_name: str) -> None:
-    for dataset in grouped_datasets:
-        for ev in dataset:
-            if 'mass_rate' in ev.df.columns:
-                continue
-
-            mass_data = _dataframes_from_gspread(spreadsheet_name)
-            case_name, subcase_name, test_name, _ = ev.name.split(':')
-            df = _parse_mass_timeseries(mass_data, case_name, subcase_name, test_name)
-            ev.df['mass_rate'] = _calculate_mass_rate(
-                df, elapsed_time_column='elapsed_time', mass_column='mass'
-            )
-            ev.save_df(overwrite=True)
-
-
-@lru_cache(maxsize=None)
-def _dataframes_from_gspread(spreadsheet_name: str) -> Dict[str, pd.DataFrame]:
-    auth = gspread.authorize(GoogleCredentials.get_application_default())
-    spreadsheet = auth.open(spreadsheet_name)
-
-    return {
-        worksheet.title: pd.DataFrame(worksheet.get_all_values())
-        for worksheet in spreadsheet.worksheets()
-    }
-
-
-def _parse_mass_timeseries(
-    dfs: Dict[str, pd.DataFrame], case: str, subcase: str, test: str
-) -> pd.DataFrame:
-    df = dfs[case]
-    df = df.loc[:, (df.loc[0] == subcase) & (df.loc[1] == test)][2:]
-    df, df.columns = df[1:], df.iloc[0]
-
-    df['datetime'] = pd.to_datetime(df.pop('date').astype(str) + ' ' + df.pop('time').astype(str))
-    datetime_secs = df.datetime.apply(lambda dt: time.mktime(dt.timetuple()))
-    df['elapsed_time'] = datetime_secs - datetime_secs.min()
-    mass = pd.to_numeric(df.pop('mass [g]').str.replace(',', '.'))
-    df['mass'] = mass - mass.min()
-
-    return df
 
 
 def _set_ev_data(ev: ExperimentVideo, dataspec: Dict[str, Any]) -> None:
@@ -206,15 +150,6 @@ def _group_datasets(datasets: Iterable[ImageDataset]) -> Tuple[ImageDataset, ...
                 datasets_dict[dataset_name].add(ev)
 
     return tuple(datasets_dict.values())
-
-
-def _calculate_mass_rate(df: pd.DataFrame, *, elapsed_time_column: str, mass_column: str) -> float:
-    X = df[elapsed_time_column].values.reshape(-1, 1)
-    y = df[mass_column].values.reshape(-1, 1)
-    linear_regressor = LinearRegression()
-    linear_regressor.fit(X, y)
-
-    return float(linear_regressor.coef_.squeeze())
 
 
 if __name__ == '__main__':
