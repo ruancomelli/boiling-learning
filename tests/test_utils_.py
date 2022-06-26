@@ -3,7 +3,7 @@ from unittest.case import TestCase
 
 from boiling_learning.utils.collections import KeyedSet
 from boiling_learning.utils.geometry import Cylinder, RectangularPrism
-from boiling_learning.utils.iterutils import EvenlySpacedGoal, evenly_spaced_indices
+from boiling_learning.utils.iterutils import evenly_spaced_indices
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.utils import indexify, unsort
 
@@ -27,7 +27,7 @@ class utils_utils_test(TestCase):
 
 
 class utils_collections_test(TestCase):
-    def test_KeyedSet(self):
+    def test_KeyedSet(self) -> None:
         keyed_set = KeyedSet(str.upper, ('hi', 'bye', 'hello'))
 
         self.assertEqual(set(keyed_set), {'hi', 'bye', 'hello'})
@@ -46,13 +46,13 @@ class utils_collections_test(TestCase):
 
 
 class geometry_test(TestCase):
-    def test_Cylinder(self):
+    def test_Cylinder(self) -> int:
         cylinder = Cylinder(length=10, diameter=2)
 
         assert cylinder.radius() == 1
         assert cylinder.volume() == math.pi * 1 ** 2 * 10
 
-    def test_RectangularPrism(self):
+    def test_RectangularPrism(self) -> int:
         prism = RectangularPrism(width=5, thickness=3, length=10)
 
         self.assertEqual(prism.cross_section_area(), 15)
@@ -97,26 +97,23 @@ class LazyTest(TestCase):
 
 class iterutils_test(TestCase):
     def test_evenly_spaced_indices(self) -> None:
-        self.assertListEqual(evenly_spaced_indices(10, 0, goal=EvenlySpacedGoal.SPREAD), [])
-        self.assertListEqual(evenly_spaced_indices(10, 1, goal=EvenlySpacedGoal.SPREAD), [5])
-        self.assertListEqual(evenly_spaced_indices(10, 2, goal=EvenlySpacedGoal.SPREAD), [3, 7])
+        self.assertListEqual(evenly_spaced_indices(10, 0, goal='spread'), [])
+        self.assertListEqual(evenly_spaced_indices(10, 1, goal='spread'), [5])
+        self.assertListEqual(evenly_spaced_indices(10, 2, goal='spread'), [3, 7])
+        self.assertListEqual(evenly_spaced_indices(10, 3, goal='spread'), [2, 5, 8])
+        self.assertListEqual(evenly_spaced_indices(10, 5, goal='spread'), [2, 3, 5, 7, 8])
         self.assertListEqual(
-            evenly_spaced_indices(10, 3, goal=EvenlySpacedGoal.SPREAD),
-            [2, 5, 8],
-        )
-        self.assertListEqual(
-            evenly_spaced_indices(10, 5, goal=EvenlySpacedGoal.SPREAD),
-            [2, 3, 5, 7, 8],
-        )
-        self.assertListEqual(
-            evenly_spaced_indices(10, 10, goal=EvenlySpacedGoal.SPREAD),
-            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+            evenly_spaced_indices(10, 10, goal='spread'), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
         )
 
         for total, count in ((10, 6), (100, 70), (100, 5)):
             with self.subTest('General properties', total=total, count=count):
-                for goal in EvenlySpacedGoal:
-                    self.assertListEqual(evenly_spaced_indices(total, 0, goal=goal), [])
+                self.assertListEqual(evenly_spaced_indices(total, 0, goal='distance'), [])
 
-                    with self.assertRaises(ValueError):
-                        evenly_spaced_indices(total, total + 1, goal=goal)
+                with self.assertRaises(ValueError):
+                    evenly_spaced_indices(total, total + 1, goal='distance')
+
+                self.assertListEqual(evenly_spaced_indices(total, 0, goal='spread'), [])
+
+                with self.assertRaises(ValueError):
+                    evenly_spaced_indices(total, total + 1, goal='spread')
