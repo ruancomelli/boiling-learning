@@ -1,5 +1,27 @@
 
 
+## v0.30.0 (2022-06-26)
+
+### Fix
+
+- **automl/tuners**: suppress errors in `_try_build`
+- **automl/blocks**: correctly rename layers in `LayersBlock`
+- **automl/tuners**: correctly initialize parents in `_FixedMaxModelSizeGreedy`
+
+### Refactor
+
+- **scripts/set_condensation_datasets_data**: remove unused parameter `datasheet_name`
+- **utils/iterutils**: replace enumeration with literal of strings
+- **model/automl**: move auto ML functionality to its own subpackage
+- **model/model**: rework `anonymize_model_json` to rename deeply nested layers
+
+### Feat
+
+- **automl**: add block for constant architecture
+- **model/model**: support `get_config` and `from_config` in `ModelArchitecture`
+- **automl**: add support for autotuning models
+- **model/automl**: add auto ML tuner
+
 ## v0.29.6 (2022-06-19)
 
 ### Fix
