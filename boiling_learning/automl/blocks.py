@@ -16,12 +16,17 @@ class LayersBlock(ak.engine.block.Block):
         super().__init__(**kwargs)
         self.layers = layers
 
-    def build(self, hp: kt.HyperParameters, inputs: List[ak.Node]) -> tf.keras.Model:
+    def build(  # pylint: disable=signature-differs
+        self,
+        hp: kt.HyperParameters,
+        inputs: List[ak.Node],
+    ) -> tf.keras.Model:
         inputs = tf.nest.flatten(inputs)
         input_node = inputs[0]
         output_node = input_node
 
         for layer in self.layers:
+            layer._init_set_name(None)  # pylint: disable=protected-access
             output_node = layer(output_node)
 
         return output_node
