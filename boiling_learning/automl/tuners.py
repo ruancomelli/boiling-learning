@@ -42,33 +42,6 @@ class EarlyStoppingGreedyOracle(ak.tuners.greedy.GreedyOracle):
 
 
 class _FixedMaxModelSizeGreedy(ak.engine.tuner.AutoTuner):
-    def __init__(
-        self,
-        *,
-        hypermodel: kt.HyperModel,
-        objective: str = 'val_loss',
-        goal: Any,
-        max_trials: int = 10,
-        initial_hps: Optional[List[Dict[str, Any]]] = None,
-        seed: Optional[int] = None,
-        hyperparameters: Optional[kt.HyperParameters] = None,
-        tune_new_entries: bool = True,
-        allow_new_entries: bool = True,
-        **kwargs: Any,
-    ) -> None:
-        self.seed = seed
-        oracle = EarlyStoppingGreedyOracle(
-            objective=objective,
-            goal=goal,
-            max_trials=max_trials,
-            initial_hps=initial_hps,
-            seed=seed,
-            hyperparameters=hyperparameters,
-            tune_new_entries=tune_new_entries,
-            allow_new_entries=allow_new_entries,
-        )
-        super().__init__(oracle=oracle, hypermodel=hypermodel, **kwargs)
-
     def on_trial_end(self, trial: kt.engine.trial.Trial) -> None:
         # Send status to Logger
         if self.logger:

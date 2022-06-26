@@ -19,10 +19,10 @@ from boiling_learning.utils.functional import P, Pack
 from boiling_learning.utils.table_dispatch import TableDispatcher
 
 # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
-JSONDataType = Union[None, bool, int, float, str, List['JSONDataType'], Dict[str, 'JSONDataType']]
 
 BasicTypes = Union[None, bool, int, str, float]
 _BasicType = TypeVar('_BasicType', bound=BasicTypes)
+JSONDataType = Union[BasicTypes, List['JSONDataType'], Dict[str, 'JSONDataType']]
 
 
 class SerializedJSONObject(TypedDict):
