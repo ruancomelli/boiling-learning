@@ -33,7 +33,10 @@ class ModelArchitecture:
         return cls(tf.keras.models.Model(inputs=inputs, outputs=outputs))
 
     def __json_encode__(self) -> Dict[str, Any]:
-        return _anonymize_model_json(_json.loads(self.model.to_json()))
+        model_json = _json.loads(self.model.to_json())
+        return anonymize_model_json(
+            {key: value for key, value in model_json['config'].items() if key != 'name'}
+        )
 
     def __describe__(self) -> Dict[str, Any]:
         return typing.cast(Dict[str, Any], json.encode(self))
@@ -131,7 +134,7 @@ class ProblemType(enum.Enum):
     REGRESSION = enum.auto()
 
 
-def _anonymize_model_json(model_json: Dict[str, Any]) -> Dict[str, Any]:
+def anonymize_model_json(model_json: Dict[str, Any]) -> Dict[str, Any]:
     names = _collect_names(model_json, name_key='name')
     translator = {name: f'layer_{index}' for index, name in enumerate(mit.unique_everseen(names))}
     return _rename_layers(model_json, translator)
