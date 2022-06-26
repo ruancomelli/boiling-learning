@@ -6,7 +6,6 @@ authors = [
     {name = "Ruan Comelli", email = "ruancomelli@gmail.com"}
 ]
 dependencies = [
-    "bokeh<3.0.0,>=2.4.2",
     "frozendict<2.0,>=1.2",
     "funcy<2.0,>=1.17",
     "gspread<6.0.0,>=5.1.1",
@@ -34,8 +33,7 @@ dependencies = [
     "h5py>=3.7.0",
     "decord==0.6.0",
     "keras-tuner>=1.1.2",
-    "autokeras>=1.0.19",
-]
+    "autokeras>=1.0.19"]
 
 requires-python = ">=3.7.12,<3.10"
 license = {text = "MIT"}

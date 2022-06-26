@@ -55,7 +55,7 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         add-paths: |
           pdm.lock
-        commit-message: 'build(deps): bump dependencies' # I prefer using dep: as prefix for dependency updates
+        commit-message: 'build(deps): bump dependencies'
         committer: ${{ github.repository_owner }} <${{ github.repository_owner }}@users.noreply.github.com>
         author: ${{ github.repository_owner }} <${{ github.repository_owner }}@users.noreply.github.com>
         signoff: false

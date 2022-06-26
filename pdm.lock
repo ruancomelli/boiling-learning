@@ -194,21 +194,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bokeh"
-version = "2.4.3"
-requires_python = ">=3.7"
-summary = "Interactive plots and applications in the browser from Python"
-dependencies = [
-    "Jinja2>=2.9",
-    "PyYAML>=3.10",
-    "numpy>=1.11.3",
-    "packaging>=16.8",
-    "pillow>=7.1.0",
-    "tornado>=5.1",
-    "typing-extensions>=3.10.0",
-]
-
-[[package]]
 name = "boto3"
 version = "1.24.12"
 requires_python = ">= 3.7"
@@ -2086,7 +2071,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:4dcbc60f687216373ee3c08be10ef7042aba40a3674a09291fb0a709bbedb414"
+content_hash = "sha256:939d086978a6ec7f6198d9317a990203d1f7bff198d76510a09920975cbdd19e"
 
 [metadata.files]
 "absl-py 1.1.0" = [
@@ -2285,10 +2270,6 @@ content_hash = "sha256:4dcbc60f687216373ee3c08be10ef7042aba40a3674a09291fb0a709b
 "blessed 1.19.1" = [
     {file = "blessed-1.19.1-py2.py3-none-any.whl", hash = "sha256:63b8554ae2e0e7f43749b6715c734cc8f3883010a809bf16790102563e6cf25b"},
     {file = "blessed-1.19.1.tar.gz", hash = "sha256:9a0d099695bf621d4680dd6c73f6ad547f6a3442fbdbe80c4b1daa1edbc492fc"},
-]
-"bokeh 2.4.3" = [
-    {file = "bokeh-2.4.3-py3-none-any.whl", hash = "sha256:104d2f0a4ca7774ee4b11e545aa34ff76bf3e2ad6de0d33944361981b65da420"},
-    {file = "bokeh-2.4.3.tar.gz", hash = "sha256:ef33801161af379665ab7a34684f2209861e3aefd5c803a21fbbb99d94874b03"},
 ]
 "boto3 1.24.12" = [
     {file = "boto3-1.24.12-py3-none-any.whl", hash = "sha256:0b9757575b8003928defc5fb6e816936fa1bdb1384d0edec6622bb9fb104e96c"},
