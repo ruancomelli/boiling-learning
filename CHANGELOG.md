@@ -1,5 +1,22 @@
 
 
+## v0.30.1 (2022-06-26)
+
+### Fix
+
+- **automl/tuning**: remove extra field from `TuneModelParams`
+
+### Refactor
+
+- **automl/hypermodels**: make `ImageRegressor` and `FixedArchitectureImageRegressor` subclasses of `Hypermodel`
+- **utils/functional**: remove unused function
+- **utils/slicerators**: remove no-longer used `slicerator` dependency
+
+### Feat
+
+- **automl/hypermodels**: define `FixedArchitectureImageRegressor` automodel
+- **automl/hypermodels**: define `ImageRegressor` automodel
+
 ## v0.30.0 (2022-06-26)
 
 ### Fix
