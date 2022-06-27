@@ -28,20 +28,6 @@ _S = TypeVar('_S')
 _U = TypeVar('_U')
 
 
-def nth_arg(n: int) -> Callable:
-    def _nth(*args):
-        args_len = len(args)
-        if args_len > n:
-            return args[n]
-        else:
-            raise TypeError(
-                f'cannot get the {n}-th argument of a {args_len}-length tuple.'
-                f' Got the following arguments: {args}'
-            )
-
-    return _nth
-
-
 ArgsType = Tuple[_T, ...]
 KwargsType = frozendict[str, _S]
 
