@@ -25,7 +25,7 @@ def fit_hypermodel(
     automodel.fit(
         ds_train,
         validation_data=ds_val,
-        callbacks=params.callbacks,
+        callbacks=params.callbacks.value,
         batch_size=params.batch_size or 32,
     )
 
