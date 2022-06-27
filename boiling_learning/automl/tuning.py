@@ -26,7 +26,7 @@ def fit_hypermodel(
         ds_train,
         validation_data=ds_val,
         callbacks=params.callbacks,
-        batch_size=params.batch_size,
+        batch_size=params.batch_size or 32,
     )
 
     return ModelArchitecture(automodel.export_model())
