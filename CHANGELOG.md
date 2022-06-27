@@ -1,5 +1,11 @@
 
 
+## v0.30.2 (2022-06-26)
+
+### Fix
+
+- **automl/tuning**: default batch size to `32`
+
 ## v0.30.1 (2022-06-26)
 
 ### Fix
