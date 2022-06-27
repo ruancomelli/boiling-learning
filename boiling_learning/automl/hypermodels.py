@@ -1,9 +1,8 @@
-from __future__ import annotations
-
 import typing
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import autokeras as ak
+import tensorflow as tf
 
 from boiling_learning.io import json
 from boiling_learning.model.model import anonymize_model_json
@@ -24,3 +23,21 @@ class HyperModel:
 
     def __describe__(self) -> Dict[str, Any]:
         return typing.cast(Dict[str, Any], json.encode(self))
+
+
+class ImageRegressor(ak.AutoModel):
+    def __init__(
+        self,
+        loss: tf.keras.losses.Loss,
+        metrics: List[tf.keras.metrics.Metric],
+        normalize_images: bool,
+        augment_images: bool,
+        **kwargs: Any,
+    ) -> None:
+        inputs = ak.ImageInput()
+        outputs = ak.ImageBlock(normalize=normalize_images, augment=augment_images)(inputs)
+        outputs = ak.SpatialReduction()(outputs)
+        outputs = ak.DenseBlock()(outputs)
+        outputs = ak.RegressionHead(output_dim=1, loss=loss, metrics=metrics)(outputs)
+
+        super().__init__(inputs, outputs, **kwargs)
