@@ -66,7 +66,7 @@ class ModelArchitecture:
 def _serialize_model(instance: ModelArchitecture, path: Path) -> None:
     path = resolve(path, dir=True)
     model_json_path = path / 'model.json'
-    model_weights_path = path / 'weights.h5'
+    model_weights_path = path / 'weights'
 
     instance.model.save_weights(str(model_weights_path))
     model_json_path.write_text(instance.model.to_json())
@@ -76,7 +76,7 @@ def _serialize_model(instance: ModelArchitecture, path: Path) -> None:
 def _deserialize_model(path: Path, _metadata: Metadata) -> ModelArchitecture:
     path = resolve(path)
     model_json_path = path / 'model.json'
-    model_weights_path = path / 'weights.h5'
+    model_weights_path = path / 'weights'
 
     if not model_json_path.is_file():
         raise FileNotFoundError(str(model_json_path))
