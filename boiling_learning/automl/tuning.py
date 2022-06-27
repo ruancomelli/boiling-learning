@@ -12,9 +12,8 @@ from boiling_learning.utils.described import Described
 
 @dataclass(frozen=True)
 class TuneModelParams:
-    batch_size: Optional[int]
-    epochs: int
     callbacks: Described[List[tf.keras.callbacks.Callback], json.JSONDataType]
+    batch_size: Optional[int] = None
 
 
 def fit_hypermodel(
