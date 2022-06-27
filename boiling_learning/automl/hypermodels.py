@@ -26,7 +26,7 @@ class HyperModel:
         return typing.cast(Dict[str, Any], json.encode(self))
 
 
-class ImageRegressor(ak.AutoModel):
+class ImageRegressor(HyperModel):
     def __init__(
         self,
         loss: tf.keras.losses.Loss,
@@ -41,10 +41,10 @@ class ImageRegressor(ak.AutoModel):
         outputs = ak.DenseBlock()(outputs)
         outputs = ak.RegressionHead(output_dim=1, loss=loss, metrics=metrics)(outputs)
 
-        super().__init__(inputs, outputs, **kwargs)
+        super().__init__(ak.AutoModel(inputs, outputs, **kwargs))
 
 
-class FixedArchitectureImageRegressor(ak.AutoModel):
+class FixedArchitectureImageRegressor(HyperModel):
     def __init__(
         self,
         layers: List[tf.keras.layers.Layer],
@@ -56,4 +56,4 @@ class FixedArchitectureImageRegressor(ak.AutoModel):
         outputs = LayersBlock(layers)(inputs)
         outputs = ak.RegressionHead(output_dim=1, loss=loss, metrics=metrics)(outputs)
 
-        super().__init__(inputs, outputs, **kwargs)
+        super().__init__(ak.AutoModel(inputs, outputs, **kwargs))

@@ -22,11 +22,12 @@ def fit_hypermodel(
 ) -> ModelArchitecture:
     ds_train, ds_val, _ = datasets
 
-    hypermodel.fit(
+    automodel = hypermodel.automodel
+    automodel.fit(
         ds_train,
         validation_data=ds_val,
         callbacks=params.callbacks,
         batch_size=params.batch_size,
     )
 
-    return ModelArchitecture(hypermodel.export_model())
+    return ModelArchitecture(automodel.export_model())
