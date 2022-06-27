@@ -15,7 +15,7 @@ dependencies = [
     "Pint<1.0,>=0.18",
     "scikit-image<1.0.0,>=0.19.1",
     "scipy<2.0.0,>=1.7.3",
-    "tensorflow-addons==0.16.1",
+    "tensorflow-addons>=0.17.1",
     "tinydb<5.0.0,>=4.5.2",
     "typing-extensions>=4.2.0",
     "tensorflow<2.9.0,>=2.8.0",
@@ -29,7 +29,8 @@ dependencies = [
     "h5py>=3.7.0",
     "decord==0.6.0",
     "keras-tuner>=1.1.2",
-    "autokeras>=1.0.19"]
+    "autokeras>=1.0.19",
+]
 
 requires-python = ">=3.7.12,<3.10"
 license = {text = "MIT"}
