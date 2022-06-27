@@ -17,8 +17,8 @@ class PopulateSpaceReturn(TypedDict):
 
 
 class EarlyStoppingGreedyOracle(ak.tuners.greedy.GreedyOracle):
-    def __init__(self, goal: Any, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, *, goal: Any, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
         self.stop_search = False
         self.goal = goal
 
@@ -58,14 +58,11 @@ class _FixedMaxModelSizeGreedy(ak.engine.tuner.AutoTuner):
     def _build_and_fit_model(
         self, trial: kt.engine.trial.Trial, *fit_args: Any, **fit_kwargs: Any
     ) -> Dict[str, List[Any]]:
-        print('BUILDING AND FITTING MODEL'.center(80, '='))
         with contextlib.suppress(tf.errors.ResourceExhaustedError, tf.errors.InternalError):
             with self.distribution_strategy.scope():
                 model = self.hypermodel.build(trial.hyperparameters)
 
             model_size = self.maybe_compute_model_size(model)
-
-            print('Got here!!!')
 
             if self.max_model_size is None or model_size <= self.max_model_size:
                 logger.info(f'Building model with size: {model_size}')
@@ -115,7 +112,6 @@ class EarlyStoppingGreedy(_FixedMaxModelSizeGreedy):
     def __init__(
         self,
         *,
-        hypermodel: kt.HyperModel,
         goal: Any,
         objective: str = 'val_loss',
         max_trials: int = 10,
@@ -137,7 +133,7 @@ class EarlyStoppingGreedy(_FixedMaxModelSizeGreedy):
             tune_new_entries=tune_new_entries,
             allow_new_entries=allow_new_entries,
         )
-        super().__init__(oracle=oracle, hypermodel=hypermodel, **kwargs)
+        super().__init__(oracle=oracle, **kwargs)
 
     def on_epoch_end(
         self,

@@ -2,6 +2,7 @@ import typing
 from typing import Any, Dict, List, Optional
 
 import autokeras as ak
+import keras_tuner as kt
 import tensorflow as tf
 
 from boiling_learning.automl.blocks import LayersBlock
@@ -9,7 +10,7 @@ from boiling_learning.io import json
 from boiling_learning.model.model import anonymize_model_json
 
 
-class HyperModel:
+class HyperModel(kt.HyperModel):
     def __init__(self, automodel: ak.AutoModel) -> None:
         self.automodel = automodel
 
