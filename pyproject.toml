@@ -29,8 +29,7 @@ dependencies = [
     "h5py>=3.7.0",
     "decord==0.6.0",
     "keras-tuner>=1.1.2",
-    "autokeras>=1.0.19",
-]
+    "autokeras>=1.0.19"]
 
 requires-python = ">=3.7.12,<3.10"
 license = {text = "MIT"}

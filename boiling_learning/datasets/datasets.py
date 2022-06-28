@@ -1,17 +1,18 @@
 from fractions import Fraction
 from pathlib import Path
-from typing import Any, Generic, Optional, Tuple, TypeVar
+from typing import Any, Optional, TypeVar
 
 import funcy
 
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
 from boiling_learning.utils.dataclasses import dataclass
+from boiling_learning.utils.typeutils import Triplet
 from boiling_learning.utils.utils import resolve
 
 _T = TypeVar('_T')
 
 
-class DatasetTriplet(Tuple[_T, _T, _T], Generic[_T]):
+class DatasetTriplet(Triplet[_T]):
     pass
 
 
