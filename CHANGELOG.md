@@ -1,5 +1,26 @@
 
 
+## v0.30.4 (2022-06-29)
+
+### Fix
+
+- **preprocessing/image**: fix tiny typing issue
+- **model/model**: allow model weights to be saved in TF format
+
+### Feat
+
+- **scripts**: add support for arrays of frames to the processor makers
+- **preprocessing/image**: support frames and arrays of images
+- **preprocessing/numpy**: add caching of frames datasets using numpy files
+- **data/boiling_curve**: add full data for Incropera boiling curve with imposed heat flux
+- **data/boiling_curve**: add full data for boiling curve from Incropera
+- add `data` subpackage containing experimental data
+- **utils/typeutils**: add utility types `Pair` and `Triplet`
+
+### Refactor
+
+- **automl**: simplify hypermodel and tuner classes
+
 ## v0.30.3 (2022-06-26)
 
 ### Fix
