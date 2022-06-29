@@ -1,5 +1,11 @@
 
 
+## v0.30.5 (2022-06-29)
+
+### Feat
+
+- **preprocessing/video**: support mapping a function to multiple frames at once
+
 ## v0.30.4 (2022-06-29)
 
 ### Fix
