@@ -257,11 +257,11 @@ def grayscale(image: _VideoFrameOrFrames) -> _VideoFrameOrFrames:
     if image.shape[-1] != 3:
         raise RuntimeError('expected image to contain 3 color channels')
 
-    return tf.image.rgb_to_grayscale(image).numpy()
+    return typing.cast(_VideoFrameOrFrames, tf.image.rgb_to_grayscale(image).numpy())
 
 
 def normalize_image(image: _VideoFrameOrFrames) -> _VideoFrameOrFrames:
-    return tf.image.per_image_standardization(image).numpy()
+    return typing.cast(_VideoFrameOrFrames, tf.image.per_image_standardization(image).numpy())
 
 
 def random_crop(
