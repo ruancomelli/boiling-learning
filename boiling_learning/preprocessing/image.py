@@ -1,6 +1,6 @@
 import typing
 from fractions import Fraction
-from typing import Optional, Tuple, Union, overload
+from typing import Optional, Tuple, TypeVar, Union, overload
 
 import numpy as np
 import tensorflow as tf
@@ -15,23 +15,27 @@ from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.preprocessing.video import VideoFrame
 from boiling_learning.utils.functional import P
 
+# there is no shape in nympy yet, so we can't really differentiate one frame from many
+VideoFrames = VideoFrame
+_VideoFrameOrFrames = TypeVar('_VideoFrameOrFrames', VideoFrame, VideoFrames)
 
-class Grayscaler(Transformer[VideoFrame, VideoFrame]):
+
+class Grayscaler(Transformer[_VideoFrameOrFrames, _VideoFrameOrFrames]):
     def __init__(self) -> None:
         super().__init__(grayscale, P())
 
 
-class ImageNormalizer(Transformer[VideoFrame, VideoFrame]):
+class ImageNormalizer(Transformer[_VideoFrameOrFrames, _VideoFrameOrFrames]):
     def __init__(self) -> None:
         super().__init__(normalize_image, P())
 
 
-class Downscaler(Transformer[VideoFrame, VideoFrame]):
+class Downscaler(Transformer[_VideoFrameOrFrames, _VideoFrameOrFrames]):
     def __init__(self, factors: Union[int, Tuple[int, int]]) -> None:
         super().__init__(downscale, pack=P(factors=factors))
 
 
-class Cropper(Transformer[VideoFrame, VideoFrame]):
+class Cropper(Transformer[_VideoFrameOrFrames, _VideoFrameOrFrames]):
     def __init__(
         self,
         left: Optional[Union[int, float, Fraction]] = None,
@@ -64,16 +68,16 @@ class Cropper(Transformer[VideoFrame, VideoFrame]):
         super().__init__(crop, pack=pack)
 
 
-class ConvertImageDType(Transformer[VideoFrame, VideoFrame]):
+class ConvertImageDType(Transformer[_VideoFrameOrFrames, _VideoFrameOrFrames]):
     def __init__(self, dtype: str) -> None:
         super().__init__(convert_image_dtype, P(dtype=dtype))
 
 
-def convert_image_dtype(image: VideoFrame, *, dtype: str) -> VideoFrame:
+def convert_image_dtype(image: _VideoFrameOrFrames, *, dtype: str) -> _VideoFrameOrFrames:
     return tf.image.convert_image_dtype(image, tf.dtypes.as_dtype(dtype)).numpy()
 
 
-class RandomCropper(Transformer[VideoFrame, VideoFrame]):
+class RandomCropper(Transformer[_VideoFrameOrFrames, _VideoFrameOrFrames]):
     def __init__(self, width: Optional[int] = None, height: Optional[int] = None) -> None:
         pack = P(
             **{
@@ -88,7 +92,7 @@ class RandomCropper(Transformer[VideoFrame, VideoFrame]):
 
 
 def crop(
-    image: VideoFrame,
+    image: _VideoFrameOrFrames,
     *,
     left: Optional[Union[int, float, Fraction]] = None,
     right: Optional[Union[int, float, Fraction]] = None,
@@ -98,7 +102,7 @@ def crop(
     bottom: Optional[Union[int, float, Fraction]] = None,
     bottom_border: Optional[Union[int, float, Fraction]] = None,
     height: Optional[Union[int, float, Fraction]] = None,
-) -> VideoFrame:
+) -> _VideoFrameOrFrames:
     if image.ndim == 3:
         total_height = image.shape[0]
         total_width = image.shape[1]
@@ -108,14 +112,17 @@ def crop(
     else:
         raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
 
-    left = _ratio_to_size(image, left, axis=1)
-    right = _ratio_to_size(image, right, axis=1)
-    right_border = _ratio_to_size(image, right_border, axis=1)
-    width = _ratio_to_size(image, width, axis=1)
-    top = _ratio_to_size(image, top, axis=0)
-    bottom = _ratio_to_size(image, bottom, axis=0)
-    bottom_border = _ratio_to_size(image, bottom_border, axis=0)
-    height = _ratio_to_size(image, height, axis=0)
+    # axis=-1 is the color channel
+    # axis=-2 is the horizontal axis
+    # axis=-3 is the vertical axis
+    left = _ratio_to_size(image.shape[-2], left)
+    right = _ratio_to_size(image.shape[-2], right)
+    right_border = _ratio_to_size(image.shape[-2], right_border)
+    width = _ratio_to_size(image.shape[-2], width)
+    top = _ratio_to_size(image.shape[-3], top)
+    bottom = _ratio_to_size(image.shape[-3], bottom)
+    bottom_border = _ratio_to_size(image.shape[-3], bottom_border)
+    height = _ratio_to_size(image.shape[-3], height)
 
     incompatible_arguments_error_message = (
         'at least two of `{}`, `{}`, `{}` and `{}` must be `None` or omitted.'
@@ -166,32 +173,34 @@ def crop(
     assert 0 <= top <= bottom
     assert 0 <= bottom <= total_height
 
-    return tf.image.crop_to_bounding_box(
-        image,
-        offset_height=top if top is not None else 0,
-        offset_width=left if left is not None else 0,
-        target_height=bottom - top,
-        target_width=right - left,
-    ).numpy()
+    return typing.cast(
+        _VideoFrameOrFrames,
+        image[
+            ...,  # support a batch axis
+            top:bottom,  # crop vertically
+            left:right,  # crop horizontally
+            :,  # don't crop the channel axis
+        ],
+    )
 
 
 @overload
-def _ratio_to_size(image: VideoFrame, x: Union[int, float, Fraction], *, axis: int) -> int:
+def _ratio_to_size(total: int, x: Union[int, float, Fraction]) -> int:
     ...
 
 
 @overload
-def _ratio_to_size(image: VideoFrame, x: None, *, axis: int) -> None:
+def _ratio_to_size(total: int, x: None) -> None:
     ...
 
 
-def _ratio_to_size(
-    image: VideoFrame, x: Optional[Union[int, float, Fraction]], *, axis: int
-) -> Optional[int]:
-    return int(x * image.shape[axis]) if isinstance(x, (float, Fraction)) else x
+def _ratio_to_size(total: int, x: Optional[Union[int, float, Fraction]]) -> Optional[int]:
+    return int(x * total) if isinstance(x, (float, Fraction)) else x
 
 
-def downscale(image: VideoFrame, factors: Union[int, Tuple[int, int]]) -> VideoFrame:
+def downscale(
+    image: _VideoFrameOrFrames, factors: Union[int, Tuple[int, int]]
+) -> _VideoFrameOrFrames:
     # 4-D Tensor of shape [batch, height, width, channels] or 3-D Tensor of shape
     # [height, width, channels].
 
@@ -209,10 +218,12 @@ def downscale(image: VideoFrame, factors: Union[int, Tuple[int, int]]) -> VideoF
     else:
         raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
 
-    return typing.cast(VideoFrame, _downscale(image, downscale_factors))
+    return typing.cast(_VideoFrameOrFrames, _downscale(image, downscale_factors))
 
 
-def _downscale_tf(image: VideoFrame, factors: Union[int, Tuple[int, int]]) -> VideoFrame:
+def _downscale_tf(
+    image: _VideoFrameOrFrames, factors: Union[int, Tuple[int, int]]
+) -> _VideoFrameOrFrames:
     # 4-D Tensor of shape [batch, height, width, channels] or 3-D Tensor of shape
     # [height, width, channels].
     if image.ndim == 3:
@@ -230,7 +241,7 @@ def _downscale_tf(image: VideoFrame, factors: Union[int, Tuple[int, int]]) -> Vi
         height_factor, width_factor = factors
 
     return typing.cast(
-        VideoFrame,
+        _VideoFrameOrFrames,
         tf.image.resize(
             image,
             (height // height_factor, width // width_factor),
@@ -238,7 +249,7 @@ def _downscale_tf(image: VideoFrame, factors: Union[int, Tuple[int, int]]) -> Vi
     )
 
 
-def grayscale(image: VideoFrame) -> VideoFrame:
+def grayscale(image: _VideoFrameOrFrames) -> _VideoFrameOrFrames:
     if image.ndim not in {3, 4}:
         raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
 
@@ -248,16 +259,16 @@ def grayscale(image: VideoFrame) -> VideoFrame:
     return tf.image.rgb_to_grayscale(image).numpy()
 
 
-def normalize_image(image: VideoFrame) -> VideoFrame:
+def normalize_image(image: _VideoFrameOrFrames) -> _VideoFrameOrFrames:
     return tf.image.per_image_standardization(image).numpy()
 
 
 def random_crop(
-    image: VideoFrame,
+    image: _VideoFrameOrFrames,
     *,
     height: Optional[int] = None,
     width: Optional[int] = None,
-) -> VideoFrame:
+) -> _VideoFrameOrFrames:
     if image.ndim == 3:
         total_height = image.shape[0]
         total_width = image.shape[1]
@@ -274,7 +285,7 @@ def random_crop(
     else:
         raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
 
-    return typing.cast(VideoFrame, tf.image.random_crop(image, size).numpy())
+    return typing.cast(_VideoFrameOrFrames, tf.image.random_crop(image, size).numpy())
 
 
 def normalized_mutual_information(
