@@ -11,31 +11,32 @@ from skimage.metrics import structural_similarity as ssim
 from skimage.transform import downscale_local_mean as _downscale
 from skimage.transform import resize
 
-from boiling_learning.preprocessing.transformers import Transformer
+from boiling_learning.preprocessing.transformers import Operator
 from boiling_learning.preprocessing.video import VideoFrame
 from boiling_learning.utils.functional import P
 
 # there is no shape in nympy yet, so we can't really differentiate one frame from many
 VideoFrames = VideoFrame
-_VideoFrameOrFrames = TypeVar('_VideoFrameOrFrames', VideoFrame, VideoFrames)
+VideoFrameOrFrames = Union[VideoFrame, VideoFrames]
+_VideoFrameOrFrames = TypeVar('_VideoFrameOrFrames', bound=VideoFrameOrFrames)
 
 
-class Grayscaler(Transformer[_VideoFrameOrFrames, _VideoFrameOrFrames]):
+class Grayscaler(Operator[VideoFrameOrFrames]):
     def __init__(self) -> None:
         super().__init__(grayscale, P())
 
 
-class ImageNormalizer(Transformer[_VideoFrameOrFrames, _VideoFrameOrFrames]):
+class ImageNormalizer(Operator[VideoFrameOrFrames]):
     def __init__(self) -> None:
         super().__init__(normalize_image, P())
 
 
-class Downscaler(Transformer[_VideoFrameOrFrames, _VideoFrameOrFrames]):
+class Downscaler(Operator[VideoFrameOrFrames]):
     def __init__(self, factors: Union[int, Tuple[int, int]]) -> None:
         super().__init__(downscale, pack=P(factors=factors))
 
 
-class Cropper(Transformer[_VideoFrameOrFrames, _VideoFrameOrFrames]):
+class Cropper(Operator[VideoFrameOrFrames]):
     def __init__(
         self,
         left: Optional[Union[int, float, Fraction]] = None,
@@ -68,7 +69,7 @@ class Cropper(Transformer[_VideoFrameOrFrames, _VideoFrameOrFrames]):
         super().__init__(crop, pack=pack)
 
 
-class ConvertImageDType(Transformer[_VideoFrameOrFrames, _VideoFrameOrFrames]):
+class ConvertImageDType(Operator[VideoFrameOrFrames]):
     def __init__(self, dtype: str) -> None:
         super().__init__(convert_image_dtype, P(dtype=dtype))
 
@@ -77,7 +78,7 @@ def convert_image_dtype(image: _VideoFrameOrFrames, *, dtype: str) -> _VideoFram
     return tf.image.convert_image_dtype(image, tf.dtypes.as_dtype(dtype)).numpy()
 
 
-class RandomCropper(Transformer[_VideoFrameOrFrames, _VideoFrameOrFrames]):
+class RandomCropper(Operator[VideoFrameOrFrames]):
     def __init__(self, width: Optional[int] = None, height: Optional[int] = None) -> None:
         pack = P(
             **{

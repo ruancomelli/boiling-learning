@@ -6,9 +6,9 @@ from boiling_learning.preprocessing.image import (
     Downscaler,
     Grayscaler,
     RandomCropper,
+    VideoFrameOrFrames,
 )
-from boiling_learning.preprocessing.transformers import Transformer
-from boiling_learning.preprocessing.video import VideoFrame
+from boiling_learning.preprocessing.transformers import Operator
 
 ExperimentVideoName = str
 
@@ -22,8 +22,8 @@ def main(
     width: int = 128,
 ) -> List[
     Union[
-        Transformer[VideoFrame, VideoFrame],
-        Dict[ExperimentVideoName, Transformer[VideoFrame, VideoFrame]],
+        Operator[VideoFrameOrFrames],
+        Dict[ExperimentVideoName, Operator[VideoFrameOrFrames]],
     ]
 ]:
     return [
