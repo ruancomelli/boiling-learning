@@ -6,14 +6,14 @@ import subprocess
 import typing
 from pathlib import Path
 from types import TracebackType
-from typing import Callable, Iterable, Iterator, Optional, Tuple, Type, Union
+from typing import Iterable, Iterator, Optional, Tuple, Type, Union
 
 import decord
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
 
-from boiling_learning.datasets.sliceable import MapSliceableDataset, SliceableDataset
+from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, serialize
 from boiling_learning.utils.descriptions import describe
@@ -86,9 +86,6 @@ class Video(SliceableDataset[VideoFrame]):
         with self as frames:
             return tuple(frames.get_batch(indices).asnumpy())
 
-    def map_batch(self, map_func: Callable[[VideoFrames], VideoFrames]) -> BatchMapVideo:
-        return BatchMapVideo(map_func, self)
-
     def __iter__(self) -> Iterator[VideoFrameU8]:
         with self as frames:
             for frame in frames:
@@ -132,29 +129,6 @@ class Video(SliceableDataset[VideoFrame]):
 
 class OpenVideoError(Exception):
     pass
-
-
-class BatchMapVideo(MapSliceableDataset[VideoFrame]):
-    def __init__(self, map_func: Callable[[VideoFrames], VideoFrames], dataset: Video) -> None:
-        def _map_one(frame: VideoFrame) -> VideoFrame:
-            array = np.ndarray([frame])
-            return map_func(array)[0]
-
-        super().__init__(_map_one, dataset)
-        self._map_batch = map_func
-
-    def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self._map_batch}, {self._ancestor})'
-
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrame, ...]:
-        assert isinstance(self._ancestor, Video)
-
-        indices = range(len(self)) if indices is None else list(indices)
-
-        with self._ancestor as frames:
-            batch = frames.get_batch(indices).asnumpy()
-
-        return tuple(self._map_batch(batch))
 
 
 @json.encode.instance(Video)
