@@ -12,11 +12,9 @@ from skimage.transform import downscale_local_mean as _downscale
 from skimage.transform import resize
 
 from boiling_learning.preprocessing.transformers import Operator
-from boiling_learning.preprocessing.video import VideoFrame
+from boiling_learning.preprocessing.video import VideoFrame, VideoFrames
 from boiling_learning.utils.functional import P
 
-# there is no shape in nympy yet, so we can't really differentiate one frame from many
-VideoFrames = VideoFrame
 VideoFrameOrFrames = Union[VideoFrame, VideoFrames]
 _VideoFrameOrFrames = TypeVar('_VideoFrameOrFrames', bound=VideoFrameOrFrames)
 
