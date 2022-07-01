@@ -364,11 +364,11 @@ def _serialize_complex_json_encodable(obj: ComplexJSONEncodableType) -> Serializ
 
 
 def dumps(obj: Supports[JSONSerializable]) -> str:
-    return _json.dumps(serialize(obj))
+    return _json.dumps(_maybe_sort_dict(serialize(obj)))
 
 
 def dump(obj: Supports[JSONSerializable], path: PathLike) -> None:
-    serialized: SerializedJSONObject = serialize(obj)
+    serialized: SerializedJSONObject = _maybe_sort_dict(serialize(obj))
 
     with resolve(path, parents=True).open('w', encoding='utf-8') as file:
         _json.dump(serialized, file, indent=4)
@@ -396,3 +396,11 @@ def load(path: PathLike) -> Any:
 
 def loads(contents: str) -> Any:
     return deserialize(_json.loads(contents))
+
+
+def _maybe_sort_dict(obj: Any) -> Any:
+    return _sort_dict(obj) if isinstance(obj, dict) else obj
+
+
+def _sort_dict(d: Dict[Any, Any]) -> Dict[Any, Any]:
+    return dict(sorted(d.items()))

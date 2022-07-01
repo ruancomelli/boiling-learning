@@ -176,10 +176,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
         return self[keep_indices]
 
     def skip(self, count: Union[int, Fraction]) -> SliceableDataset[_T]:
-        if isinstance(count, int):
-            return self[count:]
-
-        return self.take(1 - count)
+        return self[count:] if isinstance(count, int) else self.take(1 - count)
 
     @overload
     def split(
