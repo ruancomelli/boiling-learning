@@ -1,5 +1,11 @@
 
 
+## v0.30.6 (2022-06-30)
+
+### Fix
+
+- **io/json**: ensure that dictionaries are always sorted
+
 ## v0.30.5 (2022-06-29)
 
 ### Feat
