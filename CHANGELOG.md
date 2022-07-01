@@ -1,5 +1,11 @@
 
 
+## v0.30.8 (2022-07-01)
+
+### Fix
+
+- **model/model**: revert to using HDF5 files to save and load models
+
 ## v0.30.7 (2022-07-01)
 
 ### Fix
