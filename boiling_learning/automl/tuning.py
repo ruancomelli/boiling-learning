@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 import tensorflow as tf
 
@@ -13,7 +13,7 @@ from boiling_learning.utils.described import Described
 @dataclass(frozen=True)
 class TuneModelParams:
     callbacks: Described[List[tf.keras.callbacks.Callback], json.JSONDataType]
-    batch_size: Optional[int] = None
+    batch_size: int
 
 
 def fit_hypermodel(
@@ -26,7 +26,7 @@ def fit_hypermodel(
         ds_train,
         validation_data=ds_val,
         callbacks=params.callbacks.value,
-        batch_size=params.batch_size or 32,
+        batch_size=params.batch_size,
     )
 
     return ModelArchitecture(automodel.export_model())

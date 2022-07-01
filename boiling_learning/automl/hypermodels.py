@@ -15,12 +15,11 @@ class HyperModel(kt.HyperModel):
         self.automodel = automodel
 
     def get_config(self) -> Dict[str, Any]:
-        return self.automodel.tuner.hypermodel.get_config()
+        return typing.cast(Dict[str, Any], self.automodel.tuner.hypermodel.get_config())
 
     def __json_encode__(self) -> Dict[str, Any]:
-        model_json = self.get_config()
         return anonymize_model_json(
-            {key: value for key, value in model_json['config'].items() if key != 'name'}
+            {key: value for key, value in self.get_config().items() if key != 'name'}
         )
 
     def __describe__(self) -> Dict[str, Any]:
