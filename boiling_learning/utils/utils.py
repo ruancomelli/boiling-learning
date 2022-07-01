@@ -3,7 +3,6 @@ from __future__ import annotations
 import itertools
 import operator
 import os
-import pprint
 import random
 import string
 from collections import ChainMap
@@ -11,7 +10,6 @@ from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import (
-    Any,
     Callable,
     Collection,
     DefaultDict,
@@ -21,7 +19,6 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    Type,
     TypeVar,
     Union,
 )
@@ -30,9 +27,6 @@ import funcy
 import more_itertools as mit
 from typing_extensions import overload
 
-from boiling_learning.utils.iterutils import flaglast
-
-_TypeT = TypeVar('_TypeT', bound=Type[Any])
 _T = TypeVar('_T')
 _Key = TypeVar('_Key')
 _Value = TypeVar('_Value')
@@ -204,73 +198,6 @@ def tempfilepath(suffix: Optional[str] = None) -> Iterator[Path]:
             filepath = filepath.with_suffix(suffix)
 
         yield filepath
-
-
-# ---------------------------------- Class printing ----------------------------------
-def simple_pprinter(names: Optional[Tuple[str, ...]] = None):
-    def _simple_pprint(self, obj: Any, stream, indent: int, allowance, context, level):
-        """
-        Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
-        """
-        # Source: <https://stackoverflow.com/a/52521743/5811400>
-        write = stream.write
-
-        class_name = obj.__class__.__name__
-        write(f'{class_name}(')
-
-        if names is None:
-            obj_items = obj.__dict__.copy().items()
-        else:
-            if len(names) == 0:
-                values = ()
-            else:
-                values = operator.attrgetter(*names)
-                if len(names) == 1:
-                    values = (values,)
-            obj_items = zip(names, values)
-
-        _format_kwarg_dict_items(
-            self,
-            obj_items,
-            stream,
-            indent + len(class_name),
-            allowance + 1,
-            context,
-            level,
-        )
-        write(')')
-
-    return _simple_pprint
-
-
-def _format_kwarg_dict_items(self, items, stream, indent, allowance, context, level):
-    '''
-    Modified from pprint dict https://github.com/python/cpython/blob/3.7/Lib/pprint.py#L194
-    '''
-    write = stream.write
-
-    indent += self._indent_per_level
-    delimnl = ',\n' + ' ' * indent
-    for last, (key, ent) in flaglast(items):
-        write(key)
-        write('=')
-        self._format(
-            ent,
-            stream,
-            indent + len(key) + 1,
-            allowance if last else 1,
-            context,
-            level,
-        )
-        if not last:
-            write(delimnl)
-
-
-def simple_pprint_class(cls: _TypeT, *names: str) -> _TypeT:
-    pprint.PrettyPrinter._dispatch[cls.__repr__] = simple_pprinter(names)
-
-    # Returning the class allows the use of this function as a decorator
-    return cls
 
 
 # ---------------------------------- Mixins ----------------------------------

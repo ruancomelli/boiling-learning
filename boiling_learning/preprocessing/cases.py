@@ -1,44 +1,34 @@
 from typing import Optional
 
-from typing_extensions import TypeAlias
-
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.utils import PathLike, resolve
 
 
 class Case(ImageDataset):
-    VideoDataKeys: TypeAlias = ImageDataset.VideoDataKeys
-    DataFrameColumnNames: TypeAlias = ImageDataset.DataFrameColumnNames
-    DataFrameColumnTypes: TypeAlias = ImageDataset.DataFrameColumnTypes
-
     def __init__(
         self,
         path: PathLike,
         name: Optional[str] = None,
-        df_name: str = 'dataset.csv',
         dataframes_dir_name: str = 'dataframes',
         videos_dir_name: str = 'videos',
         video_suffix: str = '.mp4',
-        column_names: DataFrameColumnNames = DataFrameColumnNames(),
-        column_types: DataFrameColumnTypes = DataFrameColumnTypes(),
+        column_names: ExperimentVideo.DataFrameColumnNames = (
+            ExperimentVideo.DataFrameColumnNames()
+        ),
+        column_types: ExperimentVideo.DataFrameColumnTypes = (
+            ExperimentVideo.DataFrameColumnTypes()
+        ),
         video_data_path: Optional[PathLike] = None,
     ) -> None:
         if not video_suffix.startswith('.'):
             raise ValueError('argument *video_suffix* must start with a dot \'.\'')
 
         self.path = resolve(path, dir=True)
+        super().__init__(name=name or self.path.name)
 
-        df_path = self.path / df_name
         self.dataframes_dir = resolve(self.path / dataframes_dir_name, dir=True)
         self.videos_dir = resolve(self.path / videos_dir_name, dir=True)
-
-        super().__init__(
-            name=name or self.path.name,
-            column_names=column_names,
-            column_types=column_types,
-            df_path=df_path,
-        )
 
         self.update(
             ExperimentVideo(
@@ -58,7 +48,7 @@ class Case(ImageDataset):
         data_path: Optional[PathLike] = None,
         purge: bool = False,
         remove_absent: bool = False,
-        keys: VideoDataKeys = VideoDataKeys(),
+        keys: ImageDataset.VideoDataKeys = ImageDataset.VideoDataKeys(),
     ) -> None:
         super().set_video_data_from_file(
             data_path or self.video_data_path,
