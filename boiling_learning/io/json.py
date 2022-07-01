@@ -6,7 +6,7 @@ from datetime import timedelta
 from fractions import Fraction
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, Dict, FrozenSet, Hashable, List, Optional, Set, Tuple, TypeVar, Union
 
 from classes import AssociatedType, Supports
 from classes import typeclass as _typeclass
@@ -20,6 +20,7 @@ from boiling_learning.utils.table_dispatch import TableDispatcher
 
 # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
 
+_AnyDict = TypeVar('_AnyDict', bound=Dict[Hashable, Any])
 BasicTypes = Union[None, bool, int, str, float]
 _BasicType = TypeVar('_BasicType', bound=BasicTypes)
 JSONDataType = Union[BasicTypes, List['JSONDataType'], Dict[str, 'JSONDataType']]
@@ -357,18 +358,20 @@ class ComplexJSONEncodableType(
 @serialize.instance(delegate=ComplexJSONEncodableType)
 def _serialize_complex_json_encodable(obj: ComplexJSONEncodableType) -> SerializedJSONObject:
     '''Return a JSON serialization of an object.'''
-    return {
-        'type': encode(type(obj)),
-        'contents': encode(obj),
-    }
+    return _nested_sort_dicts(
+        {
+            'type': encode(type(obj)),
+            'contents': encode(obj),
+        }
+    )
 
 
 def dumps(obj: Supports[JSONSerializable]) -> str:
-    return _json.dumps(_maybe_sort_dict(serialize(obj)))
+    return _json.dumps(serialize(obj))
 
 
 def dump(obj: Supports[JSONSerializable], path: PathLike) -> None:
-    serialized: SerializedJSONObject = _maybe_sort_dict(serialize(obj))
+    serialized = serialize(obj)
 
     with resolve(path, parents=True).open('w', encoding='utf-8') as file:
         _json.dump(serialized, file, indent=4)
@@ -398,9 +401,10 @@ def loads(contents: str) -> Any:
     return deserialize(_json.loads(contents))
 
 
-def _maybe_sort_dict(obj: Any) -> Any:
-    return _sort_dict(obj) if isinstance(obj, dict) else obj
-
-
-def _sort_dict(d: Dict[Any, Any]) -> Dict[Any, Any]:
-    return dict(sorted(d.items()))
+def _nested_sort_dicts(obj: SerializedJSONObject) -> SerializedJSONObject:
+    if isinstance(obj, dict):
+        return {k: _nested_sort_dicts(v) for k, v in sorted(obj.items())}
+    elif isinstance(obj, list):
+        return [_nested_sort_dicts(item) for item in obj]
+    else:
+        return obj
