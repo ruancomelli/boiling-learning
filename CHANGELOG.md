@@ -1,5 +1,15 @@
 
 
+## v0.30.9 (2022-07-01)
+
+### Refactor
+
+- **preprocessing/image_datasets**: remove unused functionality from `ImageDataset`
+
+### Fix
+
+- **automl/hypermodels**: do not try to get "config" key in `HyperModel.__json_encode__`
+
 ## v0.30.8 (2022-07-01)
 
 ### Fix
