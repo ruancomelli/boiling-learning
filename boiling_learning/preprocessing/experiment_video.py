@@ -78,7 +78,6 @@ class ExperimentVideo:
     ) -> None:
         self.path = resolve(video_path)
         self.video: SliceableDataset[VideoFrame] = Video(self.path)
-        # self.video: SliceableDataset[VideoFrame] = PimsVideo(self.path)
 
         self._data: Optional[ExperimentVideo.VideoData] = None
         self.column_names = column_names

@@ -41,7 +41,24 @@ class EarlyStoppingGreedyOracle(ak.tuners.greedy.GreedyOracle):
         self.goal = state['goal']
 
 
-class _FixedMaxModelSizeGreedy(ak.engine.tuner.AutoTuner):
+class _NoAutomaticSaveBestModel(ak.engine.tuner.AutoTuner):
+    def _build_and_fit_model(
+        self, trial: kt.engine.trial.Trial, *fit_args: Any, **fit_kwargs: Any
+    ) -> Dict[str, List[Any]]:
+        if 'callbacks' in fit_kwargs:
+            fit_kwargs['callbacks'] = [
+                callback
+                for callback in fit_kwargs['callbacks']
+                if not isinstance(callback, kt.engine.tuner_utils.SaveBestEpoch)
+            ]
+
+        return typing.cast(
+            Dict[str, List[Any]],
+            super()._build_and_fit_model(trial, *fit_args, **fit_kwargs),
+        )
+
+
+class _FixedMaxModelSizeGreedy(_NoAutomaticSaveBestModel):
     def on_trial_end(self, trial: kt.engine.trial.Trial) -> None:
         # Send status to Logger
         if self.logger:
@@ -70,10 +87,7 @@ class _FixedMaxModelSizeGreedy(ak.engine.tuner.AutoTuner):
                 # TODO: may be required to avoid errors:
                 # fit_kwargs["callbacks"].extend(<your callbacks>)
 
-                return typing.cast(
-                    Dict[str, List[Any]],
-                    super()._build_and_fit_model(trial, *fit_args, **fit_kwargs),
-                )
+                return super()._build_and_fit_model(trial, *fit_args, **fit_kwargs)
 
             logger.info(f'Skipping model with size: {model_size}')
 
