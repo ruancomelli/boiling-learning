@@ -1,5 +1,11 @@
 
 
+## v0.30.10 (2022-07-02)
+
+### Fix
+
+- **automl/tuners**: skip saving models on each epoch
+
 ## v0.30.9 (2022-07-01)
 
 ### Refactor
