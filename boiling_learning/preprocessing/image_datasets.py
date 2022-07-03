@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json as _json
 from pathlib import Path
-from typing import Any, Callable, List, Mapping, Union
+from typing import Callable, List, Mapping
 
 from boiling_learning.io import json
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
@@ -25,7 +25,7 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
 
     def __repr__(self) -> str:
         return (
-            f'<{self.__class__.__name__} name={self.name} experiment_videos={tuple(self.keys())}>'
+            f'<{self.__class__.__name__} name={self.name} experiment_videos={sorted(self.keys())}>'
         )
 
     @property
@@ -45,16 +45,14 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
 
     def set_video_data(
         self,
-        video_data: Mapping[str, Union[Mapping[str, Any], ExperimentVideo.VideoData]],
-        keys: ExperimentVideo.VideoDataKeys = ExperimentVideo.VideoDataKeys(),
+        video_data: Mapping[str, ExperimentVideo.VideoData],
+        *,
         remove_absent: bool = False,
     ) -> None:
         video_data_keys = frozenset(video_data.keys())
         self_keys = frozenset(self.keys())
         for name in self_keys & video_data_keys:
-            self[name].data = dataclass_from_mapping(
-                video_data[name], ExperimentVideo.VideoData, key_map=keys
-            )
+            self[name].data = video_data[name]
 
         if remove_absent:
             for name in self_keys - video_data_keys:
@@ -63,6 +61,7 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
     def set_video_data_from_file(
         self,
         data_path: PathLike,
+        *,
         remove_absent: bool = False,
         keys: VideoDataKeys = VideoDataKeys(),
     ) -> None:
@@ -84,7 +83,12 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
         else:
             raise RuntimeError(f'could not load video data from {data_path}.')
 
-        self.set_video_data(video_data, keys, remove_absent=remove_absent)
+        video_data = {
+            name: dataclass_from_mapping(data, ExperimentVideo.VideoData, key_map=keys)
+            for name, data in video_data.items()
+        }
+
+        self.set_video_data(video_data, remove_absent=remove_absent)
 
 
 def _get_experiment_video_name(experiment_video: ExperimentVideo) -> str:

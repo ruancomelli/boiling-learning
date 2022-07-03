@@ -51,8 +51,8 @@ class Case(ImageDataset):
     ) -> None:
         super().set_video_data_from_file(
             data_path or self.video_data_path,
-            keys=keys,
             remove_absent=remove_absent,
+            keys=keys,
         )
 
     def convert_videos(
