@@ -1,5 +1,11 @@
 
 
+## v0.30.12 (2022-07-03)
+
+### Fix
+
+- **automl/hypermodels**: use `LayersBlock.get_config` when allocating path for tuner in `FixedArchitectureImageRegressor`
+
 ## v0.30.11 (2022-07-02)
 
 ### Feat
