@@ -81,7 +81,9 @@ class _SaveBestModelAtTrainingEnd(ak.engine.tuner.AutoTuner):
         )
 
     def _get_checkpoint_fname(self, trial_id: str) -> str:
-        return str(resolve(super()._get_checkpoint_fname(trial_id)).with_suffix('.h5'))
+        return str(
+            resolve(super()._get_checkpoint_fname(trial_id), parents=True).with_suffix('.h5')
+        )
 
 
 class _FixedMaxModelSizeGreedy(_SaveBestModelAtTrainingEnd):
