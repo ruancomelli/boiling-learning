@@ -1,5 +1,16 @@
 
 
+## v0.30.14 (2022-07-03)
+
+### Fix
+
+- **automl/tuners**: do not use beta Keras Tuner functions
+
+### Refactor
+
+- **model/definitions**: remove unused configuration enums
+- **datasets/bridging**: move `utils.dtypes` into `datasets/bridging`
+
 ## v0.30.13 (2022-07-03)
 
 ### Fix
