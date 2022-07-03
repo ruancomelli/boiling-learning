@@ -92,8 +92,10 @@ class FixedArchitectureImageRegressor(HyperModel):
         if 'distribution_strategy' in kwargs:
             raise TypeError("the argument 'distribution_strategy' is not supported.")
 
+        layers_block = LayersBlock(layers)
+
         inputs = ak.ImageInput()
-        outputs = LayersBlock(layers)(inputs)
+        outputs = layers_block(inputs)
         outputs = ak.RegressionHead(output_dim=1, loss=loss, metrics=metrics)(outputs)
 
         if isinstance(directory, Allocator):
@@ -101,7 +103,7 @@ class FixedArchitectureImageRegressor(HyperModel):
                 self.__class__.__name__,
                 loss=loss,
                 metrics=metrics,
-                layers=[layer.get_config() for layer in layers],
+                layers=layers_block.get_config(),
                 **kwargs,
             )
         elif directory is not None:
