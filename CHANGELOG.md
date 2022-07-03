@@ -1,5 +1,15 @@
 
 
+## v0.30.13 (2022-07-03)
+
+### Fix
+
+- **automl/tuners**: save models at the end of the training
+
+### Refactor
+
+- **model/definitions**: simplify model definitions to use `Literal`s instead of enums
+
 ## v0.30.12 (2022-07-03)
 
 ### Fix
