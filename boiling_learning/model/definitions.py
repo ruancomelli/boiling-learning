@@ -25,9 +25,10 @@ from tensorflow.keras.layers import (
     TimeDistributed,
 )
 from tensorflow.keras.mixed_precision.experimental import Policy
+from typing_extensions import Literal
 
 from boiling_learning.model.layers import ImageNormalization
-from boiling_learning.model.model import ModelArchitecture, ProblemType
+from boiling_learning.model.model import ModelArchitecture
 
 # Check this guideline:
 # https://docs.nvidia.com/deeplearning/performance/dl-performance-fully-connected/index.html
@@ -46,7 +47,7 @@ def tiny_convnet(
     dropout: Optional[float],
     hidden_layers_policy: Optional[Union[str, Policy]] = None,
     output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: ProblemType = ProblemType.REGRESSION,
+    problem: Literal['classification', 'regression'] = 'regression',
     num_classes: Optional[int] = None,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
@@ -62,10 +63,10 @@ def tiny_convnet(
         x = Dropout(dropout, dtype=hidden_layers_policy)(x)
     x = Flatten(dtype=hidden_layers_policy)(x)
 
-    if problem is ProblemType.CLASSIFICATION:
+    if problem == 'classification':
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Softmax(dtype=output_layer_policy)(x)
-    elif problem is ProblemType.REGRESSION:
+    elif problem == 'regression':
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
     else:
@@ -79,7 +80,7 @@ def small_convnet(
     dropout: Optional[float],
     hidden_layers_policy: Optional[Union[str, Policy]] = None,
     output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: ProblemType = ProblemType.REGRESSION,
+    problem: Literal['classification', 'regression'] = 'regression',
     num_classes: Optional[int] = None,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
@@ -106,10 +107,10 @@ def small_convnet(
     if dropout is not None:
         x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    if problem is ProblemType.CLASSIFICATION:
+    if problem == 'classification':
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Softmax(dtype=output_layer_policy)(x)
-    elif problem is ProblemType.REGRESSION:
+    elif problem == 'regression':
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
     else:
@@ -123,7 +124,7 @@ def hoboldnet1(
     dropout: Optional[float],
     hidden_layers_policy: Optional[Union[str, Policy]] = None,
     output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: ProblemType = ProblemType.REGRESSION,
+    problem: Literal['classification', 'regression'] = 'regression',
     num_classes: Optional[int] = None,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
@@ -154,10 +155,10 @@ def hoboldnet1(
     if dropout is not None:
         x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    if problem is ProblemType.CLASSIFICATION:
+    if problem == 'classification':
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Softmax(dtype=output_layer_policy)(x)
-    elif problem is ProblemType.REGRESSION:
+    elif problem == 'regression':
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
     else:
@@ -171,7 +172,7 @@ def hoboldnet2(
     dropout: Optional[float],
     hidden_layers_policy: Optional[Union[str, Policy]] = None,
     output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: ProblemType = ProblemType.REGRESSION,
+    problem: Literal['classification', 'regression'] = 'regression',
     num_classes: Optional[int] = None,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
@@ -202,10 +203,10 @@ def hoboldnet2(
     if dropout is not None:
         x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    if problem is ProblemType.CLASSIFICATION:
+    if problem == 'classification':
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Softmax(dtype=output_layer_policy)(x)
-    elif problem is ProblemType.REGRESSION:
+    elif problem == 'regression':
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
     else:
@@ -219,7 +220,7 @@ def hoboldnet3(
     dropout: Optional[float],
     hidden_layers_policy: Optional[Union[str, Policy]] = None,
     output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: ProblemType = ProblemType.REGRESSION,
+    problem: Literal['classification', 'regression'] = 'regression',
     num_classes: Optional[int] = None,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
@@ -258,10 +259,10 @@ def hoboldnet3(
     if dropout is not None:
         x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    if problem is ProblemType.CLASSIFICATION:
+    if problem == 'classification':
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Softmax(dtype=output_layer_policy)(x)
-    elif problem is ProblemType.REGRESSION:
+    elif problem == 'regression':
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
     else:
@@ -275,7 +276,7 @@ def hoboldnet_supplementary(
     dropout: Optional[float],
     hidden_layers_policy: Optional[Union[str, Policy]] = None,
     output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: ProblemType = ProblemType.REGRESSION,
+    problem: Literal['classification', 'regression'] = 'regression',
     num_classes: Optional[int] = None,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
@@ -313,10 +314,10 @@ def hoboldnet_supplementary(
     if dropout is not None:
         x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    if problem is ProblemType.CLASSIFICATION:
+    if problem == 'classification':
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Softmax(dtype=output_layer_policy)(x)
-    elif problem is ProblemType.REGRESSION:
+    elif problem == 'regression':
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
     else:
@@ -330,7 +331,7 @@ def kramernet(
     dropout: Optional[float],
     hidden_layers_policy: Optional[Union[str, Policy]] = None,
     output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: ProblemType = ProblemType.REGRESSION,
+    problem: Literal['classification', 'regression'] = 'regression',
     num_classes: Optional[int] = None,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
@@ -407,10 +408,10 @@ def kramernet(
     if dropout is not None:
         x = Dropout(dropout, dtype=hidden_layers_policy)(x)
 
-    if problem is ProblemType.CLASSIFICATION:
+    if problem == 'classification':
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Softmax(dtype=output_layer_policy)(x)
-    elif problem is ProblemType.REGRESSION:
+    elif problem == 'regression':
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
     else:
@@ -421,7 +422,7 @@ def kramernet(
 
 def linear_model(
     input_shape: Tuple[int, ...],
-    problem: ProblemType = ProblemType.REGRESSION,
+    problem: Literal['classification', 'regression'] = 'regression',
     normalize_images: bool = True,
 ) -> ModelArchitecture:
     inputs = Input(shape=input_shape)
@@ -429,7 +430,7 @@ def linear_model(
     if normalize_images:
         x = ImageNormalization()(x)
 
-    if problem is not ProblemType.REGRESSION:
+    if problem != 'regression':
         raise ValueError(f'unsupported problem type: \"{problem}\"')
 
     predictions = _LinearModel()(x)
@@ -455,17 +456,17 @@ def boilnet(
     dropout: Optional[float] = None,
     spatial_dropout: Optional[float] = None,
     time_window: int = 0,
-    convolution_type: ConvolutionType = ConvolutionType.CONV,
-    flattening: FlatteningMode = FlatteningMode.FLATTEN,
-    problem: ProblemType = ProblemType.REGRESSION,
+    convolution_type: Literal['vanilla', 'separable'] = 'vanilla',
+    flattening: Literal['flatten', 'average', 'max'] = 'flatten',
+    problem: Literal['classification', 'regression'] = 'regression',
     num_classes: int = 0,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
     input_shape = (time_window, *image_shape) if time_window > 0 else image_shape
     flatten_layer = {
-        FlatteningMode.FLATTEN: Flatten,
-        FlatteningMode.AVERAGE_POOLING: GlobalAveragePooling2D,
-        FlatteningMode.MAX_POOLING: GlobalMaxPooling2D,
+        'flatten': Flatten,
+        'average': GlobalAveragePooling2D,
+        'max': GlobalMaxPooling2D,
     }[flattening]
 
     inputs = Input(shape=input_shape)
@@ -478,8 +479,8 @@ def boilnet(
         spatial_dropouter = funcy.constantly(Layer())
 
     conv_layer = {
-        ConvolutionType.CONV: Conv2D,
-        ConvolutionType.SEPARABLE_CONV: SeparableConv2D,
+        'separable': Conv2D,
+        'vanilla': SeparableConv2D,
     }[convolution_type]
 
     conv = distribute(conv_layer(32, (5, 5), padding='same', activation='relu'))(normalized)
@@ -501,8 +502,8 @@ def boilnet(
     head = dropouter()(head)
 
     head_size, activation = {
-        ProblemType.CLASSIFICATION: (num_classes, 'softmax'),
-        ProblemType.REGRESSION: (1, 'linear'),
+        'classification': (num_classes, 'softmax'),
+        'regression': (1, 'linear'),
     }[problem]
     outputs = Dense(head_size, activation=activation)(flatten)
 
@@ -532,7 +533,7 @@ def boiling_mobile_net(
     image_shape: Tuple[Optional[int], ...],
     hidden_layers_policy: Optional[Union[str, Policy]] = None,
     output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: ProblemType = ProblemType.REGRESSION,
+    problem: Literal['classification', 'regression'] = 'regression',
     num_classes: int = 0,
 ) -> ModelArchitecture:
     mobile_net = MobileNetV2(
@@ -541,10 +542,10 @@ def boiling_mobile_net(
     x = Dense(256, dtype=hidden_layers_policy)(mobile_net.output)
     x = ReLU()(x)
 
-    if problem is ProblemType.CLASSIFICATION:
+    if problem == 'classification':
         x = Dense(num_classes, dtype=hidden_layers_policy)(x)
         predictions = Softmax(dtype=output_layer_policy)(x)
-    elif problem is ProblemType.REGRESSION:
+    elif problem == 'regression':
         x = Dense(1, dtype=hidden_layers_policy)(x)
         predictions = Activation('linear', dtype=output_layer_policy)(x)
     else:

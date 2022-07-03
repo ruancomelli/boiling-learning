@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import enum
 import json as _json
 import operator
 import typing
@@ -132,11 +131,6 @@ def model_memory_usage_in_bytes(
     return (
         batch_size * shapes_mem_count + model_params_count
     ) * ureg.byte + internal_model_mem_count
-
-
-class ProblemType(enum.Enum):
-    CLASSIFICATION = enum.auto()
-    REGRESSION = enum.auto()
 
 
 def anonymize_model_json(model_json: Dict[str, Any]) -> Dict[str, Any]:
