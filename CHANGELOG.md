@@ -1,5 +1,17 @@
 
 
+## v0.30.15 (2022-07-03)
+
+### Fix
+
+- **automl/tuners**: ensure that model weights are read to/from HDF5 files
+
+### Refactor
+
+- **preprocessing/image_datasets**: re-use utility function
+- **preprocessing/image_datasets**: simplify `set_video_data`
+- **preprocessing/image_datasets**: automatically apply "purge" option
+
 ## v0.30.14 (2022-07-03)
 
 ### Fix
