@@ -1,4 +1,3 @@
-import enum
 from functools import partial
 from typing import Optional, Tuple, Union
 
@@ -436,17 +435,6 @@ def linear_model(
     predictions = _LinearModel()(x)
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
-
-
-class FlatteningMode(enum.Enum):
-    FLATTEN = enum.auto()
-    AVERAGE_POOLING = enum.auto()
-    MAX_POOLING = enum.auto()
-
-
-class ConvolutionType(enum.Enum):
-    CONV = enum.auto()
-    SEPARABLE_CONV = enum.auto()
 
 
 def boilnet(
