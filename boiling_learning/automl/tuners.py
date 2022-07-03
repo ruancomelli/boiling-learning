@@ -41,16 +41,37 @@ class EarlyStoppingGreedyOracle(ak.tuners.greedy.GreedyOracle):
         self.goal = state['goal']
 
 
-class _NoAutomaticSaveBestModel(ak.engine.tuner.AutoTuner):
+class _SaveBestModelAtTrainingEnd(ak.engine.tuner.AutoTuner):
+    """Only save models at the end of the training.
+
+    If early stopping was defined as a callback, replace ``KerasTuner``'s ``SaveBestEpoch`` with
+    a similar, custom implementation that only saves models at the end of the training.
+    """
+
     def _build_and_fit_model(
         self, trial: kt.engine.trial.Trial, *fit_args: Any, **fit_kwargs: Any
     ) -> Dict[str, List[Any]]:
         if 'callbacks' in fit_kwargs:
-            fit_kwargs['callbacks'] = [
-                callback
-                for callback in fit_kwargs['callbacks']
-                if not isinstance(callback, kt.engine.tuner_utils.SaveBestEpoch)
-            ]
+            callbacks = fit_kwargs['callbacks']
+
+            if any(
+                isinstance(callback, tf.keras.callbacks.EarlyStopping) for callback in callbacks
+            ):
+                index = next(
+                    (
+                        index
+                        for index, callback in enumerate(callbacks)
+                        if isinstance(callback, kt.engine.tuner_utils.SaveBestEpoch)
+                    ),
+                    None,
+                )
+                if index is not None:
+                    callbacks.pop(index)
+                    callbacks.insert(
+                        index,
+                        SaveBestEpoch(filepath=self._get_checkpoint_fname(trial.trial_id)),
+                    )
+                    fit_kwargs['callbacks'] = callbacks
 
         return typing.cast(
             Dict[str, List[Any]],
@@ -58,7 +79,7 @@ class _NoAutomaticSaveBestModel(ak.engine.tuner.AutoTuner):
         )
 
 
-class _FixedMaxModelSizeGreedy(_NoAutomaticSaveBestModel):
+class _FixedMaxModelSizeGreedy(_SaveBestModelAtTrainingEnd):
     def on_trial_end(self, trial: kt.engine.trial.Trial) -> None:
         # Send status to Logger
         if self.logger:
@@ -170,3 +191,22 @@ class EarlyStoppingGreedy(_FixedMaxModelSizeGreedy):
 
 
 _HUGE_NUMBER = 100000.0
+
+
+class SaveBestEpoch(tf.keras.callbacks.Callback):
+    """A Keras callback to save the model weights at the end of the training."""
+
+    def __init__(self, filepath: str) -> None:
+        super().__init__()
+        self.filepath = filepath
+
+    def on_train_end(self, logs: Optional[Dict[str, Any]] = None) -> None:
+        # Create temporary saved model files on non-chief workers.
+        write_filepath = kt.distribute.utils.write_filepath(
+            self.filepath, self.model.distribute_strategy
+        )
+        self.model.save_weights(write_filepath)
+        # Remove temporary saved model files on non-chief workers.
+        kt.distribute.utils.remove_temp_dir_with_filepath(
+            write_filepath, self.model.distribute_strategy
+        )
