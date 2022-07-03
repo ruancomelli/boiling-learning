@@ -63,7 +63,6 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
     def set_video_data_from_file(
         self,
         data_path: PathLike,
-        purge: bool = False,
         remove_absent: bool = False,
         keys: VideoDataKeys = VideoDataKeys(),
     ) -> None:
@@ -71,23 +70,21 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
         video_data = _json.loads(data_path.read_text())
 
         if isinstance(video_data, list):
-            if purge:
-                video_data = (item for item in video_data if not item.pop(keys.ignore, False))
-                purge = False
-
-            video_data = {item.pop(keys.name): item for item in video_data}
-
-        if isinstance(video_data, dict):
-            if purge:
-                video_data = {
-                    key: value
-                    for key, value in video_data.items()
-                    if not value.pop(keys.ignore, False)
-                }
-
-            self.set_video_data(video_data, keys, remove_absent=remove_absent)
+            video_data = {
+                item.pop(keys.name): item
+                for item in video_data
+                if not item.pop(keys.ignore, False)
+            }
+        elif isinstance(video_data, dict):
+            video_data = {
+                key: value
+                for key, value in video_data.items()
+                if not value.pop(keys.ignore, False)
+            }
         else:
             raise RuntimeError(f'could not load video data from {data_path}.')
+
+        self.set_video_data(video_data, keys, remove_absent=remove_absent)
 
 
 def _get_experiment_video_name(experiment_video: ExperimentVideo) -> str:

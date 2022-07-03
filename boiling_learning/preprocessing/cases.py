@@ -46,13 +46,11 @@ class Case(ImageDataset):
     def set_video_data_from_file(
         self,
         data_path: Optional[PathLike] = None,
-        purge: bool = False,
         remove_absent: bool = False,
         keys: ImageDataset.VideoDataKeys = ImageDataset.VideoDataKeys(),
     ) -> None:
         super().set_video_data_from_file(
             data_path or self.video_data_path,
-            purge=purge,
             keys=keys,
             remove_absent=remove_absent,
         )

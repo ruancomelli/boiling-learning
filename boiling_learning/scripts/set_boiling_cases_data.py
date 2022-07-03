@@ -51,7 +51,7 @@ def set_case(
     *,
     case_experiment_path: PathLike,
 ) -> None:
-    case.set_video_data_from_file(purge=True, remove_absent=True)
+    case.set_video_data_from_file(remove_absent=True)
 
     case_experiment_path = resolve(case_experiment_path)
 
