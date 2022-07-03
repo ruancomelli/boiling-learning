@@ -10,6 +10,8 @@ from loguru import logger
 from tensorflow.keras import backend as K
 from typing_extensions import TypedDict
 
+from boiling_learning.utils.utils import resolve
+
 
 class PopulateSpaceReturn(TypedDict):
     status: kt.engine.trial.TrialStatus
@@ -77,6 +79,9 @@ class _SaveBestModelAtTrainingEnd(ak.engine.tuner.AutoTuner):
             Dict[str, List[Any]],
             super()._build_and_fit_model(trial, *fit_args, **fit_kwargs),
         )
+
+    def _get_checkpoint_fname(self, trial_id: str) -> str:
+        return str(resolve(super()._get_checkpoint_fname(trial_id)).with_suffix('.h5'))
 
 
 class _FixedMaxModelSizeGreedy(_SaveBestModelAtTrainingEnd):
