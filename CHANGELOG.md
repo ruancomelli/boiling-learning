@@ -1,5 +1,15 @@
 
 
+## v0.30.16 (2022-07-03)
+
+### Fix
+
+- **automl/tuners**: ensure that the checkpoint file parents exist
+
+### Refactor
+
+- **scripts/set_boiling_cases_data**: move wire sample data to `boiling_learning.data.samples`
+
 ## v0.30.15 (2022-07-03)
 
 ### Fix
