@@ -201,12 +201,4 @@ class SaveBestEpoch(tf.keras.callbacks.Callback):
         self.filepath = filepath
 
     def on_train_end(self, logs: Optional[Dict[str, Any]] = None) -> None:
-        # Create temporary saved model files on non-chief workers.
-        write_filepath = kt.distribute.utils.write_filepath(
-            self.filepath, self.model.distribute_strategy
-        )
-        self.model.save_weights(write_filepath)
-        # Remove temporary saved model files on non-chief workers.
-        kt.distribute.utils.remove_temp_dir_with_filepath(
-            write_filepath, self.model.distribute_strategy
-        )
+        self.model.save_weights(self.filepath)
