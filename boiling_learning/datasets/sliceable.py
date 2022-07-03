@@ -27,7 +27,6 @@ import more_itertools as mit
 from iteround import saferound
 from typing_extensions import Literal, TypeGuard, TypeVarTuple, Unpack
 
-from boiling_learning.utils.dtypes import NestedTypeSpec, auto_spec
 from boiling_learning.utils.iterutils import distance_maximized_evenly_spaced_indices
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
@@ -277,10 +276,6 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_T, ...]:
         return tuple(self[indices] if indices is not None else self)
-
-    @property
-    def element_spec(self) -> NestedTypeSpec:
-        return auto_spec(self[0])
 
     def _is_boolean_mask(self, key: Any) -> TypeGuard[BooleanMask]:
         return (

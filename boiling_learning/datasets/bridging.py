@@ -2,15 +2,24 @@ from __future__ import annotations
 
 import math
 from functools import partial
-from typing import Callable, Optional, TypeVar
+from typing import Callable, Hashable, List, Mapping, Optional, Tuple, TypeVar, Union
 
 import tensorflow as tf
 
 from boiling_learning.datasets.sliceable import SliceableDataset
+from boiling_learning.utils.functional import map_values
 from boiling_learning.utils.mathutils import round_to_multiple
 from boiling_learning.utils.utils import PathLike, resolve
 
 _T = TypeVar('_T')
+NestedStructure = Union[
+    _T,
+    List['NestedStructure[_T]'],
+    Tuple['NestedStructure[_T]', ...],
+    Mapping[Hashable, 'NestedStructure[_T]'],
+]
+NestedTypeSpec = NestedStructure[tf.TypeSpec]
+NestedTensorLike = NestedStructure[tf.types.experimental.TensorLike]
 
 
 def sliceable_dataset_to_tensorflow_dataset(
@@ -42,14 +51,14 @@ def sliceable_dataset_to_tensorflow_dataset(
             if not save_path.exists():
                 raise FileNotFoundError
 
-            ds = tf.data.experimental.load(str(save_path), dataset.element_spec)
+            ds = tf.data.experimental.load(str(save_path), auto_spec(dataset[0]))
         except FileNotFoundError:
             ds = creator()
 
             tf.data.experimental.save(ds, str(save_path))
             ds = tf.data.experimental.load(
                 str(save_path),
-                dataset.element_spec,
+                auto_spec(dataset[0]),
                 reader_func=_make_reader_func(deterministic=deterministic),
             )
 
@@ -105,5 +114,12 @@ def _create_tensorflow_dataset(
 
     return tf.data.Dataset.from_generator(
         lambda: iter(dataset if prefilterer is None else filter(prefilterer, dataset)),
-        output_signature=dataset.element_spec,
+        output_signature=auto_spec(dataset[0]),
     )
+
+
+def auto_spec(elem: NestedTensorLike) -> NestedTypeSpec:
+    try:
+        return tf.type_spec_from_value(elem)
+    except TypeError:
+        return map_values(auto_spec, elem)
