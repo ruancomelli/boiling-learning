@@ -91,15 +91,15 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
         self.set_video_data(video_data, remove_absent=remove_absent)
 
 
-def _get_experiment_video_name(experiment_video: ExperimentVideo) -> str:
-    return experiment_video.name
-
-
 @json.encode.instance(ImageDataset)
 def _encode_image_dataset(obj: ImageDataset) -> List[json.JSONDataType]:
-    return json.serialize(sorted(obj, key=lambda ev: ev.name))
+    return json.serialize(sorted(obj, key=_get_experiment_video_name))
 
 
 @describe.instance(ImageDataset)
 def _describe_image_dataset(obj: ImageDataset) -> List[Path]:
-    return describe(sorted(obj, key=lambda ev: ev.name))
+    return describe(sorted(obj, key=_get_experiment_video_name))
+
+
+def _get_experiment_video_name(experiment_video: ExperimentVideo) -> str:
+    return experiment_video.name
