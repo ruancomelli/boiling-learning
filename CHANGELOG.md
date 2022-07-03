@@ -1,5 +1,11 @@
 
 
+## v0.30.11 (2022-07-02)
+
+### Feat
+
+- **automl/hypermodels**: accept allocators for saving hypermodels
+
 ## v0.30.10 (2022-07-02)
 
 ### Fix
