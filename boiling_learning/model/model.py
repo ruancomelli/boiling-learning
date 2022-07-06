@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import itertools
 import json as _json
 import operator
 import typing
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, TypeVar
+from typing import Any, Callable, Dict, List, Mapping, Optional, TypeVar
 
 import more_itertools as mit
 import tensorflow as tf
@@ -133,6 +134,47 @@ def model_memory_usage_in_bytes(
     ) * ureg.byte + internal_model_mem_count
 
 
+def rename_model_layers(
+    model: ModelArchitecture,
+    renamer: Optional[Callable[[str], str]] = None,
+    custom_objects: Optional[Any] = None,
+) -> ModelArchitecture:
+    '''Rename layers and model while keeping the pre-trained weights.
+
+    Source: https://nrasadi.medium.com/change-model-layer-name-in-tensorflow-keras-58771dd6bf1b.
+    '''
+    if renamer is None:
+        renamer = _default_renamer()
+
+    config = model.model.get_config()
+    old_to_new = {}
+    new_to_old = {}
+
+    for layer in config['layers']:
+        new_name = renamer(layer['name'])
+        old_to_new[layer['name']], new_to_old[new_name] = new_name, layer['name']
+        layer['name'] = new_name
+        layer['config']['name'] = new_name
+
+        if len(layer['inbound_nodes']) > 0:
+            for in_node in layer['inbound_nodes'][0]:
+                in_node[0] = old_to_new[in_node[0]]
+
+    for input_layer in config['input_layers']:
+        input_layer[0] = old_to_new[input_layer[0]]
+
+    for output_layer in config['output_layers']:
+        output_layer[0] = old_to_new[output_layer[0]]
+
+    config['name'] = renamer(config['name'])
+    new_model = tf.keras.Model.from_config(config, custom_objects)
+
+    for layer in new_model.layers:
+        layer.set_weights(model.model.get_layer(new_to_old[layer.name]).get_weights())
+
+    return ModelArchitecture(new_model)
+
+
 def anonymize_model_json(model_json: Dict[str, Any]) -> Dict[str, Any]:
     names = _collect_names(model_json, name_key='name')
     translator = {name: f'layer_{index}' for index, name in enumerate(mit.unique_everseen(names))}
@@ -162,3 +204,12 @@ def _rename_layers(config: _Any, translator: Mapping[str, str]) -> _Any:
         return [_rename_layers(value, translator) for value in config]
     else:
         return translator[config] if isinstance(config, str) and config in translator else config
+
+
+def _default_renamer() -> Callable[[str], str]:
+    counter = itertools.count()
+
+    def _rename(_name: str) -> str:
+        return f'layer_{next(counter)}'
+
+    return _rename
