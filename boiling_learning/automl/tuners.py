@@ -19,10 +19,9 @@ class PopulateSpaceReturn(TypedDict):
 
 
 class EarlyStoppingGreedyOracle(ak.tuners.greedy.GreedyOracle):
-    def __init__(self, *, goal: Any, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
         self.stop_search = False
-        self.goal = goal
 
     def populate_space(self, trial_id: str) -> PopulateSpaceReturn:
         if self.stop_search:
@@ -34,16 +33,15 @@ class EarlyStoppingGreedyOracle(ak.tuners.greedy.GreedyOracle):
 
     def get_state(self) -> Dict[str, Any]:
         state = super().get_state()
-        state.update(stop_search=self.stop_search, goal=self.goal)
+        state.update(stop_search=self.stop_search)
         return typing.cast(Dict[str, Any], state)
 
     def set_state(self, state: Dict[str, Any]) -> None:
         super().set_state(state)
         self.stop_search = state['stop_search']
-        self.goal = state['goal']
 
 
-class _SaveBestModelAtTrainingEnd(ak.engine.tuner.AutoTuner):
+class _SaveBestModelAtTrainingEndTuner(ak.engine.tuner.AutoTuner):
     """Only save models at the end of the training.
 
     If early stopping was defined as a callback, replace ``KerasTuner``'s ``SaveBestEpoch`` with
@@ -86,7 +84,7 @@ class _SaveBestModelAtTrainingEnd(ak.engine.tuner.AutoTuner):
         )
 
 
-class _FixedMaxModelSizeGreedy(_SaveBestModelAtTrainingEnd):
+class _FixedMaxModelSizeTuner(_SaveBestModelAtTrainingEndTuner):
     def on_trial_end(self, trial: kt.engine.trial.Trial) -> None:
         # Send status to Logger
         if self.logger:
@@ -150,7 +148,7 @@ class _FixedMaxModelSizeGreedy(_SaveBestModelAtTrainingEnd):
         return 0
 
 
-class EarlyStoppingGreedy(_FixedMaxModelSizeGreedy):
+class EarlyStoppingGreedy(_FixedMaxModelSizeTuner):
     def __init__(
         self,
         *,
@@ -164,10 +162,10 @@ class EarlyStoppingGreedy(_FixedMaxModelSizeGreedy):
         allow_new_entries: bool = True,
         **kwargs: Any,
     ) -> None:
+        self.goal = goal
         self.seed = seed
         oracle = EarlyStoppingGreedyOracle(
             objective=objective,
-            goal=goal,
             max_trials=max_trials,
             initial_hps=initial_hps,
             seed=seed,
@@ -189,10 +187,8 @@ class EarlyStoppingGreedy(_FixedMaxModelSizeGreedy):
         objective = self.oracle.objective
         loss = objective.get_value(logs)
 
-        if objective.better_than(loss, self.oracle.goal):
-            logger.info(
-                f'Got {loss}, and the desired objective is {self.oracle.goal}. Stopping now.'
-            )
+        if objective.better_than(loss, self.goal):
+            logger.info(f'Got {loss}, and the desired objective is {self.goal}. Stopping now.')
             model.stop_training = True
             self.oracle.stop_search = True
 
