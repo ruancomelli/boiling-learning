@@ -41,7 +41,7 @@ class EarlyStoppingGreedyOracle(ak.tuners.greedy.GreedyOracle):
         self.stop_search = state['stop_search']
 
 
-class EarlyStoppingHyperbandOracle(ak.tuners.hyperband.HyperbandOracle):
+class EarlyStoppingHyperbandOracle(kt.oracles.HyperbandOracle):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.stop_search = False
@@ -227,6 +227,7 @@ class EarlyStoppingHyperband(_FixedMaxModelSizeTuner):
         goal: Any,
         objective: str = 'val_loss',
         max_epochs: int = 100,
+        max_trials: int = 1000,
         factor: int = 3,
         seed: Optional[int] = None,
         hyperparameters: Optional[kt.HyperParameters] = None,
@@ -244,6 +245,7 @@ class EarlyStoppingHyperband(_FixedMaxModelSizeTuner):
             tune_new_entries=tune_new_entries,
             allow_new_entries=allow_new_entries,
         )
+        oracle.max_trials = max_trials
         super().__init__(oracle=oracle, **kwargs)
 
     def on_epoch_end(
