@@ -1,5 +1,11 @@
 
 
+## v0.30.19 (2022-07-06)
+
+### Fix
+
+- **automl/tuners**: fix inheritance chain
+
 ## v0.30.18 (2022-07-06)
 
 ### Refactor
