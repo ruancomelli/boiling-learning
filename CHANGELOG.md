@@ -1,5 +1,12 @@
 
 
+## v0.30.18 (2022-07-06)
+
+### Refactor
+
+- **automl/tuners**: log max model size for easier tracking
+- **automl/tuners**: log max model size for easier tracking
+
 ## v0.30.17 (2022-07-05)
 
 ### Feat
