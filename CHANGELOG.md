@@ -1,5 +1,11 @@
 
 
+## v0.30.20 (2022-07-06)
+
+### Fix
+
+- **model/model**: correctly pass `custom_objects` to `tf.keras.Model.from_config`
+
 ## v0.30.19 (2022-07-06)
 
 ### Fix
