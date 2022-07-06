@@ -41,6 +41,29 @@ class EarlyStoppingGreedyOracle(ak.tuners.greedy.GreedyOracle):
         self.stop_search = state['stop_search']
 
 
+class EarlyStoppingHyperbandOracle(ak.tuners.hyperband.HyperbandOracle):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.stop_search = False
+
+    def populate_space(self, trial_id: str) -> PopulateSpaceReturn:
+        if self.stop_search:
+            return {
+                'status': kt.engine.trial.TrialStatus.STOPPED,
+                'values': None,
+            }
+        return typing.cast(PopulateSpaceReturn, super().populate_space(trial_id))
+
+    def get_state(self) -> Dict[str, Any]:
+        state = super().get_state()
+        state.update(stop_search=self.stop_search)
+        return typing.cast(Dict[str, Any], state)
+
+    def set_state(self, state: Dict[str, Any]) -> None:
+        super().set_state(state)
+        self.stop_search = state['stop_search']
+
+
 class _SaveBestModelAtTrainingEndTuner(ak.engine.tuner.AutoTuner):
     """Only save models at the end of the training.
 
@@ -163,11 +186,54 @@ class EarlyStoppingGreedy(_FixedMaxModelSizeTuner):
         **kwargs: Any,
     ) -> None:
         self.goal = goal
-        self.seed = seed
         oracle = EarlyStoppingGreedyOracle(
             objective=objective,
             max_trials=max_trials,
             initial_hps=initial_hps,
+            seed=seed,
+            hyperparameters=hyperparameters,
+            tune_new_entries=tune_new_entries,
+            allow_new_entries=allow_new_entries,
+        )
+        super().__init__(oracle=oracle, **kwargs)
+
+    def on_epoch_end(
+        self,
+        trial: kt.engine.trial.Trial,
+        model: tf.keras.models.Model,
+        epoch: str,
+        logs: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        super().on_epoch_end(trial, model, epoch, logs)
+
+        objective = self.oracle.objective
+        loss = objective.get_value(logs)
+
+        if objective.better_than(loss, self.goal):
+            logger.info(f'Got {loss}, and the desired objective is {self.goal}. Stopping now.')
+            model.stop_training = True
+            self.oracle.stop_search = True
+
+
+class EarlyStoppingHyperband(_FixedMaxModelSizeTuner):
+    def __init__(
+        self,
+        *,
+        goal: Any,
+        objective: str = 'val_loss',
+        max_epochs: int = 100,
+        factor: int = 3,
+        seed: Optional[int] = None,
+        hyperparameters: Optional[kt.HyperParameters] = None,
+        tune_new_entries: bool = True,
+        allow_new_entries: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        self.goal = goal
+        oracle = EarlyStoppingHyperbandOracle(
+            objective=objective,
+            max_epochs=max_epochs,
+            factor=factor,
             seed=seed,
             hyperparameters=hyperparameters,
             tune_new_entries=tune_new_entries,
