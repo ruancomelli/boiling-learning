@@ -129,16 +129,21 @@ class _FixedMaxModelSizeTuner(_SaveBestModelAtTrainingEndTuner):
                 model = self.hypermodel.build(trial.hyperparameters)
 
             model_size = self.maybe_compute_model_size(model)
+            max_model_size_message = (
+                'no maximum'
+                if self.max_model_size is None
+                else f'{model_size/self.max_model_size:.0%} {self.max_model_size}'
+            )
 
             if self.max_model_size is None or model_size <= self.max_model_size:
-                logger.info(f'Building model with size: {model_size} (max: {self.max_model_size})')
+                logger.info(f'Building model with size: {model_size} ({max_model_size_message})')
 
-                # TODO: may be required to avoid errors:
+                # may be required to avoid errors:
                 # fit_kwargs["callbacks"].extend(<your callbacks>)
 
                 return super()._build_and_fit_model(trial, *fit_args, **fit_kwargs)
 
-            logger.info(f'Skipping model with size: {model_size} (max: {self.max_model_size})')
+            logger.info(f'Skipping model with size: {model_size} ({max_model_size_message})')
 
         self.oracle.end_trial(trial.trial_id, kt.engine.trial.TrialStatus.INVALID)
 
