@@ -137,7 +137,7 @@ def model_memory_usage_in_bytes(
 def rename_model_layers(
     model: ModelArchitecture,
     renamer: Optional[Callable[[str], str]] = None,
-    custom_objects: Optional[Any] = None,
+    custom_objects: Any = _CUSTOM_OBJECTS,
 ) -> ModelArchitecture:
     '''Rename layers and model while keeping the pre-trained weights.
 
