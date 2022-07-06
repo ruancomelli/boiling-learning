@@ -1,5 +1,17 @@
 
 
+## v0.30.17 (2022-07-05)
+
+### Feat
+
+- **automl/hypermodels**: define `ConvImageRegressor` for auto-tuning image regression models with convnets
+- **automl/tuners**: define early-stopping Hyperband tuner
+- **model/model**: add utility function for renaming models
+
+### Refactor
+
+- **automl/tuners**: remove `goal` from oracle
+
 ## v0.30.16 (2022-07-03)
 
 ### Fix
