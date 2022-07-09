@@ -14,7 +14,6 @@ dependencies = [
     "parse<2.0.0,>=1.19.0",
     "Pint<1.0,>=0.18",
     "scikit-image<1.0.0,>=0.19.1",
-    "tensorflow-addons>=0.17.1",
     "tinydb<5.0.0,>=4.5.2",
     "typing-extensions>=4.2.0",
     "tensorflow<2.9.0,>=2.8.0",
@@ -53,6 +52,9 @@ repository = "https://github.com/ruancomelli/boiling-learning"
 documentation = "https://github.com/ruancomelli/boiling_learning/blob/main/README.md"
 
 [project.optional-dependencies]
+scripts = [
+    "tensorflow-addons>=0.17.1",
+]
 
 [project.entry-points.tox]
 pdm = "tox_pdm.plugin"
