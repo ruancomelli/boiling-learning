@@ -4,9 +4,9 @@ from typing import Optional, Tuple, TypeVar, Union, overload
 
 import numpy as np
 import tensorflow as tf
-from scipy.stats import entropy
 from skimage.exposure import histogram
 from skimage.measure import shannon_entropy
+from skimage.metrics import normalized_mutual_information as _normalized_mutual_information
 from skimage.metrics import structural_similarity as ssim
 from skimage.transform import downscale_local_mean as _downscale
 from skimage.transform import resize
@@ -288,11 +288,9 @@ def random_crop(
 
 
 def normalized_mutual_information(
-    image0: VideoFrame, image1: VideoFrame, bins: int = 100
+    image0: VideoFrame, image1: VideoFrame, *, bins: int = 100
 ) -> float:
     """Compute the normalized mutual information (NMI).
-
-    Source code: https://github.com/scikit-image/scikit-image/blob/8db28f027729a045de1b54b599338d1804a461b3/skimage/metrics/simple_metrics.py#L193-L261
 
     The normalized mutual information of :math:`A` and :math:`B` is given by::
     ..math::
@@ -329,25 +327,7 @@ def normalized_mutual_information(
            Pattern Recognition 32(1):71-86
            :DOI:`10.1016/S0031-3203(98)00091-0`
     """
-    if image0.ndim != image1.ndim:
-        raise ValueError(
-            'NMI requires images of same number of dimensions. '
-            f'Got {image0.ndim}D for `image0` and {image1.ndim}D for `image1`.'
-        )
-
-    image0, image1 = _reshape_to_largest(image0, image1)
-
-    hist, _ = np.histogramdd(
-        [np.reshape(image0, -1), np.reshape(image1, -1)],
-        bins=bins,
-        density=True,
-    )
-
-    H0 = entropy(np.sum(hist, axis=0))
-    H1 = entropy(np.sum(hist, axis=1))
-    H01 = entropy(np.reshape(hist, -1))
-
-    return typing.cast(float, (H0 + H1) / H01 - 1)
+    return _normalized_mutual_information(image0, image1, bins=bins) - 1
 
 
 def structural_similarity_ratio(ref: VideoFrame, image: VideoFrame) -> float:

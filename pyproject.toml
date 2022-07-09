@@ -14,7 +14,6 @@ dependencies = [
     "parse<2.0.0,>=1.19.0",
     "Pint<1.0,>=0.18",
     "scikit-image<1.0.0,>=0.19.1",
-    "scipy<2.0.0,>=1.7.3",
     "tensorflow-addons>=0.17.1",
     "tinydb<5.0.0,>=4.5.2",
     "typing-extensions>=4.2.0",
