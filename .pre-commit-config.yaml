@@ -6,7 +6,7 @@ repos:
   - id: commitizen
     stages: [commit-msg]
 
-- repo: https://github.com/hakancelik96/unimport
+- repo: https://github.com/hakancelikdev/unimport
   rev: 0.9.4
   hooks:
   - id: unimport
