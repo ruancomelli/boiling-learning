@@ -1,8 +1,5 @@
-from functools import partial
 from typing import Optional, Tuple, Union
 
-import funcy
-from tensorflow.keras.applications import MobileNetV2
 from tensorflow.keras.experimental import LinearModel as _LinearModel
 from tensorflow.keras.layers import (
     Activation,
@@ -11,17 +8,10 @@ from tensorflow.keras.layers import (
     Dense,
     Dropout,
     Flatten,
-    GlobalAveragePooling2D,
-    GlobalMaxPooling2D,
     Input,
-    Lambda,
-    Layer,
     MaxPool2D,
     ReLU,
-    SeparableConv2D,
     Softmax,
-    SpatialDropout2D,
-    TimeDistributed,
 )
 from tensorflow.keras.mixed_precision.experimental import Policy
 from typing_extensions import Literal
@@ -435,117 +425,3 @@ def linear_model(
     predictions = _LinearModel()(x)
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
-
-
-def boilnet(
-    image_shape: Tuple[Optional[int], ...],
-    hidden_layers_policy: Optional[Union[str, Policy]] = None,
-    output_layer_policy: Optional[Union[str, Policy]] = None,
-    dropout: Optional[float] = None,
-    spatial_dropout: Optional[float] = None,
-    time_window: int = 0,
-    convolution_type: Literal['vanilla', 'separable'] = 'vanilla',
-    flattening: Literal['flatten', 'average', 'max'] = 'flatten',
-    problem: Literal['classification', 'regression'] = 'regression',
-    num_classes: int = 0,
-    normalize_images: bool = True,
-) -> ModelArchitecture:
-    input_shape = (time_window, *image_shape) if time_window > 0 else image_shape
-    flatten_layer = {
-        'flatten': Flatten,
-        'average': GlobalAveragePooling2D,
-        'max': GlobalMaxPooling2D,
-    }[flattening]
-
-    inputs = Input(shape=input_shape)
-
-    normalized = ImageNormalization()(inputs) if normalize_images else inputs
-    distribute = TimeDistributed if time_window > 0 else funcy.identity
-    if spatial_dropout is not None:
-        spatial_dropouter = partial(SpatialDropout2D, spatial_dropout)
-    else:
-        spatial_dropouter = funcy.constantly(Layer())
-
-    conv_layer = {
-        'separable': Conv2D,
-        'vanilla': SeparableConv2D,
-    }[convolution_type]
-
-    conv = distribute(conv_layer(32, (5, 5), padding='same', activation='relu'))(normalized)
-    conv = distribute(spatial_dropouter())(conv)
-    conv = distribute(MaxPool2D((2, 2), strides=(2, 2)))(conv)
-    conv = distribute(conv_layer(64, (5, 5), padding='same', activation='relu'))(conv)
-    conv = distribute(spatial_dropouter())(conv)
-    conv = distribute(MaxPool2D((2, 2), strides=(2, 2)))(conv)
-    flatten = distribute(flatten_layer())(conv)
-
-    if dropout is not None:
-        dropouter = partial(Dropout, dropout)
-    else:
-        dropouter = funcy.constantly(Lambda(funcy.identity))
-
-    head = dropouter()(flatten)
-    head = Dense(256)(head)
-    head = ReLU()(head)
-    head = dropouter()(head)
-
-    head_size, activation = {
-        'classification': (num_classes, 'softmax'),
-        'regression': (1, 'linear'),
-    }[problem]
-    outputs = Dense(head_size, activation=activation)(flatten)
-
-    return _apply_policies_to_layers(
-        ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs),
-        hidden_layers_policy,
-        output_layer_policy,
-    )
-
-
-def _apply_policies_to_layers(
-    model: ModelArchitecture,
-    hidden_layers_policy: Optional[Union[str, Policy]] = None,
-    output_layer_policy: Optional[Union[str, Policy]] = None,
-) -> ModelArchitecture:
-    hidden_layers_policy = Policy(hidden_layers_policy)
-    output_layer_policy = Policy(output_layer_policy)
-
-    for layer in model.model.layers[1:-1]:
-        layer.dtype = hidden_layers_policy
-    model.model.layers[-1].dtype = output_layer_policy
-
-    return model
-
-
-def boiling_mobile_net(
-    image_shape: Tuple[Optional[int], ...],
-    hidden_layers_policy: Optional[Union[str, Policy]] = None,
-    output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: Literal['classification', 'regression'] = 'regression',
-    num_classes: int = 0,
-) -> ModelArchitecture:
-    mobile_net = MobileNetV2(
-        input_shape=image_shape, include_top=False, weights='imagenet', pooling='avg'
-    )
-    x = Dense(256, dtype=hidden_layers_policy)(mobile_net.output)
-    x = ReLU()(x)
-
-    if problem == 'classification':
-        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Softmax(dtype=output_layer_policy)(x)
-    elif problem == 'regression':
-        x = Dense(1, dtype=hidden_layers_policy)(x)
-        predictions = Activation('linear', dtype=output_layer_policy)(x)
-    else:
-        raise ValueError(f'unknown problem type: \"{problem}\"')
-
-    return ModelArchitecture.from_inputs_and_outputs(inputs=mobile_net.input, outputs=predictions)
-
-
-# TODO: fazer erro em função do y: ver se para maiores ys o erro vai subindo ou diminuindo
-# quem sabe fazer 3 ou mais modelos, um especializado para cada região de y; e quem sabe
-# usar um classificador pra escolher qual estimador não ajude muito
-# focar na arquitetura da rede, que é mais importante do que hiperparâmetros
-# otimizar as convolucionais pode ser mais importante do que otimizar as fully-connected
-
-# TODO: ReLU or LeakyReLU? https://www.quora.com/What-are-the-advantages-of-using-Leaky-Rectified-Linear-Units-Leaky-ReLU-over-normal-ReLU-in-deep-learning
