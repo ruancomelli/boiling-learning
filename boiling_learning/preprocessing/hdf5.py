@@ -33,8 +33,9 @@ class HDF5SliceableDataset(SliceableDataset[_T]):
 
         # sort the indices, fetch the frames and unsort them back
         unsorters, sorted_indices = unsort(indices)
+        sorted_indices = list(sorted_indices)
         with h5py.File(str(self._filepath), 'r') as file:
-            frames = file[self._dataset_name][list(sorted_indices)]
+            frames = file[self._dataset_name][sorted_indices]
             return tuple(frames[unsorter] for unsorter in unsorters)
 
     def __repr__(self) -> str:

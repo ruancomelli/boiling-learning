@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import Iterable, Iterator, List, Optional, Sequence, Tuple, TypeVar
+from typing import Iterable, Iterator, Optional, Sequence, Tuple, TypeVar
 
 import numpy as np
 from loguru import logger
@@ -17,7 +17,7 @@ class NumpyMemoryMappedSliceableDataset(SliceableDataset[_Array]):
 
     @contextmanager
     def open(self) -> Iterator[Sequence[_Array]]:
-        yield np.load(self._filepath, mmap_mode='r', allow_pickle=False)
+        yield np.memmap(self._filepath, mode='r')  # type: ignore
 
     def __len__(self) -> int:
         with self.open() as data:
@@ -52,16 +52,28 @@ def frames_to_numpy(
     """Save frames as an HDF5 file."""
     destination = resolve(dest, parents=True)
 
+    number_of_frames = len(frames)
+    first_frame = frames[0]
+
+    fp = np.memmap(
+        destination,
+        mode='w+',
+        dtype=first_frame.dtype,
+        shape=(number_of_frames, *first_frame.shape),
+    )
+
     if buffer_size is None:
-        buffer_size = len(frames)
+        logger.debug(f'Writing ALL frames ({number_of_frames}) to {destination}')
 
-    all_frames: List[VideoFrame] = []
-    for chunk_index, frames_batch in enumerate(frames.batch(buffer_size)):
-        n_frames = len(frames_batch)
-        start = chunk_index * buffer_size
-        end = start + n_frames
-        logger.debug(f'Writing frames {start}:{end} ({n_frames}) to {destination}')
+        fp[:] = frames.fetch()
 
-        all_frames.extend(frames_batch.fetch())
+    else:
+        for chunk_index, frames_batch in enumerate(frames.batch(buffer_size)):
+            n_frames = len(frames_batch)
+            start = chunk_index * buffer_size
+            end = start + n_frames
 
-    np.save(destination, np.stack(all_frames), allow_pickle=False)
+            logger.debug(f'Writing frames {start}:{end} ({n_frames}) to {destination}')
+
+            fp[start:end] = frames_batch.fetch()
+            fp.flush()
