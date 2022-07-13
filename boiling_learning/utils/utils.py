@@ -4,11 +4,10 @@ import operator
 import os
 import random
 import string
-from collections import ChainMap
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Iterable, Iterator, Mapping, Optional, Sequence, TypeVar, Union
+from typing import Any, Iterable, Iterator, Optional, Sequence, TypeVar, Union
 
 import funcy
 
@@ -24,23 +23,16 @@ def reorder(seq: Sequence[_T], indices: Iterable[int]) -> Iterable[_T]:
     return map(seq.__getitem__, indices)
 
 
-def argmin(iterable: Iterable) -> int:
+def argmin(iterable: Iterable[Any]) -> int:
     return min(enumerate(iterable), key=operator.itemgetter(1))[0]
 
 
-def argmax(iterable: Iterable) -> int:
+def argmax(iterable: Iterable[Any]) -> int:
     return max(enumerate(iterable), key=operator.itemgetter(1))[0]
 
 
-def argsorted(iterable: Iterable) -> Iterable[int]:
+def argsorted(iterable: Iterable[Any]) -> Iterable[int]:
     return funcy.pluck(0, sorted(enumerate(iterable), key=operator.itemgetter(1)))
-
-
-def merge_dicts(*dict_args: Mapping, latter_precedence: bool = True) -> dict:
-    if latter_precedence:
-        dict_args = reversed(dict_args)
-
-    return dict(ChainMap(*dict_args))
 
 
 def one_factor_at_a_time(
