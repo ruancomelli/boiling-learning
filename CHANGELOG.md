@@ -1,5 +1,20 @@
 
 
+## v0.31.0 (2022-07-12)
+
+### Refactor
+
+- **utils**: move `unsort` to `utils.iterutils`
+- **preprocessing/image**: remove unused image normalization preprocessing function
+- **utils/utils**: remove unused utility function `indexify`
+- **model/definitions**: remove unused custom models
+
+### Feat
+
+- **datasets/sliceable**: add support for sliceable dataset caching
+- **automl**: define auto-tunable block for image normalization
+- **preprocessing/numpy**: make `frames_to_numpy` lazier by not writing to disk and flushing instead of accumulating all data in memory
+
 ## v0.30.20 (2022-07-06)
 
 ### Fix
