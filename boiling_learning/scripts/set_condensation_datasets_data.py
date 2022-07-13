@@ -10,8 +10,9 @@ from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.video import Video
 from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
-from boiling_learning.utils import KeyedDefaultDict, PathLike, resolve
+from boiling_learning.utils.collections import KeyedDefaultDict
 from boiling_learning.utils.frozendict import frozendict
+from boiling_learning.utils.utils import PathLike, resolve
 
 _SUBCASE_PATTERNS = frozendict(
     {
