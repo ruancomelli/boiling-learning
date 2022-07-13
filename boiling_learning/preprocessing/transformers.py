@@ -5,7 +5,6 @@ from typing import Any, Callable, Generic, TypeVar
 from typing_extensions import Protocol
 
 from boiling_learning.io import json
-from boiling_learning.utils import SimpleStr
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import Pack
 
@@ -15,7 +14,7 @@ _X = TypeVar('_X')
 _Y = TypeVar('_Y')
 
 
-class Transformer(SimpleStr, Generic[_X, _Y]):
+class Transformer(Generic[_X, _Y]):
     def __init__(self, f: CallableWithFirst[_X, _Y], pack: Pack[Any, Any] = Pack()) -> None:
         self._call: Callable[[_X], _Y] = pack.rpartial(f)
         self.pack: Pack[Any, Any] = pack

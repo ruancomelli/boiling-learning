@@ -5,7 +5,6 @@ from nidaqmx.constants import ChannelType as NIChannelType
 from nidaqmx.task import Task
 
 from boiling_learning.daq.devices import Device
-from boiling_learning.utils import SimpleRepr, SimpleStr
 from boiling_learning.utils.frozendict import frozendict
 
 T = TypeVar('T')
@@ -39,7 +38,7 @@ CHANNEL_TYPE_KEYS = frozendict(
 )
 
 
-class Channel(SimpleRepr, SimpleStr):
+class Channel:
     channel_table: Dict[str, List[str]] = {}
 
     def __init__(
@@ -56,6 +55,20 @@ class Channel(SimpleRepr, SimpleStr):
         self.type = (ChannelType.UNDEFINED, ChannelType.UNDEFINED)
         self.set_type(type1, type2)
         self.ni = None
+
+    def __repr__(self) -> str:
+        # Source: <https://stackoverflow.com/a/44595303/5811400>
+        class_name = self.__class__.__name__
+        address = id(self) & 0xFFFFFF
+        attrs = ', '.join(f'{key}={value!r}' for key, value in self.__dict__.items())
+
+        return f'<{class_name} @{address:x} {attrs}>'
+
+    def __str__(self) -> str:
+        class_name = self.__class__.__name__
+        attrs = ', '.join(f'{key}={value}' for key, value in self.__dict__.items())
+
+        return f'{class_name}({attrs})'
 
     @property
     def path(self) -> str:
