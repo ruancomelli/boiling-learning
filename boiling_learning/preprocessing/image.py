@@ -24,11 +24,6 @@ class Grayscaler(Operator[VideoFrameOrFrames]):
         super().__init__(grayscale, P())
 
 
-class ImageNormalizer(Operator[VideoFrameOrFrames]):
-    def __init__(self) -> None:
-        super().__init__(normalize_image, P())
-
-
 class Downscaler(Operator[VideoFrameOrFrames]):
     def __init__(self, factors: Union[int, Tuple[int, int]]) -> None:
         super().__init__(downscale, pack=P(factors=factors))
@@ -256,10 +251,6 @@ def grayscale(image: _VideoFrameOrFrames) -> _VideoFrameOrFrames:
         raise RuntimeError('expected image to contain 3 color channels')
 
     return typing.cast(_VideoFrameOrFrames, tf.image.rgb_to_grayscale(image).numpy())
-
-
-def normalize_image(image: _VideoFrameOrFrames) -> _VideoFrameOrFrames:
-    return typing.cast(_VideoFrameOrFrames, tf.image.per_image_standardization(image).numpy())
 
 
 def random_crop(
