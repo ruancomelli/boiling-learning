@@ -1,5 +1,16 @@
 
 
+## v0.32.0 (2022-07-12)
+
+### Refactor
+
+- **utils**: move `merge_dicts` to `utils.collections`
+- **utils**: move `KeyedDefaultDict` to `utils.collections`
+
+### Feat
+
+- **datasets/cache**: support constructing a numpy cache adjusted to a dataset
+
 ## v0.31.0 (2022-07-12)
 
 ### Refactor
