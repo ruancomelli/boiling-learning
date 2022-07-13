@@ -8,7 +8,8 @@ from typing_extensions import Literal
 
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.preprocessing.video import VideoFrame
-from boiling_learning.utils.utils import PathLike, resolve, unsort
+from boiling_learning.utils.iterutils import unsort
+from boiling_learning.utils.utils import PathLike, resolve
 
 _T = TypeVar('_T')
 

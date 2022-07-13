@@ -7,7 +7,8 @@ from loguru import logger
 from typing_extensions import Literal
 
 from boiling_learning.datasets.sliceable import SliceableDatasetCache
-from boiling_learning.utils.utils import PathLike, resolve, unsort
+from boiling_learning.utils.iterutils import unsort
+from boiling_learning.utils.utils import PathLike, resolve
 
 _T = TypeVar('_T')
 

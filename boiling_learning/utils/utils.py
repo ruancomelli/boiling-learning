@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 import operator
 import os
 import random
@@ -17,13 +16,11 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
-    Tuple,
     TypeVar,
     Union,
 )
 
 import funcy
-import more_itertools as mit
 
 _T = TypeVar('_T')
 _Key = TypeVar('_Key')
@@ -49,17 +46,6 @@ def argmax(iterable: Iterable) -> int:
 
 def argsorted(iterable: Iterable) -> Iterable[int]:
     return funcy.pluck(0, sorted(enumerate(iterable), key=operator.itemgetter(1)))
-
-
-def unsort(iterable: Iterable[_T]) -> Tuple[Iterable[int], Iterable[_T]]:
-    peekable = mit.peekable(iterable)
-
-    if not peekable:
-        return (), ()
-
-    sorted_indices, sorters = mit.sort_together((peekable, itertools.count()))
-    _, unsorters = mit.sort_together((sorters, itertools.count()))
-    return unsorters, sorted_indices
 
 
 def merge_dicts(*dict_args: Mapping, latter_precedence: bool = True) -> dict:

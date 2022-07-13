@@ -3,27 +3,8 @@ from unittest.case import TestCase
 
 from boiling_learning.utils.collections import KeyedSet
 from boiling_learning.utils.geometry import Cylinder, RectangularPrism
-from boiling_learning.utils.iterutils import evenly_spaced_indices
+from boiling_learning.utils.iterutils import evenly_spaced_indices, unsort
 from boiling_learning.utils.lazy import Lazy, LazyCallable
-from boiling_learning.utils.utils import indexify, unsort
-
-
-class utils_utils_test(TestCase):
-    def test_indexify(self) -> None:
-        self.assertEqual(tuple(indexify('abc')), (0, 1, 2))
-
-    def test_unsort(self) -> None:
-        unsorted_items = [50, 30, 20, 10, 40]
-
-        unsorters, sorted_items = unsort(unsorted_items)
-        unsorters = list(unsorters)
-        sorted_items = list(sorted_items)
-        assert sorted_items == [10, 20, 30, 40, 50]
-        assert unsorters == [4, 2, 1, 0, 3]
-
-        assert [sorted_items[index] for index in unsorters] == unsorted_items
-
-        assert unsort(()) == ((), ())
 
 
 class utils_collections_test(TestCase):
@@ -46,13 +27,13 @@ class utils_collections_test(TestCase):
 
 
 class geometry_test(TestCase):
-    def test_Cylinder(self) -> int:
+    def test_Cylinder(self) -> None:
         cylinder = Cylinder(length=10, diameter=2)
 
         assert cylinder.radius() == 1
         assert cylinder.volume() == math.pi * 1 ** 2 * 10
 
-    def test_RectangularPrism(self) -> int:
+    def test_RectangularPrism(self) -> None:
         prism = RectangularPrism(width=5, thickness=3, length=10)
 
         self.assertEqual(prism.cross_section_area(), 15)
@@ -117,3 +98,16 @@ class iterutils_test(TestCase):
 
                 with self.assertRaises(ValueError):
                     evenly_spaced_indices(total, total + 1, goal='spread')
+
+    def test_unsort(self) -> None:
+        unsorted_items = [50, 30, 20, 10, 40]
+
+        unsorters, sorted_items = unsort(unsorted_items)
+        unsorters = list(unsorters)
+        sorted_items = list(sorted_items)
+        assert sorted_items == [10, 20, 30, 40, 50]
+        assert unsorters == [4, 2, 1, 0, 3]
+
+        assert [sorted_items[index] for index in unsorters] == unsorted_items
+
+        assert unsort(()) == ((), ())

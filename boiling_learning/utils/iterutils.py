@@ -1,4 +1,6 @@
-from typing import Any, Callable, Iterable, List, TypeVar
+import itertools
+import typing
+from typing import Any, Callable, Iterable, List, Tuple, TypeVar
 
 import more_itertools as mit
 import numpy as np
@@ -62,8 +64,19 @@ def evenly_spaced_indices(
     else:
         raise ValueError('`goal` must be either `"distance"` or `"spread"`')
 
-    return np.round(points).astype(int).tolist()
+    return typing.cast(List[int], np.round(points).astype(int).tolist())
 
 
 def distance_maximized_evenly_spaced_indices(total: int, count: int) -> List[int]:
     return evenly_spaced_indices(total, count, goal='distance')
+
+
+def unsort(iterable: Iterable[_T]) -> Tuple[Iterable[int], Iterable[_T]]:
+    peekable = mit.peekable(iterable)
+
+    if not peekable:
+        return (), ()
+
+    sorted_indices, sorters = mit.sort_together((peekable, itertools.count()))
+    _, unsorters = mit.sort_together((sorters, itertools.count()))
+    return unsorters, sorted_indices
