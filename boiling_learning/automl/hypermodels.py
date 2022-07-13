@@ -5,10 +5,9 @@ import autokeras as ak
 import keras_tuner as kt
 import tensorflow as tf
 
-from boiling_learning.automl.blocks import LayersBlock
+from boiling_learning.automl.blocks import ImageNormalizationBlock, LayersBlock
 from boiling_learning.io import json
 from boiling_learning.management.allocators import Allocator
-from boiling_learning.model.layers import ImageNormalization
 from boiling_learning.model.model import anonymize_model_json
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.utils import PathLike, resolve
@@ -82,7 +81,7 @@ class ConvImageRegressor(HyperModel):
         self,
         loss: tf.keras.losses.Loss,
         metrics: List[tf.keras.metrics.Metric],
-        normalize_images: bool = False,
+        normalize_images: Optional[bool] = None,
         directory: Union[PathLike, Allocator, None] = None,
         strategy: Optional[Described[tf.distribute.Strategy, Any]] = None,
         **kwargs: Any,
@@ -94,9 +93,7 @@ class ConvImageRegressor(HyperModel):
             raise TypeError("the argument 'distribution_strategy' is not supported.")
 
         outputs = inputs = ak.ImageInput()
-        if normalize_images:
-            # TODO: convert this into a proper block and make `normalize_images` auto-tunable
-            outputs = LayersBlock([ImageNormalization()])(outputs)
+        outputs = ImageNormalizationBlock(normalize_images)(outputs)
         outputs = ak.ConvBlock()(outputs)
         outputs = ak.SpatialReduction()(outputs)
         outputs = ak.DenseBlock()(outputs)

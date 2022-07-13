@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import autokeras as ak
 import keras_tuner as kt
@@ -9,6 +9,7 @@ import tensorflow as tf
 from classes import typeclass
 
 from boiling_learning.io import json
+from boiling_learning.model.layers import ImageNormalization
 
 
 class LayersBlock(ak.engine.block.Block):
@@ -20,7 +21,7 @@ class LayersBlock(ak.engine.block.Block):
         self,
         hp: kt.HyperParameters,
         inputs: List[ak.Node],
-    ) -> tf.keras.Model:
+    ) -> Any:  # TODO: improve type
         inputs = tf.nest.flatten(inputs)
         input_node = inputs[0]
         output_node = input_node
@@ -39,6 +40,30 @@ class LayersBlock(ak.engine.block.Block):
         return cls(
             [tf.keras.layers.Layer.from_config(layer_config) for layer_config in config['layers']]
         )
+
+
+class ImageNormalizationBlock(ak.engine.block.Block):
+    def __init__(self, normalize_images: Optional[bool] = None, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.normalize_images = normalize_images
+
+    def build(
+        self,
+        hp: kt.HyperParameters,
+        inputs: List[ak.Node],
+    ) -> Any:  # TODO: improve type
+        # Get the input_node from inputs.
+        node = tf.nest.flatten(inputs)[0]
+
+        if self.normalize_images is None:
+            normalize_images = hp.Boolean('normalize_images', default=False)
+        else:
+            normalize_images = self.normalize_images
+
+        if normalize_images:
+            node = ImageNormalization()(node)
+
+        return node
 
 
 @typeclass
