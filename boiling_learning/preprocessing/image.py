@@ -331,7 +331,7 @@ def normalized_mutual_information(
 
 
 def structural_similarity_ratio(ref: VideoFrame, image: VideoFrame) -> float:
-    # TODO: use https://www.tensorflow.org/api_docs/python/tf/image/ssim?
+    # TODO: use https://www.tensorflow.org/api_docs/python/tf/image/ssim ?
     # see
     # <https://www.wikiwand.com/en/Structural_similarity#/Application_of_the_formula>
     WINDOW_SIZE = 11

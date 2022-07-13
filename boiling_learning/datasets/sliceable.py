@@ -2,15 +2,19 @@ from __future__ import annotations
 
 import abc
 import itertools
+import json as _json
 import math
 import random
 from collections import defaultdict
 from fractions import Fraction
 from operator import itemgetter
+from pathlib import Path
 from typing import (
     Any,
     Callable,
     DefaultDict,
+    Dict,
+    FrozenSet,
     Generic,
     Iterable,
     Iterator,
@@ -142,6 +146,9 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
         strictness: Literal['none', 'one-off', 'strict'] = 'strict',
     ) -> ZippedSliceableDataset[Unpack[_Ts]]:
         return ZippedSliceableDataset(*datasets, strictness=strictness)
+
+    def cache(self, cache: SliceableDatasetCache[_T]) -> CachedSliceableDataset[_T]:
+        return CachedSliceableDataset(self, cache)
 
     def enumerate(self) -> ZippedSliceableDataset[int, _T]:
         return SliceableDataset.zip(SliceableDataset.range(len(self)), self)
@@ -534,6 +541,68 @@ class PrefetchedDataset(ProxySliceableDataset[_T]):
 
         for buffer_indices in SliceableDataset.range(len(self)).batch(self._buffer_size):
             yield from self.fetch(buffer_indices)
+
+
+class CachedSliceableDataset(SliceableDataset[_T]):
+    def __init__(self, ancestor: SliceableDataset[_T], cache: SliceableDatasetCache[_T]) -> None:
+        self._ancestor = ancestor
+        self._cache = cache
+
+    def __len__(self) -> int:
+        return len(self._ancestor)
+
+    def getitem_from_index(self, index: int) -> _T:
+        return self.fetch((index,))[0]
+
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_T, ...]:
+        indices = list(range(len(self)) if indices is None else indices)
+
+        missing_indices = tuple(self._cache.missing_indices(indices))
+        if missing_indices:
+            self._cache.store(
+                dict(
+                    zip(
+                        missing_indices,
+                        self._ancestor.fetch(missing_indices),
+                    )
+                )
+            )
+
+        return self._cache.fetch(indices)
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self._ancestor}, {self._cache})'
+
+
+class SliceableDatasetCache(abc.ABC, Generic[_T]):
+    _directory: Path
+
+    @abc.abstractmethod
+    def store(self, pairs: Dict[int, _T]) -> None:
+        pass
+
+    @abc.abstractmethod
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_T, ...]:
+        pass
+
+    def missing_indices(self, indices: Iterable[int]) -> FrozenSet[int]:
+        return frozenset(indices) - self._current_indices()
+
+    def _current_indices(self) -> FrozenSet[int]:
+        if not self._indices_path.is_file():
+            with self._indices_path.open('w') as file:
+                _json.dump([], file)
+            return frozenset()
+
+        with self._indices_path.open('r') as file:
+            return frozenset(_json.load(file))
+
+    @property
+    def _indices_path(self) -> Path:
+        return self._directory / 'indices.json'
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self._directory})'
 
 
 SupervisedSliceableDataset = SliceableDataset[Tuple[_X, _Y]]
