@@ -1,5 +1,13 @@
 
 
+## v0.33.0 (2022-07-13)
+
+### Refactor
+
+- **utils**: create `utils.pathutils` and move path-related functionality into it
+- **utils**: create `utils.pathutils` and move path-related functionality into it
+- **utils**: remove unnecessary `SimpleStr` and `SimpleRepr` mixin classes
+
 ## v0.32.0 (2022-07-12)
 
 ### Refactor
