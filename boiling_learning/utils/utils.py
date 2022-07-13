@@ -11,7 +11,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import (
     Callable,
-    Collection,
     DefaultDict,
     Iterable,
     Iterator,
@@ -25,7 +24,6 @@ from typing import (
 
 import funcy
 import more_itertools as mit
-from typing_extensions import overload
 
 _T = TypeVar('_T')
 _Key = TypeVar('_Key')
@@ -37,23 +35,6 @@ PathLike = Union[str, os.PathLike]
 
 
 # ---------------------------------- Utility functions ----------------------------------
-@overload
-def indexify(arg: Collection) -> range:
-    ...
-
-
-@overload
-def indexify(arg: Iterable) -> Iterable[int]:
-    ...
-
-
-def indexify(arg: Union[Iterable, Collection]) -> Iterable[int]:
-    try:
-        return range(len(arg))
-    except TypeError:
-        return funcy.walk(0, enumerate(arg))
-
-
 def reorder(seq: Sequence[_T], indices: Iterable[int]) -> Iterable[_T]:
     return map(seq.__getitem__, indices)
 
