@@ -3,7 +3,7 @@ from typing import Iterable, Tuple
 from loguru import logger
 
 from boiling_learning.preprocessing.cases import Case
-from boiling_learning.utils import PathLike
+from boiling_learning.utils.pathutils import PathLike
 
 
 def main(

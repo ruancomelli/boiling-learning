@@ -20,9 +20,9 @@ from boiling_learning.model.model import ModelArchitecture
 from boiling_learning.utils.dataclasses import dataclass, fields, shallow_asdict
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.descriptions import describe
+from boiling_learning.utils.pathutils import resolve
 from boiling_learning.utils.timing import Timer
 from boiling_learning.utils.typeutils import typename
-from boiling_learning.utils.utils import resolve
 
 _P = ParamSpec('_P')
 _T = TypeVar('_T')

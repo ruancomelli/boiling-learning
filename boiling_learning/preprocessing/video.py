@@ -17,7 +17,7 @@ from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, serialize
 from boiling_learning.utils.descriptions import describe
-from boiling_learning.utils.utils import PathLike, resolve
+from boiling_learning.utils.pathutils import PathLike, resolve
 
 if typing.TYPE_CHECKING:
     VideoFrameU8 = npt.NDArray[np.uint8]

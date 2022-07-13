@@ -9,7 +9,7 @@ import tensorflow as tf
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.utils.functional import map_values
 from boiling_learning.utils.mathutils import round_to_multiple
-from boiling_learning.utils.utils import PathLike, resolve
+from boiling_learning.utils.pathutils import PathLike, resolve
 
 _T = TypeVar('_T')
 NestedStructure = Union[

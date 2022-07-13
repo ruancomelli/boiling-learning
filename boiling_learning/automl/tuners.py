@@ -10,7 +10,7 @@ from loguru import logger
 from tensorflow.keras import backend as K
 from typing_extensions import TypedDict
 
-from boiling_learning.utils.utils import resolve
+from boiling_learning.utils.pathutils import resolve
 
 
 class PopulateSpaceReturn(TypedDict):

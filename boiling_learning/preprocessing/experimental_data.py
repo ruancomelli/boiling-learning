@@ -2,8 +2,8 @@ from pathlib import Path
 
 import modin.pandas as pd
 
-from boiling_learning.utils import PathLike, resolve
 from boiling_learning.utils.descriptions import describe
+from boiling_learning.utils.pathutils import PathLike, resolve
 
 
 class ExperimentalData:

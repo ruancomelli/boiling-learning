@@ -10,7 +10,7 @@ from boiling_learning.io.storage import load, save
 from boiling_learning.management.allocators import Allocator
 from boiling_learning.management.persister import FileProvider, Provider
 from boiling_learning.utils.functional import Pack
-from boiling_learning.utils.utils import PathLike
+from boiling_learning.utils.pathutils import PathLike
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
 

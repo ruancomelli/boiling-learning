@@ -11,10 +11,9 @@ from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.experimental_data import ExperimentalData
 from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
-from boiling_learning.utils import PathLike
+from boiling_learning.utils.pathutils import PathLike, resolve
 from boiling_learning.utils.printing import add_unit_post_fix
 from boiling_learning.utils.units import unit_registry as ureg
-from boiling_learning.utils.utils import resolve
 
 
 def main(

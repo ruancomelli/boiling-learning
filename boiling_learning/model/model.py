@@ -14,8 +14,8 @@ from pint import Quantity
 from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, serialize
 from boiling_learning.model.layers import ImageNormalization, RandomBrightness
+from boiling_learning.utils.pathutils import resolve
 from boiling_learning.utils.units import unit_registry as ureg
-from boiling_learning.utils.utils import resolve
 
 _CUSTOM_LAYERS = (ImageNormalization, RandomBrightness)
 _CUSTOM_OBJECTS = {layer.__name__: layer for layer in _CUSTOM_LAYERS}

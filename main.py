@@ -73,11 +73,11 @@ from boiling_learning.scripts import (
     set_condensation_datasets_data,
 )
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist
-from boiling_learning.utils import resolve
 from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.lazy import Lazy, LazyCallable
+from boiling_learning.utils.pathutils import resolve
 from boiling_learning.utils.random import random_state
 from boiling_learning.utils.typeutils import typename
 

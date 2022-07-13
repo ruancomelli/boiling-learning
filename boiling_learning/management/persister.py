@@ -4,7 +4,7 @@ from typing import Callable, Generic, Iterable, Type, TypeVar
 from loguru import logger
 
 from boiling_learning.io import LoaderFunction, SaverFunction
-from boiling_learning.utils.utils import PathLike, resolve
+from boiling_learning.utils.pathutils import PathLike, resolve
 
 _T = TypeVar('_T')
 CreatorFunction = Callable[[], _T]

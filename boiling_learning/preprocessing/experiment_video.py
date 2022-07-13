@@ -13,7 +13,7 @@ from boiling_learning.preprocessing.video import Video, VideoFrame, convert_vide
 from boiling_learning.utils.collections import merge_dicts
 from boiling_learning.utils.dataclasses import dataclass, field
 from boiling_learning.utils.descriptions import describe
-from boiling_learning.utils.utils import PathLike, resolve
+from boiling_learning.utils.pathutils import PathLike, resolve
 
 
 class ExperimentVideo:

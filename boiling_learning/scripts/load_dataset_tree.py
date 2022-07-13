@@ -4,7 +4,7 @@ from loguru import logger
 
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
-from boiling_learning.utils import PathLike, resolve
+from boiling_learning.utils.pathutils import PathLike, resolve
 
 
 def main(datapath: PathLike) -> List[ImageDataset]:

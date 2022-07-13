@@ -2,7 +2,7 @@ import numpy as np
 
 from boiling_learning.io.storage import load, save
 from boiling_learning.preprocessing.video import VideoFrame
-from boiling_learning.utils import tempdir
+from boiling_learning.utils.pathutils import tempdir
 
 
 def test_save_frame() -> None:

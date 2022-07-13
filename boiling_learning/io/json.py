@@ -12,10 +12,10 @@ from classes import AssociatedType, Supports
 from classes import typeclass as _typeclass
 from typing_extensions import Protocol, TypedDict, runtime_checkable
 
-from boiling_learning.utils import PathLike, resolve
 from boiling_learning.utils.dataclasses import is_dataclass_instance, shallow_asdict
 from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.functional import P, Pack
+from boiling_learning.utils.pathutils import PathLike, resolve
 from boiling_learning.utils.table_dispatch import TableDispatcher
 
 # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>

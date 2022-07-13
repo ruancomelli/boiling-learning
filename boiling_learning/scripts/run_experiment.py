@@ -15,7 +15,7 @@
 # from scipy.interpolate import interp1d
 
 # from boiling_learning.daq import Channel, ChannelType, Device
-# from boiling_learning.utils import PathLike, resolve
+# from boiling_learning.utils.pathutils import PathLike, resolve
 # from boiling_learning.utils.geometry import Cylinder
 # from boiling_learning.utils.units import unit_registry as u
 

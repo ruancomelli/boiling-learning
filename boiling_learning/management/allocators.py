@@ -10,9 +10,9 @@ from tinydb_smartcache import SmartCacheTable
 from typing_extensions import final
 
 from boiling_learning.io import json
-from boiling_learning.utils import PathLike, resolve
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import Pack
+from boiling_learning.utils.pathutils import PathLike, resolve
 
 
 class Allocator(abc.ABC):

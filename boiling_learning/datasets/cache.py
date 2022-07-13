@@ -10,7 +10,7 @@ from typing_extensions import Literal
 
 from boiling_learning.datasets.sliceable import SliceableDataset, SliceableDatasetCache
 from boiling_learning.utils.iterutils import unsort
-from boiling_learning.utils.utils import PathLike, resolve
+from boiling_learning.utils.pathutils import PathLike, resolve
 
 _Array = TypeVar('_Array', bound=np.ndarray)
 
