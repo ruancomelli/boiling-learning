@@ -24,7 +24,6 @@ dependencies = [
     "PyQt6<7.0.0,>=6.2.2",
     "modin[all]>=0.12.1",
     "loguru>=0.6.0",
-    "h5py>=3.7.0",
     "decord==0.6.0",
     "keras-tuner>=1.1.2",
     "autokeras>=1.0.19"]
