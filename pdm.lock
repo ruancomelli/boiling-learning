@@ -792,7 +792,7 @@ dependencies = [
 
 [[package]]
 name = "keras-tuner"
-version = "1.1.2"
+version = "1.1.3"
 summary = "Hypertuner for Keras"
 dependencies = [
     "ipython",
@@ -2722,9 +2722,9 @@ content_hash = "sha256:b6b1a4a50f137db3b9857cf8f910fdf18824d4d1b09753ab4a1b8cd4c
     {url = "https://files.pythonhosted.org/packages/79/4c/7c3275a01e12ef9368a892926ab932b33bb13d55794881e3573482b378a7/Keras_Preprocessing-1.1.2-py2.py3-none-any.whl", hash = "sha256:7b82029b130ff61cc99b55f3bd27427df4838576838c5b2f65940e4fcec99a7b"},
     {url = "https://files.pythonhosted.org/packages/5e/f1/b44337faca48874333769a29398fe4666686733c8880aa160b9fd5dfe600/Keras_Preprocessing-1.1.2.tar.gz", hash = "sha256:add82567c50c8bc648c14195bf544a5ce7c1f76761536956c3d2978970179ef3"},
 ]
-"keras-tuner 1.1.2" = [
-    {url = "https://files.pythonhosted.org/packages/af/ba/d9e13a2c00294bbddff9361270288191fb218fe36b9a0f3364f1a8289f61/keras-tuner-1.1.2.tar.gz", hash = "sha256:3ff5f4fc081fe1c2f1869b274950b9d82d7ae175ab8c7d872fd84156565c05e8"},
-    {url = "https://files.pythonhosted.org/packages/c7/d3/506771d6114853c270103b3348f992086517c380dbefad60c8a42ae165c3/keras_tuner-1.1.2-py3-none-any.whl", hash = "sha256:782c13c93fb9513240e3a692694b6e8bc63b5e62e82284079f1e08a27738baa7"},
+"keras-tuner 1.1.3" = [
+    {url = "https://files.pythonhosted.org/packages/f7/be/c4bc3a03d3fd73dd5bc0678069b38f4a24ae0a4385969480a59164a0543e/keras-tuner-1.1.3.tar.gz", hash = "sha256:296edb4e8fdbb8563c0145273ea94fb8889942841a1fcef1391ae09455477d70"},
+    {url = "https://files.pythonhosted.org/packages/7f/6c/8ac746c9d0e7776bf119c511c98ce10f04e9b9d7c37cb8c0ea226b0968d1/keras_tuner-1.1.3-py3-none-any.whl", hash = "sha256:8e3b4605c6989a8a7020f03e2a52573c2a1e41854bb7ba27e0b579ffd3967dd8"},
 ]
 "kt-legacy 1.0.4" = [
     {url = "https://files.pythonhosted.org/packages/ec/c5/132413b5db641363eb6274839b8cc05b756b89a58bf42905d5849aa49d13/kt-legacy-1.0.4.tar.gz", hash = "sha256:a94112e42a50e7cc3aad31f3287aa384c23555ea1432c55b5823852e09e706cf"},
