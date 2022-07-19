@@ -1,6 +1,6 @@
 from typing import Optional, Tuple, Union
 
-from tensorflow.keras.experimental import LinearModel as _LinearModel
+from tensorflow.keras.experimental import LinearModel
 from tensorflow.keras.layers import (
     Activation,
     AveragePooling2D,
@@ -26,9 +26,9 @@ from boiling_learning.model.model import ModelArchitecture
 
 def linear_regression(input_shape: Tuple[int, ...]) -> ModelArchitecture:
     inputs = Input(shape=input_shape)
-    predictions = Dense(1, activation='linear')(inputs)
+    outputs = Dense(1)(inputs)
 
-    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
 
 def tiny_convnet(
@@ -41,27 +41,26 @@ def tiny_convnet(
     normalize_images: bool = True,
 ) -> ModelArchitecture:
     # start "current layer" as the input layer
-    inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
-    x = inputs
+    outputs = inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
 
-    x = AveragePooling2D((10, 10))(x)
+    outputs = AveragePooling2D((10, 10))(outputs)
 
     if normalize_images:
-        x = ImageNormalization()(x)
+        outputs = ImageNormalization()(outputs)
     if dropout is not None:
-        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
-    x = Flatten(dtype=hidden_layers_policy)(x)
+        outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
+    outputs = Flatten(dtype=hidden_layers_policy)(outputs)
 
     if problem == 'classification':
-        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Softmax(dtype=output_layer_policy)(x)
+        outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
+        outputs = Softmax(dtype=output_layer_policy)(outputs)
     elif problem == 'regression':
-        x = Dense(1, dtype=hidden_layers_policy)(x)
-        predictions = Activation('linear', dtype=output_layer_policy)(x)
+        outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
+        outputs = Activation('linear', dtype=output_layer_policy)(outputs)
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
 
 def small_convnet(
@@ -74,38 +73,37 @@ def small_convnet(
     normalize_images: bool = True,
 ) -> ModelArchitecture:
     # start "current layer" as the input layer
-    inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
-    x = inputs
+    outputs = inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
 
     if normalize_images:
-        x = ImageNormalization()(x)
+        outputs = ImageNormalization()(outputs)
 
-    x = Conv2D(
+    outputs = Conv2D(
         16,
         (5, 5),
         padding='same',
         dtype=hidden_layers_policy,
-    )(x)
-    x = ReLU()(x)
-    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
+    )(outputs)
+    outputs = ReLU()(outputs)
+    outputs = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(outputs)
     if dropout is not None:
-        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
-    x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(32, dtype=hidden_layers_policy)(x)
-    x = ReLU()(x)
+        outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
+    outputs = Flatten(dtype=hidden_layers_policy)(outputs)
+    outputs = Dense(32, dtype=hidden_layers_policy)(outputs)
+    outputs = ReLU()(outputs)
     if dropout is not None:
-        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+        outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
     if problem == 'classification':
-        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Softmax(dtype=output_layer_policy)(x)
+        outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
+        outputs = Softmax(dtype=output_layer_policy)(outputs)
     elif problem == 'regression':
-        x = Dense(1, dtype=hidden_layers_policy)(x)
-        predictions = Activation('linear', dtype=output_layer_policy)(x)
+        outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
+        outputs = Activation('linear', dtype=output_layer_policy)(outputs)
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
 
 def hoboldnet1(
@@ -122,38 +120,37 @@ def hoboldnet1(
     learning.
     '''
     # start "current layer" as the input layer
-    inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
-    x = inputs
+    outputs = inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
 
     if normalize_images:
-        x = ImageNormalization()(x)
+        outputs = ImageNormalization()(outputs)
 
-    x = Conv2D(
+    outputs = Conv2D(
         16,
         (5, 5),
         padding='same',
         dtype=hidden_layers_policy,
-    )(x)
-    x = ReLU()(x)
-    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
+    )(outputs)
+    outputs = ReLU()(outputs)
+    outputs = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(outputs)
     if dropout is not None:
-        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
-    x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(200, dtype=hidden_layers_policy)(x)
-    x = ReLU()(x)
+        outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
+    outputs = Flatten(dtype=hidden_layers_policy)(outputs)
+    outputs = Dense(200, dtype=hidden_layers_policy)(outputs)
+    outputs = ReLU()(outputs)
     if dropout is not None:
-        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+        outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
     if problem == 'classification':
-        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Softmax(dtype=output_layer_policy)(x)
+        outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
+        outputs = Softmax(dtype=output_layer_policy)(outputs)
     elif problem == 'regression':
-        x = Dense(1, dtype=hidden_layers_policy)(x)
-        predictions = Activation('linear', dtype=output_layer_policy)(x)
+        outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
+        outputs = Activation('linear', dtype=output_layer_policy)(outputs)
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
 
 def hoboldnet2(
@@ -170,38 +167,37 @@ def hoboldnet2(
     learning.
     '''
     # start "current layer" as the input layer
-    inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
-    x = inputs
+    outputs = inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
 
     if normalize_images:
-        x = ImageNormalization()(x)
+        outputs = ImageNormalization()(outputs)
 
-    x = Conv2D(
+    outputs = Conv2D(
         32,
         (5, 5),
         padding='same',
         dtype=hidden_layers_policy,
-    )(x)
-    x = ReLU()(x)
-    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
+    )(outputs)
+    outputs = ReLU()(outputs)
+    outputs = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(outputs)
     if dropout is not None:
-        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
-    x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(200, dtype=hidden_layers_policy)(x)
-    x = ReLU()(x)
+        outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
+    outputs = Flatten(dtype=hidden_layers_policy)(outputs)
+    outputs = Dense(200, dtype=hidden_layers_policy)(outputs)
+    outputs = ReLU()(outputs)
     if dropout is not None:
-        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+        outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
     if problem == 'classification':
-        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Softmax(dtype=output_layer_policy)(x)
+        outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
+        outputs = Softmax(dtype=output_layer_policy)(outputs)
     elif problem == 'regression':
-        x = Dense(1, dtype=hidden_layers_policy)(x)
-        predictions = Activation('linear', dtype=output_layer_policy)(x)
+        outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
+        outputs = Activation('linear', dtype=output_layer_policy)(outputs)
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
 
 def hoboldnet3(
@@ -218,46 +214,45 @@ def hoboldnet3(
     learning.
     '''
     # start "current layer" as the input layer
-    inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
-    x = inputs
+    outputs = inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
 
     if normalize_images:
-        x = ImageNormalization()(x)
+        outputs = ImageNormalization()(outputs)
 
-    x = Conv2D(
+    outputs = Conv2D(
         32,
         (5, 5),
         padding='same',
         dtype=hidden_layers_policy,
-    )(x)
-    x = ReLU()(x)
-    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Conv2D(
+    )(outputs)
+    outputs = ReLU()(outputs)
+    outputs = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(outputs)
+    outputs = Conv2D(
         64,
         (5, 5),
         padding='same',
         dtype=hidden_layers_policy,
-    )(x)
-    x = ReLU()(x)
-    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
+    )(outputs)
+    outputs = ReLU()(outputs)
+    outputs = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(outputs)
     if dropout is not None:
-        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
-    x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(512, dtype=hidden_layers_policy)(x)
-    x = ReLU()(x)
+        outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
+    outputs = Flatten(dtype=hidden_layers_policy)(outputs)
+    outputs = Dense(512, dtype=hidden_layers_policy)(outputs)
+    outputs = ReLU()(outputs)
     if dropout is not None:
-        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+        outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
     if problem == 'classification':
-        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Softmax(dtype=output_layer_policy)(x)
+        outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
+        outputs = Softmax(dtype=output_layer_policy)(outputs)
     elif problem == 'regression':
-        x = Dense(1, dtype=hidden_layers_policy)(x)
-        predictions = Activation('linear', dtype=output_layer_policy)(x)
+        outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
+        outputs = Activation('linear', dtype=output_layer_policy)(outputs)
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
 
 def hoboldnet_supplementary(
@@ -273,46 +268,45 @@ def hoboldnet_supplementary(
     nucleate boiling heat flux quantification using machine learning.
     '''
     # start "current layer" as the input layer
-    inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
-    x = inputs
+    outputs = inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
 
     if normalize_images:
-        x = ImageNormalization()(x)
+        outputs = ImageNormalization()(outputs)
 
-    x = Conv2D(
+    outputs = Conv2D(
         32,
         (5, 5),
         padding='same',
         dtype=hidden_layers_policy,
-    )(x)
-    x = ReLU()(x)
-    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Conv2D(
+    )(outputs)
+    outputs = ReLU()(outputs)
+    outputs = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(outputs)
+    outputs = Conv2D(
         64,
         (5, 5),
         padding='same',
         dtype=hidden_layers_policy,
-    )(x)
-    x = ReLU()(x)
-    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
+    )(outputs)
+    outputs = ReLU()(outputs)
+    outputs = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(outputs)
     if dropout is not None:
-        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
-    x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(512, dtype=hidden_layers_policy)(x)
-    x = ReLU()(x)
+        outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
+    outputs = Flatten(dtype=hidden_layers_policy)(outputs)
+    outputs = Dense(512, dtype=hidden_layers_policy)(outputs)
+    outputs = ReLU()(outputs)
     if dropout is not None:
-        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+        outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
     if problem == 'classification':
-        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Softmax(dtype=output_layer_policy)(x)
+        outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
+        outputs = Softmax(dtype=output_layer_policy)(outputs)
     elif problem == 'regression':
-        x = Dense(1, dtype=hidden_layers_policy)(x)
-        predictions = Activation('linear', dtype=output_layer_policy)(x)
+        outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
+        outputs = Activation('linear', dtype=output_layer_policy)(outputs)
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
 
 def kramernet(
@@ -328,100 +322,94 @@ def kramernet(
     nucleate boiling heat flux quantification using machine learning.
     '''
     # start "current layer" as the input layer
-    inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
-    x = inputs
+    outputs = inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
 
     if normalize_images:
-        x = ImageNormalization()(x)
+        outputs = ImageNormalization()(outputs)
 
-    x = Conv2D(
+    outputs = Conv2D(
         64,
         (3, 3),
         padding='same',
         dtype=hidden_layers_policy,
-    )(inputs)
-    x = ReLU()(x)
-    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Conv2D(
+    )(outputs)
+    outputs = ReLU()(outputs)
+    outputs = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(outputs)
+    outputs = Conv2D(
         64,
         (3, 3),
         padding='same',
         dtype=hidden_layers_policy,
-    )(x)
-    x = ReLU()(x)
-    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
+    )(outputs)
+    outputs = ReLU()(outputs)
+    outputs = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(outputs)
     if dropout is not None:
-        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+        outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
-    x = Conv2D(
+    outputs = Conv2D(
         64,
         (3, 3),
         padding='same',
         dtype=hidden_layers_policy,
-    )(x)
-    x = ReLU()(x)
-    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Conv2D(
+    )(outputs)
+    outputs = ReLU()(outputs)
+    outputs = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(outputs)
+    outputs = Conv2D(
         64,
         (3, 3),
         padding='same',
         dtype=hidden_layers_policy,
-    )(x)
-    x = ReLU()(x)
-    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
+    )(outputs)
+    outputs = ReLU()(outputs)
+    outputs = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(outputs)
     if dropout is not None:
-        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+        outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
-    x = Conv2D(
+    outputs = Conv2D(
         128,
         (3, 3),
         padding='same',
         dtype=hidden_layers_policy,
-    )(x)
-    x = ReLU()(x)
-    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
-    x = Conv2D(
+    )(outputs)
+    outputs = ReLU()(outputs)
+    outputs = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(outputs)
+    outputs = Conv2D(
         128,
         (3, 3),
         padding='same',
         dtype=hidden_layers_policy,
-    )(x)
-    x = ReLU()(x)
-    x = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(x)
+    )(outputs)
+    outputs = ReLU()(outputs)
+    outputs = MaxPool2D((2, 2), strides=(2, 2), dtype=hidden_layers_policy)(outputs)
     if dropout is not None:
-        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+        outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
-    x = Flatten(dtype=hidden_layers_policy)(x)
-    x = Dense(256, dtype=hidden_layers_policy)(x)
-    x = ReLU()(x)
+    outputs = Flatten(dtype=hidden_layers_policy)(outputs)
+    outputs = Dense(256, dtype=hidden_layers_policy)(outputs)
+    outputs = ReLU()(outputs)
     if dropout is not None:
-        x = Dropout(dropout, dtype=hidden_layers_policy)(x)
+        outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
     if problem == 'classification':
-        x = Dense(num_classes, dtype=hidden_layers_policy)(x)
-        predictions = Softmax(dtype=output_layer_policy)(x)
+        outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
+        outputs = Softmax(dtype=output_layer_policy)(outputs)
     elif problem == 'regression':
-        x = Dense(1, dtype=hidden_layers_policy)(x)
-        predictions = Activation('linear', dtype=output_layer_policy)(x)
+        outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
+        outputs = Activation('linear', dtype=output_layer_policy)(outputs)
     else:
         raise ValueError(f'unknown problem type: \"{problem}\"')
 
-    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
 
 def linear_model(
     input_shape: Tuple[int, ...],
-    problem: Literal['classification', 'regression'] = 'regression',
     normalize_images: bool = True,
 ) -> ModelArchitecture:
-    inputs = Input(shape=input_shape)
-    x = inputs  # start "current layer" as the input layer
+    outputs = inputs = Input(shape=input_shape)
     if normalize_images:
-        x = ImageNormalization()(x)
+        outputs = ImageNormalization()(outputs)
 
-    if problem != 'regression':
-        raise ValueError(f'unsupported problem type: \"{problem}\"')
+    outputs = LinearModel()(outputs)
 
-    predictions = _LinearModel()(x)
-
-    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=predictions)
+    return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
