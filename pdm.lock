@@ -1149,6 +1149,7 @@ dependencies = [
 [[package]]
 name = "pathspec"
 version = "0.9.0"
+requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 summary = "Utility library for gitignore style pattern matching of file paths."
 
 [[package]]
@@ -1182,7 +1183,7 @@ dependencies = [
 
 [[package]]
 name = "pip"
-version = "22.1.2"
+version = "22.2"
 requires_python = ">=3.7"
 summary = "The PyPA recommended tool for installing Python packages."
 
@@ -1317,6 +1318,7 @@ summary = "Python style guide checker"
 [[package]]
 name = "pycparser"
 version = "2.21"
+requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "C parser in Python"
 
 [[package]]
@@ -3232,9 +3234,9 @@ content_hash = "sha256:b6b1a4a50f137db3b9857cf8f910fdf18824d4d1b09753ab4a1b8cd4c
     {url = "https://files.pythonhosted.org/packages/0a/98/98b3c6d954b6bd8531c611fb24be53ccc66438f493b05ec4b107942e27b7/Pint-0.18-py2.py3-none-any.whl", hash = "sha256:4b37f3c470639ea6f96b0026c3364bde30631fa737092bdaf18ad3f4f76f252f"},
     {url = "https://files.pythonhosted.org/packages/f1/ee/b44c347a8446e1b75404cd7164f90528cacc5f14d55eb073edf240468303/Pint-0.18.tar.gz", hash = "sha256:8c4bce884c269051feb7abc69dbfd18403c0c764abc83da132e8a7222f8ba801"},
 ]
-"pip 22.1.2" = [
-    {url = "https://files.pythonhosted.org/packages/96/2f/caec18213f6a67852f6997fb0673ae08d2e93d1b81573edb93ba4ef06970/pip-22.1.2-py3-none-any.whl", hash = "sha256:a3edacb89022ef5258bf61852728bf866632a394da837ca49eb4303635835f17"},
-    {url = "https://files.pythonhosted.org/packages/4b/b6/0fa7aa968a9fa4ef63a51b3ff0644e59f49dcd7235b3fd6cceb23f202e08/pip-22.1.2.tar.gz", hash = "sha256:6d55b27e10f506312894a87ccc59f280136bad9061719fac9101bdad5a6bce69"},
+"pip 22.2" = [
+    {url = "https://files.pythonhosted.org/packages/9b/9e/9e0610f25e65e2cdf90b1ee9c47ca710865401904038558ac0129ea23cbc/pip-22.2-py3-none-any.whl", hash = "sha256:9abf423d5d64f3289ab9d5bf31da9e6234f2e9c5d8dcf1423bcb46b809a02c2c"},
+    {url = "https://files.pythonhosted.org/packages/cd/b6/cf07132d631444dd7ce0ed199f2327eb34e2418f1675145e5b10e1ee65cd/pip-22.2.tar.gz", hash = "sha256:8d63fcd4ee293e30b644827268a0a973d080e5c7425ef26d427f5eb2126c7681"},
 ]
 "pip-api 0.0.30" = [
     {url = "https://files.pythonhosted.org/packages/69/a2/90dd01b87277ae65a6fb725dae86a039aeb34e24f576600abd0434aa95c4/pip-api-0.0.30.tar.gz", hash = "sha256:a05df2c7aa9b7157374bcf4273544201a0c7bae60a9c65bcf84f3959ef3896f3"},
