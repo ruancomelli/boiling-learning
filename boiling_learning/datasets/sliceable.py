@@ -244,17 +244,17 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
 
         length = len(self)
 
-        rescaled_sizes: Tuple[Optional[Union[int, float]], ...] = tuple(
+        rescaled_sizes = tuple(
             float(size * length) if isinstance(size, Fraction) else size for size in sizes
         )
-        total_size: Union[int, float] = sum(size for size in rescaled_sizes if size is not None)
+        total_size = sum(size for size in rescaled_sizes if size is not None)
 
-        clean_sizes: Tuple[float, ...] = tuple(
+        clean_sizes = tuple(
             float(length - total_size if size is None else size) for size in rescaled_sizes
         )
 
-        int_sizes: Tuple[int, ...] = tuple(
-            map(int, saferound(clean_sizes, places=0, topline=length))
+        int_sizes = tuple(
+            int(rounded_size) for rounded_size in saferound(clean_sizes, places=0, topline=length)
         )
 
         if any(size < 0 for size in int_sizes):
