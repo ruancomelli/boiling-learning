@@ -385,9 +385,7 @@ def _sync_dataframes(
         )
 
     concat = pd.concat([source_df, dest_df]).sort_index()
-    if isinstance(source_df.index, pd.Float64Index):
-        concat = concat.interpolate(method='index', limit_direction='both')
-    else:
-        concat = concat.interpolate(method='time', limit_direction='both')
+    interpolation_method = 'index' if isinstance(source_df.index, pd.Float64Index) else 'time'
+    concat = concat.interpolate(method=interpolation_method, limit_direction='both')
     concat = concat.loc[dest_df.index]
     return concat
