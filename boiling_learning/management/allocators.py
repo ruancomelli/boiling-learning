@@ -80,13 +80,15 @@ class JSONTableAllocator(Allocator):
         db: Table,
         *,
         describer: Callable[[Pack[Any, Any]], json.JSONDataType] = json_describe,
+        suffix: str = '.json',
     ) -> None:
         self.path: Path = resolve(path)
         self.db: Table = db
         self.describer: Callable[[Pack[Any, Any]], json.JSONDataType] = describer
+        self.suffix = suffix
 
     def _doc_path(self, doc_id: int) -> Path:
-        return resolve(self.path / f'{doc_id}.json', parents=True)
+        return resolve(self.path / f'{doc_id}{self.suffix}', parents=True)
 
     def _provide(self, serialized: json.JSONDataType) -> int:
         for doc in self.db:
@@ -101,7 +103,7 @@ class JSONTableAllocator(Allocator):
         serialized = self.describer(Pack(args, kwargs))
         logger.debug(f'Described arguments: {serialized}')
 
-        doc_id: int = self._provide(serialized)
+        doc_id = self._provide(serialized)
         path = self._doc_path(doc_id)
         logger.debug(f'Allocated path is {path}')
         return path
@@ -119,6 +121,7 @@ def default_table_allocator(
         ],
         json.JSONDataType,
     ] = json_describe,
+    suffix: str = '.json',
 ) -> JSONTableAllocator:
     root = resolve(root, dir=True)
     datapath = resolve(root / 'data', dir=True)
@@ -127,4 +130,4 @@ def default_table_allocator(
     db = TinyDB(str(dbpath))
     db.table_class = SmartCacheTable
 
-    return JSONTableAllocator(datapath, db, describer=describer)
+    return JSONTableAllocator(datapath, db, describer=describer, suffix=suffix)
