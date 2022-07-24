@@ -208,7 +208,6 @@ class ExperimentVideo:
 
     def make_dataframe(
         self,
-        recalculate: bool = False,
         exist_load: bool = False,
         enforce_time: bool = False,
         inplace: bool = True,
@@ -216,7 +215,7 @@ class ExperimentVideo:
         if self.df_path is None:
             raise ValueError('*df_path* is not defined yet.')
 
-        if not recalculate and self.df is not None:
+        if self.df is not None:
             return self.df
 
         if exist_load and self.df_path.is_file():
@@ -262,7 +261,7 @@ class ExperimentVideo:
         return df
 
     def sync_time_series(self, source_df: pd.DataFrame, inplace: bool = True) -> pd.DataFrame:
-        df = self.make_dataframe(recalculate=False, enforce_time=True, inplace=inplace)
+        df = self.make_dataframe(enforce_time=True, inplace=inplace)
 
         df = _sync_dataframes(
             source_df=source_df,
@@ -326,7 +325,7 @@ class ExperimentVideo:
             self.df.to_csv(path, index=False)
 
     def targets(self, select_columns: Optional[Union[str, List[str]]] = None) -> pd.DataFrame:
-        df = self.make_dataframe(recalculate=False)
+        df = self.make_dataframe()
         df = self.convert_dataframe_type(df)
         df.sort_values(by=self.column_names.index, inplace=True)
 

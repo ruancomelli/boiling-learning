@@ -61,12 +61,7 @@ def _get_experimental_data_from_path(case_experiment_path: Path) -> pd.DataFrame
 
 def _set_experiment_video_data(ev: ExperimentVideo, df: pd.DataFrame) -> None:
     ev.sync_time_series(df, inplace=True)
-    ev.make_dataframe(
-        recalculate=False,
-        exist_load=False,
-        enforce_time=True,
-        inplace=True,
-    )
+    ev.make_dataframe(exist_load=False, enforce_time=True, inplace=True)
     check_experiment_video_dataframe_indices(ev)
     _regularize_experiment_video_dataframe(ev)
     ev.save_df(overwrite=False)
