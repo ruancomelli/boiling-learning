@@ -1,5 +1,20 @@
 
 
+## v0.33.2 (2022-07-25)
+
+### Refactor
+
+- **preprocessing/image_datasets**: improve error message
+- **scripts/connect_gpus**: remove unnecessary `else` clauses
+- **preprocessing/experiment_video**: remove unnecessary parameter `recalculate` from `make_dataframe`
+- **preprocessing/experiment_video**: extract variable in `_sync_dataframes`
+- **datasets/sliceable**: reduce usage of explicit type-annotations in `SliceableDataset.split`
+- **model/definitions**: rename intermediary layers from `x` to `outputs`
+
+### Feat
+
+- **management/allocators**: support `suffix` parameter to set filename suffix when saving objects with `JSONTableAllocator` and `default_table_allocator`
+
 ## v0.33.1 (2022-07-13)
 
 ## v0.33.0 (2022-07-13)
