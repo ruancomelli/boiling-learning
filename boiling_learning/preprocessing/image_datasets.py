@@ -81,7 +81,7 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
                 if not value.pop(keys.ignore, False)
             }
         else:
-            raise RuntimeError(f'could not load video data from {data_path}.')
+            raise RuntimeError(f'could not load video data from {data_path}. Got {video_data!r}.')
 
         video_data = {
             name: dataclass_from_mapping(data, ExperimentVideo.VideoData, key_map=keys)
