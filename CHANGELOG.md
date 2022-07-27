@@ -1,5 +1,13 @@
 
 
+## v0.34.0 (2022-07-26)
+
+### Refactor
+
+- **datasets/sliceable**: make `take` and `skip` contiguous and remove `evenly_spaced_indices`
+- **utils/dataclasses**: remove unused function `to_parent_dataclass`
+- **utils**: remove module `utils.utils`, including unused functions `reorder`, `argmin`, `argmax`, `argsorted` and `onde_factor_at_a_time`
+
 ## v0.33.2 (2022-07-25)
 
 ### Refactor
