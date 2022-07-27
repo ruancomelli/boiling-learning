@@ -14,9 +14,8 @@ __all__ = (
     'is_dataclass_instance',
 )
 
-_T = TypeVar('_T')
-DataClass = Any
 _DataClass = TypeVar('_DataClass')
+DataClass = Any
 
 
 def is_dataclass_class(obj: Any) -> TypeGuard[Type[DataClass]]:
@@ -29,9 +28,9 @@ def is_dataclass_instance(obj: Any) -> TypeGuard[DataClass]:
 
 def dataclass_from_mapping(
     mapping: Mapping[str, Any],
-    dataclass_factory: Callable[..., _T],
+    dataclass_factory: Callable[..., _DataClass],
     key_map: Optional[Union[DataClass, Mapping[str, str]]] = None,
-) -> _T:
+) -> _DataClass:
     if not is_dataclass_class(dataclass_factory):
         raise ValueError('*dataclass_factory* must be a dataclass.')
 
@@ -49,20 +48,7 @@ def dataclass_from_mapping(
     return dataclass_from_mapping(mapping, dataclass_factory)
 
 
-def to_parent_dataclass(obj: _DataClass, parent: Callable[..., _DataClass]) -> _DataClass:
-    if not is_dataclass_class(parent):
-        raise ValueError('*parent* must be a dataclass.')
-
-    if not is_dataclass_instance(obj):
-        raise ValueError('*obj* must be a dataclass instance.')
-
-    if not isinstance(obj, parent):
-        raise ValueError('*obj* must be an instance of *parent*.')
-
-    return dataclass_from_mapping(asdict(obj), parent)
-
-
-def shallow_asdict(obj: _DataClass) -> Dict[str, Any]:
+def shallow_asdict(obj: DataClass) -> Dict[str, Any]:
     """Version of `asdict` that does not deepcopy objects.
 
     See https://docs.python.org/3/library/dataclasses.html#dataclasses.asdict for this
