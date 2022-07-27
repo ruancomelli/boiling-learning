@@ -4,10 +4,10 @@ from pathlib import Path
 from typing import Any, Dict, FrozenSet, Generic, List, Set, Tuple, Type, TypeVar, Union
 
 from classes import AssociatedType, Supports, typeclass
-from frozendict import frozendict
 from typing_extensions import Protocol, final, runtime_checkable
 
 from boiling_learning.utils.dataclasses import is_dataclass_instance, shallow_asdict
+from boiling_learning.utils.frozendicts import frozendict
 
 _AnyType = TypeVar('_AnyType', bound=Type[Any])
 _Description = TypeVar('_Description')

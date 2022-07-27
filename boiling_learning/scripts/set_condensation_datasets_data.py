@@ -4,13 +4,13 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import parse
 import yaml
-from frozendict import frozendict
 from loguru import logger
 
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.video import Video
 from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
+from boiling_learning.utils.frozendicts import frozendict
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 _SUBCASE_PATTERNS = frozendict(

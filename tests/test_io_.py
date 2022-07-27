@@ -1,9 +1,9 @@
 from typing import Any, Dict
 
 import pytest
-from frozendict import frozendict
 
 from boiling_learning.io import json
+from boiling_learning.utils.frozendicts import frozendict
 from boiling_learning.utils.functional import P
 
 
