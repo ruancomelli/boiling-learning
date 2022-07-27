@@ -1,5 +1,4 @@
 import math
-from unittest.case import TestCase
 
 from boiling_learning.utils.collections import KeyedSet
 from boiling_learning.utils.geometry import Cylinder, RectangularPrism
@@ -7,26 +6,26 @@ from boiling_learning.utils.iterutils import unsort
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 
 
-class utils_collections_test(TestCase):
+class Test_utils_collections:
     def test_KeyedSet(self) -> None:
         keyed_set = KeyedSet(str.upper, ('hi', 'bye', 'hello'))
 
-        self.assertEqual(set(keyed_set), {'hi', 'bye', 'hello'})
-        self.assertEqual(set(keyed_set.values()), {'hi', 'bye', 'hello'})
-        self.assertEqual(set(keyed_set.keys()), {'HI', 'BYE', 'HELLO'})
-        self.assertEqual(len(keyed_set), 3)
-        self.assertEqual(keyed_set['BYE'], 'bye')
-        self.assertIn('hello', keyed_set)
-        self.assertNotIn('byello', keyed_set)
+        assert set(keyed_set) == {'hi', 'bye', 'hello'}
+        assert set(keyed_set.values()) == {'hi', 'bye', 'hello'}
+        assert set(keyed_set.keys()) == {'HI', 'BYE', 'HELLO'}
+        assert len(keyed_set) == 3
+        assert keyed_set['BYE'] == 'bye'
+        assert 'hello' in keyed_set
+        assert 'byello' not in keyed_set
 
         keyed_set.add('byello')
-        self.assertIn('byello', keyed_set)
+        assert 'byello' in keyed_set
 
         keyed_set.discard('hello')
-        self.assertNotIn('hello', keyed_set)
+        assert 'hello' not in keyed_set
 
 
-class geometry_test(TestCase):
+class Test_geometry:
     def test_Cylinder(self) -> None:
         cylinder = Cylinder(length=10, diameter=2)
 
@@ -36,11 +35,11 @@ class geometry_test(TestCase):
     def test_RectangularPrism(self) -> None:
         prism = RectangularPrism(width=5, thickness=3, length=10)
 
-        self.assertEqual(prism.cross_section_area(), 15)
-        self.assertEqual(prism.cross_section_perimeter(), 16)
+        assert prism.cross_section_area() == 15
+        assert prism.cross_section_perimeter() == 16
 
 
-class LazyTest(TestCase):
+class TestLazy:
     def test_Lazy(self) -> None:
         history = []
 
@@ -48,14 +47,14 @@ class LazyTest(TestCase):
             history.append(0)  # simulate a side-effect
             return 0
 
-        self.assertListEqual(history, [])
+        assert history == []
         lazy_number = Lazy(creator)
-        self.assertListEqual(history, [])
-        self.assertEqual(lazy_number(), 0)
-        self.assertListEqual(history, [0])
+        assert history == []
+        assert lazy_number() == 0
+        assert history == [0]
 
         lazy_number = Lazy.from_value(1)
-        self.assertEqual(lazy_number(), 1)
+        assert lazy_number() == 1
 
     def test_LazyCallable(self) -> None:
         history = []
@@ -67,16 +66,16 @@ class LazyTest(TestCase):
 
         lazy_add = LazyCallable(add)
 
-        self.assertListEqual(history, [])
+        assert history == []
 
         result = lazy_add(1, 2)
-        self.assertListEqual(history, [])
+        assert history == []
 
-        self.assertEqual(result(), 3)
-        self.assertListEqual(history, [3])
+        assert result() == 3
+        assert history == [3]
 
 
-class iterutils_test(TestCase):
+class Test_iterutils:
     def test_unsort(self) -> None:
         unsorted_items = [50, 30, 20, 10, 40]
 

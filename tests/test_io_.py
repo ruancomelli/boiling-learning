@@ -1,5 +1,4 @@
 from typing import Any, Dict
-from unittest import TestCase
 
 import pytest
 from frozendict import frozendict
@@ -26,7 +25,7 @@ def _json_decode(obj: json.JSONDataType) -> X:
     return X(obj['value'])
 
 
-class storage_Test(TestCase):
+class TestStorage:
     def test_default_json_io(self):
         test_list = [
             314159,
@@ -37,7 +36,7 @@ class storage_Test(TestCase):
         encoded = json.dumps(json.serialize(test_list))
         decoded = json.deserialize(json.loads(encoded))
 
-        self.assertListEqual(decoded, test_list)
+        assert decoded == test_list
 
     def test_custom_json_io(self):
         x = X(3)
@@ -45,7 +44,7 @@ class storage_Test(TestCase):
         encoded = json.dumps(json.serialize(x))
         decoded = json.deserialize(json.loads(encoded))
 
-        self.assertEqual(decoded.value, 3)
+        assert decoded.value == 3
 
 
 @pytest.mark.parametrize(
