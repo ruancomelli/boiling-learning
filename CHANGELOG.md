@@ -1,5 +1,19 @@
 
 
+## v0.34.1 (2022-07-27)
+
+### Refactor
+
+- **utils/pathutils**: remove unused `tempfilepath` and `tempdir`
+- complete type annotations
+- **utils/dataclasses**: fix typing
+- **datasets/metrics**: fix typing
+- **utils/table_dispatch**: remove unused `predicate` parameter to `dispatch` method
+- **utils/collections**: remove unnecessary `KeyedDefaultDict`
+- **utils/collections**: remove unnecessary `merge_dicts`
+- **utils/lazy**: remove unused `LazyCallable.__matmul__` operator overload
+- **utils/timing**: remove unused `CasesTimer`
+
 ## v0.34.0 (2022-07-26)
 
 ### Refactor
