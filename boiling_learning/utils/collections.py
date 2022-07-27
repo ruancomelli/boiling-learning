@@ -12,9 +12,11 @@ from typing import (
     Iterator,
     KeysView,
     MutableSet,
+    Optional,
     TypeVar,
     Union,
     ValuesView,
+    overload,
 )
 
 _Any = TypeVar('_Any')
@@ -93,7 +95,15 @@ class KeyedSet(MutableSet[_Value], Generic[_Key, _Value]):
     def items(self) -> ItemsView[_Key, _Value]:
         return self.__data.items()
 
-    def get(self, key: _Key, default: _Any = None) -> Union[_Value, _Any]:
+    @overload
+    def get(self, key: _Key, default: _Any) -> Union[_Value, _Any]:
+        ...
+
+    @overload
+    def get(self, key: _Key, default: None = None) -> Union[_Value, None]:
+        ...
+
+    def get(self, key: _Key, default: Optional[_Any] = None) -> Union[_Value, Optional[_Any]]:
         with suppress(KeyError):
             return self[key]
         return default

@@ -1,7 +1,7 @@
+import typing
 from dataclasses import asdict, dataclass, field, fields, is_dataclass
 from typing import Any, Callable, Dict, Mapping, Optional, Type, TypeVar, Union
 
-import funcy
 from typing_extensions import TypeGuard
 
 __all__ = (
@@ -14,8 +14,8 @@ __all__ = (
     'is_dataclass_instance',
 )
 
-_DataClass = TypeVar('_DataClass')
 DataClass = Any
+_DataClass = TypeVar('_DataClass', bound=DataClass)
 
 
 def is_dataclass_class(obj: Any) -> TypeGuard[Type[DataClass]]:
@@ -34,18 +34,25 @@ def dataclass_from_mapping(
     if not is_dataclass_class(dataclass_factory):
         raise ValueError('*dataclass_factory* must be a dataclass.')
 
-    dataclass_field_names = frozenset(fields(dataclass_factory))
+    dataclass_field_names = frozenset(field.name for field in fields(dataclass_factory))
 
-    if key_map is None:
-        return dataclass_factory(**funcy.select_keys(dataclass_field_names, mapping))
+    if key_map is not None:
+        if is_dataclass_instance(key_map):
+            key_map = asdict(key_map)
 
-    if is_dataclass_instance(key_map):
-        key_map = asdict(key_map)
+        translator = {
+            original_name: final_name
+            for final_name, original_name in key_map.items()
+            if final_name in dataclass_field_names
+        }
+        mapping = {translator.get(key, key): value for key, value in mapping.items()}
 
-    key_map = funcy.select_keys(dataclass_field_names, key_map)
-    translator = {v: k for k, v in key_map.items()}.get
-    mapping = {translator(key, key): value for key, value in mapping.items()}
-    return dataclass_from_mapping(mapping, dataclass_factory)
+    return typing.cast(
+        _DataClass,
+        dataclass_factory(
+            **{key: value for key, value in mapping.items() if key in dataclass_field_names}
+        ),
+    )
 
 
 def shallow_asdict(obj: DataClass) -> Dict[str, Any]:
