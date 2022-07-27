@@ -10,7 +10,6 @@ from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.video import Video
 from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
-from boiling_learning.utils.collections import KeyedDefaultDict
 from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.pathutils import PathLike, resolve
 
@@ -133,7 +132,7 @@ def _make_dataframe(dataset: ImageDataset) -> None:
 
 
 def _group_datasets(datasets: Iterable[ImageDataset]) -> Tuple[ImageDataset, ...]:
-    datasets_dict = KeyedDefaultDict[str, ImageDataset](ImageDataset)
+    datasets_dict: Dict[str, ImageDataset] = {}
     for dataset in datasets:
         logger.debug(f'Reading condensation dataset {dataset.name}')
 
@@ -143,6 +142,10 @@ def _group_datasets(datasets: Iterable[ImageDataset]) -> Tuple[ImageDataset, ...
             if ev.data is not None:
                 case, subcase, _test_name, _video_name = ev.name.split(':')
                 dataset_name = ':'.join((case, subcase))
+
+                if dataset_name not in datasets_dict:
+                    datasets_dict[dataset_name] = ImageDataset(dataset_name)
+
                 datasets_dict[dataset_name].add(ev)
 
     return tuple(datasets_dict.values())

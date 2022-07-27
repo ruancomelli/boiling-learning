@@ -4,7 +4,6 @@ from contextlib import suppress
 from itertools import chain
 from typing import (
     Callable,
-    DefaultDict,
     Dict,
     Generic,
     Hashable,
@@ -21,22 +20,6 @@ from typing import (
 _Any = TypeVar('_Any')
 _Key = TypeVar('_Key', bound=Hashable)
 _Value = TypeVar('_Value')
-
-
-class KeyedDefaultDict(DefaultDict[_Key, _Value]):
-    '''
-    Source: https://stackoverflow.com/a/2912455/5811400
-    '''
-
-    def __init__(self, default_factory: Callable[[_Key], _Value]):
-        super().__init__(default_factory)
-
-    def __missing__(self, key: _Key) -> _Value:
-        if self.default_factory is None or not callable(self.default_factory):
-            raise KeyError(key)
-
-        ret = self[key] = self.default_factory(key)  # pylint: disable=not-callable
-        return ret
 
 
 class KeyedSet(MutableSet[_Value], Generic[_Key, _Value]):
