@@ -16,14 +16,16 @@ def calculate_stats(ds: tf.data.Dataset, metric: tf.keras.metrics.Metric) -> flo
     for batch in ds:
         metric.update_state(batch)
 
-    return metric.result().numpy()
+    return float(metric.result().numpy())
 
 
 def calculate_metric(ds: tf.data.Dataset, metric: tf.keras.metrics.Metric) -> float:
     """Calculate metric (error, accuracy etc.) between true and predicted values in a dataset.
 
     Args:
-        ds (tf.data.Dataset): dataset yielding `(y_true, y_pred)` pairs where `y_true` is the reference value and `y_pred` is the predicted value. Both `y_true` and `y_pred` may be either single or batched values
+        ds (tf.data.Dataset): dataset yielding `(y_true, y_pred)` pairs where `y_true` is the
+            reference value and `y_pred` is the predicted value. Both `y_true` and `y_pred` may be
+            either single or batched values
         metric (tf.keras.metrics.Metric): metric (error, accuracy etc.) to be calculated
 
     Returns:
@@ -34,4 +36,4 @@ def calculate_metric(ds: tf.data.Dataset, metric: tf.keras.metrics.Metric) -> fl
     for y_true, y_pred in ds:
         metric.update_state(y_true, y_pred)
 
-    return metric.result().numpy()
+    return float(metric.result().numpy())
