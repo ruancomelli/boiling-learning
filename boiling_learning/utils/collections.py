@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections import ChainMap
 from contextlib import suppress
 from itertools import chain
 from typing import (
@@ -13,7 +12,6 @@ from typing import (
     Iterable,
     Iterator,
     KeysView,
-    Mapping,
     MutableSet,
     TypeVar,
     Union,
@@ -23,16 +21,6 @@ from typing import (
 _Any = TypeVar('_Any')
 _Key = TypeVar('_Key', bound=Hashable)
 _Value = TypeVar('_Value')
-
-
-def merge_dicts(
-    *mappings: Mapping[_Key, _Value],
-    latter_precedence: bool = True,
-) -> Dict[_Key, _Value]:
-    if latter_precedence:
-        return merge_dicts(*reversed(mappings), latter_precedence=False)
-
-    return dict(ChainMap(*mappings))
 
 
 class KeyedDefaultDict(DefaultDict[_Key, _Value]):

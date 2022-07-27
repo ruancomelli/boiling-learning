@@ -9,7 +9,7 @@ _S = TypeVar('_S')
 
 __all__ = ('frozendict',)
 
-if sys.version_info[:3] >= (3, 9, 0):
+if sys.version_info >= (3, 9, 0):
 
     class frozendict(_frozendict):
         pass

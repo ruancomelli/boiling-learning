@@ -10,7 +10,6 @@ from loguru import logger
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.io import json
 from boiling_learning.preprocessing.video import Video, VideoFrame, convert_video
-from boiling_learning.utils.collections import merge_dicts
 from boiling_learning.utils.dataclasses import dataclass, field
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.pathutils import PathLike, resolve
@@ -227,11 +226,11 @@ class ExperimentVideo:
 
         indices = range(len(self))
 
-        data = merge_dicts(
-            {self.column_names.name: self.name, self.column_names.index: list(indices)},
-            self.data.categories,
-            latter_precedence=False,
-        )
+        data = {
+            **self.data.categories,
+            self.column_names.name: self.name,
+            self.column_names.index: list(indices),
+        }
 
         if (
             self.data.fps is not None
