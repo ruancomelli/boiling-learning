@@ -3,7 +3,7 @@ from unittest.case import TestCase
 
 from boiling_learning.utils.collections import KeyedSet
 from boiling_learning.utils.geometry import Cylinder, RectangularPrism
-from boiling_learning.utils.iterutils import evenly_spaced_indices, unsort
+from boiling_learning.utils.iterutils import unsort
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 
 
@@ -77,28 +77,6 @@ class LazyTest(TestCase):
 
 
 class iterutils_test(TestCase):
-    def test_evenly_spaced_indices(self) -> None:
-        self.assertListEqual(evenly_spaced_indices(10, 0, goal='spread'), [])
-        self.assertListEqual(evenly_spaced_indices(10, 1, goal='spread'), [5])
-        self.assertListEqual(evenly_spaced_indices(10, 2, goal='spread'), [3, 7])
-        self.assertListEqual(evenly_spaced_indices(10, 3, goal='spread'), [2, 5, 8])
-        self.assertListEqual(evenly_spaced_indices(10, 5, goal='spread'), [2, 3, 5, 7, 8])
-        self.assertListEqual(
-            evenly_spaced_indices(10, 10, goal='spread'), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-        )
-
-        for total, count in ((10, 6), (100, 70), (100, 5)):
-            with self.subTest('General properties', total=total, count=count):
-                self.assertListEqual(evenly_spaced_indices(total, 0, goal='distance'), [])
-
-                with self.assertRaises(ValueError):
-                    evenly_spaced_indices(total, total + 1, goal='distance')
-
-                self.assertListEqual(evenly_spaced_indices(total, 0, goal='spread'), [])
-
-                with self.assertRaises(ValueError):
-                    evenly_spaced_indices(total, total + 1, goal='spread')
-
     def test_unsort(self) -> None:
         unsorted_items = [50, 30, 20, 10, 40]
 

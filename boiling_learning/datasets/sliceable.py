@@ -31,8 +31,6 @@ import more_itertools as mit
 from iteround import saferound
 from typing_extensions import Literal, TypeGuard, TypeVarTuple, Unpack
 
-from boiling_learning.utils.iterutils import distance_maximized_evenly_spaced_indices
-
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
 _T = TypeVar('_T')
@@ -172,17 +170,18 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
         return self[indices]
 
     def take(self, count: Union[int, Fraction]) -> SliceableDataset[_T]:
-        if isinstance(count, int):
-            return self[:count]
+        if isinstance(count, Fraction):
+            total = len(self)
+            count = int(count * total)
 
-        total = len(self)
-        keep_indices = distance_maximized_evenly_spaced_indices(
-            total=total, count=int(count * total)
-        )
-        return self[keep_indices]
+        return self[:count]
 
     def skip(self, count: Union[int, Fraction]) -> SliceableDataset[_T]:
-        return self[count:] if isinstance(count, int) else self.take(1 - count)
+        if isinstance(count, Fraction):
+            total = len(self)
+            count = int(count * total)
+
+        return self[count:]
 
     @overload
     def split(
