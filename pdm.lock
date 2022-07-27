@@ -430,8 +430,9 @@ summary = "The FlatBuffers serialization format for Python"
 
 [[package]]
 name = "frozendict"
-version = "1.2"
-summary = "An immutable dictionary"
+version = "2.3.4"
+requires_python = ">=3.6"
+summary = "A simple immutable dictionary"
 
 [[package]]
 name = "frozenlist"
@@ -1149,7 +1150,6 @@ dependencies = [
 [[package]]
 name = "pathspec"
 version = "0.9.0"
-requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 summary = "Utility library for gitignore style pattern matching of file paths."
 
 [[package]]
@@ -1318,7 +1318,6 @@ summary = "Python style guide checker"
 [[package]]
 name = "pycparser"
 version = "2.21"
-requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "C parser in Python"
 
 [[package]]
@@ -1873,11 +1872,6 @@ version = "5.1.8"
 summary = "Typing stubs for decorator"
 
 [[package]]
-name = "types-frozendict"
-version = "2.0.9"
-summary = "Typing stubs for frozendict"
-
-[[package]]
 name = "types-pyyaml"
 version = "6.0.11"
 summary = "Typing stubs for PyYAML"
@@ -2017,7 +2011,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:b6b1a4a50f137db3b9857cf8f910fdf18824d4d1b09753ab4a1b8cd4c899b4a5"
+content_hash = "sha256:7bd75cbe0e2c2333aaefcb3b2e2e6caa54eec4b434243205bdef01cdacbd52e3"
 
 [metadata.files]
 "absl-py 1.2.0" = [
@@ -2451,8 +2445,24 @@ content_hash = "sha256:b6b1a4a50f137db3b9857cf8f910fdf18824d4d1b09753ab4a1b8cd4c
     {url = "https://files.pythonhosted.org/packages/10/41/09e9ab2134895b82466fada08b69b800f9a724bc81fcca3d4474ce48ffce/flatbuffers-2.0.tar.gz", hash = "sha256:12158ab0272375eab8db2d663ae97370c33f152b27801fa6024e1d6105fd4dd2"},
     {url = "https://files.pythonhosted.org/packages/3d/d0/26033c70d642fbc1e35d3619cf3210986fb953c173b1226709f75056c149/flatbuffers-2.0-py2.py3-none-any.whl", hash = "sha256:3751954f0604580d3219ae49a85fafec9d85eec599c0b96226e1bc0b48e57474"},
 ]
-"frozendict 1.2" = [
-    {url = "https://files.pythonhosted.org/packages/4e/55/a12ded2c426a4d2bee73f88304c9c08ebbdbadb82569ebdd6a0c007cfd08/frozendict-1.2.tar.gz", hash = "sha256:774179f22db2ef8a106e9c38d4d1f8503864603db08de2e33be5b778230f6e45"},
+"frozendict 2.3.4" = [
+    {url = "https://files.pythonhosted.org/packages/1c/0a/eaf90e443bbdbe09d9772c096cd058e23158339e57560ba5c482fd1a35c3/frozendict-2.3.4-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:3d8042b7dab5e992e30889c9b71b781d5feef19b372d47d735e4d7d45846fd4a"},
+    {url = "https://files.pythonhosted.org/packages/2d/ad/96e39d15df0c825d55dc0481016a7c743ad646d7fd4c11caf9306c606f93/frozendict-2.3.4.tar.gz", hash = "sha256:15b4b18346259392b0d27598f240e9390fafbff882137a9c48a1e0104fb17f78"},
+    {url = "https://files.pythonhosted.org/packages/33/dc/9948e7cf82103aab0a4d9f31a955b8646330e4b10d29b97fa00e47419ed9/frozendict-2.3.4-py3-none-any.whl", hash = "sha256:d722f3d89db6ae35ef35ecc243c40c800eb344848c83dba4798353312cd37b15"},
+    {url = "https://files.pythonhosted.org/packages/3a/f5/ea26dc01044e8ab28287f399822c72827d8188c3ab9b05c0820349d8b48e/frozendict-2.3.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:84c9887179a245a66a50f52afa08d4d92ae0f269839fab82285c70a0fa0dd782"},
+    {url = "https://files.pythonhosted.org/packages/3e/71/daf984abb15e4463be73b79f8bad3b394456d707e27739c4b288f8d0815e/frozendict-2.3.4-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:95bac22f7f09d81f378f2b3f672b7a50a974ca180feae1507f5e21bc147e8bc8"},
+    {url = "https://files.pythonhosted.org/packages/55/68/9aa141b275cc386dce1f52ec54c4d20d4fa5929e39fad06753232fab9564/frozendict-2.3.4-cp36-cp36m-win_amd64.whl", hash = "sha256:dbbe1339ac2646523e0bb00d1896085d1f70de23780e4927ca82b36ab8a044d3"},
+    {url = "https://files.pythonhosted.org/packages/5a/e5/e0219a218e5b93ae052258ca17e8798fb827168073d2069a0ef556acd31e/frozendict-2.3.4-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:dae686722c144b333c4dbdc16323a5de11406d26b76d2be1cc175f90afacb5ba"},
+    {url = "https://files.pythonhosted.org/packages/61/f7/e5b618117f3d9e19ac253e75b4ad50fdb5e2c838ced1811aff9269a1e807/frozendict-2.3.4-cp310-cp310-win_amd64.whl", hash = "sha256:b98a0d65a59af6da03f794f90b0c3085a7ee14e7bf8f0ef36b079ee8aa992439"},
+    {url = "https://files.pythonhosted.org/packages/6b/26/5849250f568d4ce265a38f12af11f6b694cf9ae040ca8c9bd620cc4e02e6/frozendict-2.3.4-cp38-cp38-win_amd64.whl", hash = "sha256:3ec86ebf143dd685184215c27ec416c36e0ba1b80d81b1b9482f7d380c049b4e"},
+    {url = "https://files.pythonhosted.org/packages/97/33/f7e07c348558ee1e3e5d5926b4761bf56cec15919e9fe4bfe40e215b913d/frozendict-2.3.4-cp39-cp39-win_amd64.whl", hash = "sha256:3e93aebc6e69a8ef329bbe9afb8342bd33c7b5c7a0c480cb9f7e60b0cbe48072"},
+    {url = "https://files.pythonhosted.org/packages/97/e2/fb7b3f5f658374354b02857ae462b589a8241b818790a0d4adecc5bdaf0f/frozendict-2.3.4-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:5809e6ff6b7257043a486f7a3b73a7da71cf69a38980b4171e4741291d0d9eb3"},
+    {url = "https://files.pythonhosted.org/packages/d6/32/7d436b41c0ac3bb9bb59dfe6f217763870d7b9e451b7e356ed2bf33ffcd9/frozendict-2.3.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7c550ed7fdf1962984bec21630c584d722b3ee5d5f57a0ae2527a0121dc0414a"},
+    {url = "https://files.pythonhosted.org/packages/d9/12/989ea6f3b6a03c1a051567bf1223d68fdc673d1fc3561c2e2df75bbee193/frozendict-2.3.4-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:25a6d2e8b7cf6b6e5677a1a4b53b4073e5d9ec640d1db30dc679627668d25e90"},
+    {url = "https://files.pythonhosted.org/packages/ec/c9/28be056852c784e85393cf4bc9af57daf80882533917305d29987d3e1ab2/frozendict-2.3.4-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:4a3b32d47282ae0098b9239a6d53ec539da720258bd762d62191b46f2f87c5fc"},
+    {url = "https://files.pythonhosted.org/packages/ed/f5/94e6617af0772e187eb0c9e6363891f98d43bd5881287a14efe07876ae48/frozendict-2.3.4-cp37-cp37m-win_amd64.whl", hash = "sha256:389f395a74eb16992217ac1521e689c1dea2d70113bcb18714669ace1ed623b9"},
+    {url = "https://files.pythonhosted.org/packages/f0/71/18817a3658276d2005e377583a1581629b7a373f9997f77d57cad80d0a29/frozendict-2.3.4-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:ccb6450a416c9cc9acef7683e637e28356e3ceeabf83521f74cc2718883076b7"},
+    {url = "https://files.pythonhosted.org/packages/fd/52/fa67a7cda72d2d3a1dfa579b05708b76273eaae9959c0f85484841caf2f6/frozendict-2.3.4-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:aca59108b77cadc13ba7dfea7e8f50811208c7652a13dc6c7f92d7782a24d299"},
 ]
 "frozenlist 1.3.0" = [
     {url = "https://files.pythonhosted.org/packages/0a/8f/de0f5ee99386c90f49f927fc8bf3436ac7145534db521784823e258870d3/frozenlist-1.3.0-cp37-cp37m-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:25af28b560e0c76fa41f550eacb389905633e7ac02d6eb3c09017fa1c8cdfde1"},
@@ -3934,10 +3944,6 @@ content_hash = "sha256:b6b1a4a50f137db3b9857cf8f910fdf18824d4d1b09753ab4a1b8cd4c
 "types-decorator 5.1.8" = [
     {url = "https://files.pythonhosted.org/packages/7e/3a/2b67039aeffdd9567fde3b191550e4efc2c184caeb5e14aa392f5244a335/types-decorator-5.1.8.tar.gz", hash = "sha256:0cb0cc4ab6cd6f90981cf530376be5d01156c8f423a1dff1456bbc0259d3e393"},
     {url = "https://files.pythonhosted.org/packages/ab/82/f60c2e440849c024cd6d0b1eebcadb7bafd3fd07d3f70f818909ec2706c2/types_decorator-5.1.8-py3-none-any.whl", hash = "sha256:b664ca986324ed8ad6e52b56022417556af265b7494fbd8e77d8a2856cdfb5e4"},
-]
-"types-frozendict 2.0.9" = [
-    {url = "https://files.pythonhosted.org/packages/47/f6/e0cad2befd140af466063594afdaba23313580ab74e099e48c61f051df80/types-frozendict-2.0.9.tar.gz", hash = "sha256:446b5f33125566c9885c31363e065d6416f8da6c81252af1e459a4e67a15487b"},
-    {url = "https://files.pythonhosted.org/packages/f7/ce/b82dc24a102905e86e45502e23ee60bbc57703ba1b82a65f12a43486b4f2/types_frozendict-2.0.9-py3-none-any.whl", hash = "sha256:d4292ef14f87ddec575ab1d968102dcba2c8f1e490acc67945eee1fc7de24d08"},
 ]
 "types-pyyaml 6.0.11" = [
     {url = "https://files.pythonhosted.org/packages/64/88/c231c5d97bb91fdfd673076c9d6cf3e3fcbd6c5d13d8e5181642d9c806ac/types-PyYAML-6.0.11.tar.gz", hash = "sha256:7f7da2fd11e9bc1e5e9eb3ea1be84f4849747017a59fc2eee0ea34ed1147c2e0"},

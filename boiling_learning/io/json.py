@@ -6,21 +6,20 @@ from datetime import timedelta
 from fractions import Fraction
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Dict, FrozenSet, Hashable, List, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple, TypeVar, Union
 
 from classes import AssociatedType, Supports
 from classes import typeclass as _typeclass
+from frozendict import frozendict
 from typing_extensions import Protocol, TypedDict, runtime_checkable
 
 from boiling_learning.utils.dataclasses import is_dataclass_instance, shallow_asdict
-from boiling_learning.utils.frozendict import frozendict
 from boiling_learning.utils.functional import P, Pack
 from boiling_learning.utils.pathutils import PathLike, resolve
 from boiling_learning.utils.table_dispatch import TableDispatcher
 
 # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
 
-_AnyDict = TypeVar('_AnyDict', bound=Dict[Hashable, Any])
 BasicTypes = Union[None, bool, int, str, float]
 _BasicType = TypeVar('_BasicType', bound=BasicTypes)
 JSONDataType = Union[BasicTypes, List['JSONDataType'], Dict[str, 'JSONDataType']]
