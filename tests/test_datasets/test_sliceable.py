@@ -132,12 +132,12 @@ class TestSliceableDataset:
     def test_take(self) -> None:
         sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
         assert ''.join(sds.take(10)) == 'abcdefghij'
-        assert ''.join(sds.take(Fraction(1, 3))) == 'aehlosvz'
+        assert ''.join(sds.take(Fraction(1, 3))) == 'abcdefgh'
 
     def test_skip(self) -> None:
         sds = SliceableDataset.from_sequence('abcdefghijklmnopqrstuvwxyz')
         assert ''.join(sds.skip(10)) == 'klmnopqrstuvwxyz'
-        assert ''.join(sds.skip(Fraction(1, 3))) == 'acdfgijlmoqrtuwxz'
+        assert ''.join(sds.skip(Fraction(1, 3))) == 'ijklmnopqrstuvwxyz'
 
     def test_prefetch(self) -> None:
         db = MockDatabaseDataset()
