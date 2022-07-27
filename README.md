@@ -1,9 +1,9 @@
 <h1 align="center">
 <a href="https://github.com/ruancomelli/boiling-learning">
-<img 
-  src=https://user-images.githubusercontent.com/22752929/179121666-171ab746-a072-4e62-80fa-448c4bd3f646.png 
+<img
+  src=https://user-images.githubusercontent.com/22752929/179121666-171ab746-a072-4e62-80fa-448c4bd3f646.png
   alt="Robot underwater surrounded by bubbles"
-  width="300" 
+  width="300"
   align="center"
 >
 </a>
@@ -41,7 +41,9 @@ If you are curious about the evolution of this project, take a look at the [chan
 Versioning
 ---
 
-This project uses [semantic versioning](https://semver.org/) with an additional convention: since we are still in initial development, the major version is zero: `v0.y.z`; number `y` will be incremented whenever backward incompatible changes are introduced to the API (thus `y` plays the role of the major version for stable APIs), whereas number `z` will be incremented for bug fixes, backward compatible changes, deprecations etc. (this way, `z` combines stable APIs' minor and patch version numbers).
+This project uses [ZeroVer](https://0ver.org/), a versioning scheme in which software never leaves major version **0**. This means that breaking changes are expected frequently.
+
+Given a version number `0.x.y`, the minor version `x` will be incremented whenever intentional breaking changes are introduced. If no new breaking changes are added, new releases will only increment the patch version `y` for both bug fixes and new features. This is similar to how [SemVer](https://semver.org/) treats the major and the minor version numbers, respectively.
 
 Installation
 ---
