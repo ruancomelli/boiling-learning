@@ -1,6 +1,4 @@
-import pytest
-
-from boiling_learning.utils.table_dispatch import DispatchError, TableDispatcher
+from boiling_learning.utils.table_dispatch import TableDispatcher
 
 
 class X:
@@ -24,21 +22,3 @@ def test_instance_dispatch() -> None:
     dispatched = dispatcher[X]('2022')
     assert isinstance(dispatched, X)
     assert dispatched.value == 2022
-
-
-def test_predicate() -> None:
-    dispatcher = TableDispatcher()
-
-    @dispatcher.dispatch(predicate=lambda x: x.value > 0)
-    def _dispatch_positive() -> str:
-        return 'positive'
-
-    @dispatcher.dispatch(predicate=lambda x: x.value < 0)
-    def _dispatch_positive() -> str:
-        return 'negative'
-
-    assert dispatcher[X(2022)]() == 'positive'
-    assert dispatcher[X(-1997)]() == 'negative'
-
-    with pytest.raises(DispatchError):
-        dispatcher[X(0)]
