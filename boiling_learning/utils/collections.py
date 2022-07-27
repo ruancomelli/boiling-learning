@@ -35,7 +35,7 @@ class KeyedSet(MutableSet[_Value], Generic[_Key, _Value]):
     def __len__(self) -> int:
         return len(self.__data)
 
-    def __contains__(self, element: _Value) -> bool:
+    def __contains__(self, element: _Value) -> bool:  # type: ignore
         return element in self.values()
 
     def __iter__(self) -> Iterator[_Value]:

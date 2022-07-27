@@ -1,4 +1,5 @@
 import itertools
+import typing
 from typing import Any, Callable, Iterable, Tuple, TypeVar
 
 import more_itertools as mit
@@ -41,6 +42,9 @@ def unsort(iterable: Iterable[_T]) -> Tuple[Iterable[int], Iterable[_T]]:
     if not peekable:
         return (), ()
 
-    sorted_indices, sorters = mit.sort_together((peekable, itertools.count()))
+    sorted_items, sorters = mit.sort_together((peekable, itertools.count()))
     _, unsorters = mit.sort_together((sorters, itertools.count()))
-    return unsorters, sorted_indices
+    return (
+        typing.cast(Iterable[int], unsorters),
+        typing.cast(Iterable[_T], sorted_items),
+    )
