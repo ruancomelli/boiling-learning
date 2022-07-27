@@ -1,8 +1,7 @@
-from contextlib import contextmanager
 from datetime import timedelta
 from timeit import default_timer
 from types import TracebackType
-from typing import Dict, Iterator, Optional, Type
+from typing import Optional, Type
 
 
 class Timer:
@@ -32,29 +31,3 @@ class Timer:
             return timedelta(seconds=default_timer() - self._start)
 
         return timedelta(seconds=self._end - self._start)
-
-
-class CasesTimer(Dict[str, timedelta]):
-    def __init__(self, name: str):
-        super().__init__()
-        self.name: str = name
-
-    @contextmanager
-    def case(self, name: str) -> Iterator[Timer]:
-        with Timer() as t:
-            yield t
-
-        duration = t.duration
-
-        if duration is not None:
-            self[name] = timedelta(seconds=duration)
-
-    def pretty(self) -> str:
-        return '\n\t'.join(
-            (
-                f'{self.name}:',
-                *(f'{case_name}: {timing}' for case_name, timing in self.items()),
-                '',
-                f'Total: {sum(self.values(), start=timedelta())}',
-            )
-        )
