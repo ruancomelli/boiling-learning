@@ -86,49 +86,6 @@ class Test_daq_Channel:
             assert not Channel(Device('cDAQ1Mod100'), 'ai3').exists(task)
             assert not Channel(Device('cDAQ1Mod4'), 'ai300').exists(task)
 
-    def test_type(self) -> None:
-        ch = Channel(Device())
-        assert ch.is_type(ChannelType.UNDEFINED)
-        assert ch.is_type(ChannelType.UNDEFINED, ChannelType.UNDEFINED)
-        assert not ch.is_type(ChannelType.UNDEFINED, ChannelType.INPUT)
-        assert not ch.is_type(ChannelType.ANALOG, ChannelType.UNDEFINED)
-        assert not ch.is_type(ChannelType.ANALOG, ChannelType.INPUT)
-
-        ch = Channel(Device(), type1=ChannelType.ANALOG)
-        assert ch.is_type(ChannelType.UNDEFINED)
-        assert not ch.is_type(ChannelType.INPUT)
-        assert not ch.is_type(ChannelType.DIGITAL)
-        assert not ch.is_type(ChannelType.OUTPUT)
-        assert ch.is_type(ChannelType.ANALOG)
-        assert not ch.is_type(ChannelType.ANALOG, ChannelType.INPUT)
-
-        ch = Channel(Device(), type1=ChannelType.ANALOG, type2=ChannelType.INPUT)
-        assert not ch.is_type(ChannelType.UNDEFINED)
-        assert ch.is_type(ChannelType.INPUT)
-        assert not ch.is_type(ChannelType.DIGITAL)
-        assert not ch.is_type(ChannelType.OUTPUT)
-        assert ch.is_type(ChannelType.ANALOG)
-        assert ch.is_type(ChannelType.ANALOG, ChannelType.INPUT)
-        assert not ch.is_type(ChannelType.ANALOG, ChannelType.OUTPUT)
-
-        ch = Channel(Device())
-        ch.set_type(ChannelType.ANALOG)
-        assert ch.is_type(ChannelType.UNDEFINED)
-        assert not ch.is_type(ChannelType.INPUT)
-        assert not ch.is_type(ChannelType.DIGITAL)
-        assert not ch.is_type(ChannelType.OUTPUT)
-        assert ch.is_type(ChannelType.ANALOG)
-        assert not ch.is_type(ChannelType.ANALOG, ChannelType.INPUT)
-
-        ch.set_type(ChannelType.INPUT)
-        assert not ch.is_type(ChannelType.UNDEFINED)
-        assert ch.is_type(ChannelType.INPUT)
-        assert not ch.is_type(ChannelType.DIGITAL)
-        assert not ch.is_type(ChannelType.OUTPUT)
-        assert ch.is_type(ChannelType.ANALOG)
-        assert ch.is_type(ChannelType.ANALOG, ChannelType.INPUT)
-        assert not ch.is_type(ChannelType.ANALOG, ChannelType.OUTPUT)
-
     def test_ni_type(self) -> None:
         ch = Channel(Device())
         assert ch.ni_type is None

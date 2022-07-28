@@ -79,12 +79,6 @@ class Channel:
             self.path in task.channel_names or self.description in task.channel_names
         )
 
-    def is_type(self, type1: ChannelType, type2: Optional[ChannelType] = None) -> bool:
-        if type2 is None:
-            return type1 in self.type
-        else:
-            return self.is_type(type1) and self.is_type(type2)
-
     def set_type(self, type1: ChannelType, type2: Optional[ChannelType] = None) -> None:
         if type2 is None:
             if type1 == ChannelType.UNDEFINED:
