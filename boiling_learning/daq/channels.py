@@ -126,15 +126,12 @@ class Channel:
             else None
         )
 
-    def call_ni(self, task: Task, method_name: str, *args, **kwargs):
-        channels = getattr(task, f'{self.ni_type_key()}_channels')
+    def add_to_task(self, task: Task, channel_specification: str, *args, **kwargs):
+        ni_type_key = self.ni_type_key()
+        method_name = f'add_{ni_type_key}_{channel_specification}'
+        channels = getattr(task, f'{ni_type_key}_channels')
         method = getattr(channels, method_name)
         self.ni = method(self.path, self.description, *args, **kwargs)
-
-        return self.ni
-
-    def add_to_task(self, task: Task, channel_specification: str, *args, **kwargs):
-        self.call_ni(task, f'add_{self.ni_type_key()}_{channel_specification}', *args, **kwargs)
 
         self.add_to_task_table(task)
         return self.ni
