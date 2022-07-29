@@ -1642,7 +1642,7 @@ summary = "A modern CSS selector implementation for Beautiful Soup."
 
 [[package]]
 name = "sourcery-cli"
-version = "0.12.4"
+version = "0.12.3"
 summary = "Magically refactor Python"
 
 [[package]]
@@ -3780,10 +3780,10 @@ content_hash = "sha256:0b626822cb08f192828b066ce5bd4afcfaf8006e7b018fc5d33409a53
     {url = "https://files.pythonhosted.org/packages/16/e3/4ad79882b92617e3a4a0df1960d6bce08edfb637737ac5c3f3ba29022e25/soupsieve-2.3.2.post1-py3-none-any.whl", hash = "sha256:3b2503d3c7084a42b1ebd08116e5f81aadfaea95863628c80a3b774a11b7c759"},
     {url = "https://files.pythonhosted.org/packages/f3/03/bac179d539362319b4779a00764e95f7542f4920084163db6b0fd4742d38/soupsieve-2.3.2.post1.tar.gz", hash = "sha256:fc53893b3da2c33de295667a0e19f078c14bf86544af307354de5fcf12a3f30d"},
 ]
-"sourcery-cli 0.12.4" = [
-    {url = "https://files.pythonhosted.org/packages/36/6b/d93e39d5827da9823ff4bba55ef7b5a725a101225a664b9f896c13f0afb0/sourcery_cli-0.12.4-py2.py3-none-macosx_10_9_universal2.whl", hash = "sha256:223fc025e40cd936e1ff5e8d3aca762da6f8e1b25e2838b4f4aa70c64b34689b"},
-    {url = "https://files.pythonhosted.org/packages/6f/12/c5b45212e086bea7e225433d0537393e62344a7b1248b80710b1ef6f92d6/sourcery_cli-0.12.4-py2.py3-none-win_amd64.whl", hash = "sha256:46fa559b96b1a8ba8b5d495e9520a3701544adac48e222f62d6cabdbefdf832f"},
-    {url = "https://files.pythonhosted.org/packages/d2/a1/a29e7cf10288afea977809d8f5fcce4c1acda4971188365b1f4a6ad2a63c/sourcery_cli-0.12.4-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:05ff141b9d070ddff76074c7438e66a1aa551c0647e334b7ece153eb43a9cfab"},
+"sourcery-cli 0.12.3" = [
+    {url = "https://files.pythonhosted.org/packages/09/d3/a92c087ce5855fc2fe3d03bc2fffbeb9cdb661e811f12c7dca7444cd7318/sourcery_cli-0.12.3-py2.py3-none-win_amd64.whl", hash = "sha256:8dcd6df270b0dff4613efeeb25790b01b400841de4f479f03a2bde3d16a93714"},
+    {url = "https://files.pythonhosted.org/packages/7a/71/86c7a8db044a114f9e8af1a5bf133dba55447980b579fec25e68df4ff3d0/sourcery_cli-0.12.3-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:8487129e99284f30f34200935b0e74513856d2e0a6461dadf9a834f0c235599b"},
+    {url = "https://files.pythonhosted.org/packages/7f/30/e44af4889dfc2756a66bdca447ebf0c9a6e0efef68e5864ea59fb57ae30a/sourcery_cli-0.12.3-py2.py3-none-macosx_10_9_universal2.whl", hash = "sha256:9542d4a10588aa0d6836f5f296344e9a732bdd6316f4e00667ca4b5c3611c2c7"},
 ]
 "tblib 1.7.0" = [
     {url = "https://files.pythonhosted.org/packages/d3/41/901ef2e81d7b1e834b9870d416cb09479e175a2be1c4aa1a9dcd0a555293/tblib-1.7.0.tar.gz", hash = "sha256:059bd77306ea7b419d4f76016aef6d7027cc8a0785579b5aad198803435f882c"},
