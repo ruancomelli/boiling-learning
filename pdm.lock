@@ -310,6 +310,12 @@ requires_python = ">=3.7"
 summary = "Code coverage measurement for Python"
 
 [[package]]
+name = "cycler"
+version = "0.11.0"
+requires_python = ">=3.6"
+summary = "Composable style cycles"
+
+[[package]]
 name = "dask"
 version = "2022.2.0"
 requires_python = ">=3.7"
@@ -427,6 +433,12 @@ dependencies = [
 name = "flatbuffers"
 version = "2.0"
 summary = "The FlatBuffers serialization format for Python"
+
+[[package]]
+name = "fonttools"
+version = "4.34.4"
+requires_python = ">=3.7"
+summary = "Tools to manipulate font files"
 
 [[package]]
 name = "frozendict"
@@ -805,6 +817,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kiwisolver"
+version = "1.4.4"
+requires_python = ">=3.7"
+summary = "A fast implementation of the Cassowary constraint solver"
+dependencies = [
+    "typing-extensions; python_version < \"3.8\"",
+]
+
+[[package]]
 name = "kt-legacy"
 version = "1.0.4"
 summary = "Legacy import names for Keras Tuner"
@@ -861,6 +882,22 @@ name = "markupsafe"
 version = "2.1.1"
 requires_python = ">=3.7"
 summary = "Safely add untrusted strings to HTML/XML markup."
+
+[[package]]
+name = "matplotlib"
+version = "3.5.2"
+requires_python = ">=3.7"
+summary = "Python plotting package"
+dependencies = [
+    "cycler>=0.10",
+    "fonttools>=4.22.0",
+    "kiwisolver>=1.0.1",
+    "numpy>=1.17",
+    "packaging>=20.0",
+    "pillow>=6.2.0",
+    "pyparsing>=2.2.1",
+    "python-dateutil>=2.7",
+]
 
 [[package]]
 name = "matplotlib-inline"
@@ -1150,7 +1187,6 @@ dependencies = [
 [[package]]
 name = "pathspec"
 version = "0.9.0"
-requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 summary = "Utility library for gitignore style pattern matching of file paths."
 
 [[package]]
@@ -1319,7 +1355,6 @@ summary = "Python style guide checker"
 [[package]]
 name = "pycparser"
 version = "2.21"
-requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "C parser in Python"
 
 [[package]]
@@ -1604,6 +1639,18 @@ requires_python = ">=3.7,<3.11"
 summary = "SciPy: Scientific Library for Python"
 dependencies = [
     "numpy<1.23.0,>=1.16.5",
+]
+
+[[package]]
+name = "seaborn"
+version = "0.11.2"
+requires_python = ">=3.6"
+summary = "seaborn: statistical data visualization"
+dependencies = [
+    "matplotlib>=2.2",
+    "numpy>=1.15",
+    "pandas>=0.23",
+    "scipy>=1.0",
 ]
 
 [[package]]
@@ -2018,7 +2065,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:0b626822cb08f192828b066ce5bd4afcfaf8006e7b018fc5d33409a53f0886a7"
+content_hash = "sha256:b1cf861cc4d28fc4f4657ae65b33c1e9db8cc43b195fb68aee0d24ba90d749ea"
 
 [metadata.files]
 "absl-py 1.2.0" = [
@@ -2374,6 +2421,10 @@ content_hash = "sha256:0b626822cb08f192828b066ce5bd4afcfaf8006e7b018fc5d33409a53
     {url = "https://files.pythonhosted.org/packages/f6/53/6353cec1305e478f003a52dc4ed42e05232af99faccd4dd300c5e687d5d1/coverage-6.4.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:f7bd0ffbcd03dc39490a1f40b2669cc414fae0c4e16b77bb26806a4d0b7d1452"},
     {url = "https://files.pythonhosted.org/packages/f6/73/cb9a3c2d8de315bb9f5fbbcaecd1cea2cacaf530885159159ec2d9c7757e/coverage-6.4.2-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:24b04d305ea172ccb21bee5bacd559383cba2c6fcdef85b7701cf2de4188aa55"},
 ]
+"cycler 0.11.0" = [
+    {url = "https://files.pythonhosted.org/packages/34/45/a7caaacbfc2fa60bee42effc4bcc7d7c6dbe9c349500e04f65a861c15eb9/cycler-0.11.0.tar.gz", hash = "sha256:9c87405839a19696e837b3b818fed3f5f69f16f1eec1a1ad77e043dcea9c772f"},
+    {url = "https://files.pythonhosted.org/packages/5c/f9/695d6bedebd747e5eb0fe8fad57b72fdf25411273a39791cde838d5a8f51/cycler-0.11.0-py3-none-any.whl", hash = "sha256:3a27e95f763a428a739d2add979fa7494c912a32c17c4c38c4d5f082cad165a3"},
+]
 "dask 2022.2.0" = [
     {url = "https://files.pythonhosted.org/packages/bd/d6/dc58c32e72cc69f4fe59ed51060b4a3e6fbbfa62dced0c4e132403fb61e8/dask-2022.2.0-py3-none-any.whl", hash = "sha256:feaf838faa23150faadaeb2483e8612cfb8fed51f62e635a1a6dd55d1d793ba4"},
     {url = "https://files.pythonhosted.org/packages/e1/89/ca44bc9c1f5ea5143b6530726e22b696b071d119cae8ad00cb522f260d1d/dask-2022.2.0.tar.gz", hash = "sha256:cefb5c63d1e26f6dfa650ddd1eb1a53e0cef623141b838820c6b34e6534ea409"},
@@ -2451,6 +2502,10 @@ content_hash = "sha256:0b626822cb08f192828b066ce5bd4afcfaf8006e7b018fc5d33409a53
 "flatbuffers 2.0" = [
     {url = "https://files.pythonhosted.org/packages/10/41/09e9ab2134895b82466fada08b69b800f9a724bc81fcca3d4474ce48ffce/flatbuffers-2.0.tar.gz", hash = "sha256:12158ab0272375eab8db2d663ae97370c33f152b27801fa6024e1d6105fd4dd2"},
     {url = "https://files.pythonhosted.org/packages/3d/d0/26033c70d642fbc1e35d3619cf3210986fb953c173b1226709f75056c149/flatbuffers-2.0-py2.py3-none-any.whl", hash = "sha256:3751954f0604580d3219ae49a85fafec9d85eec599c0b96226e1bc0b48e57474"},
+]
+"fonttools 4.34.4" = [
+    {url = "https://files.pythonhosted.org/packages/5a/a4/a97cff4c4af6764a04cc202299e5205b2e101cb1543bcaf9737be29f78ab/fonttools-4.34.4.zip", hash = "sha256:9a1c52488045cd6c6491fd07711a380f932466e317cb8e016fc4e99dc7eac2f0"},
+    {url = "https://files.pythonhosted.org/packages/ad/27/094dd5d09d3a57f7a5f27414ae5c1405bae1164922f1bb61fd8a748e8f65/fonttools-4.34.4-py3-none-any.whl", hash = "sha256:d73f25b283cd8033367451122aa868a23de0734757a01984e4b30b18b9050c72"},
 ]
 "frozendict 2.3.4" = [
     {url = "https://files.pythonhosted.org/packages/1c/0a/eaf90e443bbdbe09d9772c096cd058e23158339e57560ba5c482fd1a35c3/frozendict-2.3.4-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:3d8042b7dab5e992e30889c9b71b781d5feef19b372d47d735e4d7d45846fd4a"},
@@ -2743,6 +2798,51 @@ content_hash = "sha256:0b626822cb08f192828b066ce5bd4afcfaf8006e7b018fc5d33409a53
     {url = "https://files.pythonhosted.org/packages/7f/6c/8ac746c9d0e7776bf119c511c98ce10f04e9b9d7c37cb8c0ea226b0968d1/keras_tuner-1.1.3-py3-none-any.whl", hash = "sha256:8e3b4605c6989a8a7020f03e2a52573c2a1e41854bb7ba27e0b579ffd3967dd8"},
     {url = "https://files.pythonhosted.org/packages/f7/be/c4bc3a03d3fd73dd5bc0678069b38f4a24ae0a4385969480a59164a0543e/keras-tuner-1.1.3.tar.gz", hash = "sha256:296edb4e8fdbb8563c0145273ea94fb8889942841a1fcef1391ae09455477d70"},
 ]
+"kiwisolver 1.4.4" = [
+    {url = "https://files.pythonhosted.org/packages/03/93/11790e8e81b89acd3a1c8a6b501f8a05b1c41beee0990582699cdda29557/kiwisolver-1.4.4-cp37-cp37m-win_amd64.whl", hash = "sha256:03baab2d6b4a54ddbb43bba1a3a2d1627e82d205c5cf8f4c924dc49284b87166"},
+    {url = "https://files.pythonhosted.org/packages/08/14/2ee2b7013f6c7f92f76ee9e8368736410c24f404e70b0f882758493bdeec/kiwisolver-1.4.4-cp37-cp37m-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:02f79693ec433cb4b5f51694e8477ae83b3205768a6fb48ffba60549080e295b"},
+    {url = "https://files.pythonhosted.org/packages/15/cd/5b0a188f94b82b46d43023dc47354c5bb21fa4539858cd06df80889451c5/kiwisolver-1.4.4-cp39-cp39-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:efda5fc8cc1c61e4f639b8067d118e742b812c930f708e6667a5ce0d13499e29"},
+    {url = "https://files.pythonhosted.org/packages/26/32/6bd586b28b3736aa0997a24e5ebecebc83b2fdb86f29990875f7a2b83e4d/kiwisolver-1.4.4-cp38-cp38-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:ad881edc7ccb9d65b0224f4e4d05a1e85cf62d73aab798943df6d48ab0cd79a1"},
+    {url = "https://files.pythonhosted.org/packages/26/f3/1daa54509332dff966e1493fe0d5b573e0e11a56d301323ec6c667a53142/kiwisolver-1.4.4-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:b533558eae785e33e8c148a8d9921692a9fe5aa516efbdff8606e7d87b9d5824"},
+    {url = "https://files.pythonhosted.org/packages/2b/1f/a7cbeae4d9b0af9ffb8f139d4d4c8493716deb125cd23d8fabb6cd20783e/kiwisolver-1.4.4-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:8c808594c88a025d4e322d5bb549282c93c8e1ba71b790f539567932722d7bd8"},
+    {url = "https://files.pythonhosted.org/packages/49/b9/edd9b69e1f2a8339347bcfcfbb14ce19db4a81158d01d8fd26fc3a088109/kiwisolver-1.4.4-cp39-cp39-win_amd64.whl", hash = "sha256:ba59c92039ec0a66103b1d5fe588fa546373587a7d68f5c96f743c3396afc04b"},
+    {url = "https://files.pythonhosted.org/packages/4d/91/08eaa0f13fe644ae913cb157e9599ce64b64a99620df3beb0b142690e264/kiwisolver-1.4.4-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bc8d3bd6c72b2dd9decf16ce70e20abcb3274ba01b4e1c96031e0c4067d1e7cd"},
+    {url = "https://files.pythonhosted.org/packages/4f/05/59b34e788bf2b45c7157c3d898d567d28bc42986c1b6772fb1af329eea0d/kiwisolver-1.4.4-cp38-cp38-win_amd64.whl", hash = "sha256:5bce61af018b0cb2055e0e72e7d65290d822d3feee430b7b8203d8a855e78766"},
+    {url = "https://files.pythonhosted.org/packages/52/a4/93745b44a80fbddb8deec9c5f17193bfea1fce8d128c18b9489edc6e5917/kiwisolver-1.4.4-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:b428ef021242344340460fa4c9185d0b1f66fbdbfecc6c63eff4b7c29fad429d"},
+    {url = "https://files.pythonhosted.org/packages/5a/77/c8e94936cbafe39a7f454a365cf7fe5eec33bbd16c9301e10dea44ed24db/kiwisolver-1.4.4-cp38-cp38-win32.whl", hash = "sha256:75facbe9606748f43428fc91a43edb46c7ff68889b91fa31f53b58894503a191"},
+    {url = "https://files.pythonhosted.org/packages/5f/5c/272a7dd49a1914f35cd8d6d9f386defa8b047f6fbd06badd6b77b3ba24e7/kiwisolver-1.4.4.tar.gz", hash = "sha256:d41997519fcba4a1e46eb4a2fe31bc12f0ff957b2b81bac28db24744f333e955"},
+    {url = "https://files.pythonhosted.org/packages/64/e2/a8764238ea5595ab392b78cd23c2b07044133fddc8b3acdd60efbcc1af99/kiwisolver-1.4.4-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:f4f270de01dd3e129a72efad823da90cc4d6aafb64c410c9033aba70db9f1ff0"},
+    {url = "https://files.pythonhosted.org/packages/68/20/2ce1186ef4edf47281faf58f6dd72a1fcd2be1fc66514bd2d220097bdcd1/kiwisolver-1.4.4-cp310-cp310-win_amd64.whl", hash = "sha256:3fe20f63c9ecee44560d0e7f116b3a747a5d7203376abeea292ab3152334d004"},
+    {url = "https://files.pythonhosted.org/packages/6a/0f/7923176faa67482b028f242353e1939361cc90b089ebfff007503d008e7c/kiwisolver-1.4.4-pp37-pypy37_pp73-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:787518a6789009c159453da4d6b683f468ef7a65bbde796bcea803ccf191058d"},
+    {url = "https://files.pythonhosted.org/packages/73/c9/7e5ea6d8dd9a3b91e957ada019a149f54ef294275f784451991de4d4d297/kiwisolver-1.4.4-pp37-pypy37_pp73-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:91672bacaa030f92fc2f43b620d7b337fd9a5af28b0d6ed3f77afc43c4a64b5a"},
+    {url = "https://files.pythonhosted.org/packages/75/a6/27a96c414200846c9a13ac16635c747b0d2bd8c391f22f31cc9e638e1849/kiwisolver-1.4.4-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:ecb1fa0db7bf4cff9dac752abb19505a233c7f16684c5826d1f11ebd9472b871"},
+    {url = "https://files.pythonhosted.org/packages/75/e2/37f78c092e2e11fe559b9cfca1172fca0c20ca9b521ec806be9679251f1d/kiwisolver-1.4.4-cp37-cp37m-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:d0611a0a2a518464c05ddd5a3a1a0e856ccc10e67079bb17f265ad19ab3c7597"},
+    {url = "https://files.pythonhosted.org/packages/79/0f/5cc4ca3df66c49817944b9a1c7343ba70aefffc868ddf651d7839cc5dffd/kiwisolver-1.4.4-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:7577c1987baa3adc4b3c62c33bd1118c3ef5c8ddef36f0f2c950ae0b199e100d"},
+    {url = "https://files.pythonhosted.org/packages/83/b7/f6386940bec20b842a097697a0396a0941cbc5262d4b619dee2cc123502b/kiwisolver-1.4.4-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:2f5e60fabb7343a836360c4f0919b8cd0d6dbf08ad2ca6b9cf90bf0c76a3c4f6"},
+    {url = "https://files.pythonhosted.org/packages/86/7a/6b438da7534dacd232ed4e19f74f4edced2cda9494d7e6536f54edfdf4a5/kiwisolver-1.4.4-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:2e407cb4bd5a13984a6c2c0fe1845e4e41e96f183e5e5cd4d77a857d9693494c"},
+    {url = "https://files.pythonhosted.org/packages/87/d8/c46267cbc3799a7609ace482f64a4e242fe95d67f562a05bc80c0e59d4a0/kiwisolver-1.4.4-cp37-cp37m-win32.whl", hash = "sha256:a553dadda40fef6bfa1456dc4be49b113aa92c2a9a9e8711e955618cd69622e3"},
+    {url = "https://files.pythonhosted.org/packages/8e/e0/6e6afbbdc7cac65e25e5407922f8e3997e53eda6bab70e8fa6f7765de60d/kiwisolver-1.4.4-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c97528e64cb9ebeff9701e7938653a9951922f2a38bd847787d4a8e498cc83ae"},
+    {url = "https://files.pythonhosted.org/packages/96/7f/63c0f0c775a9fc2b59684806d0a1da62f790adca4c0f5f3106059349f8a0/kiwisolver-1.4.4-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:f9f39e2f049db33a908319cf46624a569b36983c7c78318e9726a4cb8923b26c"},
+    {url = "https://files.pythonhosted.org/packages/a4/36/c414d75be311ce97ef7248edcc4fc05afae2998641bf6b592d43a9dee581/kiwisolver-1.4.4-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:7c43e1e1206cd421cd92e6b3280d4385d41d7166b3ed577ac20444b6995a445f"},
+    {url = "https://files.pythonhosted.org/packages/a5/d2/d55d40e3a65cc9cdf6b311862fba48905c1d59851594eaecc381727e0883/kiwisolver-1.4.4-cp39-cp39-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:4ea39b0ccc4f5d803e3337dd46bcce60b702be4d86fd0b3d7531ef10fd99a1ac"},
+    {url = "https://files.pythonhosted.org/packages/a9/f1/ef22058926af3f3588370b6ef09193790c42790f517e91a6103cc5ec28f0/kiwisolver-1.4.4-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:41dae968a94b1ef1897cb322b39360a0812661dba7c682aa45098eb8e193dbdf"},
+    {url = "https://files.pythonhosted.org/packages/a9/fd/049c39c4c501775f5439ba8e08bf298d5af828b99c703e265c5150311ccd/kiwisolver-1.4.4-cp310-cp310-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:abbe9fa13da955feb8202e215c4018f4bb57469b1b78c7a4c5c7b93001699938"},
+    {url = "https://files.pythonhosted.org/packages/ab/8f/8dbe2d4efc4c0b08ec67d6efb7cc31fbfd688c80afad85f65980633b0d37/kiwisolver-1.4.4-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:1041feb4cda8708ce73bb4dcb9ce1ccf49d553bf87c3954bdfa46f0c3f77252c"},
+    {url = "https://files.pythonhosted.org/packages/b7/e0/ee57a00f6bf411e54cf0521eceab306d1c606c5a640ee1b54951d2bd41b7/kiwisolver-1.4.4-cp310-cp310-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:a68b62a02953b9841730db7797422f983935aeefceb1679f0fc85cbfbd311c32"},
+    {url = "https://files.pythonhosted.org/packages/b7/f4/12806263b2ef28704319b902c08e7aaf8c6931255a02d76b01c1cac66ab6/kiwisolver-1.4.4-cp39-cp39-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:968f44fdbf6dd757d12920d63b566eeb4d5b395fd2d00d29d7ef00a00582aac9"},
+    {url = "https://files.pythonhosted.org/packages/bc/45/3022994d464bf1cf836cbca3fe94e0badc19e8b89baff82d412396cca19c/kiwisolver-1.4.4-cp37-cp37m-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:db5283d90da4174865d520e7366801a93777201e91e79bacbac6e6927cbceede"},
+    {url = "https://files.pythonhosted.org/packages/c2/58/a49e7fa3e09254102339d5c10ae10eaf76fd13b8a124accf518fbf2eb3fc/kiwisolver-1.4.4-cp39-cp39-win32.whl", hash = "sha256:da7e547706e69e45d95e116e6939488d62174e033b763ab1496b4c29b76fabea"},
+    {url = "https://files.pythonhosted.org/packages/c5/05/e24f2cb424a34d78d65fe5dfd930419fd42d8fcf83e796ed187d42ac034c/kiwisolver-1.4.4-pp37-pypy37_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:da152d8cdcab0e56e4f45eb08b9aea6455845ec83172092f09b0e077ece2cf7a"},
+    {url = "https://files.pythonhosted.org/packages/c7/cf/40d5c5d4f91b2d5cb3aadad9a1074964749a19e1054cef3d491cfa73a25e/kiwisolver-1.4.4-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f8ad8285b01b0d4695102546b342b493b3ccc6781fc28c8c6a1bb63e95d22f09"},
+    {url = "https://files.pythonhosted.org/packages/ca/0d/ddabc096cebfdcade8c77e42b7a30650fbd8024dfd2d01ab4036a7f0adfe/kiwisolver-1.4.4-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:841293b17ad704d70c578f1f0013c890e219952169ce8a24ebc063eecf775454"},
+    {url = "https://files.pythonhosted.org/packages/cb/16/cd9684584d1f2ea5df14c483e6d9a121886817da3dc8740ccc7e6a170541/kiwisolver-1.4.4-cp38-cp38-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:1d1573129aa0fd901076e2bfb4275a35f5b7aa60fbfb984499d661ec950320b0"},
+    {url = "https://files.pythonhosted.org/packages/cb/56/a7c407d437f82eb92954b618bbc71af28a3d88634901f69500d186209a85/kiwisolver-1.4.4-cp310-cp310-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:8ed58b8acf29798b036d347791141767ccf65eee7f26bde03a71c944449e53de"},
+    {url = "https://files.pythonhosted.org/packages/cf/93/52792dd319af16897c248e5e053a806ef83648212e66ec3738aaf7238094/kiwisolver-1.4.4-cp310-cp310-win32.whl", hash = "sha256:e92a513161077b53447160b9bd8f522edfbed4bd9759e4c18ab05d7ef7e49408"},
+    {url = "https://files.pythonhosted.org/packages/e1/f7/9ffb2a9e67a38707bab30f8591adaa8f137abe91a83d667400c81bb024bc/kiwisolver-1.4.4-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:62ac9cc684da4cf1778d07a89bf5f81b35834cb96ca523d3a7fb32509380cbf6"},
+    {url = "https://files.pythonhosted.org/packages/eb/db/b7ebaa2d35f9fb55f3ff8328b5e9dc049f6524dca737cea13e6235ab191d/kiwisolver-1.4.4-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:10ee06759482c78bdb864f4109886dff7b8a56529bc1609d4f1112b93fe6423c"},
+    {url = "https://files.pythonhosted.org/packages/ee/c2/99b2d61dc246844498e68571c589e37ed7a866a4914cb2da2d66d141b596/kiwisolver-1.4.4-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:c79ebe8f3676a4c6630fd3f777f3cfecf9289666c84e775a67d1d358578dc2e3"},
+    {url = "https://files.pythonhosted.org/packages/f2/e2/7ed98290955aa83598d0e5672d88bbc193192cdcd23d3a9ed7e536cf8e55/kiwisolver-1.4.4-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:f0a71d85ecdd570ded8ac3d1c0f480842f49a40beb423bb8014539a9f32a5897"},
+]
 "kt-legacy 1.0.4" = [
     {url = "https://files.pythonhosted.org/packages/09/83/7c3001c7826cd7194f36dc971c57a25c7a55373e7087c62a6d1d1193c022/kt_legacy-1.0.4-py3-none-any.whl", hash = "sha256:8b6eaff78b01b3cf1d71390cbcc6498208433e2ae0ce4d3c6e072f980b9fc625"},
     {url = "https://files.pythonhosted.org/packages/ec/c5/132413b5db641363eb6274839b8cc05b756b89a58bf42905d5849aa49d13/kt-legacy-1.0.4.tar.gz", hash = "sha256:a94112e42a50e7cc3aad31f3287aa384c23555ea1432c55b5823852e09e706cf"},
@@ -2876,6 +2976,43 @@ content_hash = "sha256:0b626822cb08f192828b066ce5bd4afcfaf8006e7b018fc5d33409a53
     {url = "https://files.pythonhosted.org/packages/fc/e4/78c7607352dd574d524daad079f855757d406d36b919b1864a5a07978390/MarkupSafe-2.1.1-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:efc1913fd2ca4f334418481c7e595c00aad186563bbc1ec76067848c7ca0a933"},
     {url = "https://files.pythonhosted.org/packages/fd/f4/524d2e8f5a3727cf309c2b7df7c732038375322df1376c9e9ef3aa92fcaf/MarkupSafe-2.1.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4b9fe39a2ccc108a4accc2676e77da025ce383c108593d65cc909add5c3bd601"},
     {url = "https://files.pythonhosted.org/packages/ff/3a/42262a3aa6415befee33b275b31afbcef4f7f8d2f4380061b226c692ee2a/MarkupSafe-2.1.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a49907dd8420c5685cfa064a1335b6754b74541bbb3706c259c02ed65b644b3e"},
+]
+"matplotlib 3.5.2" = [
+    {url = "https://files.pythonhosted.org/packages/00/eb/4c2d7824c1ea12693303d1e7e8f495c8c3350181b662e06e3e569b69d76d/matplotlib-3.5.2-cp310-cp310-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:c87973ddec10812bddc6c286b88fdd654a666080fbe846a1f7a3b4ba7b11ab78"},
+    {url = "https://files.pythonhosted.org/packages/03/70/57c4847a43f9b9be01222776d2aeba1a0e48e8526e511edb2826dc7ae6f8/matplotlib-3.5.2-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:7f409716119fa39b03da3d9602bd9b41142fab7a0568758cd136cd80b1bf36c8"},
+    {url = "https://files.pythonhosted.org/packages/0a/75/7411b92878a8eb7b14330814a921d1b19a974f1a699e1d7096b38efd6776/matplotlib-3.5.2-cp37-cp37m-win32.whl", hash = "sha256:a91426ae910819383d337ba0dc7971c7cefdaa38599868476d94389a329e599b"},
+    {url = "https://files.pythonhosted.org/packages/17/cb/83784d0aeef468bf3193fb7aa1957d0c4e8e6ee8ba249024ceeffc58b5ff/matplotlib-3.5.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4a05f2b37222319753a5d43c0a4fd97ed4ff15ab502113e3f2625c26728040cf"},
+    {url = "https://files.pythonhosted.org/packages/18/c7/35b4515da4b84cefcd8234233fd2015afd003278ed6a810ae0f03ec6c496/matplotlib-3.5.2-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:ee175a571e692fc8ae8e41ac353c0e07259113f4cb063b0ec769eff9717e84bb"},
+    {url = "https://files.pythonhosted.org/packages/1d/3c/cba248e93a42252c5a8d2322335fd643d8836e5d1cf6bea432a4149ec783/matplotlib-3.5.2-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:751d3815b555dcd6187ad35b21736dc12ce6925fc3fa363bbc6dc0f86f16484f"},
+    {url = "https://files.pythonhosted.org/packages/23/d7/be130e12d82e7b27f379e563669751feca432fe34eeb85ad9c6eee4c3a22/matplotlib-3.5.2-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e2b696699386766ef171a259d72b203a3c75d99d03ec383b97fc2054f52e15cf"},
+    {url = "https://files.pythonhosted.org/packages/29/3c/740cdccfa4e22a84fc3d8f7f13ed632691c9a90969a0ea37fe92ad6f2c98/matplotlib-3.5.2-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:ebc27ad11df3c1661f4677a7762e57a8a91dd41b466c3605e90717c9a5f90c82"},
+    {url = "https://files.pythonhosted.org/packages/2a/0d/bebf456dd3b5bb4ecd78cb1e78636f38716384529d083ed78327ba49ec83/matplotlib-3.5.2-cp38-cp38-win_amd64.whl", hash = "sha256:75c406c527a3aa07638689586343f4b344fcc7ab1f79c396699eb550cd2b91f7"},
+    {url = "https://files.pythonhosted.org/packages/2f/be/7d6e073a3eb740ebeba43a69f5de2b141fea50b801e24e0ae024ac94d4ac/matplotlib-3.5.2.tar.gz", hash = "sha256:48cf850ce14fa18067f2d9e0d646763681948487a8080ec0af2686468b4607a2"},
+    {url = "https://files.pythonhosted.org/packages/35/be/2d87d517ef2c3be82ea3323e268928a12b979d9d609057e3580197e1c979/matplotlib-3.5.2-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ea75df8e567743207e2b479ba3d8843537be1c146d4b1e3e395319a4e1a77fe9"},
+    {url = "https://files.pythonhosted.org/packages/36/e2/15a8569383085c22fc9b6e3066c887f7420a91f01aaf010e09e10191f8e6/matplotlib-3.5.2-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:364e6bca34edc10a96aa3b1d7cd76eb2eea19a4097198c1b19e89bee47ed5781"},
+    {url = "https://files.pythonhosted.org/packages/3a/40/a638be5b2a7be1c37657c211e908f249e5b504c10e749b9107b19fd9ff2c/matplotlib-3.5.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:3d8e129af95b156b41cb3be0d9a7512cc6d73e2b2109f82108f566dbabdbf377"},
+    {url = "https://files.pythonhosted.org/packages/42/18/50a124008e624830fb8e2a5384802ba99ee0443994ebdee8f548c3732039/matplotlib-3.5.2-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:b8d3f4e71e26307e8c120b72c16671d70c5cd08ae412355c11254aa8254fb87f"},
+    {url = "https://files.pythonhosted.org/packages/43/64/1d949d0fab5b83071290a46c93de28cbd8ff15a75b533d6c134012c61e4d/matplotlib-3.5.2-cp39-cp39-win_amd64.whl", hash = "sha256:c772264631e5ae61f0bd41313bbe48e1b9bcc95b974033e1118c9caa1a84d5c6"},
+    {url = "https://files.pythonhosted.org/packages/62/13/d18a3fd0f34af637926a6a072709ca843ee5cc3e2cda3c799a3d4de56f1a/matplotlib-3.5.2-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5844cea45d804174bf0fac219b4ab50774e504bef477fc10f8f730ce2d623441"},
+    {url = "https://files.pythonhosted.org/packages/67/31/8ef33af33c7baec10517a0e9e5d054433d5429599ed60bba85ed7144ea44/matplotlib-3.5.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:49a5938ed6ef9dda560f26ea930a2baae11ea99e1c2080c8714341ecfda72a89"},
+    {url = "https://files.pythonhosted.org/packages/67/4e/5959c5822f0694e4c2beb93f9ee34b8ec49052fc79d88f8842d9ded72f02/matplotlib-3.5.2-cp310-cp310-win_amd64.whl", hash = "sha256:b4fedaa5a9aa9ce14001541812849ed1713112651295fdddd640ea6620e6cf98"},
+    {url = "https://files.pythonhosted.org/packages/7f/86/982067578d28fc48ad1dd7da360435b8c18239060edd7a12f70271562cf3/matplotlib-3.5.2-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:24173c23d1bcbaed5bf47b8785d27933a1ac26a5d772200a0f3e0e38f471b001"},
+    {url = "https://files.pythonhosted.org/packages/83/56/8080af16635d10a6876bab52ee9ab0c25b410bb1080aba12c12bb4be68eb/matplotlib-3.5.2-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2e8bda1088b941ead50caabd682601bece983cadb2283cafff56e8fcddbf7d7f"},
+    {url = "https://files.pythonhosted.org/packages/89/fb/bb45f98582b0c046ccced1cbef3e286f0021fdf70d1b994d5fdd1a325956/matplotlib-3.5.2-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:2a0967d4156adbd0d46db06bc1a877f0370bce28d10206a5071f9ecd6dc60b79"},
+    {url = "https://files.pythonhosted.org/packages/8e/2c/2e98d7eddec1ac993026930e95917825cbb42d9c7dbb933d0b986b473d8e/matplotlib-3.5.2-cp310-cp310-win32.whl", hash = "sha256:9776e1a10636ee5f06ca8efe0122c6de57ffe7e8c843e0fb6e001e9d9256ec95"},
+    {url = "https://files.pythonhosted.org/packages/af/95/66d06ccfdeaaca61614aeecf7030f489c45eb4aaef04a9f65c0c12c9589e/matplotlib-3.5.2-cp38-cp38-win32.whl", hash = "sha256:b6c63cd01cad0ea8704f1fd586e9dc5777ccedcd42f63cbbaa3eae8dd41172a1"},
+    {url = "https://files.pythonhosted.org/packages/b3/5b/c1b57349d1d4e13623a268d582e71aac84981a3b029036b093cf73500d58/matplotlib-3.5.2-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:44c6436868186564450df8fd2fc20ed9daaef5caad699aa04069e87099f9b5a8"},
+    {url = "https://files.pythonhosted.org/packages/b7/21/ad86b69d2afb2d42c5a0bf454d8b547bab07e7393921af160b9c002cb70c/matplotlib-3.5.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:03bbb3f5f78836855e127b5dab228d99551ad0642918ccbf3067fcd52ac7ac5e"},
+    {url = "https://files.pythonhosted.org/packages/bb/ee/59a884d5ee3c0fbf47c0e449daf87388809dafb48152c045873235851355/matplotlib-3.5.2-cp37-cp37m-win_amd64.whl", hash = "sha256:c4b82c2ae6d305fcbeb0eb9c93df2602ebd2f174f6e8c8a5d92f9445baa0c1d3"},
+    {url = "https://files.pythonhosted.org/packages/bd/53/5fd2fb5e3b26460d80cd237ca6b390bd967c3cf6019407d4dcafba9c5afb/matplotlib-3.5.2-cp37-cp37m-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:9480842d5aadb6e754f0b8f4ebeb73065ac8be1855baa93cd082e46e770591e9"},
+    {url = "https://files.pythonhosted.org/packages/c0/f0/2ef5d732f45edc9fa70fc85737a0cd79df443f8e8ca0bfd1f7668cd02b4f/matplotlib-3.5.2-cp39-cp39-win32.whl", hash = "sha256:ee0b8e586ac07f83bb2950717e66cb305e2859baf6f00a9c39cc576e0ce9629c"},
+    {url = "https://files.pythonhosted.org/packages/d1/7d/821222d0533051fcb7caf116457fa790ed0f84ac9c3902436f89662744c2/matplotlib-3.5.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:5a32ea6e12e80dedaca2d4795d9ed40f97bfa56e6011e14f31502fdd528b9c89"},
+    {url = "https://files.pythonhosted.org/packages/df/e7/0ad4aad00d6d0314aaf97526a54a34d385f898ebb7915d112431fff452ff/matplotlib-3.5.2-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:6c623b355d605a81c661546af7f24414165a8a2022cddbe7380a31a4170fa2e9"},
+    {url = "https://files.pythonhosted.org/packages/e1/81/0a73fe71098683a1f73243f18f419464ec109acae16811bf29c5d0dc173e/matplotlib-3.5.2-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:7d7705022df2c42bb02937a2a824f4ec3cca915700dd80dc23916af47ff05f1a"},
+    {url = "https://files.pythonhosted.org/packages/e4/55/332178f2ce970855154874b66595baf123155891307a84c8d6886f0bd6bd/matplotlib-3.5.2-pp37-pypy37_pp73-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:31fbc2af27ebb820763f077ec7adc79b5a031c2f3f7af446bd7909674cd59460"},
+    {url = "https://files.pythonhosted.org/packages/f4/4d/9b62279224557e9a3b9d11f69e572996c3ccb1ee7444b5173f15ecb2cbc4/matplotlib-3.5.2-pp37-pypy37_pp73-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:4fa28ca76ac5c2b2d54bc058b3dad8e22ee85d26d1ee1b116a6fd4d2277b6a04"},
+    {url = "https://files.pythonhosted.org/packages/f7/6b/5301bfdd311e0be74235cbcf0f104a4d3507e10002b9807e87341ebac0a8/matplotlib-3.5.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:77157be0fc4469cbfb901270c205e7d8adb3607af23cef8bd11419600647ceed"},
+    {url = "https://files.pythonhosted.org/packages/fd/b6/52cb6ddd11462c0c86e53d9fe092074f9c106d61204851815b0c1e5879f1/matplotlib-3.5.2-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:4a44cdfdb9d1b2f18b1e7d315eb3843abb097869cd1ef89cfce6a488cd1b5182"},
 ]
 "matplotlib-inline 0.1.3" = [
     {url = "https://files.pythonhosted.org/packages/0f/98/838f4c57f7b2679eec038ad0abefd1acaeec35e635d4d7af215acd7d1bd2/matplotlib-inline-0.1.3.tar.gz", hash = "sha256:a04bfba22e0d1395479f866853ec1ee28eea1485c1d69a6faf00dc3e24ff34ee"},
@@ -3755,6 +3892,10 @@ content_hash = "sha256:0b626822cb08f192828b066ce5bd4afcfaf8006e7b018fc5d33409a53
     {url = "https://files.pythonhosted.org/packages/ec/5e/6bfc7e77cf54ba51e5ec8e83ee6fe9c5f1b4b3e2d233925f2c322fa704bd/scipy-1.7.3-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:eb7ae2c4dbdb3c9247e07acc532f91077ae6dbc40ad5bd5dca0bb5a176ee9bda"},
     {url = "https://files.pythonhosted.org/packages/f8/3d/26a75c8045181c2fab9c76936ca84318a6674707e33e42c727c1d84f1df4/scipy-1.7.3-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:95c2d250074cfa76715d58830579c64dff7354484b284c2b8b87e5a38321672c"},
     {url = "https://files.pythonhosted.org/packages/f9/7a/e872395711a1d5a571751153d5e4f81f316716ce50563dc263d365ce9251/scipy-1.7.3-1-cp39-cp39-macosx_12_0_arm64.whl", hash = "sha256:b78a35c5c74d336f42f44106174b9851c783184a85a3fe3e68857259b37b9ffb"},
+]
+"seaborn 0.11.2" = [
+    {url = "https://files.pythonhosted.org/packages/10/5b/0479d7d845b5ba410ca702ffcd7f2cd95a14a4dfff1fde2637802b258b9b/seaborn-0.11.2-py3-none-any.whl", hash = "sha256:85a6baa9b55f81a0623abddc4a26b334653ff4c6b18c418361de19dbba0ef283"},
+    {url = "https://files.pythonhosted.org/packages/58/81/51b7ee560a1b01d5c47cae22bfed4e79f1529a08cdff950506097b0d51e1/seaborn-0.11.2.tar.gz", hash = "sha256:cf45e9286d40826864be0e3c066f98536982baf701a7caa386511792d61ff4f6"},
 ]
 "send2trash 1.8.0" = [
     {url = "https://files.pythonhosted.org/packages/47/26/3435896d757335ea53dce5abf8d658ca80757a7a06258451b358f10232be/Send2Trash-1.8.0-py3-none-any.whl", hash = "sha256:f20eaadfdb517eaca5ce077640cb261c7d2698385a6a0f072a4a5447fd49fa08"},
