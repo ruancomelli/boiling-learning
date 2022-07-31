@@ -1,5 +1,18 @@
 
 
+## v0.34.3 (2022-07-30)
+
+### Fix
+
+- **scripts/make_boiling_processors**: expand visualization window for second case
+
+### Refactor
+
+- **preprocessing/image**: de-structure shapes instead of index-accessing them
+- **scripts**: move steady state plotting script to `scripts` folder
+- **daq/channels**: extract variables and merge methods
+- **daq/channels**: remove unused utility method `is_type`
+
 ## v0.34.2 (2022-07-27)
 
 ## v0.34.1 (2022-07-27)
