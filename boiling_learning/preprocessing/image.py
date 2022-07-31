@@ -98,25 +98,20 @@ def crop(
     height: Optional[Union[int, float, Fraction]] = None,
 ) -> _VideoFrameOrFrames:
     if image.ndim == 3:
-        total_height = image.shape[0]
-        total_width = image.shape[1]
+        total_height, total_width, _ = image.shape
     elif image.ndim == 4:
-        total_height = image.shape[1]
-        total_width = image.shape[2]
+        _, total_height, total_width, _ = image.shape
     else:
         raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
 
-    # axis=-1 is the color channel
-    # axis=-2 is the horizontal axis
-    # axis=-3 is the vertical axis
-    left = _ratio_to_size(image.shape[-2], left)
-    right = _ratio_to_size(image.shape[-2], right)
-    right_border = _ratio_to_size(image.shape[-2], right_border)
-    width = _ratio_to_size(image.shape[-2], width)
-    top = _ratio_to_size(image.shape[-3], top)
-    bottom = _ratio_to_size(image.shape[-3], bottom)
-    bottom_border = _ratio_to_size(image.shape[-3], bottom_border)
-    height = _ratio_to_size(image.shape[-3], height)
+    left = _ratio_to_size(total_width, left)
+    right = _ratio_to_size(total_width, right)
+    right_border = _ratio_to_size(total_width, right_border)
+    width = _ratio_to_size(total_width, width)
+    top = _ratio_to_size(total_height, top)
+    bottom = _ratio_to_size(total_height, bottom)
+    bottom_border = _ratio_to_size(total_height, bottom_border)
+    height = _ratio_to_size(total_height, height)
 
     incompatible_arguments_error_message = (
         'at least two of `{}`, `{}`, `{}` and `{}` must be `None` or omitted.'
@@ -260,16 +255,11 @@ def random_crop(
     width: Optional[int] = None,
 ) -> _VideoFrameOrFrames:
     if image.ndim == 3:
-        total_height = image.shape[0]
-        total_width = image.shape[1]
-        number_of_channels = image.shape[2]
+        total_height, total_width, number_of_channels = image.shape
 
         size = (height or total_height, width or total_width, number_of_channels)
     elif image.ndim == 4:
-        batch_size = image.shape[0]
-        total_height = image.shape[1]
-        total_width = image.shape[2]
-        number_of_channels = image.shape[3]
+        batch_size, total_height, total_width, number_of_channels = image.shape
 
         size = (batch_size, height or total_height, width or total_width, number_of_channels)
     else:
