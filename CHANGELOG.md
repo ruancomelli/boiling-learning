@@ -1,5 +1,15 @@
 
 
+## v0.34.4 (2022-08-02)
+
+### Fix
+
+- **scripts/make_boiling_processors**: expand bottom for second case
+
+### Feat
+
+- **automl/tuners**: make `goal` optional
+
 ## v0.34.3 (2022-07-30)
 
 ### Fix
