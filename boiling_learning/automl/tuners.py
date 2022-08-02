@@ -180,7 +180,7 @@ class EarlyStoppingGreedy(_FixedMaxModelSizeTuner):
     def __init__(
         self,
         *,
-        goal: Any,
+        goal: Any = None,
         objective: str = 'val_loss',
         max_trials: int = 10,
         initial_hps: Optional[List[Dict[str, Any]]] = None,
@@ -211,20 +211,21 @@ class EarlyStoppingGreedy(_FixedMaxModelSizeTuner):
     ) -> None:
         super().on_epoch_end(trial, model, epoch, logs)
 
-        objective = self.oracle.objective
-        loss = objective.get_value(logs)
+        if self.goal is not None:
+            objective = self.oracle.objective
+            loss = objective.get_value(logs)
 
-        if objective.better_than(loss, self.goal):
-            logger.info(f'Got {loss}, and the desired objective is {self.goal}. Stopping now.')
-            model.stop_training = True
-            self.oracle.stop_search = True
+            if objective.better_than(loss, self.goal):
+                logger.info(f'Got {loss}, and the desired objective is {self.goal}. Stopping now.')
+                model.stop_training = True
+                self.oracle.stop_search = True
 
 
 class EarlyStoppingHyperband(_FixedMaxModelSizeTuner):
     def __init__(
         self,
         *,
-        goal: Any,
+        goal: Any = None,
         objective: str = 'val_loss',
         max_epochs: int = 100,
         max_trials: int = 1000,
@@ -257,13 +258,14 @@ class EarlyStoppingHyperband(_FixedMaxModelSizeTuner):
     ) -> None:
         super().on_epoch_end(trial, model, epoch, logs)
 
-        objective = self.oracle.objective
-        loss = objective.get_value(logs)
+        if self.goal is not None:
+            objective = self.oracle.objective
+            loss = objective.get_value(logs)
 
-        if objective.better_than(loss, self.goal):
-            logger.info(f'Got {loss}, and the desired objective is {self.goal}. Stopping now.')
-            model.stop_training = True
-            self.oracle.stop_search = True
+            if objective.better_than(loss, self.goal):
+                logger.info(f'Got {loss}, and the desired objective is {self.goal}. Stopping now.')
+                model.stop_training = True
+                self.oracle.stop_search = True
 
 
 _HUGE_NUMBER = 100000.0
