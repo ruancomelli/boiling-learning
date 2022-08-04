@@ -1221,7 +1221,7 @@ dependencies = [
 
 [[package]]
 name = "pip"
-version = "22.2.1"
+version = "22.2.2"
 requires_python = ">=3.7"
 summary = "The PyPA recommended tool for installing Python packages."
 
@@ -3391,9 +3391,9 @@ content_hash = "sha256:b1cf861cc4d28fc4f4657ae65b33c1e9db8cc43b195fb68aee0d24ba9
     {url = "https://files.pythonhosted.org/packages/0a/98/98b3c6d954b6bd8531c611fb24be53ccc66438f493b05ec4b107942e27b7/Pint-0.18-py2.py3-none-any.whl", hash = "sha256:4b37f3c470639ea6f96b0026c3364bde30631fa737092bdaf18ad3f4f76f252f"},
     {url = "https://files.pythonhosted.org/packages/f1/ee/b44c347a8446e1b75404cd7164f90528cacc5f14d55eb073edf240468303/Pint-0.18.tar.gz", hash = "sha256:8c4bce884c269051feb7abc69dbfd18403c0c764abc83da132e8a7222f8ba801"},
 ]
-"pip 22.2.1" = [
-    {url = "https://files.pythonhosted.org/packages/46/28/addd7e66bb3af799d35a5dcbb79407b591a7ed674f4efd2bd8f930c40821/pip-22.2.1.tar.gz", hash = "sha256:50516e47a2b79e77446f0d05649f0d53772c192571486236b1905492bfc24bac"},
-    {url = "https://files.pythonhosted.org/packages/84/25/5734a44897751d8bac6822efb819acda2d969bcc1b915bbd7d48102952cb/pip-22.2.1-py3-none-any.whl", hash = "sha256:0bbbc87dfbe6eed217beff0021f8b7dea04c8f4a0baa9d31dc4cff281ffc5b2b"},
+"pip 22.2.2" = [
+    {url = "https://files.pythonhosted.org/packages/1f/2c/d9626f045e7b49a6225c6b09257861f24da78f4e5f23af2ddbdf852c99b8/pip-22.2.2-py3-none-any.whl", hash = "sha256:b61a374b5bc40a6e982426aede40c9b5a08ff20e640f5b56977f4f91fed1e39a"},
+    {url = "https://files.pythonhosted.org/packages/4b/30/e15b806597e67057e07a5acdc135216ccbf76a5f1681a324533b61066b0b/pip-22.2.2.tar.gz", hash = "sha256:3fd1929db052f056d7a998439176d3333fa1b3f6c1ad881de1885c0717608a4b"},
 ]
 "pip-api 0.0.30" = [
     {url = "https://files.pythonhosted.org/packages/05/c8/d319552f0ef7af0cb57c80be8c8181184ab66a205d18b4574214b0940ba1/pip_api-0.0.30-py3-none-any.whl", hash = "sha256:2a0314bd31522eb9ffe8a99668b0d07fee34ebc537931e7b6483001dbedcbdc9"},
