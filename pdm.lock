@@ -1187,7 +1187,6 @@ dependencies = [
 [[package]]
 name = "pathspec"
 version = "0.9.0"
-requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 summary = "Utility library for gitignore style pattern matching of file paths."
 
 [[package]]
@@ -1356,7 +1355,6 @@ summary = "Python style guide checker"
 [[package]]
 name = "pycparser"
 version = "2.21"
-requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "C parser in Python"
 
 [[package]]
@@ -2067,7 +2065,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:b1cf861cc4d28fc4f4657ae65b33c1e9db8cc43b195fb68aee0d24ba90d749ea"
+content_hash = "sha256:2d79f91b6b0ec1bdd527f2d3242c64f9c8c8f3d12f44304dc7f5ae5786b2c5c4"
 
 [metadata.files]
 "absl-py 1.2.0" = [

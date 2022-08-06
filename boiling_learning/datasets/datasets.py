@@ -3,17 +3,19 @@ from pathlib import Path
 from typing import Any, Optional, TypeVar
 
 import funcy
+from typing_extensions import NamedTuple
 
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
 from boiling_learning.utils.dataclasses import dataclass
 from boiling_learning.utils.pathutils import resolve
-from boiling_learning.utils.typeutils import Triplet
 
 _T = TypeVar('_T')
 
 
-class DatasetTriplet(Triplet[_T]):
-    pass
+class DatasetTriplet(NamedTuple[_T]):
+    train: _T
+    val: _T
+    test: _T
 
 
 @dataclass(frozen=True)
