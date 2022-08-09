@@ -970,7 +970,7 @@ dependencies = [
 
 [[package]]
 name = "more-itertools"
-version = "8.13.0"
+version = "8.14.0"
 requires_python = ">=3.5"
 summary = "More routines for operating on iterables, beyond itertools"
 
@@ -1197,6 +1197,7 @@ dependencies = [
 [[package]]
 name = "pathspec"
 version = "0.9.0"
+requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 summary = "Utility library for gitignore style pattern matching of file paths."
 
 [[package]]
@@ -1365,6 +1366,7 @@ summary = "Python style guide checker"
 [[package]]
 name = "pycparser"
 version = "2.21"
+requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "C parser in Python"
 
 [[package]]
@@ -1487,7 +1489,7 @@ summary = "Python for Window Extensions"
 name = "pywinpty"
 version = "2.0.6"
 requires_python = ">=3.7"
-summary = "Pseudo terminal support for Windows from Python."
+summary = ""
 
 [[package]]
 name = "pyyaml"
@@ -3047,9 +3049,9 @@ content_hash = "sha256:c8c2fe49a3da932a6b11dd4cd10eff846062d3b82579e21d2399279de
     {url = "https://files.pythonhosted.org/packages/03/45/12c6fb6ee0014bfc827d878a246eba54d06116f3c8ccf7659c2912a21254/modin_spreadsheet-0.1.2-py2.py3-none-any.whl", hash = "sha256:43729fe9367147eed6e39ab01bfbb868da9f071a7b1e5afb97f1c8764767fb2b"},
     {url = "https://files.pythonhosted.org/packages/47/78/7530c7c0b833af5bc5fd16f62d8f78243b0eb26d966816e281f7fb6b4b97/modin-spreadsheet-v0.1.2.tar.gz", hash = "sha256:0517b21a2e36002a7e04a0dd4ee925b23e00293efd7df93aa30645bf4c5a8cc1"},
 ]
-"more-itertools 8.13.0" = [
-    {url = "https://files.pythonhosted.org/packages/b4/23/2987c2792c18a211dfe913e2f60e55cde0af6dfc41217e4da74ac7cd68f4/more-itertools-8.13.0.tar.gz", hash = "sha256:a42901a0a5b169d925f6f217cd5a190e32ef54360905b9c39ee7db5313bfec0f"},
-    {url = "https://files.pythonhosted.org/packages/bd/3f/c4b3dbd315e248f84c388bd4a72b131a29f123ecacc37ffb2b3834546e42/more_itertools-8.13.0-py3-none-any.whl", hash = "sha256:c5122bffc5f104d37c1626b8615b511f3427aa5389b94d61e5ef8236bfbc3ddb"},
+"more-itertools 8.14.0" = [
+    {url = "https://files.pythonhosted.org/packages/0b/ff/1ad78678bee731ae5414ea5e97396b3f91de32186028daa614d322ac5a8b/more_itertools-8.14.0-py3-none-any.whl", hash = "sha256:1bc4f91ee5b1b31ac7ceacc17c09befe6a40a503907baf9c839c229b5095cfd2"},
+    {url = "https://files.pythonhosted.org/packages/c7/0c/fad24ca2c9283abc45a32b3bfc2a247376795683449f595ff1280c171396/more-itertools-8.14.0.tar.gz", hash = "sha256:c09443cd3d5438b8dafccd867a6bc1cb0894389e90cb53d227456b0b0bccb750"},
 ]
 "msgpack 1.0.4" = [
     {url = "https://files.pythonhosted.org/packages/01/9c/26a337b8d4a7cb5b1058bec7f187936bf749e78cd519c497e845e965d2e5/msgpack-1.0.4-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:449e57cc1ff18d3b444eb554e44613cffcccb32805d16726a5494038c3b93dab"},
