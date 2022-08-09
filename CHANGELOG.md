@@ -1,5 +1,16 @@
 
 
+## v0.34.6 (2022-08-08)
+
+### Fix
+
+- **scripts**: fix boiling processors to use center crops
+- **scripts/plot_steady_state**: wrap script in a function
+
+### Refactor
+
+- **datasets/datasets**: make `DatasetTriplet` a named tuple
+
 ## v0.34.5 (2022-08-02)
 
 ## v0.34.4 (2022-08-02)
