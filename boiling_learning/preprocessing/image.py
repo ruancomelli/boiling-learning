@@ -62,6 +62,24 @@ class Cropper(Operator[VideoFrameOrFrames]):
         super().__init__(crop, pack=pack)
 
 
+class CenterCropper(Operator[VideoFrameOrFrames]):
+    def __init__(
+        self,
+        height: Optional[Union[int, float, Fraction]] = None,
+        width: Optional[Union[int, float, Fraction]] = None,
+    ) -> None:
+        pack = P(
+            **{
+                key: value
+                for key, value in {'width': width, 'height': height}.items()
+                # remove `None`s to avoid polluting the `pack` argument
+                if value is not None
+            }
+        )
+
+        super().__init__(center_crop, pack=pack)
+
+
 class ConvertImageDType(Operator[VideoFrameOrFrames]):
     def __init__(self, dtype: str) -> None:
         super().__init__(convert_image_dtype, P(dtype=dtype))
@@ -170,6 +188,27 @@ def crop(
             left:right,  # crop horizontally
             :,  # don't crop the channel axis
         ],
+    )
+
+
+def center_crop(
+    image: _VideoFrameOrFrames,
+    *,
+    height: Optional[Union[int, float, Fraction]] = None,
+    width: Optional[Union[int, float, Fraction]] = None,
+) -> _VideoFrameOrFrames:
+    if image.ndim == 3:
+        total_height, total_width, _ = image.shape
+    elif image.ndim == 4:
+        _, total_height, total_width, _ = image.shape
+    else:
+        raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
+
+    height = _ratio_to_size(total_width, height) if height is not None else total_height
+    width = _ratio_to_size(total_width, width) if width is not None else total_width
+
+    return typing.cast(
+        _VideoFrameOrFrames, tf.keras.layers.CenterCrop(height, width)(image).numpy()
     )
 
 
