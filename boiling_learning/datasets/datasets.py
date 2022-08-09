@@ -1,6 +1,6 @@
 from fractions import Fraction
 from pathlib import Path
-from typing import Any, Optional, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 
 import funcy
 from typing_extensions import NamedTuple
@@ -12,7 +12,7 @@ from boiling_learning.utils.pathutils import resolve
 _T = TypeVar('_T')
 
 
-class DatasetTriplet(NamedTuple[_T]):
+class DatasetTriplet(NamedTuple, Generic[_T]):
     train: _T
     val: _T
     test: _T
