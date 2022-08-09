@@ -1477,7 +1477,7 @@ summary = "Python for Window Extensions"
 name = "pywinpty"
 version = "2.0.6"
 requires_python = ">=3.7"
-summary = ""
+summary = "Pseudo terminal support for Windows from Python."
 
 [[package]]
 name = "pyyaml"
@@ -1947,11 +1947,10 @@ dependencies = [
 
 [[package]]
 name = "unimport"
-version = "0.10.0"
+version = "0.11.1"
 requires_python = ">=3.6"
-summary = "attr: unimport.constants.DESCRIPTION"
+summary = "attr: unimport.__description__"
 dependencies = [
-    "importlib-metadata>=0.12; python_version < \"3.8\"",
     "libcst>=0.3.0; python_version <= \"3.8\"",
     "libcst>=0.3.7; python_version >= \"3.9\"",
     "pathspec>=0.5.0",
@@ -4112,8 +4111,8 @@ content_hash = "sha256:2d79f91b6b0ec1bdd527f2d3242c64f9c8c8f3d12f44304dc7f5ae578
     {url = "https://files.pythonhosted.org/packages/ad/fa/77565f652ce57ed56d3a63d537c885a18e4451cf2d56d944991aeb3c82bd/typing_inspect-0.7.1-py3-none-any.whl", hash = "sha256:3cd7d4563e997719a710a3bfe7ffb544c6b72069b6812a02e9b414a8fa3aaa6b"},
     {url = "https://files.pythonhosted.org/packages/c3/da/864ce66818e308b38209d4b1ef0585921d28eb07621ba7d905a0e96bcc80/typing_inspect-0.7.1.tar.gz", hash = "sha256:047d4097d9b17f46531bf6f014356111a1b6fb821a24fe7ac909853ca2a782aa"},
 ]
-"unimport 0.10.0" = [
-    {url = "https://files.pythonhosted.org/packages/73/a8/b6bbc56f0cf82c27d9b0e60ea3e3b5d03ad9857dbd58b21acc46e2f5b2e3/unimport-0.10.0.tar.gz", hash = "sha256:df9e6f05452155550e039565dd494d5ddec4a4fffe29deed92735320d5cd91ca"},
+"unimport 0.11.1" = [
+    {url = "https://files.pythonhosted.org/packages/60/c6/611130a87d1a2a1dc131c502e22225a747a5aa58f2b611b58d95597d8fff/unimport-0.11.1.tar.gz", hash = "sha256:c9c7a5f8950bc75bbd6d829d9e20623dc8a23d301fac0f72a462514a7f758d01"},
 ]
 "urllib3 1.26.10" = [
     {url = "https://files.pythonhosted.org/packages/25/36/f056e5f1389004cf886bb7a8514077f24224238a7534497c014a6b9ac770/urllib3-1.26.10.tar.gz", hash = "sha256:879ba4d1e89654d9769ce13121e0f94310ea32e8d2f8cf587b77c08bbcdb30d6"},
