@@ -1,5 +1,11 @@
 
 
+## v0.34.7 (2022-08-08)
+
+### Fix
+
+- **datasets/datasets**: fix wrong inheritance in `DatasetTriplet`
+
 ## v0.34.6 (2022-08-08)
 
 ### Fix
