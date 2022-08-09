@@ -1,5 +1,11 @@
 
 
+## v0.34.8 (2022-08-09)
+
+### Fix
+
+- **scripts/make_boiling_processors**: remove extra space below wires
+
 ## v0.34.7 (2022-08-08)
 
 ### Fix
