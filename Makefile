@@ -2,11 +2,10 @@
 .TESTS_FOLDER = tests
 .STUBS_FOLDER = typings
 
-.AUTOFLAKE = $(shell pdm run autoflake --in-place --recursive --expand-star-imports --remove-duplicate-keys --remove-unused-variables --remove-all-unused-imports --ignore-init-module-imports $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
 .UNIMPORT = $(shell pdm run unimport --remove --gitignore --ignore-init --include-star-import $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
 .BLACK = $(shell pdm run black $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
 .ISORT = $(shell pdm run isort $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
-.FORMAT = $(foreach command,.AUTOFLAKE .UNIMPORT .BLACK .ISORT,$(call $(command)))
+.FORMAT = $(foreach command,.UNIMPORT .BLACK .ISORT,$(call $(command)))
 
 .READD = $(shell git update-index --again)
 .CHECK = $(shell pre-commit run)
