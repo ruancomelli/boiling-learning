@@ -22,6 +22,8 @@ _CUSTOM_OBJECTS = {layer.__name__: layer for layer in _CUSTOM_LAYERS}
 
 _Any = TypeVar('_Any')
 
+Evaluation = Dict[str, Any]
+
 
 class ModelArchitecture:
     def __init__(self, model: tf.keras.models.Model) -> None:
@@ -60,6 +62,9 @@ class ModelArchitecture:
             return sum(tf.keras.backend.count_params(p) for p in self.model.non_trainable_weights)
         else:
             raise ValueError('at least one of `trainable` and `non_trainable` must be true')
+
+    def evaluate(self, data: tf.data.Dataset) -> Evaluation:
+        return self.model.evaluate(data, return_dict=True)
 
 
 @serialize.instance(ModelArchitecture)

@@ -16,7 +16,7 @@ from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
 from boiling_learning.model.callbacks import RegisterEpoch, SaveHistory
-from boiling_learning.model.model import ModelArchitecture
+from boiling_learning.model.model import Evaluation, ModelArchitecture
 from boiling_learning.utils.dataclasses import dataclass, fields, shallow_asdict
 from boiling_learning.utils.described import Described
 from boiling_learning.utils.descriptions import describe
@@ -84,6 +84,7 @@ class FitModelReturn:
     trained_epochs: int
     history: Tuple[Dict[str, Any], ...]
     train_time: timedelta
+    evaluation: Evaluation
 
 
 @serialize.instance(FitModelReturn)
@@ -126,6 +127,7 @@ def get_fit_model(
         trained_epochs=epoch_registry.last_epoch(),
         history=tuple(history_registry.history),
         train_time=duration,
+        evaluation=compiled_model.architecture.evaluate(ds_val),
     )
 
 
