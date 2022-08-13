@@ -53,3 +53,8 @@ repos:
   hooks:
   - id: pretty-format-yaml
     args: [--autofix, --indent, '2']
+
+- repo: https://github.com/tox-dev/pyproject-fmt
+  rev: 0.1.0
+  hooks:
+  - id: pyproject-fmt
