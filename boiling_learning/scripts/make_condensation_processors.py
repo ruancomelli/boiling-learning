@@ -1,6 +1,9 @@
 from typing import Dict, List, Union
 
+from typing_extensions import Literal
+
 from boiling_learning.preprocessing.image import (
+    CenterCropper,
     ConvertImageDType,
     Cropper,
     Downscaler,
@@ -17,6 +20,7 @@ def main(
     downscale_factor: int = 5,
     height: int = 8 * 12,
     width: int = 8 * 12,
+    crop_mode: Literal['center', 'random'] = 'center',
 ) -> List[
     Union[
         Operator[VideoFrameOrFrames],
@@ -109,7 +113,7 @@ def main(
             'parametric:rh 90%:test 5:00012': Cropper(left=744, right=1312, top=226, bottom=806),
         },
         Downscaler(downscale_factor),
-        RandomCropper(height=height, width=width),
+        {'center': CenterCropper, 'random': RandomCropper}[crop_mode](height=height, width=width),
     ]
 
 
