@@ -1,5 +1,12 @@
 
 
+## v0.34.9 (2022-08-13)
+
+### Feat
+
+- return model evaluation from fitting and autotuning
+- accept a crop mode in `make_condensation_preprocessors`
+
 ## v0.34.8 (2022-08-09)
 
 ### Fix
