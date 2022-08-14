@@ -280,7 +280,7 @@ dependencies = [
 
 [[package]]
 name = "commitizen"
-version = "2.29.5"
+version = "2.31.0"
 requires_python = ">=3.6.2,<4.0.0"
 summary = "Python commitizen client tool"
 dependencies = [
@@ -2392,9 +2392,9 @@ content_hash = "sha256:b855cfe147d9b60913ea9015d5dcacf1b2104f19bc40c2bd979c7ed2f
     {url = "https://files.pythonhosted.org/packages/2e/6c/b2613688477d1a7477c0b1c7f102cd92e1b0befcacf7125daf200a6dede8/colorful-0.5.4.tar.gz", hash = "sha256:86848ad4e2eda60cd2519d8698945d22f6f6551e23e95f3f14dfbb60997807ea"},
     {url = "https://files.pythonhosted.org/packages/b0/8e/e386e248266952d24d73ed734c2f5513f34d9557032618c8910e605dfaf6/colorful-0.5.4-py2.py3-none-any.whl", hash = "sha256:8d264b52a39aae4c0ba3e2a46afbaec81b0559a99be0d2cfe2aba4cf94531348"},
 ]
-"commitizen 2.29.5" = [
-    {url = "https://files.pythonhosted.org/packages/6e/24/1c9bee395034644dd846c6f010a52c0dd01690d03e4559247c740cd906dd/commitizen-2.29.5.tar.gz", hash = "sha256:a6ab0b9f6cffbc49b2a4d2b940cbcc1715a9373f04604653a64677ef20a6ba7f"},
-    {url = "https://files.pythonhosted.org/packages/9c/ba/4b3ba7310d589c4a2ca843fac4de0c8be7ee6cf48d995c4b0f8a94f2bae7/commitizen-2.29.5-py3-none-any.whl", hash = "sha256:07f1708232dd14a839af82df62fcd53e0adb5b807cc55f4faab6c86b9a63ef12"},
+"commitizen 2.31.0" = [
+    {url = "https://files.pythonhosted.org/packages/93/98/704e970c6bb641c3042041636669198b5ce31da836059efcf84ab9f10fa7/commitizen-2.31.0.tar.gz", hash = "sha256:a326874c88748d37e28ed75e2f01eb42e72de99c1d951ac20d8ddd94bd3762d4"},
+    {url = "https://files.pythonhosted.org/packages/b3/44/6d8940336349058aacbbffbfb3036ce58941f29d81f0230d2b86d5e05dcb/commitizen-2.31.0-py3-none-any.whl", hash = "sha256:f0c1ddb5d45ccdbf2584844dbcf0c7fa68d21941de6b5206377bb6d418699e73"},
 ]
 "coverage 6.4.3" = [
     {url = "https://files.pythonhosted.org/packages/02/98/9fb7c1c92f4436117f345bcbbaaaf37af6730b991383b97353110dcdf1f8/coverage-6.4.3-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:adf1a0d272633b21d645dd6e02e3293429c1141c7d65a58e4cbcd592d53b8e01"},
