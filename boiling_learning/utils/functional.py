@@ -62,10 +62,11 @@ class Pack(Generic[_T, _S]):
     def __getitem__(self, loc: Union[int, str]) -> Union[_T, _S]:
         if isinstance(loc, int):
             return self.args[loc]
-        elif isinstance(loc, str):
+
+        if isinstance(loc, str):
             return self.kwargs[loc]
-        else:
-            raise ValueError(f'*Pack* expects an *int* index or *str* key, but got a {type(loc)}')
+
+        raise ValueError(f'*Pack* expects an *int* index or *str* key, but got a {type(loc)}')
 
     def __iter__(self) -> Iterator[Union[Tuple[_T], KwargsType[_S]]]:
         return iter(self.pair())
