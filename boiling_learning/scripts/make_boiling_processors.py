@@ -182,9 +182,6 @@ def main(
             left=0,
             right_border=0,
         ),
-        # cropping width is done deterministically here for validating with the literature
-        # however, ideally we should be able to choose if we want a deterministic or a randomic
-        # crop
         {'center': CenterCropper, 'random': RandomCropper}[crop_mode](
             width=width * downscale_factor
         ),
