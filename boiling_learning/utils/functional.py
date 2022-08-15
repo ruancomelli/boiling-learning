@@ -4,7 +4,6 @@ from functools import partial
 from typing import (
     Any,
     Callable,
-    FrozenSet,
     Generic,
     Iterable,
     Iterator,
@@ -34,8 +33,8 @@ KwargsType = frozendict[str, _S]
 
 class Pack(Generic[_T, _S]):
     def __init__(self, args: Iterable[_T] = (), kwargs: Mapping[str, _S] = frozendict()) -> None:
-        self._args: ArgsType[_T] = tuple(args)
-        self._kwargs: KwargsType[_S] = frozendict(kwargs)
+        self._args = tuple(args)
+        self._kwargs = frozendict(kwargs)
 
     @property
     def args(self) -> ArgsType[_T]:
@@ -138,8 +137,6 @@ class Pack(Generic[_T, _S]):
         p3 = p.omit((0, 2, 'd', 'e'), lambda x: x is None)
         print(p3) # prints Pack(1, 2, 4, None, 6, a=a, b=b, c=None, d=d, f=f)
         '''
-        pos: FrozenSet[int]
-        keys: Tuple[str, ...]
         if isinstance(loc, int):
             pos = frozenset({loc})
             keys = ()
