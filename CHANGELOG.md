@@ -1,5 +1,13 @@
 
 
+## v0.34.11 (2022-08-17)
+
+### Refactor
+
+- simplify arguments to `Cropper` in `make_boiling_processors`
+- **utils**: simplify type-annotations in `Pack`
+- **utils**: use if-guards in `Pack.__getitem__`
+
 ## v0.34.10 (2022-08-13)
 
 ## v0.34.9 (2022-08-13)
