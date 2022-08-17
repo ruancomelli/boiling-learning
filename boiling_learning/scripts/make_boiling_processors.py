@@ -176,12 +176,7 @@ def main(
             'GOPR2959': Cropper(left=980, right=1810, top=400, bottom=1200),
             'GOPR2960': Cropper(left=980, right=1810, top=400, bottom=1200),
         },
-        Cropper(
-            height=height * downscale_factor,
-            bottom_border=0,
-            left=0,
-            right_border=0,
-        ),
+        Cropper(height=height * downscale_factor, bottom_border=0),
         {'center': CenterCropper, 'random': RandomCropper}[crop_mode](
             width=width * downscale_factor
         ),
