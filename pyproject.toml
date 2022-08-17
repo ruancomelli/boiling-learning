@@ -65,9 +65,6 @@ pdm = "tox_pdm.plugin"
 requires = ["pdm-pep517"]
 build-backend = "pdm.pep517.api"
 
-[tool.pdm]
-includes = []
-
 [tool.pdm.dev-dependencies]
 test = [
     "pytest>=7.1.2",
