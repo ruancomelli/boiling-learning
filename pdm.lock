@@ -1678,7 +1678,7 @@ summary = "Send file to trash natively under Mac OS X, Windows and Linux."
 
 [[package]]
 name = "setuptools"
-version = "65.0.1"
+version = "65.0.2"
 requires_python = ">=3.7"
 summary = "Easily download, build, install, upgrade, and uninstall Python packages"
 
@@ -4031,9 +4031,9 @@ content_hash = "sha256:267f30e5cb1aa3fdd18992f6adbb3bf3618c3cded808036a4a6b6a1fe
     {url = "https://files.pythonhosted.org/packages/47/26/3435896d757335ea53dce5abf8d658ca80757a7a06258451b358f10232be/Send2Trash-1.8.0-py3-none-any.whl", hash = "sha256:f20eaadfdb517eaca5ce077640cb261c7d2698385a6a0f072a4a5447fd49fa08"},
     {url = "https://files.pythonhosted.org/packages/49/2c/d990b8d5a7378dde856f5a82e36ed9d6061b5f2d00f39dc4317acd9538b4/Send2Trash-1.8.0.tar.gz", hash = "sha256:d2c24762fd3759860a0aff155e45871447ea58d2be6bdd39b5c8f966a0c99c2d"},
 ]
-"setuptools 65.0.1" = [
-    {url = "https://files.pythonhosted.org/packages/02/10/be08cf9b821236bcc312a6104fb586bbeb692a50b1714ade91b9e28c2db4/setuptools-65.0.1.tar.gz", hash = "sha256:c04a012ae3a1b2cc2aeed4893377b70ea61c6c143d0acceea16ec4b60de6e40d"},
-    {url = "https://files.pythonhosted.org/packages/9d/b9/48de2d69a45354b20ca754e6c61736f1db3707c208ea04908766b184fd23/setuptools-65.0.1-py3-none-any.whl", hash = "sha256:7a2e7e95c3bf33f356b4c59aee7a6848585c4219dd3e941e43cc117888f210e4"},
+"setuptools 65.0.2" = [
+    {url = "https://files.pythonhosted.org/packages/02/70/40276081ce5d29e7610618a857909e4eba264c0c9cfb4ecb613a4f7ad0ef/setuptools-65.0.2-py3-none-any.whl", hash = "sha256:39275e7aafa4a4f0f4308f2302c6ee384dcdacdbaacc1e30dcbb6fd824c625bb"},
+    {url = "https://files.pythonhosted.org/packages/96/c2/8c6605094cb9a27b593e14377fb89a934342051bc7316a0ce21d47029481/setuptools-65.0.2.tar.gz", hash = "sha256:101bf15ca723beef42c8db91a761f3748d4d697e17fae904db60c0b619d8d094"},
 ]
 "six 1.16.0" = [
     {url = "https://files.pythonhosted.org/packages/71/39/171f1c67cd00715f190ba0b100d606d440a28c93c7714febeca8b79af85e/six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
