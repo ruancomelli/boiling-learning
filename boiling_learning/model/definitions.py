@@ -13,7 +13,7 @@ from tensorflow.keras.layers import (
     ReLU,
     Softmax,
 )
-from tensorflow.keras.mixed_precision.experimental import Policy
+from tensorflow.keras.mixed_precision import Policy
 from typing_extensions import Literal
 
 from boiling_learning.model.layers import ImageNormalization
