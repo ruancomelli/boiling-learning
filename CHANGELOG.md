@@ -1,5 +1,11 @@
 
 
+## v0.34.13 (2022-08-17)
+
+### Refactor
+
+- **preprocessing/image**: replace `skimage` downscale with TF
+
 ## v0.34.12 (2022-08-17)
 
 ## v0.34.11 (2022-08-17)
