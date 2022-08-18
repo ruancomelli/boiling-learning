@@ -8,7 +8,6 @@ from skimage.exposure import histogram
 from skimage.measure import shannon_entropy
 from skimage.metrics import normalized_mutual_information as _normalized_mutual_information
 from skimage.metrics import structural_similarity as ssim
-from skimage.transform import downscale_local_mean as _downscale
 from skimage.transform import resize
 
 from boiling_learning.preprocessing.transformers import Operator
@@ -231,29 +230,6 @@ def downscale(
 ) -> _VideoFrameOrFrames:
     # 4-D Tensor of shape [batch, height, width, channels] or 3-D Tensor of shape
     # [height, width, channels].
-
-    if isinstance(factors, int):
-        height_factor, width_factor = factors, factors
-    else:
-        height_factor, width_factor = factors
-
-    CHANNEL_FACTOR = 1
-    if image.ndim == 3:
-        downscale_factors = (height_factor, width_factor, CHANNEL_FACTOR)
-    elif image.ndim == 4:
-        BATCH_FACTOR = 1
-        downscale_factors = (BATCH_FACTOR, height_factor, width_factor, CHANNEL_FACTOR)
-    else:
-        raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
-
-    return typing.cast(_VideoFrameOrFrames, _downscale(image, downscale_factors))
-
-
-def _downscale_tf(
-    image: _VideoFrameOrFrames, factors: Union[int, Tuple[int, int]]
-) -> _VideoFrameOrFrames:
-    # 4-D Tensor of shape [batch, height, width, channels] or 3-D Tensor of shape
-    # [height, width, channels].
     if image.ndim == 3:
         height = image.shape[0]
         width = image.shape[1]
@@ -263,17 +239,14 @@ def _downscale_tf(
     else:
         raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
 
-    if isinstance(factors, int):
-        height_factor, width_factor = factors, factors
-    else:
-        height_factor, width_factor = factors
+    height_factor, width_factor = (factors, factors) if isinstance(factors, int) else factors
+
+    new_height = round(height / height_factor)
+    new_width = round(width / width_factor)
 
     return typing.cast(
         _VideoFrameOrFrames,
-        tf.image.resize(
-            image,
-            (height // height_factor, width // width_factor),
-        ).numpy(),
+        tf.image.resize(image, (new_height, new_width), antialias=True).numpy(),
     )
 
 
