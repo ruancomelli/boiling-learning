@@ -1199,7 +1199,6 @@ dependencies = [
 [[package]]
 name = "pathspec"
 version = "0.9.0"
-requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 summary = "Utility library for gitignore style pattern matching of file paths."
 
 [[package]]
@@ -1374,7 +1373,6 @@ summary = "Python style guide checker"
 [[package]]
 name = "pycparser"
 version = "2.21"
-requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "C parser in Python"
 
 [[package]]
@@ -1497,7 +1495,7 @@ summary = "Python for Window Extensions"
 name = "pywinpty"
 version = "2.0.7"
 requires_python = ">=3.7"
-summary = ""
+summary = "Pseudo terminal support for Windows from Python."
 
 [[package]]
 name = "pyyaml"
@@ -2089,7 +2087,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:267f30e5cb1aa3fdd18992f6adbb3bf3618c3cded808036a4a6b6a1fed4376ce"
+content_hash = "sha256:efc8b161a71f19e8c09966c29cf4a6312fd3fe3e5fe21b3b38110af23b094b4f"
 
 [metadata.files]
 "absl-py 1.2.0" = [
