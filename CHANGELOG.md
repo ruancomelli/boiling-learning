@@ -1,5 +1,17 @@
 
 
+## v0.34.14 (2022-08-20)
+
+### Feat
+
+- **visualization/video**: support string `display_data`
+- **visualization/video**: add function for saving videos as GIF
+- add new `visualization` module
+
+### Refactor
+
+- **visualization/video**: rename `format` parameter as `fmt`
+
 ## v0.34.13 (2022-08-17)
 
 ### Refactor
