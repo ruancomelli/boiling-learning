@@ -16,7 +16,7 @@ def save_as_video(
     path: PathLike,
     frames: Iterable[Tuple[VideoFrame, Dict[str, Any]]],
     *,
-    display_data: Union[Tuple[str, ...], Dict[str, str]] = (),
+    display_data: Union[str, Tuple[str, ...], Dict[str, str]] = (),
     text_position: Union[Tuple[int, int], Tuple[Fraction, Fraction]] = (
         Fraction(1, 10),
         Fraction(1, 10),
@@ -26,6 +26,8 @@ def save_as_video(
     fmt: str = 'mp4',
 ) -> None:
     path = resolve(path, parents=True)
+    if isinstance(display_data, str):
+        display_data = (display_data,)
 
     with contextlib.closing(
         imageio.get_writer(str(path), format=fmt, mode='I', fps=float(fps))
@@ -46,7 +48,7 @@ def save_as_gif(
     path: PathLike,
     frames: Iterable[Tuple[VideoFrame, Dict[str, Any]]],
     *,
-    display_data: Union[Tuple[str, ...], Dict[str, str]] = (),
+    display_data: Union[str, Tuple[str, ...], Dict[str, str]] = (),
     text_position: Union[Tuple[int, int], Tuple[Fraction, Fraction]] = (
         Fraction(1, 10),
         Fraction(1, 10),
@@ -55,6 +57,8 @@ def save_as_gif(
     duration: int,
 ) -> None:
     path = resolve(path, parents=True)
+    if isinstance(display_data, str):
+        display_data = (display_data,)
 
     imgs = (
         _annotate_image(
