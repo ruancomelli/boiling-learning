@@ -63,12 +63,16 @@ class CompiledModel:
     architecture: ModelArchitecture
     params: CompileModelParams
 
+    def compile(self) -> None:
+        self.architecture.model.compile(
+            optimizer=self.params.optimizer, loss=self.params.loss, metrics=self.params.metrics
+        )
+
 
 def compile_model(architecture: ModelArchitecture, params: CompileModelParams) -> CompiledModel:
-    architecture.model.compile(
-        optimizer=params.optimizer, loss=params.loss, metrics=params.metrics
-    )
-    return CompiledModel(architecture, params)
+    compiled_model = CompiledModel(architecture, params)
+    compiled_model.compile()
+    return compiled_model
 
 
 @dataclass(frozen=True)
