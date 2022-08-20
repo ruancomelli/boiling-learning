@@ -18,14 +18,14 @@ def save_as_video(
     display_data: Union[Tuple[str, ...], Dict[str, str]],
     *,
     fps: Real,
-    format: str = 'mp4',
+    fmt: str = 'mp4',
     text_position: Union[Tuple[int, int], Tuple[Fraction, Fraction]],
     text_color: int = 255,
 ) -> None:
     path = resolve(path, parents=True)
 
     with contextlib.closing(
-        imageio.get_writer(str(path), format=format, mode='I', fps=float(fps))
+        imageio.get_writer(str(path), format=fmt, mode='I', fps=float(fps))
     ) as writer:
         for frame, data in frames:
             image = Image.fromarray((frame.squeeze() * 255).astype(np.uint8))
