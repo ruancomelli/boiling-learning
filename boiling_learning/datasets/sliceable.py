@@ -31,8 +31,6 @@ import more_itertools as mit
 from iteround import saferound
 from typing_extensions import Literal, TypeGuard, TypeVarTuple, Unpack
 
-# pylint: disable=missing-function-docstring,missing-class-docstring
-
 _T = TypeVar('_T')
 _U = TypeVar('_U')
 _X = TypeVar('_X')

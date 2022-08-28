@@ -12,8 +12,6 @@ from boiling_learning.io import json
 from boiling_learning.utils.pathutils import PathLike, resolve
 from boiling_learning.utils.table_dispatch import TableDispatcher
 
-# pylint: disable=missing-function-docstring,missing-class-docstring
-
 Metadata = json.JSONDataType
 
 
