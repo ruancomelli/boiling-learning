@@ -59,7 +59,7 @@ class JSONSerializable(AssociatedType):
 
 
 class SupportsJSONSerializableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return serialize.supports(instance)
 
 
@@ -115,7 +115,7 @@ def _decode_Path(obj: str) -> Path:
 
 
 class _PackOfJSONSerializableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return isinstance(instance, Pack) and serialize.supports(instance.pair())
 
 
@@ -139,7 +139,7 @@ def _decode_Pack(obj: List[SerializedJSONObject]) -> Pack:
 
 
 class _ListOfJSONSerializableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return isinstance(instance, list) and all(serialize.supports(item) for item in instance)
 
 
@@ -160,7 +160,7 @@ def _decode_list(obj: List[JSONDataType]) -> list:
 
 
 class _DictOfJSONSerializableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return isinstance(instance, dict) and all(
             isinstance(key, str) and serialize.supports(value) for key, value in instance.items()
         )
@@ -183,7 +183,7 @@ def _decode_dict(obj: Dict[str, JSONDataType]) -> dict:
 
 
 class _TupleOfJSONSerializableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return isinstance(instance, tuple) and all(serialize.supports(item) for item in instance)
 
 
@@ -204,7 +204,7 @@ def _decode_tuple(obj: List[JSONDataType]) -> tuple:
 
 
 class _SetOfJSONSerializableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return isinstance(instance, set) and all(serialize.supports(item) for item in instance)
 
 
@@ -223,7 +223,7 @@ def _decode_set(obj: List[JSONDataType]) -> set:
 
 
 class _FrozenSetOfJSONSerializableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return isinstance(instance, frozenset) and all(
             serialize.supports(item) for item in instance
         )
@@ -246,7 +246,7 @@ def _decode_frozenset(obj: List[JSONDataType]) -> frozenset:
 
 
 class _FrozenDictOfJSONEncodableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return isinstance(instance, frozendict) and serialize.supports(dict(instance))
 
 
@@ -274,7 +274,7 @@ def _decode_frozendict(obj: Dict[str, Any]) -> frozendict:
 
 
 class DataclassOfJSONSerializableFieldsMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return is_dataclass_instance(instance) and serialize.supports(shallow_asdict(instance))
 
 
@@ -340,7 +340,7 @@ def _serialize_list(instance: ListOfJSONSerializable) -> List[JSONDataType]:
 
 
 class _ComplexJSONEncodableTypeMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return (
             instance is not None
             and not isinstance(instance, (bool, int, str, float, ListOfJSONSerializable))

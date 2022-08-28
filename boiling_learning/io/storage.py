@@ -21,7 +21,7 @@ class Serializable(AssociatedType):
 
 
 class _SerializableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return serialize.supports(instance)
 
 
@@ -35,7 +35,7 @@ def serialize(instance: Supports[Serializable], path: Path) -> Metadata:
 
 
 class _DeserializableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return instance in deserialize
 
 
@@ -51,7 +51,7 @@ class Saveable(AssociatedType):
 
 
 class _SupportsSaveableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return save.supports(instance)
 
 
@@ -93,7 +93,7 @@ def load(path: PathLike) -> Any:
 
 
 class _SimpleJSONSerializableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return instance is None or (
             isinstance(instance, (bool, int, float, str, dict, list, tuple))
             and json.serialize.supports(instance)
@@ -111,7 +111,7 @@ def _serialize_simple_json_serializable(instance: SimpleJSONSerializable, path: 
 
 
 class _ListOfSaveableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return isinstance(instance, list) and all(save.supports(item) for item in instance)
 
 
@@ -128,7 +128,7 @@ def _serialize_list(instance: ListOfSaveable, path: Path) -> None:
 
 
 class _TupleOfSaveableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return isinstance(instance, tuple) and all(save.supports(item) for item in instance)
 
 
@@ -142,7 +142,7 @@ def _serialize_tuple(instance: TupleOfSaveable, path: Path) -> None:
 
 
 class _DictOfSaveableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return isinstance(instance, dict) and all(
             isinstance(key, str) and save.supports(value) for key, value in instance.items()
         )

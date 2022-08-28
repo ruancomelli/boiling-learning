@@ -43,7 +43,7 @@ def _json_describe_json_serializable(instance: json.SupportsJSONSerializable) ->
 
 
 class DescribableAsJSONDescribableMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         if not describe.supports(instance):
             return False
 

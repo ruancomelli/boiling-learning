@@ -68,7 +68,7 @@ def _describe_dict(
 
 
 class _DataclassOfDescribableFieldsMeta(type):
-    def __instancecheck__(cls, instance: Any) -> bool:
+    def __instancecheck__(self, instance: Any) -> bool:
         return is_dataclass_instance(instance) and describe.supports(shallow_asdict(instance))
 
 
