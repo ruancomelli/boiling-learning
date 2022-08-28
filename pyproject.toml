@@ -83,6 +83,7 @@ lint = [
     "pylint>=2.14.5",
     "vulture>=2.5",
     "sourcery-cli>=0.12.6",
+    "flake8==4.0.1",
 ]
 ci = [
     "commitizen>=2.29.5",
