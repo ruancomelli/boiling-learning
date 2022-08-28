@@ -1,7 +1,8 @@
 import nidaqmx
 import pytest
 
-from boiling_learning.daq import Channel, ChannelType, Device, NIChannelType
+from boiling_learning.daq.channels import Channel, ChannelType, NIChannelType
+from boiling_learning.daq.devices import Device
 
 
 def _has_nidaqmx() -> bool:

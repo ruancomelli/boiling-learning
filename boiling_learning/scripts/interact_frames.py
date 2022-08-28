@@ -6,7 +6,7 @@
 # from ipywidgets import interact, widgets
 # from skimage.transform import downscale_local_mean as downscale
 
-# from boiling_learning.preprocessing import ImageDataset
+# from boiling_learning.preprocessing.image_datasets import ImageDataset
 # from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 
 # try:
