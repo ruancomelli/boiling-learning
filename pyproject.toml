@@ -78,7 +78,6 @@ test = [
 ]
 lint = [
     "black>=22.6.0",
-    "flake8>=3.9.2",
     "isort[requirements_deprecated_finder]>=5.10.1",
     "unimport>=0.11.1",
     "pylint>=2.14.5",

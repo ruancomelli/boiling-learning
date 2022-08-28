@@ -376,7 +376,7 @@ def _sync_dataframes(
     if isinstance(dest_df.index, pd.TimedeltaIndex):
         dest_df.index = dest_df.index.total_seconds()
 
-    if type(source_df.index) is not type(dest_df.index):
+    if type(source_df.index) is not type(dest_df.index):  # noqa: E721 # do not compare types
         raise ValueError(
             f'the source and dest DataFrames indices must have the same type.'
             f' Got {type(source_df.index)} and {type(dest_df.index)}'

@@ -1,3 +1,5 @@
+# flake8: noqa
+
 # from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple, TypeVar, Union
 
 # import bokeh.models

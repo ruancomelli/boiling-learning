@@ -7,7 +7,7 @@ import tensorflow as tf
 from skimage.exposure import histogram
 from skimage.measure import shannon_entropy
 from skimage.metrics import normalized_mutual_information as _normalized_mutual_information
-from skimage.metrics import structural_similarity as ssim
+from skimage.metrics import structural_similarity
 from skimage.transform import resize
 
 from boiling_learning.preprocessing.transformers import Operator
@@ -285,46 +285,14 @@ def normalized_mutual_information(
 ) -> float:
     """Compute the normalized mutual information (NMI).
 
-    The normalized mutual information of :math:`A` and :math:`B` is given by::
-    ..math::
-        Y(A, B) = \frac{H(A) + H(B)}{H(A, B)}
-    where :math:`H(X) := - \sum_{x \in X}{x \log x}` is the entropy.
-    It was proposed to be useful in registering images by Colin Studholme and
-    colleagues [1]_. It ranges from 0 (perfectly uncorrelated image values)
-    to 1 (perfectly correlated image values, whether positively or negatively).
-    Parameters
-    ----------
-    image0, image1 : ndarray
-        Images to be compared. The two input images must have the same number
-        of dimensions.
-    bins : int or sequence of int, optional
-        The number of bins along each axis of the joint histogram.
-    Returns
-    -------
-    nmi : float
-        The normalized mutual information between the two arrays, computed at
-        the granularity given by ``bins``. Higher NMI implies more similar
-        input images.
-    Raises
-    ------
-    ValueError
-        If the images don't have the same number of dimensions.
-    Notes
-    -----
-    If the two input images are not the same shape, the smaller image is
-    resized to match the larger one.
-    References
-    ----------
-    .. [1] C. Studholme, D.L.G. Hill, & D.J. Hawkes (1999). An overlap
-           invariant entropy measure of 3D medical image alignment.
-           Pattern Recognition 32(1):71-86
-           :DOI:`10.1016/S0031-3203(98)00091-0`
+    It ranges from 0 (perfectly uncorrelated image values) to 1 (perfectly correlated image values,
+    whether positively or negatively).
     """
     return _normalized_mutual_information(image0, image1, bins=bins) - 1
 
 
 def structural_similarity_ratio(ref: VideoFrame, image: VideoFrame) -> float:
-    # TODO: use https://www.tensorflow.org/api_docs/python/tf/image/ssim ?
+    # TODO: use https://www.tensorflow.org/api_docs/python/tf/image/structural_similarity ?
     # see
     # <https://www.wikiwand.com/en/Structural_similarity#/Application_of_the_formula>
     WINDOW_SIZE = 11
@@ -334,7 +302,9 @@ def structural_similarity_ratio(ref: VideoFrame, image: VideoFrame) -> float:
     image = np.squeeze(image)
 
     return typing.cast(
-        float, ssim(ref, image, win_size=WINDOW_SIZE) / ssim(ref, ref, win_size=WINDOW_SIZE)
+        float,
+        structural_similarity(ref, image, win_size=WINDOW_SIZE)
+        / structural_similarity(ref, ref, win_size=WINDOW_SIZE),
     )
 
 

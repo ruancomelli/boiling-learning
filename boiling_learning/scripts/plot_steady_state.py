@@ -48,7 +48,7 @@ def main(
     elapsed_time_min = data['Elapsed time'] / 60
 
     plt.plot(elapsed_time_min, data['Temperature'])
-    plt.xlabel('Elapsed Time [$\si{\min}$]')
+    plt.xlabel('Elapsed Time [$\si{\min}$]')  # noqa: W605 # invalid escape sequence
     # plt.show()
     plt.savefig(output_path)
 
