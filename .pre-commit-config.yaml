@@ -53,3 +53,8 @@ repos:
   hooks:
   - id: pretty-format-yaml
     args: [--autofix, --indent, '2']
+
+- repo: https://github.com/floatingpurr/sync_with_pdm
+  rev: 0.1.0
+  hooks:
+  - id: sync_with_pdm
