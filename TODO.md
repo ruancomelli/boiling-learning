@@ -1,8 +1,7 @@
 # TODO List
 
 - \[ \] Write unit tests.
-- \[ \] Write a config file, so that configurations are not hard-coded in
-  Python, but in a JSON file.
+- \[ \] Achieve 100% test coverage.
 - \[x\] Python Learning: design a preprocessing function that takes a
   `tf.tensor`. This function should take a batch, preprocess it (possibly using
   many cores) and then fetch the results. The results should then be saved to
@@ -11,11 +10,8 @@
   [TensorFlow tutorial to image classification](https://www.tensorflow.org/tutorials/images/classification),
   [TensorFlow tutorial to loading images](https://www.tensorflow.org/tutorials/load_data/images),
   [TensorFlow guide to building input pipelines](https://www.tensorflow.org/guide/data).
-- \[ \] Improve the project structure:
-  - \[ \] `bl` has its own `utils`. But I believe that every package should have
-    their own utils.
-  - \[ \] `bl.utils` could be split into many utilities submodules.
-- \[ \] Use type annotations where applicable.
+- \[x\] `bl.utils` could be split into many utilities submodules.
+- \[x\] Use type annotations where applicable.
 - \[ \] Document code.
 - \[x\] Allow different batch sizes for different models.
 - \[ \] Why do `more_itertools.filter_except` and `more_itertools.map_except`
@@ -33,7 +29,7 @@ assert lower_eq("Hi", "hi")
 ```
 
 - \[x\] Am I normalizing images correctly? Make sure I am!
-- \[ \] Write READMEs for each package.
+- \[ \] Write READMEs for each subpackage.
 - \[ \] Include licenses in each module.
 - \[ \] Make `cv2` path-like compliant.
 - \[ \] Take a look at the relationship between bubble or droplet formation rate
@@ -44,7 +40,7 @@ assert lower_eq("Hi", "hi")
   typing helper `Sentinel` which expects a sentinel value called, for instance,
   `_sentinel`, or another type. Equivalent to `typing.Optional`, but using any
   other sentinel instead of `None`. See `typing.Literal` in Python 3.8.
-- \[ \] Create now my own models and tests Kramer's. Some steps are:
+- \[ \] Create my own models and test Kramer's. Some steps are:
   - \[ \] Learn where to put Dropout layers.
     [This paper is awesome](https://arxiv.org/abs/1207.0580).
   - \[ \] Always make the number of dense units a multiple of 8. There is a
@@ -57,7 +53,7 @@ assert lower_eq("Hi", "hi")
   [this](https://www.wikiwand.com/en/Fraction_of_variance_unexplained). Am I
   evaluating models correctly?
 - \[ \] Include `strategy` as part of a model's description?
-- \[ \] Implement callbacks for reporting the history and timestamps of a
+- \[x\] Implement callbacks for reporting the history and timestamps of a
   models' training. This would be useful to compare the training of models, in
   special execution speed (to allow comparison between CPUs versus GPUs or
   uniform versus mixed precision).
@@ -68,7 +64,7 @@ assert lower_eq("Hi", "hi")
   using GPUs and MirroredStrategy), being the application of mixed precision the
   only difference between the two nets.
 - \[ \] Organize datasets and publish them on
-  [Kaggle](https://www.kaggle.com/ruancomelli).
+  [Kaggle](https://www.kaggle.com/ruancomelli)?
 - \[ \] Use narrower visualization windows?
 - \[ \] Take a look at
   [this](https://www.machinecurve.com/index.php/2019/11/13/how-to-use-tensorboard-with-keras/#about-histogram_freq-what-are-weight-histograms),
@@ -89,7 +85,7 @@ look smaller).
 
 - \[ \] Use object detection.
 - \[ \] Use transfer learning from one case to another.
-- \[ \] Implement a way to measure the training time.
+- \[x\] Implement a way to measure the training time.
 - \[ \] Implement a warm-up: the first epoch of training (after compiling or
   restoring) should be discarded to avoid including TF warmup in the training
   time measurement.
@@ -148,7 +144,7 @@ signature, delegating this responsibility to a helper class.
   - \[ \] How random contrast (and others) affect image variance, and what does
     this mean in machine learning?
   - \[x\] Train on one set, evaluate on another
-- \[ \] Release `Pack` as a standalone package, including functional programming
+- \[x\] \[No. It is not useful enough.\] Release `Pack` as a standalone package, including functional programming
   functionality:
 
 ```python
@@ -194,7 +190,6 @@ and think of other things.
 - \[ \] Check
   [separable convolutions](https://towardsdatascience.com/a-basic-introduction-to-separable-convolutions-b99ec3102728)
 - \[ \] Improve `Pack`, making it more like `Parameters`.
-- \[ \] PACK: Packs Are Compact Kids?
 - \[ \] [This ideia](https://github.com/kachayev/dataclasses-tensor) looks
   amazing, maybe use it?
 - \[ \] Use
@@ -229,6 +224,6 @@ and think of other things.
   [ConvLSTM2D](https://www.tensorflow.org/api_docs/python/tf/keras/layers/ConvLSTM2D)
   for timeseries of images!
 - \[ \] take a look at [`ndindex`](https://quansight-labs.github.io/ndindex/index.html)
-- \[ \] Take a look at [Probabilistic Layers Regression](https://www.tensorflow.org/probability/examples/Probabilistic_Layers_Regression)
+- \[ \] take a look at [Probabilistic Layers Regression](https://www.tensorflow.org/probability/examples/Probabilistic_Layers_Regression)
 - \[ \] make [LeakyReLU trainable](https://www.tensorflow.org/guide/intro_to_modules#the_build_step)?
 - \[ \] [quantize models](https://www.tensorflow.org/model_optimization/guide/quantization/training_example#clone_and_fine-tune_pre-trained_model_with_quantization_aware_training)?
