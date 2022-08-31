@@ -125,7 +125,7 @@ summary = "Classes Without Boilerplate"
 
 [[package]]
 name = "autokeras"
-version = "1.0.19"
+version = "1.0.20"
 summary = "AutoML for deep learning"
 dependencies = [
     "keras-tuner>=1.1.0",
@@ -2246,9 +2246,9 @@ content_hash = "sha256:b0dd7807f3b550ef6066f8361c0d3f20b5fc7e9dcbd3e864db5fa3e40
     {url = "https://files.pythonhosted.org/packages/1a/cb/c4ffeb41e7137b23755a45e1bfec9cbb76ecf51874c6f1d113984ecaa32c/attrs-22.1.0.tar.gz", hash = "sha256:29adc2665447e5191d0e7c568fde78b21f9672d344281d0c6e1ab085429b22b6"},
     {url = "https://files.pythonhosted.org/packages/f2/bc/d817287d1aa01878af07c19505fafd1165cd6a119e9d0821ca1d1c20312d/attrs-22.1.0-py2.py3-none-any.whl", hash = "sha256:86efa402f67bf2df34f51a335487cf46b1ec130d02b8d39fd248abfd30da551c"},
 ]
-"autokeras 1.0.19" = [
-    {url = "https://files.pythonhosted.org/packages/40/cd/aa8102a3b6d5db82aea5870a7d18457456953990d6286f61731723b7de9a/autokeras-1.0.19-py3-none-any.whl", hash = "sha256:2931bb3e21c985bd8674b45427703382ed18aef39df9b257839b20c726d136f4"},
-    {url = "https://files.pythonhosted.org/packages/e8/fb/b5679ecf2ea36b8b9f065a68c779f820095a97017b9949dc947c2017add5/autokeras-1.0.19.tar.gz", hash = "sha256:d0b7407fbda40fa025d11cd350b0ac1ca0df13101433efea5e770baf625f96aa"},
+"autokeras 1.0.20" = [
+    {url = "https://files.pythonhosted.org/packages/04/1b/a6bf6bac7840e42640db06c49ea1a4442bda94087932d989a6ee90f9e224/autokeras-1.0.20-py3-none-any.whl", hash = "sha256:66da8c3c9f25afe456b2bbb123219fb91402e6015fb0df9479b9bacb0caab7aa"},
+    {url = "https://files.pythonhosted.org/packages/f2/5d/a3c46434a1d050f550db75ac21a59bdc5622bbcf67faf63c25a8fffca238/autokeras-1.0.20.tar.gz", hash = "sha256:3d0f09629abb9b98f9059e3c8b9d39b4acd7f6dcde6d0584146a02035159141a"},
 ]
 "backcall 0.2.0" = [
     {url = "https://files.pythonhosted.org/packages/4c/1c/ff6546b6c12603d8dd1070aa3c3d273ad4c07f5771689a7b69a550e8c951/backcall-0.2.0-py2.py3-none-any.whl", hash = "sha256:fbbce6a29f263178a1f7915c1940bde0ec2b2a967566fe1c65c1dfb7422bd255"},
