@@ -112,12 +112,6 @@ requires_python = ">=3.5"
 summary = "Enhance the standard unittest package with features for testing asyncio libraries"
 
 [[package]]
-name = "atomicwrites"
-version = "1.4.1"
-requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-summary = "Atomic file writes."
-
-[[package]]
 name = "attrs"
 version = "22.1.0"
 requires_python = ">=3.5"
@@ -1456,11 +1450,10 @@ summary = "Persistent/Functional/Immutable data structures"
 
 [[package]]
 name = "pytest"
-version = "7.1.2"
+version = "7.1.3"
 requires_python = ">=3.7"
 summary = "pytest: simple powerful testing with Python"
 dependencies = [
-    "atomicwrites>=1.0; sys_platform == \"win32\"",
     "attrs>=19.2.0",
     "colorama; sys_platform == \"win32\"",
     "importlib-metadata>=0.12; python_version < \"3.8\"",
@@ -1760,7 +1753,7 @@ summary = "What-If Tool TensorBoard plugin."
 
 [[package]]
 name = "tensorflow"
-version = "2.9.1"
+version = "2.9.2"
 requires_python = ">=3.7"
 summary = "TensorFlow is an open source machine learning framework for everyone."
 dependencies = [
@@ -2238,9 +2231,6 @@ content_hash = "sha256:b0dd7807f3b550ef6066f8361c0d3f20b5fc7e9dcbd3e864db5fa3e40
 "asynctest 0.13.0" = [
     {url = "https://files.pythonhosted.org/packages/0c/0f/6056f4435923d2f8c89ac9ef2d18506a569348d8f9cc827b0dd7a4c8acc4/asynctest-0.13.0.tar.gz", hash = "sha256:c27862842d15d83e6a34eb0b2866c323880eb3a75e4485b079ea11748fd77fac"},
     {url = "https://files.pythonhosted.org/packages/e8/b6/8d17e169d577ca7678b11cd0d3ceebb0a6089a7f4a2de4b945fe4b1c86db/asynctest-0.13.0-py3-none-any.whl", hash = "sha256:5da6118a7e6d6b54d83a8f7197769d046922a44d2a99c21382f0a6e4fadae676"},
-]
-"atomicwrites 1.4.1" = [
-    {url = "https://files.pythonhosted.org/packages/87/c6/53da25344e3e3a9c01095a89f16dbcda021c609ddb42dd6d7c0528236fb2/atomicwrites-1.4.1.tar.gz", hash = "sha256:81b2c9071a49367a7f770170e5eec8cb66567cfbbc8c73d20ce5ca4a8d71cf11"},
 ]
 "attrs 22.1.0" = [
     {url = "https://files.pythonhosted.org/packages/1a/cb/c4ffeb41e7137b23755a45e1bfec9cbb76ecf51874c6f1d113984ecaa32c/attrs-22.1.0.tar.gz", hash = "sha256:29adc2665447e5191d0e7c568fde78b21f9672d344281d0c6e1ab085429b22b6"},
@@ -3475,7 +3465,6 @@ content_hash = "sha256:b0dd7807f3b550ef6066f8361c0d3f20b5fc7e9dcbd3e864db5fa3e40
     {url = "https://files.pythonhosted.org/packages/26/bf/3b0c19d97745aea31cbd808b33c6e2686fa3baa0c9a8046ecd403e41a921/Pillow-9.2.0-cp39-cp39-win32.whl", hash = "sha256:337a74fd2f291c607d220c793a8135273c4c2ab001b03e601c36766005f36885"},
     {url = "https://files.pythonhosted.org/packages/29/61/9303560bc992d5e1985a260544b008410a53dab8b8f34d2791aeff04bc5b/Pillow-9.2.0-pp38-pypy38_pp73-manylinux_2_28_x86_64.whl", hash = "sha256:96b5e6874431df16aee0c1ba237574cb6dff1dcb173798faa6a9d8b399a05d0e"},
     {url = "https://files.pythonhosted.org/packages/29/8e/63969ca113cf56b6ff285ce1d983ebce8a205b57ad2e206e4656c77f47b1/Pillow-9.2.0-pp38-pypy38_pp73-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:1802f34298f5ba11d55e5bb09c31997dc0c6aed919658dfdf0198a2fe75d5490"},
-    {url = "https://files.pythonhosted.org/packages/38/bf/591fb5d727e291fe0e83b9c26eaf52b540ece7805c91c193fc653031aa66/Pillow-9.2.0-cp311-cp311-macosx_10_10_universal2.whl", hash = "sha256:408673ed75594933714482501fe97e055a42996087eeca7e5d06e33218d05aa8"},
     {url = "https://files.pythonhosted.org/packages/39/72/7097a5b4b70661df03b8af02152fc5562a6f7ad1eb94b0ceb3c1999ed623/Pillow-9.2.0-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:d5b87da55a08acb586bad5c3aa3b86505f559b84f39035b233d5bf844b0834b1"},
     {url = "https://files.pythonhosted.org/packages/3a/2c/dd6fe78e01ed1b6d117be95f7e9ed77c77899c14847b1ebe46148b53d354/Pillow-9.2.0-cp38-cp38-win32.whl", hash = "sha256:2ad0d4df0f5ef2247e27fc790d5c9b5a0af8ade9ba340db4a73bb1a4a3e5fb4f"},
     {url = "https://files.pythonhosted.org/packages/42/a5/b861588a463b29cfd789ab7e88cb95d33c2a3b6bbbe524f268b4ec8e0ba3/Pillow-9.2.0-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:0030fdbd926fb85844b8b92e2f9449ba89607231d3dd597a21ae72dc7fe26927"},
@@ -3489,9 +3478,9 @@ content_hash = "sha256:b0dd7807f3b550ef6066f8361c0d3f20b5fc7e9dcbd3e864db5fa3e40
     {url = "https://files.pythonhosted.org/packages/65/94/d4d2c7b148f2a9f7069325123d9ac9ae64aba2e2a908997f53082bf86908/Pillow-9.2.0-cp310-cp310-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:831e648102c82f152e14c1a0938689dbb22480c548c8d4b8b248b3e50967b88c"},
     {url = "https://files.pythonhosted.org/packages/66/a8/d2c36017e6abd37de63ab3c5224d21141c651076068e6c3a169a8b021deb/Pillow-9.2.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7b0554af24df2bf96618dac71ddada02420f946be943b181108cac55a7a2dcd4"},
     {url = "https://files.pythonhosted.org/packages/69/f5/9e802159d78b2eaf26bf1f8b94648605993f5ca7247ac8870f065063fc40/Pillow-9.2.0-cp37-cp37m-win_amd64.whl", hash = "sha256:69bd1a15d7ba3694631e00df8de65a8cb031911ca11f44929c97fe05eb9b6c1d"},
+    {url = "https://files.pythonhosted.org/packages/84/6c/2c6e4a6d0f94b1154dcc4e8ec54e9c7c1df70569925508484df02e7f9490/Pillow-9.2.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:336b9036127eab855beec9662ac3ea13a4544a523ae273cbf108b228ecac8437"},
     {url = "https://files.pythonhosted.org/packages/85/7f/8192ff7e5f79f05a637a8c4e697e24083fdc3c92f8f542b23180e49b6623/Pillow-9.2.0-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:37ff6b522a26d0538b753f0b4e8e164fdada12db6c6f00f62145d732d8a3152e"},
     {url = "https://files.pythonhosted.org/packages/86/d2/ca178ad71dcd1dcddbe2a3f7983639d2f8a20e723d9a978ab978ed08c874/Pillow-9.2.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a138441e95562b3c078746a22f8fca8ff1c22c014f856278bdbdd89ca36cff1b"},
-    {url = "https://files.pythonhosted.org/packages/88/48/f433e808970f3d261d2fbcb888efc232feb66059d92cc53298ade7af0a4c/Pillow-9.2.0-cp311-cp311-macosx_11_0_universal2.whl", hash = "sha256:727dd1389bc5cb9827cbd1f9d40d2c2a1a0c9b32dd2261db522d22a604a6eec9"},
     {url = "https://files.pythonhosted.org/packages/88/49/c26fc3b5b0e82bdc9d8751d6b939da29327b0d98f7c3b95a575cbfed2743/Pillow-9.2.0-cp37-cp37m-macosx_10_10_x86_64.whl", hash = "sha256:2c58b24e3a63efd22554c676d81b0e57f80e0a7d3a5874a7e14ce90ec40d3069"},
     {url = "https://files.pythonhosted.org/packages/88/7a/ddfe28b485b623361457d4783007c1f9ba83a87f93e7fec32f64793efb6c/Pillow-9.2.0-cp39-cp39-macosx_10_10_x86_64.whl", hash = "sha256:0ed2c4ef2451de908c90436d6e8092e13a43992f1860275b4d8082667fbb2ffc"},
     {url = "https://files.pythonhosted.org/packages/8c/92/2975b464d9926dc667020ed1abfa6276e68c3571dcb77e43347e15ee9eed/Pillow-9.2.0.tar.gz", hash = "sha256:75e636fd3e0fb872693f23ccb8a5ff2cd578801251f3a4f6854c6a5d437d3c04"},
@@ -3511,6 +3500,7 @@ content_hash = "sha256:b0dd7807f3b550ef6066f8361c0d3f20b5fc7e9dcbd3e864db5fa3e40
     {url = "https://files.pythonhosted.org/packages/c6/d8/ea34b07fdef5adde22ce9710213e7b8ad458969cc05f67f27f2607c3dbdc/Pillow-9.2.0-cp311-cp311-win32.whl", hash = "sha256:b6d5e92df2b77665e07ddb2e4dbd6d644b78e4c0d2e9272a852627cdba0d75cf"},
     {url = "https://files.pythonhosted.org/packages/ce/1c/c639b5662d3b831c4b95e08bc610a50a5b9e719f71338bedc0117e8dc5d3/Pillow-9.2.0-cp37-cp37m-win32.whl", hash = "sha256:fa768eff5f9f958270b081bb33581b4b569faabf8774726b283edb06617101dc"},
     {url = "https://files.pythonhosted.org/packages/d2/b9/4434959b8a2bdeccc5181b71d1377aeed352628fdf5c8a92f25868a0f2a0/Pillow-9.2.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:136659638f61a251e8ed3b331fc6ccd124590eeff539de57c5f80ef3a9594e58"},
+    {url = "https://files.pythonhosted.org/packages/d3/83/77f4cbeb3f06a8bd43b39aa68df3ba2d415254c0cbe7bf7f26c894ebfd30/Pillow-9.2.0-cp311-cp311-macosx_10_10_x86_64.whl", hash = "sha256:adabc0bce035467fb537ef3e5e74f2847c8af217ee0be0455d4fec8adc0462fc"},
     {url = "https://files.pythonhosted.org/packages/d6/88/7d83874025345abe8574c81c6eb1e52b935e94e6cf4201c1402d600eb7da/Pillow-9.2.0-pp38-pypy38_pp73-macosx_10_10_x86_64.whl", hash = "sha256:f07f1f00e22b231dd3d9b9208692042e29792d6bd4f6639415d2f23158a80013"},
     {url = "https://files.pythonhosted.org/packages/d8/60/b13c00d403f34110e96c1b5c0afa73ce461efe3fe960c3a7e3e7fe190d82/Pillow-9.2.0-cp310-cp310-macosx_10_10_x86_64.whl", hash = "sha256:a9c9bc489f8ab30906d7a85afac4b4944a572a7432e00698a7239f44a44e6efb"},
     {url = "https://files.pythonhosted.org/packages/d8/80/ff6b6ae88982f73d050907dc2c307f387f6a04ce2ca7230ef3a568fbccac/Pillow-9.2.0-cp38-cp38-manylinux_2_28_x86_64.whl", hash = "sha256:bc431b065722a5ad1dfb4df354fb9333b7a582a5ee39a90e6ffff688d72f27a1"},
@@ -3798,9 +3788,9 @@ content_hash = "sha256:b0dd7807f3b550ef6066f8361c0d3f20b5fc7e9dcbd3e864db5fa3e40
     {url = "https://files.pythonhosted.org/packages/dc/4f/5588cd16135b6d75a042349df7c4e114eb091ffb213e11c2805a44a7e860/pyrsistent-0.18.1-cp310-cp310-win_amd64.whl", hash = "sha256:636ce2dc235046ccd3d8c56a7ad54e99d5c1cd0ef07d9ae847306c91d11b5fec"},
     {url = "https://files.pythonhosted.org/packages/fa/4b/f051c292400d013523d6ced81af83c313059fd494e45e94ea99ceb549b95/pyrsistent-0.18.1-cp38-cp38-win32.whl", hash = "sha256:b568f35ad53a7b07ed9b1b2bae09eb15cdd671a5ba5d2c66caee40dbf91c68ca"},
 ]
-"pytest 7.1.2" = [
-    {url = "https://files.pythonhosted.org/packages/4e/1f/34657c6ac56f3c58df650ba41f8ffb2620281ead8e11bcdc7db63cf72a78/pytest-7.1.2.tar.gz", hash = "sha256:a06a0425453864a270bc45e71f783330a7428defb4230fb5e6a731fde06ecd45"},
-    {url = "https://files.pythonhosted.org/packages/fb/d0/bae533985f2338c5d02184b4a7083b819f6b3fc101da792e0d96e6e5299d/pytest-7.1.2-py3-none-any.whl", hash = "sha256:13d0e3ccfc2b6e26be000cb6568c832ba67ba32e719443bfe725814d3c42433c"},
+"pytest 7.1.3" = [
+    {url = "https://files.pythonhosted.org/packages/a4/a7/8c63a4966935b0d0b039fd67ebf2e1ae00f1af02ceb912d838814d772a9a/pytest-7.1.3.tar.gz", hash = "sha256:4f365fec2dff9c1162f834d9f18af1ba13062db0c708bf7b946f8a5c76180c39"},
+    {url = "https://files.pythonhosted.org/packages/e3/b9/3541bbcb412a9fd56593005ff32183825634ef795a1c01ceb6dee86e7259/pytest-7.1.3-py3-none-any.whl", hash = "sha256:1377bda3466d70b55e3f5cecfa55bb7cfcf219c7964629b967c37cf0bda818b7"},
 ]
 "python-dateutil 2.8.2" = [
     {url = "https://files.pythonhosted.org/packages/36/7a/87837f39d0296e723bb9b62bbb257d0355c7f6128853c78955f57342a56d/python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
@@ -4132,19 +4122,19 @@ content_hash = "sha256:b0dd7807f3b550ef6066f8361c0d3f20b5fc7e9dcbd3e864db5fa3e40
 "tensorboard-plugin-wit 1.8.1" = [
     {url = "https://files.pythonhosted.org/packages/e0/68/e8ecfac5dd594b676c23a7f07ea34c197d7d69b3313afdf8ac1b0a9905a2/tensorboard_plugin_wit-1.8.1-py3-none-any.whl", hash = "sha256:ff26bdd583d155aa951ee3b152b3d0cffae8005dc697f72b44a8e8c2a77a8cbe"},
 ]
-"tensorflow 2.9.1" = [
-    {url = "https://files.pythonhosted.org/packages/0b/3f/57bb9bbd2dfecba3659aedffb54bb837e83ccba81f217cb744f26d453048/tensorflow-2.9.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:add2f4e55fd7209a5cb01d815364adc9827184d74a83c2f1616c72be2e85c8b7"},
-    {url = "https://files.pythonhosted.org/packages/23/84/e9aa1e62775d36202df20b19e442c2779499b43c9738daf222d7a8abd9fc/tensorflow-2.9.1-cp38-cp38-win_amd64.whl", hash = "sha256:a27bffb91f0aef6ba2a30f6507932d9c6801af56cfee8442767f9f3f69bb37a6"},
-    {url = "https://files.pythonhosted.org/packages/25/7d/2f33b5981dfc417a14759572dd00f1efcf9cde6a839e7c8fdccb238370ff/tensorflow-2.9.1-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:81ad045d39cf4360d5e6183cdda0990661302cca502917a12e54177989b340b9"},
-    {url = "https://files.pythonhosted.org/packages/46/7b/d55ad3929956336e23cd1167616c192dbc1ef7d24fb57231385c5d475111/tensorflow-2.9.1-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:b1f7674220b19ab5d39d9313f9c60278cef56052614600cba192700c658e502c"},
-    {url = "https://files.pythonhosted.org/packages/51/86/f5db15a6403a8ecf377807e93cdcd5cddb2f57e73604143cc02917d24db4/tensorflow-2.9.1-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:2c77edeb4a9d542032ddac93f732e3dd3d1c4d15c8795e4e43166ed46503582d"},
-    {url = "https://files.pythonhosted.org/packages/66/8e/19d47c7b9e2629c37fb3b2febb09a45d4ee7055e6bcb7ff790d8604d822c/tensorflow-2.9.1-cp310-cp310-win_amd64.whl", hash = "sha256:8be7d7f6091ac5af09c19eb178bbbd51346794684851a7bd57826d2d1cfa220e"},
-    {url = "https://files.pythonhosted.org/packages/7a/ec/f5e5717d76aff3449c3e5aaf43c960a19cd6dfa7ad06dffa6b51ffb763b7/tensorflow-2.9.1-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:df048d216f90c9fcbda22bdd03420b0e0e6e7ee98b8b91f221afef46b7664635"},
-    {url = "https://files.pythonhosted.org/packages/af/f2/b9ebc1355c2d48c5823f9a33bfd91d885c1499846080eebc4ea21f5e509d/tensorflow-2.9.1-cp37-cp37m-win_amd64.whl", hash = "sha256:abbdcfa7c14974f9bafa8f51214c037639a8991eef3dbcafc506e608a673c54c"},
-    {url = "https://files.pythonhosted.org/packages/b0/30/bd03cd1ab1f0b295f37ed96dcee5942f81d4486648adb8079215f5c4f367/tensorflow-2.9.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:adc1b80ec32337ba1720fadbf64242aae06a7ee1c7aea6a1a0cffe1968c89b25"},
-    {url = "https://files.pythonhosted.org/packages/c9/d1/3e8abee0f85cfef53be619766e1822b8190efad2dcb76167a62863033a14/tensorflow-2.9.1-cp39-cp39-win_amd64.whl", hash = "sha256:1c2c6557f6bd7e0d3f1063e27346e4f1c4353db2b7751ac7451033b335fa4b7c"},
-    {url = "https://files.pythonhosted.org/packages/db/27/6754ced3dfcdc0507c24df31b5daa9acfa6357f083b355081781fa040404/tensorflow-2.9.1-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:488a7a964298b92278cca593b7f687abd1c8f51982a08dc6ded5efd9457bf477"},
-    {url = "https://files.pythonhosted.org/packages/fd/0a/4772fb94cf9b4ad7553c253193afc2e7ea5403f7390976885e5066e3d518/tensorflow-2.9.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:212a4d97fb6dedff257703d7a2ce50b0b8ec23d955938083363aa7bc526918cc"},
+"tensorflow 2.9.2" = [
+    {url = "https://files.pythonhosted.org/packages/0d/f0/1e509035d97a093a7f1f5da3df6aad5cddf798ce4f9cab9056b330207c82/tensorflow-2.9.2-cp38-cp38-win_amd64.whl", hash = "sha256:0c6b53b76b37410a81fb2c60dd870f62424ea38824cc243f31bc83e2154f8e2b"},
+    {url = "https://files.pythonhosted.org/packages/11/15/aee52939622ccb448054b040400bde3c6cfd26e05ce83f79e54eaebc5500/tensorflow-2.9.2-cp310-cp310-win_amd64.whl", hash = "sha256:6ce399fbe01bf6947fefeebb670a3004a89c0a961e423166c95877614df0eb40"},
+    {url = "https://files.pythonhosted.org/packages/21/12/58883264d7aa488cd92374c019985378ccfdbe975527975a8040ce4e5be0/tensorflow-2.9.2-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:cfc56160818c0c33af71dfcfde0c4185326203b675858e65b8abb288d8353165"},
+    {url = "https://files.pythonhosted.org/packages/52/95/632719588d4acf019b7280e834ab4ce3d9ef1ea72db51e0a89d83e7ca7a5/tensorflow-2.9.2-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7dcebf66d8d52d8c5d3fed44ca14a254b9a132168c26aaa860b000c43c2fcdc8"},
+    {url = "https://files.pythonhosted.org/packages/74/c3/c222baff1e49dd9ac42788dfcad0b16ac574a25db0d85a9c64c703bd8fbe/tensorflow-2.9.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:277ff1ea457fb9caa06d801a64fea636f6f5fcd9f9069c3087d4c7b91e608cf1"},
+    {url = "https://files.pythonhosted.org/packages/7b/a4/5bbf78605c6dae8df764108974370f25d08a6df95f2472e8e3f88d7973f0/tensorflow-2.9.2-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:80eaa5be88905b926fb4793d72b74f8acaac03341b10136a479caba4b9db2c94"},
+    {url = "https://files.pythonhosted.org/packages/80/9f/53b0f2c87812244594977854608ee69d1a22b8a63193a3c8e41015827f13/tensorflow-2.9.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4c92ef1c2e8ea5e4a040fcab6ad204f81e5418738470d691bd0f6e46e25c058e"},
+    {url = "https://files.pythonhosted.org/packages/9c/9a/0f6a641141586dad78e48b04df7cc03960298a6738f628b3d9ee0b5009e0/tensorflow-2.9.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:776901fc7015f2514900af10ffaff8d7e97f19fa98e84c34c93e870ad09e0331"},
+    {url = "https://files.pythonhosted.org/packages/a1/61/1511407f5a6670543d8fc3957cb68bd44d0b0cd640b9a09965172de54d4d/tensorflow-2.9.2-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:b090926fc7039e9ed58e1cf11450fd27e05833746e6c371a66247e60bcbc9bbd"},
+    {url = "https://files.pythonhosted.org/packages/ac/52/5ff1222502dbaec945cc810868b663ca62f176c3443d5bd892c1336a0cfd/tensorflow-2.9.2-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:055bc087b881896048e87617285a585d44041c55537fc3748efb0a987aa2147e"},
+    {url = "https://files.pythonhosted.org/packages/c9/db/2c041eace6f57df381d4ef9adb88f8b4877d78f2deb3dfd33deb2abc5915/tensorflow-2.9.2-cp37-cp37m-win_amd64.whl", hash = "sha256:2edb7a9bf50f24e7c85a5629dd44cca5379d8cd9e46935a400bcf64fed08bc11"},
+    {url = "https://files.pythonhosted.org/packages/e0/3f/9f94f8e1f9a0273d9324eee4750bbd09a5c4a221004f5c798c2a780645fa/tensorflow-2.9.2-cp39-cp39-win_amd64.whl", hash = "sha256:9f9e01732bcdd5240434a109ab71e96ea24b38563498e0d027399d16e5412e99"},
 ]
 "tensorflow-addons 0.17.1" = [
     {url = "https://files.pythonhosted.org/packages/04/51/a800d8b54547f7ad27f6c6215475224b206083d6e8f497db33d5c9e30701/tensorflow_addons-0.17.1-cp38-cp38-win_amd64.whl", hash = "sha256:f884097d6fedb3e7d300d28dc633431303a1dbb7a6d91c442d7aef0b36a5c2c7"},
