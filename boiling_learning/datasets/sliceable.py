@@ -2,13 +2,11 @@ from __future__ import annotations
 
 import abc
 import itertools
-import json as _json
 import math
 import random
 from collections import defaultdict
 from fractions import Fraction
 from operator import itemgetter
-from pathlib import Path
 from typing import (
     Any,
     Callable,
@@ -572,8 +570,6 @@ class CachedSliceableDataset(SliceableDataset[_T]):
 
 
 class SliceableDatasetCache(abc.ABC, Generic[_T]):
-    _directory: Path
-
     @abc.abstractmethod
     def store(self, pairs: Dict[int, _T]) -> None:
         pass
@@ -582,24 +578,16 @@ class SliceableDatasetCache(abc.ABC, Generic[_T]):
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_T, ...]:
         pass
 
+    @abc.abstractmethod
+    def current_indices(self) -> FrozenSet[int]:
+        pass
+
     def missing_indices(self, indices: Iterable[int]) -> FrozenSet[int]:
-        return frozenset(indices) - self._current_indices()
+        return frozenset(indices) - self.current_indices()
 
-    def _current_indices(self) -> FrozenSet[int]:
-        if not self._indices_path.is_file():
-            with self._indices_path.open('w') as file:
-                _json.dump([], file)
-            return frozenset()
-
-        with self._indices_path.open('r') as file:
-            return frozenset(_json.load(file))
-
-    @property
-    def _indices_path(self) -> Path:
-        return self._directory / 'indices.json'
-
+    @abc.abstractmethod
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self._directory})'
+        pass
 
 
 SupervisedSliceableDataset = SliceableDataset[Tuple[_X, _Y]]
