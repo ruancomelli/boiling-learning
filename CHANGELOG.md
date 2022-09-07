@@ -1,5 +1,19 @@
 
 
+## v0.34.15 (2022-09-06)
+
+### Feat
+
+- **datasets/cache**: add `MemoryCache` for storing data in memory
+- **model/training**: support direct compilation of `CompiledModel`
+
+### Refactor
+
+- add Sourcery config file and refactor codebase
+- fix flake8 errors
+- remove wildcard imports
+- **scripts/set_condensation_datasets_data**: reduce one indentation level
+
 ## v0.34.14 (2022-08-20)
 
 ### Feat
