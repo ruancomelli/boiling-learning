@@ -14,6 +14,9 @@ from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.pathutils import PathLike, resolve
 
+# Ensure that all databases/tables will now use the smart query cache
+TinyDB.table_class = SmartCacheTable
+
 
 class Allocator(abc.ABC):
     @abc.abstractmethod
@@ -125,9 +128,5 @@ def default_table_allocator(
 ) -> JSONTableAllocator:
     root = resolve(root, dir=True)
     datapath = resolve(root / 'data', dir=True)
-    dbpath = root / 'db.json'
-
-    db = TinyDB(str(dbpath))
-    db.table_class = SmartCacheTable
-
-    return JSONTableAllocator(datapath, db, describer=describer, suffix=suffix)
+    database = TinyDB(str(root / 'db.json'))
+    return JSONTableAllocator(datapath, database, describer=describer, suffix=suffix)
