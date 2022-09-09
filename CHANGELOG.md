@@ -1,5 +1,11 @@
 
 
+## v0.34.16 (2022-09-09)
+
+### Fix
+
+- **management/allocators**: correctly set `SmartCacheTable`s before instantiating `TinyDB` databases
+
 ## v0.34.15 (2022-09-06)
 
 ### Feat
