@@ -273,7 +273,7 @@ dependencies = [
 
 [[package]]
 name = "commitizen"
-version = "2.32.4"
+version = "2.32.5"
 requires_python = ">=3.6.2,<4.0.0"
 summary = "Python commitizen client tool"
 dependencies = [
@@ -2391,9 +2391,9 @@ content_hash = "sha256:b0dd7807f3b550ef6066f8361c0d3f20b5fc7e9dcbd3e864db5fa3e40
     {url = "https://files.pythonhosted.org/packages/2e/6c/b2613688477d1a7477c0b1c7f102cd92e1b0befcacf7125daf200a6dede8/colorful-0.5.4.tar.gz", hash = "sha256:86848ad4e2eda60cd2519d8698945d22f6f6551e23e95f3f14dfbb60997807ea"},
     {url = "https://files.pythonhosted.org/packages/b0/8e/e386e248266952d24d73ed734c2f5513f34d9557032618c8910e605dfaf6/colorful-0.5.4-py2.py3-none-any.whl", hash = "sha256:8d264b52a39aae4c0ba3e2a46afbaec81b0559a99be0d2cfe2aba4cf94531348"},
 ]
-"commitizen 2.32.4" = [
-    {url = "https://files.pythonhosted.org/packages/29/fc/34489a215aa656cba59e62822ada13e6b2aaa12cb5e9c18dd584e2647287/commitizen-2.32.4.tar.gz", hash = "sha256:49966db4fed8840b424198019b83e38cf45c8d8727afcfc04ae8f174bfdb0e73"},
-    {url = "https://files.pythonhosted.org/packages/87/97/befd9fdd8d83c418b4407e5932fac34ac1837e14b19247e8ac23203b0731/commitizen-2.32.4-py3-none-any.whl", hash = "sha256:3113a4d807cea74c2f2e5bcd96c46a111c2ce87114c7411b17688aa0bbe6e738"},
+"commitizen 2.32.5" = [
+    {url = "https://files.pythonhosted.org/packages/0d/81/7430aadbeaf7b51c50cc6033a67b4b7bd3ea4267a3c5f9cbbcef846b2945/commitizen-2.32.5-py3-none-any.whl", hash = "sha256:21c2f8b793e4c37f528d12e20cf51f02eb261e65392a6560b94303e0e2ffe26c"},
+    {url = "https://files.pythonhosted.org/packages/29/f4/971ca171b7a8202f76bba2ebdd1f5a75cd99bf842bc7fda8ca4d6273b603/commitizen-2.32.5.tar.gz", hash = "sha256:051ed762b94b97897921322aa5cd1848211aa974bd277c1c9cee852675c90f42"},
 ]
 "coverage 6.4.4" = [
     {url = "https://files.pythonhosted.org/packages/03/21/c55f5529e9bbcf3c029790ca3cea3b18bae3dd897f7461b5f2165053ee35/coverage-6.4.4-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:9c7b9b498eb0c0d48b4c2abc0e10c2d78912203f972e0e63e3c9dc21f15abdaa"},
@@ -3934,6 +3934,7 @@ content_hash = "sha256:b0dd7807f3b550ef6066f8361c0d3f20b5fc7e9dcbd3e864db5fa3e40
     {url = "https://files.pythonhosted.org/packages/a7/2c/9ff05957a40dc87889a584457a6c700e77ad3f623e4f5e33a29dfcc2ea59/pyzmq-23.2.1-cp311-cp311-musllinux_1_1_i686.whl", hash = "sha256:794871988c34727c7f79bdfe2546e6854ae1fa2e1feb382784f23a9c6c63ecb3"},
     {url = "https://files.pythonhosted.org/packages/a7/bb/54986ab979a4f964c6b76817b6fdd7403a9cf76f368a0c67ec6bb65a783d/pyzmq-23.2.1-cp311-cp311-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:39dd252b683816935702825e5bf775df16090619ced9bb4ba68c2d0b6f0c9b18"},
     {url = "https://files.pythonhosted.org/packages/a8/d9/8da216639eff155dc0549cce52aed765c6667dba56a38a38b81c3e0e4adb/pyzmq-23.2.1-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:67975a9e1237b9ccc78f457bef17691bbdd2055a9d26e81ee914ba376846d0ce"},
+    {url = "https://files.pythonhosted.org/packages/ab/40/5bb0dc2e758d4bd6a2b18b000650e27680a1804af8488575521abfea0188/pyzmq-23.2.1-cp38-cp38-macosx_10_15_universal2.whl", hash = "sha256:0ff6294e001129a9f22dcbfba186165c7e6f573c46de2704d76f873c94c65416"},
     {url = "https://files.pythonhosted.org/packages/ae/8e/1d806b8f90b2ba994532b7050bab4ca56eb537696f7d3e2ea16c0c37dc68/pyzmq-23.2.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:9a39ddb0431a68954bd318b923230fa5b649c9c62b0e8340388820c5f1b15bd2"},
     {url = "https://files.pythonhosted.org/packages/b2/04/f4b318dd471df5269e0947dd0f932c8c6ba492af42a78f48a2a224e99a6d/pyzmq-23.2.1-cp310-cp310-musllinux_1_1_aarch64.whl", hash = "sha256:71b32a1e827bdcbf73750e60370d3b07685816ff3d8695f450f0f8c3226503f8"},
     {url = "https://files.pythonhosted.org/packages/b4/e3/081b1a02af85b60e19191ea5d41b422ea7a0126043b7c54b5f3c2ce8e065/pyzmq-23.2.1-cp311-cp311-macosx_10_15_universal2.whl", hash = "sha256:e753eee6d3b93c5354e8ba0a1d62956ee49355f0a36e00570823ef64e66183f5"},
