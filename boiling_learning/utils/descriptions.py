@@ -87,8 +87,8 @@ def _describe_dataclass(
 
 
 @describe.instance(Fraction)
-def _describe_fraction(instance: Fraction) -> str:
-    return str(instance)
+def _describe_fraction(instance: Fraction) -> Tuple[int, int]:
+    return instance.numerator, instance.denominator
 
 
 @describe.instance(timedelta)
