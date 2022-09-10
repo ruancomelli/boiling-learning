@@ -1,5 +1,15 @@
 
 
+## v0.34.17 (2022-09-10)
+
+### Feat
+
+- **preprocessing/transformers**: implement fluid pipelining of transformers
+
+### Refactor
+
+- simplify description and JSON-encoding of `Fraction`s
+
 ## v0.34.16 (2022-09-09)
 
 ### Fix
