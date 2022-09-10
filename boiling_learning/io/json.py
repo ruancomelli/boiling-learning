@@ -292,14 +292,13 @@ def _encode_dataclass(
 
 
 @encode.instance(Fraction)
-def _encode_fraction(instance: Fraction) -> List[int]:
-    return serialize((instance.numerator, instance.denominator))
+def _encode_fraction(instance: Fraction) -> str:
+    return str(instance)
 
 
 @decode.dispatch(Fraction)
-def _decode_fraction(instance: List[int]) -> Fraction:
-    numerator, denominator = instance
-    return Fraction(deserialize(numerator), deserialize(denominator))
+def _decode_fraction(instance: str) -> Fraction:
+    return Fraction(instance)
 
 
 @encode.instance(timedelta)
