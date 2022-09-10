@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, Tuple, TypeVar
 
 from typing_extensions import Protocol
 
 from boiling_learning.io import json
 from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import Pack
+from boiling_learning.utils.lazy import Lazy
 
 _X_contra = TypeVar('_X_contra', contravariant=True)
 _Y_co = TypeVar('_Y_co', covariant=True)
@@ -30,6 +31,29 @@ class Transformer(Generic[_X, _Y]):
         kwargs = ', '.join(f'{key}={value}' for key, value in self.pack.kwargs.items())
         arguments = f'{args}, {kwargs}' if args and kwargs else args or kwargs
         return f'<{self.__class__.__name__} ({arguments})>'
+
+    def __ror__(self, arg: _X) -> _Y:
+        return _Transformed(arg, self)
+
+
+class _Transformed(Lazy[_Y]):
+    def __init__(self, arg: _X, transformer: Transformer[_X, _Y]) -> None:
+        if isinstance(arg, _Transformed):
+            super().__init__(lambda: transformer(arg()))
+        else:
+            super().__init__(lambda: transformer(arg))
+
+        self._arg = arg
+        self._transformer = transformer
+
+    def __describe__(self) -> json.JSONDataType:
+        return describe(self._pipe())
+
+    def _pipe(self) -> Tuple[Any, ...]:
+        if isinstance(self._arg, _Transformed):
+            return (*self._arg._pipe(), self._transformer)  # pylint: disable=protected-access
+        else:
+            return (self._arg, self._transformer)
 
 
 # the concept of mathematical operator as a function mapping a set to itself
