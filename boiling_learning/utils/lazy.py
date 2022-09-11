@@ -5,9 +5,10 @@ from typing import Callable, Generic, TypeVar
 
 from typing_extensions import ParamSpec
 
-__all__ = ('Lazy', 'LazyCallable')
+__all__ = ('Lazy', 'LazyCallable', 'LazyTransform')
 
 _T = TypeVar('_T')
+_S = TypeVar('_S')
 _P = ParamSpec('_P')
 
 
@@ -29,3 +30,13 @@ class LazyCallable(Generic[_P, _T]):
 
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> Lazy[_T]:
         return Lazy(partial(self._call, *args, **kwargs))
+
+
+class LazyTransform(Lazy[_S]):
+    def __init__(self, arg: Lazy[_T], transform: Callable[[_T], _S]) -> None:
+        self._arg = arg
+        self._transform = transform
+        super().__init__(self._eval)
+
+    def _eval(self) -> _S:
+        return self._transform(self._arg())
