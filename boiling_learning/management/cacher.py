@@ -68,7 +68,7 @@ class CachedFunction(Generic[_P, _R]):
 
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         path = self.allocate(*args, **kwargs)
-        creator: Callable[[], _R] = Pack(args, kwargs).partial(self.function)
+        creator: Callable[[], _R] = self.function @ Pack(args, kwargs)
 
         return self.provide(creator, path)
 

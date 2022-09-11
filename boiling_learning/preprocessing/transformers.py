@@ -17,7 +17,7 @@ _Y = TypeVar('_Y')
 
 class Transformer(Generic[_X, _Y]):
     def __init__(self, f: CallableWithFirst[_X, _Y], pack: Pack[Any, Any] = Pack()) -> None:
-        self._call: Callable[[_X], _Y] = pack.rpartial(f)
+        self._call: Callable[[_X], _Y] = f @ pack
         self.pack: Pack[Any, Any] = pack
 
     def __call__(self, arg: _X) -> _Y:
