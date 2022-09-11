@@ -157,13 +157,9 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
         return MapSliceableDataset(__map_func, self)
 
     def shuffle(self) -> SliceableDataset[_T]:
-        # using `random.sample` as per the docs:
+        # using `random.sample` indirectly as per the docs:
         # https://docs.python.org/3/library/random.html#random.shuffle
-
-        length = len(self)
-        indices = random.sample(range(length), k=length)
-
-        return self[indices]
+        return self.sample(len(self))
 
     def take(self, count: Union[int, Fraction]) -> SliceableDataset[_T]:
         if isinstance(count, Fraction):
@@ -178,6 +174,16 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
             count = int(count * total)
 
         return self[count:]
+
+    def sample(self, count: Union[int, Fraction]) -> SliceableDataset[_T]:
+        total = len(self)
+
+        if isinstance(count, Fraction):
+            count = int(count * total)
+
+        indices = random.sample(range(total), count)
+
+        return self[indices]
 
     @overload
     def split(
