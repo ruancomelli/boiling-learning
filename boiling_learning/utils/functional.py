@@ -88,11 +88,6 @@ class Pack(Generic[_T, _S]):
     def __describe__(self) -> Tuple[Tuple[_T], KwargsType[_S]]:
         return describe(self.pair())
 
-    @classmethod
-    def pack(*cls_n_args: _T, **kwargs: _S) -> Pack[_T, _S]:
-        cls, *args = cls_n_args
-        return cls(args, kwargs)
-
     def feed(self, f: Callable[..., _U]) -> _U:
         return f(*self.args, **self.kwargs)
 
