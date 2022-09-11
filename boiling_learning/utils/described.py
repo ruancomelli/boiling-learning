@@ -10,8 +10,6 @@ _Any = TypeVar('_Any')
 _AnyT = TypeVar('_AnyT')
 _AnyS = TypeVar('_AnyS')
 _Description = TypeVar('_Description')
-
-
 _DescribedConstructedObject = Tuple[str, Pack[_AnyT, _AnyS]]
 
 

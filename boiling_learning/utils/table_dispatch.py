@@ -1,7 +1,6 @@
 from typing import Any, Callable, Dict, Optional, TypeVar
 
 _T = TypeVar('_T')
-Predicate = Callable[[_T], bool]
 _Callable = TypeVar('_Callable', bound=Callable[..., Any])
 
 
