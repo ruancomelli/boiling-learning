@@ -8,7 +8,6 @@ from typing import (
     Iterable,
     Iterator,
     Mapping,
-    Optional,
     Tuple,
     TypeVar,
     Union,
@@ -125,52 +124,6 @@ class Pack(Generic[_T, _S]):
     def __rmatmul__(self, other: Any) -> Any:
         return self.rpartial(other) if callable(other) else NotImplemented
 
-    def omit(
-        self,
-        loc: Union[int, str, Iterable[Union[int, str]]] = (),  # TODO: unify everything here
-        pred: Optional[Callable[[_T], bool]] = None,
-    ) -> Pack[_T, _S]:
-        '''
-        p = P(1, 2, None, 4, None, 6, a='a', b='b', c=None, d='d', e=None, f='f')
-        p2 = p.omit((0, 2, 'd', 'e'))
-        print(p2) # prints Pack(2, 4, None, 6, a=a, b=b, c=None, f=f)
-        p3 = p.omit((0, 2, 'd', 'e'), lambda x: x is None)
-        print(p3) # prints Pack(1, 2, 4, None, 6, a=a, b=b, c=None, d=d, f=f)
-        '''
-        if isinstance(loc, int):
-            pos = frozenset({loc})
-            keys = ()
-        elif isinstance(loc, str):
-            pos = frozenset()
-            keys = (loc,)
-        else:
-            pos = frozenset(loc_ for loc_ in loc if isinstance(loc_, int))
-            keys = tuple(loc_ for loc_ in loc if isinstance(loc_, str))
-
-        enumerated_args = tuple(enumerate(self.args))
-        to_remove = funcy.select_keys(pos, enumerated_args)
-        if pred is not None:
-            to_remove = funcy.select_values(pred, to_remove)
-        to_remove = frozenset(funcy.walk(0, to_remove))
-        args = tuple(funcy.select_keys(lambda idx: idx not in to_remove, enumerated_args))
-        args = funcy.walk(1, args)
-
-        to_remove = funcy.project(self.kwargs, keys)
-        if pred is not None:
-            to_remove = funcy.select_values(pred, to_remove)
-        kwargs = funcy.omit(self.kwargs, to_remove.keys())
-
-        return Pack(args=args, kwargs=kwargs)
-
-    def _copy(self, new_args, new_kwargs, right: bool = False) -> Pack:
-        n_new_args = len(new_args)
-        if right:
-            args = self.args[:-n_new_args] + new_args
-        else:
-            args = new_args + self.args[n_new_args:]
-        kwargs = frozendict({**self.kwargs, **new_kwargs})
-        return Pack(args, kwargs)
-
     def copy(self, *new_args, **new_kwargs) -> Pack:
         '''
         p1 = P(1, 'a', 'Hi', x=0, y='hello')
@@ -187,17 +140,14 @@ class Pack(Generic[_T, _S]):
         '''
         return self._copy(new_args, new_kwargs, right=True)
 
-    def _apply(self, fargs, fkwargs, right: bool = False) -> Pack:
-        n_fargs = len(fargs)
-
-        args_to_transform = self.args[-n_fargs:] if right else self.args[:n_fargs]
-
-        new_args = tuple(
-            f(arg) if f is not None else arg for f, arg in zip(fargs, args_to_transform)
-        )
-        new_kwargs = {k: f(self[k]) for k, f in fkwargs.items()}
-
-        return self._copy(new_args, new_kwargs, right=right)
+    def _copy(self, new_args, new_kwargs, right: bool = False) -> Pack:
+        n_new_args = len(new_args)
+        if right:
+            args = self.args[:-n_new_args] + new_args
+        else:
+            args = new_args + self.args[n_new_args:]
+        kwargs = frozendict({**self.kwargs, **new_kwargs})
+        return Pack(args, kwargs)
 
     def apply(self, *fargs, **fkwargs) -> Pack:
         '''
@@ -214,6 +164,18 @@ class Pack(Generic[_T, _S]):
         print(p2) # prints Pack(0, b, hi, x=3, y=HELLO, z=byello)
         '''
         return self._apply(fargs, fkwargs, right=True)
+
+    def _apply(self, fargs, fkwargs, right: bool = False) -> Pack:
+        n_fargs = len(fargs)
+
+        args_to_transform = self.args[-n_fargs:] if right else self.args[:n_fargs]
+
+        new_args = tuple(
+            f(arg) if f is not None else arg for f, arg in zip(fargs, args_to_transform)
+        )
+        new_kwargs = {k: f(self[k]) for k, f in fkwargs.items()}
+
+        return self._copy(new_args, new_kwargs, right=right)
 
 
 class Args(Pack[_T, _S], Generic[_T, _S]):
