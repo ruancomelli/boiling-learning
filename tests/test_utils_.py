@@ -47,9 +47,9 @@ class TestLazy:
             history.append(0)  # simulate a side-effect
             return 0
 
-        assert history == []
+        assert not history
         lazy_number = Lazy(creator)
-        assert history == []
+        assert not history
         assert lazy_number() == 0
         assert history == [0]
 
@@ -66,10 +66,10 @@ class TestLazy:
 
         lazy_add = LazyCallable(add)
 
-        assert history == []
+        assert not history
 
         result = lazy_add(1, 2)
-        assert history == []
+        assert not history
 
         assert result() == 3
         assert history == [3]
