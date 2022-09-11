@@ -186,10 +186,3 @@ class Kwargs(Pack[_T, _S], Generic[_T, _S]):
 class P(Pack[_T, _S], Generic[_T, _S]):
     def __init__(self, *args: _T, cls: Any = Sentinel.INSTANCE, **kwargs: _S) -> None:
         super().__init__(args, kwargs)
-
-
-def map_values(f: Callable[[_T], _S], iterable: Iterable[_T]) -> Iterable[_S]:
-    if hasattr(iterable, 'items'):
-        return funcy.walk_values(f, iterable)
-    else:
-        return funcy.walk(f, iterable)

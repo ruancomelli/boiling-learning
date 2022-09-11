@@ -4,10 +4,10 @@ import math
 from functools import partial
 from typing import Callable, Hashable, List, Mapping, Optional, Tuple, TypeVar, Union
 
+import funcy
 import tensorflow as tf
 
 from boiling_learning.datasets.sliceable import SliceableDataset
-from boiling_learning.utils.functional import map_values
 from boiling_learning.utils.mathutils import round_to_multiple
 from boiling_learning.utils.pathutils import PathLike, resolve
 
@@ -122,4 +122,5 @@ def auto_spec(elem: NestedTensorLike) -> NestedTypeSpec:
     try:
         return tf.type_spec_from_value(elem)
     except TypeError:
-        return map_values(auto_spec, elem)
+        walker = funcy.walk_values if hasattr(elem, 'items') else funcy.walk  # type: ignore
+        return walker(auto_spec, elem)
