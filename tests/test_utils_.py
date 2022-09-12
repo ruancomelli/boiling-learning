@@ -24,6 +24,11 @@ class Test_utils_collections:
         keyed_set.discard('hello')
         assert 'hello' not in keyed_set
 
+        assert keyed_set.get('BYE') == 'bye'
+        assert keyed_set.get('BYE', 'wololoo') == 'bye'
+        assert keyed_set.get('WOLOLOOO') is None
+        assert keyed_set.get('WOLOLOOO', 'wololoo') == 'wololoo'
+
 
 class Test_geometry:
     def test_Cylinder(self) -> None:

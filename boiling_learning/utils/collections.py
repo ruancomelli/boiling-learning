@@ -3,8 +3,8 @@ from __future__ import annotations
 from contextlib import suppress
 from itertools import chain
 from typing import (
+    Any,
     Callable,
-    Dict,
     Generic,
     Hashable,
     ItemsView,
@@ -20,14 +20,15 @@ from typing import (
 )
 
 _Any = TypeVar('_Any')
+_OptionalAny = TypeVar('_OptionalAny', None, Any)
 _Key = TypeVar('_Key', bound=Hashable)
 _Value = TypeVar('_Value')
 
 
 class KeyedSet(MutableSet[_Value], Generic[_Key, _Value]):
     def __init__(self, key: Callable[[_Value], _Key], iterable: Iterable[_Value] = ()) -> None:
-        self.__key: Callable[[_Value], _Key] = key
-        self.__data: Dict[_Key, _Value] = {self.__key(element): element for element in iterable}
+        self.__key = key
+        self.__data = {self.__key(element): element for element in iterable}
 
     # ------------------------------------------------------------------------
     # Set-like operations
@@ -35,7 +36,7 @@ class KeyedSet(MutableSet[_Value], Generic[_Key, _Value]):
     def __len__(self) -> int:
         return len(self.__data)
 
-    def __contains__(self, element: _Value) -> bool:  # type: ignore
+    def __contains__(self, element: object) -> bool:
         return element in self.values()
 
     def __iter__(self) -> Iterator[_Value]:
@@ -55,13 +56,13 @@ class KeyedSet(MutableSet[_Value], Generic[_Key, _Value]):
                 self.remove(value)
 
     def isdisjoint(self, other: Iterable[_Value]) -> bool:
-        return frozenset(self.keys()).isdisjoint(KeyedSet(self.__key, other).keys())
+        return frozenset(self.keys()).isdisjoint(map(self.__key, other))
 
     def issubset(self, other: Iterable[_Value]) -> bool:
-        return frozenset(self.keys()).issubset(KeyedSet(self.__key, other).keys())
+        return frozenset(self.keys()).issubset(map(self.__key, other))
 
     def issuperset(self, other: Iterable[_Value]) -> bool:
-        return frozenset(self.keys()).issuperset(KeyedSet(self.__key, other).keys())
+        return frozenset(self.keys()).issuperset(map(self.__key, other))
 
     def union(self, *others: Iterable[_Value]) -> KeyedSet[_Key, _Value]:
         return KeyedSet(self.__key, chain(self, *others))
@@ -104,6 +105,4 @@ class KeyedSet(MutableSet[_Value], Generic[_Key, _Value]):
         ...
 
     def get(self, key: _Key, default: Optional[_Any] = None) -> Union[_Value, Optional[_Any]]:
-        with suppress(KeyError):
-            return self[key]
-        return default
+        return self.__data.get(key, default)
