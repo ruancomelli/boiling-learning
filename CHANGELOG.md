@@ -1,5 +1,20 @@
 
 
+## v0.34.20 (2022-09-12)
+
+### Feat
+
+- **utils/lazy**: add `LazyDescribed` utility class
+
+### Fix
+
+- **utils/lazy**: make lazy objects describable
+
+### Refactor
+
+- **utils/functional**: simplify `Pack.__getitem__`
+- **utils/functional**: simplify `Pack.__str__`
+
 ## v0.34.19 (2022-09-12)
 
 ### Fix
