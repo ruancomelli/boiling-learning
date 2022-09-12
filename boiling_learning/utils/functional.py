@@ -56,16 +56,10 @@ class Pack(Generic[_T, _S]):
         )
 
     def __hash__(self) -> int:
-        return hash((self.args, self.kwargs))
+        return hash(self.pair())
 
     def __getitem__(self, loc: Union[int, str]) -> Union[_T, _S]:
-        if isinstance(loc, int):
-            return self.args[loc]
-
-        if isinstance(loc, str):
-            return self.kwargs[loc]
-
-        raise ValueError(f'*Pack* expects an *int* index or *str* key, but got a {type(loc)}')
+        return self.args[loc] if isinstance(loc, int) else self.kwargs[loc]
 
     def __iter__(self) -> Iterator[Union[Tuple[_T], KwargsType[_S]]]:
         return iter(self.pair())
@@ -166,16 +160,6 @@ class Pack(Generic[_T, _S]):
         new_kwargs = {k: f(self[k]) for k, f in fkwargs.items()}
 
         return self._copy(new_args, new_kwargs, right=right)
-
-
-class Args(Pack[_T, _S], Generic[_T, _S]):
-    def __init__(self, args: ArgsType[_T] = ()) -> None:
-        super().__init__(args, {})
-
-
-class Kwargs(Pack[_T, _S], Generic[_T, _S]):
-    def __init__(self, kwargs: KwargsType[_S] = frozendict()) -> None:
-        super().__init__((), kwargs)
 
 
 class P(Pack[_T, _S], Generic[_T, _S]):
