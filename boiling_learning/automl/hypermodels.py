@@ -6,10 +6,10 @@ import keras_tuner as kt
 import tensorflow as tf
 
 from boiling_learning.automl.blocks import ImageNormalizationBlock, LayersBlock
+from boiling_learning.describe.described import Described
 from boiling_learning.io import json
 from boiling_learning.management.allocators import Allocator
 from boiling_learning.model.model import anonymize_model_json
-from boiling_learning.utils.described import Described
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 

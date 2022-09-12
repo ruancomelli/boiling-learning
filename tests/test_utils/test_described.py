@@ -1,5 +1,5 @@
+from boiling_learning.describe.described import Described
 from boiling_learning.describe.describers import describe
-from boiling_learning.utils.described import Described
 
 
 def test_described_list() -> None:

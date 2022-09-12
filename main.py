@@ -38,6 +38,7 @@ from boiling_learning.datasets.sliceable import (
     SupervisedSliceableDataset,
     concatenate,
 )
+from boiling_learning.describe.described import Described
 from boiling_learning.io import json
 from boiling_learning.io.storage import load, save
 from boiling_learning.management.allocators import default_table_allocator
@@ -74,7 +75,6 @@ from boiling_learning.scripts import (
 )
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist
 from boiling_learning.utils.dataclasses import dataclass
-from boiling_learning.utils.described import Described
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.lazy import Lazy, LazyCallable
 from boiling_learning.utils.pathutils import resolve
