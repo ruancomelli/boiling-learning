@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from functools import lru_cache, partial
-from typing import Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, Tuple, TypeVar
 
 from typing_extensions import ParamSpec
+
+from boiling_learning.describe.describers import describe
+from boiling_learning.io import json
 
 __all__ = ('Lazy', 'LazyCallable', 'LazyTransform')
 
@@ -23,6 +26,9 @@ class Lazy(Generic[_T]):
     def from_value(cls, value: _T) -> Lazy[_T]:
         return Lazy(lambda: value)
 
+    def __describe__(self) -> json.JSONDataType:
+        return describe(self())
+
 
 class LazyCallable(Generic[_P, _T]):
     def __init__(self, call: Callable[_P, _T]) -> None:
@@ -40,3 +46,13 @@ class LazyTransform(Lazy[_S]):
 
     def _eval(self) -> _S:
         return self._transform(self._arg())
+
+    def __describe__(self) -> json.JSONDataType:
+        return describe(self._pipeline())
+
+    def _pipeline(self) -> Tuple[Any, ...]:
+        return (
+            (*self._arg._pipeline(), self._transform)  # pylint: disable=protected-access
+            if isinstance(self._arg, LazyTransform)
+            else (self._arg, self._transform)
+        )

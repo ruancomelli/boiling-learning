@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from itertools import chain
-from typing import Any, Callable, Generic, Tuple, TypeVar
+from typing import Any, Callable, Generic, TypeVar
 
 from typing_extensions import Protocol
 
 from boiling_learning.describe.describers import describe
 from boiling_learning.io import json
 from boiling_learning.utils.functional import Pack
-from boiling_learning.utils.lazy import LazyTransform
+from boiling_learning.utils.lazy import Lazy, LazyTransform
 
 _X_contra = TypeVar('_X_contra', contravariant=True)
 _Y_co = TypeVar('_Y_co', covariant=True)
@@ -34,20 +34,8 @@ class Transformer(Generic[_X, _Y]):
         )
         return f'<{self.__class__.__name__} ({", ".join(arguments)})>'
 
-    def __ror__(self, arg: _X) -> _DescribedLazyTransform[_Y]:
-        return _DescribedLazyTransform(arg, self)
-
-
-class _DescribedLazyTransform(LazyTransform[_Y]):
-    def __describe__(self) -> json.JSONDataType:
-        return describe(self.pipeline())
-
-    def pipeline(self) -> Tuple[Any, ...]:
-        return (
-            (*self._arg.pipeline(), self._transform)
-            if isinstance(self._arg, _DescribedLazyTransform)
-            else (self._arg, self._transform)
-        )
+    def __ror__(self, arg: Lazy[_X]) -> LazyTransform[_Y]:
+        return LazyTransform(arg, self)
 
 
 # the concept of mathematical operator as a function mapping a set to itself
