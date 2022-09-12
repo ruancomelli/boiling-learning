@@ -16,8 +16,9 @@ class Test_utils_collections:
         assert len(keyed_set) == 3
         assert keyed_set['BYE'] == 'bye'
         assert 'hello' in keyed_set
-        assert 'byello' not in keyed_set
+        assert 'HELLO' not in keyed_set
 
+        assert 'byello' not in keyed_set
         keyed_set.add('byello')
         assert 'byello' in keyed_set
 
