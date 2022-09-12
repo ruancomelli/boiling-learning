@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
+from itertools import chain
 from typing import (
     Any,
     Callable,
@@ -73,17 +74,11 @@ class Pack(Generic[_T, _S]):
         return f'Pack(args={self.args}, kwargs={self.kwargs})'
 
     def __str__(self) -> str:
-        args2str = ', '.join(map(str, self.args))
-        kwargs2str = ', '.join(f'{key}={value}' for key, value in self.kwargs.items())
-        return ''.join(
-            (
-                'P(',
-                args2str,
-                ', ' if args2str and kwargs2str else '',
-                kwargs2str,
-                ')',
-            )
+        arguments = chain(
+            map(str, self.args),
+            (f'{key}={value}' for key, value in self.kwargs.items()),
         )
+        return f'P({", ".join(arguments)})'
 
     def __describe__(self) -> Tuple[Tuple[_T], KwargsType[_S]]:
         return describe(self.pair())
