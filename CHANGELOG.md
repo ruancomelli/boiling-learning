@@ -1,5 +1,30 @@
 
 
+## v0.34.19 (2022-09-12)
+
+### Fix
+
+- **preprocessing/transformers**: fix type annotation for `Transformer.__ror__`
+
+### Refactor
+
+- **preprocessing/transformers**: simplify string conversion
+- **utils/collections**: simplify `KeyedSet` methods
+- move `utils/described.py` to `describe/described.py`
+- move `utils/descriptions.py` to `describe/describers.py`
+- re-use matmul operator with `Pack`s
+- **utils/functional**: remove barely used method `map_values`
+- **utils/functional**: remove unused constructor `Pack.pack`
+- **utils/functional**: remove unused method `Pack.omit`
+- **utils/table_dispatch**: remove unused typevar `Predicate`
+- **utils/lazy**: improve type annotations
+
+### Feat
+
+- add new subpackage `describe`
+- **datasets/sliceable**: add `sample` method
+- add lazy transformations
+
 ## v0.34.18 (2022-09-10)
 
 ## v0.34.17 (2022-09-10)
