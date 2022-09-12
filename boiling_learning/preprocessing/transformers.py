@@ -34,7 +34,7 @@ class Transformer(Generic[_X, _Y]):
         )
         return f'<{self.__class__.__name__} ({", ".join(arguments)})>'
 
-    def __ror__(self, arg: _X) -> _Y:
+    def __ror__(self, arg: _X) -> _DescribedLazyTransform[_Y]:
         return _DescribedLazyTransform(arg, self)
 
 
