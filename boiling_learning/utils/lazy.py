@@ -30,6 +30,15 @@ class Lazy(Generic[_T]):
         return describe(self())
 
 
+class LazyDescribed(Lazy[_T]):
+    def __init__(self, value: Lazy[_T], description: json.JSONDataType) -> None:
+        super().__init__(value)
+        self._description = description
+
+    def __describe__(self) -> json.JSONDataType:
+        return self._description
+
+
 class LazyCallable(Generic[_P, _T]):
     def __init__(self, call: Callable[_P, _T]) -> None:
         self._call = call
