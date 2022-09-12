@@ -8,10 +8,10 @@ import modin.pandas as pd
 from loguru import logger
 
 from boiling_learning.datasets.sliceable import SliceableDataset
+from boiling_learning.describe.describers import describe
 from boiling_learning.io import json
 from boiling_learning.preprocessing.video import Video, VideoFrame, convert_video
 from boiling_learning.utils.dataclasses import dataclass, field
-from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 

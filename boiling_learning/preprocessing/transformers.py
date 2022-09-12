@@ -4,8 +4,8 @@ from typing import Any, Callable, Generic, Tuple, TypeVar
 
 from typing_extensions import Protocol
 
+from boiling_learning.describe.describers import describe
 from boiling_learning.io import json
-from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.lazy import LazyTransform
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Generic, List, Tuple, Type, TypeVar
 
-from boiling_learning.utils.descriptions import describe
+from boiling_learning.describe.describers import describe
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.sentinels import EMPTY, Emptiable
 

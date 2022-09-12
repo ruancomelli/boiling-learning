@@ -9,8 +9,8 @@ from tinydb.table import Table
 from tinydb_smartcache import SmartCacheTable
 from typing_extensions import final
 
+from boiling_learning.describe.describers import describe
 from boiling_learning.io import json
-from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.pathutils import PathLike, resolve
 

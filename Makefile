@@ -1,10 +1,9 @@
 .PROJECT = boiling_learning
 .TESTS_FOLDER = tests
-.STUBS_FOLDER = typings
 
-.UNIMPORT = $(shell pdm run unimport --remove --gitignore --ignore-init --include-star-import $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
-.BLACK = $(shell pdm run black $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
-.ISORT = $(shell pdm run isort $(.PROJECT) $(.STUBS_FOLDER) $(.TESTS_FOLDER))
+.UNIMPORT = $(shell pdm run unimport --remove --gitignore --ignore-init --include-star-import $(.PROJECT) $(.TESTS_FOLDER))
+.BLACK = $(shell pdm run black $(.PROJECT) $(.TESTS_FOLDER))
+.ISORT = $(shell pdm run isort $(.PROJECT) $(.TESTS_FOLDER))
 .FORMAT = $(foreach command,.UNIMPORT .BLACK .ISORT,$(call $(command)))
 
 .READD = $(shell git update-index --again)

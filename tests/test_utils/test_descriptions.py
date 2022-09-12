@@ -1,4 +1,4 @@
-from boiling_learning.utils.descriptions import describe
+from boiling_learning.describe.describers import describe
 from boiling_learning.utils.functional import P
 
 

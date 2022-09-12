@@ -5,11 +5,11 @@ from typing import List
 import pytest
 from tinydb import TinyDB
 
+from boiling_learning.describe.describers import describe
 from boiling_learning.io import json
 from boiling_learning.management.allocators import JSONTableAllocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.management.persister import FilePersister, FileProvider, Persister, Provider
-from boiling_learning.utils.descriptions import describe
 from boiling_learning.utils.functional import P
 
 
