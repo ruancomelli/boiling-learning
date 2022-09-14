@@ -39,7 +39,7 @@ def set_case(
     for ev in case:
         try:
             logger.debug(f'Trying to load data for {ev.name}')
-            ev.load_df(overwrite=False, missing_ok=False, inplace=True)
+            ev.load_df(overwrite=False, inplace=True)
             logger.debug(f'Succesfully loaded data for {ev.name}')
         except FileNotFoundError:
             logger.debug(f'Failed to load data for {ev.name}')

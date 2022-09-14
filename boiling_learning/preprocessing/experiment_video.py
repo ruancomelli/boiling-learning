@@ -278,7 +278,6 @@ class ExperimentVideo:
         path: Optional[PathLike] = None,
         columns: Optional[Iterable[str]] = None,
         overwrite: bool = False,
-        missing_ok: bool = False,
         inplace: bool = True,
     ) -> Optional[pd.DataFrame]:
         if path is not None:
@@ -292,9 +291,6 @@ class ExperimentVideo:
 
         if not overwrite and self.df is not None:
             return self.df
-
-        if missing_ok and not self.df_path.is_file():
-            return None
 
         df = pd.read_csv(
             self.df_path,
