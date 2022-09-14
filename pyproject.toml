@@ -82,7 +82,7 @@ lint = [
     "unimport>=0.11.1",
     "pylint>=2.14.5",
     "vulture>=2.5",
-    "sourcery-cli>=0.12.6",
+    "sourcery-cli>=0.12.8",
     "flake8==4.0.1",
 ]
 ci = [
