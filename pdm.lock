@@ -273,7 +273,7 @@ dependencies = [
 
 [[package]]
 name = "commitizen"
-version = "2.33.0"
+version = "2.33.1"
 requires_python = ">=3.6.2,<4.0.0"
 summary = "Python commitizen client tool"
 dependencies = [
@@ -2391,9 +2391,9 @@ content_hash = "sha256:b0dd7807f3b550ef6066f8361c0d3f20b5fc7e9dcbd3e864db5fa3e40
     {url = "https://files.pythonhosted.org/packages/2e/6c/b2613688477d1a7477c0b1c7f102cd92e1b0befcacf7125daf200a6dede8/colorful-0.5.4.tar.gz", hash = "sha256:86848ad4e2eda60cd2519d8698945d22f6f6551e23e95f3f14dfbb60997807ea"},
     {url = "https://files.pythonhosted.org/packages/b0/8e/e386e248266952d24d73ed734c2f5513f34d9557032618c8910e605dfaf6/colorful-0.5.4-py2.py3-none-any.whl", hash = "sha256:8d264b52a39aae4c0ba3e2a46afbaec81b0559a99be0d2cfe2aba4cf94531348"},
 ]
-"commitizen 2.33.0" = [
-    {url = "https://files.pythonhosted.org/packages/87/41/5a2a3a43be51aa640f5295fe372e24fa03db80641dbf23f308395f31c12d/commitizen-2.33.0.tar.gz", hash = "sha256:dbbef5518402343fd2f1ac689f5754f85f94a4bf59b06af663d04ca113e66d92"},
-    {url = "https://files.pythonhosted.org/packages/ca/c5/4080037eae0be83f2d9e8c65577e3bf86ab52d9f732a8b7cf29ff3c72e4c/commitizen-2.33.0-py3-none-any.whl", hash = "sha256:cddc897537d523aaef583ab3d1b694a50d8178790c899b773e5013270deb7a2c"},
+"commitizen 2.33.1" = [
+    {url = "https://files.pythonhosted.org/packages/b2/43/dc76db201d4aad6ca3f8d7614cc61bc469af25f394f017c4f810a323e010/commitizen-2.33.1-py3-none-any.whl", hash = "sha256:d2b61023954446ae6829378422e68f46f82b6d52689b3dc3942c193c3d31bee5"},
+    {url = "https://files.pythonhosted.org/packages/c5/5b/2600ed2ad6da430a08c49343d71ee42a29302507805f634881150ffee573/commitizen-2.33.1.tar.gz", hash = "sha256:b4c032516bd4afc446af5a15bb8a1d5ac1011af4314e3f3ffc5f0fe0363249e4"},
 ]
 "coverage 6.4.4" = [
     {url = "https://files.pythonhosted.org/packages/03/21/c55f5529e9bbcf3c029790ca3cea3b18bae3dd897f7461b5f2165053ee35/coverage-6.4.4-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:9c7b9b498eb0c0d48b4c2abc0e10c2d78912203f972e0e63e3c9dc21f15abdaa"},
