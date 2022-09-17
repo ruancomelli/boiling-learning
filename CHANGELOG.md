@@ -1,5 +1,15 @@
 
 
+## v0.34.21 (2022-09-17)
+
+### Fix
+
+- **automl/tuning**: ensure that the valset is batched when evaluating
+
+### Refactor
+
+- **preprocessing/experiment_video**: remove unnecessary parameter `missing_ok` from `load_df`
+
 ## v0.34.20 (2022-09-12)
 
 ### Feat
