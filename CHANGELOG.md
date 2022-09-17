@@ -1,5 +1,11 @@
 
 
+## v0.34.22 (2022-09-17)
+
+### Fix
+
+- **automl/tuning**: make `TuneModelReturn` saveable and loadable
+
 ## v0.34.21 (2022-09-17)
 
 ### Fix
