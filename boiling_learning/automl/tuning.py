@@ -39,5 +39,5 @@ def fit_hypermodel(
 
     return TuneModelReturn(
         model=model,
-        evaluation=model.evaluate(ds_val),
+        evaluation=model.evaluate(ds_val.batch(params.batch_size)),
     )
