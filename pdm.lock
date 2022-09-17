@@ -273,7 +273,7 @@ dependencies = [
 
 [[package]]
 name = "commitizen"
-version = "2.32.5"
+version = "2.33.1"
 requires_python = ">=3.6.2,<4.0.0"
 summary = "Python commitizen client tool"
 dependencies = [
@@ -566,7 +566,7 @@ summary = "Internationalized Domain Names in Applications (IDNA)"
 
 [[package]]
 name = "imageio"
-version = "2.21.2"
+version = "2.21.3"
 requires_python = ">=3.7"
 summary = "Library for reading and writing a wide range of image, video, scientific, and volumetric data formats."
 dependencies = [
@@ -2389,9 +2389,9 @@ content_hash = "sha256:6dc8afb0eaccc309c28a8c0f9aeb8c33e62ded4487cbca89d5a254684
     {url = "https://files.pythonhosted.org/packages/2e/6c/b2613688477d1a7477c0b1c7f102cd92e1b0befcacf7125daf200a6dede8/colorful-0.5.4.tar.gz", hash = "sha256:86848ad4e2eda60cd2519d8698945d22f6f6551e23e95f3f14dfbb60997807ea"},
     {url = "https://files.pythonhosted.org/packages/b0/8e/e386e248266952d24d73ed734c2f5513f34d9557032618c8910e605dfaf6/colorful-0.5.4-py2.py3-none-any.whl", hash = "sha256:8d264b52a39aae4c0ba3e2a46afbaec81b0559a99be0d2cfe2aba4cf94531348"},
 ]
-"commitizen 2.32.5" = [
-    {url = "https://files.pythonhosted.org/packages/0d/81/7430aadbeaf7b51c50cc6033a67b4b7bd3ea4267a3c5f9cbbcef846b2945/commitizen-2.32.5-py3-none-any.whl", hash = "sha256:21c2f8b793e4c37f528d12e20cf51f02eb261e65392a6560b94303e0e2ffe26c"},
-    {url = "https://files.pythonhosted.org/packages/29/f4/971ca171b7a8202f76bba2ebdd1f5a75cd99bf842bc7fda8ca4d6273b603/commitizen-2.32.5.tar.gz", hash = "sha256:051ed762b94b97897921322aa5cd1848211aa974bd277c1c9cee852675c90f42"},
+"commitizen 2.33.1" = [
+    {url = "https://files.pythonhosted.org/packages/b2/43/dc76db201d4aad6ca3f8d7614cc61bc469af25f394f017c4f810a323e010/commitizen-2.33.1-py3-none-any.whl", hash = "sha256:d2b61023954446ae6829378422e68f46f82b6d52689b3dc3942c193c3d31bee5"},
+    {url = "https://files.pythonhosted.org/packages/c5/5b/2600ed2ad6da430a08c49343d71ee42a29302507805f634881150ffee573/commitizen-2.33.1.tar.gz", hash = "sha256:b4c032516bd4afc446af5a15bb8a1d5ac1011af4314e3f3ffc5f0fe0363249e4"},
 ]
 "coverage 6.4.4" = [
     {url = "https://files.pythonhosted.org/packages/03/21/c55f5529e9bbcf3c029790ca3cea3b18bae3dd897f7461b5f2165053ee35/coverage-6.4.4-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:9c7b9b498eb0c0d48b4c2abc0e10c2d78912203f972e0e63e3c9dc21f15abdaa"},
@@ -2731,9 +2731,9 @@ content_hash = "sha256:6dc8afb0eaccc309c28a8c0f9aeb8c33e62ded4487cbca89d5a254684
     {url = "https://files.pythonhosted.org/packages/04/a2/d918dcd22354d8958fe113e1a3630137e0fc8b44859ade3063982eacd2a4/idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
     {url = "https://files.pythonhosted.org/packages/62/08/e3fc7c8161090f742f504f40b1bccbfc544d4a4e09eb774bf40aafce5436/idna-3.3.tar.gz", hash = "sha256:9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d"},
 ]
-"imageio 2.21.2" = [
-    {url = "https://files.pythonhosted.org/packages/3e/07/ebbc1c526c0c9fea353024f789b3cc8316eb44537710778630a812ea2e8e/imageio-2.21.2-py3-none-any.whl", hash = "sha256:abe8aa4f2ac71a1b79094a01eb46d3acc150d11b4b79dbe353edfefb566ad541"},
-    {url = "https://files.pythonhosted.org/packages/8e/15/8b99bb40218f7181a7d8a41674e5dc7f2c6602870a17703828aeec80322c/imageio-2.21.2.tar.gz", hash = "sha256:5702e7b4874bdb2f428b08c7491699b44842129d412cdaa7177ba7ff059deb2c"},
+"imageio 2.21.3" = [
+    {url = "https://files.pythonhosted.org/packages/05/df/6a83cabdccb4fdede85ad944a5815f7f9e3e2129bd14873d316bc5b077c2/imageio-2.21.3-py3-none-any.whl", hash = "sha256:f8ada7a1cab07a4c437c3367bac271ff3010cf71275955825a5cde778543ca52"},
+    {url = "https://files.pythonhosted.org/packages/ee/60/9f908cf371495942e7931b565bc95c6b69d24c71cc55808e0c9886bbbbb0/imageio-2.21.3.tar.gz", hash = "sha256:b10a583c831c932f4afbea9e8403082d2a76b1d30d7555b777ceb70441890b3c"},
 ]
 "importlib-metadata 4.2.0" = [
     {url = "https://files.pythonhosted.org/packages/22/51/52442c59db26637681148c21f8984eed58c9db67053a0a4783a047010c98/importlib_metadata-4.2.0-py3-none-any.whl", hash = "sha256:057e92c15bc8d9e8109738a48db0ccb31b4d9d5cfbee5a8670879a30be66304b"},
