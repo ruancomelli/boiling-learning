@@ -3,16 +3,18 @@ from __future__ import annotations
 import itertools
 from datetime import timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Type, TypeVar
 
 from classes import AssociatedType, Supports, typeclass
 from typing_extensions import final
 
 from boiling_learning.io import json
+from boiling_learning.utils.dataclasses import DataClass, is_dataclass_instance, shallow_asdict
 from boiling_learning.utils.pathutils import PathLike, resolve
 from boiling_learning.utils.table_dispatch import TableDispatcher
 
 Metadata = json.JSONDataType
+_DataClassType = TypeVar('_DataClassType', bound=Type[DataClass])
 
 
 @final
@@ -224,3 +226,28 @@ def _serialize_timedelta(instance: timedelta, path: Path) -> None:
 @deserialize.dispatch(timedelta)
 def _deserialize_timedelta(path: Path, _metadata: Metadata) -> timedelta:
     return timedelta(seconds=load(path))
+
+
+class DataclassOfSaveableFieldsMeta(type):
+    def __instancecheck__(self, instance: Any) -> bool:
+        return is_dataclass_instance(instance) and save.supports(shallow_asdict(instance))
+
+
+class DataclassOfSaveableFields(
+    metaclass=DataclassOfSaveableFieldsMeta,
+):
+    ...
+
+
+@serialize.instance(delegate=DataclassOfSaveableFields)
+def _serialize_dataclass(instance: DataclassOfSaveableFields, path: Path) -> Metadata:
+    return serialize(shallow_asdict(instance), path)
+
+
+def register_deserializer_for_dataclass(dataclass_type: _DataClassType) -> _DataClassType:
+    @deserialize.dispatch(dataclass_type)
+    def _deserialize(path: Path, metadata: Metadata) -> DataClass:
+        fields = deserialize[dict](path, metadata)
+        return dataclass_type(**fields)
+
+    return dataclass_type
