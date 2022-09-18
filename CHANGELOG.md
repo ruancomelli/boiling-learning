@@ -1,5 +1,11 @@
 
 
+## v0.34.25 (2022-09-18)
+
+### Fix
+
+- **model/model**: remove `ModelArchitecture.__json_encode__`
+
 ## v0.34.24 (2022-09-18)
 
 ### Fix
