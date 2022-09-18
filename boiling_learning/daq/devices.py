@@ -1,6 +1,6 @@
 from nidaqmx.task import Task
 
-from boiling_learning.utils.dataclasses import dataclass
+from boiling_learning.io.storage import dataclass
 
 
 @dataclass

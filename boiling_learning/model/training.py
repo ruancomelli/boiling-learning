@@ -16,10 +16,10 @@ from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.describe.described import Described
 from boiling_learning.describe.describers import describe
 from boiling_learning.io import json
-from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
+from boiling_learning.io.storage import Metadata, dataclass, deserialize, load, save, serialize
 from boiling_learning.model.callbacks import RegisterEpoch, SaveHistory
 from boiling_learning.model.model import Evaluation, ModelArchitecture
-from boiling_learning.utils.dataclasses import dataclass, fields, shallow_asdict
+from boiling_learning.utils.dataclasses import fields, shallow_asdict
 from boiling_learning.utils.pathutils import resolve
 from boiling_learning.utils.timing import Timer
 from boiling_learning.utils.typeutils import typename
@@ -91,6 +91,8 @@ class FitModelReturn:
     evaluation: Evaluation
 
 
+# NOTE: after v0.34.23, dataclasses are automatically serializable and de-serializable.
+# however, we are keeping this overload for backwards compatibility.
 @serialize.instance(FitModelReturn)
 def _serialize_fit_model_return(instance: FitModelReturn, path: Path) -> None:
     path = resolve(path, dir=True)

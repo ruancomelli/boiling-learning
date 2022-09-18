@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple
 from pint import Quantity
 from typing_extensions import Literal
 
-from boiling_learning.utils.dataclasses import dataclass
+from boiling_learning.io.storage import dataclass
 from boiling_learning.utils.units import unit_registry as ureg
 
 Q_ = ureg.Quantity

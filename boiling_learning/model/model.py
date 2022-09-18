@@ -100,8 +100,8 @@ def _deserialize_model(path: Path, _metadata: Metadata) -> ModelArchitecture:
 def model_memory_usage_in_bytes(
     architecture: ModelArchitecture, *, batch_size: int
 ) -> Quantity[int]:
-    """
-    Return the estimated memory usage of a given Keras model in bytes.
+    """Return the estimated memory usage of a given Keras model in bytes.
+
     This includes the model weights and layers, but excludes the dataset.
 
     The model shapes are multipled by the batch size, but the weights are not.
@@ -115,7 +115,6 @@ def model_memory_usage_in_bytes(
             pass `1` as the argument here.
     Returns:
         An estimate of the Keras model's memory usage in bytes.
-
     """
     model = architecture.model
 

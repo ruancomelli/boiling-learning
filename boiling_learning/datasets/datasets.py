@@ -1,13 +1,10 @@
 from fractions import Fraction
-from pathlib import Path
-from typing import Any, Generic, Optional, TypeVar
+from typing import Generic, Optional, TypeVar
 
 import funcy
 from typing_extensions import NamedTuple
 
-from boiling_learning.io.storage import Metadata, deserialize, load, save, serialize
-from boiling_learning.utils.dataclasses import dataclass
-from boiling_learning.utils.pathutils import resolve
+from boiling_learning.io.storage import dataclass
 
 _T = TypeVar('_T')
 
@@ -57,23 +54,3 @@ class DatasetSplits:
 
         if not (0 < self.train < 1 and 0 <= self.val < 1 and 0 < self.test < 1):
             raise ValueError('it is required that 0 < (*train*, *test*) < 1 and 0 <= *val* < 1')
-
-
-@serialize.instance(DatasetTriplet)
-def _serialize_dataset_triplet(instance: DatasetTriplet[Any], path: Path) -> None:
-    path = resolve(path, dir=True)
-
-    ds_train, ds_val, ds_test = instance
-
-    save(ds_train, path / 'train')
-    save(ds_val, path / 'val')
-    save(ds_test, path / 'test')
-
-
-@deserialize.dispatch(DatasetTriplet)
-def _deserialize_dataset_triplet(path: Path, metadata: Metadata) -> DatasetTriplet[Any]:
-    ds_train = load(path / 'train')
-    ds_val = load(path / 'val')
-    ds_test = load(path / 'test')
-
-    return DatasetTriplet(ds_train, ds_val, ds_test)

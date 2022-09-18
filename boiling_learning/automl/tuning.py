@@ -6,9 +6,8 @@ from boiling_learning.automl.hypermodels import HyperModel
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.describe.described import Described
 from boiling_learning.io import json
-from boiling_learning.io.storage import register_deserializer_for_dataclass
+from boiling_learning.io.storage import dataclass
 from boiling_learning.model.model import Evaluation, ModelArchitecture
-from boiling_learning.utils.dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -17,7 +16,6 @@ class TuneModelParams:
     batch_size: int
 
 
-@register_deserializer_for_dataclass
 @dataclass(frozen=True)
 class TuneModelReturn:
     model: ModelArchitecture

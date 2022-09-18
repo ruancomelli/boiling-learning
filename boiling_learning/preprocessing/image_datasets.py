@@ -6,9 +6,10 @@ from typing import Callable, List, Mapping
 
 from boiling_learning.describe.describers import describe
 from boiling_learning.io import json
+from boiling_learning.io.storage import dataclass
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.utils.collections import KeyedSet
-from boiling_learning.utils.dataclasses import dataclass, dataclass_from_mapping
+from boiling_learning.utils.dataclasses import dataclass_from_mapping
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 

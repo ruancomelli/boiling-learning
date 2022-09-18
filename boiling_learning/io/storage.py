@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import itertools
+from dataclasses import dataclass as _dataclass
 from datetime import timedelta
+from functools import wraps
 from pathlib import Path
-from typing import Any, Type, TypeVar
+from typing import Any, Callable, Type, TypeVar
 
 from classes import AssociatedType, Supports, typeclass
 from typing_extensions import final
@@ -15,6 +17,8 @@ from boiling_learning.utils.table_dispatch import TableDispatcher
 
 Metadata = json.JSONDataType
 _DataClassType = TypeVar('_DataClassType', bound=Type[DataClass])
+_Any = TypeVar('_Any')
+_AnyCallable = TypeVar('_AnyCallable', bound=Callable[..., Any])
 
 
 @final
@@ -251,3 +255,16 @@ def register_deserializer_for_dataclass(dataclass_type: _DataClassType) -> _Data
         return dataclass_type(**fields)
 
     return dataclass_type
+
+
+def _identity_compose(
+    identity_transform: Callable[[_Any], _Any], function: _AnyCallable
+) -> _AnyCallable:
+    @wraps(function)
+    def _wrapped(*args, **kwargs) -> Any:
+        return identity_transform(function(*args, **kwargs))
+
+    return _wrapped
+
+
+dataclass = _identity_compose(register_deserializer_for_dataclass, _dataclass)

@@ -1,12 +1,11 @@
 import typing
-from dataclasses import asdict, dataclass, field, fields, is_dataclass
+from dataclasses import asdict, field, fields, is_dataclass
 from typing import Any, Callable, Dict, Mapping, Optional, Type, TypeVar, Union
 
 from typing_extensions import TypeGuard
 
 __all__ = (
     'asdict',
-    'dataclass',
     'field',
     'fields',
     'is_dataclass',
