@@ -1,5 +1,16 @@
 
 
+## v0.34.23 (2022-09-18)
+
+### Refactor
+
+- **model/training**: remove custom (de)serialization for `FitModelReturn`
+
+### Feat
+
+- make dataclasses automatically de-serializable
+- **model/model**: add method for easily copying models
+
 ## v0.34.22 (2022-09-17)
 
 ### Fix
