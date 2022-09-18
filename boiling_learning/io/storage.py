@@ -11,13 +11,17 @@ from classes import AssociatedType, Supports, typeclass
 from typing_extensions import final
 
 from boiling_learning.io import json
-from boiling_learning.utils.dataclasses import DataClass, is_dataclass_instance, shallow_asdict
+from boiling_learning.utils.dataclasses import (
+    DataClass,
+    is_dataclass_class,
+    is_dataclass_instance,
+    shallow_asdict,
+)
 from boiling_learning.utils.pathutils import PathLike, resolve
 from boiling_learning.utils.table_dispatch import TableDispatcher
 
 Metadata = json.JSONDataType
 _DataClassType = TypeVar('_DataClassType', bound=Type[DataClass])
-_Any = TypeVar('_Any')
 _AnyCallable = TypeVar('_AnyCallable', bound=Callable[..., Any])
 
 
@@ -257,14 +261,31 @@ def register_deserializer_for_dataclass(dataclass_type: _DataClassType) -> _Data
     return dataclass_type
 
 
-def _identity_compose(
-    identity_transform: Callable[[_Any], _Any], function: _AnyCallable
-) -> _AnyCallable:
-    @wraps(function)
+def _auto_register_deserializer_for_dataclass(dataclass_decorator: _AnyCallable) -> _AnyCallable:
+    @wraps(dataclass_decorator)
     def _wrapped(*args, **kwargs) -> Any:
-        return identity_transform(function(*args, **kwargs))
+        decorated_result = dataclass_decorator(*args, **kwargs)
+
+        if is_dataclass_class(decorated_result):
+            # This is the case where we are directly wrapping a class, like
+            #
+            # @dataclass
+            # class C: pass
+            #
+            # In this situation, directly register the class.
+            return register_deserializer_for_dataclass(decorated_result)
+        else:
+            # This is the case where we are first passing arguments to `dataclass`
+            # before actually decorating a class, like
+            #
+            # @dataclass(frozen=True)
+            # class C: pass
+            #
+            # In this situation, recurse by instructing the new decorator to
+            # automatically register dataclasses.
+            return _auto_register_deserializer_for_dataclass(decorated_result)
 
     return _wrapped
 
 
-dataclass = _identity_compose(register_deserializer_for_dataclass, _dataclass)
+dataclass = _auto_register_deserializer_for_dataclass(_dataclass)
