@@ -1,5 +1,11 @@
 
 
+## v0.34.24 (2022-09-18)
+
+### Fix
+
+- **io/storage**: auto-register parametrized `@dataclass(...)` decorators
+
 ## v0.34.23 (2022-09-18)
 
 ### Refactor
