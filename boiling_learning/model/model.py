@@ -66,6 +66,9 @@ class ModelArchitecture:
     def evaluate(self, data: tf.data.Dataset) -> Evaluation:
         return self.model.evaluate(data, return_dict=True)
 
+    def clone(self) -> ModelArchitecture:
+        return ModelArchitecture(tf.keras.models.clone_model(self.model))
+
 
 @serialize.instance(ModelArchitecture)
 def _serialize_model(instance: ModelArchitecture, path: Path) -> None:
