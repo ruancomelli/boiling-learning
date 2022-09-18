@@ -44,14 +44,11 @@ class ModelArchitecture:
             tf.keras.models.model_from_json(_json.dumps(config), custom_objects=_CUSTOM_OBJECTS)
         )
 
-    def __json_encode__(self) -> Dict[str, Any]:
+    def __describe__(self) -> Dict[str, Any]:
         model_json = _json.loads(self.model.to_json())
         return anonymize_model_json(
             {key: value for key, value in model_json['config'].items() if key != 'name'}
         )
-
-    def __describe__(self) -> Dict[str, Any]:
-        return typing.cast(Dict[str, Any], json.encode(self))
 
     def count_parameters(self, *, trainable: bool = True, non_trainable: bool = True) -> int:
         if trainable and non_trainable:
