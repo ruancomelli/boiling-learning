@@ -1,5 +1,11 @@
 
 
+## v0.34.26 (2022-09-19)
+
+### Fix
+
+- **scripts/make_boiling_processors**: fix indirect visualization cropping by cropping from the bottom
+
 ## v0.34.25 (2022-09-18)
 
 ### Fix
