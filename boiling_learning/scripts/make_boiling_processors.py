@@ -26,6 +26,7 @@ def main(
     direct_visualization: bool = True,
     downscale_factor: int = 4,
     height: Optional[int] = None,
+    bottom_border: Optional[int] = None,
     width: int = RECOMMENDED_WIDTH,
     visualization_window_width: Fraction = Fraction(60, 100),
     crop_mode: Literal['center', 'random'] = 'center',
@@ -37,6 +38,9 @@ def main(
 ]:
     if height is None:
         height = RECOMMENDED_DIRECT_HEIGHT if direct_visualization else RECOMMENDED_INDIRECT_HEIGHT
+
+    if bottom_border is None:
+        bottom_border = RECOMMENDED_DIRECT_HEIGHT - height
 
     return [
         ConvertImageDType('float32'),
@@ -176,11 +180,8 @@ def main(
             'GOPR2959': Cropper(left=980, right=1810, top=400, bottom=1200),
             'GOPR2960': Cropper(left=980, right=1810, top=400, bottom=1200),
         },
-        Cropper(height=height * downscale_factor, top=0),
-        {'center': CenterCropper, 'random': RandomCropper}[crop_mode](
-            width=width * downscale_factor
-        ),
         Downscaler(downscale_factor),
+        Cropper(height=height, bottom_border=bottom_border),
         {'center': CenterCropper, 'random': RandomCropper}[crop_mode](
             width=round(width * visualization_window_width)
         ),
