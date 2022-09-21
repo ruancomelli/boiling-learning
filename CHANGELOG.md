@@ -1,5 +1,11 @@
 
 
+## v0.34.28 (2022-09-20)
+
+### Fix
+
+- **scripts/make_boiling_processors**: fix processors again and simplify pipeline
+
 ## v0.34.27 (2022-09-19)
 
 ## v0.34.26 (2022-09-19)
