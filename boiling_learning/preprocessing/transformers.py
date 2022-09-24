@@ -3,7 +3,7 @@ from __future__ import annotations
 from itertools import chain
 from typing import Any, Callable, Generic, TypeVar
 
-from typing_extensions import Protocol
+from typing_extensions import Concatenate, ParamSpec, Protocol
 
 from boiling_learning.describe.describers import describe
 from boiling_learning.io import json
@@ -14,6 +14,7 @@ _X_contra = TypeVar('_X_contra', contravariant=True)
 _Y_co = TypeVar('_Y_co', covariant=True)
 _X = TypeVar('_X')
 _Y = TypeVar('_Y')
+_P = ParamSpec('_P')
 
 
 class Transformer(Generic[_X, _Y]):
@@ -42,9 +43,36 @@ class Transformer(Generic[_X, _Y]):
 Operator = Transformer[_X, _X]
 
 
+class WrappedFunctionTransformer(Transformer[_X, _Y]):
+    def __init__(
+        self, function: Callable[Concatenate[_X, _P], _Y], *args: _P.args, **kwargs: _P.kwargs
+    ) -> None:
+        super().__init__(function, Pack(args, kwargs))
+
+    def __describe__(self) -> json.JSONDataType:
+        return json.serialize(
+            {
+                'type': self.__class__.__name__,
+                'function': self._call,
+                'pack': self.pack,
+            }
+        )
+
+
 @json.encode.instance(Transformer)
 def _encode_transformer(instance: Transformer[Any, Any]) -> json.JSONDataType:
     return json.serialize(describe(instance))
+
+
+def wrap_as_partial_transformer(
+    function: Callable[Concatenate[_X, _P], _Y]
+) -> Callable[_P, WrappedFunctionTransformer[_X, _Y]]:
+    def _partial_transformer(
+        *args: _P.args, **kwargs: _P.kwargs
+    ) -> WrappedFunctionTransformer[_X, _Y]:
+        return WrappedFunctionTransformer(function, *args, **kwargs)
+
+    return _partial_transformer
 
 
 class CallableWithFirst(Protocol[_X_contra, _Y_co]):
