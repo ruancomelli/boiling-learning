@@ -1,5 +1,18 @@
 
 
+## v0.34.29 (2022-09-24)
+
+### Feat
+
+- add module containing re-usable dataset transforms
+- **preprocessing/transformers**: allow simpler conversion of functions to transformers with a new wrapper `WrappedFunctionTransformer`
+- **describe/describers**: make functions describable
+- **io/json**: allow JSON encoding and decoding of functions
+
+### Fix
+
+- **preprocessing/transformers**: fix description of `WrappedFunctionTransformer`s
+
 ## v0.34.28 (2022-09-20)
 
 ### Fix
