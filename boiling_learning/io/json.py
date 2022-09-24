@@ -6,6 +6,7 @@ from datetime import timedelta
 from fractions import Fraction
 from importlib import import_module
 from pathlib import Path
+from types import FunctionType
 from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple, TypeVar, Union
 
 from classes import AssociatedType, Supports
@@ -49,6 +50,17 @@ class SupportsJSONEncodable(Supports[JSONEncodable], metaclass=JSONEncodableMeta
 @_typeclass(JSONEncodable)
 def encode(instance: Supports[JSONEncodable]) -> JSONDataType:
     '''Return a JSON encoding of an object.'''
+
+
+@_typeclass
+def encode_type(instance: Any) -> JSONDataType:
+    '''Return a JSON encoding of the type of an object.'''
+
+
+@encode_type.instance(object)
+def _encode_type_any(instance: object) -> str:
+    '''Return a JSON encoding of the type of an object.'''
+    return encode(type(instance))
 
 
 decode = TableDispatcher()
@@ -312,12 +324,14 @@ def _decode_timedelta(instance: float) -> timedelta:
     return timedelta(seconds=instance)
 
 
+@encode.instance(FunctionType)
 @encode.instance(type)
 def _encode_types(instance: type) -> str:
     return f'{instance.__module__}.{instance.__qualname__}'
 
 
 @decode.dispatch(abc.ABCMeta)
+@decode.dispatch(FunctionType)
 @decode.dispatch(type)
 def _decode_types(instance: str) -> type:
     modulepath, typename = instance.rsplit('.', maxsplit=1)
@@ -339,11 +353,19 @@ def _serialize_list(instance: ListOfJSONSerializable) -> List[JSONDataType]:
     return [serialize(item) for item in instance]
 
 
+@encode_type.instance(FunctionType)
+def _encode_type_function_type(obj: FunctionType) -> str:
+    return 'types.FunctionType'
+
+
 class _ComplexJSONEncodableTypeMeta(type):
     def __instancecheck__(self, instance: Any) -> bool:
         return (
             instance is not None
-            and not isinstance(instance, (bool, int, str, float, ListOfJSONSerializable))
+            and not isinstance(
+                instance,
+                (bool, int, str, float, ListOfJSONSerializable),
+            )
             and encode.supports(instance)
         )
 
@@ -357,10 +379,11 @@ class ComplexJSONEncodableType(
 @serialize.instance(delegate=ComplexJSONEncodableType)
 def _serialize_complex_json_encodable(obj: ComplexJSONEncodableType) -> SerializedJSONObject:
     '''Return a JSON serialization of an object.'''
+
     return _nested_sort_dicts(
         {
-            'type': encode(type(obj)),
             'contents': encode(obj),
+            'type': encode_type(obj),
         }
     )
 
