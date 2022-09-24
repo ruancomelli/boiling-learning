@@ -1,6 +1,7 @@
 from datetime import timedelta
 from fractions import Fraction
 from pathlib import Path
+from types import FunctionType
 from typing import Any, Dict, FrozenSet, Generic, List, Set, Tuple, Type, TypeVar, Union
 
 from classes import AssociatedType, Supports, typeclass
@@ -39,6 +40,7 @@ _BasicType = TypeVar('_BasicType', bound=Union[None, bool, int, str, float, Path
 @describe.instance(str)
 @describe.instance(float)
 @describe.instance(Path)
+@describe.instance(FunctionType)
 def _describe_basics(instance: _BasicType) -> _BasicType:
     return instance
 
