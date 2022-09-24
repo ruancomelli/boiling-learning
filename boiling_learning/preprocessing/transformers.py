@@ -47,13 +47,14 @@ class WrappedFunctionTransformer(Transformer[_X, _Y]):
     def __init__(
         self, function: Callable[Concatenate[_X, _P], _Y], *args: _P.args, **kwargs: _P.kwargs
     ) -> None:
+        self.function = function
         super().__init__(function, Pack(args, kwargs))
 
     def __describe__(self) -> json.JSONDataType:
         return json.serialize(
             {
                 'type': self.__class__.__name__,
-                'function': self._call,
+                'function': self.function,
                 'pack': self.pack,
             }
         )
