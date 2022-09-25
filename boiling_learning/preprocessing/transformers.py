@@ -18,15 +18,19 @@ _P = ParamSpec('_P')
 
 
 class Transformer(Generic[_X, _Y]):
-    def __init__(self, f: CallableWithFirst[_X, _Y], pack: Pack[Any, Any] = Pack()) -> None:
-        self._call: Callable[[_X], _Y] = f @ pack
+    def __init__(self, function: CallableWithFirst[_X, _Y], pack: Pack[Any, Any] = Pack()) -> None:
+        self.function = function
         self.pack = pack
 
     def __call__(self, arg: _X) -> _Y:
-        return self._call(arg)
+        return self.function(arg, *self.pack.args, **self.pack.kwargs)
 
     def __describe__(self) -> json.JSONDataType:
-        return json.serialize({'type': self.__class__.__name__, 'pack': self.pack})
+        return {
+            'type': type(self),
+            'function': self.function,
+            'pack': self.pack,
+        }
 
     def __str__(self) -> str:
         arguments = chain(
@@ -43,23 +47,6 @@ class Transformer(Generic[_X, _Y]):
 Operator = Transformer[_X, _X]
 
 
-class WrappedFunctionTransformer(Transformer[_X, _Y]):
-    def __init__(
-        self, function: Callable[Concatenate[_X, _P], _Y], *args: _P.args, **kwargs: _P.kwargs
-    ) -> None:
-        self.function = function
-        super().__init__(function, Pack(args, kwargs))
-
-    def __describe__(self) -> json.JSONDataType:
-        return json.serialize(
-            {
-                'type': self.__class__.__name__,
-                'function': self.function,
-                'pack': self.pack,
-            }
-        )
-
-
 @json.encode.instance(Transformer)
 def _encode_transformer(instance: Transformer[Any, Any]) -> json.JSONDataType:
     return json.serialize(describe(instance))
@@ -67,11 +54,9 @@ def _encode_transformer(instance: Transformer[Any, Any]) -> json.JSONDataType:
 
 def wrap_as_partial_transformer(
     function: Callable[Concatenate[_X, _P], _Y]
-) -> Callable[_P, WrappedFunctionTransformer[_X, _Y]]:
-    def _partial_transformer(
-        *args: _P.args, **kwargs: _P.kwargs
-    ) -> WrappedFunctionTransformer[_X, _Y]:
-        return WrappedFunctionTransformer(function, *args, **kwargs)
+) -> Callable[_P, Transformer[_X, _Y]]:
+    def _partial_transformer(*args: _P.args, **kwargs: _P.kwargs) -> Transformer[_X, _Y]:
+        return Transformer(function, Pack(args, kwargs))
 
     return _partial_transformer
 
