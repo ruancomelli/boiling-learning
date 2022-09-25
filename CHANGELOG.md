@@ -1,5 +1,14 @@
 
 
+## v0.34.30 (2022-09-25)
+
+### Refactor
+
+- **utils/iterutils**: remove unused function `apply`
+- **preprocessing/transformers**: simplify interface for constructing `Transformer`s
+- **preprocessing/image**: replace custom transformer subclasses with wrapped transformers
+- **preprocessing/transformers**: remove intermediate wrapped transformer
+
 ## v0.34.29 (2022-09-24)
 
 ### Feat
