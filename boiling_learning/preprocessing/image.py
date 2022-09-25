@@ -10,99 +10,20 @@ from skimage.metrics import normalized_mutual_information as _normalized_mutual_
 from skimage.metrics import structural_similarity
 from skimage.transform import resize
 
-from boiling_learning.preprocessing.transformers import Operator
+from boiling_learning.preprocessing.transformers import wrap_as_partial_transformer
 from boiling_learning.preprocessing.video import VideoFrame, VideoFrames
-from boiling_learning.utils.functional import P
 
 VideoFrameOrFrames = Union[VideoFrame, VideoFrames]
 _VideoFrameOrFrames = TypeVar('_VideoFrameOrFrames', bound=VideoFrameOrFrames)
 
 
-class Grayscaler(Operator[VideoFrameOrFrames]):
-    def __init__(self) -> None:
-        super().__init__(grayscale, P())
-
-
-class Downscaler(Operator[VideoFrameOrFrames]):
-    def __init__(self, factors: Union[int, Tuple[int, int]]) -> None:
-        super().__init__(downscale, pack=P(factors=factors))
-
-
-class Cropper(Operator[VideoFrameOrFrames]):
-    def __init__(
-        self,
-        left: Optional[Union[int, float, Fraction]] = None,
-        right: Optional[Union[int, float, Fraction]] = None,
-        right_border: Optional[Union[int, float, Fraction]] = None,
-        width: Optional[Union[int, float, Fraction]] = None,
-        top: Optional[Union[int, float, Fraction]] = None,
-        bottom: Optional[Union[int, float, Fraction]] = None,
-        bottom_border: Optional[Union[int, float, Fraction]] = None,
-        height: Optional[Union[int, float, Fraction]] = None,
-    ) -> None:
-        pack = P(
-            **{
-                key: value
-                for key, value in {
-                    'left': left,
-                    'right': right,
-                    'right_border': right_border,
-                    'width': width,
-                    'top': top,
-                    'bottom': bottom,
-                    'bottom_border': bottom_border,
-                    'height': height,
-                }.items()
-                # remove `None`s to avoid polluting the `pack` argument
-                if value is not None
-            }
-        )
-
-        super().__init__(crop, pack=pack)
-
-
-class CenterCropper(Operator[VideoFrameOrFrames]):
-    def __init__(
-        self,
-        height: Optional[Union[int, float, Fraction]] = None,
-        width: Optional[Union[int, float, Fraction]] = None,
-    ) -> None:
-        pack = P(
-            **{
-                key: value
-                for key, value in {'width': width, 'height': height}.items()
-                # remove `None`s to avoid polluting the `pack` argument
-                if value is not None
-            }
-        )
-
-        super().__init__(center_crop, pack=pack)
-
-
-class ConvertImageDType(Operator[VideoFrameOrFrames]):
-    def __init__(self, dtype: str) -> None:
-        super().__init__(convert_image_dtype, P(dtype=dtype))
-
-
-def convert_image_dtype(image: _VideoFrameOrFrames, *, dtype: str) -> _VideoFrameOrFrames:
+@wrap_as_partial_transformer
+def image_dtype_converter(image: _VideoFrameOrFrames, dtype: str) -> _VideoFrameOrFrames:
     return tf.image.convert_image_dtype(image, tf.dtypes.as_dtype(dtype)).numpy()
 
 
-class RandomCropper(Operator[VideoFrameOrFrames]):
-    def __init__(self, width: Optional[int] = None, height: Optional[int] = None) -> None:
-        pack = P(
-            **{
-                key: value
-                for key, value in {'width': width, 'height': height}.items()
-                # remove `None`s to avoid polluting the `pack` argument
-                if value is not None
-            }
-        )
-
-        super().__init__(random_crop, pack=pack)
-
-
-def crop(
+@wrap_as_partial_transformer
+def cropper(
     image: _VideoFrameOrFrames,
     *,
     left: Optional[Union[int, float, Fraction]] = None,
@@ -190,7 +111,8 @@ def crop(
     )
 
 
-def center_crop(
+@wrap_as_partial_transformer
+def center_cropper(
     image: _VideoFrameOrFrames,
     *,
     height: Optional[Union[int, float, Fraction]] = None,
@@ -225,7 +147,8 @@ def _ratio_to_size(total: int, x: Optional[Union[int, float, Fraction]]) -> Opti
     return int(x * total) if isinstance(x, (float, Fraction)) else x
 
 
-def downscale(
+@wrap_as_partial_transformer
+def downscaler(
     image: _VideoFrameOrFrames, factors: Union[int, Tuple[int, int]]
 ) -> _VideoFrameOrFrames:
     # 4-D Tensor of shape [batch, height, width, channels] or 3-D Tensor of shape
@@ -250,7 +173,8 @@ def downscale(
     )
 
 
-def grayscale(image: _VideoFrameOrFrames) -> _VideoFrameOrFrames:
+@wrap_as_partial_transformer
+def grayscaler(image: _VideoFrameOrFrames) -> _VideoFrameOrFrames:
     if image.ndim not in {3, 4}:
         raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
 
@@ -260,7 +184,8 @@ def grayscale(image: _VideoFrameOrFrames) -> _VideoFrameOrFrames:
     return typing.cast(_VideoFrameOrFrames, tf.image.rgb_to_grayscale(image).numpy())
 
 
-def random_crop(
+@wrap_as_partial_transformer
+def random_cropper(
     image: _VideoFrameOrFrames,
     *,
     height: Optional[int] = None,

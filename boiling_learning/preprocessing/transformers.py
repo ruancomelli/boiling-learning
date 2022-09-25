@@ -43,10 +43,6 @@ class Transformer(Generic[_X, _Y]):
         return LazyTransform(arg, self)
 
 
-# the concept of mathematical operator as a function mapping a set to itself
-Operator = Transformer[_X, _X]
-
-
 @json.encode.instance(Transformer)
 def _encode_transformer(instance: Transformer[Any, Any]) -> json.JSONDataType:
     return json.serialize(describe(instance))
