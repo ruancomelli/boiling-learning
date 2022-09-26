@@ -1710,7 +1710,7 @@ summary = "A modern CSS selector implementation for Beautiful Soup."
 
 [[package]]
 name = "sourcery-cli"
-version = "0.12.8"
+version = "0.12.9"
 summary = "Magically refactor Python"
 
 [[package]]
@@ -4110,10 +4110,10 @@ content_hash = "sha256:6dc8afb0eaccc309c28a8c0f9aeb8c33e62ded4487cbca89d5a254684
     {url = "https://files.pythonhosted.org/packages/16/e3/4ad79882b92617e3a4a0df1960d6bce08edfb637737ac5c3f3ba29022e25/soupsieve-2.3.2.post1-py3-none-any.whl", hash = "sha256:3b2503d3c7084a42b1ebd08116e5f81aadfaea95863628c80a3b774a11b7c759"},
     {url = "https://files.pythonhosted.org/packages/f3/03/bac179d539362319b4779a00764e95f7542f4920084163db6b0fd4742d38/soupsieve-2.3.2.post1.tar.gz", hash = "sha256:fc53893b3da2c33de295667a0e19f078c14bf86544af307354de5fcf12a3f30d"},
 ]
-"sourcery-cli 0.12.8" = [
-    {url = "https://files.pythonhosted.org/packages/38/b0/8c294cc8493cc8f4dfca8480a052c65b7a325f3b2867b7476059e3bee72e/sourcery_cli-0.12.8-py2.py3-none-macosx_10_9_universal2.whl", hash = "sha256:75440d959cd2702b9ac60618ab8049fd62df92078bfc94d99996a50ed0be71f0"},
-    {url = "https://files.pythonhosted.org/packages/8b/2c/a206ffe29a72f73ccae86a71487703fb4fb7678ac870020ce8ded9a389b1/sourcery_cli-0.12.8-py2.py3-none-win_amd64.whl", hash = "sha256:984a8c1939784550e485068097692d376721646c8d6f85fb60f94fa4fbc87fd1"},
-    {url = "https://files.pythonhosted.org/packages/9f/28/f1f5f0d589d39b47f71ff732fb59b937d88ecc1e0ebc940a720f99b61600/sourcery_cli-0.12.8-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:a303acdaf75adbc332fa55ffd1af4048e5e6bd2df7c83f21293e3988c7255794"},
+"sourcery-cli 0.12.9" = [
+    {url = "https://files.pythonhosted.org/packages/0b/3f/845ee890071abee95cb81b674d211d1df9ae20551b872a71589bd7299640/sourcery_cli-0.12.9-py2.py3-none-macosx_10_9_universal2.whl", hash = "sha256:c86dc33468158c487556c9b8b99751047d0463fdbf026a114449e7fc4d5b6750"},
+    {url = "https://files.pythonhosted.org/packages/5e/87/95e09b4b848d2008ed3b1a46a9377425783a22e63a1c257b2a081048ea09/sourcery_cli-0.12.9-py2.py3-none-win_amd64.whl", hash = "sha256:48a6f9da6f2b1a70029de0dbe3eb7989d48d4e3f1580a181b00d37b0deca1113"},
+    {url = "https://files.pythonhosted.org/packages/e1/16/a870efe051dae5ca9856fc3fd95d688eaa606cb84c58e08ee6f71a3a0551/sourcery_cli-0.12.9-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:74fd219091e3462e74365f524d863f213c76082bac775114128c4bbdab3971db"},
 ]
 "tblib 1.7.0" = [
     {url = "https://files.pythonhosted.org/packages/d3/41/901ef2e81d7b1e834b9870d416cb09479e175a2be1c4aa1a9dcd0a555293/tblib-1.7.0.tar.gz", hash = "sha256:059bd77306ea7b419d4f76016aef6d7027cc8a0785579b5aad198803435f882c"},
