@@ -1,5 +1,12 @@
 
 
+## v0.34.31 (2022-10-01)
+
+### Refactor
+
+- **preprocessing**: rename `ImageDataset` as `ExperimentVideoDataset`
+- **preprocessing**: rename module `preprocessing.image_datasets` as `preprocessing.experiment_video_dataset`
+
 ## v0.34.30 (2022-09-25)
 
 ### Refactor
