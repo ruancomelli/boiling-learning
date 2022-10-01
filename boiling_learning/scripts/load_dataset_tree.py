@@ -3,16 +3,16 @@ from typing import List
 from loguru import logger
 
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
-from boiling_learning.preprocessing.experiment_video_dataset import ImageDataset
+from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 
-def main(datapath: PathLike) -> List[ImageDataset]:
+def main(datapath: PathLike) -> List[ExperimentVideoDataset]:
     logger.info(f'Loading cases from {datapath}')
 
     datapath = resolve(datapath)
 
-    datasets: List[ImageDataset] = []
+    datasets: List[ExperimentVideoDataset] = []
     for casedir in datapath.iterdir():
         logger.debug(f'Searching for subcases in {casedir}')
         if not casedir.is_dir():
@@ -27,7 +27,7 @@ def main(datapath: PathLike) -> List[ImageDataset]:
 
             subcase = subcasedir.name
 
-            dataset = ImageDataset(f'{case}:{subcase}')
+            dataset = ExperimentVideoDataset(f'{case}:{subcase}')
             for testdir in subcasedir.iterdir():
                 logger.debug(f'Searching for videos in {testdir}')
 

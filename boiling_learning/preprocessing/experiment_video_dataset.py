@@ -13,7 +13,7 @@ from boiling_learning.utils.dataclasses import dataclass_from_mapping
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 
-class ImageDataset(KeyedSet[str, ExperimentVideo]):
+class ExperimentVideoDataset(KeyedSet[str, ExperimentVideo]):
     @dataclass(frozen=True)
     class VideoDataKeys(ExperimentVideo.VideoDataKeys):
         name: str = 'name'
@@ -36,11 +36,11 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
     @classmethod
     def make_union(
         cls,
-        *others: ImageDataset,
+        *others: ExperimentVideoDataset,
         namer: Callable[[List[str]], str] = '+'.join,
-    ) -> ImageDataset:
+    ) -> ExperimentVideoDataset:
         name = namer([other.name for other in others])
-        image_dataset = ImageDataset(name)
+        image_dataset = ExperimentVideoDataset(name)
         image_dataset.update(*others)
         return image_dataset
 
@@ -92,13 +92,13 @@ class ImageDataset(KeyedSet[str, ExperimentVideo]):
         self.set_video_data(video_data, remove_absent=remove_absent)
 
 
-@json.encode.instance(ImageDataset)
-def _encode_image_dataset(obj: ImageDataset) -> List[json.JSONDataType]:
+@json.encode.instance(ExperimentVideoDataset)
+def _encode_image_dataset(obj: ExperimentVideoDataset) -> List[json.JSONDataType]:
     return json.serialize(sorted(obj, key=_get_experiment_video_name))
 
 
-@describe.instance(ImageDataset)
-def _describe_image_dataset(obj: ImageDataset) -> List[Path]:
+@describe.instance(ExperimentVideoDataset)
+def _describe_image_dataset(obj: ExperimentVideoDataset) -> List[Path]:
     return describe(sorted(obj, key=_get_experiment_video_name))
 
 

@@ -6,7 +6,7 @@
 # from ipywidgets import interact, widgets
 # from skimage.transform import downscale_local_mean as downscale
 
-# from boiling_learning.preprocessing.image_datasets import ImageDataset
+# from boiling_learning.preprocessing.image_datasets import ExperimentVideoDataset
 # from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 
 # try:
@@ -34,7 +34,7 @@
 
 
 # def _interact_dataset_frames(
-#     datasets: Tuple[ImageDataset, ...], imshow: Callable[[np.ndarray], Any]
+#     datasets: Tuple[ExperimentVideoDataset, ...], imshow: Callable[[np.ndarray], Any]
 # ) -> None:
 #     datasets_options = [(dataset.name, dataset) for dataset in datasets]
 #     default_dataset = datasets_options[0][1]
@@ -74,7 +74,7 @@
 
 #     experiment_videos_widget.observe(update_max_index, 'value')
 
-#     def show_frames(dataset: ImageDataset, ev: ExperimentVideo, idx: int) -> None:
+#     def show_frames(dataset: ExperimentVideoDataset, ev: ExperimentVideo, idx: int) -> None:
 #         imshow(ev[idx])
 
 #     interact(
@@ -85,7 +85,7 @@
 #     )
 
 
-# def main(datasets: Iterable[ImageDataset], colab_backend: bool = False) -> None:
+# def main(datasets: Iterable[ExperimentVideoDataset], colab_backend: bool = False) -> None:
 #     datasets = tuple(datasets)
 
 #     imshow = (

@@ -60,7 +60,7 @@ from boiling_learning.model.training import (
     strategy_scope,
 )
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
-from boiling_learning.preprocessing.experiment_video_dataset import ImageDataset
+from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.preprocessing.hdf5 import get_frame_from_hdf5, video_to_hdf5
 from boiling_learning.preprocessing.transformers import DictTransformer, Transformer
 from boiling_learning.preprocessing.video import PimsVideo, VideoFrame
@@ -180,7 +180,7 @@ condensation_datasets_merged = set_condensation_datasets_data.main(
     fps_cache_path=Path('.cache', 'fps'),
     end_frame_index_cache_path=Path('.cache', 'end_frame_index'),
 )
-condensation_datasets_merged_all = ImageDataset.make_union(*condensation_datasets_merged)
+condensation_datasets_merged_all = ExperimentVideoDataset.make_union(*condensation_datasets_merged)
 
 boiling_preprocessors, boiling_augmentors = make_boiling_processors.main(
     direct_visualization=True,
@@ -253,7 +253,7 @@ if OPTIONS.test:
 
 @dataclass(frozen=True)
 class GetImageDatasetParams:
-    image_dataset: ImageDataset
+    image_dataset: ExperimentVideoDataset
     transformers: List[Transformer[VideoFrame, VideoFrame]]
     splits: DatasetSplits
     target: Optional[str] = None
@@ -261,7 +261,7 @@ class GetImageDatasetParams:
 
 
 def _get_image_dataset(
-    image_dataset: ImageDataset,
+    image_dataset: ExperimentVideoDataset,
     transformers: List[Transformer[VideoFrame, VideoFrame]],
     splits: DatasetSplits,
     dataset_size: Optional[Union[int, Fraction]] = None,

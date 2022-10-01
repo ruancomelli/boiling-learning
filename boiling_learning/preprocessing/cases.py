@@ -1,11 +1,11 @@
 from typing import Optional
 
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
-from boiling_learning.preprocessing.experiment_video_dataset import ImageDataset
+from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 
-class Case(ImageDataset):
+class Case(ExperimentVideoDataset):
     def __init__(
         self,
         path: PathLike,
@@ -47,7 +47,7 @@ class Case(ImageDataset):
         self,
         data_path: Optional[PathLike] = None,
         remove_absent: bool = False,
-        keys: ImageDataset.VideoDataKeys = ImageDataset.VideoDataKeys(),
+        keys: ExperimentVideoDataset.VideoDataKeys = ExperimentVideoDataset.VideoDataKeys(),
     ) -> None:
         super().set_video_data_from_file(
             data_path or self.video_data_path,

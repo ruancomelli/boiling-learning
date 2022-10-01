@@ -7,7 +7,7 @@ import yaml
 from loguru import logger
 
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
-from boiling_learning.preprocessing.experiment_video_dataset import ImageDataset
+from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.preprocessing.video import Video
 from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
 from boiling_learning.utils.frozendicts import frozendict
@@ -23,7 +23,9 @@ _SUBCASE_PATTERNS = frozendict(
 _TIMEDELTA_PATTERN = re.compile(r'(?P<h>\d{2}):(?P<min>\d{2}):(?P<s>\d{2})')
 
 
-def main(datasets: Iterable[ImageDataset], dataspecpath: PathLike) -> Tuple[ImageDataset, ...]:
+def main(
+    datasets: Iterable[ExperimentVideoDataset], dataspecpath: PathLike
+) -> Tuple[ExperimentVideoDataset, ...]:
     logger.info('Setting condensation data')
 
     datasets = tuple(datasets)
@@ -110,7 +112,7 @@ def _parse_timedelta(s: Optional[str]) -> Optional[timedelta]:
     return timedelta(hours=int(m['h']), minutes=int(m['min']), seconds=int(m['s']))
 
 
-def _make_dataframe(dataset: ImageDataset) -> None:
+def _make_dataframe(dataset: ExperimentVideoDataset) -> None:
     missing: List[ExperimentVideo] = []
     for ev in dataset:
         try:
@@ -131,8 +133,10 @@ def _make_dataframe(dataset: ImageDataset) -> None:
         ev.save_df(overwrite=False)
 
 
-def _group_datasets(datasets: Iterable[ImageDataset]) -> Tuple[ImageDataset, ...]:
-    datasets_dict: Dict[str, ImageDataset] = {}
+def _group_datasets(
+    datasets: Iterable[ExperimentVideoDataset],
+) -> Tuple[ExperimentVideoDataset, ...]:
+    datasets_dict: Dict[str, ExperimentVideoDataset] = {}
     for dataset in datasets:
         logger.debug(f'Reading condensation dataset {dataset.name}')
 
@@ -145,7 +149,7 @@ def _group_datasets(datasets: Iterable[ImageDataset]) -> Tuple[ImageDataset, ...
             dataset_name = f'{case}:{subcase}'
 
             if dataset_name not in datasets_dict:
-                datasets_dict[dataset_name] = ImageDataset(dataset_name)
+                datasets_dict[dataset_name] = ExperimentVideoDataset(dataset_name)
 
             datasets_dict[dataset_name].add(ev)
 
