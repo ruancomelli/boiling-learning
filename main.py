@@ -60,8 +60,8 @@ from boiling_learning.model.training import (
     strategy_scope,
 )
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
+from boiling_learning.preprocessing.experiment_video_dataset import ImageDataset
 from boiling_learning.preprocessing.hdf5 import get_frame_from_hdf5, video_to_hdf5
-from boiling_learning.preprocessing.image_datasets import ImageDataset
 from boiling_learning.preprocessing.transformers import DictTransformer, Transformer
 from boiling_learning.preprocessing.video import PimsVideo, VideoFrame
 from boiling_learning.scripts import (
