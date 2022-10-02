@@ -1,5 +1,20 @@
 
 
+## v0.35.0 (2022-10-02)
+
+### Refactor
+
+- rename `boiling_learning.describe.describers` as `boiling_learning.descriptions`
+- replace `Described` with `LazyDescribed`
+- replace all usages of `Described` with `Lazy` or `LazyDescribed`
+- **describe/described**: retrieve the inner value of `Described` by calling the object instead of accessing an attribute
+- **transforms**: make existing transformers `eager` where applicable
+
+### Feat
+
+- **transforms**: add function for taking a subset of a dataset triplet
+- **utils/lazy**: add `eager` decorator for functions to accept both eager and lazy values
+
 ## v0.34.33 (2022-10-01)
 
 ### Fix
