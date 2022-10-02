@@ -1,5 +1,11 @@
 
 
+## v0.34.33 (2022-10-01)
+
+### Fix
+
+- **transforms**: allow tuples to be passed as dataset triplets
+
 ## v0.34.32 (2022-10-01)
 
 ## v0.34.31 (2022-10-01)
