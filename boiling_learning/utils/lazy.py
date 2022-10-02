@@ -1,19 +1,20 @@
 from __future__ import annotations
 
 from functools import lru_cache, partial, wraps
-from typing import Any, Callable, Generic, Tuple, TypeVar, Union
+from typing import Any, Callable, Generic, List, Tuple, TypeVar, Union
 
 from typing_extensions import Concatenate, ParamSpec
 
 from boiling_learning.describe.describers import Describable, describe
 from boiling_learning.io import json
+from boiling_learning.utils.functional import Pack
 
 __all__ = ('Lazy', 'LazyCallable', 'LazyTransform')
 
 _T = TypeVar('_T')
 _S = TypeVar('_S')
 _P = ParamSpec('_P')
-_Desc = Describable('_Desc', bound=Describable[json.JSONDataType])
+_Desc = TypeVar('_Desc', bound=Describable[json.JSONDataType])
 
 
 class Lazy(Generic[_T]):
@@ -48,6 +49,19 @@ class LazyDescribed(Lazy[_T]):
     @classmethod
     def from_describable(cls, value: _Desc) -> Lazy[_Desc]:
         return cls.from_value_and_description(value, value)
+
+    @classmethod
+    def from_constructor(
+        cls, constructor: Callable[_P, _T], *args: _P.args, **kwargs: _P.kwargs
+    ) -> LazyDescribed[_T]:
+        return LazyDescribed(
+            constructor(*args, **kwargs),
+            (constructor, Pack(args, kwargs)),
+        )
+
+    @classmethod
+    def from_list(cls, items: List[LazyDescribed[_T]]) -> LazyDescribed[List[_T]]:
+        return LazyDescribed(Lazy(lambda: [item() for item in items]), items)
 
 
 class LazyCallable(Generic[_P, _T]):
