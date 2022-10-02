@@ -458,7 +458,7 @@ class GetFitModel(CachedFunction[_P, Model]):
 
         dataset_cache_path = self.allocate('cache', datasets, params.batch_size)
         dataset_snapshot_path = self.allocate('snapshot', datasets)
-        _, ds_val, _ = datasets.value
+        _, ds_val, _ = datasets()
         ds_val_g10 = sliceable_dataset_to_tensorflow_dataset(ds_val.shuffle()).filter(
             lambda frame, hf: hf >= 10
         )
@@ -468,7 +468,7 @@ class GetFitModel(CachedFunction[_P, Model]):
 
         ds_val_g10 = ds_val_g10.prefetch(AUTOTUNE)
 
-        params.callbacks.value.extend(
+        params.callbacks().extend(
             [
                 TimePrinter(),
                 tf.keras.callbacks.ModelCheckpoint(

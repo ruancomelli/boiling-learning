@@ -15,8 +15,11 @@ _DescribedConstructedObject = Tuple[str, Pack[_AnyT, _AnyS]]
 
 class Described(Generic[_Any, _Description]):
     def __init__(self, value: _Any, description: Emptiable[_Description] = EMPTY) -> None:
-        self.value = value
+        self._value = value
         self.description = describe(description if description is not EMPTY else value)
+
+    def __call__(self) -> _Any:
+        return self._value
 
     def __describe__(self) -> _Description:
         return self.description
@@ -31,5 +34,5 @@ class Described(Generic[_Any, _Description]):
     def from_list(
         cls, described: List[Described[_Any, _Description]]
     ) -> Described[List[_Any], List[_Description]]:
-        values = [item.value for item in described]
+        values = [item() for item in described]
         return cls(values, describe(described))

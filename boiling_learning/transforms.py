@@ -35,7 +35,7 @@ def datasets_concatenater(
     test_datasets = []
 
     for dataset_triplet in datasets:
-        ds_train, ds_val, ds_test = dataset_triplet.value
+        ds_train, ds_val, ds_test = dataset_triplet()
 
         train_datasets.append(ds_train)
         val_datasets.append(ds_val)

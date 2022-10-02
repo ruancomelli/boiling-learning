@@ -96,14 +96,14 @@ def get_fit_model(
     epoch_registry: RegisterEpoch,
     history_registry: SaveHistory,
 ) -> FitModelReturn:
-    ds_train, ds_val, _ = datasets.value
+    ds_train, ds_val, _ = datasets()
 
     with Timer() as timer:
         compiled_model.architecture.model.fit(
             ds_train,
             validation_data=ds_val,
             epochs=params.epochs,
-            callbacks=params.callbacks.value + [history_registry, epoch_registry],
+            callbacks=params.callbacks() + [history_registry, epoch_registry],
         )
 
     duration = timer.duration
@@ -120,7 +120,7 @@ def get_fit_model(
 
 @contextmanager
 def strategy_scope(strategy: Optional[Described[tf.distribute.Strategy, Any]]) -> Iterator[None]:
-    context = strategy.value.scope() if strategy is not None else nullcontext()
+    context = strategy().scope() if strategy is not None else nullcontext()
 
     with context:
         yield

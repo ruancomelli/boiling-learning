@@ -70,7 +70,7 @@ class ImageRegressor(HyperModel):
                 outputs,
                 directory=directory,
                 overwrite=directory is None,
-                distribution_strategy=strategy.value if strategy is not None else None,
+                distribution_strategy=strategy() if strategy is not None else None,
                 **kwargs,
             )
         )
@@ -116,7 +116,7 @@ class ConvImageRegressor(HyperModel):
                 outputs,
                 directory=directory,
                 overwrite=directory is None,
-                distribution_strategy=strategy.value if strategy is not None else None,
+                distribution_strategy=strategy() if strategy is not None else None,
                 **kwargs,
             )
         )
@@ -161,7 +161,7 @@ class FixedArchitectureImageRegressor(HyperModel):
                 outputs,
                 directory=directory,
                 overwrite=directory is None,
-                distribution_strategy=strategy.value if strategy is not None else None,
+                distribution_strategy=strategy() if strategy is not None else None,
                 **kwargs,
             )
         )

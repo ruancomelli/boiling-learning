@@ -5,7 +5,7 @@ from typing import Any, Callable, Generic, Tuple, TypeVar, Union
 
 from typing_extensions import Concatenate, ParamSpec
 
-from boiling_learning.describe.describers import describe
+from boiling_learning.describe.describers import Describable, describe
 from boiling_learning.io import json
 
 __all__ = ('Lazy', 'LazyCallable', 'LazyTransform')
@@ -13,6 +13,7 @@ __all__ = ('Lazy', 'LazyCallable', 'LazyTransform')
 _T = TypeVar('_T')
 _S = TypeVar('_S')
 _P = ParamSpec('_P')
+_Desc = Describable('_Desc', bound=Describable[json.JSONDataType])
 
 
 class Lazy(Generic[_T]):
@@ -31,18 +32,22 @@ class Lazy(Generic[_T]):
 
 
 class LazyDescribed(Lazy[_T]):
-    def __init__(self, value: Lazy[_T], description: json.JSONDataType) -> None:
+    def __init__(self, value: Lazy[_T], description: Describable[json.JSONDataType]) -> None:
         super().__init__(value)
-        self._description = description
+        self._description = describe(description)
 
     def __describe__(self) -> json.JSONDataType:
-        return describe(self._description)
+        return self._description
 
     @classmethod
     def from_value_and_description(
-        cls, value: _T, description: json.JSONDataType
+        cls, value: _T, description: Describable[json.JSONDataType]
     ) -> LazyDescribed[_T]:
         return LazyDescribed(Lazy.from_value(value), description)
+
+    @classmethod
+    def from_describable(cls, value: _Desc) -> Lazy[_Desc]:
+        return cls.from_value_and_description(value, value)
 
 
 class LazyCallable(Generic[_P, _T]):
