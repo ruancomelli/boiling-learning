@@ -50,8 +50,5 @@ def dataset_sampler(
     if isinstance(dataset_triplet, Described):
         dataset_triplet = dataset_triplet.value
 
-    return DatasetTriplet(
-        dataset_triplet.train.sample(count),
-        dataset_triplet.val.sample(count),
-        dataset_triplet.test.sample(count),
-    )
+    train, val, test = dataset_triplet
+    return DatasetTriplet(train.sample(count), val.sample(count), test.sample(count))
