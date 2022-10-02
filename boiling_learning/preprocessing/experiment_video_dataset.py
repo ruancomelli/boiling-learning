@@ -4,7 +4,7 @@ import json as _json
 from pathlib import Path
 from typing import Callable, List, Mapping
 
-from boiling_learning.describe.describers import describe
+from boiling_learning.descriptions import describe
 from boiling_learning.io import json
 from boiling_learning.io.storage import dataclass
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo

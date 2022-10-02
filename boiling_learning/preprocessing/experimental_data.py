@@ -2,7 +2,7 @@ from pathlib import Path
 
 import modin.pandas as pd
 
-from boiling_learning.describe.describers import describe
+from boiling_learning.descriptions import describe
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 

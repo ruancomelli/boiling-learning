@@ -5,7 +5,7 @@ from typing import Any, Callable, Generic, List, Tuple, TypeVar, Union
 
 from typing_extensions import Concatenate, ParamSpec
 
-from boiling_learning.describe.describers import Describable, describe
+from boiling_learning.descriptions import Describable, describe
 from boiling_learning.io import json
 from boiling_learning.utils.functional import Pack
 

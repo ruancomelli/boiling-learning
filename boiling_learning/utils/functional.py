@@ -17,7 +17,7 @@ from typing import (
 
 import funcy
 
-from boiling_learning.describe.describers import describe
+from boiling_learning.descriptions import describe
 from boiling_learning.utils.frozendicts import frozendict
 from boiling_learning.utils.sentinels import Sentinel
 

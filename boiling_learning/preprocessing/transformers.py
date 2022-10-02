@@ -6,7 +6,7 @@ from typing import Any, Callable, Generic, TypeVar
 
 from typing_extensions import Concatenate, ParamSpec
 
-from boiling_learning.describe.describers import describe
+from boiling_learning.descriptions import describe
 from boiling_learning.io import json
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.lazy import Lazy, LazyTransform

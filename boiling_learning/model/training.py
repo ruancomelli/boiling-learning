@@ -12,7 +12,7 @@ from tensorflow.keras.optimizers import Optimizer
 from typing_extensions import ParamSpec, TypedDict
 
 from boiling_learning.datasets.datasets import DatasetTriplet
-from boiling_learning.describe.describers import describe
+from boiling_learning.descriptions import describe
 from boiling_learning.io import json
 from boiling_learning.io.storage import dataclass, load
 from boiling_learning.model.callbacks import RegisterEpoch, SaveHistory
