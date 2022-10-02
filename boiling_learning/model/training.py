@@ -12,12 +12,12 @@ from tensorflow.keras.optimizers import Optimizer
 from typing_extensions import ParamSpec, TypedDict
 
 from boiling_learning.datasets.datasets import DatasetTriplet
-from boiling_learning.describe.described import Described
 from boiling_learning.describe.describers import describe
 from boiling_learning.io import json
 from boiling_learning.io.storage import dataclass, load
 from boiling_learning.model.callbacks import RegisterEpoch, SaveHistory
 from boiling_learning.model.model import Evaluation, ModelArchitecture
+from boiling_learning.utils.lazy import Lazy, LazyDescribed
 from boiling_learning.utils.timing import Timer
 from boiling_learning.utils.typeutils import typename
 
@@ -76,7 +76,7 @@ def compile_model(architecture: ModelArchitecture, params: CompileModelParams) -
 class FitModelParams:
     batch_size: Optional[int]
     epochs: int
-    callbacks: Described[List[Callback], json.JSONDataType]
+    callbacks: LazyDescribed[List[Callback]]
 
 
 @dataclass(frozen=True)
@@ -90,7 +90,7 @@ class FitModelReturn:
 
 def get_fit_model(
     compiled_model: CompiledModel,
-    datasets: Described[DatasetTriplet[tf.data.Dataset], json.JSONDataType],
+    datasets: Lazy[DatasetTriplet[tf.data.Dataset]],
     params: FitModelParams,
     *,
     epoch_registry: RegisterEpoch,
@@ -119,7 +119,7 @@ def get_fit_model(
 
 
 @contextmanager
-def strategy_scope(strategy: Optional[Described[tf.distribute.Strategy, Any]]) -> Iterator[None]:
+def strategy_scope(strategy: Optional[Lazy[tf.distribute.Strategy]]) -> Iterator[None]:
     context = strategy().scope() if strategy is not None else nullcontext()
 
     with context:
@@ -128,8 +128,8 @@ def strategy_scope(strategy: Optional[Described[tf.distribute.Strategy, Any]]) -
 
 def _wrap_with_strategy(
     func: Callable[_P, _T]
-) -> Callable[[Optional[Described[tf.distribute.Strategy, Any]]], Callable[_P, _T]]:
-    def _wrapper(strategy: Optional[Described[tf.distribute.Strategy, Any]]) -> Callable[_P, _T]:
+) -> Callable[[Optional[Lazy[tf.distribute.Strategy]]], Callable[_P, _T]]:
+    def _wrapper(strategy: Optional[Lazy[tf.distribute.Strategy]]) -> Callable[_P, _T]:
         def _wrapped(*args: _P.args, **kwargs: _P.kwargs) -> _T:
             with strategy_scope(strategy):
                 return func(*args, **kwargs)

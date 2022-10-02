@@ -6,10 +6,10 @@ import keras_tuner as kt
 import tensorflow as tf
 
 from boiling_learning.automl.blocks import ImageNormalizationBlock, LayersBlock
-from boiling_learning.describe.described import Described
 from boiling_learning.io import json
 from boiling_learning.management.allocators import Allocator
 from boiling_learning.model.model import anonymize_model_json
+from boiling_learning.utils.lazy import Lazy
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 
@@ -37,7 +37,7 @@ class ImageRegressor(HyperModel):
         normalize_images: Optional[bool] = None,
         augment_images: Optional[bool] = None,
         directory: Union[PathLike, Allocator, None] = None,
-        strategy: Optional[Described[tf.distribute.Strategy, Any]] = None,
+        strategy: Optional[Lazy[tf.distribute.Strategy]] = None,
         **kwargs: Any,
     ) -> None:
         if 'overwrite' in kwargs:
@@ -83,7 +83,7 @@ class ConvImageRegressor(HyperModel):
         metrics: List[tf.keras.metrics.Metric],
         normalize_images: Optional[bool] = None,
         directory: Union[PathLike, Allocator, None] = None,
-        strategy: Optional[Described[tf.distribute.Strategy, Any]] = None,
+        strategy: Optional[Lazy[tf.distribute.Strategy]] = None,
         **kwargs: Any,
     ) -> None:
         if 'overwrite' in kwargs:
@@ -129,7 +129,7 @@ class FixedArchitectureImageRegressor(HyperModel):
         loss: tf.keras.losses.Loss,
         metrics: List[tf.keras.metrics.Metric],
         directory: Union[PathLike, Allocator, None] = None,
-        strategy: Optional[Described[tf.distribute.Strategy, Any]] = None,
+        strategy: Optional[Lazy[tf.distribute.Strategy]] = None,
         **kwargs: Any,
     ) -> None:
         if 'overwrite' in kwargs:

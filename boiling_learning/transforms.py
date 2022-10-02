@@ -3,9 +3,8 @@ from typing import Any, Tuple, TypeVar, Union
 
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
-from boiling_learning.describe.described import Described
 from boiling_learning.preprocessing.transformers import wrap_as_partial_transformer
-from boiling_learning.utils.lazy import eager
+from boiling_learning.utils.lazy import LazyDescribed, eager
 
 _Dataset = TypeVar('_Dataset', bound=SliceableDataset[Any])
 
@@ -20,7 +19,7 @@ def subset(datasets: DatasetTriplet[_Dataset], name: str) -> _Dataset:
 
 @wrap_as_partial_transformer
 def datasets_merger(
-    datasets: Tuple[Described[DatasetTriplet[_Dataset], Any], ...]
+    datasets: Tuple[LazyDescribed[DatasetTriplet[_Dataset], Any], ...]
 ) -> DatasetTriplet[_Dataset]:
     dataset_triplet = datasets_concatenater()(datasets)
     return dataset_sampler(count=Fraction(1, len(datasets)))(dataset_triplet)
@@ -28,7 +27,7 @@ def datasets_merger(
 
 @wrap_as_partial_transformer
 def datasets_concatenater(
-    datasets: Tuple[Described[DatasetTriplet[_Dataset], Any], ...]
+    datasets: Tuple[LazyDescribed[DatasetTriplet[_Dataset], Any], ...]
 ) -> DatasetTriplet[_Dataset]:
     train_datasets = []
     val_datasets = []

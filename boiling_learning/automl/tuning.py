@@ -4,15 +4,15 @@ import tensorflow as tf
 
 from boiling_learning.automl.hypermodels import HyperModel
 from boiling_learning.datasets.datasets import DatasetTriplet
-from boiling_learning.describe.described import Described
 from boiling_learning.io import json
 from boiling_learning.io.storage import dataclass
 from boiling_learning.model.model import Evaluation, ModelArchitecture
+from boiling_learning.utils.lazy import LazyDescribed
 
 
 @dataclass(frozen=True)
 class TuneModelParams:
-    callbacks: Described[List[tf.keras.callbacks.Callback], json.JSONDataType]
+    callbacks: LazyDescribed[List[tf.keras.callbacks.Callback], json.JSONDataType]
     batch_size: int
 
 
