@@ -1,5 +1,11 @@
 
 
+## v0.35.1 (2022-10-02)
+
+### Feat
+
+- add utility module for image datasets
+
 ## v0.35.0 (2022-10-02)
 
 ### Refactor
