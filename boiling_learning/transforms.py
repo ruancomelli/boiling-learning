@@ -5,11 +5,13 @@ from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.describe.described import Described
 from boiling_learning.preprocessing.transformers import wrap_as_partial_transformer
+from boiling_learning.utils.lazy import eager
 
 _Dataset = TypeVar('_Dataset', bound=SliceableDataset[Any])
 
 
 @wrap_as_partial_transformer
+@eager
 def subset(datasets: DatasetTriplet[_Dataset], name: str) -> _Dataset:
     ds_train, ds_val, ds_test = datasets
 
@@ -47,15 +49,10 @@ def datasets_concatenater(
 
 
 @wrap_as_partial_transformer
+@eager
 def dataset_sampler(
-    dataset_triplet: Union[
-        DatasetTriplet[_Dataset],
-        Described[DatasetTriplet[_Dataset], Any],
-    ],
+    dataset_triplet: DatasetTriplet[_Dataset],
     count: Union[int, Fraction],
 ) -> DatasetTriplet[_Dataset]:
-    if isinstance(dataset_triplet, Described):
-        dataset_triplet = dataset_triplet.value
-
     train, val, test = dataset_triplet
     return DatasetTriplet(train.sample(count), val.sample(count), test.sample(count))

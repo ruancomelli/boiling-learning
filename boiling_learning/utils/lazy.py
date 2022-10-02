@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from functools import lru_cache, partial
+from functools import lru_cache, partial, wraps
 from typing import Any, Callable, Generic, Tuple, TypeVar, Union
 
 from typing_extensions import Concatenate, ParamSpec
@@ -76,6 +76,7 @@ class LazyTransform(Lazy[_S]):
 def eager(
     function: Callable[Concatenate[_T, _P], _S]
 ) -> Callable[Concatenate[Union[_T, Lazy[_T]], _P], _S]:
+    @wraps(function)
     def _wrapped(first: Union[_T, Lazy[_T]], *args: _P.args, **kwargs: _P.kwargs) -> _S:
         return (
             function(first(), *args, **kwargs)
