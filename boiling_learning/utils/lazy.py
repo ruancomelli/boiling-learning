@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from functools import lru_cache, partial
-from typing import Any, Callable, Generic, Tuple, TypeVar
+from typing import Any, Callable, Generic, Tuple, TypeVar, Union
 
-from typing_extensions import ParamSpec
+from typing_extensions import Concatenate, ParamSpec
 
 from boiling_learning.describe.describers import describe
 from boiling_learning.io import json
@@ -36,7 +36,13 @@ class LazyDescribed(Lazy[_T]):
         self._description = description
 
     def __describe__(self) -> json.JSONDataType:
-        return self._description
+        return describe(self._description)
+
+    @classmethod
+    def from_value_and_description(
+        cls, value: _T, description: json.JSONDataType
+    ) -> LazyDescribed[_T]:
+        return LazyDescribed(Lazy.from_value(value), description)
 
 
 class LazyCallable(Generic[_P, _T]):
@@ -65,3 +71,16 @@ class LazyTransform(Lazy[_S]):
             if isinstance(self._arg, LazyTransform)
             else (self._arg, self._transform)
         )
+
+
+def eager(
+    function: Callable[Concatenate[_T, _P], _S]
+) -> Callable[Concatenate[Union[_T, Lazy[_T]], _P], _S]:
+    def _wrapped(first: Union[_T, Lazy[_T]], *args: _P.args, **kwargs: _P.kwargs) -> _S:
+        return (
+            function(first(), *args, **kwargs)
+            if isinstance(first, Lazy)
+            else function(first, *args, **kwargs)
+        )
+
+    return _wrapped
