@@ -10,6 +10,13 @@ _Dataset = TypeVar('_Dataset', bound=SliceableDataset[Any])
 
 
 @wrap_as_partial_transformer
+def subset(datasets: DatasetTriplet[_Dataset], name: str) -> _Dataset:
+    ds_train, ds_val, ds_test = datasets
+
+    return {'train': ds_train, 'val': ds_val, 'test': ds_test}[name]
+
+
+@wrap_as_partial_transformer
 def datasets_merger(
     datasets: Tuple[Described[DatasetTriplet[_Dataset], Any], ...]
 ) -> DatasetTriplet[_Dataset]:
