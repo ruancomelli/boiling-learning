@@ -1,6 +1,8 @@
 from fractions import Fraction
 from typing import Any, Tuple, TypeVar, Union
 
+from typing_extensions import Literal
+
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.preprocessing.transformers import wrap_as_partial_transformer
@@ -11,7 +13,7 @@ _Dataset = TypeVar('_Dataset', bound=SliceableDataset[Any])
 
 @wrap_as_partial_transformer
 @eager
-def subset(datasets: DatasetTriplet[_Dataset], name: str) -> _Dataset:
+def subset(datasets: DatasetTriplet[_Dataset], name: Literal['train', 'val', 'test']) -> _Dataset:
     ds_train, ds_val, ds_test = datasets
 
     return {'train': ds_train, 'val': ds_val, 'test': ds_test}[name]
