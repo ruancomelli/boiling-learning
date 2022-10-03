@@ -1,5 +1,15 @@
 
 
+## v0.36.0 (2022-10-02)
+
+### Refactor
+
+- rename `boiling_learning.utils.lazy` as `boiling_learning.lazy`
+
+### Fix
+
+- **utils/lazy**: forward a partial function in `LazyDescribed.from_constructor`
+
 ## v0.35.2 (2022-10-02)
 
 ### Feat
