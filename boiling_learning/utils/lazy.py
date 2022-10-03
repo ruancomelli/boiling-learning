@@ -55,7 +55,7 @@ class LazyDescribed(Lazy[_T]):
         cls, constructor: Callable[_P, _T], *args: _P.args, **kwargs: _P.kwargs
     ) -> LazyDescribed[_T]:
         return LazyDescribed(
-            constructor(*args, **kwargs),
+            LazyCallable(constructor)(*args, **kwargs),
             (constructor, Pack(args, kwargs)),
         )
 
