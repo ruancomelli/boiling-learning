@@ -15,9 +15,9 @@ from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.descriptions import describe
 from boiling_learning.io import json
 from boiling_learning.io.storage import dataclass, load
+from boiling_learning.lazy import Lazy, LazyDescribed
 from boiling_learning.model.callbacks import RegisterEpoch, SaveHistory
 from boiling_learning.model.model import Evaluation, ModelArchitecture
-from boiling_learning.utils.lazy import Lazy, LazyDescribed
 from boiling_learning.utils.timing import Timer
 from boiling_learning.utils.typeutils import typename
 

@@ -5,8 +5,8 @@ from typing_extensions import Literal
 
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
+from boiling_learning.lazy import LazyDescribed, eager
 from boiling_learning.preprocessing.transformers import wrap_as_partial_transformer
-from boiling_learning.utils.lazy import LazyDescribed, eager
 
 _Dataset = TypeVar('_Dataset', bound=SliceableDataset[Any])
 

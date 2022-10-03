@@ -1,8 +1,8 @@
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
+from boiling_learning.lazy import Lazy, LazyDescribed
 from boiling_learning.management.allocators import json_describe
 from boiling_learning.transforms import subset
-from boiling_learning.utils.lazy import Lazy, LazyDescribed
 
 
 def test_subset() -> None:

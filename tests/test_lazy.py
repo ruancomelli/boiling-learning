@@ -1,5 +1,5 @@
 from boiling_learning.descriptions import describe
-from boiling_learning.utils.lazy import LazyDescribed
+from boiling_learning.lazy import LazyDescribed
 
 
 def test_lazy_described_from_list() -> None:

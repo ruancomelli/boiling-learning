@@ -8,8 +8,8 @@ from typing_extensions import Concatenate, ParamSpec
 
 from boiling_learning.descriptions import describe
 from boiling_learning.io import json
+from boiling_learning.lazy import Lazy, LazyTransform
 from boiling_learning.utils.functional import Pack
-from boiling_learning.utils.lazy import Lazy, LazyTransform
 
 _X = TypeVar('_X')
 _Y = TypeVar('_Y')

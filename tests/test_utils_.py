@@ -1,9 +1,9 @@
 import math
 
+from boiling_learning.lazy import Lazy, LazyCallable
 from boiling_learning.utils.collections import KeyedSet
 from boiling_learning.utils.geometry import Cylinder, RectangularPrism
 from boiling_learning.utils.iterutils import unsort
-from boiling_learning.utils.lazy import Lazy, LazyCallable
 
 
 class Test_utils_collections:
