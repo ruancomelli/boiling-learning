@@ -1,5 +1,5 @@
 from fractions import Fraction
-from typing import Any, Tuple, TypeVar, Union
+from typing import Any, Optional, Tuple, TypeVar, Union
 
 from typing_extensions import Literal
 
@@ -54,6 +54,18 @@ def datasets_concatenater(
 def dataset_sampler(
     dataset_triplet: DatasetTriplet[_Dataset],
     count: Union[int, Fraction],
+    subset: Optional[Literal['train', 'val', 'test']] = None,
 ) -> DatasetTriplet[_Dataset]:
     train, val, test = dataset_triplet
-    return DatasetTriplet(train.sample(count), val.sample(count), test.sample(count))
+
+    if subset is None:
+        return DatasetTriplet(train.sample(count), val.sample(count), test.sample(count))
+
+    if subset == 'train':
+        train = train.sample(count)
+    elif subset == 'val':
+        val = val.sample(count)
+    else:
+        test = test.sample(count)
+
+    return DatasetTriplet(train, val, test)

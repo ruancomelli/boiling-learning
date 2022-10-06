@@ -95,11 +95,9 @@ class ExperimentVideo:
         self.df_path = (
             resolve(df_path)
             if df_path is not None
-            else (
-                (resolve(df_dir) / self.name).with_suffix(df_suffix)
-                if df_dir is not None
-                else None
-            )
+            else (resolve(df_dir) / self.name).with_suffix(df_suffix)
+            if df_dir is not None
+            else None
         )
 
     def __len__(self) -> int:
