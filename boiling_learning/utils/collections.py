@@ -3,7 +3,6 @@ from __future__ import annotations
 from contextlib import suppress
 from itertools import chain
 from typing import (
-    Any,
     Callable,
     Generic,
     Hashable,
@@ -20,7 +19,6 @@ from typing import (
 )
 
 _Any = TypeVar('_Any')
-_OptionalAny = TypeVar('_OptionalAny', None, Any)
 _Key = TypeVar('_Key', bound=Hashable)
 _Value = TypeVar('_Value')
 
