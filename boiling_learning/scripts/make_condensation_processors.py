@@ -29,7 +29,6 @@ def main(
 ]:
     return [
         image_dtype_converter('float32'),
-        grayscaler(),
         {
             'stainless steel:polished:test 6:00003': cropper(
                 left=849, right=1427, top=307, bottom=900
@@ -112,6 +111,7 @@ def main(
             'parametric:rh 90%:test 5:00013': cropper(left=744, right=1307, top=231, bottom=802),
             'parametric:rh 90%:test 5:00012': cropper(left=744, right=1312, top=226, bottom=806),
         },
+        grayscaler(),
         downscaler(downscale_factor),
         {'center': center_cropper, 'random': random_cropper}[crop_mode](
             height=height, width=width

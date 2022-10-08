@@ -44,7 +44,6 @@ def main(
 
     return [
         image_dtype_converter('float32'),
-        grayscaler(),
         {
             'GOPR2819': cropper(left=861, right=1687, top=321, bottom=1150),
             'GOPR2820': cropper(left=861, right=1678, top=321, bottom=1140),
@@ -180,6 +179,7 @@ def main(
             'GOPR2959': cropper(left=980, right=1810, top=400, bottom=1200),
             'GOPR2960': cropper(left=980, right=1810, top=400, bottom=1200),
         },
+        grayscaler(),
         downscaler(downscale_factor),
         cropper(height=height, bottom_border=bottom_border),
         {'center': center_cropper, 'random': random_cropper}[crop_mode](
