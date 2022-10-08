@@ -1,5 +1,19 @@
 
 
+## v0.36.1 (2022-10-08)
+
+### Fix
+
+- **scripts**: invert order of conversion to grayscale and cropping
+
+### Feat
+
+- **transforms**: accept a subset to sample with `dataset_sampler`
+
+### Refactor
+
+- **utils/collections**: remove unnecessary typevar
+
 ## v0.36.0 (2022-10-02)
 
 ### Refactor
