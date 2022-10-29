@@ -29,7 +29,7 @@ class Transformer(Generic[_X, _Y]):
     def __call__(self, arg: _X) -> _Y:
         return self.function(arg, *self.pack.args, **self.pack.kwargs)
 
-    def __describe__(self) -> json.JSONSerializable:
+    def __describe__(self) -> json.JSONEncodable:
         return {
             'type': type(self),
             'function': self.function,

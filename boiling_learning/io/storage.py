@@ -102,20 +102,20 @@ def load(path: PathLike) -> Any:
     return deserialize[obj_type](path / '__data__', metadata['metadata'])
 
 
-class _SimpleJSONSerializableMeta(type):
+class _SimpleJSONEncodableMeta(type):
     def __instancecheck__(self, instance: Any) -> bool:
         return instance is None or (
             isinstance(instance, (bool, int, float, str, dict, list, tuple))
-            and json.serialize.supports(instance)
+            and json.encode.supports(instance)
         )
 
 
-class SimpleJSONSerializable(metaclass=_SimpleJSONSerializableMeta):
+class SimpleJSONEncodable(metaclass=_SimpleJSONEncodableMeta):
     pass
 
 
-@serialize.instance(delegate=SimpleJSONSerializable)
-def _serialize_simple_json_serializable(instance: SimpleJSONSerializable, path: Path) -> Metadata:
+@serialize.instance(delegate=SimpleJSONEncodable)
+def _serialize_simple_json_serializable(instance: SimpleJSONEncodable, path: Path) -> Metadata:
     json.dump(instance, path.with_suffix('.json'))
     return {'json': True}
 

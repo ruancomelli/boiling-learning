@@ -40,8 +40,8 @@ def json_describe(instance: Supports[JSONDescribable[_JSONDescription]]) -> _JSO
     '''Return a JSON description of an object.'''
 
 
-@json_describe.instance(delegate=json.SupportsJSONSerializable)
-def _json_describe_json_serializable(instance: json.SupportsJSONSerializable) -> json.JSONDataType:
+@json_describe.instance(delegate=json.SupportsJSONEncodable)
+def _json_describe_json_serializable(instance: json.SupportsJSONEncodable) -> json.JSONDataType:
     return json.serialize(instance)
 
 
