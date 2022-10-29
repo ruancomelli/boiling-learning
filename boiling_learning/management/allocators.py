@@ -94,6 +94,8 @@ class JSONTableAllocator(Allocator):
         return resolve(self.path / f'{doc_id}{self.suffix}', parents=True)
 
     def _provide(self, serialized: json.JSONDataType) -> int:
+        serialized = {'data': serialized}  # ensure that is a mapping
+
         for doc in self.db:
             if doc == serialized:
                 return doc.doc_id

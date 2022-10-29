@@ -321,15 +321,31 @@ def serialize(obj: Supports[JSONEncodable]) -> SerializedJSONObject:
     if obj is None or isinstance(obj, (bool, int, str, float)):
         return obj
 
-    if isinstance(obj, list):
-        return [serialize(item) for item in obj]
+    if isinstance(obj, (list, tuple)):
+        return _nested_sort_dicts([encode_type(obj), *(serialize(item) for item in obj)])
 
-    return _nested_sort_dicts(
-        {
-            'contents': encode(obj),
-            'type': encode_type(obj),
-        }
-    )
+    return _nested_sort_dicts([encode_type(obj), encode(obj)])
+
+
+def deserialize(obj: SerializedJSONDataType) -> Any:
+    if isinstance(obj, dict):
+        return {key: deserialize(value) for key, value in obj.items()}
+
+    if isinstance(obj, list):
+        encoded_type, *encoded_items = obj
+
+        obj_type = decode[type](encoded_type)
+
+        if obj_type is list:
+            return [deserialize(item) for item in encoded_items]
+
+        if obj_type is tuple:
+            return tuple(deserialize(item) for item in encoded_items)
+
+        (encoded_item,) = encoded_items
+        return decode[obj_type](encoded_item)
+
+    return obj
 
 
 def dumps(obj: Supports[JSONEncodable]) -> str:
@@ -341,20 +357,6 @@ def dump(obj: Supports[JSONEncodable], path: PathLike) -> None:
 
     with resolve(path, parents=True).open('w', encoding='utf-8') as file:
         _json.dump(serialized, file, indent=4)
-
-
-def deserialize(obj: SerializedJSONDataType) -> Any:
-    if isinstance(obj, dict):
-        encoded_type = obj['type']
-
-        obj_type = decode[type](encoded_type) if encoded_type is not None else None
-
-        return decode[obj_type](obj['contents'])
-
-    if isinstance(obj, list):
-        return [deserialize(item) for item in obj]
-
-    return obj
 
 
 def load(path: PathLike) -> Any:

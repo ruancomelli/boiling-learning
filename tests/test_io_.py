@@ -69,18 +69,15 @@ class TestStorage:
         ),
         pytest.param(
             (3, 'hi', ['no', 'yes'], True, None),
-            [3, 'hi', ['no', 'yes'], True, None],
-            id='tuple-of-basics',
+            [3, 'hi', ['builtins.list', 'no', 'yes'], True, None],
+            id='tuple-of-nested-basics',
         ),
         pytest.param(
             (3, 'hi', ('no', X(4)), True, None),
             [
                 3,
                 'hi',
-                {
-                    'type': 'builtins.tuple',
-                    'contents': ['no', {'type': f'{__name__}.X', 'contents': {'value': 4}}],
-                },
+                ['builtins.tuple', 'no', [f'{__name__}.X', {'value': 4}]],
                 True,
                 None,
             ],
@@ -88,32 +85,23 @@ class TestStorage:
         ),
         pytest.param(
             P(3, 'hi', ('no', X(4)), do=True, errors=None),
-            {
-                'type': 'builtins.tuple',
-                'contents': [
-                    {
-                        'type': 'builtins.tuple',
-                        'contents': [
-                            3,
-                            'hi',
-                            {
-                                'type': 'builtins.tuple',
-                                'contents': [
-                                    'no',
-                                    {'type': f'{__name__}.X', 'contents': {'value': 4}},
-                                ],
-                            },
-                        ],
-                    },
-                    {
-                        'type': f'{frozendict.__module__}.{frozendict.__name__}',
-                        'contents': {
-                            'type': 'builtins.dict',
-                            'contents': {'do': True, 'errors': None},
-                        },
-                    },
+            [
+                'builtins.tuple',
+                [
+                    'builtins.tuple',
+                    3,
+                    'hi',
+                    [
+                        'builtins.tuple',
+                        'no',
+                        [f'{__name__}.X', {'value': 4}],
+                    ],
                 ],
-            },
+                [
+                    f'{frozendict.__module__}.{frozendict.__name__}',
+                    ['builtins.dict', {'do': True, 'errors': None}],
+                ],
+            ],
             id='pack-of-complex',
         ),
     ],
@@ -132,37 +120,33 @@ def test_json_encode_decode(obj: Any, encoded: Any) -> None:
         pytest.param(3.14, 3.14),
         pytest.param('hello', 'hello'),
         pytest.param(True, True),
-        pytest.param([], [], id='empty-list'),
-        pytest.param(X(5), {'type': f'{__name__}.X', 'contents': {'value': 5}}, id='custom-type'),
-        pytest.param([0, 1, 'hello'], [0, 1, 'hello'], id='list-of-basics'),
+        pytest.param([], ['builtins.list'], id='empty-list'),
+        pytest.param(X(5), [f'{__name__}.X', {'value': 5}], id='custom-type'),
+        pytest.param([0, 1, 'hello'], ['builtins.list', 0, 1, 'hello'], id='list-of-basics'),
         pytest.param(
             (0, None, 'hello'),
-            {'type': 'builtins.tuple', 'contents': [0, None, 'hello']},
+            ['builtins.tuple', 0, None, 'hello'],
             id='tuple-of-basics',
         ),
         pytest.param(
             (3, 'hi', ['no', 'yes'], True, None),
-            {'type': 'builtins.tuple', 'contents': [3, 'hi', ['no', 'yes'], True, None]},
+            ['builtins.tuple', 3, 'hi', ['builtins.list', 'no', 'yes'], True, None],
             id='tuple-of-complex-native',
         ),
         pytest.param(
             (3, 'hi', ('no', X(4)), True, None),
-            {
-                'type': 'builtins.tuple',
-                'contents': [
-                    3,
-                    'hi',
-                    {
-                        'type': 'builtins.tuple',
-                        'contents': [
-                            'no',
-                            {'type': f'{__name__}.X', 'contents': {'value': 4}},
-                        ],
-                    },
-                    True,
-                    None,
+            [
+                'builtins.tuple',
+                3,
+                'hi',
+                [
+                    'builtins.tuple',
+                    'no',
+                    [f'{__name__}.X', {'value': 4}],
                 ],
-            },
+                True,
+                None,
+            ],
             id='tuple-of-complex-custom',
         ),
     ],

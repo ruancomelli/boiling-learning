@@ -40,99 +40,78 @@ def test_subset_lazy() -> None:
     assert list(val_subset()) == list(ds_val) == [3, 4, 5]
     assert list(test_subset()) == list(ds_test) == [6, 7, 8]
 
-    assert json_describe(train_subset) == {
-        'contents': [
-            'my_dataset',
+    assert json_describe(train_subset) == [
+        'builtins.tuple',
+        'my_dataset',
+        [
+            'builtins.dict',
             {
-                'contents': {
-                    'function': {
-                        'contents': 'boiling_learning.transforms.subset',
-                        'type': 'types.FunctionType',
-                    },
-                    'pack': {
-                        'contents': {
-                            'contents': [
-                                {'contents': ['train'], 'type': 'builtins.tuple'},
-                                {
-                                    'contents': {'contents': {}, 'type': 'builtins.dict'},
-                                    'type': 'boiling_learning.utils.frozendicts.frozendict',
-                                },
-                            ],
-                            'type': 'builtins.tuple',
-                        },
-                        'type': 'boiling_learning.utils.functional.Pack',
-                    },
-                    'type': {
-                        'contents': 'boiling_learning.preprocessing.transformers.Transformer',
-                        'type': 'builtins.type',
-                    },
-                },
-                'type': 'builtins.dict',
+                'function': ['types.FunctionType', 'boiling_learning.transforms.subset'],
+                'pack': [
+                    'boiling_learning.utils.functional.Pack',
+                    [
+                        'builtins.tuple',
+                        ['builtins.tuple', 'train'],
+                        [
+                            'boiling_learning.utils.frozendicts.frozendict',
+                            ['builtins.dict', {}],
+                        ],
+                    ],
+                ],
+                'type': [
+                    'builtins.type',
+                    'boiling_learning.preprocessing.transformers.Transformer',
+                ],
             },
         ],
-        'type': 'builtins.tuple',
-    }
-    assert json_describe(val_subset) == {
-        'contents': [
-            'my_dataset',
+    ]
+    assert json_describe(val_subset) == [
+        'builtins.tuple',
+        'my_dataset',
+        [
+            'builtins.dict',
             {
-                'contents': {
-                    'function': {
-                        'contents': 'boiling_learning.transforms.subset',
-                        'type': 'types.FunctionType',
-                    },
-                    'pack': {
-                        'contents': {
-                            'contents': [
-                                {'contents': ['val'], 'type': 'builtins.tuple'},
-                                {
-                                    'contents': {'contents': {}, 'type': 'builtins.dict'},
-                                    'type': 'boiling_learning.utils.frozendicts.frozendict',
-                                },
-                            ],
-                            'type': 'builtins.tuple',
-                        },
-                        'type': 'boiling_learning.utils.functional.Pack',
-                    },
-                    'type': {
-                        'contents': 'boiling_learning.preprocessing.transformers.Transformer',
-                        'type': 'builtins.type',
-                    },
-                },
-                'type': 'builtins.dict',
+                'function': ['types.FunctionType', 'boiling_learning.transforms.subset'],
+                'pack': [
+                    'boiling_learning.utils.functional.Pack',
+                    [
+                        'builtins.tuple',
+                        ['builtins.tuple', 'val'],
+                        [
+                            'boiling_learning.utils.frozendicts.frozendict',
+                            ['builtins.dict', {}],
+                        ],
+                    ],
+                ],
+                'type': [
+                    'builtins.type',
+                    'boiling_learning.preprocessing.transformers.Transformer',
+                ],
             },
         ],
-        'type': 'builtins.tuple',
-    }
-    assert json_describe(test_subset) == {
-        'contents': [
-            'my_dataset',
+    ]
+    assert json_describe(test_subset) == [
+        'builtins.tuple',
+        'my_dataset',
+        [
+            'builtins.dict',
             {
-                'contents': {
-                    'function': {
-                        'contents': 'boiling_learning.transforms.subset',
-                        'type': 'types.FunctionType',
-                    },
-                    'pack': {
-                        'contents': {
-                            'contents': [
-                                {'contents': ['test'], 'type': 'builtins.tuple'},
-                                {
-                                    'contents': {'contents': {}, 'type': 'builtins.dict'},
-                                    'type': 'boiling_learning.utils.frozendicts.frozendict',
-                                },
-                            ],
-                            'type': 'builtins.tuple',
-                        },
-                        'type': 'boiling_learning.utils.functional.Pack',
-                    },
-                    'type': {
-                        'contents': 'boiling_learning.preprocessing.transformers.Transformer',
-                        'type': 'builtins.type',
-                    },
-                },
-                'type': 'builtins.dict',
+                'function': ['types.FunctionType', 'boiling_learning.transforms.subset'],
+                'pack': [
+                    'boiling_learning.utils.functional.Pack',
+                    [
+                        'builtins.tuple',
+                        ['builtins.tuple', 'test'],
+                        [
+                            'boiling_learning.utils.frozendicts.frozendict',
+                            ['builtins.dict', {}],
+                        ],
+                    ],
+                ],
+                'type': [
+                    'builtins.type',
+                    'boiling_learning.preprocessing.transformers.Transformer',
+                ],
             },
         ],
-        'type': 'builtins.tuple',
-    }
+    ]
