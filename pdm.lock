@@ -1190,7 +1190,6 @@ dependencies = [
 [[package]]
 name = "pathspec"
 version = "0.9.0"
-requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 summary = "Utility library for gitignore style pattern matching of file paths."
 
 [[package]]
@@ -1365,7 +1364,6 @@ summary = "Python style guide checker"
 [[package]]
 name = "pycparser"
 version = "2.21"
-requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "C parser in Python"
 
 [[package]]
@@ -1496,7 +1494,7 @@ summary = "Python for Window Extensions"
 name = "pywinpty"
 version = "2.0.7"
 requires_python = ">=3.7"
-summary = ""
+summary = "Pseudo terminal support for Windows from Python."
 
 [[package]]
 name = "pyyaml"
@@ -1837,21 +1835,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tinydb"
-version = "4.7.0"
-requires_python = ">=3.6,<4.0"
-summary = "TinyDB is a tiny, document oriented database optimized for your happiness :)"
-
-[[package]]
-name = "tinydb-smartcache"
-version = "2.0.0"
-requires_python = ">=3.5,<4.0"
-summary = "A smarter query cache for TinyDB"
-dependencies = [
-    "tinydb<5.0,>=4.0",
-]
-
-[[package]]
 name = "toml"
 version = "0.10.2"
 requires_python = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
@@ -2088,7 +2071,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:6dc8afb0eaccc309c28a8c0f9aeb8c33e62ded4487cbca89d5a25468497c321f"
+content_hash = "sha256:d606a4cb1a6cd03b0a4c9f90620323e9a7d14c144eedbac07628f14df3b4235e"
 
 [metadata.files]
 "absl-py 1.2.0" = [
@@ -3749,6 +3732,7 @@ content_hash = "sha256:6dc8afb0eaccc309c28a8c0f9aeb8c33e62ded4487cbca89d5a254684
 ]
 "pyqt6-sip 13.4.0" = [
     {url = "https://files.pythonhosted.org/packages/03/fe/807a494e573d12df05612d21a70e3089f48ad9d6740263a302193295bcd2/PyQt6_sip-13.4.0-cp310-cp310-win_amd64.whl", hash = "sha256:de601187055d684b36ebe6e800a5deacaa55b69d71ad43312b76422cfeae0e12"},
+    {url = "https://files.pythonhosted.org/packages/29/01/35fc3db892f1bbe1bd3caf28a34269a7fdf657ce2638f895345976076f1d/PyQt6_sip-13.4.0-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:e3b17308ca729bcb6d25c01144c6b2e17d40812231c3ef9caaa72a78db2b1069"},
     {url = "https://files.pythonhosted.org/packages/38/c1/d6ba9ca0e6edb407f388a029971cd32e8131a4a0395c1380309c4ced9808/PyQt6_sip-13.4.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:3ac7e0800180202dcc0c7035ff88c2a6f4a0f5acb20c4a19f71d807d0f7857b7"},
     {url = "https://files.pythonhosted.org/packages/39/fc/f889254efda90418e367df28da9d14ac64ca19a9d93f44355d21ac562b0f/PyQt6_sip-13.4.0.tar.gz", hash = "sha256:6d87a3ee5872d7511b76957d68a32109352caf3b7a42a01d9ee20032b350d979"},
     {url = "https://files.pythonhosted.org/packages/4d/0a/a232e775e5c7d4e7d946f685fce97009117e652efc59c490b29eb9b3d8ab/PyQt6_sip-13.4.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:9e03c780846fd5d71c06e33322fd11a05713d9cd410e3571d069ac9a84077647"},
@@ -3760,7 +3744,9 @@ content_hash = "sha256:6dc8afb0eaccc309c28a8c0f9aeb8c33e62ded4487cbca89d5a254684
     {url = "https://files.pythonhosted.org/packages/a9/f1/a3d40a6eb4c9b5ec34a07e48a67572f9b76a389f44921fcea1a5a4261c90/PyQt6_sip-13.4.0-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:fd2df2a9479b8ac858117bd55dc0ec0bd1ce6c8f3486b0cc5e860c0540a8bba0"},
     {url = "https://files.pythonhosted.org/packages/bb/d3/0c579d5dd1f011b9f7e03fe78e0d3e503465aa6a9358228c1f0b89d78c1d/PyQt6_sip-13.4.0-cp310-cp310-manylinux1_x86_64.whl", hash = "sha256:bb4f2e2fdcf3a8dafe4256750bbedd9e7107c4fd8afa9c25be28423c36bb12b8"},
     {url = "https://files.pythonhosted.org/packages/c8/d5/7d1c7f767d5478999135faaf9b2599f1b7daa792920192d9c79471a7ef07/PyQt6_sip-13.4.0-cp39-cp39-win_amd64.whl", hash = "sha256:3486914137f5336cff6e10a5e9d52c1e60ff883473938b45f267f794daeacb2f"},
+    {url = "https://files.pythonhosted.org/packages/c9/4f/b6920510584aaea655d722573d7cfd68cde5f6f0a9e07e7ff92dac5dc5bb/PyQt6_sip-13.4.0-cp311-cp311-win_amd64.whl", hash = "sha256:77af9c7e3f50414ec5af9b1534aaf2ba25115ae65aa5ed735111c8ef0884b862"},
     {url = "https://files.pythonhosted.org/packages/ee/de/7f630f208867dbeb2dc7c8945e674c4dd690b7e7d7214f9995ae9495b273/PyQt6_sip-13.4.0-cp38-cp38-win_amd64.whl", hash = "sha256:cfdcd43e123bd55c155cfe7a33895033e6d25de90a48ed9c25a0ddd0196a810e"},
+    {url = "https://files.pythonhosted.org/packages/f3/c6/a485e737dd52038142322f3bd8f09268e946b942ece1db037b370ca7a3d5/PyQt6_sip-13.4.0-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:d51704d50b82713fd7c928b7deb31e17be239ddac74fc2fd708e52bd21ecea3a"},
 ]
 "pyqtgraph 0.12.3" = [
     {url = "https://files.pythonhosted.org/packages/36/8f/4893227da3d4825a48cc1ec67acfc19ad26444f78527b61d6ed22c926d10/pyqtgraph-0.12.3.tar.gz", hash = "sha256:f1dfee710fa5e9abaaf3d4dff0116659e6c7b4e7b514870c5cddad268a753d74"},
@@ -4201,14 +4187,6 @@ content_hash = "sha256:6dc8afb0eaccc309c28a8c0f9aeb8c33e62ded4487cbca89d5a254684
 "tinycss2 1.1.1" = [
     {url = "https://files.pythonhosted.org/packages/1e/5a/576828164b5486f319c4323915b915a8af3fa4a654bbb6f8fc8e87b5cb17/tinycss2-1.1.1.tar.gz", hash = "sha256:b2e44dd8883c360c35dd0d1b5aad0b610e5156c2cb3b33434634e539ead9d8bf"},
     {url = "https://files.pythonhosted.org/packages/53/7b/5dba39bf0572f1f28e2844f08f74a73482a381de1d1feac3bbc6b808051e/tinycss2-1.1.1-py3-none-any.whl", hash = "sha256:fe794ceaadfe3cf3e686b22155d0da5780dd0e273471a51846d0a02bc204fec8"},
-]
-"tinydb 4.7.0" = [
-    {url = "https://files.pythonhosted.org/packages/2c/76/93df2ac94dacc0f63e4263ee7cf4787d0c3df22859d9e0627958048f39c7/tinydb-4.7.0-py3-none-any.whl", hash = "sha256:e2cdf6e2dad49813e9b5fceb3c7943387309a8738125fbff0b58d248a033f7a9"},
-    {url = "https://files.pythonhosted.org/packages/77/b3/2ab727ab4062800731c2e4d773358c6c25f8d630affa3e3ccdb21dc40d68/tinydb-4.7.0.tar.gz", hash = "sha256:357eb7383dee6915f17b00596ec6dd2a890f3117bf52be28a4c516aeee581100"},
-]
-"tinydb-smartcache 2.0.0" = [
-    {url = "https://files.pythonhosted.org/packages/08/c4/2190b0c9a5ed5f9791df94ccc4596982bad46842356af67144597d65db06/tinydb_smartcache-2.0.0-py3-none-any.whl", hash = "sha256:c162fe6c558bb73ff1e6b33b168807ea87063e47e2b85cb9e84c12d4354aa7c8"},
-    {url = "https://files.pythonhosted.org/packages/c3/6d/5fd031f52892f834856a1f019d7c15a5981b82385427a5e164da3711b946/tinydb-smartcache-2.0.0.tar.gz", hash = "sha256:a1f6034d8fe28a72810fdbef46a0547949cbf7e9b43a69343dc0e1adfb47f04a"},
 ]
 "toml 0.10.2" = [
     {url = "https://files.pythonhosted.org/packages/44/6f/7120676b6d73228c96e17f1f794d8ab046fc910d781c8d151120c3f1569e/toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},

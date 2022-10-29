@@ -1,11 +1,10 @@
 import abc
+import json as _json
 from pathlib import Path
-from typing import Any, Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, List, Optional, TypeVar
 
 from classes import AssociatedType, Supports, typeclass
 from loguru import logger
-from tinydb import TinyDB
-from tinydb_smartcache import SmartCacheTable
 from typing_extensions import final
 
 from boiling_learning.descriptions import describe
@@ -14,7 +13,6 @@ from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 # Ensure that all databases/tables will now use the smart query cache
-TinyDB.table_class = SmartCacheTable
 
 
 class Allocator(abc.ABC):
@@ -93,20 +91,43 @@ class JSONTableAllocator(Allocator):
     ) -> None:
         root = resolve(path, dir=True)
         self.path = resolve(root / 'data', dir=True)
-        self.db = TinyDB(str(root / 'db.json'))
+        self.db_path = root / 'db.json'
+        self._data: Optional[List[json.JSONDataType]] = None
         self.describer = describer
         self.suffix = suffix
 
+    @property
+    def data(self) -> List[json.JSONDataType]:
+        if self._data is None:
+            self._data = self._load_db()
+
+        return self._data
+
+    @data.setter
+    def data(self, data: List[json.JSONDataType]) -> None:
+        self._data = data
+        self._save_db()
+
     def _doc_path(self, doc_id: int) -> Path:
-        return resolve(self.path / f'{doc_id}{self.suffix}', parents=True)
+        return self.path / f'{doc_id}{self.suffix}'
 
     def _provide(self, serialized: json.JSONDataType) -> int:
-        serialized = {'data': serialized}  # ensure that is a mapping
+        try:
+            return self.data.index(serialized)
+        except ValueError:
+            self.data = self.data + [serialized]
+            return len(self.data) - 1
 
-        for doc in self.db:
-            if doc == serialized:
-                return doc.doc_id
-        return self.db.insert(serialized)
+    def _load_db(self) -> List[json.JSONDataType]:
+        try:
+            with self.db_path.open('r', encoding='utf-8') as file:
+                return _json.load(file)
+        except FileNotFoundError:
+            return []
+
+    def _save_db(self) -> None:
+        with self.db_path.open('w', encoding='utf-8') as file:
+            _json.dump(self.data, file)
 
     def __call__(self, pack: Pack[Any, Any]) -> Path:
         logger.debug(f'Allocating path for args {pack}')
