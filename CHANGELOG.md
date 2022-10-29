@@ -1,5 +1,25 @@
 
 
+## v0.37.0 (2022-10-29)
+
+### Perf
+
+- **management/allocators**: re-implement `JSONTableAllocator` with faster algorithm assuming that we read much more often than we write
+- **io/json**: make `json.serialize` a regular function
+
+### Refactor
+
+- **main**: update `main.py`
+- **management/allocators**: simplify `JSONTableAllocator` inputs
+- **io/json**: simplify serialization by using lists
+- **io/json**: simplify conditionals
+- **io/json**: do not import `typeclass` as `_typeclass`
+
+### BREAKING CHANGE
+
+- the serialization/deserialization protocol
+changed.
+
 ## v0.36.1 (2022-10-08)
 
 ### Fix
