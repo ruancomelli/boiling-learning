@@ -9,8 +9,7 @@ from pathlib import Path
 from types import FunctionType
 from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple, TypeVar, Union
 
-from classes import AssociatedType, Supports
-from classes import typeclass as _typeclass
+from classes import AssociatedType, Supports, typeclass
 from typing_extensions import Protocol, TypedDict, runtime_checkable
 
 from boiling_learning.utils.dataclasses import is_dataclass_instance, shallow_asdict
@@ -47,12 +46,12 @@ class SupportsJSONEncodable(Supports[JSONEncodable], metaclass=JSONEncodableMeta
     ...
 
 
-@_typeclass(JSONEncodable)
+@typeclass(JSONEncodable)
 def encode(instance: Supports[JSONEncodable]) -> JSONDataType:
     '''Return a JSON encoding of an object.'''
 
 
-@_typeclass
+@typeclass
 def encode_type(instance: Any) -> JSONDataType:
     '''Return a JSON encoding of the type of an object.'''
 
@@ -82,7 +81,7 @@ class SupportsJSONSerializable(
     ...
 
 
-@_typeclass(JSONSerializable)
+@typeclass(JSONSerializable)
 def serialize(obj: Supports[JSONSerializable]) -> SerializedJSONObject:
     '''Return a JSON serialization of an object.'''
 
