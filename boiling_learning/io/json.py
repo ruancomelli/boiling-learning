@@ -405,10 +405,11 @@ def deserialize(obj: SerializedJSONDataType) -> Any:
         obj_type = decode[type](encoded_type) if encoded_type is not None else None
 
         return decode[obj_type](obj['contents'])
-    elif isinstance(obj, list):
+
+    if isinstance(obj, list):
         return [deserialize(item) for item in obj]
-    else:
-        return obj
+
+    return obj
 
 
 def load(path: PathLike) -> Any:
@@ -423,9 +424,10 @@ def loads(contents: str) -> Any:
 
 
 def _nested_sort_dicts(obj: SerializedJSONObject) -> SerializedJSONObject:
-    if isinstance(obj, dict):
-        return {k: _nested_sort_dicts(v) for k, v in sorted(obj.items())}
-    elif isinstance(obj, list):
-        return [_nested_sort_dicts(item) for item in obj]
-    else:
-        return obj
+    return (
+        {k: _nested_sort_dicts(v) for k, v in sorted(obj.items())}
+        if isinstance(obj, dict)
+        else [_nested_sort_dicts(item) for item in obj]
+        if isinstance(obj, list)
+        else obj
+    )
