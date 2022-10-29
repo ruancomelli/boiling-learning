@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import List
 
 import pytest
-from tinydb import TinyDB
 
 from boiling_learning.descriptions import describe
 from boiling_learning.io import json
@@ -76,8 +75,7 @@ class TestPersister:
 
 class TestAllocators:
     def test_JSONAllocator(self, tmp_path: Path) -> None:
-        db = TinyDB(tmp_path / 'db.json')
-        allocator = JSONTableAllocator(tmp_path / 'allocator', db)
+        allocator = JSONTableAllocator(tmp_path)
 
         p1 = P('3.14', 0, name='pi')
         p2 = P('hello')
@@ -91,8 +89,7 @@ class TestAllocators:
 
 class TestCacher:
     def test_cache(self, tmp_path: Path) -> None:
-        db = TinyDB(tmp_path / 'db.json')
-        allocator = JSONTableAllocator(tmp_path / 'allocator', db)
+        allocator = JSONTableAllocator(tmp_path)
 
         history = []
 

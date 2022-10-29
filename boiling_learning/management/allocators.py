@@ -5,7 +5,6 @@ from typing import Any, Callable, Generic, TypeVar
 from classes import AssociatedType, Supports, typeclass
 from loguru import logger
 from tinydb import TinyDB
-from tinydb.table import Table
 from tinydb_smartcache import SmartCacheTable
 from typing_extensions import final
 
@@ -80,14 +79,22 @@ class JSONTableAllocator(Allocator):
     def __init__(
         self,
         path: PathLike,
-        db: Table,
         *,
-        describer: Callable[[Pack[Any, Any]], json.JSONDataType] = json_describe,
+        describer: Callable[
+            [
+                Pack[
+                    Supports[JSONDescribable[json.JSONDataType]],
+                    Supports[JSONDescribable[json.JSONDataType]],
+                ]
+            ],
+            json.JSONDataType,
+        ] = json_describe,
         suffix: str = '.json',
     ) -> None:
-        self.path: Path = resolve(path)
-        self.db: Table = db
-        self.describer: Callable[[Pack[Any, Any]], json.JSONDataType] = describer
+        root = resolve(path, dir=True)
+        self.path = resolve(root / 'data', dir=True)
+        self.db = TinyDB(str(root / 'db.json'))
+        self.describer = describer
         self.suffix = suffix
 
     def _doc_path(self, doc_id: int) -> Path:
@@ -115,7 +122,7 @@ class JSONTableAllocator(Allocator):
 
 
 def default_table_allocator(
-    root: PathLike,
+    path: PathLike,
     *,
     describer: Callable[
         [
@@ -128,7 +135,8 @@ def default_table_allocator(
     ] = json_describe,
     suffix: str = '.json',
 ) -> JSONTableAllocator:
-    root = resolve(root, dir=True)
-    datapath = resolve(root / 'data', dir=True)
-    database = TinyDB(str(root / 'db.json'))
-    return JSONTableAllocator(datapath, database, describer=describer, suffix=suffix)
+    return JSONTableAllocator(
+        path,
+        describer=describer,
+        suffix=suffix,
+    )
