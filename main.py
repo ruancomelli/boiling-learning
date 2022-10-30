@@ -145,7 +145,7 @@ from boiling_learning.scripts import (
     set_condensation_datasets_data,
 )
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist
-from boiling_learning.transforms import dataset_sampler, datasets_merger, subset
+from boiling_learning.transforms import dataset_sampler, datasets_merger, map_transformers, subset
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.pathutils import resolve
 from boiling_learning.utils.random import random_state
@@ -364,16 +364,42 @@ def _compile_transformers(
     )
 
 
+@dataclass
+class VideoInfo:
+    length: int
+    shape: Tuple[int, ...]
+    dtype: str
+
+
+@cache(JSONTableAllocator(analyses_path / 'cache' / 'video-info2'))
+def get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
+    dataset = video()
+    first_frame = dataset[0]
+    return VideoInfo(
+        length=len(dataset),
+        shape=first_frame.shape,
+        dtype=str(first_frame.dtype),
+    )
+
+
 def _video_dataset_from_video_and_transformers(
     experiment_video: ExperimentVideo,
     transformers: Iterable[Transformer[Image, Image]],
 ) -> SliceableDataset[Image]:
     compiled_transformers = _compile_transformers(transformers, experiment_video)
-    video = experiment_video.video.map(compiled_transformers())
 
-    directory = numpy_directory_allocator.allocate(experiment_video, compiled_transformers)
-    numpy_cache = NumpyCache.from_dataset(directory, video)
-    return video.cache(numpy_cache)
+    video = LazyDescribed.from_value_and_description(
+        experiment_video.video, experiment_video
+    ) | map_transformers(compiled_transformers)
+    video_info = get_video_info(video)
+
+    directory = numpy_directory_allocator.allocate(video)
+    numpy_cache = NumpyCache(
+        directory,
+        shape=(video_info.length, *video_info.shape),
+        dtype=np.dtype(video_info.dtype),
+    )
+    return video().cache(numpy_cache)
 
 
 @lru_cache(maxsize=1024)

@@ -1,14 +1,25 @@
 from fractions import Fraction
-from typing import Any, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Optional, Tuple, TypeVar, Union
 
 from typing_extensions import Literal
 
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.lazy import LazyDescribed, eager
-from boiling_learning.preprocessing.transformers import wrap_as_partial_transformer
+from boiling_learning.preprocessing.transformers import Transformer, wrap_as_partial_transformer
 
 _Dataset = TypeVar('_Dataset', bound=SliceableDataset[Any])
+_Element = TypeVar('_Element')
+IdentityTransformer = Transformer[_Element, _Element]
+
+
+@wrap_as_partial_transformer
+@eager
+def map_transformers(
+    dataset: SliceableDataset[_Element],
+    compiled_transformers: LazyDescribed[Callable[[_Element], _Element]],
+) -> SliceableDataset[_Element]:
+    return dataset.map(compiled_transformers())
 
 
 @wrap_as_partial_transformer

@@ -8,7 +8,7 @@ import numpy as np
 from loguru import logger
 from typing_extensions import Literal
 
-from boiling_learning.datasets.sliceable import SliceableDataset, SliceableDatasetCache
+from boiling_learning.datasets.sliceable import SliceableDatasetCache
 from boiling_learning.utils.iterutils import unsort
 from boiling_learning.utils.pathutils import PathLike, resolve
 
@@ -49,19 +49,6 @@ class NumpyCache(SliceableDatasetCache[_Array]):
         self._directory = resolve(directory, dir=True)
         self._shape = shape
         self._dtype = dtype
-
-    @classmethod
-    def from_dataset(
-        cls,
-        directory: PathLike,
-        dataset: SliceableDataset[_Array],
-    ) -> NumpyCache[_Array]:
-        first_frame = dataset[0]
-        return NumpyCache(
-            directory,
-            shape=(len(dataset), *first_frame.shape),
-            dtype=first_frame.dtype,
-        )
 
     def store(self, pairs: Dict[int, _Array]) -> None:
         logger.debug(f'Storing {len(pairs)} items {sorted(pairs)} to {self._data_path}')
