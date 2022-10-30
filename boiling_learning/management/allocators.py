@@ -140,24 +140,3 @@ class JSONTableAllocator(Allocator):
         path = self._doc_path(doc_id)
         logger.debug(f'Allocated path is {path}')
         return path
-
-
-def default_table_allocator(
-    path: PathLike,
-    *,
-    describer: Callable[
-        [
-            Pack[
-                Supports[JSONDescribable[json.JSONDataType]],
-                Supports[JSONDescribable[json.JSONDataType]],
-            ]
-        ],
-        json.JSONDataType,
-    ] = json_describe,
-    suffix: str = '.json',
-) -> JSONTableAllocator:
-    return JSONTableAllocator(
-        path,
-        describer=describer,
-        suffix=suffix,
-    )

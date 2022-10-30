@@ -100,7 +100,7 @@ from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTri
 from boiling_learning.io import json
 from boiling_learning.io.storage import dataclass, deserialize, load, save, serialize
 from boiling_learning.lazy import Lazy, LazyDescribed
-from boiling_learning.management.allocators import default_table_allocator
+from boiling_learning.management.allocators import JSONTableAllocator
 from boiling_learning.management.cacher import CachedFunction, Cacher, cache
 from boiling_learning.model.callbacks import (
     AdditionalValidationSets,
@@ -326,7 +326,7 @@ def ensure_data_is_set(video: ExperimentVideo) -> None:
         setter()
 
 
-@cache(default_table_allocator(analyses_path / 'cache' / 'purged-experiment-videos'))
+@cache(JSONTableAllocator(analyses_path / 'cache' / 'purged-experiment-videos'))
 def purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> List[str]:
     videos = list(image_dataset)
 
@@ -343,10 +343,8 @@ def purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> List[str]:
 # to avoid changing the description
 
 
-numpy_directory_allocator = default_table_allocator(
-    analyses_path / 'datasets' / 'numpy', suffix=''
-)
-targets_allocator = default_table_allocator(analyses_path / 'datasets' / 'targets', suffix='.csv')
+numpy_directory_allocator = JSONTableAllocator(analyses_path / 'datasets' / 'numpy', suffix='')
+targets_allocator = JSONTableAllocator(analyses_path / 'datasets' / 'targets', suffix='.csv')
 
 
 def _is_condensation_video(video: ExperimentVideo) -> bool:
@@ -484,7 +482,7 @@ _T = TypeVar('_T')
 DEFAULT_PREFETCH_BUFFER_SIZE = 4
 # DEFAULT_PREFETCH_BUFFER_SIZE = 4096
 
-training_datasets_allocator = default_table_allocator(analyses_path / 'datasets' / 'training')
+training_datasets_allocator = JSONTableAllocator(analyses_path / 'datasets' / 'training')
 
 
 def _default_filter_for_frames_dataset(
@@ -682,16 +680,12 @@ boiling_indirect_preprocessors = make_boiling_processors.main(direct_visualizati
 logger.debug('Getting datasets')
 
 boiling_direct_datasets = tuple(
-    get_image_dataset(
-        GetImageDatasetParams(case, transformers=boiling_direct_preprocessors)
-    )
+    get_image_dataset(GetImageDatasetParams(case, transformers=boiling_direct_preprocessors))
     for case in boiling_cases_timed
 )
 
 boiling_indirect_datasets = tuple(
-    get_image_dataset(
-        GetImageDatasetParams(case, transformers=boiling_indirect_preprocessors)
-    )
+    get_image_dataset(GetImageDatasetParams(case, transformers=boiling_indirect_preprocessors))
     for case in boiling_cases_timed
 )
 
@@ -862,7 +856,7 @@ class FitCondensationModel(CachedFunction[_P, FitModelReturn]):
 
 fit_boiling_model = FitBoilingModel(
     Cacher(
-        allocator=default_table_allocator(analyses_path / 'models' / 'boiling', suffix=''),
+        allocator=JSONTableAllocator(analyses_path / 'models' / 'boiling', suffix=''),
         exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
         loader=load_with_strategy(strategy),
     )
@@ -870,7 +864,7 @@ fit_boiling_model = FitBoilingModel(
 
 fit_condensation_model = FitCondensationModel(
     Cacher(
-        allocator=default_table_allocator(analyses_path / 'models' / 'condensation', suffix=''),
+        allocator=JSONTableAllocator(analyses_path / 'models' / 'condensation', suffix=''),
         exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
         loader=load_with_strategy(strategy),
     )
@@ -895,16 +889,16 @@ if OPTIONS.test:
 """### Autofitting"""
 
 
-boiling_direct_hypermodel_allocator = default_table_allocator(
+boiling_direct_hypermodel_allocator = JSONTableAllocator(
     analyses_path / 'autofit' / 'boiling-direct-tuners'
 )
-boiling_indirect_hypermodel_allocator = default_table_allocator(
+boiling_indirect_hypermodel_allocator = JSONTableAllocator(
     analyses_path / 'autofit' / 'boiling-indirect-tuners'
 )
 
 
 @cache(
-    allocator=default_table_allocator(analyses_path / 'autofit' / 'models'),
+    allocator=JSONTableAllocator(analyses_path / 'autofit' / 'models'),
     exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
     loader=load_with_strategy(strategy),
 )
@@ -1036,7 +1030,7 @@ def get_pretrained_baseline_model(
 # pretrained_baseline_boiling_model_architecture_indirect = get_pretrained_baseline_model(direct=False, normalize_images=False)
 
 
-_autofit_to_dataset_allocator = default_table_allocator(
+_autofit_to_dataset_allocator = JSONTableAllocator(
     analyses_path / 'autofit' / 'autofit-to-dataset'
 )
 
@@ -1127,7 +1121,7 @@ def autofit_to_dataset(
 PREFETCH = 1024
 
 
-@cache(default_table_allocator(analyses_path / 'cache' / 'targets'))
+@cache(JSONTableAllocator(analyses_path / 'cache' / 'targets'))
 def get_targets(
     dataset: LazyDescribed[ImageDatasetTriplet],
 ) -> Tuple[List[Targets], List[Targets], List[Targets]]:
@@ -1533,7 +1527,7 @@ ds_evaluation_indirect = to_tensorflow(
 )
 
 
-@cache(default_table_allocator(analyses_path / 'studies' / 'boiling-learning-curve'))
+@cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-learning-curve'))
 def boiling_learning_curve_point(
     fraction: Fraction, *, direct: bool = True, normalize_images: bool = False
 ) -> Dict[str, float]:
@@ -1712,7 +1706,7 @@ logger.info('Analyzing cross-surface boiling evaluation')
 BATCH_SIZE = 200
 
 
-@cache(default_table_allocator(analyses_path / 'studies' / 'boiling-cross-surface'))
+@cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-cross-surface'))
 def boiling_cross_surface_evaluation(
     direct_visualization: bool,
     training_cases: Tuple[int, ...],
@@ -1865,7 +1859,7 @@ logger.info('Analyzing cross-surface boiling evaluation')
 BATCH_SIZE = 200
 
 
-@cache(default_table_allocator(analyses_path / 'studies' / 'boiling-cross-surface-automl'))
+@cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-cross-surface-automl'))
 def boiling_cross_surface_evaluation(
     direct_visualization: bool, training_cases: Tuple[int, ...], evaluation_cases: Tuple[int, ...]
 ) -> Dict[str, float]:
