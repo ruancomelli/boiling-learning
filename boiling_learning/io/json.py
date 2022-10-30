@@ -254,7 +254,7 @@ class FrozenDictOfJSONEncodable(
 def _encode_frozendict(
     instance: FrozenDictOfJSONEncodable,
 ) -> Dict[str, SerializedJSONObject]:
-    return serialize(dict(instance))
+    return encode(dict(instance))
 
 
 @decode.dispatch(frozendict)

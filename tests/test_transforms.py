@@ -54,7 +54,7 @@ def test_subset_lazy() -> None:
                         ['builtins.tuple', 'train'],
                         [
                             'boiling_learning.utils.frozendicts.frozendict',
-                            ['builtins.dict', {}],
+                            {},
                         ],
                     ],
                 ],
@@ -79,7 +79,7 @@ def test_subset_lazy() -> None:
                         ['builtins.tuple', 'val'],
                         [
                             'boiling_learning.utils.frozendicts.frozendict',
-                            ['builtins.dict', {}],
+                            {},
                         ],
                     ],
                 ],
@@ -104,7 +104,7 @@ def test_subset_lazy() -> None:
                         ['builtins.tuple', 'test'],
                         [
                             'boiling_learning.utils.frozendicts.frozendict',
-                            ['builtins.dict', {}],
+                            {},
                         ],
                     ],
                 ],

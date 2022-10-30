@@ -99,7 +99,7 @@ class TestStorage:
                 ],
                 [
                     f'{frozendict.__module__}.{frozendict.__name__}',
-                    ['builtins.dict', {'do': True, 'errors': None}],
+                    {'do': True, 'errors': None},
                 ],
             ],
             id='pack-of-complex',
