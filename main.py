@@ -343,12 +343,6 @@ def purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> List[str]:
 # to avoid changing the description
 
 
-SPLITS = DatasetSplits(
-    train=Fraction(70, 100),
-    val=Fraction(15, 100),
-    test=Fraction(15, 100),
-)
-
 numpy_directory_allocator = default_table_allocator(
     analyses_path / 'datasets' / 'numpy', suffix=''
 )
@@ -423,7 +417,11 @@ if OPTIONS.test:
 class GetImageDatasetParams:
     image_dataset: ExperimentVideoDataset
     transformers: List[Transformer[Image, Image]]
-    splits: DatasetSplits = SPLITS
+    splits: DatasetSplits = DatasetSplits(
+        train=Fraction(70, 100),
+        val=Fraction(15, 100),
+        test=Fraction(15, 100),
+    )
 
 
 def _get_image_dataset(
@@ -685,14 +683,14 @@ logger.debug('Getting datasets')
 
 boiling_direct_datasets = tuple(
     get_image_dataset(
-        GetImageDatasetParams(case, transformers=boiling_direct_preprocessors, splits=SPLITS)
+        GetImageDatasetParams(case, transformers=boiling_direct_preprocessors)
     )
     for case in boiling_cases_timed
 )
 
 boiling_indirect_datasets = tuple(
     get_image_dataset(
-        GetImageDatasetParams(case, transformers=boiling_indirect_preprocessors, splits=SPLITS)
+        GetImageDatasetParams(case, transformers=boiling_indirect_preprocessors)
     )
     for case in boiling_cases_timed
 )
@@ -883,7 +881,6 @@ if OPTIONS.test:
     get_image_dataset_params = GetImageDatasetParams(
         boiling_cases_timed[0],
         transformers=boiling_direct_preprocessors,
-        splits=SPLITS,
         dataset_size=None,
     )
 
@@ -1225,7 +1222,6 @@ boiling_target_name = 'Flux [W/cm**2]'
 #     get_image_dataset_params = GetImageDatasetParams(
 #         case,
 #         transformers=preprocessors,
-#         splits=SPLITS,
 #     )
 
 #     logger.info(f"Getting datasets...")
@@ -1967,7 +1963,6 @@ condensation_all_cases = ExperimentVideoDataset.make_union(
 get_image_dataset_params = GetImageDatasetParams(
     condensation_all_cases,
     transformers=condensation_preprocessors,
-    splits=SPLITS,
     # dataset_size=Fraction(1, 100),
     dataset_size=None,
 )
@@ -1997,7 +1992,6 @@ condensation_all_cases = ExperimentVideoDataset.make_union(*condensation_dataset
 get_image_dataset_params = GetImageDatasetParams(
     condensation_all_cases,
     transformers=condensation_preprocessors,
-    splits=SPLITS,
     dataset_size=None,
 )
 
@@ -2116,7 +2110,6 @@ logger.info('First condensation case')
 get_image_dataset_params = GetImageDatasetParams(
     condensation_all_cases,
     transformers=condensation_preprocessors,
-    splits=SPLITS,
     dataset_size=None,
 )
 
@@ -2209,7 +2202,6 @@ BATCH_SIZE = 32
 get_image_dataset_params = GetImageDatasetParams(
     boiling_cases_timed[0],
     transformers=(*boiling_direct_preprocessors, ImageNormalizer()),
-    splits=SPLITS,
     dataset_size=None,
 )
 
@@ -2272,7 +2264,6 @@ BATCH_SIZE = 32
 get_image_dataset_params = GetImageDatasetParams(
     boiling_cases_timed[0],
     transformers=(*boiling_direct_preprocessors, ImageNormalizer()),
-    splits=SPLITS,
     dataset_size=None,
 )
 
