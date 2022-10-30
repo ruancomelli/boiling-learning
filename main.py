@@ -367,7 +367,6 @@ def _compile_transformers(
 def _video_dataset_from_video_and_transformers(
     experiment_video: ExperimentVideo,
     transformers: Iterable[Transformer[Image, Image]],
-    buffer_size: Optional[int] = None,
 ) -> SliceableDataset[Image]:
     compiled_transformers = _compile_transformers(transformers, experiment_video)
     video = experiment_video.video.map(compiled_transformers())
@@ -394,10 +393,9 @@ def _target_dataset_from_video(video: ExperimentVideo) -> SliceableDataset[Targe
 def sliceable_dataset_from_video_and_transformers(
     ev: ExperimentVideo,
     transformers: Iterable[Transformer[Image, Image]],
-    buffer_size: Optional[int] = None,
 ) -> ImageDataset:
     targets = _target_dataset_from_video(ev)  # targets first to ensure correct ev data setup
-    video = _video_dataset_from_video_and_transformers(ev, transformers, buffer_size=buffer_size)
+    video = _video_dataset_from_video_and_transformers(ev, transformers)
 
     return SliceableDataset.zip(video, targets, strictness='one-off')
     # return SliceableDataset.zip(video, targets, strictness="none")
