@@ -11,8 +11,6 @@ from typing import (
     Any,
     Callable,
     DefaultDict,
-    Dict,
-    FrozenSet,
     Generic,
     Iterable,
     Iterator,
@@ -564,37 +562,10 @@ class CachedSliceableDataset(SliceableDataset[_T]):
 
 class SliceableDatasetCache(abc.ABC, Generic[_T]):
     @abc.abstractmethod
-    def store(self, pairs: Dict[int, _T]) -> None:
-        pass
-
-    @abc.abstractmethod
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_T, ...]:
-        pass
-
     def fetch_from(
         self, source: SliceableDataset[_T], indices: Optional[Iterable[int]] = None
     ) -> Tuple[_T, ...]:
-        indices = list(range(len(source)) if indices is None else indices)
-
-        missing_indices = tuple(self.missing_indices(indices))
-        if missing_indices:
-            self.store(
-                dict(
-                    zip(
-                        missing_indices,
-                        source.fetch(missing_indices),
-                    )
-                )
-            )
-
-        return self.fetch(indices)
-
-    @abc.abstractmethod
-    def current_indices(self) -> FrozenSet[int]:
         pass
-
-    def missing_indices(self, indices: Iterable[int]) -> FrozenSet[int]:
-        return frozenset(indices) - self.current_indices()
 
     @abc.abstractmethod
     def __repr__(self) -> str:

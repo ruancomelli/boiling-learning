@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 import json as _json
 from pathlib import Path
 from typing import Dict, FrozenSet, Iterable, Optional, Tuple, TypeVar
@@ -8,7 +9,7 @@ import numpy as np
 from loguru import logger
 from typing_extensions import Literal
 
-from boiling_learning.datasets.sliceable import SliceableDatasetCache
+from boiling_learning.datasets.sliceable import SliceableDataset, SliceableDatasetCache
 from boiling_learning.utils.iterutils import unsort
 from boiling_learning.utils.pathutils import PathLike, resolve
 
@@ -16,29 +17,65 @@ _Any = TypeVar('_Any')
 _Array = TypeVar('_Array', bound=np.ndarray)
 
 
-class MemoryCache(SliceableDatasetCache[_Any]):
+class _MinimalFetchCache(SliceableDatasetCache[_Any]):
+    @abc.abstractmethod
+    def _store(self, pairs: Dict[int, _Any]) -> None:
+        pass
+
+    @abc.abstractmethod
+    def _fetch(self, indices: Tuple[int, ...]) -> Tuple[_Any, ...]:
+        pass
+
+    @abc.abstractmethod
+    def _current_indices(self) -> FrozenSet[int]:
+        pass
+
+    def _missing_indices(self, indices: Tuple[int, ...]) -> FrozenSet[int]:
+        return frozenset(indices) - self._current_indices()
+
+    def fetch_from(
+        self,
+        source: SliceableDataset[_Any],
+        indices: Optional[Iterable[int]] = None,
+    ) -> Tuple[_Any, ...]:
+        indices = tuple(range(len(source)) if indices is None else indices)
+
+        missing_indices = tuple(self._missing_indices(indices))
+        if missing_indices:
+            self._store(
+                dict(
+                    zip(
+                        missing_indices,
+                        source.fetch(missing_indices),
+                    )
+                )
+            )
+
+        return self._fetch(indices)
+
+
+class MemoryCache(_MinimalFetchCache[_Any]):
     def __init__(self) -> None:
         self._storage: Dict[int, _Any] = {}
 
-    def store(self, pairs: Dict[int, _Any]) -> None:
+    def _store(self, pairs: Dict[int, _Any]) -> None:
         self._storage.update(pairs)
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_Any, ...]:
-        indices = sorted(self.current_indices()) if indices is None else list(indices)
-        missing = self.missing_indices(indices).intersection(indices)
+    def _fetch(self, indices: Tuple[int, ...]) -> Tuple[_Any, ...]:
+        missing = self._missing_indices(indices).intersection(indices)
         if missing:
             raise ValueError(f'Required missing indices: {sorted(missing)}')
 
         return tuple(self._storage[index] for index in indices)
 
-    def current_indices(self) -> FrozenSet[int]:
+    def _current_indices(self) -> FrozenSet[int]:
         return frozenset(self._storage)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}()'
 
 
-class NumpyCache(SliceableDatasetCache[_Array]):
+class NumpyCache(_MinimalFetchCache[_Array]):
     def __init__(
         self,
         directory: PathLike,
@@ -50,7 +87,7 @@ class NumpyCache(SliceableDatasetCache[_Array]):
         self._shape = shape
         self._dtype = dtype
 
-    def store(self, pairs: Dict[int, _Array]) -> None:
+    def _store(self, pairs: Dict[int, _Array]) -> None:
         logger.debug(f'Storing {len(pairs)} items {sorted(pairs)} to {self._data_path}')
 
         indices = list(pairs)
@@ -59,19 +96,14 @@ class NumpyCache(SliceableDatasetCache[_Array]):
         data[indices] = tuple(pairs.values())
         data.flush()
 
-        current_indices = self.current_indices()
-        new_indices = sorted(current_indices.union(indices))
+        _current_indices = self._current_indices()
+        new_indices = sorted(_current_indices.union(indices))
 
         with self._indices_path.open('w') as file:
             _json.dump(new_indices, file)
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_Array, ...]:
-        if indices is None:
-            indices = sorted(self.current_indices())
-
-        indices = list(indices)
-
-        missing = self.missing_indices(indices).intersection(indices)
+    def _fetch(self, indices: Tuple[int, ...]) -> Tuple[_Array, ...]:
+        missing = self._missing_indices(indices).intersection(indices)
         if missing:
             raise ValueError(f'Required missing indices: {sorted(missing)}')
 
@@ -82,7 +114,7 @@ class NumpyCache(SliceableDatasetCache[_Array]):
         frames = self._data(mode='r')[sorted_indices]
         return tuple(frames[unsorter] for unsorter in unsorters)
 
-    def current_indices(self) -> FrozenSet[int]:
+    def _current_indices(self) -> FrozenSet[int]:
         if not self._indices_path.is_file():
             with self._indices_path.open('w') as file:
                 _json.dump([], file)
@@ -92,9 +124,7 @@ class NumpyCache(SliceableDatasetCache[_Array]):
             return frozenset(_json.load(file))
 
     def _data(self, *, mode: Literal['r', 'w', 'a']) -> np.memmap:
-        path = self._data_path
-
-        if mode == 'a' and not path.is_file():
+        if mode == 'a' and not self._data_path.is_file():
             mode = 'w'
 
         memmap_mode = {
@@ -104,7 +134,7 @@ class NumpyCache(SliceableDatasetCache[_Array]):
         }[mode]
 
         return np.memmap(
-            path,
+            self._data_path,
             mode=memmap_mode,
             dtype=self._dtype,
             shape=self._shape,

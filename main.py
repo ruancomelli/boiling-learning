@@ -503,8 +503,8 @@ if OPTIONS.test:
 
 _T = TypeVar('_T')
 
-DEFAULT_PREFETCH_BUFFER_SIZE = 4
-# DEFAULT_PREFETCH_BUFFER_SIZE = 4096
+# DEFAULT_PREFETCH_BUFFER_SIZE = 4
+DEFAULT_PREFETCH_BUFFER_SIZE = 4096
 
 training_datasets_allocator = JSONTableAllocator(analyses_path / 'datasets' / 'training')
 
@@ -512,12 +512,11 @@ training_datasets_allocator = JSONTableAllocator(analyses_path / 'datasets' / 't
 def _default_filter_for_frames_dataset(
     dataset: ImageDataset,
 ) -> Callable[[Tuple[VideoFrame, Dict[str, Any]]], bool]:
-    first_frame, _ = dataset[0]
-
     def _pred(pair: Tuple[VideoFrame, Dict[str, Any]]) -> bool:
         if len(pair) != 2:
             return False
 
+        first_frame, _ = dataset[0]
         frame, _data = pair
         return frame.shape == first_frame.shape and not np.allclose(frame, 0)
 
@@ -712,6 +711,19 @@ boiling_indirect_datasets = tuple(
     get_image_dataset(GetImageDatasetParams(case, transformers=boiling_indirect_preprocessors))
     for case in boiling_cases_timed
 )
+
+for is_direct, datasets in (
+    (True, boiling_direct_datasets),
+    (False, boiling_indirect_datasets),
+):
+    for index, dataset in enumerate(datasets):
+        for subset_name, subset in zip(('train', 'val', 'test'), dataset()):
+            logger.info(
+                f"Iterating over {'direct' if is_direct else 'indirect'} {subset_name} "
+                f'dataset #{index}.'
+            )
+            for frame, targets in subset:
+                pass
 
 # logger.debug("Done")
 
@@ -1145,7 +1157,7 @@ def autofit_to_dataset(
 PREFETCH = 1024
 
 
-@cache(JSONTableAllocator(analyses_path / 'cache' / 'targets'))
+@cache(JSONTableAllocator(analyses_path / 'cache' / 'targets2'))
 def get_targets(
     dataset: LazyDescribed[ImageDatasetTriplet],
 ) -> Tuple[List[Targets], List[Targets], List[Targets]]:
