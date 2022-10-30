@@ -149,6 +149,23 @@ def test_json_encode_decode(obj: Any, encoded: Any) -> None:
             ],
             id='tuple-of-complex-custom',
         ),
+        pytest.param(
+            P(3, 'hi', ('no', X(4)), do=True, errors=None),
+            [
+                'boiling_learning.utils.functional.Pack',
+                [
+                    3,
+                    'hi',
+                    [
+                        'builtins.tuple',
+                        'no',
+                        [f'{__name__}.X', {'value': 4}],
+                    ],
+                ],
+                {'do': True, 'errors': None},
+            ],
+            id='pack-of-complex',
+        ),
     ],
 )
 def test_serialization_deserialization(obj: Any, serialized: Any) -> None:

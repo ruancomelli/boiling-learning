@@ -47,17 +47,7 @@ def test_subset_lazy() -> None:
             'builtins.dict',
             {
                 'function': ['types.FunctionType', 'boiling_learning.transforms.subset'],
-                'pack': [
-                    'boiling_learning.utils.functional.Pack',
-                    [
-                        'builtins.tuple',
-                        ['builtins.tuple', 'train'],
-                        [
-                            'boiling_learning.utils.frozendicts.frozendict',
-                            {},
-                        ],
-                    ],
-                ],
+                'pack': ['boiling_learning.utils.functional.Pack', ['train'], {}],
                 'type': [
                     'builtins.type',
                     'boiling_learning.preprocessing.transformers.Transformer',
@@ -72,17 +62,7 @@ def test_subset_lazy() -> None:
             'builtins.dict',
             {
                 'function': ['types.FunctionType', 'boiling_learning.transforms.subset'],
-                'pack': [
-                    'boiling_learning.utils.functional.Pack',
-                    [
-                        'builtins.tuple',
-                        ['builtins.tuple', 'val'],
-                        [
-                            'boiling_learning.utils.frozendicts.frozendict',
-                            {},
-                        ],
-                    ],
-                ],
+                'pack': ['boiling_learning.utils.functional.Pack', ['val'], {}],
                 'type': [
                     'builtins.type',
                     'boiling_learning.preprocessing.transformers.Transformer',
@@ -97,17 +77,7 @@ def test_subset_lazy() -> None:
             'builtins.dict',
             {
                 'function': ['types.FunctionType', 'boiling_learning.transforms.subset'],
-                'pack': [
-                    'boiling_learning.utils.functional.Pack',
-                    [
-                        'builtins.tuple',
-                        ['builtins.tuple', 'test'],
-                        [
-                            'boiling_learning.utils.frozendicts.frozendict',
-                            {},
-                        ],
-                    ],
-                ],
+                'pack': ['boiling_learning.utils.functional.Pack', ['test'], {}],
                 'type': [
                     'builtins.type',
                     'boiling_learning.preprocessing.transformers.Transformer',

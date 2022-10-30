@@ -62,6 +62,12 @@ def _encode_type_any(instance: object) -> str:
     return encode(type(instance))
 
 
+@encode_type.instance(Pack)
+def _encode_type_pack(instance: Pack) -> str:
+    '''Return a JSON encoding of the type ``Pack``.'''
+    return encode(Pack)
+
+
 @encode_type.instance(FunctionType)
 def _encode_type_function_type(obj: FunctionType) -> str:
     return 'types.FunctionType'
@@ -324,6 +330,9 @@ def serialize(obj: Supports[JSONEncodable]) -> SerializedJSONObject:
     if isinstance(obj, (list, tuple)):
         return _nested_sort_dicts([encode_type(obj), *(serialize(item) for item in obj)])
 
+    if isinstance(obj, Pack):
+        return _nested_sort_dicts([encode_type(obj), encode(obj.args), encode(obj.kwargs)])
+
     return _nested_sort_dicts([encode_type(obj), encode(obj)])
 
 
@@ -341,6 +350,10 @@ def deserialize(obj: SerializedJSONDataType) -> Any:
 
         if obj_type is tuple:
             return tuple(deserialize(item) for item in encoded_items)
+
+        if obj_type is Pack:
+            args, kwargs = encoded_items
+            return Pack(decode[list](args), decode[dict](kwargs))
 
         (encoded_item,) = encoded_items
         return decode[obj_type](encoded_item)
