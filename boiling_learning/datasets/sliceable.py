@@ -556,20 +556,7 @@ class CachedSliceableDataset(SliceableDataset[_T]):
         return self.fetch((index,))[0]
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_T, ...]:
-        indices = list(range(len(self)) if indices is None else indices)
-
-        missing_indices = tuple(self._cache.missing_indices(indices))
-        if missing_indices:
-            self._cache.store(
-                dict(
-                    zip(
-                        missing_indices,
-                        self._ancestor.fetch(missing_indices),
-                    )
-                )
-            )
-
-        return self._cache.fetch(indices)
+        return self._cache.fetch_from(self._ancestor, indices)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self._ancestor}, {self._cache})'
@@ -583,6 +570,24 @@ class SliceableDatasetCache(abc.ABC, Generic[_T]):
     @abc.abstractmethod
     def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_T, ...]:
         pass
+
+    def fetch_from(
+        self, source: SliceableDataset[_T], indices: Optional[Iterable[int]] = None
+    ) -> Tuple[_T, ...]:
+        indices = list(range(len(source)) if indices is None else indices)
+
+        missing_indices = tuple(self.missing_indices(indices))
+        if missing_indices:
+            self.store(
+                dict(
+                    zip(
+                        missing_indices,
+                        source.fetch(missing_indices),
+                    )
+                )
+            )
+
+        return self.fetch(indices)
 
     @abc.abstractmethod
     def current_indices(self) -> FrozenSet[int]:
