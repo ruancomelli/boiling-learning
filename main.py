@@ -19,14 +19,10 @@ Hack to avoid Google Colab's limitation of "The accounts running the notebook an
 # Solution from https://stackoverflow.com/a/69881106/5811400 to allow using Google Colab in one account with data
 # from other account's Google Drive
 
-import csv
-import datetime
 import itertools
-import math
 import operator
 import os
 import sys
-import textwrap
 from dataclasses import replace
 from fractions import Fraction
 from functools import lru_cache, partial
@@ -36,7 +32,6 @@ from pprint import pprint
 from typing import (
     Any,
     Callable,
-    Container,
     Dict,
     ItemsView,
     Iterable,
@@ -44,8 +39,6 @@ from typing import (
     List,
     NamedTuple,
     Optional,
-    Sequence,
-    Set,
     Tuple,
     TypeVar,
     Union,
@@ -54,7 +47,6 @@ from typing import (
 
 import autokeras as ak
 import funcy
-import keras_tuner as kt
 import matplotlib.pyplot as plt
 import modin.pandas as pd
 import more_itertools as mit
@@ -67,7 +59,6 @@ from keras_tuner.engine.tuner_utils import SaveBestEpoch
 from loguru import logger
 from modin.config import Engine
 from rich.console import Console
-from rich.style import Style
 from rich.table import Table
 from skimage.io import imshow
 from tensorflow.data import AUTOTUNE
@@ -403,7 +394,7 @@ def _target_dataset_from_video(video: ExperimentVideo) -> SliceableDataset[Targe
     except (OSError, AttributeError):
         ensure_data_is_set(video)
         targets = video.targets()
-        targets.to_csv(path)
+        targets.to_csv(path, index=False)
 
     return SliceableDataset.from_sequence(targets.to_dict('records'))
 
