@@ -10,14 +10,6 @@ Original file is located at
 <!-- TODO: what is the goal of this notebook? -->
 """
 
-"""## Initialization
-
-Hack to avoid Google Colab's limitation of "The accounts running the notebook and accessing Google Drive must be the same"
-"""
-
-# Commented out IPython magic to ensure Python compatibility.
-# Solution from https://stackoverflow.com/a/69881106/5811400 to allow using Google Colab in one account with data
-# from other account's Google Drive
 
 import itertools
 import operator
@@ -93,7 +85,7 @@ from boiling_learning.automl.hypermodels import (
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
 from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn, fit_hypermodel
 from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_dataset
-from boiling_learning.datasets.cache import MemoryCache, NumpyCache
+from boiling_learning.datasets.cache import EagerCache, MemoryCache, NumpyCache
 from boiling_learning.datasets.datasets import DatasetSplits, DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset, features, map_targets, targets
 from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
@@ -170,17 +162,6 @@ os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 # TODO: esse vídeo pode ser para as quatro superfícies ao mesmo tempo
 
 """### Login"""
-
-
-projects_path = Path(
-    '/', 'media', 'ruancomelli', 'Elements SE', 'files', 'ruan', 'lepten-google-drive', 'Projects'
-)
-boiling_learning_path = Path(projects_path, 'boiling-learning')
-condensation_learning_path = Path(projects_path, 'condensation-learning')
-
-# for easy compatibility with local scripts (that is, not running on Colab) - simply set those envvars:
-os.environ['BOILING_DATA_PATH'] = str(boiling_learning_path)
-os.environ['CONDENSATION_DATA_PATH'] = str(condensation_learning_path)
 
 # %%capture
 # import requests
@@ -382,6 +363,9 @@ def get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
     )
 
 
+EAGER_BUFFER_SIZE = 32
+
+
 def _video_dataset_from_video_and_transformers(
     experiment_video: ExperimentVideo,
     transformers: Iterable[Transformer[Image, Image]],
@@ -399,7 +383,7 @@ def _video_dataset_from_video_and_transformers(
         shape=(video_info.length, *video_info.shape),
         dtype=np.dtype(video_info.dtype),
     )
-    return video().cache(numpy_cache)
+    return video().cache(EagerCache(numpy_cache, buffer_size=EAGER_BUFFER_SIZE))
 
 
 @lru_cache(maxsize=1024)
@@ -504,7 +488,7 @@ if OPTIONS.test:
 _T = TypeVar('_T')
 
 # DEFAULT_PREFETCH_BUFFER_SIZE = 4
-DEFAULT_PREFETCH_BUFFER_SIZE = 4096
+DEFAULT_PREFETCH_BUFFER_SIZE = 1024
 
 training_datasets_allocator = JSONTableAllocator(analyses_path / 'datasets' / 'training')
 
@@ -541,7 +525,7 @@ def to_tensorflow(
     buffer_size: int = DEFAULT_PREFETCH_BUFFER_SIZE,
     target: Optional[str] = None,
     shuffle: Union[bool, int] = True,
-) -> tf.data.Dataset:
+) -> LazyDescribed[tf.data.Dataset]:
     dataset_value = dataset()
 
     default_prefilterer = _default_filter_for_frames_dataset(dataset_value)
@@ -558,8 +542,9 @@ def to_tensorflow(
     tf_dataset = sliceable_dataset_to_tensorflow_dataset(
         dataset_value,
         # DEBUG: I commented out the following line to avoid issues with dataset saving taking too long
-        # save_path=save_path,
-        cache=True,
+        save_path=save_path,
+        # DEBUG: try re-setting this to True
+        cache=False,
         batch_size=batch_size,
         prefilterer=_prefilterer,
         filterer=filterer,
@@ -572,7 +557,15 @@ def to_tensorflow(
     if shuffle and shuffle is not True:
         tf_dataset = tf_dataset.shuffle(shuffle)
 
-    return tf_dataset
+    return LazyDescribed.from_value_and_description(
+        tf_dataset,
+        (
+            dataset,
+            ('prefilterer', prefilterer),
+            ('batch', batch_size),
+            ('target', target),
+        ),
+    )
 
 
 def to_tensorflow_triplet(
@@ -587,7 +580,7 @@ def to_tensorflow_triplet(
     include_val: bool = True,
     include_test: bool = True,
     shuffle: Union[bool, int] = True,
-) -> DatasetTriplet[tf.data.Dataset]:
+) -> DatasetTriplet[LazyDescribed[tf.data.Dataset]]:
     _to_tensorflow = partial(
         to_tensorflow,
         batch_size=batch_size,
@@ -602,19 +595,19 @@ def to_tensorflow_triplet(
         logger.debug('Converting TRAIN set to tensorflow')
         ds_train = _to_tensorflow(dataset | subset('train'))
     else:
-        ds_train = tf.data.Dataset.range(0)
+        ds_train = LazyDescribed.from_value_and_description(tf.data.Dataset.range(0), None)
 
     if include_val:
         logger.debug('Converting VAL set to tensorflow')
         ds_val = _to_tensorflow(dataset | subset('val'))
     else:
-        ds_val = tf.data.Dataset.range(0)
+        ds_val = LazyDescribed.from_value_and_description(tf.data.Dataset.range(0), None)
 
     if include_test:
         logger.debug('Converting TEST set to tensorflow')
         ds_test = _to_tensorflow(dataset | subset('test'))
     else:
-        ds_test = tf.data.Dataset.range(0)
+        ds_test = LazyDescribed.from_value_and_description(tf.data.Dataset.range(0), None)
 
     return DatasetTriplet(ds_train, ds_val, ds_test)
 
@@ -712,18 +705,18 @@ boiling_indirect_datasets = tuple(
     for case in boiling_cases_timed
 )
 
-for is_direct, datasets in (
-    (True, boiling_direct_datasets),
-    (False, boiling_indirect_datasets),
-):
-    for index, dataset in enumerate(datasets):
-        for subset_name, subset in zip(('train', 'val', 'test'), dataset()):
-            logger.info(
-                f"Iterating over {'direct' if is_direct else 'indirect'} {subset_name} "
-                f'dataset #{index}.'
-            )
-            for frame, targets in subset:
-                pass
+# for is_direct, datasets in (
+#     (True, boiling_direct_datasets),
+#     (False, boiling_indirect_datasets),
+# ):
+#     for index, dataset in enumerate(datasets):
+#         for subset_name, subset in zip(('train', 'val', 'test'), dataset()):
+#             logger.info(
+#                 f"Iterating over {'direct' if is_direct else 'indirect'} {subset_name} "
+#                 f'dataset #{index}.'
+#             )
+#             for frame, targets in subset:
+#                 pass
 
 # logger.debug("Done")
 
@@ -794,15 +787,6 @@ class FitBoilingModel(CachedFunction[_P, FitModelReturn]):
             batch_size=params.batch_size,
             target=target,
         )
-        tensorflow_datasets = to_tensorflow_triplet(
-            datasets,
-            prefilterer=LazyDescribed.from_value_and_description(
-                _is_not_outlier, 'abs(Power [W] - nominal_power) < 5'
-            ),
-            batch_size=params.batch_size,
-            include_test=False,
-            target=target,
-        )
 
         params.callbacks().extend(
             (
@@ -819,7 +803,7 @@ class FitBoilingModel(CachedFunction[_P, FitModelReturn]):
                     }
                 ),
                 # BackupAndRestore(workspace_path / 'backup', delete_on_end=False),
-                AdditionalValidationSets({'HF10': ds_val_g10}),
+                AdditionalValidationSets({'HF10': ds_val_g10()}),
                 MemoryCleanUp(),
                 # tf.keras.callbacks.TensorBoard(tensorboard_logs_path / datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), histogram_freq=1),
             )
@@ -831,7 +815,18 @@ class FitBoilingModel(CachedFunction[_P, FitModelReturn]):
 
         creator: Callable[[], FitModelReturn] = P(
             compiled_model,
-            LazyDescribed.from_value_and_description(tensorflow_datasets, datasets),
+            tuple(
+                subset()
+                for subset in to_tensorflow_triplet(
+                    datasets,
+                    prefilterer=LazyDescribed.from_value_and_description(
+                        _is_not_outlier, 'abs(Power [W] - nominal_power) < 5'
+                    ),
+                    batch_size=params.batch_size,
+                    include_test=False,
+                    target=target,
+                )
+            ),
             params,
             epoch_registry=RegisterEpoch(workspace_path / 'epoch.json'),
             history_registry=SaveHistory(workspace_path / 'history.json', mode='a'),
@@ -851,10 +846,6 @@ class FitCondensationModel(CachedFunction[_P, FitModelReturn]):
         params: FitModelParams,
         target: str,
     ) -> FitModelReturn:
-        datasets_tf = to_tensorflow_triplet(
-            datasets, batch_size=params.batch_size, include_test=False, target=target
-        )
-
         params.callbacks().extend(
             (
                 TimePrinter(
@@ -881,7 +872,12 @@ class FitCondensationModel(CachedFunction[_P, FitModelReturn]):
 
         creator: Callable[[], FitModelReturn] = P(
             compiled_model,
-            LazyDescribed.from_value_and_description(datasets_tf, datasets),
+            to_tensorflow_triplet(
+                datasets,
+                batch_size=params.batch_size,
+                include_test=False,
+                target=target,
+            ),
             params,
             epoch_registry=RegisterEpoch(workspace_path / 'epoch.json'),
             history_registry=SaveHistory(workspace_path / 'history.json', mode='a'),
@@ -945,7 +941,10 @@ def autofit(
     target: str,
 ) -> TuneModelReturn:
     ds_train, ds_val, ds_test = to_tensorflow_triplet(
-        datasets, batch_size=params.batch_size, include_test=False, target=target
+        datasets,
+        batch_size=params.batch_size,
+        include_test=False,
+        target=target,
     )
 
     if not any(isinstance(callback, MemoryCleanUp) for callback in params.callbacks()):
@@ -954,9 +953,9 @@ def autofit(
     tuned_model = fit_hypermodel(
         hypermodel,
         DatasetTriplet(
-            ds_train.unbatch().prefetch(tf.data.AUTOTUNE),
-            ds_val.unbatch().prefetch(tf.data.AUTOTUNE),
-            ds_test,
+            ds_train().unbatch().prefetch(tf.data.AUTOTUNE),
+            ds_val().unbatch().prefetch(tf.data.AUTOTUNE),
+            ds_test(),
         ),
         params,
     )
@@ -968,6 +967,7 @@ def autofit(
 
 """### Baseline on-wire pool boiling"""
 
+logger.info('Getting sample frames')
 
 baseline_boiling_dataset_direct = boiling_direct_datasets[0]
 baseline_boiling_dataset_indirect = boiling_indirect_datasets[0]
@@ -979,6 +979,8 @@ first_frame_indirect, _ = ds_train_indirect[0]
 
 baseline_boiling_mse_direct = 13  # W / cm**2
 baseline_boiling_mse_indirect = 33  # W / cm**2
+
+logger.info('Done getting sample frames')
 
 
 def get_baseline_compile_params() -> CompileModelParams:
@@ -1003,12 +1005,17 @@ def get_baseline_model(direct: bool = True, normalize_images: bool = True) -> Mo
         return hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=normalize_images)
 
 
+logger.info('Getting direct baseline model')
 baseline_boiling_model_architecture_direct = get_baseline_model(
     direct=True, normalize_images=False
 )
+logger.info('Done getting direct baseline model')
+
+logger.info('Getting indirect baseline model')
 baseline_boiling_model_architecture_indirect = get_baseline_model(
     direct=False, normalize_images=False
 )
+logger.info('Done getting indirect baseline model')
 
 baseline_boiling_model_direct_size = int(
     baseline_boiling_model_architecture_direct.count_parameters(
@@ -1016,6 +1023,7 @@ baseline_boiling_model_direct_size = int(
         non_trainable=False,
     )
 )
+
 baseline_boiling_model_indirect_size = int(
     baseline_boiling_model_architecture_indirect.count_parameters(
         trainable=True,

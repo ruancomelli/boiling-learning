@@ -30,7 +30,7 @@ class _MinimalFetchCache(SliceableDatasetCache[_Any]):
     def _current_indices(self) -> FrozenSet[int]:
         pass
 
-    def _missing_indices(self, indices: Tuple[int, ...]) -> FrozenSet[int]:
+    def missing_indices(self, indices: Tuple[int, ...]) -> FrozenSet[int]:
         return frozenset(indices) - self._current_indices()
 
     def fetch_from(
@@ -40,7 +40,7 @@ class _MinimalFetchCache(SliceableDatasetCache[_Any]):
     ) -> Tuple[_Any, ...]:
         indices = tuple(range(len(source)) if indices is None else indices)
 
-        missing_indices = tuple(self._missing_indices(indices))
+        missing_indices = tuple(self.missing_indices(indices))
         if missing_indices:
             self._store(
                 dict(
@@ -62,7 +62,7 @@ class MemoryCache(_MinimalFetchCache[_Any]):
         self._storage.update(pairs)
 
     def _fetch(self, indices: Tuple[int, ...]) -> Tuple[_Any, ...]:
-        missing = self._missing_indices(indices).intersection(indices)
+        missing = self.missing_indices(indices).intersection(indices)
         if missing:
             raise ValueError(f'Required missing indices: {sorted(missing)}')
 
@@ -103,7 +103,7 @@ class NumpyCache(_MinimalFetchCache[_Array]):
             _json.dump(new_indices, file)
 
     def _fetch(self, indices: Tuple[int, ...]) -> Tuple[_Array, ...]:
-        missing = self._missing_indices(indices).intersection(indices)
+        missing = self.missing_indices(indices).intersection(indices)
         if missing:
             raise ValueError(f'Required missing indices: {sorted(missing)}')
 
@@ -150,3 +150,33 @@ class NumpyCache(_MinimalFetchCache[_Array]):
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self._directory})'
+
+
+class EagerCache(SliceableDatasetCache[_Any]):
+    def __init__(
+        self,
+        wrapped: _MinimalFetchCache[_Any],
+        buffer_size: int,
+    ) -> None:
+        self._wrapped = wrapped
+        self._buffer_size = buffer_size
+
+    def fetch_from(
+        self,
+        source: SliceableDataset[_Any],
+        indices: Optional[Iterable[int]] = None,
+    ) -> Tuple[_Any, ...]:
+        all_indices = range(len(source))
+        indices = tuple(all_indices if indices is None else indices)
+
+        if len(indices) >= self._buffer_size:
+            return self._wrapped.fetch_from(source, indices)
+
+        all_missing_indices = self._wrapped.missing_indices(all_indices)
+        extra_missing_indices = all_missing_indices.difference(indices)
+        eagerly_fetched_indices = (indices + tuple(extra_missing_indices))[: self._buffer_size]
+        eagerly_fetched_values = self._wrapped.fetch_from(source, eagerly_fetched_indices)
+        return eagerly_fetched_values[: len(indices)]
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self._wrapped}, buffer_size={self._buffer_size})'

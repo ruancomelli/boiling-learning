@@ -90,13 +90,13 @@ class FitModelReturn:
 
 def get_fit_model(
     compiled_model: CompiledModel,
-    datasets: Lazy[DatasetTriplet[tf.data.Dataset]],
+    datasets: DatasetTriplet[tf.data.Dataset],
     params: FitModelParams,
     *,
     epoch_registry: RegisterEpoch,
     history_registry: SaveHistory,
 ) -> FitModelReturn:
-    ds_train, ds_val, _ = datasets()
+    ds_train, ds_val, _ = datasets
 
     with Timer() as timer:
         compiled_model.architecture.model.fit(
