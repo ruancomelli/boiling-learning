@@ -301,20 +301,19 @@ CONDENSATION_VIDEO_TO_SETTER = {
 VIDEO_TO_SETTER = {**BOILING_VIDEO_TO_SETTER, **CONDENSATION_VIDEO_TO_SETTER}
 
 
-def ensure_data_is_set(video: ExperimentVideo) -> None:
+def ensure_data_is_set(video: ExperimentVideo) -> ExperimentVideo:
     if video.data is None:
         setter = VIDEO_TO_SETTER[video.name]
         setter()
 
+    return video
+
 
 @cache(JSONTableAllocator(analyses_path / 'cache' / 'purged-experiment-videos'))
 def purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> List[str]:
-    videos = list(image_dataset)
-
-    for video in videos:
-        if video in image_dataset:
-            ensure_data_is_set(video)
-            # assert video.data is not None or video not in image_dataset, (video.name, image_dataset)
+    for video in image_dataset:
+        ensure_data_is_set(video)
+        # assert video.data is not None or video not in image_dataset, (video.name, image_dataset)
 
     return [video.name for video in image_dataset if video.data is not None]
 
