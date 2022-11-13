@@ -1161,7 +1161,7 @@ def autofit_to_dataset(
 """### Data Distribution"""
 
 
-PREFETCH = 1024
+PREFETCH = 2048
 
 
 @cache(JSONTableAllocator(analyses_path / 'cache' / 'targets2'))
@@ -1600,7 +1600,7 @@ def boiling_learning_curve_point(
     with strategy_scope(strategy):
         compile_model(model.architecture, get_baseline_compile_params())
     evaluation = model.architecture.evaluate(
-        ds_evaluation_direct if direct else ds_evaluation_indirect
+        (ds_evaluation_direct if direct else ds_evaluation_indirect)()
     )
 
     logger.info(f'Done')
