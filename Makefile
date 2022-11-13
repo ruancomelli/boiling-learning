@@ -49,10 +49,6 @@ autofix:
 	@-$(call $(.CHECK))
 	@$(call $(.READD))
 
-.PHONY: commit
-commit: autofix
-	@pdm run cz commit
-
 .PHONY: release
 release:
 # for v1.0.0 and after, the following line should be used to bump the project version:
