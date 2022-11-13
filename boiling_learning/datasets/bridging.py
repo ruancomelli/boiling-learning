@@ -6,6 +6,7 @@ from typing import Callable, Hashable, List, Mapping, Optional, Tuple, TypeVar, 
 
 import funcy
 import tensorflow as tf
+from loguru import logger
 
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.utils.mathutils import round_to_multiple
@@ -51,8 +52,11 @@ def sliceable_dataset_to_tensorflow_dataset(
             if not save_path.exists():
                 raise FileNotFoundError
 
+            logger.debug(f'Loading dataset from {save_path}')
             ds = tf.data.experimental.load(str(save_path), auto_spec(dataset[0]))
         except FileNotFoundError:
+            logger.debug(f'File does not exist: {save_path}')
+
             ds = creator()
 
             tf.data.experimental.save(ds, str(save_path))
