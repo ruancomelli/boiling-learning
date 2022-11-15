@@ -189,15 +189,16 @@ tf.keras.mixed_precision.set_global_policy('mixed_float16')
 
 Engine.put('ray')  # Modin will use Ray
 
-boiling_learning_path = resolve(os.environ['BOILING_DATA_PATH'])
-boiling_experiments_path = boiling_learning_path / 'experiments'
-boiling_cases_path = boiling_learning_path / 'cases'
-condensation_learning_path = resolve(os.environ['CONDENSATION_DATA_PATH'])
-condensation_cases_path = condensation_learning_path / 'data'
-analyses_path = boiling_learning_path / 'analyses'
+masters_path = resolve(os.environ['MASTERS_PATH'])
+data_path = masters_path / 'data'
+boiling_data_path = data_path / 'boiling1d'
+boiling_experiments_path = boiling_data_path / 'experiments'
+boiling_cases_path = boiling_data_path / 'cases'
+condensation_data_path = data_path / 'condensation'
+analyses_path = masters_path / 'analyses'
 tensorboard_logs_path = resolve(analyses_path / 'models' / 'logs', dir=True)
 
-log_file = resolve(boiling_learning_path / 'logs' / '{time}.log', parents=True)
+log_file = resolve(masters_path / 'logs' / '{time}.log', parents=True)
 
 logger.remove()
 logger.add(sys.stderr, level='DEBUG')
@@ -233,11 +234,11 @@ logger.info(f'Options: {OPTIONS}')
 logger.info('Checking paths')
 check_all_paths_exist(
     (
-        ('Boiling learning', boiling_learning_path),
+        ('Masters', masters_path),
+        ('Boiling data', boiling_data_path),
         ('Boiling cases', boiling_cases_path),
         ('Boiling experiments', boiling_experiments_path),
-        ('Contensation learning', condensation_learning_path),
-        ('Contensation cases', condensation_cases_path),
+        ('Contensation data', condensation_data_path),
         ('Analyses', analyses_path),
     )
 )
@@ -276,9 +277,9 @@ boiling_experiments_map = {
     'case 5': boiling_experiments_path / 'Experiment 2020-09-10 13-53' / 'data.csv',
 }
 
-logger.info(f'Loading condensation cases from {condensation_cases_path}')
-condensation_datasets = load_dataset_tree.main(condensation_cases_path)
-condensation_data_path = condensation_cases_path / 'data_spec.yaml'
+logger.info(f'Loading condensation cases from {condensation_data_path}')
+condensation_datasets = load_dataset_tree.main(condensation_data_path)
+condensation_data_spec_path = condensation_data_path / 'data_spec.yaml'
 
 BOILING_VIDEO_TO_SETTER = {
     video.name: partial(
@@ -292,7 +293,7 @@ BOILING_VIDEO_TO_SETTER = {
 
 CONDENSATION_VIDEO_TO_SETTER = {
     video.name: partial(
-        set_condensation_datasets_data.main, condensation_datasets, condensation_data_path
+        set_condensation_datasets_data.main, condensation_datasets, condensation_data_spec_path
     )
     for img_ds in condensation_datasets
     for video in img_ds
@@ -1993,7 +1994,7 @@ boiling_cross_surface = {
 condensation_all_cases = ExperimentVideoDataset.make_union(
     *set_condensation_datasets_data.main(
         condensation_datasets,
-        condensation_data_path,
+        condensation_data_spec_path,
     )
 )
 
@@ -2020,7 +2021,7 @@ logger.info('First condensation case')
 # condensation_all_cases = ExperimentVideoDataset.make_union(
 #     *set_condensation_datasets_data.main(
 #         condensation_datasets,
-#         condensation_data_path,
+#         condensation_data_spec_path,
 #     )
 # )
 
@@ -2140,7 +2141,7 @@ logger.info('First condensation case')
 # condensation_all_cases = ExperimentVideoDataset.make_union(
 #     *set_condensation_datasets_data.main(
 #         condensation_datasets,
-#         condensation_data_path,
+#         condensation_data_spec_path,
 #     )
 # )
 
