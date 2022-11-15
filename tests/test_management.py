@@ -8,8 +8,7 @@ from boiling_learning.descriptions import describe
 from boiling_learning.io.json import dump as saver
 from boiling_learning.io.json import load as loader
 from boiling_learning.management.allocators import JSONTableAllocator
-from boiling_learning.management.cacher import cache
-from boiling_learning.management.persister import provide
+from boiling_learning.management.cacher import Cacher, cache
 from boiling_learning.utils.functional import P
 
 
@@ -18,44 +17,18 @@ def filepath(tmp_path: Path) -> Path:
     return tmp_path / 'file'
 
 
-class TestProvide:
-    def test_provide(self, filepath: Path):
-        MISSING = 0
+@pytest.fixture
+def cache_path(tmp_path: Path) -> Path:
+    return tmp_path / 'cache'
 
-        def creator() -> int:
-            return MISSING
 
-        VALUE = 3
-        saver(VALUE, filepath)
-        assert filepath.is_file()
-        assert (
-            provide(
-                filepath,
-                creator=creator,
-                saver=saver,
-                loader=loader,
-            )
-            == VALUE
-        )
-
-        filepath.unlink()
-
-        assert not filepath.is_file()
-        assert (
-            provide(
-                filepath,
-                creator=creator,
-                saver=saver,
-                loader=loader,
-            )
-            == MISSING
-        )
+@pytest.fixture
+def allocator(cache_path: Path) -> JSONTableAllocator:
+    return JSONTableAllocator(cache_path)
 
 
 class TestAllocators:
-    def test_JSONAllocator(self, tmp_path: Path) -> None:
-        allocator = JSONTableAllocator(tmp_path)
-
+    def test_JSONAllocator(self, allocator: JSONTableAllocator) -> None:
         p1 = P('3.14', 0, name='pi')
         p2 = P('hello')
 
@@ -67,9 +40,25 @@ class TestAllocators:
 
 
 class TestCacher:
-    def test_cache(self, tmp_path: Path) -> None:
-        allocator = JSONTableAllocator(tmp_path)
+    def test_provide(self, allocator: JSONTableAllocator, filepath: Path):
+        cacher = Cacher(allocator, saver=saver, loader=loader)
 
+        MISSING = 0
+
+        def creator() -> int:
+            return MISSING
+
+        VALUE = 3
+        saver(VALUE, filepath)
+        assert filepath.is_file()
+        assert cacher.provide(creator, filepath) == VALUE
+
+        filepath.unlink()
+
+        assert not filepath.is_file()
+        assert cacher.provide(creator, filepath) == MISSING
+
+    def test_cache(self, allocator: JSONTableAllocator) -> None:
         history = []
 
         def side_effect(number: float, name: str) -> None:
