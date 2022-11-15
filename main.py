@@ -1737,47 +1737,17 @@ def boiling_cross_surface_evaluation(
     training_dataset = LazyDescribed.from_describable(training_datasets) | datasets_merger()
     evaluation_dataset = LazyDescribed.from_describable(evaluation_datasets) | datasets_merger()
 
-    ds_training_train, _, _ = datasets_train()
-    first_frame, _ = ds_training_train[0]
-
-    logger.info('Done')
-
     with strategy_scope(strategy):
-        architecture = hoboldnet2(
-            first_frame.shape,
-            dropout=0.5,
-            output_layer_policy='float32',
+        architecture = get_baseline_model(
+            direct=direct_visualization,
             normalize_images=normalize_images,
         )
         compiled_model = compile_model(architecture, get_baseline_compile_params())
 
     logger.info('Training...')
-    fit_model_params = FitModelParams(
-        # batch_size=16,
-        batch_size=BATCH_SIZE,
-        epochs=100,
-        callbacks=Described.from_list(
-            [
-                Described.from_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
-                Described.from_constructor(
-                    tf.keras.callbacks.EarlyStopping,
-                    P(
-                        monitor='val_loss',
-                        min_delta=0,
-                        # patience=2,
-                        patience=10,
-                        baseline=None,
-                        mode='auto',
-                        restore_best_weights=True,
-                        verbose=1,
-                    ),
-                ),
-            ]
-        ),
-    )
 
     model = fit_boiling_model(
-        compiled_model, training_dataset, fit_model_params, target='Flux [W/cm**2]'
+        compiled_model, training_dataset, get_baseline_fit_params(), target='Flux [W/cm**2]'
     )
 
     logger.info('Evaluating')
@@ -1839,8 +1809,6 @@ for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
     )
 
     for training_indices in cases_indices:
-        results = tuple()
-
         cross_surface_analysis.add_row(
             _format_sets(training_indices),
             *map(
@@ -1867,92 +1835,89 @@ for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
 logger.info('Analyzing cross-surface boiling evaluation')
 BATCH_SIZE = 200
 
+# TODO: this fix this to handle AutoML!
+# @cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-cross-surface-automl'))
+# def boiling_cross_surface_evaluation_automl(
+#     direct_visualization: bool, training_cases: tuple[int, ...], evaluation_cases: tuple[int, ...]
+# ) -> dict[str, float]:
+#     logger.info(
+#         f'Training on cases {training_cases} '
+#         f'| evaluation on {evaluation_cases} '
+#         f"| {'Direct' if direct_visualization else 'Indirect'} visualization"
+#     )
 
-@cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-cross-surface-automl'))
-def boiling_cross_surface_evaluation_automl(
-    direct_visualization: bool, training_cases: tuple[int, ...], evaluation_cases: tuple[int, ...]
-) -> dict[str, float]:
-    logger.info(
-        f'Training on cases {training_cases} '
-        f'| evaluation on {evaluation_cases} '
-        f"| {'Direct' if direct_visualization else 'Indirect'} visualization"
-    )
+#     all_datasets = boiling_direct_datasets if direct_visualization else boiling_indirect_datasets
+#     training_datasets = tuple(all_datasets[training_case] for training_case in training_cases)
+#     evaluation_datasets = tuple(
+#         all_datasets[evaluation_case] for evaluation_case in evaluation_cases
+#     )
 
-    all_datasets = boiling_direct_datasets if direct_visualization else boiling_indirect_datasets
-    training_datasets = tuple(all_datasets[training_case] for training_case in training_cases)
-    evaluation_datasets = tuple(
-        all_datasets[evaluation_case] for evaluation_case in evaluation_cases
-    )
+#     training_dataset = LazyDescribed.from_describable(training_datasets) | datasets_merger()
+#     evaluation_dataset = LazyDescribed.from_describable(evaluation_datasets) | datasets_merger()
 
-    training_dataset = LazyDescribed.from_describable(training_datasets) | datasets_merger()
-    evaluation_dataset = LazyDescribed.from_describable(evaluation_datasets) | datasets_merger()
+#     logger.info('Done')
 
-    ds_training_train, _, _ = training_dataset()
-    first_frame, _ = ds_training_train[0]
+#     with strategy_scope(strategy):
+#         architecture = (
+#             regular_wire_best_model_direct_visualization
+#             if direct_visualization
+#             else regular_wire_best_model_indirect_visualization
+#         ).clone()
+#         compiled_model = compile_model(architecture, get_baseline_compile_params())
 
-    logger.info('Done')
+#     logger.info('Training...')
+#     fit_model_params = FitModelParams(
+#         batch_size=BATCH_SIZE,
+#         epochs=100,
+#         callbacks=Described.from_list(
+#             [
+#                 Described.from_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
+#                 Described.from_constructor(
+#                     tf.keras.callbacks.EarlyStopping,
+#                     P(
+#                         monitor='val_loss',
+#                         min_delta=0,
+#                         patience=10,
+#                         baseline=None,
+#                         mode='auto',
+#                         restore_best_weights=True,
+#                         verbose=1,
+#                     ),
+#                 ),
+#             ]
+#         ),
+#     )
 
-    with strategy_scope(strategy):
-        architecture = (
-            regular_wire_best_model_direct_visualization
-            if direct_visualization
-            else regular_wire_best_model_indirect_visualization
-        ).clone()
-        compiled_model = compile_model(architecture, get_baseline_compile_params())
+#     model = fit_boiling_model(
+#         compiled_model, training_dataset, fit_model_params, target='Flux [W/cm**2]'
+#     )
 
-    logger.info('Training...')
-    fit_model_params = FitModelParams(
-        batch_size=BATCH_SIZE,
-        epochs=100,
-        callbacks=Described.from_list(
-            [
-                Described.from_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
-                Described.from_constructor(
-                    tf.keras.callbacks.EarlyStopping,
-                    P(
-                        monitor='val_loss',
-                        min_delta=0,
-                        patience=10,
-                        baseline=None,
-                        mode='auto',
-                        restore_best_weights=True,
-                        verbose=1,
-                    ),
-                ),
-            ]
-        ),
-    )
+#     logger.info('Evaluating')
+#     with strategy_scope(strategy):
+#         compile_model(model.architecture, get_baseline_compile_params())
 
-    model = fit_boiling_model(
-        compiled_model, training_dataset, fit_model_params, target='Flux [W/cm**2]'
-    )
+#     ds_evaluation_val = to_tensorflow(
+#         evaluation_dataset | subset('val'),
+#         batch_size=BATCH_SIZE,
+#         target='Flux [W/cm**2]',
+#     )
 
-    logger.info('Evaluating')
-    with strategy_scope(strategy):
-        compile_model(model.architecture, get_baseline_compile_params())
+#     evaluation = model.architecture.evaluate(ds_evaluation_val)
+#     logger.info(f'Done: {evaluation}')
 
-    ds_evaluation_val = to_tensorflow(
-        evaluation_dataset | subset('val'),
-        batch_size=BATCH_SIZE,
-        target='Flux [W/cm**2]',
-    )
-
-    evaluation = model.architecture.evaluate(ds_evaluation_val)
-    logger.info(f'Done: {evaluation}')
-
-    return evaluation
+#     return evaluation
 
 
-cases_indices = ((0,), (1,), (0, 1), (2,), (3,), (2, 3), (0, 1, 2, 3))
+# cases_indices = ((0,), (1,), (0, 1), (2,), (3,), (2, 3), (0, 1, 2, 3))
 
-boiling_cross_surface = {
-    (is_direct, training_cases, evaluation_cases): boiling_cross_surface_evaluation_automl(
-        is_direct, training_cases, evaluation_cases
-    )
-    for is_direct, training_cases, evaluation_cases in itertools.product(
-        (False, True), cases_indices, cases_indices
-    )
-}
+# boiling_cross_surface = {
+#     (is_direct, training_cases, evaluation_cases): boiling_cross_surface_evaluation_automl(
+#         is_direct, training_cases, evaluation_cases
+#     )
+#     for is_direct, training_cases, evaluation_cases in itertools.product(
+#         (False, True), cases_indices, cases_indices
+#     )
+# }
 
 """### Condensation"""
 
