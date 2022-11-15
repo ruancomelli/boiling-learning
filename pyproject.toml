@@ -32,7 +32,7 @@ dependencies = [
     "rich>=12.6.0",
 ]
 
-requires-python = ">=3.7.12,<3.10"
+requires-python = ">=3.9.14,<3.10"
 license = {text = "MIT"}
 readme = "README.md"
 keywords = ["python", "machine-learning", "deep-learning", "tensorflow", "phase-change"]
