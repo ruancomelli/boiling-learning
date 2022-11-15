@@ -8,7 +8,7 @@ from boiling_learning.descriptions import describe
 from boiling_learning.io import json
 from boiling_learning.management.allocators import JSONTableAllocator
 from boiling_learning.management.cacher import cache
-from boiling_learning.management.persister import FilePersister, Persister, Provider
+from boiling_learning.management.persister import Persister, Provider
 from boiling_learning.utils.functional import P
 
 
@@ -24,15 +24,6 @@ class TestPersister:
 
         persister.save(VALUE, filepath)
         assert persister.load(filepath) == VALUE
-
-    def test_FileManager(self, filepath: Path):
-        VALUE = 3
-        persister = Persister(json.dump, json.load)
-
-        file_manager = FilePersister(filepath, persister)
-
-        file_manager.save(VALUE)
-        assert file_manager.load() == VALUE
 
     def test_Provider(self, filepath: Path):
         MISSING = 0

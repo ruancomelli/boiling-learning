@@ -22,18 +22,6 @@ class Persister(Generic[_T]):
         return self.loader(resolve(filepath))
 
 
-class FilePersister(Generic[_T]):
-    def __init__(self, filepath: PathLike, persister: Persister[_T]) -> None:
-        self.path = resolve(filepath, parents=True)
-        self.persister = persister
-
-    def save(self, obj: _T) -> None:
-        self.persister.save(obj, self.path)
-
-    def load(self) -> _T:
-        return self.persister.load(self.path)
-
-
 class Provider(Persister[_T]):
     def __init__(
         self,
