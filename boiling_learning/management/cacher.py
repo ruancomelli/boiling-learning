@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Generic, Iterable, Type, TypeVar
+from typing import Any, Callable, Generic, Iterable, Type, TypeVar
 
 from typing_extensions import ParamSpec
 
@@ -48,7 +48,7 @@ class Cacher(Generic[_R]):
     def decorate(self, function: Callable[_P, _R]) -> CachedFunction[_P, _R]:
         return CachedFunction(function, self)
 
-    def allocate(self, *args: _P.args, **kwargs: _P.kwargs) -> Path:
+    def allocate(self, *args: Any, **kwargs: Any) -> Path:
         return self.allocator.allocate(*args, **kwargs)
 
     def load(self, path: PathLike) -> _R:
