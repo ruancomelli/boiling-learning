@@ -53,16 +53,20 @@ def sliceable_dataset_to_tensorflow_dataset(
                 raise FileNotFoundError
 
             logger.debug(f'Loading dataset from {save_path}')
-            ds = tf.data.experimental.load(str(save_path), auto_spec(dataset[0]))
+            # TODO: now passing the typespec is optional... try removing it!
+            ds = tf.data.Dataset.load(
+                str(save_path),
+                # auto_spec(dataset[0])
+            )
         except FileNotFoundError:
             logger.debug(f'File does not exist: {save_path}')
 
             ds = creator()
 
-            tf.data.experimental.save(ds, str(save_path))
-            ds = tf.data.experimental.load(
+            ds.save(str(save_path))
+            ds = tf.data.Dataset.load(
                 str(save_path),
-                auto_spec(dataset[0]),
+                # auto_spec(dataset[0]),
                 reader_func=_make_reader_func(deterministic=deterministic),
             )
 
