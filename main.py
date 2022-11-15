@@ -19,7 +19,6 @@ from dataclasses import replace
 from fractions import Fraction
 from functools import lru_cache, partial
 from operator import itemgetter
-from pathlib import Path
 from pprint import pprint
 from typing import (
     Any,
@@ -32,9 +31,6 @@ from typing import (
     TypeVar,
     Union,
     ValuesView,
-    dict,
-    list,
-    tuple,
 )
 
 import autokeras as ak
@@ -43,7 +39,6 @@ import matplotlib.pyplot as plt
 import modin.pandas as pd
 import more_itertools as mit
 import numpy as np
-import pandas as pd
 import seaborn as sns
 import tensorflow as tf
 import tensorflow_addons as tfa
@@ -53,57 +48,30 @@ from modin.config import Engine
 from rich.console import Console
 from rich.table import Table
 from skimage.io import imshow
-from tensorflow.data import AUTOTUNE
 from tensorflow.keras.callbacks import Callback
-from tensorflow.keras.layers import (
-    Activation,
-    AveragePooling2D,
-    Conv2D,
-    Dense,
-    Dropout,
-    Flatten,
-    GlobalAveragePooling2D,
-    GlobalMaxPooling2D,
-    Input,
-    Lambda,
-    Layer,
-    LayerNormalization,
-    MaxPool2D,
-    ReLU,
-    SeparableConv2D,
-    Softmax,
-    SpatialDropout2D,
-    TimeDistributed,
-)
+from tensorflow.keras.layers import Activation, Conv2D, Dense, Dropout, Flatten, MaxPool2D, ReLU
 from typing_extensions import ParamSpec
 
-from boiling_learning.automl.hypermodels import (
-    ConvImageRegressor,
-    FixedArchitectureImageRegressor,
-    HyperModel,
-)
+from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
 from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn, fit_hypermodel
 from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_dataset
-from boiling_learning.datasets.cache import EagerCache, MemoryCache, NumpyCache
+from boiling_learning.datasets.cache import EagerCache, NumpyCache
 from boiling_learning.datasets.datasets import DatasetSplits, DatasetTriplet
-from boiling_learning.datasets.sliceable import SliceableDataset, features, map_targets, targets
+from boiling_learning.datasets.sliceable import SliceableDataset, map_targets, targets
 from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
-from boiling_learning.io import json
-from boiling_learning.io.storage import dataclass, deserialize, load, save, serialize
+from boiling_learning.io.storage import dataclass
 from boiling_learning.lazy import Lazy, LazyDescribed
 from boiling_learning.management.allocators import JSONTableAllocator
 from boiling_learning.management.cacher import CachedFunction, Cacher, cache
 from boiling_learning.model.callbacks import (
     AdditionalValidationSets,
-    BackupAndRestore,
     MemoryCleanUp,
-    ReduceLROnPlateau,
     RegisterEpoch,
     SaveHistory,
     TimePrinter,
 )
-from boiling_learning.model.definitions import hoboldnet2, hoboldnet3, tiny_convnet
+from boiling_learning.model.definitions import hoboldnet2
 from boiling_learning.model.model import ModelArchitecture, rename_model_layers
 from boiling_learning.model.training import (
     CompiledModel,
@@ -125,7 +93,7 @@ from boiling_learning.preprocessing.image import (
     structural_similarity_ratio,
 )
 from boiling_learning.preprocessing.transformers import Transformer
-from boiling_learning.preprocessing.video import Video, VideoFrame
+from boiling_learning.preprocessing.video import VideoFrame
 from boiling_learning.scripts import (
     analyze_consecutive_frames,
     connect_gpus,
@@ -140,9 +108,7 @@ from boiling_learning.scripts.utils.initialization import check_all_paths_exist
 from boiling_learning.transforms import dataset_sampler, datasets_merger, map_transformers, subset
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.pathutils import resolve
-from boiling_learning.utils.random import random_state
 from boiling_learning.utils.typeutils import typename
-from boiling_learning.visualization.video import save_as_video
 
 # check <https://stackoverflow.com/a/58970598/5811400> and <https://github.com/googlecolab/colabtools/issues/864#issuecomment-556437040>
 
@@ -1212,6 +1178,7 @@ def plot_dataset_targets(
 
 """#### On-wire pool boiling"""
 
+
 boiling_filter_target = lambda target: abs(target['Power [W]'] - target['nominal_power']) < 5
 boiling_target_name = 'Flux [W/cm**2]'
 
@@ -1497,7 +1464,7 @@ for retrain_index in range(NUMBER_OF_RETRAINS):
     print(model)
     best_performance = min(model.history, key=lambda data: data['val_loss'])
     evaluations.append(best_performance)
-    logger.info(f'Done')
+    logger.info('Done')
 
 pprint(evaluations)
 
@@ -1511,16 +1478,16 @@ logger.info('Testing with other wire')
 
 DATASET = boiling_direct_datasets[2]
 
-logger.info(f'Compiling...')
+logger.info('Compiling...')
 first_frame, _ = DATASET()[0][0]
 
 with strategy_scope(strategy):
     # TODO: replace this with utility function!
     architecture = hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=False)
     compiled_model = compile_model(architecture, get_baseline_compile_params())
-logger.info(f'Done')
+logger.info('Done')
 
-logger.info(f'Training...')
+logger.info('Training...')
 fit_model_params = FitModelParams(
     batch_size=200,
     epochs=100,
@@ -1544,7 +1511,7 @@ fit_model_params = FitModelParams(
 with strategy_scope(strategy):
     model = fit_boiling_model(compiled_model, DATASET, fit_model_params, target='Flux [W/cm**2]')
 pprint(model)
-logger.info(f'Done')
+logger.info('Done')
 
 """#### Boiling learning curve"""
 
@@ -1575,21 +1542,21 @@ def boiling_learning_curve_point(
 ) -> dict[str, float]:
     logger.info(f'Analyzing fraction {fraction}')
 
-    logger.info(f'Getting datasets...')
+    logger.info('Getting datasets...')
     datasets = (
         baseline_boiling_dataset_direct if direct else baseline_boiling_dataset_indirect
     ) | dataset_sampler(fraction)
-    logger.info(f'Done')
+    logger.info('Done')
 
-    logger.info(f'Compiling...')
+    logger.info('Compiling...')
     with strategy_scope(strategy):
         compiled_model = compile_model(
             get_baseline_model(direct=direct, normalize_images=normalize_images),
             get_baseline_compile_params(),
         )
-    logger.info(f'Done')
+    logger.info('Done')
 
-    logger.info(f'Training...')
+    logger.info('Training...')
 
     model = fit_boiling_model(
         compiled_model, datasets, get_baseline_fit_params(), target='Flux [W/cm**2]'
@@ -1602,7 +1569,7 @@ def boiling_learning_curve_point(
         (ds_evaluation_direct if direct else ds_evaluation_indirect)()
     )
 
-    logger.info(f'Done')
+    logger.info('Done')
 
     return evaluation
 
@@ -1683,58 +1650,58 @@ print(regular_wire_best_model_direct_visualization_less_data)
 """#### Other wire - auto ML"""
 
 
-with strategy_scope(strategy):
-    loss = tf.keras.losses.MeanSquaredError()
-    metrics = [
-        tf.keras.metrics.MeanSquaredError('MSE'),
-        tf.keras.metrics.RootMeanSquaredError('RMS'),
-        tf.keras.metrics.MeanAbsoluteError('MAE'),
-        tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
-        tfa.metrics.RSquare('R2'),
-    ]
+# with strategy_scope(strategy):
+#     loss = tf.keras.losses.MeanSquaredError()
+#     metrics = [
+#         tf.keras.metrics.MeanSquaredError('MSE'),
+#         tf.keras.metrics.RootMeanSquaredError('RMS'),
+#         tf.keras.metrics.MeanAbsoluteError('MAE'),
+#         tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
+#         tfa.metrics.RSquare('R2'),
+#     ]
 
-hypermodel = ConvImageRegressor(
-    loss=loss,
-    metrics=metrics,
-    tuner=EarlyStoppingGreedy,
-    directory=hypermodel_allocator,
-    max_model_size=int(
-        baseline_boiling_model_architecture.count_parameters(trainable=True, non_trainable=False)
-    ),
-    strategy=strategy,
-    goal=baseline_boiling_loss,
-    normalize_images=False,
-)
+# hypermodel = ConvImageRegressor(
+#     loss=loss,
+#     metrics=metrics,
+#     tuner=EarlyStoppingGreedy,
+#     directory=hypermodel_allocator,
+#     max_model_size=int(
+#         baseline_boiling_model_architecture.count_parameters(trainable=True, non_trainable=False)
+#     ),
+#     strategy=strategy,
+#     goal=baseline_boiling_loss,
+#     normalize_images=False,
+# )
 
-tune_model_params = TuneModelParams(
-    batch_size=16,
-    callbacks=Described.from_list(
-        [
-            Described.from_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
-            Described.from_constructor(
-                tf.keras.callbacks.EarlyStopping,
-                P(
-                    monitor='val_loss',
-                    min_delta=0,
-                    # patience=2,
-                    patience=10,
-                    baseline=None,
-                    mode='auto',
-                    restore_best_weights=True,
-                    verbose=1,
-                ),
-            ),
-        ]
-    ),
-)
+# tune_model_params = TuneModelParams(
+#     batch_size=16,
+#     callbacks=Described.from_list(
+#         [
+#             Described.from_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
+#             Described.from_constructor(
+#                 tf.keras.callbacks.EarlyStopping,
+#                 P(
+#                     monitor='val_loss',
+#                     min_delta=0,
+#                     # patience=2,
+#                     patience=10,
+#                     baseline=None,
+#                     mode='auto',
+#                     restore_best_weights=True,
+#                     verbose=1,
+#                 ),
+#             ),
+#         ]
+#     ),
+# )
 
-regular_wire_best_model = autofit(
-    hypermodel,
-    datasets=boiling_direct_datasets[1],
-    params=tune_model_params,
-    target='Flux [W/cm**2]',
-)
-print(regular_wire_best_model)
+# regular_wire_best_model = autofit(
+#     hypermodel,
+#     datasets=boiling_direct_datasets[1],
+#     params=tune_model_params,
+#     target='Flux [W/cm**2]',
+# )
+# print(regular_wire_best_model)
 
 # TODO: define this as output from the previous study
 DATASET_SIZE = Fraction(1, 1)
@@ -1773,7 +1740,7 @@ def boiling_cross_surface_evaluation(
     ds_training_train, _, _ = datasets_train()
     first_frame, _ = ds_training_train[0]
 
-    logger.info(f'Done')
+    logger.info('Done')
 
     with strategy_scope(strategy):
         architecture = hoboldnet2(
@@ -1784,7 +1751,7 @@ def boiling_cross_surface_evaluation(
         )
         compiled_model = compile_model(architecture, get_baseline_compile_params())
 
-    logger.info(f'Training...')
+    logger.info('Training...')
     fit_model_params = FitModelParams(
         # batch_size=16,
         batch_size=BATCH_SIZE,
@@ -1813,7 +1780,7 @@ def boiling_cross_surface_evaluation(
         compiled_model, training_dataset, fit_model_params, target='Flux [W/cm**2]'
     )
 
-    logger.info(f'Evaluating')
+    logger.info('Evaluating')
     with strategy_scope(strategy):
         compile_model(model.architecture, get_baseline_compile_params())
 
@@ -1840,7 +1807,7 @@ boiling_cross_surface = {
     )
 }
 
-boiling_cross_surface
+print(boiling_cross_surface)
 
 
 console = Console()
@@ -1902,7 +1869,7 @@ BATCH_SIZE = 200
 
 
 @cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-cross-surface-automl'))
-def boiling_cross_surface_evaluation(
+def boiling_cross_surface_evaluation_automl(
     direct_visualization: bool, training_cases: tuple[int, ...], evaluation_cases: tuple[int, ...]
 ) -> dict[str, float]:
     logger.info(
@@ -1960,7 +1927,7 @@ def boiling_cross_surface_evaluation(
         compiled_model, training_dataset, fit_model_params, target='Flux [W/cm**2]'
     )
 
-    logger.info(f'Evaluating')
+    logger.info('Evaluating')
     with strategy_scope(strategy):
         compile_model(model.architecture, get_baseline_compile_params())
 
@@ -1979,7 +1946,7 @@ def boiling_cross_surface_evaluation(
 cases_indices = ((0,), (1,), (0, 1), (2,), (3,), (2, 3), (0, 1, 2, 3))
 
 boiling_cross_surface = {
-    (is_direct, training_cases, evaluation_cases): boiling_cross_surface_evaluation(
+    (is_direct, training_cases, evaluation_cases): boiling_cross_surface_evaluation_automl(
         is_direct, training_cases, evaluation_cases
     )
     for is_direct, training_cases, evaluation_cases in itertools.product(
@@ -2031,7 +1998,7 @@ get_image_dataset_params = GetImageDatasetParams(
     dataset_size=None,
 )
 
-logger.info(f'Getting datasets...')
+logger.info('Getting datasets...')
 # TODO: this should be set by `set_condensation_datasets_data`
 def _set_case_name(data: dict[str, Any]) -> dict[str, Any]:
     data['case_name'] = ':'.join(data['name'].split(':')[:2])
@@ -2042,7 +2009,7 @@ ds_train, ds_val, ds_test = get_image_dataset(get_image_dataset_params)
 ds_train = map_targets(ds_train, _set_case_name)
 ds_val = map_targets(ds_val, _set_case_name)
 ds_test = map_targets(ds_test, _set_case_name)
-logger.info(f'Done')
+logger.info('Done')
 
 logger.info('Calculating classes')
 CLASSES = sorted(frozenset(targets(ds_train).map(itemgetter('case_name')).prefetch(4096)))
@@ -2059,15 +2026,15 @@ ds_val = map_targets(ds_val, _set_case)
 ds_test = map_targets(ds_test, _set_case)
 logger.info('Done')
 
-logger.info(f'Describing datasets...')
+logger.info('Describing datasets...')
 datasets = Described(value=(ds_train, ds_val, ds_test), description=get_image_dataset_params)
-logger.info(f'Done')
+logger.info('Done')
 
-logger.info(f'Getting first frame...')
+logger.info('Getting first frame...')
 first_frame, _ = ds_train[0]
-logger.info(f'Done')
+logger.info('Done')
 
-logger.info(f'Compiling...')
+logger.info('Compiling...')
 with strategy_scope(strategy):
     architecture = hoboldnet2(
         first_frame.shape,
@@ -2087,9 +2054,9 @@ with strategy_scope(strategy):
         ],
     )
     compiled_model = compile_model(architecture, compile_params)
-logger.info(f'Done')
+logger.info('Done')
 
-logger.info(f'Training...')
+logger.info('Training...')
 fit_model_params = FitModelParams(
     batch_size=200,
     epochs=100,
@@ -2129,7 +2096,7 @@ fit_model_params = FitModelParams(
 with strategy_scope(strategy):
     model = fit_condensation_model(compiled_model, datasets, fit_model_params)
 print(model)
-logger.info(f'Done')
+logger.info('Done')
 
 # REGRESSION
 
@@ -2149,19 +2116,19 @@ get_image_dataset_params = GetImageDatasetParams(
     dataset_size=None,
 )
 
-logger.info(f'Getting datasets...')
+logger.info('Getting datasets...')
 ds_train, ds_val, ds_test = get_image_dataset(get_image_dataset_params)
-logger.info(f'Done')
+logger.info('Done')
 
-logger.info(f'Describing datasets...')
+logger.info('Describing datasets...')
 datasets = Described(value=(ds_train, ds_val, ds_test), description=get_image_dataset_params)
-logger.info(f'Done')
+logger.info('Done')
 
-logger.info(f'Getting first frame...')
+logger.info('Getting first frame...')
 first_frame, _ = ds_train[0]
-logger.info(f'Done')
+logger.info('Done')
 
-logger.info(f'Compiling...')
+logger.info('Compiling...')
 with strategy_scope(strategy):
     architecture = hoboldnet2(
         first_frame.shape,
@@ -2169,9 +2136,9 @@ with strategy_scope(strategy):
         output_layer_policy='float32',
     )
     compiled_model = compile_model(architecture, get_baseline_compile_params())
-logger.info(f'Done')
+logger.info('Done')
 
-logger.info(f'Training...')
+logger.info('Training...')
 fit_model_params = FitModelParams(
     batch_size=200,
     epochs=100,
@@ -2211,7 +2178,7 @@ fit_model_params = FitModelParams(
 with strategy_scope(strategy):
     model = fit_condensation_model(compiled_model, datasets, fit_model_params, target='mass_rate')
 print(model)
-logger.info(f'Done')
+logger.info('Done')
 
 """## Studies
 
@@ -2241,7 +2208,7 @@ get_image_dataset_params = GetImageDatasetParams(
     dataset_size=None,
 )
 
-logger.info(f'Getting datasets...')
+logger.info('Getting datasets...')
 datasets = Described(get_image_dataset(get_image_dataset_params), get_image_dataset_params)
 ds_train, ds_val, ds_test = datasets.value
 first_frame, _ = ds_train[0]
@@ -2250,7 +2217,7 @@ ds_train, ds_val, _ = to_tensorflow_triplet(
 )
 ds_train = ds_train.unbatch().prefetch(tf.data.AUTOTUNE)
 ds_val = ds_val.unbatch().prefetch(tf.data.AUTOTUNE)
-logger.info(f'Done')
+logger.info('Done')
 
 with strategy_scope(strategy):
     loss = tf.keras.losses.MeanSquaredError()
@@ -2292,7 +2259,7 @@ regressor.fit(
 )
 
 
-logger.info(f'Done')
+logger.info('Done')
 
 
 BATCH_SIZE = 32
@@ -2303,7 +2270,7 @@ get_image_dataset_params = GetImageDatasetParams(
     dataset_size=None,
 )
 
-logger.info(f'Getting datasets...')
+logger.info('Getting datasets...')
 datasets = Described(get_image_dataset(get_image_dataset_params), get_image_dataset_params)
 ds_train, ds_val, ds_test = datasets.value
 first_frame, _ = ds_train[0]
@@ -2312,7 +2279,7 @@ ds_train, ds_val, _ = to_tensorflow_triplet(
 )
 ds_train = ds_train.unbatch().prefetch(tf.data.AUTOTUNE)
 ds_val = ds_val.unbatch().prefetch(tf.data.AUTOTUNE)
-logger.info(f'Done')
+logger.info('Done')
 
 with strategy_scope(strategy):
     loss = tf.keras.losses.MeanSquaredError()
@@ -2346,7 +2313,7 @@ regressor.fit(
 )
 
 
-logger.info(f'Done')
+logger.info('Done')
 
 
 save_best_epoch_on_epoch_end = SaveBestEpoch.on_epoch_end
