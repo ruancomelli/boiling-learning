@@ -150,6 +150,7 @@ tag_format = "v$major.$minor.$patch$prerelease"
 update_changelog_on_bump = true
 version = "0.37.0"
 version_files = ["pyproject.toml:version"]
+bump_message = "chore: release $new_version"
 
 [tool.pylint.main]
 # Specify a score threshold to be exceeded before program exits with error.
