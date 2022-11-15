@@ -1,9 +1,9 @@
 repos:
 
-- repo: https://github.com/commitizen-tools/commitizen
-  rev: v2.37.0
+- repo: https://github.com/compilerla/conventional-pre-commit
+  rev: v2.1.1
   hooks:
-  - id: commitizen
+  - id: conventional-pre-commit
     stages: [commit-msg]
 
 - repo: https://github.com/hakancelikdev/unimport
