@@ -50,38 +50,6 @@ The RTD was calibrated and the 3rd order calibration coefficients can be found i
       - observations: bubble formation started much earlier on the tape. Also, the critical point was achieved with a much lower heat flux, and the wire broke inside the covered region.
       - problem: the observations demonstrate that the tape strongly modifies the heat transfer behavior of the heating wire.
     - thin layers:
-      <!-- TODO: here -->
-
-### Surface Roughness
-
-For condensation surfaces:
-
-- Alex:
-  - 220:
-    - Sa = 0.105 um
-    - Sa = 0.0832 um
-    - Sa = 0.096 um
-    - Sa = 0.0864 um
-  - 600:
-    - Sa = 0.00711 um
-    - Sa = 0.00849 um
-    - Sa = 8.05 nm
-    - Sa = 0.0102 um
-  - Polido:
-    - Sa = 1.43 nm
-    - Sa = 0.00192 um
-    - Sa = 1.76 nm
-    - Sa = 3.23 nm
-    - Sa = 1.58 nm
-
-- jones2009:
-  - polished:
-    - Ra = 0.038 um
-  - EDM:
-    - Ra = 1.08 um
-    - Ra = 2.22 um
-    - Ra = 5.89 um
-    - Ra = 10.0 um
 
 ## Sample
 
@@ -146,9 +114,3 @@ Ribbon 2 was used in Experiment 5. Data:
 - texturing: none. The ribbon was used as extracted from the coil. No further treatment was applied.
 
 The experiment was executed without sensors.
-
-## Machine learning
-
-### Bubble detection
-
-I searched for some papers that used machine learning or filters to detect bubbles. However, the best studies I found showed that CNNs are the way to go, having a much better accuracy in detecting bubbles and avoiding false positives. Perhaps more research is needed before deciding to exclude other methods and diving into CNNs. <!-- TODO: more research on different bubble detection methods -->
