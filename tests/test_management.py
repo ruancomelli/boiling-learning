@@ -5,10 +5,11 @@ from typing import List
 import pytest
 
 from boiling_learning.descriptions import describe
-from boiling_learning.io import json
+from boiling_learning.io.json import dump as saver
+from boiling_learning.io.json import load as loader
 from boiling_learning.management.allocators import JSONTableAllocator
 from boiling_learning.management.cacher import cache
-from boiling_learning.management.persister import Persister, provide
+from boiling_learning.management.persister import provide
 from boiling_learning.utils.functional import P
 
 
@@ -17,30 +18,22 @@ def filepath(tmp_path: Path) -> Path:
     return tmp_path / 'file'
 
 
-class TestPersister:
-    def test_Persister(self, filepath: Path):
-        VALUE = 'hello'
-        persister = Persister(json.dump, json.load)
-
-        persister.save(VALUE, filepath)
-        assert persister.load(filepath) == VALUE
-
+class TestProvide:
     def test_provide(self, filepath: Path):
         MISSING = 0
 
         def creator() -> int:
             return MISSING
 
-        persister = Persister(json.dump, json.load)
-
         VALUE = 3
-        persister.save(VALUE, filepath)
+        saver(VALUE, filepath)
         assert filepath.is_file()
         assert (
             provide(
                 filepath,
                 creator=creator,
-                persister=persister,
+                saver=saver,
+                loader=loader,
             )
             == VALUE
         )
@@ -52,7 +45,8 @@ class TestPersister:
             provide(
                 filepath,
                 creator=creator,
-                persister=persister,
+                saver=saver,
+                loader=loader,
             )
             == MISSING
         )
@@ -81,7 +75,7 @@ class TestCacher:
         def side_effect(number: float, name: str) -> None:
             history.append((number, name))
 
-        @cache(allocator=allocator, saver=json.dump, loader=json.load)
+        @cache(allocator=allocator, saver=saver, loader=loader)
         def func(number: float, name: str) -> dict:
             side_effect(number, name)
             return {'number': number, 'name': name}

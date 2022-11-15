@@ -1,5 +1,5 @@
 from contextlib import suppress
-from typing import Callable, Generic, Iterable, Type, TypeVar
+from typing import Callable, Iterable, Type, TypeVar
 
 from loguru import logger
 
@@ -10,33 +10,12 @@ _T = TypeVar('_T')
 CreatorFunction = Callable[[], _T]
 
 
-class Persister(Generic[_T]):
-    def __init__(self, saver: SaverFunction[_T], loader: LoaderFunction[_T]) -> None:
-        self.saver = saver
-        self.loader = loader
-
-    def save(self, obj: _T, filepath: PathLike) -> None:
-        resolved = resolve(filepath, parents=True)
-
-        logger.debug(f'Saving result to {resolved}')
-        self.saver(obj, resolved)
-        logger.debug('Result saved')
-
-    def load(self, filepath: PathLike) -> _T:
-        resolved = resolve(filepath, parents=True)
-
-        logger.debug(f'Loading result from {resolved}')
-        result = self.loader(resolved)
-        logger.debug('Result successfully loaded')
-
-        return result
-
-
 def provide(
     filepath: PathLike,
     /,
     *,
-    persister: Persister[_T],
+    saver: SaverFunction[_T],
+    loader: LoaderFunction[_T],
     creator: CreatorFunction[_T],
     exceptions: Iterable[Type[Exception]] = (
         FileNotFoundError,
@@ -50,13 +29,19 @@ def provide(
 
     if resolved.exists():
         with suppress(*exceptions):
-            return persister.load(resolved)
+            logger.debug(f'Loading result from {resolved}')
+            result = loader(resolved)
+            logger.debug('Result successfully loaded')
+
+            return result
 
     logger.debug('Unable to load result, creating...')
     obj = creator()
     logger.debug('Result created')
 
     if autosave:
-        persister.save(obj, resolved)
+        logger.debug(f'Saving result to {resolved}')
+        saver(obj, resolve(filepath, parents=True))
+        logger.debug('Result saved')
 
     return obj
