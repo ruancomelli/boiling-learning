@@ -302,17 +302,15 @@ CONDENSATION_VIDEO_TO_SETTER = {
 VIDEO_TO_SETTER = {**BOILING_VIDEO_TO_SETTER, **CONDENSATION_VIDEO_TO_SETTER}
 
 
-def ensure_data_is_set(video: ExperimentVideo) -> ExperimentVideo:
+def ensure_data_is_set(video: ExperimentVideo) -> None:
     if video.data is None:
         setter = VIDEO_TO_SETTER[video.name]
         setter()
 
-    return video
-
 
 @cache(JSONTableAllocator(analyses_path / 'cache' / 'purged-experiment-videos'))
 def purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> List[str]:
-    for video in image_dataset:
+    for video in tuple(image_dataset):
         ensure_data_is_set(video)
         # assert video.data is not None or video not in image_dataset, (video.name, image_dataset)
 
@@ -352,7 +350,7 @@ class VideoInfo:
     dtype: str
 
 
-@cache(JSONTableAllocator(analyses_path / 'cache' / 'video-info2'))
+@cache(JSONTableAllocator(analyses_path / 'cache' / 'video-info'))
 def get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
     dataset = video()
     first_frame = dataset[0]
@@ -1165,7 +1163,7 @@ def autofit_to_dataset(
 PREFETCH = 2048
 
 
-@cache(JSONTableAllocator(analyses_path / 'cache' / 'targets2'))
+@cache(JSONTableAllocator(analyses_path / 'cache' / 'targets'))
 def get_targets(
     dataset: LazyDescribed[ImageDatasetTriplet],
 ) -> Tuple[List[Targets], List[Targets], List[Targets]]:
