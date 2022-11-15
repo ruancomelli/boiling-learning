@@ -60,9 +60,6 @@ class Cacher(Generic[_R]):
 
         return obj
 
-    def decorate(self, function: Callable[_P, _R]) -> CachedFunction[_P, _R]:
-        return CachedFunction(function, self)
-
     def allocate(self, *args: Any, **kwargs: Any) -> Path:
         return self.allocator.allocate(*args, **kwargs)
 
@@ -107,10 +104,15 @@ def cache(
     ),
     autosave: bool = True,
 ) -> Callable[[Callable[_P, _R]], CachedFunction[_P, _R]]:
-    return Cacher(
+    cacher = Cacher(
         allocator=allocator,
         saver=saver,
         loader=loader,
         exceptions=exceptions,
         autosave=autosave,
-    ).decorate
+    )
+
+    def decorator(function: Callable[_P, _R]) -> CachedFunction[_P, _R]:
+        return CachedFunction(function, cacher)
+
+    return decorator
