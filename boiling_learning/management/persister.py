@@ -16,17 +16,26 @@ class Persister(Generic[_T]):
         self.loader = loader
 
     def save(self, obj: _T, filepath: PathLike) -> None:
-        self.saver(obj, resolve(filepath))
+        resolved = resolve(filepath, parents=True)
+
+        logger.debug(f'Saving result to {resolved}')
+        self.saver(obj, resolved)
+        logger.debug('Result saved')
 
     def load(self, filepath: PathLike) -> _T:
-        return self.loader(resolve(filepath))
+        resolved = resolve(filepath, parents=True)
+
+        logger.debug(f'Loading result from {resolved}')
+        result = self.loader(resolved)
+        logger.debug('Result successfully loaded')
+
+        return result
 
 
-class Provider(Persister[_T]):
+class Provider(Generic[_T]):
     def __init__(
         self,
-        saver: SaverFunction[_T],
-        loader: LoaderFunction[_T],
+        persister: Persister[_T],
         creator: CreatorFunction[_T],
         exceptions: Iterable[Type[Exception]] = (
             FileNotFoundError,
@@ -34,8 +43,7 @@ class Provider(Persister[_T]):
         ),
         autosave: bool = True,
     ) -> None:
-        super().__init__(saver, loader)
-
+        self.persister = persister
         self.creator = creator
         self.exceptions = tuple(exceptions)
         self.autosave = autosave
@@ -47,19 +55,13 @@ class Provider(Persister[_T]):
 
         if resolved.exists():
             with suppress(*self.exceptions):
-                result = self.load(resolved)
-                logger.debug('Result successfully loaded')
-                return result
+                return self.persister.load(resolved)
 
         logger.debug('Unable to load result, creating...')
-
         obj = self.creator()
-
         logger.debug('Result created')
 
         if self.autosave:
-            logger.debug(f'Saving result to {resolved}')
-            self.save(obj, resolve(resolved, parents=True))
-            logger.debug('Result saved')
+            self.persister.save(obj, resolved)
 
         return obj

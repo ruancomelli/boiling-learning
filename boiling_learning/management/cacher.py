@@ -8,7 +8,7 @@ from typing_extensions import ParamSpec
 from boiling_learning.io import LoaderFunction, SaverFunction
 from boiling_learning.io.storage import load, save
 from boiling_learning.management.allocators import Allocator
-from boiling_learning.management.persister import Provider
+from boiling_learning.management.persister import Persister, Provider
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.pathutils import PathLike
 
@@ -36,8 +36,10 @@ class Cacher(Generic[_R]):
 
     def provide(self, creator: Callable[[], _R], path: Path) -> _R:
         provider = Provider(
-            saver=self.save,
-            loader=self.load,
+            persister=Persister(
+                saver=self.save,
+                loader=self.load,
+            ),
             creator=creator,
             exceptions=self.exceptions,
             autosave=self.autosave,

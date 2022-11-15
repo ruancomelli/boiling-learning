@@ -28,13 +28,12 @@ class TestPersister:
     def test_Provider(self, filepath: Path):
         MISSING = 0
         provider = Provider(
-            saver=json.dump,
-            loader=json.load,
+            persister=Persister(json.dump, json.load),
             creator=lambda: MISSING,
         )
 
         VALUE = 3
-        provider.save(VALUE, filepath)
+        provider.persister.save(VALUE, filepath)
         assert filepath.is_file()
         assert provider.provide(filepath) == VALUE
 
