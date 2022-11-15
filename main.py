@@ -292,10 +292,6 @@ numpy_directory_allocator = JSONTableAllocator(analyses_path / 'datasets' / 'num
 targets_allocator = JSONTableAllocator(analyses_path / 'datasets' / 'targets', suffix='.csv')
 
 
-def _is_condensation_video(video: ExperimentVideo) -> bool:
-    return video.name in CONDENSATION_VIDEO_TO_SETTER
-
-
 def _compile_transformers(
     transformers: Iterable[Transformer[Image, Image]],
     experiment_video: ExperimentVideo,
@@ -373,7 +369,7 @@ def sliceable_dataset_from_video_and_transformers(
 
     return SliceableDataset.zip(video, targets, strictness='one-off')
     # return SliceableDataset.zip(video, targets, strictness="none")
-    # return SliceableDataset.zip(video, targets, strictness="none" if _is_condensation_video(ev) else "one-off")
+    # return SliceableDataset.zip(video, targets, strictness="none" if ev.name in CONDENSATION_VIDEO_TO_SETTER else "one-off")
 
 
 if OPTIONS.test:
@@ -468,14 +464,7 @@ def _default_filter_for_frames_dataset(
         frame, _data = pair
         return frame.shape == first_frame.shape and not np.allclose(frame, 0)
 
-    def _actual_pred(pair: tuple[VideoFrame, dict[str, Any]]) -> bool:
-        res = _pred(pair)
-        if not res:
-            _, data = pair
-            print('FAILED:', data)
-        return res
-
-    return _actual_pred
+    return _pred
 
 
 def to_tensorflow(
