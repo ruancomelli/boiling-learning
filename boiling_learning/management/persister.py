@@ -71,17 +71,7 @@ class Provider(Persister[_T]):
 
         if self.autosave:
             logger.debug(f'Saving result to {resolved}')
-            self.save(obj, resolved)
+            self.save(obj, resolve(resolved, parents=True))
             logger.debug('Result saved')
 
         return obj
-
-
-class FileProvider(FilePersister[_T]):
-    def __init__(self, filepath: PathLike, provider: Provider[_T]) -> None:
-        super().__init__(filepath, provider)
-
-        self.provider = provider
-
-    def provide(self) -> _T:
-        return self.provider.provide(self.path)

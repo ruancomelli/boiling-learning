@@ -8,7 +8,7 @@ from boiling_learning.descriptions import describe
 from boiling_learning.io import json
 from boiling_learning.management.allocators import JSONTableAllocator
 from boiling_learning.management.cacher import cache
-from boiling_learning.management.persister import FilePersister, FileProvider, Persister, Provider
+from boiling_learning.management.persister import FilePersister, Persister, Provider
 from boiling_learning.utils.functional import P
 
 
@@ -51,26 +51,6 @@ class TestPersister:
 
         assert not filepath.is_file()
         assert provider.provide(filepath) == MISSING
-
-    def test_FileProvider(self, filepath: Path):
-        MISSING = 0
-        provider = Provider(
-            saver=json.dump,
-            loader=json.load,
-            creator=lambda: MISSING,
-        )
-
-        provider = FileProvider(filepath, provider)
-
-        VALUE = 3
-        provider.save(VALUE)
-        assert filepath.is_file()
-        assert provider.provide() == VALUE
-
-        filepath.unlink()
-
-        assert not filepath.is_file()
-        assert provider.provide() == MISSING
 
 
 class TestAllocators:
