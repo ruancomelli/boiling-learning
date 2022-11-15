@@ -1,5 +1,34 @@
 
 
+## v0.38.0 (2022-11-14)
+
+### Fix
+
+- **main**: correctly retrieve lazy value when generating the learning curve
+- **main**: make `main` executable
+- **main**: ensure that index columns are not included when saving data as CSV
+
+### Refactor
+
+- **datasets/bridging**: add logging for when loading is successful or fails
+- **main**: simplify purging experiment videos
+- **datasets/cache**: simplify `SliceableDatasetCache` interface
+- **datasets/sliceable**: allow caches to take responsibility over the decision from where to fetch data
+- **main**: remove unused parameter `buffer_size`
+- **management/allocators**: replace `default_table_allocator` with `JSONTableAllocator`
+- **io/json**: simplify encoding/decoding of `Pack`s
+- **main**: remove constant `SPLITS` and instead make it a default value to `GetImageDatasetParams`
+- **io/json**: simplify encoding/decoding of `frozendict`s
+
+### Perf
+
+- **main**: cache video information for faster subsequent iterations
+
+### BREAKING CHANGE
+
+- the protocol for encoding or decoding `Pack`s
+has changed.
+
 ## v0.37.0 (2022-10-29)
 
 ### Perf
