@@ -10,7 +10,6 @@ from operator import itemgetter
 from typing import (
     Any,
     Callable,
-    DefaultDict,
     Generic,
     Iterable,
     Iterator,
@@ -457,7 +456,7 @@ class ConcatenateSliceableDataset(SliceableDataset[Union[Unpack[_Ts]]], Generic[
                 itertools.chain.from_iterable(ancestor.fetch() for ancestor in self._ancestors)
             )
 
-        grouped_indices: DefaultDict[int, list[tuple[int, int]]] = defaultdict(list)
+        grouped_indices: defaultdict[int, list[tuple[int, int]]] = defaultdict(list)
         for position, index in enumerate(indices):
             ancestor_index, relative_index = self._absolute_index_to_ancestor_and_relative_index(
                 index

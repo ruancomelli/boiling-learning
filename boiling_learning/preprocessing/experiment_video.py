@@ -185,9 +185,9 @@ class ExperimentVideo:
 
         assert video_data is not None
 
-        col_types = funcy.merge(
-            dict.fromkeys(video_data.categories, 'category'),
-            {
+        col_types = (
+            dict.fromkeys(video_data.categories, 'category')
+            | {
                 self.column_names.index: self.column_types.index,
                 self.column_names.name: self.column_types.name,
                 # self.column_names.elapsed_time: self.column_types.elapsed_time
