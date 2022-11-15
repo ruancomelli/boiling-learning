@@ -32,36 +32,31 @@ class Persister(Generic[_T]):
         return result
 
 
-class Provider(Generic[_T]):
-    def __init__(
-        self,
-        persister: Persister[_T],
-        creator: CreatorFunction[_T],
-        exceptions: Iterable[Type[Exception]] = (
-            FileNotFoundError,
-            NotADirectoryError,
-        ),
-        autosave: bool = True,
-    ) -> None:
-        self.persister = persister
-        self.creator = creator
-        self.exceptions = tuple(exceptions)
-        self.autosave = autosave
+def provide(
+    filepath: PathLike,
+    /,
+    *,
+    persister: Persister[_T],
+    creator: CreatorFunction[_T],
+    exceptions: Iterable[Type[Exception]] = (
+        FileNotFoundError,
+        NotADirectoryError,
+    ),
+    autosave: bool = True,
+) -> _T:
+    logger.debug(f'Providing result for file {filepath}')
 
-    def provide(self, filepath: PathLike) -> _T:
-        logger.debug(f'Providing result for file {filepath}')
+    resolved = resolve(filepath)
 
-        resolved = resolve(filepath)
+    if resolved.exists():
+        with suppress(*exceptions):
+            return persister.load(resolved)
 
-        if resolved.exists():
-            with suppress(*self.exceptions):
-                return self.persister.load(resolved)
+    logger.debug('Unable to load result, creating...')
+    obj = creator()
+    logger.debug('Result created')
 
-        logger.debug('Unable to load result, creating...')
-        obj = self.creator()
-        logger.debug('Result created')
+    if autosave:
+        persister.save(obj, resolved)
 
-        if self.autosave:
-            self.persister.save(obj, resolved)
-
-        return obj
+    return obj
