@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from functools import partial
-from typing import Callable, Hashable, List, Mapping, Optional, Tuple, TypeVar, Union
+from typing import Callable, Hashable, Mapping, Optional, TypeVar, Union
 
 import funcy
 import tensorflow as tf
@@ -15,8 +15,8 @@ from boiling_learning.utils.pathutils import PathLike, resolve
 _T = TypeVar('_T')
 NestedStructure = Union[
     _T,
-    List['NestedStructure[_T]'],
-    Tuple['NestedStructure[_T]', ...],
+    list['NestedStructure[_T]'],
+    tuple['NestedStructure[_T]', ...],
     Mapping[Hashable, 'NestedStructure[_T]'],
 ]
 NestedTypeSpec = NestedStructure[tf.TypeSpec]

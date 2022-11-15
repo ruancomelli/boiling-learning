@@ -1,5 +1,5 @@
 # import math
-# from typing import Callable, Dict, Tuple
+# from typing import Callable
 
 # import matplotlib.pyplot as plt
 # import numpy as np
@@ -8,11 +8,11 @@
 
 
 # def main(
-#     frames: Dict[int, np.ndarray],
-#     metrics: Dict[str, Callable[[np.ndarray, np.ndarray], float]],
+#     frames: dict[int, np.ndarray],
+#     metrics: dict[str, Callable[[np.ndarray, np.ndarray], float]],
 #     final_timeshift: int = 1,
 #     xscale: str = 'linear',
-#     figsize: Tuple[int, int] = (7, 5),
+#     figsize: tuple[int, int] = (7, 5),
 # ) -> None:
 #     if not {0, final_timeshift}.issubset(frames):
 #         raise ValueError(

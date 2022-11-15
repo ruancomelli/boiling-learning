@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache, partial, wraps
-from typing import Any, Callable, Generic, List, Tuple, TypeVar, Union
+from typing import Any, Callable, Generic, TypeVar, Union
 
 from typing_extensions import Concatenate, ParamSpec
 
@@ -60,7 +60,7 @@ class LazyDescribed(Lazy[_T]):
         )
 
     @classmethod
-    def from_list(cls, items: List[LazyDescribed[_T]]) -> LazyDescribed[List[_T]]:
+    def from_list(cls, items: list[LazyDescribed[_T]]) -> LazyDescribed[list[_T]]:
         return LazyDescribed(Lazy(lambda: [item() for item in items]), items)
 
 
@@ -84,7 +84,7 @@ class LazyTransform(Lazy[_S]):
     def __describe__(self) -> json.JSONDataType:
         return describe(self._pipeline())
 
-    def _pipeline(self) -> Tuple[Any, ...]:
+    def _pipeline(self) -> tuple[Any, ...]:
         return (
             (*self._arg._pipeline(), self._transform)  # pylint: disable=protected-access
             if isinstance(self._arg, LazyTransform)

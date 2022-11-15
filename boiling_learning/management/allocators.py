@@ -1,7 +1,7 @@
 import abc
 import json as _json
 from pathlib import Path
-from typing import Any, Callable, Generic, List, Optional, TypeVar, final
+from typing import Any, Callable, Generic, Optional, TypeVar, final
 
 from classes import AssociatedType, Supports, typeclass
 from loguru import logger
@@ -91,19 +91,19 @@ class JSONTableAllocator(Allocator):
         root = resolve(path, dir=True)
         self.path = resolve(root / 'data', dir=True)
         self.db_path = root / 'db.json'
-        self._data: Optional[List[json.JSONDataType]] = None
+        self._data: Optional[list[json.JSONDataType]] = None
         self.describer = describer
         self.suffix = suffix
 
     @property
-    def data(self) -> List[json.JSONDataType]:
+    def data(self) -> list[json.JSONDataType]:
         if self._data is None:
             self._data = self._load_db()
 
         return self._data
 
     @data.setter
-    def data(self, data: List[json.JSONDataType]) -> None:
+    def data(self, data: list[json.JSONDataType]) -> None:
         self._data = data
         self._save_db()
 
@@ -117,7 +117,7 @@ class JSONTableAllocator(Allocator):
             self.data = self.data + [serialized]
             return len(self.data) - 1
 
-    def _load_db(self) -> List[json.JSONDataType]:
+    def _load_db(self) -> list[json.JSONDataType]:
         try:
             with self.db_path.open('r', encoding='utf-8') as file:
                 return _json.load(file)

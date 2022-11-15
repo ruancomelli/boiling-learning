@@ -1,6 +1,6 @@
 import typing
 from fractions import Fraction
-from typing import Optional, Tuple, TypeVar, Union, overload
+from typing import Optional, TypeVar, Union, overload
 
 import numpy as np
 import tensorflow as tf
@@ -149,7 +149,7 @@ def _ratio_to_size(total: int, x: Optional[Union[int, float, Fraction]]) -> Opti
 
 @wrap_as_partial_transformer
 def downscaler(
-    image: _VideoFrameOrFrames, factors: Union[int, Tuple[int, int]]
+    image: _VideoFrameOrFrames, factors: Union[int, tuple[int, int]]
 ) -> _VideoFrameOrFrames:
     # 4-D Tensor of shape [batch, height, width, channels] or 3-D Tensor of shape
     # [height, width, channels].
@@ -269,7 +269,7 @@ def shannon_entropy_ratio(ref: VideoFrame, image: VideoFrame) -> float:
     return typing.cast(float, shannon_entropy(image) / shannon_entropy(ref))
 
 
-def _reshape_to_largest(image0: VideoFrame, image1: VideoFrame) -> Tuple[VideoFrame, VideoFrame]:
+def _reshape_to_largest(image0: VideoFrame, image1: VideoFrame) -> tuple[VideoFrame, VideoFrame]:
     if image0.shape != image1.shape:
         max_shape = np.maximum(image0.shape, image1.shape)
         image0 = resize(image0, max_shape)

@@ -1,6 +1,5 @@
 import math
 from pathlib import Path
-from typing import List
 
 import pytest
 
@@ -103,7 +102,7 @@ class TestDescriptor:
             def __init__(self, length: int) -> None:
                 self.value: int = length
 
-            def __describe__(self) -> List[int]:
+            def __describe__(self) -> list[int]:
                 return [self.value] * self.value
 
         assert describe.supports(CrazyItems(3))

@@ -2,18 +2,7 @@ from __future__ import annotations
 
 from functools import partial
 from itertools import chain
-from typing import (
-    Any,
-    Callable,
-    Generic,
-    Iterable,
-    Iterator,
-    Mapping,
-    Tuple,
-    TypeVar,
-    Union,
-    overload,
-)
+from typing import Any, Callable, Generic, Iterable, Iterator, Mapping, TypeVar, Union, overload
 
 import funcy
 
@@ -27,7 +16,7 @@ _S = TypeVar('_S')
 _U = TypeVar('_U')
 
 
-ArgsType = Tuple[_T, ...]
+ArgsType = tuple[_T, ...]
 KwargsType = frozendict[str, _S]
 
 
@@ -44,7 +33,7 @@ class Pack(Generic[_T, _S]):
     def kwargs(self) -> KwargsType[_S]:
         return self._kwargs
 
-    def pair(self) -> Tuple[ArgsType[_T], KwargsType[_S]]:
+    def pair(self) -> tuple[ArgsType[_T], KwargsType[_S]]:
         return (self._args, self._kwargs)
 
     def __bool__(self) -> bool:
@@ -61,7 +50,7 @@ class Pack(Generic[_T, _S]):
     def __getitem__(self, loc: Union[int, str]) -> Union[_T, _S]:
         return self.args[loc] if isinstance(loc, int) else self.kwargs[loc]
 
-    def __iter__(self) -> Iterator[Union[Tuple[_T], KwargsType[_S]]]:
+    def __iter__(self) -> Iterator[Union[tuple[_T], KwargsType[_S]]]:
         return iter(self.pair())
 
     def __repr__(self) -> str:
@@ -74,7 +63,7 @@ class Pack(Generic[_T, _S]):
         )
         return f'P({", ".join(arguments)})'
 
-    def __describe__(self) -> Tuple[Tuple[_T], KwargsType[_S]]:
+    def __describe__(self) -> tuple[tuple[_T], KwargsType[_S]]:
         return describe(self.pair())
 
     def feed(self, f: Callable[..., _U]) -> _U:

@@ -1,4 +1,4 @@
-from typing import Dict, Literal, Tuple
+from typing import Literal
 
 from pint import Quantity
 
@@ -23,7 +23,7 @@ class NukiyamaBoilingCurve:
     length: Quantity = 200 * ureg.mm
 
     @staticmethod
-    def fetch() -> Tuple[Quantity, Quantity]:
+    def fetch() -> tuple[Quantity, Quantity]:
         temperature_excess = Q_(
             [
                 3,
@@ -61,7 +61,7 @@ class NukiyamaBoilingCurve:
 
 class IncroperaBoilingCurveImposedHeat:
     @staticmethod
-    def fetch() -> Tuple[Quantity, Quantity]:
+    def fetch() -> tuple[Quantity, Quantity]:
         temperature_excess = Q_(
             [
                 1.0212414255144324,
@@ -368,7 +368,7 @@ class IncroperaBoilingCurveImposedHeat:
         return temperature_excess, heat_flux_ratio
 
     @staticmethod
-    def extra() -> Dict[Literal['MAX', 'MIN', 'BURNOUT'], Tuple[Quantity, Quantity]]:
+    def extra() -> dict[Literal['MAX', 'MIN', 'BURNOUT'], tuple[Quantity, Quantity]]:
         return {
             'MAX': (
                 Q_(36.1792385571704, ureg.delta_degC),
@@ -387,7 +387,7 @@ class IncroperaBoilingCurveImposedHeat:
 
 class IncroperaBoilingCurveImposedTemperatureExcess:
     @staticmethod
-    def fetch() -> Tuple[Quantity, Quantity]:
+    def fetch() -> tuple[Quantity, Quantity]:
         temperature_excess = Q_(
             [
                 1.2746231374307015,
@@ -617,7 +617,7 @@ class IncroperaBoilingCurveImposedTemperatureExcess:
         return temperature_excess.to(ureg.delta_degC), heat_flux.to(ureg.W / ureg.cm**2)
 
     @staticmethod
-    def extra() -> Dict[Literal['A', 'B', 'C', 'D', 'E'], Tuple[Quantity, Quantity]]:
+    def extra() -> dict[Literal['A', 'B', 'C', 'D', 'E'], tuple[Quantity, Quantity]]:
         return {
             'A': (
                 Q_(5.329765171785223, ureg.delta_degC),

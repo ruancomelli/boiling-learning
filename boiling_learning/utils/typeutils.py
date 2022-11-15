@@ -1,7 +1,7 @@
-from typing import Any, Tuple, TypeVar
+from typing import Any, TypeVar
 
 _Any = TypeVar('_Any')
-Pair = Tuple[_Any, _Any]
+Pair = tuple[_Any, _Any]
 
 
 def typename(obj: Any) -> str:

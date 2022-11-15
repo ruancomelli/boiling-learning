@@ -6,7 +6,7 @@ import subprocess
 import typing
 from pathlib import Path
 from types import TracebackType
-from typing import Iterable, Iterator, Optional, Tuple, Type, Union
+from typing import Iterable, Iterator, Optional, Type, Union
 
 import decord
 import numpy as np
@@ -80,7 +80,7 @@ class Video(SliceableDataset[VideoFrame]):
         with self as frames:
             return typing.cast(VideoFrameU8, frames[index].asnumpy())
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[VideoFrameU8, ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[VideoFrameU8, ...]:
         indices = range(len(self)) if indices is None else list(indices)
 
         with self as frames:

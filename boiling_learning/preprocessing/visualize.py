@@ -1,6 +1,6 @@
 # flake8: noqa
 
-# from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple, TypeVar, Union
+# from typing import Any, Callable, Mapping, Optional, Sequence, TypeVar, Union
 
 # import bokeh.models
 # import bokeh.plotting
@@ -192,7 +192,7 @@
 #         str,
 #         Callable[
 #             [Transformer, VideoFrame],
-#             Sequence[Tuple[Transformer, VideoFrame, Pack]],
+#             Sequence[tuple[Transformer, VideoFrame, Pack]],
 #         ],
 #     ] = DEFAULT_VISUALIZERS,
 #     annotators: Optional[
@@ -208,7 +208,7 @@
 #     ] = DEFAULT_ANNOTATORS,
 #     plot_original: bool = True,
 #     normalize: bool = False,
-# ) -> Union[List[mpl.figure.Figure], List[bokeh.plotting.Figure]]:
+# ) -> Union[list[mpl.figure.Figure], list[bokeh.plotting.Figure]]:
 #     METHODS = frozendict(
 #         {
 #             'plt': _visualize_transformations_plt,
@@ -238,13 +238,13 @@
 #         str,
 #         Callable[
 #             [Transformer, VideoFrame],
-#             Sequence[Tuple[Transformer, VideoFrame, Pack]],
+#             Sequence[tuple[Transformer, VideoFrame, Pack]],
 #         ],
 #     ] = DEFAULT_VISUALIZERS,
 #     annotators=None,
 #     plot_original: bool = True,
 #     normalize: bool = False,
-# ) -> List[mpl.figure.Figure]:
+# ) -> list[mpl.figure.Figure]:
 #     print('Transformers:', transformers)
 
 #     visualization_title = f'{ev.name}[{idx}]'
@@ -348,7 +348,7 @@
 #         str,
 #         Callable[
 #             [Transformer, VideoFrame],
-#             Sequence[Tuple[Transformer, VideoFrame, Pack]],
+#             Sequence[tuple[Transformer, VideoFrame, Pack]],
 #         ],
 #     ] = DEFAULT_VISUALIZERS,
 #     annotators: Mapping[
@@ -362,7 +362,7 @@
 #     ] = DEFAULT_ANNOTATORS,
 #     plot_original: bool = True,
 #     normalize: bool = False,
-# ) -> List[bokeh.plotting.Figure]:
+# ) -> list[bokeh.plotting.Figure]:
 #     print('Transformers:', transformers)
 
 #     visualization_title = f'{ev.name}[{idx}]'
@@ -403,8 +403,8 @@
 
 
 # def visualize_dataset(
-#     named_datasets: Dict[
-#         str, DatasetTriplet[SupervisedSliceableDataset[VideoFrame, Dict[str, Any]]]
+#     named_datasets: dict[
+#         str, DatasetTriplet[SupervisedSliceableDataset[VideoFrame, dict[str, Any]]]
 #     ],
 #     n_samples: int = 1,
 # ) -> None:
@@ -461,8 +461,8 @@
 #     n_cols: Optional[int] = None,
 #     n_rows: Optional[int] = None,
 #     n_elems: Optional[int] = None,
-#     fig_size: Optional[Union[str, Tuple[int, int]]] = None,
-#     subfig_size: Optional[Union[str, Tuple[int, int]]] = None,
+#     fig_size: Optional[Union[str, tuple[int, int]]] = None,
+#     subfig_size: Optional[Union[str, tuple[int, int]]] = None,
 #     tight_layout: bool = True,
 # ) -> dict:
 #     """Resize figure and calculate the number of rows and columns in the subplot grid.
@@ -496,7 +496,7 @@
 #         n_cols = (n_elems - 1) // n_rows + 1
 #     grid_size = (n_rows, n_cols)
 
-#     def validate(size: _T) -> Union[_T, Tuple[int, int]]:
+#     def validate(size: _T) -> Union[_T, tuple[int, int]]:
 #         if size in {'micro'}:
 #             return (2, 1.5)
 #         if size in {'tiny'}:

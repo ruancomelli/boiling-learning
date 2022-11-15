@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager, nullcontext
 from datetime import timedelta
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, TypedDict, TypeVar, Union
+from typing import Any, Callable, Iterator, Optional, TypedDict, TypeVar, Union
 
 import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
@@ -32,7 +32,7 @@ def _describe_typename(instance: Metric) -> str:
 
 class TypeAndConfig(TypedDict):
     typename: str
-    config: Dict[str, Any]
+    config: dict[str, Any]
 
 
 @describe.instance(Loss)
@@ -52,7 +52,7 @@ def _encode_configurable(instance: Union[Loss, Metric, Optimizer]) -> json.JSOND
 class CompileModelParams:
     loss: Loss
     optimizer: Optimizer
-    metrics: Optional[List[Metric]]
+    metrics: Optional[list[Metric]]
 
 
 @dataclass(frozen=True)
@@ -76,14 +76,14 @@ def compile_model(architecture: ModelArchitecture, params: CompileModelParams) -
 class FitModelParams:
     batch_size: Optional[int]
     epochs: int
-    callbacks: LazyDescribed[List[Callback]]
+    callbacks: LazyDescribed[list[Callback]]
 
 
 @dataclass(frozen=True)
 class FitModelReturn:
     architecture: ModelArchitecture
     trained_epochs: int
-    history: Tuple[Dict[str, Any], ...]
+    history: tuple[dict[str, Any], ...]
     train_time: timedelta
     evaluation: Evaluation
 

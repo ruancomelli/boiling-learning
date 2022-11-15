@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json as _json
 from pathlib import Path
-from typing import Callable, List, Mapping
+from typing import Callable, Mapping
 
 from boiling_learning.descriptions import describe
 from boiling_learning.io import json
@@ -37,7 +37,7 @@ class ExperimentVideoDataset(KeyedSet[str, ExperimentVideo]):
     def make_union(
         cls,
         *others: ExperimentVideoDataset,
-        namer: Callable[[List[str]], str] = '+'.join,
+        namer: Callable[[list[str]], str] = '+'.join,
     ) -> ExperimentVideoDataset:
         name = namer([other.name for other in others])
         image_dataset = ExperimentVideoDataset(name)
@@ -93,12 +93,12 @@ class ExperimentVideoDataset(KeyedSet[str, ExperimentVideo]):
 
 
 @json.encode.instance(ExperimentVideoDataset)
-def _encode_image_dataset(obj: ExperimentVideoDataset) -> List[json.JSONDataType]:
+def _encode_image_dataset(obj: ExperimentVideoDataset) -> list[json.JSONDataType]:
     return json.serialize(sorted(obj, key=_get_experiment_video_name))
 
 
 @describe.instance(ExperimentVideoDataset)
-def _describe_image_dataset(obj: ExperimentVideoDataset) -> List[Path]:
+def _describe_image_dataset(obj: ExperimentVideoDataset) -> list[Path]:
     return describe(sorted(obj, key=_get_experiment_video_name))
 
 

@@ -1,5 +1,5 @@
 from fractions import Fraction
-from typing import Any, Callable, Literal, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Literal, Optional, TypeVar, Union
 
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
@@ -30,7 +30,7 @@ def subset(datasets: DatasetTriplet[_Dataset], name: Literal['train', 'val', 'te
 
 @wrap_as_partial_transformer
 def datasets_merger(
-    datasets: Tuple[LazyDescribed[DatasetTriplet[_Dataset]], ...]
+    datasets: tuple[LazyDescribed[DatasetTriplet[_Dataset]], ...]
 ) -> DatasetTriplet[_Dataset]:
     dataset_triplet = datasets_concatenater()(datasets)
     return dataset_sampler(count=Fraction(1, len(datasets)))(dataset_triplet)
@@ -38,7 +38,7 @@ def datasets_merger(
 
 @wrap_as_partial_transformer
 def datasets_concatenater(
-    datasets: Tuple[LazyDescribed[DatasetTriplet[_Dataset]], ...]
+    datasets: tuple[LazyDescribed[DatasetTriplet[_Dataset]], ...]
 ) -> DatasetTriplet[_Dataset]:
     train_datasets = []
     val_datasets = []

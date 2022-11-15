@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 import json as _json
 from pathlib import Path
-from typing import Dict, FrozenSet, Iterable, Literal, Optional, Tuple, TypeVar
+from typing import Iterable, Literal, Optional, TypeVar
 
 import numpy as np
 from loguru import logger
@@ -18,25 +18,25 @@ _Array = TypeVar('_Array', bound=np.ndarray)
 
 class _MinimalFetchCache(SliceableDatasetCache[_Any]):
     @abc.abstractmethod
-    def _store(self, pairs: Dict[int, _Any]) -> None:
+    def _store(self, pairs: dict[int, _Any]) -> None:
         pass
 
     @abc.abstractmethod
-    def _fetch(self, indices: Tuple[int, ...]) -> Tuple[_Any, ...]:
+    def _fetch(self, indices: tuple[int, ...]) -> tuple[_Any, ...]:
         pass
 
     @abc.abstractmethod
-    def _current_indices(self) -> FrozenSet[int]:
+    def _current_indices(self) -> frozenset[int]:
         pass
 
-    def missing_indices(self, indices: Tuple[int, ...]) -> FrozenSet[int]:
+    def missing_indices(self, indices: tuple[int, ...]) -> frozenset[int]:
         return frozenset(indices) - self._current_indices()
 
     def fetch_from(
         self,
         source: SliceableDataset[_Any],
         indices: Optional[Iterable[int]] = None,
-    ) -> Tuple[_Any, ...]:
+    ) -> tuple[_Any, ...]:
         indices = tuple(range(len(source)) if indices is None else indices)
 
         missing_indices = tuple(self.missing_indices(indices))
@@ -55,19 +55,19 @@ class _MinimalFetchCache(SliceableDatasetCache[_Any]):
 
 class MemoryCache(_MinimalFetchCache[_Any]):
     def __init__(self) -> None:
-        self._storage: Dict[int, _Any] = {}
+        self._storage: dict[int, _Any] = {}
 
-    def _store(self, pairs: Dict[int, _Any]) -> None:
+    def _store(self, pairs: dict[int, _Any]) -> None:
         self._storage.update(pairs)
 
-    def _fetch(self, indices: Tuple[int, ...]) -> Tuple[_Any, ...]:
+    def _fetch(self, indices: tuple[int, ...]) -> tuple[_Any, ...]:
         missing = self.missing_indices(indices).intersection(indices)
         if missing:
             raise ValueError(f'Required missing indices: {sorted(missing)}')
 
         return tuple(self._storage[index] for index in indices)
 
-    def _current_indices(self) -> FrozenSet[int]:
+    def _current_indices(self) -> frozenset[int]:
         return frozenset(self._storage)
 
     def __repr__(self) -> str:
@@ -79,14 +79,14 @@ class NumpyCache(_MinimalFetchCache[_Array]):
         self,
         directory: PathLike,
         *,
-        shape: Tuple[int, ...],
+        shape: tuple[int, ...],
         dtype: np.dtype,
     ) -> None:
         self._directory = resolve(directory, dir=True)
         self._shape = shape
         self._dtype = dtype
 
-    def _store(self, pairs: Dict[int, _Array]) -> None:
+    def _store(self, pairs: dict[int, _Array]) -> None:
         logger.debug(f'Storing {len(pairs)} items {sorted(pairs)} to {self._data_path}')
 
         indices = list(pairs)
@@ -101,7 +101,7 @@ class NumpyCache(_MinimalFetchCache[_Array]):
         with self._indices_path.open('w') as file:
             _json.dump(new_indices, file)
 
-    def _fetch(self, indices: Tuple[int, ...]) -> Tuple[_Array, ...]:
+    def _fetch(self, indices: tuple[int, ...]) -> tuple[_Array, ...]:
         missing = self.missing_indices(indices).intersection(indices)
         if missing:
             raise ValueError(f'Required missing indices: {sorted(missing)}')
@@ -113,7 +113,7 @@ class NumpyCache(_MinimalFetchCache[_Array]):
         frames = self._data(mode='r')[sorted_indices]
         return tuple(frames[unsorter] for unsorter in unsorters)
 
-    def _current_indices(self) -> FrozenSet[int]:
+    def _current_indices(self) -> frozenset[int]:
         if not self._indices_path.is_file():
             with self._indices_path.open('w') as file:
                 _json.dump([], file)
@@ -164,7 +164,7 @@ class EagerCache(SliceableDatasetCache[_Any]):
         self,
         source: SliceableDataset[_Any],
         indices: Optional[Iterable[int]] = None,
-    ) -> Tuple[_Any, ...]:
+    ) -> tuple[_Any, ...]:
         all_indices = range(len(source))
         indices = tuple(all_indices if indices is None else indices)
 

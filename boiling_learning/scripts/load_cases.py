@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple
+from typing import Iterable
 
 from loguru import logger
 
@@ -8,7 +8,7 @@ from boiling_learning.utils.pathutils import PathLike
 
 def main(
     casepaths: Iterable[PathLike], video_suffix: str, convert_videos: bool = False
-) -> Tuple[Case, ...]:
+) -> tuple[Case, ...]:
     cases = tuple(Case(casepath, video_suffix=video_suffix) for casepath in casepaths)
 
     if convert_videos:

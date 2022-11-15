@@ -7,20 +7,7 @@ from fractions import Fraction
 from importlib import import_module
 from pathlib import Path
 from types import FunctionType
-from typing import (
-    Any,
-    Dict,
-    FrozenSet,
-    List,
-    Optional,
-    Protocol,
-    Set,
-    Tuple,
-    TypedDict,
-    TypeVar,
-    Union,
-    runtime_checkable,
-)
+from typing import Any, Optional, Protocol, TypedDict, TypeVar, Union, runtime_checkable
 
 from classes import AssociatedType, Supports, typeclass
 
@@ -34,7 +21,7 @@ from boiling_learning.utils.table_dispatch import TableDispatcher
 
 BasicTypes = Union[None, bool, int, str, float]
 _BasicType = TypeVar('_BasicType', bound=BasicTypes)
-JSONDataType = Union[BasicTypes, List['JSONDataType'], Dict[str, 'JSONDataType']]
+JSONDataType = Union[BasicTypes, list['JSONDataType'], dict[str, 'JSONDataType']]
 
 
 class SerializedJSONObject(TypedDict):
@@ -42,7 +29,7 @@ class SerializedJSONObject(TypedDict):
     contents: JSONDataType
 
 
-SerializedJSONDataType = Union[BasicTypes, List[BasicTypes], SerializedJSONObject]
+SerializedJSONDataType = Union[BasicTypes, list[BasicTypes], SerializedJSONObject]
 
 
 class JSONEncodable(AssociatedType):
@@ -140,13 +127,13 @@ class PackOfJSONEncodable(
 
 
 @encode.instance(delegate=PackOfJSONEncodable)
-def _encode_Pack(instance: PackOfJSONEncodable) -> List[SerializedJSONObject]:
+def _encode_Pack(instance: PackOfJSONEncodable) -> list[SerializedJSONObject]:
     return serialize(instance.pair())
 
 
 @decode.dispatch(P)
 @decode.dispatch(Pack)
-def _decode_Pack(obj: List[SerializedJSONObject]) -> Pack:
+def _decode_Pack(obj: list[SerializedJSONObject]) -> Pack:
     args, kwargs = deserialize(obj)
     return Pack(args, kwargs)
 
@@ -156,17 +143,17 @@ class _ListOfJSONEncodableMeta(type):
         return isinstance(instance, list) and all(encode.supports(item) for item in instance)
 
 
-class ListOfJSONEncodable(List[Supports[JSONEncodable]], metaclass=_ListOfJSONEncodableMeta):
+class ListOfJSONEncodable(list[Supports[JSONEncodable]], metaclass=_ListOfJSONEncodableMeta):
     ...
 
 
 @encode.instance(delegate=ListOfJSONEncodable)
-def _encode_list(instance: ListOfJSONEncodable) -> List[JSONDataType]:
+def _encode_list(instance: ListOfJSONEncodable) -> list[JSONDataType]:
     return [serialize(item) for item in instance]
 
 
 @decode.dispatch(list)
-def _decode_list(obj: List[JSONDataType]) -> list:
+def _decode_list(obj: list[JSONDataType]) -> list:
     return [deserialize(item) for item in obj]
 
 
@@ -177,17 +164,17 @@ class _DictOfJSONEncodableMeta(type):
         )
 
 
-class DictOfJSONEncodable(Dict[str, Supports[JSONEncodable]], metaclass=_DictOfJSONEncodableMeta):
+class DictOfJSONEncodable(dict[str, Supports[JSONEncodable]], metaclass=_DictOfJSONEncodableMeta):
     ...
 
 
 @encode.instance(delegate=DictOfJSONEncodable)
-def _encode_dict(instance: DictOfJSONEncodable) -> Dict[str, SerializedJSONObject]:
+def _encode_dict(instance: DictOfJSONEncodable) -> dict[str, SerializedJSONObject]:
     return {key: serialize(value) for key, value in instance.items()}
 
 
 @decode.dispatch(dict)
-def _decode_dict(obj: Dict[str, JSONDataType]) -> dict:
+def _decode_dict(obj: dict[str, JSONDataType]) -> dict:
     return {key: deserialize(value) for key, value in obj.items()}
 
 
@@ -197,18 +184,18 @@ class _TupleOfJSONEncodableMeta(type):
 
 
 class TupleOfJSONEncodable(
-    Tuple[Supports[JSONEncodable], ...], metaclass=_TupleOfJSONEncodableMeta
+    tuple[Supports[JSONEncodable], ...], metaclass=_TupleOfJSONEncodableMeta
 ):
     ...
 
 
 @encode.instance(delegate=TupleOfJSONEncodable)
-def _encode_tuple(instance: TupleOfJSONEncodable) -> List[SerializedJSONObject]:
+def _encode_tuple(instance: TupleOfJSONEncodable) -> list[SerializedJSONObject]:
     return list(map(serialize, instance))
 
 
 @decode.dispatch(tuple)
-def _decode_tuple(obj: List[JSONDataType]) -> tuple:
+def _decode_tuple(obj: list[JSONDataType]) -> tuple:
     return tuple(map(deserialize, obj))
 
 
@@ -217,17 +204,17 @@ class _SetOfJSONEncodableMeta(type):
         return isinstance(instance, set) and all(encode.supports(item) for item in instance)
 
 
-class SetOfJSONEncodable(Set[Supports[JSONEncodable]], metaclass=_SetOfJSONEncodableMeta):
+class SetOfJSONEncodable(set[Supports[JSONEncodable]], metaclass=_SetOfJSONEncodableMeta):
     ...
 
 
 @encode.instance(delegate=SetOfJSONEncodable)
-def _encode_set(instance: SetOfJSONEncodable) -> List[SerializedJSONObject]:
+def _encode_set(instance: SetOfJSONEncodable) -> list[SerializedJSONObject]:
     return sorted(map(serialize, instance))
 
 
 @decode.dispatch(set)
-def _decode_set(obj: List[JSONDataType]) -> set:
+def _decode_set(obj: list[JSONDataType]) -> set:
     return set(map(deserialize, obj))
 
 
@@ -237,18 +224,18 @@ class _FrozenSetOfJSONEncodableMeta(type):
 
 
 class FrozenSetOfJSONEncodable(
-    FrozenSet[Supports[JSONEncodable]], metaclass=_FrozenSetOfJSONEncodableMeta
+    frozenset[Supports[JSONEncodable]], metaclass=_FrozenSetOfJSONEncodableMeta
 ):
     ...
 
 
 @encode.instance(delegate=FrozenSetOfJSONEncodable)
-def _encode_frozenset(instance: FrozenSetOfJSONEncodable) -> List[SerializedJSONObject]:
+def _encode_frozenset(instance: FrozenSetOfJSONEncodable) -> list[SerializedJSONObject]:
     return sorted(map(serialize, instance))
 
 
 @decode.dispatch(frozenset)
-def _decode_frozenset(obj: List[JSONDataType]) -> frozenset:
+def _decode_frozenset(obj: list[JSONDataType]) -> frozenset:
     return frozenset(map(deserialize, obj))
 
 
@@ -271,12 +258,12 @@ class FrozenDictOfJSONEncodable(
 @encode.instance(delegate=FrozenDictOfJSONEncodable)
 def _encode_frozendict(
     instance: FrozenDictOfJSONEncodable,
-) -> Dict[str, SerializedJSONObject]:
+) -> dict[str, SerializedJSONObject]:
     return encode(dict(instance))
 
 
 @decode.dispatch(frozendict)
-def _decode_frozendict(obj: Dict[str, Any]) -> frozendict:
+def _decode_frozendict(obj: dict[str, Any]) -> frozendict:
     return frozendict(deserialize(obj))
 
 
@@ -294,17 +281,17 @@ class DataclassOfJSONEncodableFields(
 @encode.instance(delegate=DataclassOfJSONEncodableFields)
 def _encode_dataclass(
     instance: DataclassOfJSONEncodableFields,
-) -> Dict[str, SerializedJSONObject]:
+) -> dict[str, SerializedJSONObject]:
     return serialize(shallow_asdict(instance))
 
 
 @encode.instance(Fraction)
-def _encode_fraction(instance: Fraction) -> List[int]:
+def _encode_fraction(instance: Fraction) -> list[int]:
     return serialize((instance.numerator, instance.denominator))
 
 
 @decode.dispatch(Fraction)
-def _decode_fraction(instance: List[int]) -> Fraction:
+def _decode_fraction(instance: list[int]) -> Fraction:
     numerator, denominator = instance
     return Fraction(deserialize(numerator), deserialize(denominator))
 

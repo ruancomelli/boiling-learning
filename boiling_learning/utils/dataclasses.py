@@ -1,6 +1,6 @@
 import typing
 from dataclasses import asdict, field, fields, is_dataclass
-from typing import Any, Callable, Dict, Mapping, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Mapping, Optional, Type, TypeVar, Union
 
 from typing_extensions import TypeGuard
 
@@ -54,7 +54,7 @@ def dataclass_from_mapping(
     )
 
 
-def shallow_asdict(obj: DataClass) -> Dict[str, Any]:
+def shallow_asdict(obj: DataClass) -> dict[str, Any]:
     """Version of `asdict` that does not deepcopy objects.
 
     See https://docs.python.org/3/library/dataclasses.html#dataclasses.asdict for this

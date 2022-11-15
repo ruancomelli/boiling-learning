@@ -1,6 +1,6 @@
 import re
 from datetime import timedelta
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Iterable, Optional
 
 import parse
 import yaml
@@ -25,7 +25,7 @@ _TIMEDELTA_PATTERN = re.compile(r'(?P<h>\d{2}):(?P<min>\d{2}):(?P<s>\d{2})')
 
 def main(
     datasets: Iterable[ExperimentVideoDataset], dataspecpath: PathLike
-) -> Tuple[ExperimentVideoDataset, ...]:
+) -> tuple[ExperimentVideoDataset, ...]:
     logger.info('Setting condensation data')
 
     datasets = tuple(datasets)
@@ -48,7 +48,7 @@ def main(
     return grouped_datasets
 
 
-def _set_ev_data(ev: ExperimentVideo, dataspec: Dict[str, Any]) -> None:
+def _set_ev_data(ev: ExperimentVideo, dataspec: dict[str, Any]) -> None:
     case, subcase, test_name, video_name = ev.name.split(':')
 
     # TODO: add average mass rate to categories?
@@ -113,7 +113,7 @@ def _parse_timedelta(s: Optional[str]) -> Optional[timedelta]:
 
 
 def _make_dataframe(dataset: ExperimentVideoDataset) -> None:
-    missing: List[ExperimentVideo] = []
+    missing: list[ExperimentVideo] = []
     for ev in dataset:
         try:
             logger.debug(f'Trying to load data for {ev.name}')
@@ -135,8 +135,8 @@ def _make_dataframe(dataset: ExperimentVideoDataset) -> None:
 
 def _group_datasets(
     datasets: Iterable[ExperimentVideoDataset],
-) -> Tuple[ExperimentVideoDataset, ...]:
-    datasets_dict: Dict[str, ExperimentVideoDataset] = {}
+) -> tuple[ExperimentVideoDataset, ...]:
+    datasets_dict: dict[str, ExperimentVideoDataset] = {}
     for dataset in datasets:
         logger.debug(f'Reading condensation dataset {dataset.name}')
 

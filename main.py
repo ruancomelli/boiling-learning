@@ -24,17 +24,17 @@ from pprint import pprint
 from typing import (
     Any,
     Callable,
-    Dict,
     ItemsView,
     Iterable,
     KeysView,
-    List,
     NamedTuple,
     Optional,
-    Tuple,
     TypeVar,
     Union,
     ValuesView,
+    dict,
+    list,
+    tuple,
 )
 
 import autokeras as ak
@@ -309,7 +309,7 @@ def ensure_data_is_set(video: ExperimentVideo) -> None:
 
 
 @cache(JSONTableAllocator(analyses_path / 'cache' / 'purged-experiment-videos'))
-def purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> List[str]:
+def purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]:
     for video in tuple(image_dataset):
         ensure_data_is_set(video)
         # assert video.data is not None or video not in image_dataset, (video.name, image_dataset)
@@ -346,7 +346,7 @@ def _compile_transformers(
 @dataclass
 class VideoInfo:
     length: int
-    shape: Tuple[int, ...]
+    shape: tuple[int, ...]
     dtype: str
 
 
@@ -420,7 +420,7 @@ if OPTIONS.test:
 @dataclass(frozen=True)
 class GetImageDatasetParams:
     image_dataset: ExperimentVideoDataset
-    transformers: List[Transformer[Image, Image]]
+    transformers: list[Transformer[Image, Image]]
     splits: DatasetSplits = DatasetSplits(
         train=Fraction(70, 100),
         val=Fraction(15, 100),
@@ -430,7 +430,7 @@ class GetImageDatasetParams:
 
 def _get_image_dataset(
     image_dataset: ExperimentVideoDataset,
-    transformers: List[Transformer[Image, Image]],
+    transformers: list[Transformer[Image, Image]],
     splits: DatasetSplits,
 ) -> ImageDatasetTriplet:
     purged_experiment_videos = purge_experiment_videos(image_dataset)
@@ -493,8 +493,8 @@ training_datasets_allocator = JSONTableAllocator(analyses_path / 'datasets' / 't
 
 def _default_filter_for_frames_dataset(
     dataset: ImageDataset,
-) -> Callable[[Tuple[VideoFrame, Dict[str, Any]]], bool]:
-    def _pred(pair: Tuple[VideoFrame, Dict[str, Any]]) -> bool:
+) -> Callable[[tuple[VideoFrame, dict[str, Any]]], bool]:
+    def _pred(pair: tuple[VideoFrame, dict[str, Any]]) -> bool:
         if len(pair) != 2:
             return False
 
@@ -502,7 +502,7 @@ def _default_filter_for_frames_dataset(
         frame, _data = pair
         return frame.shape == first_frame.shape and not np.allclose(frame, 0)
 
-    def _actual_pred(pair: Tuple[VideoFrame, Dict[str, Any]]) -> bool:
+    def _actual_pred(pair: tuple[VideoFrame, dict[str, Any]]) -> bool:
         res = _pred(pair)
         if not res:
             _, data = pair
@@ -517,7 +517,7 @@ def to_tensorflow(
     *,
     batch_size: Optional[int] = None,
     prefilterer: Optional[
-        LazyDescribed[Callable[[Tuple[VideoFrame, Dict[str, Any]]], bool]]
+        LazyDescribed[Callable[[tuple[VideoFrame, dict[str, Any]]], bool]]
     ] = None,
     filterer: Optional[Callable[..., bool]] = None,
     buffer_size: int = DEFAULT_PREFETCH_BUFFER_SIZE,
@@ -528,7 +528,7 @@ def to_tensorflow(
 
     default_prefilterer = _default_filter_for_frames_dataset(dataset_value)
 
-    def _prefilterer(element: Tuple[VideoFrame, Dict[str, Any]]) -> bool:
+    def _prefilterer(element: tuple[VideoFrame, dict[str, Any]]) -> bool:
         return default_prefilterer(element) and (prefilterer is None or prefilterer()(element))
 
     save_path = training_datasets_allocator.allocate(dataset, prefilterer)
@@ -769,7 +769,7 @@ class FitBoilingModel(CachedFunction[_P, FitModelReturn]):
             stddev.
         """
 
-        def _is_not_outlier(pair: Tuple[Image, Targets]) -> bool:
+        def _is_not_outlier(pair: tuple[Image, Targets]) -> bool:
             frame, data = pair
             return abs(data['Power [W]'] - data['nominal_power']) < 5
 
@@ -1166,7 +1166,7 @@ PREFETCH = 2048
 @cache(JSONTableAllocator(analyses_path / 'cache' / 'targets'))
 def get_targets(
     dataset: LazyDescribed[ImageDatasetTriplet],
-) -> Tuple[List[Targets], List[Targets], List[Targets]]:
+) -> tuple[list[Targets], list[Targets], list[Targets]]:
     ds_train, ds_val, ds_test = dataset()
 
     return (
@@ -1177,7 +1177,7 @@ def get_targets(
 
 
 def plot_dataset_targets(
-    datasets: Tuple[LazyDescribed[ImageDatasetTriplet], ...],
+    datasets: tuple[LazyDescribed[ImageDatasetTriplet], ...],
     *,
     target_name: str,
     filter_target: Optional[Callable[[Targets], bool]] = None,
@@ -1235,7 +1235,7 @@ boiling_target_name = 'Flux [W/cm**2]'
 """### Downscaling"""
 
 # from itertools import takewhile
-# from typing import List
+#
 
 # from boiling_learning.preprocessing.image import (
 #     Downscaler,
@@ -1253,7 +1253,7 @@ boiling_target_name = 'Flux [W/cm**2]'
 #     )
 # )
 
-# sample_frames: List[VideoFrame] = []
+# sample_frames: list[VideoFrame] = []
 # for case in boiling_cases_timed:
 #     get_image_dataset_params = GetImageDatasetParams(
 #         case,
@@ -1572,7 +1572,7 @@ ds_evaluation_indirect = to_tensorflow(
 @cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-learning-curve'))
 def boiling_learning_curve_point(
     fraction: Fraction, *, direct: bool = True, normalize_images: bool = False
-) -> Dict[str, float]:
+) -> dict[str, float]:
     logger.info(f'Analyzing fraction {fraction}')
 
     logger.info(f'Getting datasets...')
@@ -1751,10 +1751,10 @@ BATCH_SIZE = 200
 @cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-cross-surface'))
 def boiling_cross_surface_evaluation(
     direct_visualization: bool,
-    training_cases: Tuple[int, ...],
-    evaluation_cases: Tuple[int, ...],
+    training_cases: tuple[int, ...],
+    evaluation_cases: tuple[int, ...],
     normalize_images: bool = True,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     logger.info(
         f'Training on cases {training_cases} '
         f'| evaluation on {evaluation_cases} '
@@ -1846,7 +1846,7 @@ boiling_cross_surface
 console = Console()
 
 
-def _format_sets(indices: Tuple[int, ...]) -> str:
+def _format_sets(indices: tuple[int, ...]) -> str:
     return ' + '.join(map(str, indices))
 
 
@@ -1903,8 +1903,8 @@ BATCH_SIZE = 200
 
 @cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-cross-surface-automl'))
 def boiling_cross_surface_evaluation(
-    direct_visualization: bool, training_cases: Tuple[int, ...], evaluation_cases: Tuple[int, ...]
-) -> Dict[str, float]:
+    direct_visualization: bool, training_cases: tuple[int, ...], evaluation_cases: tuple[int, ...]
+) -> dict[str, float]:
     logger.info(
         f'Training on cases {training_cases} '
         f'| evaluation on {evaluation_cases} '
@@ -2033,7 +2033,7 @@ get_image_dataset_params = GetImageDatasetParams(
 
 logger.info(f'Getting datasets...')
 # TODO: this should be set by `set_condensation_datasets_data`
-def _set_case_name(data: Dict[str, Any]) -> Dict[str, Any]:
+def _set_case_name(data: dict[str, Any]) -> dict[str, Any]:
     data['case_name'] = ':'.join(data['name'].split(':')[:2])
     return data
 
@@ -2049,7 +2049,7 @@ CLASSES = sorted(frozenset(targets(ds_train).map(itemgetter('case_name')).prefet
 N_CLASSES = len(CLASSES)
 
 
-def _set_case(data: Dict[str, Any]) -> Dict[str, Any]:
+def _set_case(data: dict[str, Any]) -> dict[str, Any]:
     data['case'] = CLASSES.index(data['case_name'])
     return data
 

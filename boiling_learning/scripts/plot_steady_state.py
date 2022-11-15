@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -58,7 +58,7 @@ def _figsize(
     width: Optional[float] = None,
     ratio: Optional[float] = None,
     textwidth: float = 6.29707,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     if height is None:
         if width is None or ratio is None:
             raise ValueError('if `height` is omitted, both `width` and `ratio` must be given.')

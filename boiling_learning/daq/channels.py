@@ -1,5 +1,5 @@
 import enum
-from typing import Dict, List, Optional, Type, TypeVar, Union
+from typing import Optional, Type, TypeVar, Union
 
 from nidaqmx.constants import ChannelType as NIChannelType
 from nidaqmx.task import Task
@@ -39,7 +39,7 @@ CHANNEL_TYPE_KEYS = frozendict(
 
 
 class Channel:
-    channel_table: Dict[str, List[str]] = {}
+    channel_table: dict[str, list[str]] = {}
 
     def __init__(
         self,
@@ -139,7 +139,7 @@ class Channel:
     def read(
         self,
         task: Task,
-        readings: Union[List[float], List[List[float]]],
+        readings: Union[list[float], list[list[float]]],
         dtype: Type[T] = list,
     ) -> Optional[T]:
         if not Channel.channel_table[task.name]:

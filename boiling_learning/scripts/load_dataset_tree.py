@@ -1,5 +1,3 @@
-from typing import List
-
 from loguru import logger
 
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
@@ -7,12 +5,12 @@ from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVi
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 
-def main(datapath: PathLike) -> List[ExperimentVideoDataset]:
+def main(datapath: PathLike) -> list[ExperimentVideoDataset]:
     logger.info(f'Loading cases from {datapath}')
 
     datapath = resolve(datapath)
 
-    datasets: List[ExperimentVideoDataset] = []
+    datasets: list[ExperimentVideoDataset] = []
     for casedir in datapath.iterdir():
         logger.debug(f'Searching for subcases in {casedir}')
         if not casedir.is_dir():

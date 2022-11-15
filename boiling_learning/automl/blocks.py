@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import autokeras as ak
 import keras_tuner as kt
@@ -13,14 +13,14 @@ from boiling_learning.model.layers import ImageNormalization
 
 
 class LayersBlock(ak.engine.block.Block):
-    def __init__(self, layers: List[tf.keras.layers.Layer], **kwargs) -> None:
+    def __init__(self, layers: list[tf.keras.layers.Layer], **kwargs) -> None:
         super().__init__(**kwargs)
         self.layers = layers
 
     def build(  # pylint: disable=signature-differs
         self,
         hp: kt.HyperParameters,
-        inputs: List[ak.Node],
+        inputs: list[ak.Node],
     ) -> Any:  # TODO: improve type
         inputs = tf.nest.flatten(inputs)
         input_node = inputs[0]
@@ -32,11 +32,11 @@ class LayersBlock(ak.engine.block.Block):
 
         return output_node
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict[str, Any]:
         return {'layers': clean_config([layer.get_config() for layer in self.layers])}
 
     @classmethod
-    def from_config(cls, config: Dict[str, Any]) -> LayersBlock:
+    def from_config(cls, config: dict[str, Any]) -> LayersBlock:
         return cls(
             [tf.keras.layers.Layer.from_config(layer_config) for layer_config in config['layers']]
         )
@@ -50,7 +50,7 @@ class ImageNormalizationBlock(ak.engine.block.Block):
     def build(
         self,
         hp: kt.HyperParameters,
-        inputs: List[ak.Node],
+        inputs: list[ak.Node],
     ) -> Any:  # TODO: improve type
         # Get the input_node from inputs.
         node = tf.nest.flatten(inputs)[0]
@@ -82,10 +82,10 @@ def _clean_config_numpy_arrays(config: np.ndarray) -> json.JSONDataType:
 
 
 @clean_config.instance(dict)
-def _clean_config_dict(config: Dict[str, Any]) -> Dict[str, Any]:
+def _clean_config_dict(config: dict[str, Any]) -> dict[str, Any]:
     return {key: clean_config(value) for key, value in config.items()}
 
 
 @clean_config.instance(list)
-def _clean_config_list(config: List[Any]) -> List[Any]:
+def _clean_config_list(config: list[Any]) -> list[Any]:
     return [clean_config(value) for value in config]

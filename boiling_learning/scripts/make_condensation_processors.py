@@ -1,4 +1,4 @@
-from typing import Dict, List, Literal, Union
+from typing import Literal, Union
 
 from boiling_learning.preprocessing.image import (
     VideoFrameOrFrames,
@@ -19,10 +19,10 @@ def main(
     height: int = 8 * 12,
     width: int = 8 * 12,
     crop_mode: Literal['center', 'random'] = 'center',
-) -> List[
+) -> list[
     Union[
         Transformer[VideoFrameOrFrames, VideoFrameOrFrames],
-        Dict[ExperimentVideoName, Transformer[VideoFrameOrFrames, VideoFrameOrFrames]],
+        dict[ExperimentVideoName, Transformer[VideoFrameOrFrames, VideoFrameOrFrames]],
     ]
 ]:
     return [

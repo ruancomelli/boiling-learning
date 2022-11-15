@@ -2,7 +2,7 @@ import contextlib
 import typing
 from fractions import Fraction
 from numbers import Real
-from typing import Any, Dict, Iterable, Tuple, Union
+from typing import Any, Iterable, Union
 
 import imageio
 import numpy as np
@@ -14,10 +14,10 @@ from boiling_learning.utils.pathutils import PathLike, resolve
 
 def save_as_video(
     path: PathLike,
-    frames: Iterable[Tuple[VideoFrame, Dict[str, Any]]],
+    frames: Iterable[tuple[VideoFrame, dict[str, Any]]],
     *,
-    display_data: Union[str, Tuple[str, ...], Dict[str, str]] = (),
-    text_position: Union[Tuple[int, int], Tuple[Fraction, Fraction]] = (
+    display_data: Union[str, tuple[str, ...], dict[str, str]] = (),
+    text_position: Union[tuple[int, int], tuple[Fraction, Fraction]] = (
         Fraction(1, 10),
         Fraction(1, 10),
     ),
@@ -46,10 +46,10 @@ def save_as_video(
 
 def save_as_gif(
     path: PathLike,
-    frames: Iterable[Tuple[VideoFrame, Dict[str, Any]]],
+    frames: Iterable[tuple[VideoFrame, dict[str, Any]]],
     *,
-    display_data: Union[str, Tuple[str, ...], Dict[str, str]] = (),
-    text_position: Union[Tuple[int, int], Tuple[Fraction, Fraction]] = (
+    display_data: Union[str, tuple[str, ...], dict[str, str]] = (),
+    text_position: Union[tuple[int, int], tuple[Fraction, Fraction]] = (
         Fraction(1, 10),
         Fraction(1, 10),
     ),
@@ -77,10 +77,10 @@ def save_as_gif(
 
 def _annotate_image(
     image: Image.Image,
-    data: Dict[str, Any],
+    data: dict[str, Any],
     *,
-    display_data: Union[Tuple[str, ...], Dict[str, str]],
-    text_position: Union[Tuple[int, int], Tuple[Fraction, Fraction]],
+    display_data: Union[tuple[str, ...], dict[str, str]],
+    text_position: Union[tuple[int, int], tuple[Fraction, Fraction]],
     text_color: int = 255,
 ) -> Image.Image:
     absolute_text_position = _to_absolute_position(image, text_position)
@@ -103,10 +103,10 @@ def _annotate_image(
 
 
 def _to_absolute_position(
-    image: Image.Image, position: Union[Tuple[int, int], Tuple[Fraction, Fraction]]
-) -> Tuple[int, int]:
+    image: Image.Image, position: Union[tuple[int, int], tuple[Fraction, Fraction]]
+) -> tuple[int, int]:
     x_position, y_position = position
     if isinstance(x_position, int):
-        return typing.cast(Tuple[int, int], position)
+        return typing.cast(tuple[int, int], position)
 
     return (round(x_position * image.width), round(y_position * image.height))

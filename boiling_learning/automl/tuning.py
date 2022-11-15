@@ -1,5 +1,3 @@
-from typing import List
-
 import tensorflow as tf
 
 from boiling_learning.automl.hypermodels import HyperModel
@@ -11,7 +9,7 @@ from boiling_learning.model.model import Evaluation, ModelArchitecture
 
 @dataclass(frozen=True)
 class TuneModelParams:
-    callbacks: LazyDescribed[List[tf.keras.callbacks.Callback]]
+    callbacks: LazyDescribed[list[tf.keras.callbacks.Callback]]
     batch_size: int
 
 

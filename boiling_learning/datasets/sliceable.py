@@ -14,11 +14,9 @@ from typing import (
     Generic,
     Iterable,
     Iterator,
-    List,
     Literal,
     Optional,
     Sequence,
-    Tuple,
     TypeVar,
     Union,
     overload,
@@ -35,7 +33,7 @@ _X2 = TypeVar('_X2')
 _Y = TypeVar('_Y')
 _Y2 = TypeVar('_Y2')
 _Ts = TypeVarTuple('_Ts')
-BooleanMask = List[bool]
+BooleanMask = list[bool]
 
 
 class SliceableDataset(abc.ABC, Sequence[_T]):
@@ -135,7 +133,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
 
     @staticmethod
     def zip(
-        *datasets: Unpack[Tuple[SliceableDataset[Unpack[_Ts]]]],
+        *datasets: Unpack[tuple[SliceableDataset[Unpack[_Ts]]]],
         strictness: Literal['none', 'one-off', 'strict'] = 'strict',
     ) -> ZippedSliceableDataset[Unpack[_Ts]]:
         return ZippedSliceableDataset(*datasets, strictness=strictness)
@@ -188,7 +186,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
     def split(
         self,
         __size1: Optional[Union[int, Fraction]],
-    ) -> Tuple[SliceableDataset[_T]]:
+    ) -> tuple[SliceableDataset[_T]]:
         ...
 
     @overload
@@ -196,7 +194,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
         self,
         __size1: None,
         __size2: Union[int, Fraction],
-    ) -> Tuple[SliceableDataset[_T], SliceableDataset[_T]]:
+    ) -> tuple[SliceableDataset[_T], SliceableDataset[_T]]:
         ...
 
     @overload
@@ -204,7 +202,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
         self,
         __size1: Union[int, Fraction],
         __size2: None,
-    ) -> Tuple[SliceableDataset[_T], SliceableDataset[_T]]:
+    ) -> tuple[SliceableDataset[_T], SliceableDataset[_T]]:
         ...
 
     @overload
@@ -213,7 +211,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
         __size1: None,
         __size2: Union[int, Fraction],
         __size3: Union[int, Fraction],
-    ) -> Tuple[SliceableDataset[_T], SliceableDataset[_T], SliceableDataset[_T]]:
+    ) -> tuple[SliceableDataset[_T], SliceableDataset[_T], SliceableDataset[_T]]:
         ...
 
     @overload
@@ -222,7 +220,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
         __size1: Union[int, Fraction],
         __size2: None,
         __size3: Union[int, Fraction],
-    ) -> Tuple[SliceableDataset[_T], SliceableDataset[_T], SliceableDataset[_T]]:
+    ) -> tuple[SliceableDataset[_T], SliceableDataset[_T], SliceableDataset[_T]]:
         ...
 
     @overload
@@ -231,14 +229,14 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
         __size1: Union[int, Fraction],
         __size2: Union[int, Fraction],
         __size3: None,
-    ) -> Tuple[SliceableDataset[_T], SliceableDataset[_T], SliceableDataset[_T]]:
+    ) -> tuple[SliceableDataset[_T], SliceableDataset[_T], SliceableDataset[_T]]:
         ...
 
     @overload
-    def split(self, *sizes: Optional[Union[int, Fraction]]) -> Tuple[SliceableDataset[_T], ...]:
+    def split(self, *sizes: Optional[Union[int, Fraction]]) -> tuple[SliceableDataset[_T], ...]:
         ...
 
-    def split(self, *sizes: Optional[Union[int, Fraction]]) -> Tuple[SliceableDataset[_T], ...]:
+    def split(self, *sizes: Optional[Union[int, Fraction]]) -> tuple[SliceableDataset[_T], ...]:
         if sizes.count(None) > 1:
             raise TypeError('`split` supports at most one `None` size.')
 
@@ -261,7 +259,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
             raise ValueError(f'got negative sizes: {int_sizes}')
 
         remaining = self
-        splits: List[SliceableDataset[_T]] = []
+        splits: list[SliceableDataset[_T]] = []
 
         for size in int_sizes:
             splits.append(remaining.take(size))
@@ -281,7 +279,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
     def flatten(self) -> SliceableDataset[Any]:
         return self.unbatch().flatten() if _is_nested_sliceable_dataset(self) else self
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_T, ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[_T, ...]:
         return tuple(self[indices] if indices is not None else self)
 
     def _is_boolean_mask(self, key: Any) -> TypeGuard[BooleanMask]:
@@ -314,7 +312,7 @@ class ProxySliceableDataset(SliceableDataset[_T]):
     def getitem_from_boolean_mask(self, mask: BooleanMask) -> SliceableDataset[_T]:
         return self._ancestor[mask]
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_T, ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[_T, ...]:
         return self._ancestor.fetch(indices)
 
     def __repr__(self) -> str:
@@ -370,18 +368,18 @@ class ComposedIndicesSliceableDataset(SliceableDataset[_T]):
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self._ancestor}, {self._indices})'
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_T, ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[_T, ...]:
         rebased_indices = self._indices if indices is None else self._rebase_indices(indices)
         return self._ancestor.fetch(rebased_indices)
 
-    def _rebase_indices(self, indices: Iterable[int]) -> Tuple[int, ...]:
+    def _rebase_indices(self, indices: Iterable[int]) -> tuple[int, ...]:
         return tuple(self._indices[index] for index in indices)
 
 
-class ZippedSliceableDataset(SliceableDataset[Tuple[Unpack[_Ts]]], Generic[Unpack[_Ts]]):
+class ZippedSliceableDataset(SliceableDataset[tuple[Unpack[_Ts]]], Generic[Unpack[_Ts]]):
     def __init__(
         self,
-        *datasets: Unpack[Tuple[Unpack[_Ts]]],
+        *datasets: Unpack[tuple[Unpack[_Ts]]],
         strictness: Literal['none', 'one-off', 'strict'] = 'strict',
     ) -> None:
         self._ancestors = datasets
@@ -395,30 +393,30 @@ class ZippedSliceableDataset(SliceableDataset[Tuple[Unpack[_Ts]]], Generic[Unpac
     def __len__(self) -> int:
         return self._length
 
-    def getitem_from_index(self, index: int) -> Tuple[Unpack[_Ts]]:
+    def getitem_from_index(self, index: int) -> tuple[Unpack[_Ts]]:
         return tuple(dataset[index] for dataset in self._ancestors)
 
-    def getitem_from_indices(self, indices: Iterable[int]) -> SliceableDataset[Tuple[Unpack[_Ts]]]:
+    def getitem_from_indices(self, indices: Iterable[int]) -> SliceableDataset[tuple[Unpack[_Ts]]]:
         return ZippedSliceableDataset(*(dataset[indices] for dataset in self._ancestors))
 
     def __repr__(self) -> str:
         reprs = ', '.join(repr(dataset) for dataset in self._ancestors)
         return f'{self.__class__.__name__}({reprs})'
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[Tuple[Unpack[_Ts]]]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[tuple[Unpack[_Ts]]]:
         if indices is None:
             return tuple(zip(*(dataset.fetch() for dataset in self._ancestors)))
 
         indices = tuple(indices)
         return tuple(zip(*(dataset.fetch(indices) for dataset in self._ancestors)))
 
-    def _check_lengths(self, lengths: List[int]) -> None:
+    def _check_lengths(self, lengths: list[int]) -> None:
         if self._strictness == 'one-off':
             self._check_one_off(lengths)
         elif self._strictness == 'strict':
             self._check_strict(lengths)
 
-    def _check_one_off(self, lengths: List[int]) -> None:
+    def _check_one_off(self, lengths: list[int]) -> None:
         minimum = min(lengths)
         maximum = max(lengths)
         if maximum - minimum > 1:
@@ -429,7 +427,7 @@ class ZippedSliceableDataset(SliceableDataset[Tuple[Unpack[_Ts]]], Generic[Unpac
                 f'Got lengths={lengths}.'
             )
 
-    def _check_strict(self, lengths: List[int]) -> None:
+    def _check_strict(self, lengths: list[int]) -> None:
         if not mit.all_equal(lengths):
             raise ValueError(
                 f'[strictness={self._strictness}] '
@@ -453,20 +451,20 @@ class ConcatenateSliceableDataset(SliceableDataset[Union[Unpack[_Ts]]], Generic[
         ancestor_index, relative_index = self._absolute_index_to_ancestor_and_relative_index(index)
         return self._ancestors[ancestor_index][relative_index]
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[Union[_T, _U], ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[Union[_T, _U], ...]:
         if indices is None:
             return tuple(
                 itertools.chain.from_iterable(ancestor.fetch() for ancestor in self._ancestors)
             )
 
-        grouped_indices: DefaultDict[int, List[Tuple[int, int]]] = defaultdict(list)
+        grouped_indices: DefaultDict[int, list[tuple[int, int]]] = defaultdict(list)
         for position, index in enumerate(indices):
             ancestor_index, relative_index = self._absolute_index_to_ancestor_and_relative_index(
                 index
             )
             grouped_indices[ancestor_index].append((position, relative_index))
 
-        position_value_pairs: List[Tuple[int, Union[Unpack[_Ts]]]] = []
+        position_value_pairs: list[tuple[int, Union[Unpack[_Ts]]]] = []
         for ancestor_index, position_relative_index_pairs in grouped_indices.items():
             if not position_relative_index_pairs:
                 continue
@@ -477,7 +475,7 @@ class ConcatenateSliceableDataset(SliceableDataset[Union[Unpack[_Ts]]], Generic[
 
         return tuple(value for _, value in sorted(position_value_pairs, key=itemgetter(0)))
 
-    def _absolute_index_to_ancestor_and_relative_index(self, index: int) -> Tuple[int, int]:
+    def _absolute_index_to_ancestor_and_relative_index(self, index: int) -> tuple[int, int]:
         relative_index = index
         for ancestor_index, ancestor in enumerate(self._ancestors):
             ancestor_length = len(ancestor)
@@ -508,7 +506,7 @@ class MapSliceableDataset(SliceableDataset[_U]):
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self._map}, {self._ancestor})'
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_U, ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[_U, ...]:
         fetched = self._ancestor.fetch(indices)
         return tuple(map(self._map, fetched))
 
@@ -554,7 +552,7 @@ class CachedSliceableDataset(SliceableDataset[_T]):
     def getitem_from_index(self, index: int) -> _T:
         return self.fetch((index,))[0]
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[_T, ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[_T, ...]:
         return self._cache.fetch_from(self._ancestor, indices)
 
     def __repr__(self) -> str:
@@ -565,7 +563,7 @@ class SliceableDatasetCache(abc.ABC, Generic[_T]):
     @abc.abstractmethod
     def fetch_from(
         self, source: SliceableDataset[_T], indices: Optional[Iterable[int]] = None
-    ) -> Tuple[_T, ...]:
+    ) -> tuple[_T, ...]:
         pass
 
     @abc.abstractmethod
@@ -573,7 +571,7 @@ class SliceableDatasetCache(abc.ABC, Generic[_T]):
         pass
 
 
-SupervisedSliceableDataset = SliceableDataset[Tuple[_X, _Y]]
+SupervisedSliceableDataset = SliceableDataset[tuple[_X, _Y]]
 
 
 def features(dataset: SupervisedSliceableDataset[_X, _Y]) -> SliceableDataset[_X]:
@@ -586,14 +584,14 @@ def targets(dataset: SupervisedSliceableDataset[_X, _Y]) -> SliceableDataset[_Y]
 
 def unzip(
     dataset: SupervisedSliceableDataset[_X, _Y]
-) -> Tuple[SliceableDataset[_X], SliceableDataset[_Y]]:
+) -> tuple[SliceableDataset[_X], SliceableDataset[_Y]]:
     return features(dataset), targets(dataset)
 
 
 def map_features(
     dataset: SupervisedSliceableDataset[_X, _Y], __map_features: Callable[[_X], _X2]
 ) -> SupervisedSliceableDataset[_X2, _Y]:
-    def map_func(pair: Tuple[_X, _Y]) -> Tuple[_X2, _Y]:
+    def map_func(pair: tuple[_X, _Y]) -> tuple[_X2, _Y]:
         feature, target = pair
         return __map_features(feature), target
 
@@ -603,7 +601,7 @@ def map_features(
 def map_targets(
     dataset: SupervisedSliceableDataset[_X, _Y], __map_targets: Callable[[_Y], _Y2]
 ) -> SupervisedSliceableDataset[_X, _Y2]:
-    def map_func(pair: Tuple[_X, _Y]) -> Tuple[_X, _Y2]:
+    def map_func(pair: tuple[_X, _Y]) -> tuple[_X, _Y2]:
         feature, target = pair
         return feature, __map_targets(target)
 
@@ -615,7 +613,7 @@ def map_pair(
     __map_features: Callable[[_X], _X2],
     __map_targets: Callable[[_Y], _Y2],
 ) -> SupervisedSliceableDataset[_X2, _Y2]:
-    def map_func(pair: Tuple[_X, _Y]) -> Tuple[_X2, _Y2]:
+    def map_func(pair: tuple[_X, _Y]) -> tuple[_X2, _Y2]:
         feature, target = pair
         return __map_features(feature), __map_targets(target)
 

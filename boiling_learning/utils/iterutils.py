@@ -1,13 +1,13 @@
 import itertools
 import typing
-from typing import Iterable, Tuple, TypeVar
+from typing import Iterable, TypeVar
 
 import more_itertools as mit
 
 _T = TypeVar('_T')
 
 
-def unsort(iterable: Iterable[_T]) -> Tuple[Iterable[int], Iterable[_T]]:
+def unsort(iterable: Iterable[_T]) -> tuple[Iterable[int], Iterable[_T]]:
     peekable = mit.peekable(iterable)
 
     if not peekable:

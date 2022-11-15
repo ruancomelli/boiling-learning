@@ -2,21 +2,7 @@ from datetime import timedelta
 from fractions import Fraction
 from pathlib import Path
 from types import FunctionType
-from typing import (
-    Any,
-    Dict,
-    FrozenSet,
-    Generic,
-    List,
-    Protocol,
-    Set,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-    final,
-    runtime_checkable,
-)
+from typing import Any, Generic, Protocol, Type, TypeVar, Union, final, runtime_checkable
 
 from classes import AssociatedType, Supports, typeclass
 
@@ -64,21 +50,21 @@ def _describe_has_describe(instance: HasDescribe[_Description]) -> _Description:
 
 
 @describe.instance(list)
-def _describe_list(instance: List[Supports[Describable[_Description]]]) -> List[_Description]:
+def _describe_list(instance: list[Supports[Describable[_Description]]]) -> list[_Description]:
     return [describe(item) for item in instance]
 
 
 @describe.instance(tuple)
 def _describe_tuple(
-    instance: Tuple[Supports[Describable[_Description]], ...]
-) -> Tuple[_Description, ...]:
+    instance: tuple[Supports[Describable[_Description]], ...]
+) -> tuple[_Description, ...]:
     return tuple(describe(item) for item in instance)
 
 
 @describe.instance(dict)
 def _describe_dict(
-    instance: Dict[str, Supports[Describable[_Description]]]
-) -> Dict[str, _Description]:
+    instance: dict[str, Supports[Describable[_Description]]]
+) -> dict[str, _Description]:
     return {key: describe(value) for key, value in instance.items()}
 
 
@@ -97,12 +83,12 @@ class DataclassOfDescribableFields(
 @describe.instance(delegate=DataclassOfDescribableFields)
 def _describe_dataclass(
     instance: DataclassOfDescribableFields[_Description],
-) -> Dict[str, _Description]:
+) -> dict[str, _Description]:
     return describe(shallow_asdict(instance))
 
 
 @describe.instance(Fraction)
-def _describe_fraction(instance: Fraction) -> Tuple[int, int]:
+def _describe_fraction(instance: Fraction) -> tuple[int, int]:
     return instance.numerator, instance.denominator
 
 
@@ -114,19 +100,19 @@ def _describe_timedelta(instance: timedelta) -> float:
 @describe.instance(frozendict)
 def _describe_frozendict(
     instance: frozendict[str, Supports[Describable[_Description]]],
-) -> Dict[str, _Description]:
+) -> dict[str, _Description]:
     return describe(dict(instance))
 
 
 @describe.instance(set)
-def _describe_set(instance: Set[Supports[Describable[_Description]]]) -> Set[_Description]:
+def _describe_set(instance: set[Supports[Describable[_Description]]]) -> set[_Description]:
     return {describe(item) for item in instance}
 
 
 @describe.instance(frozenset)
 def _describe_frozenset(
-    instance: FrozenSet[Supports[Describable[_Description]]],
-) -> FrozenSet[_Description]:
+    instance: frozenset[Supports[Describable[_Description]]],
+) -> frozenset[_Description]:
     return frozenset(describe(item) for item in instance)
 
 

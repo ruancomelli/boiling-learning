@@ -1,4 +1,4 @@
-from typing import Literal, Optional, Tuple, Union
+from typing import Literal, Optional, Union
 
 from tensorflow.keras.experimental import LinearModel
 from tensorflow.keras.layers import (
@@ -23,7 +23,7 @@ from boiling_learning.model.model import ModelArchitecture
 # It includes tips and rules-of-thumb for defining layers.
 
 
-def linear_regression(input_shape: Tuple[int, ...]) -> ModelArchitecture:
+def linear_regression(input_shape: tuple[int, ...]) -> ModelArchitecture:
     inputs = Input(shape=input_shape)
     outputs = Dense(1)(inputs)
 
@@ -31,7 +31,7 @@ def linear_regression(input_shape: Tuple[int, ...]) -> ModelArchitecture:
 
 
 def tiny_convnet(
-    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
+    input_shape: Union[tuple[int, int, int], tuple[int, int]],
     dropout: Optional[float],
     hidden_layers_policy: Optional[Union[str, Policy]] = None,
     output_layer_policy: Optional[Union[str, Policy]] = None,
@@ -63,7 +63,7 @@ def tiny_convnet(
 
 
 def small_convnet(
-    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
+    input_shape: Union[tuple[int, int, int], tuple[int, int]],
     dropout: Optional[float],
     hidden_layers_policy: Optional[Union[str, Policy]] = None,
     output_layer_policy: Optional[Union[str, Policy]] = None,
@@ -106,7 +106,7 @@ def small_convnet(
 
 
 def hoboldnet1(
-    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
+    input_shape: Union[tuple[int, int, int], tuple[int, int]],
     dropout: Optional[float],
     hidden_layers_policy: Optional[Union[str, Policy]] = None,
     output_layer_policy: Optional[Union[str, Policy]] = None,
@@ -153,7 +153,7 @@ def hoboldnet1(
 
 
 def hoboldnet2(
-    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
+    input_shape: Union[tuple[int, int, int], tuple[int, int]],
     dropout: Optional[float],
     hidden_layers_policy: Optional[Union[str, Policy]] = None,
     output_layer_policy: Optional[Union[str, Policy]] = None,
@@ -200,7 +200,7 @@ def hoboldnet2(
 
 
 def hoboldnet3(
-    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
+    input_shape: Union[tuple[int, int, int], tuple[int, int]],
     dropout: Optional[float],
     hidden_layers_policy: Optional[Union[str, Policy]] = None,
     output_layer_policy: Optional[Union[str, Policy]] = None,
@@ -255,7 +255,7 @@ def hoboldnet3(
 
 
 def hoboldnet_supplementary(
-    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
+    input_shape: Union[tuple[int, int, int], tuple[int, int]],
     dropout: Optional[float],
     hidden_layers_policy: Optional[Union[str, Policy]] = None,
     output_layer_policy: Optional[Union[str, Policy]] = None,
@@ -309,7 +309,7 @@ def hoboldnet_supplementary(
 
 
 def kramernet(
-    input_shape: Union[Tuple[int, int, int], Tuple[int, int]],
+    input_shape: Union[tuple[int, int, int], tuple[int, int]],
     dropout: Optional[float],
     hidden_layers_policy: Optional[Union[str, Policy]] = None,
     output_layer_policy: Optional[Union[str, Policy]] = None,
@@ -402,7 +402,7 @@ def kramernet(
 
 
 def linear_model(
-    input_shape: Tuple[int, ...],
+    input_shape: tuple[int, ...],
     normalize_images: bool = True,
 ) -> ModelArchitecture:
     outputs = inputs = Input(shape=input_shape)

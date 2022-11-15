@@ -1,7 +1,7 @@
 import contextlib
 import gc
 import typing
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, Optional, TypedDict
 
 import autokeras as ak
 import keras_tuner as kt
@@ -14,7 +14,7 @@ from boiling_learning.utils.pathutils import resolve
 
 class PopulateSpaceReturn(TypedDict):
     status: kt.engine.trial.TrialStatus
-    values: Optional[Dict[str, Any]]
+    values: Optional[dict[str, Any]]
 
 
 class EarlyStoppingGreedyOracle(ak.tuners.greedy.GreedyOracle):
@@ -30,12 +30,12 @@ class EarlyStoppingGreedyOracle(ak.tuners.greedy.GreedyOracle):
             }
         return typing.cast(PopulateSpaceReturn, super().populate_space(trial_id))
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         state = super().get_state()
         state.update(stop_search=self.stop_search)
-        return typing.cast(Dict[str, Any], state)
+        return typing.cast(dict[str, Any], state)
 
-    def set_state(self, state: Dict[str, Any]) -> None:
+    def set_state(self, state: dict[str, Any]) -> None:
         super().set_state(state)
         self.stop_search = state['stop_search']
 
@@ -53,12 +53,12 @@ class EarlyStoppingHyperbandOracle(kt.oracles.HyperbandOracle):
             }
         return typing.cast(PopulateSpaceReturn, super().populate_space(trial_id))
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         state = super().get_state()
         state.update(stop_search=self.stop_search)
-        return typing.cast(Dict[str, Any], state)
+        return typing.cast(dict[str, Any], state)
 
-    def set_state(self, state: Dict[str, Any]) -> None:
+    def set_state(self, state: dict[str, Any]) -> None:
         super().set_state(state)
         self.stop_search = state['stop_search']
 
@@ -72,7 +72,7 @@ class _SaveBestModelAtTrainingEndTuner(ak.engine.tuner.AutoTuner):
 
     def _build_and_fit_model(
         self, trial: kt.engine.trial.Trial, *fit_args: Any, **fit_kwargs: Any
-    ) -> Dict[str, List[Any]]:
+    ) -> dict[str, list[Any]]:
         if 'callbacks' in fit_kwargs:
             callbacks = fit_kwargs['callbacks']
 
@@ -96,7 +96,7 @@ class _SaveBestModelAtTrainingEndTuner(ak.engine.tuner.AutoTuner):
                     fit_kwargs['callbacks'] = callbacks
 
         return typing.cast(
-            Dict[str, List[Any]],
+            dict[str, list[Any]],
             super()._build_and_fit_model(trial, *fit_args, **fit_kwargs),
         )
 
@@ -122,7 +122,7 @@ class _FixedMaxModelSizeTuner(_SaveBestModelAtTrainingEndTuner):
 
     def _build_and_fit_model(
         self, trial: kt.engine.trial.Trial, *fit_args: Any, **fit_kwargs: Any
-    ) -> Dict[str, List[Any]]:
+    ) -> dict[str, list[Any]]:
         with contextlib.suppress(tf.errors.ResourceExhaustedError, tf.errors.InternalError):
             with self.distribution_strategy.scope():
                 model = self.hypermodel.build(trial.hyperparameters)
@@ -149,7 +149,7 @@ class _FixedMaxModelSizeTuner(_SaveBestModelAtTrainingEndTuner):
         dummy_history_obj = tf.keras.callbacks.History()
         dummy_history_obj.on_train_begin()
         dummy_history_obj.history.setdefault('val_loss', []).append(_HUGE_NUMBER)
-        return typing.cast(Dict[str, List[Any]], dummy_history_obj)
+        return typing.cast(dict[str, list[Any]], dummy_history_obj)
 
     def _try_build(self, hp: kt.HyperParameters) -> tf.keras.Model:
         # clean-up TF graph from previously stored (defunct) graph
@@ -182,7 +182,7 @@ class EarlyStoppingGreedy(_FixedMaxModelSizeTuner):
         goal: Any = None,
         objective: str = 'val_loss',
         max_trials: int = 10,
-        initial_hps: Optional[List[Dict[str, Any]]] = None,
+        initial_hps: Optional[list[dict[str, Any]]] = None,
         seed: Optional[int] = None,
         hyperparameters: Optional[kt.HyperParameters] = None,
         tune_new_entries: bool = True,
@@ -206,7 +206,7 @@ class EarlyStoppingGreedy(_FixedMaxModelSizeTuner):
         trial: kt.engine.trial.Trial,
         model: tf.keras.models.Model,
         epoch: str,
-        logs: Optional[Dict[str, Any]] = None,
+        logs: Optional[dict[str, Any]] = None,
     ) -> None:
         super().on_epoch_end(trial, model, epoch, logs)
 
@@ -253,7 +253,7 @@ class EarlyStoppingHyperband(_FixedMaxModelSizeTuner):
         trial: kt.engine.trial.Trial,
         model: tf.keras.models.Model,
         epoch: str,
-        logs: Optional[Dict[str, Any]] = None,
+        logs: Optional[dict[str, Any]] = None,
     ) -> None:
         super().on_epoch_end(trial, model, epoch, logs)
 
@@ -277,5 +277,5 @@ class SaveBestEpoch(tf.keras.callbacks.Callback):
         super().__init__()
         self.filepath = filepath
 
-    def on_train_end(self, logs: Optional[Dict[str, Any]] = None) -> None:
+    def on_train_end(self, logs: Optional[dict[str, Any]] = None) -> None:
         self.model.save_weights(self.filepath)

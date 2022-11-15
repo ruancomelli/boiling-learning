@@ -1,5 +1,5 @@
 from fractions import Fraction
-from typing import Dict, List, Literal, Optional, Union
+from typing import Literal, Optional, Union
 
 from boiling_learning.preprocessing.image import (
     VideoFrameOrFrames,
@@ -28,10 +28,10 @@ def main(
     width: int = RECOMMENDED_WIDTH,
     visualization_window_width: Fraction = Fraction(60, 100),
     crop_mode: Literal['center', 'random'] = 'center',
-) -> List[
+) -> list[
     Union[
         Transformer[VideoFrameOrFrames, VideoFrameOrFrames],
-        Dict[ExperimentVideoName, Transformer[VideoFrameOrFrames, VideoFrameOrFrames]],
+        dict[ExperimentVideoName, Transformer[VideoFrameOrFrames, VideoFrameOrFrames]],
     ]
 ]:
     if height is None:

@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -16,7 +16,7 @@ class X:
 
 
 @json.encode.instance(X)
-def _json_encode(obj: X) -> Dict[str, int]:
+def _json_encode(obj: X) -> dict[str, int]:
     return {'value': obj.value}
 
 

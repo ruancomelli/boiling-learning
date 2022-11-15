@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Optional, TypeVar
+from typing import Any, Callable, Optional, TypeVar
 
 _Callable = TypeVar('_Callable', bound=Callable[..., Any])
 
@@ -7,7 +7,7 @@ class DispatchError(Exception):
     pass
 
 
-class TableDispatcher(Dict[type, Callable[..., Any]]):
+class TableDispatcher(dict[type, Callable[..., Any]]):
     def __init__(self, default: Optional[Callable[..., Any]] = None) -> None:
         super().__init__()
         self._default: Optional[Callable[..., Any]] = default

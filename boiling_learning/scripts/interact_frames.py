@@ -1,5 +1,5 @@
 # import warnings
-# from typing import Any, Callable, Iterable, Tuple
+# from typing import Any, Callable, Iterable
 
 # import funcy
 # import numpy as np
@@ -34,7 +34,7 @@
 
 
 # def _interact_dataset_frames(
-#     datasets: Tuple[ExperimentVideoDataset, ...], imshow: Callable[[np.ndarray], Any]
+#     datasets: tuple[ExperimentVideoDataset, ...], imshow: Callable[[np.ndarray], Any]
 # ) -> None:
 #     datasets_options = [(dataset.name, dataset) for dataset in datasets]
 #     default_dataset = datasets_options[0][1]

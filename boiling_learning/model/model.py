@@ -5,7 +5,7 @@ import json as _json
 import operator
 import typing
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, Optional, TypeVar
+from typing import Any, Callable, Mapping, Optional, TypeVar
 
 import more_itertools as mit
 import tensorflow as tf
@@ -22,7 +22,7 @@ _CUSTOM_OBJECTS = {layer.__name__: layer for layer in _CUSTOM_LAYERS}
 
 _Any = TypeVar('_Any')
 
-Evaluation = Dict[str, Any]
+Evaluation = dict[str, Any]
 
 
 class ModelArchitecture:
@@ -35,16 +35,16 @@ class ModelArchitecture:
     ) -> ModelArchitecture:
         return cls(tf.keras.models.Model(inputs=inputs, outputs=outputs))
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict[str, Any]:
         return json.encode(self)
 
     @classmethod
-    def from_config(cls, config: Dict[str, Any]) -> ModelArchitecture:
+    def from_config(cls, config: dict[str, Any]) -> ModelArchitecture:
         return cls(
             tf.keras.models.model_from_json(_json.dumps(config), custom_objects=_CUSTOM_OBJECTS)
         )
 
-    def __describe__(self) -> Dict[str, Any]:
+    def __describe__(self) -> dict[str, Any]:
         model_json = _json.loads(self.model.to_json())
         return anonymize_model_json(
             {key: value for key, value in model_json['config'].items() if key != 'name'}
@@ -179,14 +179,14 @@ def rename_model_layers(
     return ModelArchitecture(new_model)
 
 
-def anonymize_model_json(model_json: Dict[str, Any]) -> Dict[str, Any]:
+def anonymize_model_json(model_json: dict[str, Any]) -> dict[str, Any]:
     names = _collect_names(model_json, name_key='name')
     translator = {name: f'layer_{index}' for index, name in enumerate(mit.unique_everseen(names))}
     return _rename_layers(model_json, translator)
 
 
-def _collect_names(config: Any, *, name_key: str = 'name') -> List[str]:
-    names: List[str] = []
+def _collect_names(config: Any, *, name_key: str = 'name') -> list[str]:
+    names: list[str] = []
     if isinstance(config, dict):
         # sort keys and values here to ensure that they are always iterated over in the
         # same order for different models

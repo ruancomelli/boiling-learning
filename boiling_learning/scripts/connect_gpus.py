@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 import tensorflow as tf
 from loguru import logger
@@ -13,7 +13,7 @@ def main(
     # See <https://www.tensorflow.org/xla/tutorials/autoclustering_xla>
     tf.config.optimizer.set_jit(True)  # Enable XLA.
 
-    gpus: List[tf.config.PhysicalDevice] = tf.config.list_physical_devices('GPU')
+    gpus: list[tf.config.PhysicalDevice] = tf.config.list_physical_devices('GPU')
 
     logger.info(f'Available GPUs: {gpus}')
 

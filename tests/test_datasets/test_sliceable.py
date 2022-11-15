@@ -1,6 +1,6 @@
 from fractions import Fraction
 from random import sample
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, Optional
 
 import numpy as np
 import pytest
@@ -12,8 +12,8 @@ from boiling_learning.utils.random import random_state
 
 class MockDatabaseDataset(SliceableDataset[int]):
     def __init__(self) -> None:
-        self.items = [index ** 2 for index in range(8)]
-        self.database_fetches: List[List[int]] = []
+        self.items = [index**2 for index in range(8)]
+        self.database_fetches: list[list[int]] = []
 
     def __repr__(self) -> str:
         return f'MockDatabaseDataset({self.items})'
@@ -24,7 +24,7 @@ class MockDatabaseDataset(SliceableDataset[int]):
     def getitem_from_index(self, index: int) -> int:
         return self.items[index]
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> Tuple[int, ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[int, ...]:
         if indices is None:
             indices = range(len(self))
 

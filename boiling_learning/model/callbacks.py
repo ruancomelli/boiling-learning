@@ -1,7 +1,7 @@
 import datetime
 import gc
 import shutil
-from typing import Any, Callable, Dict, Iterable, List, Literal, Optional
+from typing import Any, Callable, Iterable, Literal, Optional
 
 import numpy as np
 from loguru import logger
@@ -17,7 +17,7 @@ from boiling_learning.utils.pathutils import PathLike, resolve
 
 # Source: <https://stackoverflow.com/q/47731935/5811400>
 class AdditionalValidationSets(Callback):
-    def __init__(self, validation_sets: Dict[str, Dataset]) -> None:
+    def __init__(self, validation_sets: dict[str, Dataset]) -> None:
         """
         :param batch_size:
         batch size to be used when evaluating on the additional datasets
@@ -26,7 +26,7 @@ class AdditionalValidationSets(Callback):
 
         self.validation_sets = validation_sets
 
-    def on_epoch_end(self, epoch: int, logs: Optional[Dict[str, Any]] = None) -> None:
+    def on_epoch_end(self, epoch: int, logs: Optional[dict[str, Any]] = None) -> None:
         if logs is None:
             return
 
@@ -320,19 +320,19 @@ class SaveHistory(Callback):
     def __init__(self, path: PathLike, *, mode: Literal['a', 'w']) -> None:
         self._path = resolve(path, parents=True)
 
-        self.history: List[Dict[str, Any]] = []
+        self.history: list[dict[str, Any]] = []
 
         if mode == 'a' and self._path.is_file():
             self.history.extend(json.load(self._path))
 
-    def on_epoch_end(self, epoch: int, logs: Dict[str, Any]) -> None:
+    def on_epoch_end(self, epoch: int, logs: dict[str, Any]) -> None:
         self._append_to_history(logs)
         json.dump(self.history, self._path)
 
     def __describe__(self) -> str:
         return str(self._path)
 
-    def _append_to_history(self, logs: Dict[str, Any]) -> None:
+    def _append_to_history(self, logs: dict[str, Any]) -> None:
         self.history.append({key: float(value) for key, value in logs.items()})
 
 

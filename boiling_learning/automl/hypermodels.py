@@ -1,5 +1,5 @@
 import typing
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 import autokeras as ak
 import keras_tuner as kt
@@ -17,23 +17,23 @@ class HyperModel(kt.HyperModel):
     def __init__(self, automodel: ak.AutoModel) -> None:
         self.automodel = automodel
 
-    def get_config(self) -> Dict[str, Any]:
-        return typing.cast(Dict[str, Any], self.automodel.tuner.hypermodel.get_config())
+    def get_config(self) -> dict[str, Any]:
+        return typing.cast(dict[str, Any], self.automodel.tuner.hypermodel.get_config())
 
-    def __json_encode__(self) -> Dict[str, Any]:
+    def __json_encode__(self) -> dict[str, Any]:
         return anonymize_model_json(
             {key: value for key, value in self.get_config().items() if key != 'name'}
         )
 
-    def __describe__(self) -> Dict[str, Any]:
-        return typing.cast(Dict[str, Any], json.encode(self))
+    def __describe__(self) -> dict[str, Any]:
+        return typing.cast(dict[str, Any], json.encode(self))
 
 
 class ImageRegressor(HyperModel):
     def __init__(
         self,
         loss: tf.keras.losses.Loss,
-        metrics: List[tf.keras.metrics.Metric],
+        metrics: list[tf.keras.metrics.Metric],
         normalize_images: Optional[bool] = None,
         augment_images: Optional[bool] = None,
         directory: Union[PathLike, Allocator, None] = None,
@@ -80,7 +80,7 @@ class ConvImageRegressor(HyperModel):
     def __init__(
         self,
         loss: tf.keras.losses.Loss,
-        metrics: List[tf.keras.metrics.Metric],
+        metrics: list[tf.keras.metrics.Metric],
         normalize_images: Optional[bool] = None,
         directory: Union[PathLike, Allocator, None] = None,
         strategy: Optional[Lazy[tf.distribute.Strategy]] = None,
@@ -125,9 +125,9 @@ class ConvImageRegressor(HyperModel):
 class FixedArchitectureImageRegressor(HyperModel):
     def __init__(
         self,
-        layers: List[tf.keras.layers.Layer],
+        layers: list[tf.keras.layers.Layer],
         loss: tf.keras.losses.Loss,
-        metrics: List[tf.keras.metrics.Metric],
+        metrics: list[tf.keras.metrics.Metric],
         directory: Union[PathLike, Allocator, None] = None,
         strategy: Optional[Lazy[tf.distribute.Strategy]] = None,
         **kwargs: Any,

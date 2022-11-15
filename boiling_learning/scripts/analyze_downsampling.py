@@ -1,6 +1,6 @@
 # import math
 # from functools import partial
-# from typing import Callable, Dict, Iterable, List, Tuple
+# from typing import Callable, Iterable
 
 # import matplotlib.pyplot as plt
 # import numpy as np
@@ -12,7 +12,7 @@
 #     ref: np.ndarray,
 #     evaluator: Callable[[np.ndarray, np.ndarray], float],
 #     downsamplers: Iterable[Callable[[np.ndarray], np.ndarray]],
-# ) -> List[float]:
+# ) -> list[float]:
 #     pairs = ((ref, downsampler(ref)) for downsampler in downsamplers)
 #     evaluations = (evaluator(ref, image) for ref, image in pairs)
 
@@ -21,11 +21,11 @@
 
 # def main(
 #     image: np.ndarray,
-#     metrics: Dict[str, Callable[[np.ndarray, np.ndarray], float]],
+#     metrics: dict[str, Callable[[np.ndarray, np.ndarray], float]],
 #     downscale_factors: Iterable[int] = (),
 #     final_downscale_factor: int = 5,
 #     xscale: str = 'log',
-#     figsize: Tuple[int, int] = (7, 5),
+#     figsize: tuple[int, int] = (7, 5),
 # ) -> None:
 #     image = grayscale(image)
 #     downscale_factors = sorted({1, final_downscale_factor}.union(downscale_factors))
