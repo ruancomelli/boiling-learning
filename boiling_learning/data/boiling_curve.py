@@ -1,7 +1,6 @@
-from typing import Dict, Tuple
+from typing import Dict, Literal, Tuple
 
 from pint import Quantity
-from typing_extensions import Literal
 
 from boiling_learning.io.storage import dataclass
 from boiling_learning.utils.units import unit_registry as ureg
@@ -54,10 +53,10 @@ class NukiyamaBoilingCurve:
                 38.22,
                 40.48,
             ],
-            ureg.cal / (ureg.cm ** 2 * ureg.s),
+            ureg.cal / (ureg.cm**2 * ureg.s),
         )
 
-        return temperature_excess.to(ureg.delta_degC), heat_flux.to(ureg.W / ureg.cm ** 2)
+        return temperature_excess.to(ureg.delta_degC), heat_flux.to(ureg.W / ureg.cm**2)
 
 
 class IncroperaBoilingCurveImposedHeat:
@@ -612,32 +611,32 @@ class IncroperaBoilingCurveImposedTemperatureExcess:
                 3515487.7961905403,
                 3887703.8736272226,
             ],
-            (ureg.W / ureg.m ** 2),
+            (ureg.W / ureg.m**2),
         )
 
-        return temperature_excess.to(ureg.delta_degC), heat_flux.to(ureg.W / ureg.cm ** 2)
+        return temperature_excess.to(ureg.delta_degC), heat_flux.to(ureg.W / ureg.cm**2)
 
     @staticmethod
     def extra() -> Dict[Literal['A', 'B', 'C', 'D', 'E'], Tuple[Quantity, Quantity]]:
         return {
             'A': (
                 Q_(5.329765171785223, ureg.delta_degC),
-                Q_(6526.742602759848, ureg.W / ureg.m ** 2),
+                Q_(6526.742602759848, ureg.W / ureg.m**2),
             ),
             'B': (
                 Q_(10, ureg.delta_degC),
-                Q_(100738.36274301627, ureg.W / ureg.m ** 2),
+                Q_(100738.36274301627, ureg.W / ureg.m**2),
             ),
             'C': (
                 Q_(31.099515499401985, ureg.delta_degC),
-                Q_(1382213.3392412085, ureg.W / ureg.m ** 2),
+                Q_(1382213.3392412085, ureg.W / ureg.m**2),
             ),
             'D': (
                 Q_(141.62460655153197, ureg.delta_degC),
-                Q_(26021.687873296054, ureg.W / ureg.m ** 2),
+                Q_(26021.687873296054, ureg.W / ureg.m**2),
             ),
             'E': (
                 Q_(1187.228084422286, ureg.delta_degC),
-                Q_(1402700.1913364157, ureg.W / ureg.m ** 2),
+                Q_(1402700.1913364157, ureg.W / ureg.m**2),
             ),
         }

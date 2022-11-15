@@ -1,6 +1,4 @@
-from typing import Dict, List, Union
-
-from typing_extensions import Literal
+from typing import Dict, List, Literal, Union
 
 from boiling_learning.preprocessing.image import (
     VideoFrameOrFrames,

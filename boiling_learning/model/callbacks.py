@@ -1,7 +1,7 @@
 import datetime
 import gc
 import shutil
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Literal, Optional
 
 import numpy as np
 from loguru import logger
@@ -10,7 +10,6 @@ from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import BackupAndRestore as _BackupAndRestore
 from tensorflow.keras.callbacks import Callback
 from tensorflow.python.platform import tf_logging as logging
-from typing_extensions import Literal
 
 from boiling_learning.io import json
 from boiling_learning.utils.pathutils import PathLike, resolve

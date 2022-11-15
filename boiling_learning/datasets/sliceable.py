@@ -15,6 +15,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Literal,
     Optional,
     Sequence,
     Tuple,
@@ -25,7 +26,7 @@ from typing import (
 
 import more_itertools as mit
 from iteround import saferound
-from typing_extensions import Literal, TypeGuard, TypeVarTuple, Unpack
+from typing_extensions import TypeGuard, TypeVarTuple, Unpack
 
 _T = TypeVar('_T')
 _U = TypeVar('_U')

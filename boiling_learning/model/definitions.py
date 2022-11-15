@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union
+from typing import Literal, Optional, Tuple, Union
 
 from tensorflow.keras.experimental import LinearModel
 from tensorflow.keras.layers import (
@@ -14,7 +14,6 @@ from tensorflow.keras.layers import (
     Softmax,
 )
 from tensorflow.keras.mixed_precision import Policy
-from typing_extensions import Literal
 
 from boiling_learning.model.layers import ImageNormalization
 from boiling_learning.model.model import ModelArchitecture

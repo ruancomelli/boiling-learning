@@ -3,11 +3,10 @@ from __future__ import annotations
 import abc
 import json as _json
 from pathlib import Path
-from typing import Dict, FrozenSet, Iterable, Optional, Tuple, TypeVar
+from typing import Dict, FrozenSet, Iterable, Literal, Optional, Tuple, TypeVar
 
 import numpy as np
 from loguru import logger
-from typing_extensions import Literal
 
 from boiling_learning.datasets.sliceable import SliceableDataset, SliceableDatasetCache
 from boiling_learning.utils.iterutils import unsort

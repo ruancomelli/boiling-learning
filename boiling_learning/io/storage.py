@@ -5,10 +5,9 @@ from dataclasses import dataclass as _dataclass
 from datetime import timedelta
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, Type, TypeVar
+from typing import Any, Callable, Type, TypeVar, final
 
 from classes import AssociatedType, Supports, typeclass
-from typing_extensions import final
 
 from boiling_learning.io import json
 from boiling_learning.utils.dataclasses import (

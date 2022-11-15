@@ -1,11 +1,10 @@
 import abc
 import json as _json
 from pathlib import Path
-from typing import Any, Callable, Generic, List, Optional, TypeVar
+from typing import Any, Callable, Generic, List, Optional, TypeVar, final
 
 from classes import AssociatedType, Supports, typeclass
 from loguru import logger
-from typing_extensions import final
 
 from boiling_learning.descriptions import describe
 from boiling_learning.io import json

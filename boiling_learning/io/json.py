@@ -7,10 +7,22 @@ from fractions import Fraction
 from importlib import import_module
 from pathlib import Path
 from types import FunctionType
-from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple, TypeVar, Union
+from typing import (
+    Any,
+    Dict,
+    FrozenSet,
+    List,
+    Optional,
+    Protocol,
+    Set,
+    Tuple,
+    TypedDict,
+    TypeVar,
+    Union,
+    runtime_checkable,
+)
 
 from classes import AssociatedType, Supports, typeclass
-from typing_extensions import Protocol, TypedDict, runtime_checkable
 
 from boiling_learning.utils.dataclasses import is_dataclass_instance, shallow_asdict
 from boiling_learning.utils.frozendicts import frozendict

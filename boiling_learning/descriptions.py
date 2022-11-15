@@ -2,10 +2,23 @@ from datetime import timedelta
 from fractions import Fraction
 from pathlib import Path
 from types import FunctionType
-from typing import Any, Dict, FrozenSet, Generic, List, Set, Tuple, Type, TypeVar, Union
+from typing import (
+    Any,
+    Dict,
+    FrozenSet,
+    Generic,
+    List,
+    Protocol,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    final,
+    runtime_checkable,
+)
 
 from classes import AssociatedType, Supports, typeclass
-from typing_extensions import Protocol, final, runtime_checkable
 
 from boiling_learning.utils.dataclasses import is_dataclass_instance, shallow_asdict
 from boiling_learning.utils.frozendicts import frozendict

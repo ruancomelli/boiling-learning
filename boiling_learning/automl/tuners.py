@@ -1,14 +1,13 @@
 import contextlib
 import gc
 import typing
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TypedDict
 
 import autokeras as ak
 import keras_tuner as kt
 import tensorflow as tf
 from loguru import logger
 from tensorflow.keras import backend as K
-from typing_extensions import TypedDict
 
 from boiling_learning.utils.pathutils import resolve
 

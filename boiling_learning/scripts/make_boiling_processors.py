@@ -1,7 +1,5 @@
 from fractions import Fraction
-from typing import Dict, List, Optional, Union
-
-from typing_extensions import Literal
+from typing import Dict, List, Literal, Optional, Union
 
 from boiling_learning.preprocessing.image import (
     VideoFrameOrFrames,

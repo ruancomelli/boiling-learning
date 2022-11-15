@@ -1,7 +1,5 @@
 from fractions import Fraction
-from typing import Any, Callable, Optional, Tuple, TypeVar, Union
-
-from typing_extensions import Literal
+from typing import Any, Callable, Literal, Optional, Tuple, TypeVar, Union
 
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
