@@ -1,7 +1,7 @@
 import contextlib
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Mapping, Optional, Union
+from typing import Any, Iterator, Mapping, Optional, Union
 
 import funcy
 import modin.pandas as pd
@@ -273,12 +273,7 @@ class ExperimentVideo:
 
         return df
 
-    def load_df(
-        self,
-        columns: Optional[Iterable[str]] = None,
-        overwrite: bool = False,
-        inplace: bool = True,
-    ) -> Optional[pd.DataFrame]:
+    def load_df(self, overwrite: bool = False, inplace: bool = True) -> Optional[pd.DataFrame]:
         if self.df_path is None:
             raise ValueError('`df_path` is not defined yet')
 
@@ -289,11 +284,7 @@ class ExperimentVideo:
         if not overwrite and self.df is not None:
             return self.df
 
-        df = pd.read_csv(
-            self.df_path,
-            skipinitialspace=True,
-            usecols=tuple(columns) if columns is not None else None,
-        )
+        df = pd.read_csv(self.df_path, skipinitialspace=True)
 
         if inplace:
             self.df = df
