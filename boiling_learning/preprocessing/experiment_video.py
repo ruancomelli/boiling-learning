@@ -185,15 +185,16 @@ class ExperimentVideo:
 
         assert video_data is not None
 
-        col_types = (
-            dict.fromkeys(video_data.categories, 'category')
-            | {
+        col_types = funcy.merge(
+            dict.fromkeys(video_data.categories, 'category'),
+            {
                 self.column_names.index: self.column_types.index,
                 self.column_names.name: self.column_types.name,
                 # self.column_names.elapsed_time: self.column_types.elapsed_time
                 # BUG: including the line above rounds elapsed time, breaking the whole pipeline
             },
         )
+
         col_types = funcy.select_keys(set(df.columns), col_types)
         df = df.astype(col_types)
 
@@ -302,18 +303,14 @@ class ExperimentVideo:
 
         return df
 
-    def save_df(self, path: Optional[PathLike] = None, overwrite: bool = False) -> None:
+    def save_df(self, overwrite: bool = False) -> None:
         if self.df is None:
             raise ValueError('*df* is not defined.')
 
-        if path is None:
-            if self.df_path is None:
-                raise ValueError(
-                    '*df_path* is not defined yet, so *path* must be given as argument.'
-                )
-            path = self.df_path
+        if self.df_path is None:
+            raise ValueError('*df_path* is not defined yet, so *path* must be given as argument.')
 
-        path = resolve(path, parents=True)
+        path = resolve(self.df_path, parents=True)
 
         if overwrite or not path.is_file():
             self.df.to_csv(path, index=False)
