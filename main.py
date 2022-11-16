@@ -46,6 +46,7 @@ from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_d
 from boiling_learning.datasets.cache import EagerCache, NumpyCache
 from boiling_learning.datasets.datasets import DatasetSplits, DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset, map_targets, targets
+from boiling_learning.descriptions import describe
 from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
 from boiling_learning.io.storage import dataclass
 from boiling_learning.lazy import Lazy, LazyDescribed
@@ -172,7 +173,7 @@ logger.info('Succesfully checked paths')
 
 strategy = connect_gpus.main(require_gpu=False)
 strategy = LazyDescribed.from_value_and_description(strategy, typename(strategy))
-logger.info(f'Using distribute strategy: {strategy_name}')
+logger.info(f'Using distribute strategy: {describe(strategy)}')
 
 """## Datasets
 
@@ -1708,7 +1709,7 @@ def boiling_cross_surface_evaluation(
         target='Flux [W/cm**2]',
     )
 
-    evaluation = model.architecture.evaluate(ds_evaluation_val)
+    evaluation = model.architecture.evaluate(ds_evaluation_val())
     logger.info(f'Done: {evaluation}')
 
     return evaluation
