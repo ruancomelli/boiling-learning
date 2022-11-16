@@ -30,6 +30,7 @@ dependencies = [
     "imageio>=2.4.1",
     "Pillow>=7.1.2",
     "rich>=12.6.0",
+    "typer[all]>=0.7.0",
 ]
 
 requires-python = ">=3.9.14,<3.10"
