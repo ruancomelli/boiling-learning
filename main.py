@@ -270,7 +270,7 @@ def get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
     )
 
 
-EAGER_BUFFER_SIZE = 32
+EAGER_BUFFER_SIZE = 128
 
 
 def _video_dataset_from_video_and_transformers(
@@ -314,9 +314,11 @@ def sliceable_dataset_from_video_and_transformers(
     targets = _target_dataset_from_video(ev)  # targets first to ensure correct ev data setup
     video = _video_dataset_from_video_and_transformers(ev, transformers)
 
-    return SliceableDataset.zip(video, targets, strictness='one-off')
+    # return SliceableDataset.zip(video, targets, strictness='one-off')
     # return SliceableDataset.zip(video, targets, strictness="none")
-    # return SliceableDataset.zip(video, targets, strictness="none" if ev.name in CONDENSATION_VIDEO_TO_SETTER else "one-off")
+    return SliceableDataset.zip(
+        video, targets, strictness='none' if ev.name in CONDENSATION_VIDEO_TO_SETTER else 'one-off'
+    )
 
 
 if OPTIONS.test:
