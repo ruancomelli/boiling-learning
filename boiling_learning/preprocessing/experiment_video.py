@@ -275,15 +275,12 @@ class ExperimentVideo:
 
     def load_df(
         self,
-        path: Optional[PathLike] = None,
         columns: Optional[Iterable[str]] = None,
         overwrite: bool = False,
         inplace: bool = True,
     ) -> Optional[pd.DataFrame]:
-        if path is not None:
-            self.df_path = resolve(path)
-        elif self.df_path is None:
-            raise ValueError('*df_path* is not defined yet, so *path* must be given as argument.')
+        if self.df_path is None:
+            raise ValueError('`df_path` is not defined yet')
 
         logger.debug(
             f'Loading dataframe for experiment video {self.name} from file {self.df_path}'
@@ -305,10 +302,10 @@ class ExperimentVideo:
 
     def save_df(self, overwrite: bool = False) -> None:
         if self.df is None:
-            raise ValueError('*df* is not defined.')
+            raise ValueError('`df` is not defined')
 
         if self.df_path is None:
-            raise ValueError('*df_path* is not defined yet, so *path* must be given as argument.')
+            raise ValueError('`df_path` is not defined yet')
 
         path = resolve(self.df_path, parents=True)
 
