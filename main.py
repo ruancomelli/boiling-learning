@@ -637,9 +637,26 @@ boiling_indirect_datasets = tuple(
 
 """#### Condensation"""
 
+# TODO: choose this correctly!!
+CONDENSATION_SUBSAMPLE = Fraction(1, 60)
+
 condensation_preprocessors = make_condensation_processors.main(
     downscale_factor=5, height=8 * 12, width=8 * 12
 )
+condensation_dataset = (
+    tuple(
+        get_image_dataset(
+            GetImageDatasetParams(
+                ds,
+                condensation_preprocessors,
+            )
+        )
+        | dataset_sampler(CONDENSATION_SUBSAMPLE)
+        for ds in condensation_datasets
+    )
+    | datasets_concatenater()
+)
+
 
 # TODO: improve this!!!
 
@@ -898,7 +915,9 @@ def get_baseline_compile_params() -> CompileModelParams:
         )
 
 
-def get_baseline_model(direct: bool = True, normalize_images: bool = True) -> ModelArchitecture:
+def get_baseline_boiling_model(
+    direct: bool = True, normalize_images: bool = True
+) -> ModelArchitecture:
     first_frame = first_frame_direct if direct else first_frame_indirect
 
     with strategy_scope(strategy):
@@ -906,13 +925,13 @@ def get_baseline_model(direct: bool = True, normalize_images: bool = True) -> Mo
 
 
 logger.info('Getting direct baseline model')
-baseline_boiling_model_architecture_direct = get_baseline_model(
+baseline_boiling_model_architecture_direct = get_baseline_boiling_model(
     direct=True, normalize_images=False
 )
 logger.info('Done getting direct baseline model')
 
 logger.info('Getting indirect baseline model')
-baseline_boiling_model_architecture_indirect = get_baseline_model(
+baseline_boiling_model_architecture_indirect = get_baseline_boiling_model(
     direct=False, normalize_images=False
 )
 logger.info('Done getting indirect baseline model')
@@ -954,11 +973,11 @@ def get_baseline_fit_params() -> FitModelParams:
     )
 
 
-def get_pretrained_baseline_model(
+def get_pretrained_baseline_boiling_model(
     direct: bool = True, normalize_images: bool = True
 ) -> FitModelReturn:
     compiled_model = compile_model(
-        get_baseline_model(direct=direct, normalize_images=normalize_images),
+        get_baseline_boiling_model(direct=direct, normalize_images=normalize_images),
         get_baseline_compile_params(),
     )
 
@@ -970,8 +989,8 @@ def get_pretrained_baseline_model(
     )
 
 
-# pretrained_baseline_boiling_model_architecture_direct = get_pretrained_baseline_model(direct=True, normalize_images=False)
-# pretrained_baseline_boiling_model_architecture_indirect = get_pretrained_baseline_model(direct=False, normalize_images=False)
+# pretrained_baseline_boiling_model_architecture_direct = get_pretrained_baseline_boiling_model(direct=True, normalize_images=False)
+# pretrained_baseline_boiling_model_architecture_indirect = get_pretrained_baseline_boiling_model(direct=False, normalize_images=False)
 
 
 _autofit_to_dataset_allocator = JSONTableAllocator(
@@ -1271,26 +1290,45 @@ boiling_target_name = 'Flux [W/cm**2]'
 #         ax.imshow(frame.squeeze(), cmap="gray")
 #         ax.grid(False)
 
+"""FIRST CONDENSATION CASE JUST FOR FUN"""
+
+first_frame = condensation_dataset()[0][0]
+with strategy_scope(strategy):
+    architecture = hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=True)
+
+compiled_model = compile_model(
+    architecture,
+    get_baseline_compile_params(),
+)
+trained_model = fit_condensation_model(
+    compiled_model,
+    condensation_dataset,
+    get_baseline_fit_params(),
+    target='mass_rate',
+)
+
 """### On-Wire Pool Boiling
 
 #### Validation
 """
 
-validated_model_direct = get_pretrained_baseline_model(direct=True, normalize_images=False)
+validated_model_direct = get_pretrained_baseline_boiling_model(direct=True, normalize_images=False)
 print(validated_model_direct)
 print('Evaluation:', validated_model_direct.evaluation)
 
-validated_model_indirect = get_pretrained_baseline_model(direct=False, normalize_images=False)
+validated_model_indirect = get_pretrained_baseline_boiling_model(
+    direct=False, normalize_images=False
+)
 print(validated_model_indirect)
 print('Evaluation:', validated_model_indirect.evaluation)
 
-validated_model_direct_normalized = get_pretrained_baseline_model(
+validated_model_direct_normalized = get_pretrained_baseline_boiling_model(
     direct=True, normalize_images=True
 )
 print(validated_model_direct_normalized)
 print('Evaluation:', validated_model_direct_normalized.evaluation)
 
-validated_model_indirect_normalized = get_pretrained_baseline_model(
+validated_model_indirect_normalized = get_pretrained_baseline_boiling_model(
     direct=False, normalize_images=True
 )
 print(validated_model_indirect_normalized)
@@ -1487,7 +1525,7 @@ def boiling_learning_curve_point(
     logger.info('Compiling...')
     with strategy_scope(strategy):
         compiled_model = compile_model(
-            get_baseline_model(direct=direct, normalize_images=normalize_images),
+            get_baseline_boiling_model(direct=direct, normalize_images=normalize_images),
             get_baseline_compile_params(),
         )
     logger.info('Done')
@@ -1667,7 +1705,7 @@ def boiling_cross_surface_evaluation(
     evaluation_dataset = LazyDescribed.from_describable(evaluation_datasets) | datasets_merger()
 
     with strategy_scope(strategy):
-        architecture = get_baseline_model(
+        architecture = get_baseline_boiling_model(
             direct=direct_visualization,
             normalize_images=normalize_images,
         )
@@ -1761,65 +1799,63 @@ for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
 # %tensorboard --logdir $tensorboard_logs_path
 
 
-logger.info('Analyzing cross-surface boiling evaluation with AutoML')
-BATCH_SIZE = 200
+# logger.info('Analyzing cross-surface boiling evaluation with AutoML')
+# BATCH_SIZE = 200
 
 
-@cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-cross-surface-automl'))
-def boiling_cross_surface_evaluation_automl(
-    direct_visualization: bool, training_cases: tuple[int, ...], evaluation_cases: tuple[int, ...]
-) -> dict[str, float]:
-    logger.info(
-        f'Training on cases {training_cases} '
-        f'| evaluation on {evaluation_cases} '
-        f"| {'Direct' if direct_visualization else 'Indirect'} visualization"
-    )
+# @cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-cross-surface-automl'))
+# def boiling_cross_surface_evaluation_automl(
+#     direct_visualization: bool, training_cases: tuple[int, ...], evaluation_cases: tuple[int, ...]
+# ) -> dict[str, float]:
+#     logger.info(
+#         f'Training on cases {training_cases} '
+#         f'| evaluation on {evaluation_cases} '
+#         f"| {'Direct' if direct_visualization else 'Indirect'} visualization"
+#     )
 
-    all_datasets = boiling_direct_datasets if direct_visualization else boiling_indirect_datasets
-    training_datasets = tuple(all_datasets[training_case] for training_case in training_cases)
-    evaluation_datasets = tuple(
-        all_datasets[evaluation_case] for evaluation_case in evaluation_cases
-    )
+#     all_datasets = boiling_direct_datasets if direct_visualization else boiling_indirect_datasets
+#     training_datasets = tuple(all_datasets[training_case] for training_case in training_cases)
+#     evaluation_datasets = tuple(
+#         all_datasets[evaluation_case] for evaluation_case in evaluation_cases
+#     )
 
-    training_dataset = LazyDescribed.from_describable(training_datasets) | datasets_merger()
-    evaluation_dataset = LazyDescribed.from_describable(evaluation_datasets) | datasets_merger()
+#     training_dataset = LazyDescribed.from_describable(training_datasets) | datasets_merger()
+#     evaluation_dataset = LazyDescribed.from_describable(evaluation_datasets) | datasets_merger()
 
-    tune_model_return: TuneModelReturn = autofit_to_dataset(
-        training_dataset,
-        target=boiling_target_name,
-        normalize_images=True,
-        max_model_size=baseline_boiling_model_direct_size,
-        goal=None,
-    )
+#     tune_model_return: TuneModelReturn = autofit_to_dataset(
+#         training_dataset,
+#         target=boiling_target_name,
+#         normalize_images=True,
+#         max_model_size=baseline_boiling_model_direct_size,
+#         goal=None,
+#     )
 
-    logger.info('Evaluating')
-    with strategy_scope(strategy):
-        compile_model(tune_model_return.model, get_baseline_compile_params())
+#     logger.info('Evaluating')
+#     with strategy_scope(strategy):
+#         compile_model(tune_model_return.model, get_baseline_compile_params())
 
-    ds_evaluation_val = to_tensorflow(
-        evaluation_dataset | subset('val'),
-        batch_size=BATCH_SIZE,
-        target='Flux [W/cm**2]',
-    )
+#     ds_evaluation_val = to_tensorflow(
+#         evaluation_dataset | subset('val'),
+#         batch_size=BATCH_SIZE,
+#         target='Flux [W/cm**2]',
+#     )
 
-    evaluation = tune_model_return.model.evaluate(ds_evaluation_val())
-    logger.info(f'Done: {evaluation}')
+#     evaluation = tune_model_return.model.evaluate(ds_evaluation_val())
+#     logger.info(f'Done: {evaluation}')
 
-    return evaluation
+#     return evaluation
 
 
-cases_indices = ((0,), (1,), (0, 1), (2,), (3,), (2, 3), (0, 1, 2, 3))
+# cases_indices = ((0,), (1,), (0, 1), (2,), (3,), (2, 3), (0, 1, 2, 3))
 
-boiling_cross_surface_automl = {
-    (is_direct, training_cases, evaluation_cases): boiling_cross_surface_evaluation_automl(
-        is_direct, training_cases, evaluation_cases
-    )
-    for is_direct, training_cases, evaluation_cases in itertools.product(
-        (False, True), cases_indices, cases_indices
-    )
-}
-
-"""### Condensation"""
+# boiling_cross_surface_automl = {
+#     (is_direct, training_cases, evaluation_cases): boiling_cross_surface_evaluation_automl(
+#         is_direct, training_cases, evaluation_cases
+#     )
+#     for is_direct, training_cases, evaluation_cases in itertools.product(
+#         (False, True), cases_indices, cases_indices
+#     )
+# }
 
 condensation_all_cases = ExperimentVideoDataset.make_union(
     *set_condensation_datasets_data.main(
