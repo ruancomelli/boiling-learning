@@ -84,7 +84,7 @@ def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> None:
     )
 
     power_unit = ureg.watt
-    heat_flux_unit = ureg.watt / ureg.centimeter ** 2
+    heat_flux_unit = ureg.watt / ureg.centimeter**2
     sample_id = ev.data.categories['sample_id']
 
     full_power_key = add_unit_post_fix('Power', power_unit)

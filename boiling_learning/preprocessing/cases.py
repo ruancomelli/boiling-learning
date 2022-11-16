@@ -1,11 +1,21 @@
-from typing import Optional
+from __future__ import annotations
 
+import json as _json
+from typing import Mapping, Optional
+
+from boiling_learning.io.storage import dataclass
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
+from boiling_learning.utils.dataclasses import dataclass_from_mapping
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 
 class Case(ExperimentVideoDataset):
+    @dataclass(frozen=True)
+    class VideoDataKeys(ExperimentVideo.VideoDataKeys):
+        name: str = 'name'
+        ignore: str = 'ignore'
+
     def __init__(
         self,
         path: PathLike,
@@ -45,15 +55,50 @@ class Case(ExperimentVideoDataset):
 
     def set_video_data_from_file(
         self,
-        data_path: Optional[PathLike] = None,
+        data_path: PathLike,
+        *,
         remove_absent: bool = False,
-        keys: ExperimentVideoDataset.VideoDataKeys = ExperimentVideoDataset.VideoDataKeys(),
+        keys: VideoDataKeys = VideoDataKeys(),
     ) -> None:
-        super().set_video_data_from_file(
-            data_path or self.video_data_path,
-            remove_absent=remove_absent,
-            keys=keys,
-        )
+        data_path = resolve(self.video_data_path)
+        video_data = _json.loads(data_path.read_text(encoding='utf8'))
+
+        if isinstance(video_data, list):
+            video_data = {
+                item.pop(keys.name): item
+                for item in video_data
+                if not item.pop(keys.ignore, False)
+            }
+        elif isinstance(video_data, dict):
+            video_data = {
+                key: value
+                for key, value in video_data.items()
+                if not value.pop(keys.ignore, False)
+            }
+        else:
+            raise RuntimeError(f'could not load video data from {data_path}. Got {video_data!r}.')
+
+        video_data = {
+            name: dataclass_from_mapping(data, ExperimentVideo.VideoData, key_map=keys)
+            for name, data in video_data.items()
+        }
+
+        self._set_video_data(video_data, remove_absent=remove_absent)
+
+    def _set_video_data(
+        self,
+        video_data: Mapping[str, ExperimentVideo.VideoData],
+        *,
+        remove_absent: bool = False,
+    ) -> None:
+        video_data_keys = frozenset(video_data.keys())
+        self_keys = frozenset(self.keys())
+        for name in self_keys & video_data_keys:
+            self[name].data = video_data[name]
+
+        if remove_absent:
+            for name in self_keys - video_data_keys:
+                del self[name]
 
     def convert_videos(
         self, new_suffix: str, new_videos_dir: PathLike, overwrite: bool = False
