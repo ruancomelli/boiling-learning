@@ -1,5 +1,4 @@
 import itertools
-import operator
 import os
 import sys
 from dataclasses import replace
@@ -20,7 +19,6 @@ from typing import (
     ValuesView,
 )
 
-import autokeras as ak
 import funcy
 import matplotlib.pyplot as plt
 import modin.pandas as pd
@@ -29,13 +27,10 @@ import numpy as np
 import seaborn as sns
 import tensorflow as tf
 import tensorflow_addons as tfa
-from keras_tuner.engine.tuner_utils import SaveBestEpoch
 from loguru import logger
 from rich.console import Console
 from rich.table import Table
 from skimage.io import imshow
-from tensorflow.keras.callbacks import Callback
-from tensorflow.keras.layers import Activation, Conv2D, Dense, Dropout, Flatten, MaxPool2D, ReLU
 from typing_extensions import ParamSpec
 
 from boiling_learning.app.configuration import configure
@@ -73,17 +68,9 @@ from boiling_learning.model.training import (
 )
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
-from boiling_learning.preprocessing.image import (
-    normalized_mutual_information,
-    retained_variance,
-    shannon_cross_entropy_ratio,
-    shannon_entropy_ratio,
-    structural_similarity_ratio,
-)
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.preprocessing.video import VideoFrame
 from boiling_learning.scripts import (
-    analyze_consecutive_frames,
     connect_gpus,
     load_cases,
     load_dataset_tree,
@@ -1652,13 +1639,6 @@ print(regular_wire_best_model_direct_visualization_less_data)
 # )
 # print(regular_wire_best_model)
 
-# TODO: define this as output from the previous study
-DATASET_SIZE = Fraction(1, 1)
-
-"""#### Cross-surface boiling evaluation"""
-
-# %tensorboard --logdir $tensorboard_logs_path
-
 
 logger.info('Analyzing cross-surface boiling evaluation')
 BATCH_SIZE = 200
@@ -1781,92 +1761,63 @@ for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
 # %tensorboard --logdir $tensorboard_logs_path
 
 
-logger.info('Analyzing cross-surface boiling evaluation')
+logger.info('Analyzing cross-surface boiling evaluation with AutoML')
 BATCH_SIZE = 200
 
-# TODO: this fix this to handle AutoML!
-# @cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-cross-surface-automl'))
-# def boiling_cross_surface_evaluation_automl(
-#     direct_visualization: bool, training_cases: tuple[int, ...], evaluation_cases: tuple[int, ...]
-# ) -> dict[str, float]:
-#     logger.info(
-#         f'Training on cases {training_cases} '
-#         f'| evaluation on {evaluation_cases} '
-#         f"| {'Direct' if direct_visualization else 'Indirect'} visualization"
-#     )
 
-#     all_datasets = boiling_direct_datasets if direct_visualization else boiling_indirect_datasets
-#     training_datasets = tuple(all_datasets[training_case] for training_case in training_cases)
-#     evaluation_datasets = tuple(
-#         all_datasets[evaluation_case] for evaluation_case in evaluation_cases
-#     )
+@cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-cross-surface-automl'))
+def boiling_cross_surface_evaluation_automl(
+    direct_visualization: bool, training_cases: tuple[int, ...], evaluation_cases: tuple[int, ...]
+) -> dict[str, float]:
+    logger.info(
+        f'Training on cases {training_cases} '
+        f'| evaluation on {evaluation_cases} '
+        f"| {'Direct' if direct_visualization else 'Indirect'} visualization"
+    )
 
-#     training_dataset = LazyDescribed.from_describable(training_datasets) | datasets_merger()
-#     evaluation_dataset = LazyDescribed.from_describable(evaluation_datasets) | datasets_merger()
+    all_datasets = boiling_direct_datasets if direct_visualization else boiling_indirect_datasets
+    training_datasets = tuple(all_datasets[training_case] for training_case in training_cases)
+    evaluation_datasets = tuple(
+        all_datasets[evaluation_case] for evaluation_case in evaluation_cases
+    )
 
-#     logger.info('Done')
+    training_dataset = LazyDescribed.from_describable(training_datasets) | datasets_merger()
+    evaluation_dataset = LazyDescribed.from_describable(evaluation_datasets) | datasets_merger()
 
-#     with strategy_scope(strategy):
-#         architecture = (
-#             regular_wire_best_model_direct_visualization
-#             if direct_visualization
-#             else regular_wire_best_model_indirect_visualization
-#         ).clone()
-#         compiled_model = compile_model(architecture, get_baseline_compile_params())
+    tune_model_return: TuneModelReturn = autofit_to_dataset(
+        training_dataset,
+        target=boiling_target_name,
+        normalize_images=True,
+        max_model_size=baseline_boiling_model_direct_size,
+        goal=None,
+    )
 
-#     logger.info('Training...')
-#     fit_model_params = FitModelParams(
-#         batch_size=BATCH_SIZE,
-#         epochs=100,
-#         callbacks=Described.from_list(
-#             [
-#                 Described.from_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
-#                 Described.from_constructor(
-#                     tf.keras.callbacks.EarlyStopping,
-#                     P(
-#                         monitor='val_loss',
-#                         min_delta=0,
-#                         patience=10,
-#                         baseline=None,
-#                         mode='auto',
-#                         restore_best_weights=True,
-#                         verbose=1,
-#                     ),
-#                 ),
-#             ]
-#         ),
-#     )
+    logger.info('Evaluating')
+    with strategy_scope(strategy):
+        compile_model(tune_model_return.model, get_baseline_compile_params())
 
-#     model = fit_boiling_model(
-#         compiled_model, training_dataset, fit_model_params, target='Flux [W/cm**2]'
-#     )
+    ds_evaluation_val = to_tensorflow(
+        evaluation_dataset | subset('val'),
+        batch_size=BATCH_SIZE,
+        target='Flux [W/cm**2]',
+    )
 
-#     logger.info('Evaluating')
-#     with strategy_scope(strategy):
-#         compile_model(model.architecture, get_baseline_compile_params())
+    evaluation = tune_model_return.model.evaluate(ds_evaluation_val())
+    logger.info(f'Done: {evaluation}')
 
-#     ds_evaluation_val = to_tensorflow(
-#         evaluation_dataset | subset('val'),
-#         batch_size=BATCH_SIZE,
-#         target='Flux [W/cm**2]',
-#     )
-
-#     evaluation = model.architecture.evaluate(ds_evaluation_val)
-#     logger.info(f'Done: {evaluation}')
-
-#     return evaluation
+    return evaluation
 
 
-# cases_indices = ((0,), (1,), (0, 1), (2,), (3,), (2, 3), (0, 1, 2, 3))
+cases_indices = ((0,), (1,), (0, 1), (2,), (3,), (2, 3), (0, 1, 2, 3))
 
-# boiling_cross_surface = {
-#     (is_direct, training_cases, evaluation_cases): boiling_cross_surface_evaluation_automl(
-#         is_direct, training_cases, evaluation_cases
-#     )
-#     for is_direct, training_cases, evaluation_cases in itertools.product(
-#         (False, True), cases_indices, cases_indices
-#     )
-# }
+boiling_cross_surface_automl = {
+    (is_direct, training_cases, evaluation_cases): boiling_cross_surface_evaluation_automl(
+        is_direct, training_cases, evaluation_cases
+    )
+    for is_direct, training_cases, evaluation_cases in itertools.product(
+        (False, True), cases_indices, cases_indices
+    )
+}
 
 """### Condensation"""
 
@@ -2103,732 +2054,732 @@ logger.info('Done')
 
 assert False, 'STOP!'
 
-"""## The End
+# """## The End
 
-## Experimental Code
+# ## Experimental Code
 
-### Kramer data
-"""
+# ### Kramer data
+# """
 
 
-"""### AutoKeras"""
+# """### AutoKeras"""
 
 
-BATCH_SIZE = 32
+# BATCH_SIZE = 32
 
-get_image_dataset_params = GetImageDatasetParams(
-    boiling_cases_timed[0],
-    transformers=(*boiling_direct_preprocessors, ImageNormalizer()),
-    dataset_size=None,
-)
-
-logger.info('Getting datasets...')
-datasets = Described(get_image_dataset(get_image_dataset_params), get_image_dataset_params)
-ds_train, ds_val, ds_test = datasets.value
-first_frame, _ = ds_train[0]
-ds_train, ds_val, _ = to_tensorflow_triplet(
-    datasets, batch_size=BATCH_SIZE, include_test=False, target='Flux [W/cm**2]'
-)
-ds_train = ds_train.unbatch().prefetch(tf.data.AUTOTUNE)
-ds_val = ds_val.unbatch().prefetch(tf.data.AUTOTUNE)
-logger.info('Done')
-
-with strategy_scope(strategy):
-    loss = tf.keras.losses.MeanSquaredError()
-    metrics = [
-        tf.keras.metrics.MeanSquaredError('MSE'),
-        tf.keras.metrics.RootMeanSquaredError('RMS'),
-        tf.keras.metrics.MeanAbsoluteError('MAE'),
-        tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
-        tfa.metrics.RSquare('R2'),
-    ]
-
-inputs = ak.ImageInput()
-x = LayersBlock(baseline_boiling_model_architecture.model.layers[1:-3])(inputs)
-outputs = ak.RegressionHead(output_dim=1, loss=loss, metrics=metrics)(x)
-
-regressor = ak.AutoModel(
-    inputs,
-    outputs,
-    distribution_strategy=strategy.value,
-    tuner=EarlyStoppingGreedy,
-    overwrite=True,
-    goal=10,
-    # max_model_size=sum(
-    #     tf.keras.backend.count_params(p)
-    #     for p in baseline_boiling_model_architecture.model.trainable_weights
-    # )
-)
-
-
-regressor.fit(
-    ds_train,
-    validation_data=ds_val,
-    callbacks=[
-        tf.keras.callbacks.EarlyStopping(patience=5, restore_best_weights=True),
-        tf.keras.callbacks.TerminateOnNaN(),
-        # TimePrinter()
-    ],
-    batch_size=BATCH_SIZE,
-)
-
-
-logger.info('Done')
-
-
-BATCH_SIZE = 32
-
-get_image_dataset_params = GetImageDatasetParams(
-    boiling_cases_timed[0],
-    transformers=(*boiling_direct_preprocessors, ImageNormalizer()),
-    dataset_size=None,
-)
-
-logger.info('Getting datasets...')
-datasets = Described(get_image_dataset(get_image_dataset_params), get_image_dataset_params)
-ds_train, ds_val, ds_test = datasets.value
-first_frame, _ = ds_train[0]
-ds_train, ds_val, _ = to_tensorflow_triplet(
-    datasets, batch_size=BATCH_SIZE, include_test=False, target='Flux [W/cm**2]'
-)
-ds_train = ds_train.unbatch().prefetch(tf.data.AUTOTUNE)
-ds_val = ds_val.unbatch().prefetch(tf.data.AUTOTUNE)
-logger.info('Done')
-
-with strategy_scope(strategy):
-    loss = tf.keras.losses.MeanSquaredError()
-    metrics = [
-        tf.keras.metrics.MeanSquaredError('MSE'),
-        tf.keras.metrics.RootMeanSquaredError('RMS'),
-        tf.keras.metrics.MeanAbsoluteError('MAE'),
-        tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
-        tfa.metrics.RSquare('R2'),
-    ]
-
-inputs = ak.ImageInput()
-x = ak.ImageBlock(normalize=False, augment=False)(inputs)
-x = ak.SpatialReduction()(x)
-x = ak.DenseBlock()(x)
-outputs = ak.RegressionHead(output_dim=1, loss=loss, metrics=metrics)(x)
-
-regressor = ak.AutoModel(
-    inputs, outputs, distribution_strategy=strategy.value, tuner=BetterGreedy, overwrite=True
-)
-
-regressor.fit(
-    ds_train,
-    validation_data=ds_val,
-    callbacks=[
-        tf.keras.callbacks.EarlyStopping(patience=5, restore_best_weights=True),
-        tf.keras.callbacks.TerminateOnNaN(),
-        # TimePrinter()
-    ],
-    batch_size=BATCH_SIZE,
-)
-
-
-logger.info('Done')
-
-
-save_best_epoch_on_epoch_end = SaveBestEpoch.on_epoch_end
-SaveBestEpoch.on_epoch_end = Callback.on_epoch_end
-
-
-class CNN2Block(ak.Block):
-    def build(self, hp, inputs=None):
-        # Get the input_node from inputs.
-        input_node = tf.nest.flatten(inputs)[0]
-        x = Conv2D(32, (5, 5), padding='same')(input_node)
-        x = ReLU()(x)
-        x = MaxPool2D((2, 2), strides=(2, 2))(x)
-        x = Dropout(0.5)(x)
-        # x = Dropout(hp.Float("dropout", min_value=0.0, max_value=1.0))(x)
-        return x
-
-
-class DenseBlock(ak.Block):
-    def build(self, hp, inputs=None):
-        # Get the input_node from inputs.
-        input_node = tf.nest.flatten(inputs)[0]
-        x = Dense(200)(input_node)
-        x = ReLU()(x)
-        x = Dropout(0.5)(x)
-        # x = Dropout(hp.Float("dropout", min_value=0.0, max_value=1.0))(x)
-        x = Dense(1)(x)
-        return Activation('linear')(x)
-
-
-class HoboldNetBlock(ak.Block):
-    def build(self, hp, inputs=None):
-        # Get the input_node from inputs.
-        input_node = tf.nest.flatten(inputs)[0]
-        x = Conv2D(32, (5, 5), padding='same', dtype='mixed_float16')(input_node)
-        x = ReLU(dtype='mixed_float16')(x)
-        x = MaxPool2D((2, 2), strides=(2, 2), dtype='mixed_float16')(x)
-        x = Flatten(dtype='mixed_float16')(x)
-        x = Dropout(0.5, dtype='mixed_float16')(x)
-        x = Dense(200, dtype='mixed_float16')(x)
-        x = ReLU(dtype='mixed_float16')(x)
-        return x
-        # x = Dropout(0.5)(x)
-        # # x = Dropout(hp.Float("dropout", min_value=0.0, max_value=1.0))(x)
-        # x = Dense(1)(x)
-        # return Activation('linear')(x)
-
-
-with strategy_scope(strategy):
-    loss = tf.keras.losses.MeanSquaredError()
-    metrics = [
-        tf.keras.metrics.MeanSquaredError('MSE'),
-        tf.keras.metrics.RootMeanSquaredError('RMS'),
-        tf.keras.metrics.MeanAbsoluteError('MAE'),
-        tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
-        tfa.metrics.RSquare('R2'),
-    ]
-
-input_node = ak.ImageInput()
-# x = ak.Normalization()(input_node)
-# x = CNN2Block()(input_node)
-# x = ak.SpatialReduction()(x)
-# x = DenseBlock()(x)
-# output_node = ak.RegressionHead()(x)
-# x = HoboldNetBlock()(input_node)
-# output_node = DenseBlock()(x)
-x = HoboldNetBlock()(input_node)
-output_node = ak.RegressionHead(loss=loss, dropout=0.5, output_dim=1, metrics=metrics)(x)
-
-auto_model = ak.AutoModel(
-    inputs=input_node,
-    outputs=output_node,
-    directory=analyses_path / 'temp' / 'auto_tune_hoboldnet2-5',
-    overwrite=True,
-    distribution_strategy=strategy.value,
-)
-auto_model.fit(
-    ds_train.batch(
-        200,
-        num_parallel_calls=tf.data.AUTOTUNE,
-        deterministic=False,
-    ).prefetch(tf.data.AUTOTUNE),
-    validation_data=ds_val.batch(
-        200,
-        num_parallel_calls=tf.data.AUTOTUNE,
-        deterministic=False,
-    ).prefetch(tf.data.AUTOTUNE),
-    # batch_size=200,
-    callbacks=[
-        tf.keras.callbacks.TerminateOnNaN(),
-        TimePrinter(
-            when={
-                # 'on_batch_begin',
-                # 'on_batch_end',
-                'on_epoch_begin',
-                'on_epoch_end',
-                # 'on_predict_batch_begin',
-                # 'on_predict_batch_end',
-                # 'on_predict_begin',
-                # 'on_predict_end',
-                # 'on_test_batch_begin',
-                # 'on_test_batch_end',
-                # 'on_test_begin',
-                # 'on_test_end',
-                # 'on_train_batch_begin',
-                # 'on_train_batch_end',
-                # 'on_train_begin',
-                # 'on_train_end',
-            }
-        ),
-        tf.keras.callbacks.EarlyStopping(
-            monitor='val_loss',
-            min_delta=0,
-            patience=2,
-            # patience=10,
-            baseline=None,
-            mode='auto',
-            restore_best_weights=True,
-            verbose=1,
-        ),
-    ],
-)
-
-"""## Old Code"""
-
-reference_datasets_boiling = (
-    boiling_cases_timed[0]['GOPR2868'].as_tf_dataset(),
-    boiling_cases_timed[1]['GOPR2878'].as_tf_dataset(),
-    boiling_cases_timed[2]['GOPR2908'].as_tf_dataset(),
-    boiling_cases_timed[3]['GOPR2948'].as_tf_dataset(),
-)
-reference_datasets_condensation = (
-    condensation_datasets_dict['stainless steel:polished'][
-        'stainless steel:polished:test 4:00003'
-    ].as_tf_dataset(),
-    condensation_datasets_dict['parametric:old']['parametric:old:test 3:00006'].as_tf_dataset(),
-    condensation_datasets_dict['parametric:T_inf 40C'][
-        'parametric:T_inf 40C:test 2:00005'
-    ].as_tf_dataset(),
-    condensation_datasets_dict['parametric:T_inf 60C'][
-        'parametric:T_inf 60C:test 1:00001'
-    ].as_tf_dataset(),
-    condensation_datasets_dict['parametric:T_s 5C'][
-        'parametric:T_s 5C:test 3:00008'
-    ].as_tf_dataset(),
-    condensation_datasets_dict['parametric:T_s 20C'][
-        'parametric:T_s 20C:test 3:00008'
-    ].as_tf_dataset(),
-    condensation_datasets_dict['parametric:rh 70%'][
-        'parametric:rh 70%:test 3:00001'
-    ].as_tf_dataset(),
-    condensation_datasets_dict['parametric:rh 90%'][
-        'parametric:rh 90%:test 3:00009'
-    ].as_tf_dataset(),
-)
-
-"""### FPS"""
-
-# Commented out IPython magic to ensure Python compatibility.
-# %matplotlib inline
-
-
-# TODO: is FPS 30 or 1 here???
-# Answer: take a look at <https://drive.google.com/drive/u/1/folders/1hVLDeLOlklVqIN-W6eGbRUqTxMXZTF74>
-# It seems that FPS is already 1, so frame #30 happens 30s after frame #0.
-
-if OPTIONS['analyze_consecutive_frames']:
-    for reference_datasets, preprocessors, final_timeshift, timeshifts in (
-        (
-            reference_datasets_boiling,
-            boiling_direct_preprocessors,
-            1,
-            (0, 1, 2, 3, 5, 10, 20, 30, 60),
-        ),
-        (
-            reference_datasets_condensation,
-            condensation_preprocessors,
-            300,
-            (0, 1, 2, 3, 5, 10, 20, 30, 60, 120, 300, 600, 1200, 1600, 3600, 7200),
-        ),
-    ):
-        for dataset in reference_datasets:
-            n_frames = max(timeshifts) + 1
-
-            preprocessors = select_preprocessors(preprocessors)
-
-            dataset = bl.datasets.apply_transformers(dataset, preprocessors)
-            _, data = list(dataset.take(1).as_numpy_iterator())[0]
-            print(data)
-            frames = {
-                idx: frame
-                for idx, frame in enumerate(
-                    dataset.map(lambda image, data: image).take(n_frames).as_numpy_iterator()
-                )
-                if idx in timeshifts
-            }
-
-            fig = plt.figure()
-            ax = fig.add_subplot(1, 1, 1)
-            ax.imshow(frames[0], cmap='gray')
-            fig.show()
-
-            analyze_consecutive_frames.main(
-                frames.items(),
-                metrics={
-                    'Retained variance': retained_variance,
-                    'Cross-entropy ratio': shannon_cross_entropy_ratio,
-                    'Entropy ratio': shannon_entropy_ratio,
-                    'NMI ratio': normalized_mutual_information,
-                    'Structural similarity': structural_similarity_ratio,
-                },
-                timeshifts=timeshifts,
-                final_timeshift=final_timeshift,
-                xscale='symlog',
-                figsize=(4, 3),
-            )
-
-# import matplotlib.pyplot as plt
-# import numpy as np
-
-# # Source: https://stackoverflow.com/questions/10917495/matplotlib-imshow-in-3d-plot
-
-# plt.clf()
-# fig = plt.figure(1)
-# ax = fig.gca(projection='3d')
-
-# params_no_reduce_lr = []
-# metrics_no_reduce_lr = []
-# params_reduce_lr = []
-# metrics_reduce_lr = []
-
-# for params, metrics in evaluations:
-#     if params['reduce_lr_on_plateau']:
-#         params_reduce_lr.append(params)
-#         metrics_reduce_lr.append(metrics)
-#     else:
-#         params_no_reduce_lr.append(params)
-#         metrics_no_reduce_lr.append(metrics)
-
-# X_label = 'batch_size'
-# Y_label = 'lr'
-# Z_label = 'MAE'
-
-# for reduce_lr in (False, True):
-#     params = {
-#         False: params_no_reduce_lr,
-#         True: params_reduce_lr
-#     }[reduce_lr]
-
-#     metrics = {
-#         False: metrics_no_reduce_lr,
-#         True: metrics_reduce_lr
-#     }[reduce_lr]
-
-#     X_list = list(set(funcy.pluck(X_label, params)))
-#     Y_list = list(set(funcy.pluck(Y_label, params)))
-
-#     X = np.zeros((len(X_list),))
-#     Y = np.zeros((len(Y_list),))
-#     Z = np.zeros((X.shape[0], Y.shape[0]))
-
-#     for (i, x), (j, y) in it.product(
-#             enumerate(X_list),
-#             enumerate(Y_list)
-#     ):
-#         X[i] = x
-#         Y[j] = y
-
-
-#         Z[i, j] =
-
-#     Z = np.array(
-#         funcy.pluck(
-#             Z_label,
-#             funcy.pluck(
-#                 'ds_val_gt10',
-#                 metrics
-#             )
-#         )
-#     )
-
-#     ax.plot_surface(X, Y, Z, rstride=8, cstride=8, alpha=0.3)
-
-#     cset = ax.contourf(X, Y, Z, zdir='z', offset=min(Z),
-#             levels=np.linspace(min(Z),max(Z),100),cmap=plt.cm.jet)
-#     cset = ax.contourf(X, Y, Z, zdir='x', offset=min(X), cmap=plt.cm.jet)
-#     cset = ax.contourf(X, Y, Z, zdir='y', offset=max(Y), cmap=plt.cm.jet)
-
-#     ax.set_xlabel(X_label)
-#     ax.set_xlim(min(X), max(X))
-#     ax.set_ylabel(Y_label)
-#     ax.set_ylim(min(Y), max(Y))
-#     ax.set_zlabel(Z_label)
-#     ax.set_zlim(min(Z), max(Z))
-
-#     plt.show()
-
-"""### Learning curve
-
-Evaluate models trained with different fractions of the dataset. For instance, 1%, 5%, 10%, 50% and 100% of the data.
-
-Tasks:
-
-- do some research: search for papers and books that explain this.
-
-### Cross evaluation
-"""
-
-metric_name = 'MAE'
-bar_metrics = dict(evaluations)
-bar_metrics = {
-    pack_: {set_name: set_metrics[metric_name] for set_name, set_metrics in sets.items()}
-    for pack_, sets in bar_metrics.items()
-}
-
-for k, v in bar_metrics.items():
-    print(k)
-    pprint(v)
-
-new_bar_metrics = {}
-for pack_, metrics_ in bar_metrics.items():
-    print('Pack:', pack_)
-    key = pack_.omit(['lr'])
-    print(key)
-    if key not in new_bar_metrics:
-        print('key not in new_bar_metrics')
-        new_bar_metrics[key] = {}
-    print(metrics_)
-    new_bar_metrics[key][pack_['lr']] = metrics_
-
-for pack_, metrics_dict in new_bar_metrics.items():
-    new_bar_metrics[pack_] = max(metrics_dict.values(), key=operator.itemgetter('ds_eval'))
-
-bar_metrics = {}
-for pack_, metrics_ in new_bar_metrics.items():
-    key = pack_.omit(['direct'])
-    print(key)
-    if key not in bar_metrics:
-        print('key not in bar_metrics')
-        bar_metrics[key] = {}
-    print(metrics_)
-    bar_metrics[key][pack_['direct']] = metrics_
-
-pprint(bar_metrics)
-
-# %matplotlib inline
-
-sns.set_context('notebook')
-sns.set_theme(style='ticks')
-
-metrics_data = pd.DataFrame.from_records(
-    [
-        {
-            'train': '+'.join(case_name[-1] for case_name in pack_['train_cases']),
-            'eval': '+'.join(case_name[-1] for case_name in pack_['eval_cases']),
-            'visualization': 'direct' if direct else 'indirect',
-            'metric': metrics_['ds_eval'],
-        }
-        for pack_, metrics_dict in bar_metrics.items()
-        for direct, metrics_ in metrics_dict.items()
-    ]
-)
-
-tips = sns.load_dataset('tips')
-
-# weird workaround, I don't know why metrics_data gives an error...
-new_metrics_data = tips.sample(len(metrics_data)).copy()
-new_metrics_data = new_metrics_data.rename(
-    columns={
-        'sex': 'train',
-        'total_bill': 'metric',
-        'smoker': 'eval',
-        'time': 'direct',
-    }
-)
-new_metrics_data['train'] = metrics_data['train']
-new_metrics_data['metric'] = metrics_data['metric']
-new_metrics_data['eval'] = metrics_data['eval']
-new_metrics_data['visualization'] = metrics_data['visualization']
-
-orient = 'v'
-x, y = ('train', 'metric')
-if orient == 'h':
-    x, y = y, x
-
-g = sns.catplot(
-    x=x,
-    y=y,
-    col='visualization',
-    data=new_metrics_data,
-    kind='bar',
-    hue='eval',
-    orient=orient,
-)
-label = 'MAE [W/cm²]'
-if orient == 'h':
-    g.set_xlabels(label)
-else:
-    g.set_ylabels(label)
-
-for ax in g.axes_dict.values():
-    for p, txt in zip(
-        ax.patches,
-        mit.flatten(
-            [
-                itertools.repeat(txt, len(ax.patches) // len(g.legend.get_texts()))
-                for txt in g.legend.get_texts()
-            ]
-        ),
-    ):
-        ax.text(
-            # p.get_x() - 0.01,
-            p.get_x(),
-            p.get_height() * 1.02,
-            txt.get_text(),
-            color='black',
-            rotation='horizontal',
-            size='large',
-        )
-
-
-def main(evaluations, metric_name: str):
-    bar_metrics = dict(evaluations)
-    bar_metrics = {
-        pack_: {set_name: set_metrics[metric_name] for set_name, set_metrics in sets.items()}
-        for pack_, sets in bar_metrics.items()
-    }
-
-    for k, v in bar_metrics.items():
-        print(k)
-        pprint(v)
-
-    new_bar_metrics = {}
-    for pack_, metrics_ in bar_metrics.items():
-        print('Pack:', pack_)
-        key = pack_.omit(['lr'])
-        print(key)
-        if key not in new_bar_metrics:
-            print('key not in new_bar_metrics')
-            new_bar_metrics[key] = {}
-        print(metrics_)
-        new_bar_metrics[key][pack_['lr']] = metrics_
-
-    for pack_, metrics_dict in new_bar_metrics.items():
-        new_bar_metrics[pack_] = max(metrics_dict.values(), key=operator.itemgetter('ds_eval'))
-
-    bar_metrics = {}
-    for pack_, metrics_ in new_bar_metrics.items():
-        key = pack_.omit(['direct'])
-        print(key)
-        if key not in bar_metrics:
-            print('key not in bar_metrics')
-            bar_metrics[key] = {}
-        print(metrics_)
-        bar_metrics[key][pack_['direct']] = metrics_
-
-    pprint(bar_metrics)
-
-    # %matplotlib inline
-
-    sns.set_context('notebook')
-    sns.set_theme(style='ticks')
-
-    metrics_data = pd.DataFrame.from_records(
-        [
-            {
-                'train': '+'.join(case_name[-1] for case_name in pack_['train_cases']),
-                'eval': '+'.join(case_name[-1] for case_name in pack_['eval_cases']),
-                'visualization': 'direct' if direct else 'indirect',
-                'metric': metrics_['ds_eval'],
-            }
-            for pack_, metrics_dict in bar_metrics.items()
-            for direct, metrics_ in metrics_dict.items()
-        ]
-    )
-
-    tips = sns.load_dataset('tips')
-
-    # weird workaround, I don't know why metrics_data gives an error...
-    new_metrics_data = tips.sample(len(metrics_data)).copy()
-    new_metrics_data = new_metrics_data.rename(
-        columns={
-            'sex': 'train',
-            'total_bill': 'metric',
-            'smoker': 'eval',
-            'time': 'direct',
-        }
-    )
-    new_metrics_data['train'] = metrics_data['train']
-    new_metrics_data['metric'] = metrics_data['metric']
-    new_metrics_data['eval'] = metrics_data['eval']
-    new_metrics_data['visualization'] = metrics_data['visualization']
-
-    orient = 'v'
-    x, y = ('train', 'metric')
-    if orient == 'h':
-        x, y = y, x
-    g = sns.catplot(
-        x=x,
-        y=y,
-        col='visualization',
-        data=new_metrics_data,
-        kind='bar',
-        hue='eval',
-        orient=orient,
-    )
-    label = 'MAE [W/cm²]'
-    if orient == 'h':
-        g.set_xlabels(label)
-    else:
-        g.set_ylabels(label)
-
-    for ax in g.axes_dict.values():
-        for p, txt in zip(
-            ax.patches,
-            mit.flatten(
-                [
-                    itertools.repeat(txt, len(ax.patches) // len(g.legend.get_texts()))
-                    for txt in g.legend.get_texts()
-                ]
-            ),
-        ):
-            ax.text(
-                # p.get_x() - 0.01,
-                p.get_x(),
-                p.get_height() * 1.02,
-                txt.get_text(),
-                color='black',
-                rotation='horizontal',
-                size='large',
-            )
-
-
-# Commented out IPython magic to ensure Python compatibility.
-# %matplotlib inline
-
-sns.set_context('notebook')
-sns.set_theme(style='ticks')
-
-
-main(evaluations, 'MAE')
-
-"""2+3 uses too much data!!!
-perhaps 2+3 could be defined as 50% of case 2 + 50% of case 3?
-"""
-
-# # Fix the x-axes.
-# ax.set_xticks(x + bar_width)
-# ax.set_xticks(x)
-# ax.set_xticklabels(
-#     [
-#         '\n'.join([
-#             'train: ' + '+'.join(case_name[-1] for case_name in pack_['train_cases']),
-#             'eval: ' + '+'.join(case_name[-1] for case_name in pack_['eval_cases'])
-#         ])
-#         for pack_ in bar_metrics
-#     ],
-#     fontdict=dict(fontsize=10)
+# get_image_dataset_params = GetImageDatasetParams(
+#     boiling_cases_timed[0],
+#     transformers=(*boiling_direct_preprocessors, ImageNormalizer()),
+#     dataset_size=None,
 # )
 
-# # Add legend.
-# ax.legend()
+# logger.info('Getting datasets...')
+# datasets = Described(get_image_dataset(get_image_dataset_params), get_image_dataset_params)
+# ds_train, ds_val, ds_test = datasets.value
+# first_frame, _ = ds_train[0]
+# ds_train, ds_val, _ = to_tensorflow_triplet(
+#     datasets, batch_size=BATCH_SIZE, include_test=False, target='Flux [W/cm**2]'
+# )
+# ds_train = ds_train.unbatch().prefetch(tf.data.AUTOTUNE)
+# ds_val = ds_val.unbatch().prefetch(tf.data.AUTOTUNE)
+# logger.info('Done')
 
-# # Axis styling.
-# ax.spines['top'].set_visible(False)
-# ax.spines['right'].set_visible(False)
-# ax.spines['left'].set_visible(False)
-# ax.spines['bottom'].set_color('#DDDDDD')
-# ax.tick_params(bottom=False, left=False)
-# ax.set_axisbelow(True)
-# ax.yaxis.grid(True, color='#EEEEEE')
-# ax.xaxis.grid(False)
+# with strategy_scope(strategy):
+#     loss = tf.keras.losses.MeanSquaredError()
+#     metrics = [
+#         tf.keras.metrics.MeanSquaredError('MSE'),
+#         tf.keras.metrics.RootMeanSquaredError('RMS'),
+#         tf.keras.metrics.MeanAbsoluteError('MAE'),
+#         tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
+#         tfa.metrics.RSquare('R2'),
+#     ]
 
-# # Add axis and chart labels.
-# ax.set_xlabel('Job', labelpad=15)
-# ax.set_ylabel('MAE [W/cm²]', labelpad=15)
-# ax.set_title(f'Cross-evaluation metric', pad=15)
+# inputs = ak.ImageInput()
+# x = LayersBlock(baseline_boiling_model_architecture.model.layers[1:-3])(inputs)
+# outputs = ak.RegressionHead(output_dim=1, loss=loss, metrics=metrics)(x)
 
-# fig.tight_layout()
-# fig.show()
+# regressor = ak.AutoModel(
+#     inputs,
+#     outputs,
+#     distribution_strategy=strategy.value,
+#     tuner=EarlyStoppingGreedy,
+#     overwrite=True,
+#     goal=10,
+#     # max_model_size=sum(
+#     #     tf.keras.backend.count_params(p)
+#     #     for p in baseline_boiling_model_architecture.model.trainable_weights
+#     # )
+# )
 
-"""## TO-DO List
 
-- [ ] improve sectioning
-- [ ] remove old code
-- [ ] remove unnecessary comments
-- [ ] make "Boiling Learning.ipynb" deprecated
-- [ ] see available models at https://github.com/tensorflow/models/tree/master/official
-- [ ] see more models at https://tfhub.dev/tensorflow/efficientnet/b0/classification/1
-- [ ] see TensorFlow Addons, such as the following optimizer:
-    https://www.tensorflow.org/addons/tutorials/optimizers_lazyadam
-- [ ] include
-    https://www.tensorflow.org/addons/tutorials/tqdm_progress_bar#default_tqdmcallback_usage
-- [x] change `Manager`s path from `test_` to real
-- [x] improve shuffling... we can see that data is almost contiguous
-- [x] calculate heat flux and use it instead of power
-- [ ] see papers in Kopernio
-- [x] when describing a dataset, include only the DictImageTransformer components that appear as
-    ExperimentVideos
-- [ ] allow bootstraping for confidence intervals in `bl.model.eval_with`
-- [ ] define function `eval_regions` that allows us to evaluate a model when
-    nominal power = 0, 10, 20... for instance:
-    `eval_regions(model, ds_val, 'nominal_heat_flux') == {0: 8.32, 10: 5.63, 20: 12.10, ...}`
-"""
+# regressor.fit(
+#     ds_train,
+#     validation_data=ds_val,
+#     callbacks=[
+#         tf.keras.callbacks.EarlyStopping(patience=5, restore_best_weights=True),
+#         tf.keras.callbacks.TerminateOnNaN(),
+#         # TimePrinter()
+#     ],
+#     batch_size=BATCH_SIZE,
+# )
+
+
+# logger.info('Done')
+
+
+# BATCH_SIZE = 32
+
+# get_image_dataset_params = GetImageDatasetParams(
+#     boiling_cases_timed[0],
+#     transformers=(*boiling_direct_preprocessors, ImageNormalizer()),
+#     dataset_size=None,
+# )
+
+# logger.info('Getting datasets...')
+# datasets = Described(get_image_dataset(get_image_dataset_params), get_image_dataset_params)
+# ds_train, ds_val, ds_test = datasets.value
+# first_frame, _ = ds_train[0]
+# ds_train, ds_val, _ = to_tensorflow_triplet(
+#     datasets, batch_size=BATCH_SIZE, include_test=False, target='Flux [W/cm**2]'
+# )
+# ds_train = ds_train.unbatch().prefetch(tf.data.AUTOTUNE)
+# ds_val = ds_val.unbatch().prefetch(tf.data.AUTOTUNE)
+# logger.info('Done')
+
+# with strategy_scope(strategy):
+#     loss = tf.keras.losses.MeanSquaredError()
+#     metrics = [
+#         tf.keras.metrics.MeanSquaredError('MSE'),
+#         tf.keras.metrics.RootMeanSquaredError('RMS'),
+#         tf.keras.metrics.MeanAbsoluteError('MAE'),
+#         tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
+#         tfa.metrics.RSquare('R2'),
+#     ]
+
+# inputs = ak.ImageInput()
+# x = ak.ImageBlock(normalize=False, augment=False)(inputs)
+# x = ak.SpatialReduction()(x)
+# x = ak.DenseBlock()(x)
+# outputs = ak.RegressionHead(output_dim=1, loss=loss, metrics=metrics)(x)
+
+# regressor = ak.AutoModel(
+#     inputs, outputs, distribution_strategy=strategy.value, tuner=BetterGreedy, overwrite=True
+# )
+
+# regressor.fit(
+#     ds_train,
+#     validation_data=ds_val,
+#     callbacks=[
+#         tf.keras.callbacks.EarlyStopping(patience=5, restore_best_weights=True),
+#         tf.keras.callbacks.TerminateOnNaN(),
+#         # TimePrinter()
+#     ],
+#     batch_size=BATCH_SIZE,
+# )
+
+
+# logger.info('Done')
+
+
+# save_best_epoch_on_epoch_end = SaveBestEpoch.on_epoch_end
+# SaveBestEpoch.on_epoch_end = Callback.on_epoch_end
+
+
+# class CNN2Block(ak.Block):
+#     def build(self, hp, inputs=None):
+#         # Get the input_node from inputs.
+#         input_node = tf.nest.flatten(inputs)[0]
+#         x = Conv2D(32, (5, 5), padding='same')(input_node)
+#         x = ReLU()(x)
+#         x = MaxPool2D((2, 2), strides=(2, 2))(x)
+#         x = Dropout(0.5)(x)
+#         # x = Dropout(hp.Float("dropout", min_value=0.0, max_value=1.0))(x)
+#         return x
+
+
+# class DenseBlock(ak.Block):
+#     def build(self, hp, inputs=None):
+#         # Get the input_node from inputs.
+#         input_node = tf.nest.flatten(inputs)[0]
+#         x = Dense(200)(input_node)
+#         x = ReLU()(x)
+#         x = Dropout(0.5)(x)
+#         # x = Dropout(hp.Float("dropout", min_value=0.0, max_value=1.0))(x)
+#         x = Dense(1)(x)
+#         return Activation('linear')(x)
+
+
+# class HoboldNetBlock(ak.Block):
+#     def build(self, hp, inputs=None):
+#         # Get the input_node from inputs.
+#         input_node = tf.nest.flatten(inputs)[0]
+#         x = Conv2D(32, (5, 5), padding='same', dtype='mixed_float16')(input_node)
+#         x = ReLU(dtype='mixed_float16')(x)
+#         x = MaxPool2D((2, 2), strides=(2, 2), dtype='mixed_float16')(x)
+#         x = Flatten(dtype='mixed_float16')(x)
+#         x = Dropout(0.5, dtype='mixed_float16')(x)
+#         x = Dense(200, dtype='mixed_float16')(x)
+#         x = ReLU(dtype='mixed_float16')(x)
+#         return x
+#         # x = Dropout(0.5)(x)
+#         # # x = Dropout(hp.Float("dropout", min_value=0.0, max_value=1.0))(x)
+#         # x = Dense(1)(x)
+#         # return Activation('linear')(x)
+
+
+# with strategy_scope(strategy):
+#     loss = tf.keras.losses.MeanSquaredError()
+#     metrics = [
+#         tf.keras.metrics.MeanSquaredError('MSE'),
+#         tf.keras.metrics.RootMeanSquaredError('RMS'),
+#         tf.keras.metrics.MeanAbsoluteError('MAE'),
+#         tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
+#         tfa.metrics.RSquare('R2'),
+#     ]
+
+# input_node = ak.ImageInput()
+# # x = ak.Normalization()(input_node)
+# # x = CNN2Block()(input_node)
+# # x = ak.SpatialReduction()(x)
+# # x = DenseBlock()(x)
+# # output_node = ak.RegressionHead()(x)
+# # x = HoboldNetBlock()(input_node)
+# # output_node = DenseBlock()(x)
+# x = HoboldNetBlock()(input_node)
+# output_node = ak.RegressionHead(loss=loss, dropout=0.5, output_dim=1, metrics=metrics)(x)
+
+# auto_model = ak.AutoModel(
+#     inputs=input_node,
+#     outputs=output_node,
+#     directory=analyses_path / 'temp' / 'auto_tune_hoboldnet2-5',
+#     overwrite=True,
+#     distribution_strategy=strategy.value,
+# )
+# auto_model.fit(
+#     ds_train.batch(
+#         200,
+#         num_parallel_calls=tf.data.AUTOTUNE,
+#         deterministic=False,
+#     ).prefetch(tf.data.AUTOTUNE),
+#     validation_data=ds_val.batch(
+#         200,
+#         num_parallel_calls=tf.data.AUTOTUNE,
+#         deterministic=False,
+#     ).prefetch(tf.data.AUTOTUNE),
+#     # batch_size=200,
+#     callbacks=[
+#         tf.keras.callbacks.TerminateOnNaN(),
+#         TimePrinter(
+#             when={
+#                 # 'on_batch_begin',
+#                 # 'on_batch_end',
+#                 'on_epoch_begin',
+#                 'on_epoch_end',
+#                 # 'on_predict_batch_begin',
+#                 # 'on_predict_batch_end',
+#                 # 'on_predict_begin',
+#                 # 'on_predict_end',
+#                 # 'on_test_batch_begin',
+#                 # 'on_test_batch_end',
+#                 # 'on_test_begin',
+#                 # 'on_test_end',
+#                 # 'on_train_batch_begin',
+#                 # 'on_train_batch_end',
+#                 # 'on_train_begin',
+#                 # 'on_train_end',
+#             }
+#         ),
+#         tf.keras.callbacks.EarlyStopping(
+#             monitor='val_loss',
+#             min_delta=0,
+#             patience=2,
+#             # patience=10,
+#             baseline=None,
+#             mode='auto',
+#             restore_best_weights=True,
+#             verbose=1,
+#         ),
+#     ],
+# )
+
+# """## Old Code"""
+
+# reference_datasets_boiling = (
+#     boiling_cases_timed[0]['GOPR2868'].as_tf_dataset(),
+#     boiling_cases_timed[1]['GOPR2878'].as_tf_dataset(),
+#     boiling_cases_timed[2]['GOPR2908'].as_tf_dataset(),
+#     boiling_cases_timed[3]['GOPR2948'].as_tf_dataset(),
+# )
+# reference_datasets_condensation = (
+#     condensation_datasets_dict['stainless steel:polished'][
+#         'stainless steel:polished:test 4:00003'
+#     ].as_tf_dataset(),
+#     condensation_datasets_dict['parametric:old']['parametric:old:test 3:00006'].as_tf_dataset(),
+#     condensation_datasets_dict['parametric:T_inf 40C'][
+#         'parametric:T_inf 40C:test 2:00005'
+#     ].as_tf_dataset(),
+#     condensation_datasets_dict['parametric:T_inf 60C'][
+#         'parametric:T_inf 60C:test 1:00001'
+#     ].as_tf_dataset(),
+#     condensation_datasets_dict['parametric:T_s 5C'][
+#         'parametric:T_s 5C:test 3:00008'
+#     ].as_tf_dataset(),
+#     condensation_datasets_dict['parametric:T_s 20C'][
+#         'parametric:T_s 20C:test 3:00008'
+#     ].as_tf_dataset(),
+#     condensation_datasets_dict['parametric:rh 70%'][
+#         'parametric:rh 70%:test 3:00001'
+#     ].as_tf_dataset(),
+#     condensation_datasets_dict['parametric:rh 90%'][
+#         'parametric:rh 90%:test 3:00009'
+#     ].as_tf_dataset(),
+# )
+
+# """### FPS"""
+
+# # Commented out IPython magic to ensure Python compatibility.
+# # %matplotlib inline
+
+
+# # TODO: is FPS 30 or 1 here???
+# # Answer: take a look at <https://drive.google.com/drive/u/1/folders/1hVLDeLOlklVqIN-W6eGbRUqTxMXZTF74>
+# # It seems that FPS is already 1, so frame #30 happens 30s after frame #0.
+
+# if OPTIONS['analyze_consecutive_frames']:
+#     for reference_datasets, preprocessors, final_timeshift, timeshifts in (
+#         (
+#             reference_datasets_boiling,
+#             boiling_direct_preprocessors,
+#             1,
+#             (0, 1, 2, 3, 5, 10, 20, 30, 60),
+#         ),
+#         (
+#             reference_datasets_condensation,
+#             condensation_preprocessors,
+#             300,
+#             (0, 1, 2, 3, 5, 10, 20, 30, 60, 120, 300, 600, 1200, 1600, 3600, 7200),
+#         ),
+#     ):
+#         for dataset in reference_datasets:
+#             n_frames = max(timeshifts) + 1
+
+#             preprocessors = select_preprocessors(preprocessors)
+
+#             dataset = bl.datasets.apply_transformers(dataset, preprocessors)
+#             _, data = list(dataset.take(1).as_numpy_iterator())[0]
+#             print(data)
+#             frames = {
+#                 idx: frame
+#                 for idx, frame in enumerate(
+#                     dataset.map(lambda image, data: image).take(n_frames).as_numpy_iterator()
+#                 )
+#                 if idx in timeshifts
+#             }
+
+#             fig = plt.figure()
+#             ax = fig.add_subplot(1, 1, 1)
+#             ax.imshow(frames[0], cmap='gray')
+#             fig.show()
+
+#             analyze_consecutive_frames.main(
+#                 frames.items(),
+#                 metrics={
+#                     'Retained variance': retained_variance,
+#                     'Cross-entropy ratio': shannon_cross_entropy_ratio,
+#                     'Entropy ratio': shannon_entropy_ratio,
+#                     'NMI ratio': normalized_mutual_information,
+#                     'Structural similarity': structural_similarity_ratio,
+#                 },
+#                 timeshifts=timeshifts,
+#                 final_timeshift=final_timeshift,
+#                 xscale='symlog',
+#                 figsize=(4, 3),
+#             )
+
+# # import matplotlib.pyplot as plt
+# # import numpy as np
+
+# # # Source: https://stackoverflow.com/questions/10917495/matplotlib-imshow-in-3d-plot
+
+# # plt.clf()
+# # fig = plt.figure(1)
+# # ax = fig.gca(projection='3d')
+
+# # params_no_reduce_lr = []
+# # metrics_no_reduce_lr = []
+# # params_reduce_lr = []
+# # metrics_reduce_lr = []
+
+# # for params, metrics in evaluations:
+# #     if params['reduce_lr_on_plateau']:
+# #         params_reduce_lr.append(params)
+# #         metrics_reduce_lr.append(metrics)
+# #     else:
+# #         params_no_reduce_lr.append(params)
+# #         metrics_no_reduce_lr.append(metrics)
+
+# # X_label = 'batch_size'
+# # Y_label = 'lr'
+# # Z_label = 'MAE'
+
+# # for reduce_lr in (False, True):
+# #     params = {
+# #         False: params_no_reduce_lr,
+# #         True: params_reduce_lr
+# #     }[reduce_lr]
+
+# #     metrics = {
+# #         False: metrics_no_reduce_lr,
+# #         True: metrics_reduce_lr
+# #     }[reduce_lr]
+
+# #     X_list = list(set(funcy.pluck(X_label, params)))
+# #     Y_list = list(set(funcy.pluck(Y_label, params)))
+
+# #     X = np.zeros((len(X_list),))
+# #     Y = np.zeros((len(Y_list),))
+# #     Z = np.zeros((X.shape[0], Y.shape[0]))
+
+# #     for (i, x), (j, y) in it.product(
+# #             enumerate(X_list),
+# #             enumerate(Y_list)
+# #     ):
+# #         X[i] = x
+# #         Y[j] = y
+
+
+# #         Z[i, j] =
+
+# #     Z = np.array(
+# #         funcy.pluck(
+# #             Z_label,
+# #             funcy.pluck(
+# #                 'ds_val_gt10',
+# #                 metrics
+# #             )
+# #         )
+# #     )
+
+# #     ax.plot_surface(X, Y, Z, rstride=8, cstride=8, alpha=0.3)
+
+# #     cset = ax.contourf(X, Y, Z, zdir='z', offset=min(Z),
+# #             levels=np.linspace(min(Z),max(Z),100),cmap=plt.cm.jet)
+# #     cset = ax.contourf(X, Y, Z, zdir='x', offset=min(X), cmap=plt.cm.jet)
+# #     cset = ax.contourf(X, Y, Z, zdir='y', offset=max(Y), cmap=plt.cm.jet)
+
+# #     ax.set_xlabel(X_label)
+# #     ax.set_xlim(min(X), max(X))
+# #     ax.set_ylabel(Y_label)
+# #     ax.set_ylim(min(Y), max(Y))
+# #     ax.set_zlabel(Z_label)
+# #     ax.set_zlim(min(Z), max(Z))
+
+# #     plt.show()
+
+# """### Learning curve
+
+# Evaluate models trained with different fractions of the dataset. For instance, 1%, 5%, 10%, 50% and 100% of the data.
+
+# Tasks:
+
+# - do some research: search for papers and books that explain this.
+
+# ### Cross evaluation
+# """
+
+# metric_name = 'MAE'
+# bar_metrics = dict(evaluations)
+# bar_metrics = {
+#     pack_: {set_name: set_metrics[metric_name] for set_name, set_metrics in sets.items()}
+#     for pack_, sets in bar_metrics.items()
+# }
+
+# for k, v in bar_metrics.items():
+#     print(k)
+#     pprint(v)
+
+# new_bar_metrics = {}
+# for pack_, metrics_ in bar_metrics.items():
+#     print('Pack:', pack_)
+#     key = pack_.omit(['lr'])
+#     print(key)
+#     if key not in new_bar_metrics:
+#         print('key not in new_bar_metrics')
+#         new_bar_metrics[key] = {}
+#     print(metrics_)
+#     new_bar_metrics[key][pack_['lr']] = metrics_
+
+# for pack_, metrics_dict in new_bar_metrics.items():
+#     new_bar_metrics[pack_] = max(metrics_dict.values(), key=operator.itemgetter('ds_eval'))
+
+# bar_metrics = {}
+# for pack_, metrics_ in new_bar_metrics.items():
+#     key = pack_.omit(['direct'])
+#     print(key)
+#     if key not in bar_metrics:
+#         print('key not in bar_metrics')
+#         bar_metrics[key] = {}
+#     print(metrics_)
+#     bar_metrics[key][pack_['direct']] = metrics_
+
+# pprint(bar_metrics)
+
+# # %matplotlib inline
+
+# sns.set_context('notebook')
+# sns.set_theme(style='ticks')
+
+# metrics_data = pd.DataFrame.from_records(
+#     [
+#         {
+#             'train': '+'.join(case_name[-1] for case_name in pack_['train_cases']),
+#             'eval': '+'.join(case_name[-1] for case_name in pack_['eval_cases']),
+#             'visualization': 'direct' if direct else 'indirect',
+#             'metric': metrics_['ds_eval'],
+#         }
+#         for pack_, metrics_dict in bar_metrics.items()
+#         for direct, metrics_ in metrics_dict.items()
+#     ]
+# )
+
+# tips = sns.load_dataset('tips')
+
+# # weird workaround, I don't know why metrics_data gives an error...
+# new_metrics_data = tips.sample(len(metrics_data)).copy()
+# new_metrics_data = new_metrics_data.rename(
+#     columns={
+#         'sex': 'train',
+#         'total_bill': 'metric',
+#         'smoker': 'eval',
+#         'time': 'direct',
+#     }
+# )
+# new_metrics_data['train'] = metrics_data['train']
+# new_metrics_data['metric'] = metrics_data['metric']
+# new_metrics_data['eval'] = metrics_data['eval']
+# new_metrics_data['visualization'] = metrics_data['visualization']
+
+# orient = 'v'
+# x, y = ('train', 'metric')
+# if orient == 'h':
+#     x, y = y, x
+
+# g = sns.catplot(
+#     x=x,
+#     y=y,
+#     col='visualization',
+#     data=new_metrics_data,
+#     kind='bar',
+#     hue='eval',
+#     orient=orient,
+# )
+# label = 'MAE [W/cm²]'
+# if orient == 'h':
+#     g.set_xlabels(label)
+# else:
+#     g.set_ylabels(label)
+
+# for ax in g.axes_dict.values():
+#     for p, txt in zip(
+#         ax.patches,
+#         mit.flatten(
+#             [
+#                 itertools.repeat(txt, len(ax.patches) // len(g.legend.get_texts()))
+#                 for txt in g.legend.get_texts()
+#             ]
+#         ),
+#     ):
+#         ax.text(
+#             # p.get_x() - 0.01,
+#             p.get_x(),
+#             p.get_height() * 1.02,
+#             txt.get_text(),
+#             color='black',
+#             rotation='horizontal',
+#             size='large',
+#         )
+
+
+# def main(evaluations, metric_name: str):
+#     bar_metrics = dict(evaluations)
+#     bar_metrics = {
+#         pack_: {set_name: set_metrics[metric_name] for set_name, set_metrics in sets.items()}
+#         for pack_, sets in bar_metrics.items()
+#     }
+
+#     for k, v in bar_metrics.items():
+#         print(k)
+#         pprint(v)
+
+#     new_bar_metrics = {}
+#     for pack_, metrics_ in bar_metrics.items():
+#         print('Pack:', pack_)
+#         key = pack_.omit(['lr'])
+#         print(key)
+#         if key not in new_bar_metrics:
+#             print('key not in new_bar_metrics')
+#             new_bar_metrics[key] = {}
+#         print(metrics_)
+#         new_bar_metrics[key][pack_['lr']] = metrics_
+
+#     for pack_, metrics_dict in new_bar_metrics.items():
+#         new_bar_metrics[pack_] = max(metrics_dict.values(), key=operator.itemgetter('ds_eval'))
+
+#     bar_metrics = {}
+#     for pack_, metrics_ in new_bar_metrics.items():
+#         key = pack_.omit(['direct'])
+#         print(key)
+#         if key not in bar_metrics:
+#             print('key not in bar_metrics')
+#             bar_metrics[key] = {}
+#         print(metrics_)
+#         bar_metrics[key][pack_['direct']] = metrics_
+
+#     pprint(bar_metrics)
+
+#     # %matplotlib inline
+
+#     sns.set_context('notebook')
+#     sns.set_theme(style='ticks')
+
+#     metrics_data = pd.DataFrame.from_records(
+#         [
+#             {
+#                 'train': '+'.join(case_name[-1] for case_name in pack_['train_cases']),
+#                 'eval': '+'.join(case_name[-1] for case_name in pack_['eval_cases']),
+#                 'visualization': 'direct' if direct else 'indirect',
+#                 'metric': metrics_['ds_eval'],
+#             }
+#             for pack_, metrics_dict in bar_metrics.items()
+#             for direct, metrics_ in metrics_dict.items()
+#         ]
+#     )
+
+#     tips = sns.load_dataset('tips')
+
+#     # weird workaround, I don't know why metrics_data gives an error...
+#     new_metrics_data = tips.sample(len(metrics_data)).copy()
+#     new_metrics_data = new_metrics_data.rename(
+#         columns={
+#             'sex': 'train',
+#             'total_bill': 'metric',
+#             'smoker': 'eval',
+#             'time': 'direct',
+#         }
+#     )
+#     new_metrics_data['train'] = metrics_data['train']
+#     new_metrics_data['metric'] = metrics_data['metric']
+#     new_metrics_data['eval'] = metrics_data['eval']
+#     new_metrics_data['visualization'] = metrics_data['visualization']
+
+#     orient = 'v'
+#     x, y = ('train', 'metric')
+#     if orient == 'h':
+#         x, y = y, x
+#     g = sns.catplot(
+#         x=x,
+#         y=y,
+#         col='visualization',
+#         data=new_metrics_data,
+#         kind='bar',
+#         hue='eval',
+#         orient=orient,
+#     )
+#     label = 'MAE [W/cm²]'
+#     if orient == 'h':
+#         g.set_xlabels(label)
+#     else:
+#         g.set_ylabels(label)
+
+#     for ax in g.axes_dict.values():
+#         for p, txt in zip(
+#             ax.patches,
+#             mit.flatten(
+#                 [
+#                     itertools.repeat(txt, len(ax.patches) // len(g.legend.get_texts()))
+#                     for txt in g.legend.get_texts()
+#                 ]
+#             ),
+#         ):
+#             ax.text(
+#                 # p.get_x() - 0.01,
+#                 p.get_x(),
+#                 p.get_height() * 1.02,
+#                 txt.get_text(),
+#                 color='black',
+#                 rotation='horizontal',
+#                 size='large',
+#             )
+
+
+# # Commented out IPython magic to ensure Python compatibility.
+# # %matplotlib inline
+
+# sns.set_context('notebook')
+# sns.set_theme(style='ticks')
+
+
+# main(evaluations, 'MAE')
+
+# """2+3 uses too much data!!!
+# perhaps 2+3 could be defined as 50% of case 2 + 50% of case 3?
+# """
+
+# # # Fix the x-axes.
+# # ax.set_xticks(x + bar_width)
+# # ax.set_xticks(x)
+# # ax.set_xticklabels(
+# #     [
+# #         '\n'.join([
+# #             'train: ' + '+'.join(case_name[-1] for case_name in pack_['train_cases']),
+# #             'eval: ' + '+'.join(case_name[-1] for case_name in pack_['eval_cases'])
+# #         ])
+# #         for pack_ in bar_metrics
+# #     ],
+# #     fontdict=dict(fontsize=10)
+# # )
+
+# # # Add legend.
+# # ax.legend()
+
+# # # Axis styling.
+# # ax.spines['top'].set_visible(False)
+# # ax.spines['right'].set_visible(False)
+# # ax.spines['left'].set_visible(False)
+# # ax.spines['bottom'].set_color('#DDDDDD')
+# # ax.tick_params(bottom=False, left=False)
+# # ax.set_axisbelow(True)
+# # ax.yaxis.grid(True, color='#EEEEEE')
+# # ax.xaxis.grid(False)
+
+# # # Add axis and chart labels.
+# # ax.set_xlabel('Job', labelpad=15)
+# # ax.set_ylabel('MAE [W/cm²]', labelpad=15)
+# # ax.set_title(f'Cross-evaluation metric', pad=15)
+
+# # fig.tight_layout()
+# # fig.show()
+
+# """## TO-DO List
+
+# - [ ] improve sectioning
+# - [ ] remove old code
+# - [ ] remove unnecessary comments
+# - [ ] make "Boiling Learning.ipynb" deprecated
+# - [ ] see available models at https://github.com/tensorflow/models/tree/master/official
+# - [ ] see more models at https://tfhub.dev/tensorflow/efficientnet/b0/classification/1
+# - [ ] see TensorFlow Addons, such as the following optimizer:
+#     https://www.tensorflow.org/addons/tutorials/optimizers_lazyadam
+# - [ ] include
+#     https://www.tensorflow.org/addons/tutorials/tqdm_progress_bar#default_tqdmcallback_usage
+# - [x] change `Manager`s path from `test_` to real
+# - [x] improve shuffling... we can see that data is almost contiguous
+# - [x] calculate heat flux and use it instead of power
+# - [ ] see papers in Kopernio
+# - [x] when describing a dataset, include only the DictImageTransformer components that appear as
+#     ExperimentVideos
+# - [ ] allow bootstraping for confidence intervals in `bl.model.eval_with`
+# - [ ] define function `eval_regions` that allows us to evaluate a model when
+#     nominal power = 0, 10, 20... for instance:
+#     `eval_regions(model, ds_val, 'nominal_heat_flux') == {0: 8.32, 10: 5.63, 20: 12.10, ...}`
+# """
