@@ -55,7 +55,6 @@ class Case(ExperimentVideoDataset):
 
     def set_video_data_from_file(
         self,
-        data_path: PathLike,
         *,
         remove_absent: bool = False,
         keys: VideoDataKeys = VideoDataKeys(),
