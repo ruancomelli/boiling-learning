@@ -23,12 +23,6 @@ class Case(ExperimentVideoDataset):
         dataframes_dir_name: str = 'dataframes',
         videos_dir_name: str = 'videos',
         video_suffix: str = '.mp4',
-        column_names: ExperimentVideo.DataFrameColumnNames = (
-            ExperimentVideo.DataFrameColumnNames()
-        ),
-        column_types: ExperimentVideo.DataFrameColumnTypes = (
-            ExperimentVideo.DataFrameColumnTypes()
-        ),
         video_data_path: Optional[PathLike] = None,
     ) -> None:
         super().__init__()
@@ -43,13 +37,7 @@ class Case(ExperimentVideoDataset):
         self.videos_dir = resolve(self.path / videos_dir_name, dir=True)
 
         self.update(
-            ExperimentVideo(
-                video_path=video_path,
-                df_dir=self.dataframes_dir,
-                df_suffix='.csv',
-                column_names=column_names,
-                column_types=column_types,
-            )
+            ExperimentVideo(video_path=video_path, df_dir=self.dataframes_dir, df_suffix='.csv')
             for video_path in self.videos_dir.rglob(f'*{video_suffix}')
         )
 
@@ -90,6 +78,7 @@ class Case(ExperimentVideoDataset):
 
         video_data_keys = frozenset(video_data.keys())
         self_keys = frozenset(self.keys())
+
         for name in self_keys & video_data_keys:
             self[name].data = video_data[name]
 
