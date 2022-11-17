@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable
 
 from boiling_learning.descriptions import describe
 from boiling_learning.io import json
@@ -10,28 +9,15 @@ from boiling_learning.utils.collections import KeyedSet
 
 
 class ExperimentVideoDataset(KeyedSet[str, ExperimentVideo]):
-    def __init__(self, name: str) -> None:
+    def __init__(self) -> None:
         super().__init__(_get_experiment_video_name)
 
-        self._name = name
-
     def __repr__(self) -> str:
-        return (
-            f'<{self.__class__.__name__} name={self.name} experiment_videos={sorted(self.keys())}>'
-        )
-
-    @property
-    def name(self) -> str:
-        return self._name
+        return f'{self.__class__.__name__}({sorted(self.keys())})'
 
     @classmethod
-    def make_union(
-        cls,
-        *others: ExperimentVideoDataset,
-        namer: Callable[[list[str]], str] = '+'.join,
-    ) -> ExperimentVideoDataset:
-        name = namer([other.name for other in others])
-        image_dataset = ExperimentVideoDataset(name)
+    def make_union(cls, *others: ExperimentVideoDataset) -> ExperimentVideoDataset:
+        image_dataset = ExperimentVideoDataset()
         image_dataset.update(*others)
         return image_dataset
 

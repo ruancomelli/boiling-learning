@@ -33,7 +33,7 @@ def main(
     dataspec = yaml.safe_load(dataspecpath.read_text())
 
     for dataset in datasets:
-        logger.debug(f'Reading condensation dataset {dataset.name}')
+        logger.debug(f'Reading condensation dataset {dataset}')
 
         for ev in dataset:
             _set_ev_data(ev, dataspec)
@@ -138,7 +138,7 @@ def _group_datasets(
 ) -> tuple[ExperimentVideoDataset, ...]:
     datasets_dict: dict[str, ExperimentVideoDataset] = {}
     for dataset in datasets:
-        logger.debug(f'Reading condensation dataset {dataset.name}')
+        logger.debug(f'Reading condensation dataset {dataset}')
 
         for ev in dataset:
             if ev.data is None:
@@ -149,7 +149,7 @@ def _group_datasets(
             dataset_name = f'{case}:{subcase}'
 
             if dataset_name not in datasets_dict:
-                datasets_dict[dataset_name] = ExperimentVideoDataset(dataset_name)
+                datasets_dict[dataset_name] = ExperimentVideoDataset()
 
             datasets_dict[dataset_name].add(ev)
 

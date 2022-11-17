@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json as _json
-from typing import Mapping, Optional
+from typing import Optional
 
 from boiling_learning.io.storage import dataclass
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
@@ -31,11 +31,13 @@ class Case(ExperimentVideoDataset):
         ),
         video_data_path: Optional[PathLike] = None,
     ) -> None:
+        super().__init__()
+
         if not video_suffix.startswith('.'):
             raise ValueError('argument *video_suffix* must start with a dot \'.\'')
 
         self.path = resolve(path, dir=True)
-        super().__init__(name=name or self.path.name)
+        self._name = name or self.path.name
 
         self.dataframes_dir = resolve(self.path / dataframes_dir_name, dir=True)
         self.videos_dir = resolve(self.path / videos_dir_name, dir=True)
@@ -52,6 +54,10 @@ class Case(ExperimentVideoDataset):
         )
 
         self.video_data_path = video_data_path or self.path / 'data.json'
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     def set_video_data_from_file(
         self,
@@ -82,14 +88,6 @@ class Case(ExperimentVideoDataset):
             for name, data in video_data.items()
         }
 
-        self._set_video_data(video_data, remove_absent=remove_absent)
-
-    def _set_video_data(
-        self,
-        video_data: Mapping[str, ExperimentVideo.VideoData],
-        *,
-        remove_absent: bool = False,
-    ) -> None:
         video_data_keys = frozenset(video_data.keys())
         self_keys = frozenset(self.keys())
         for name in self_keys & video_data_keys:

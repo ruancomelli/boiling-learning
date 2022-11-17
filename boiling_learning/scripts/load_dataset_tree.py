@@ -25,7 +25,7 @@ def main(datapath: PathLike) -> list[ExperimentVideoDataset]:
 
             subcase = subcasedir.name
 
-            dataset = ExperimentVideoDataset(f'{case}:{subcase}')
+            dataset = ExperimentVideoDataset()
             for testdir in subcasedir.iterdir():
                 logger.debug(f'Searching for videos in {testdir}')
 

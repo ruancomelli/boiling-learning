@@ -36,7 +36,7 @@
 # def _interact_dataset_frames(
 #     datasets: tuple[ExperimentVideoDataset, ...], imshow: Callable[[np.ndarray], Any]
 # ) -> None:
-#     datasets_options = [(dataset.name, dataset) for dataset in datasets]
+#     datasets_options = [(str(dataset), dataset) for dataset in datasets]
 #     default_dataset = datasets_options[0][1]
 #     datasets_widget = widgets.Dropdown(
 #         options=datasets_options,

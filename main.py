@@ -80,7 +80,13 @@ from boiling_learning.scripts import (
     set_condensation_datasets_data,
 )
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist
-from boiling_learning.transforms import dataset_sampler, datasets_merger, map_transformers, subset
+from boiling_learning.transforms import (
+    dataset_sampler,
+    datasets_concatenater,
+    datasets_merger,
+    map_transformers,
+    subset,
+)
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.pathutils import resolve
 from boiling_learning.utils.typeutils import typename
