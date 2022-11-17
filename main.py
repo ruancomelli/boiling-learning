@@ -652,15 +652,17 @@ condensation_preprocessors = make_condensation_processors.main(
     downscale_factor=5, height=8 * 12, width=8 * 12
 )
 condensation_dataset = (
-    tuple(
-        get_image_dataset(
-            GetImageDatasetParams(
-                ds,
-                condensation_preprocessors,
+    LazyDescribed.from_describable(
+        tuple(
+            get_image_dataset(
+                GetImageDatasetParams(
+                    ds,
+                    condensation_preprocessors,
+                )
             )
+            | dataset_sampler(CONDENSATION_SUBSAMPLE)
+            for ds in condensation_datasets
         )
-        | dataset_sampler(CONDENSATION_SUBSAMPLE)
-        for ds in condensation_datasets
     )
     | datasets_concatenater()
 )
