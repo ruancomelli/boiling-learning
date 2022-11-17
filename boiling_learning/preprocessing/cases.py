@@ -19,7 +19,6 @@ class Case(ExperimentVideoDataset):
     def __init__(
         self,
         path: PathLike,
-        name: Optional[str] = None,
         dataframes_dir_name: str = 'dataframes',
         videos_dir_name: str = 'videos',
         video_suffix: str = '.mp4',
@@ -31,7 +30,6 @@ class Case(ExperimentVideoDataset):
             raise ValueError('argument *video_suffix* must start with a dot \'.\'')
 
         self.path = resolve(path, dir=True)
-        self._name = name or self.path.name
 
         self.dataframes_dir = resolve(self.path / dataframes_dir_name, dir=True)
         self.videos_dir = resolve(self.path / videos_dir_name, dir=True)
@@ -45,7 +43,7 @@ class Case(ExperimentVideoDataset):
 
     @property
     def name(self) -> str:
-        return self._name
+        return self.path.name
 
     def set_video_data_from_file(
         self,
