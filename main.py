@@ -22,7 +22,6 @@ from typing import (
 import funcy
 import matplotlib.pyplot as plt
 import modin.pandas as pd
-import more_itertools as mit
 import numpy as np
 import seaborn as sns
 import tensorflow as tf
@@ -91,13 +90,15 @@ from boiling_learning.utils.functional import P
 from boiling_learning.utils.pathutils import resolve
 from boiling_learning.utils.typeutils import typename
 
-# TODO: check <https://stackoverflow.com/a/58970598/5811400> and <https://github.com/googlecolab/colabtools/issues/864#issuecomment-556437040>
+# TODO: check
+# <https://stackoverflow.com/a/58970598/5811400> and <https://github.com/googlecolab/colabtools/issues/864#issuecomment-556437040> # noqa
 # TODO: na condensação, fazer crop determinístico!!!
 # TODO: depois, se tiver tempo, fazer RandomCrop pra comparar
 # TODO: ver o quanto influencia crop determinístico versus randomico
 # TODO: para ambos os tipos de corte, rodar auto ML
 # TODO: para um mesmo fluxo, mostrar imagens para os quatro datasets
-# TODO: fazer vídeos tipo o do Hobold com a ebulição e um gráfico (barrinha de erro), o fluxo nominal e o valor predito
+# TODO: fazer vídeos tipo o do Hobold com a ebulição e um gráfico (barrinha de erro), o
+# fluxo nominal e o valor predito
 # TODO: esse vídeo pode ser para as quatro superfícies ao mesmo tempo
 
 
@@ -218,7 +219,7 @@ CONDENSATION_VIDEO_TO_SETTER = {
     for video in img_ds
 }
 
-VIDEO_TO_SETTER = {**BOILING_VIDEO_TO_SETTER, **CONDENSATION_VIDEO_TO_SETTER}
+VIDEO_TO_SETTER = BOILING_VIDEO_TO_SETTER | CONDENSATION_VIDEO_TO_SETTER
 
 
 def ensure_data_is_set(video: ExperimentVideo) -> None:
@@ -266,7 +267,7 @@ class VideoInfo:
 
 
 @cache(JSONTableAllocator(analyses_path / 'cache' / 'video-info'))
-def get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
+def _get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
     dataset = video()
     first_frame = dataset[0]
     return VideoInfo(
@@ -288,7 +289,7 @@ def _video_dataset_from_video_and_transformers(
     video = LazyDescribed.from_value_and_description(
         experiment_video.video, experiment_video
     ) | map_transformers(compiled_transformers)
-    video_info = get_video_info(video)
+    video_info = _get_video_info(video)
 
     directory = numpy_directory_allocator.allocate(video)
     numpy_cache = NumpyCache(
@@ -325,13 +326,6 @@ def sliceable_dataset_from_video_and_transformers(
     return SliceableDataset.zip(
         video, targets, strictness='none' if ev.name in CONDENSATION_VIDEO_TO_SETTER else 'one-off'
     )
-
-
-if OPTIONS.test:
-    sample_ev = mit.first(boiling_cases_timed[0])
-    sds = sliceable_dataset_from_video_and_transformers(sample_ev, boiling_direct_preprocessors)
-    sample_frame = sds[0][0]
-    print(sample_frame)
 
 
 @dataclass(frozen=True)
@@ -654,28 +648,15 @@ condensation_preprocessors = make_condensation_processors.main(
 condensation_dataset = (
     LazyDescribed.from_describable(
         tuple(
-            get_image_dataset(
-                GetImageDatasetParams(
-                    ds,
-                    condensation_preprocessors,
-                )
+            (
+                get_image_dataset(GetImageDatasetParams(ds, condensation_preprocessors))
+                | dataset_sampler(CONDENSATION_SUBSAMPLE)
             )
-            | dataset_sampler(CONDENSATION_SUBSAMPLE)
             for ds in condensation_datasets
         )
     )
     | datasets_concatenater()
 )
-
-
-# TODO: improve this!!!
-
-"""## Models
-
-### Training
-"""
-
-# DON'T FORGET TO TURN OFF SHIELDS: https://github.com/tensorflow/tensorboard/issues/3186#issuecomment-663534468
 
 
 _P = ParamSpec('_P')
@@ -799,11 +780,14 @@ class FitCondensationModel(CachedFunction[_P, FitModelReturn]):
 
         creator: Callable[[], FitModelReturn] = P(
             compiled_model,
-            to_tensorflow_triplet(
-                datasets,
-                batch_size=params.batch_size,
-                include_test=False,
-                target=target,
+            tuple(
+                subset()
+                for subset in to_tensorflow_triplet(
+                    datasets,
+                    batch_size=params.batch_size,
+                    include_test=False,
+                    target=target,
+                )
             ),
             params,
             epoch_registry=RegisterEpoch(workspace_path / 'epoch.json'),
@@ -844,16 +828,6 @@ if OPTIONS.test:
     frame, _ = ds_train[0]
 
     imshow(frame.squeeze())
-
-"""### Autofitting"""
-
-
-boiling_direct_hypermodel_allocator = JSONTableAllocator(
-    analyses_path / 'autofit' / 'boiling-direct-tuners'
-)
-boiling_indirect_hypermodel_allocator = JSONTableAllocator(
-    analyses_path / 'autofit' / 'boiling-indirect-tuners'
-)
 
 
 @cache(
@@ -1302,7 +1276,7 @@ boiling_target_name = 'Flux [W/cm**2]'
 
 """FIRST CONDENSATION CASE JUST FOR FUN"""
 
-first_frame = condensation_dataset()[0][0]
+first_frame = condensation_dataset()[0][0][0]
 with strategy_scope(strategy):
     architecture = hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=True)
 
@@ -1399,10 +1373,6 @@ print('Evaluation:', validated_model_indirect_normalized.evaluation)
 # grid = explainer.explain(baseline_boiling_dataset_direct()[1][0], model.architecture.model, )
 
 """#### Retrain randomness"""
-
-# %%time
-# %tensorboard --logdir $tensorboard_logs_path
-
 
 logger.info('Analyzing effects of random initialization')
 
@@ -2388,7 +2358,8 @@ assert False, 'STOP!'
 
 
 # # TODO: is FPS 30 or 1 here???
-# # Answer: take a look at <https://drive.google.com/drive/u/1/folders/1hVLDeLOlklVqIN-W6eGbRUqTxMXZTF74>
+# # Answer: take a look at
+# <https://drive.google.com/drive/u/1/folders/1hVLDeLOlklVqIN-W6eGbRUqTxMXZTF74>
 # # It seems that FPS is already 1, so frame #30 happens 30s after frame #0.
 
 # if OPTIONS['analyze_consecutive_frames']:
@@ -2524,7 +2495,8 @@ assert False, 'STOP!'
 
 # """### Learning curve
 
-# Evaluate models trained with different fractions of the dataset. For instance, 1%, 5%, 10%, 50% and 100% of the data.
+# Evaluate models trained with different fractions of the dataset.
+# For instance, 1%, 5%, 10%, 50% and 100% of the data.
 
 # Tasks:
 
