@@ -112,8 +112,6 @@ class ExperimentVideo:
             'video_path': self.path,
             'df_path': self.df_path,
             'data': self.data,
-            'column_names': self.column_names,
-            'column_types': self.column_types,
         }
         joined_kwargs = ', '.join(f'{k}={v}' for k, v in kwargs.items() if v is not None)
         return f'{self.__class__.__name__}({joined_kwargs})'

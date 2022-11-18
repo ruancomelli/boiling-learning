@@ -4,11 +4,10 @@ from typing import Any, Callable, Literal, Optional, TypeVar, Union
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.lazy import LazyDescribed, eager
-from boiling_learning.preprocessing.transformers import Transformer, wrap_as_partial_transformer
+from boiling_learning.preprocessing.transformers import wrap_as_partial_transformer
 
 _Dataset = TypeVar('_Dataset', bound=SliceableDataset[Any])
 _Element = TypeVar('_Element')
-IdentityTransformer = Transformer[_Element, _Element]
 
 
 @wrap_as_partial_transformer
