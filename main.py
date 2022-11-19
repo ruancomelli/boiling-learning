@@ -3,8 +3,9 @@ import os
 import sys
 from dataclasses import replace
 from fractions import Fraction
-from functools import lru_cache, partial
+from functools import partial
 from operator import itemgetter
+from pathlib import Path
 from pprint import pprint
 from typing import (
     Any,
@@ -101,14 +102,12 @@ from boiling_learning.utils.typeutils import typename
 # fluxo nominal e o valor predito
 # TODO: esse vídeo pode ser para as quatro superfícies ao mesmo tempo
 
-
 configure(
     force_gpu_allow_growth=True,
     use_xla=True,
     mixed_precision_global_policy='mixed_float16',
     modin_engine='ray',
 )
-
 
 masters_path = resolve(os.environ['MASTERS_PATH'])
 data_path = masters_path / 'data'
@@ -243,7 +242,6 @@ def purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]:
 
 
 numpy_directory_allocator = JSONTableAllocator(analyses_path / 'datasets' / 'numpy', suffix='')
-targets_allocator = JSONTableAllocator(analyses_path / 'datasets' / 'targets', suffix='.csv')
 
 
 def _compile_transformers(
@@ -300,17 +298,22 @@ def _video_dataset_from_video_and_transformers(
     return video().cache(EagerCache(numpy_cache, buffer_size=EAGER_BUFFER_SIZE))
 
 
-@lru_cache(maxsize=1024)
+def _dataframe_targets_to_csv(targets: pd.DataFrame, path: Path) -> None:
+    targets.to_csv(path, index=False)
+
+
+@cache(
+    JSONTableAllocator(analyses_path / 'datasets' / 'targets', suffix='.csv'),
+    saver=_dataframe_targets_to_csv,
+    loader=pd.read_csv,
+    exceptions=(OSError, AttributeError),
+)
+def _experiment_video_targets_as_dataframe(video: ExperimentVideo) -> pd.DataFrame:
+    return video.targets()
+
+
 def _target_dataset_from_video(video: ExperimentVideo) -> SliceableDataset[Targets]:
-    path = targets_allocator.allocate(video)
-
-    try:
-        targets = pd.read_csv(path)
-    except (OSError, AttributeError):
-        ensure_data_is_set(video)
-        targets = video.targets()
-        targets.to_csv(path, index=False)
-
+    targets = _experiment_video_targets_as_dataframe(video)
     return SliceableDataset.from_sequence(targets.to_dict('records'))
 
 
@@ -318,13 +321,16 @@ def sliceable_dataset_from_video_and_transformers(
     ev: ExperimentVideo,
     transformers: Iterable[Transformer[Image, Image]],
 ) -> ImageDataset:
-    targets = _target_dataset_from_video(ev)  # targets first to ensure correct ev data setup
+    ensure_data_is_set(ev)
     video = _video_dataset_from_video_and_transformers(ev, transformers)
+    targets = _target_dataset_from_video(ev)
 
     # return SliceableDataset.zip(video, targets, strictness='one-off')
     # return SliceableDataset.zip(video, targets, strictness="none")
     return SliceableDataset.zip(
-        video, targets, strictness='none' if ev.name in CONDENSATION_VIDEO_TO_SETTER else 'one-off'
+        video,
+        targets,
+        strictness='none' if ev.name in CONDENSATION_VIDEO_TO_SETTER else 'one-off',
     )
 
 
