@@ -16,6 +16,33 @@ _Any = TypeVar('_Any')
 _Array = TypeVar('_Array', bound=np.ndarray)
 
 
+class NoCache(SliceableDatasetCache[_Any]):
+    """A no-op cache.
+
+    Useful to e.g. allow eager caching of upstream datasets. For instance:
+    ```python
+    tuple(
+        dataset
+        .cache(NumpyCache(...))
+        .sample(Fraction(1, 100))
+        # eagerly cause 1000 elements to be fetched at once, but only from the sampled
+        # dataset
+        .cache(EagerCache(NoCache(), 1000))
+    )
+    ```
+    """
+
+    def fetch_from(
+        self,
+        source: SliceableDataset[_Any],
+        indices: Optional[Iterable[int]] = None,
+    ) -> tuple[_Any, ...]:
+        return source.fetch(indices)
+
+    def __repr__(self) -> str:
+        return 'NoCache()'
+
+
 class _MinimalFetchCache(SliceableDatasetCache[_Any]):
     @abc.abstractmethod
     def _store(self, pairs: dict[int, _Any]) -> None:
