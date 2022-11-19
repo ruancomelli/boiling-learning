@@ -36,7 +36,7 @@ from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
 from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn, fit_hypermodel
 from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_dataset
-from boiling_learning.datasets.cache import EagerCache, NumpyCache
+from boiling_learning.datasets.cache import NumpyCache
 from boiling_learning.datasets.datasets import DatasetSplits, DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset, map_targets, targets
 from boiling_learning.descriptions import describe
@@ -285,7 +285,10 @@ def _video_dataset_from_video_and_transformers(
         shape=(video_info.length, *video_info.shape),
         dtype=np.dtype(video_info.dtype),
     )
-    return video().cache(EagerCache(numpy_cache, buffer_size=EAGER_BUFFER_SIZE))
+    return video().cache(
+        # EagerCache(numpy_cache, buffer_size=EAGER_BUFFER_SIZE),
+        numpy_cache
+    )
 
 
 def _dataframe_targets_to_csv(targets: pd.DataFrame, path: Path) -> None:
