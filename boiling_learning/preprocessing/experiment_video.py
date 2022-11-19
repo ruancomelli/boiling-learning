@@ -1,7 +1,7 @@
 import contextlib
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Iterator, Mapping, Optional, Union
+from typing import Any, Iterator, Mapping, Optional
 
 import funcy
 import modin.pandas as pd
@@ -301,13 +301,10 @@ class ExperimentVideo:
         if overwrite or not path.is_file():
             self.df.to_csv(path, index=False)
 
-    def targets(self, select_columns: Optional[Union[str, list[str]]] = None) -> pd.DataFrame:
+    def targets(self) -> pd.DataFrame:
         df = self.make_dataframe()
         df = self.convert_dataframe_type(df)
         df.sort_values(by=self.column_names.index, inplace=True)
-
-        if select_columns is not None:
-            df = df[select_columns]
 
         return df
 
