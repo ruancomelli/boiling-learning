@@ -13,6 +13,7 @@ from typing import (
     ItemsView,
     Iterable,
     KeysView,
+    Literal,
     NamedTuple,
     Optional,
     Union,
@@ -36,7 +37,7 @@ from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
 from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn, fit_hypermodel
 from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_dataset
-from boiling_learning.datasets.cache import NumpyCache
+from boiling_learning.datasets.cache import EagerCache, NumpyCache
 from boiling_learning.datasets.datasets import DatasetSplits, DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset, map_targets, targets
 from boiling_learning.descriptions import describe
@@ -218,6 +219,10 @@ CONDENSATION_VIDEO_TO_SETTER = {
 VIDEO_TO_SETTER = BOILING_VIDEO_TO_SETTER | CONDENSATION_VIDEO_TO_SETTER
 
 
+def _is_condensation_video(ev: ExperimentVideo) -> bool:
+    return ev.name in CONDENSATION_VIDEO_TO_SETTER
+
+
 def ensure_data_is_set(video: ExperimentVideo) -> None:
     if video.data is None:
         setter = VIDEO_TO_SETTER[video.name]
@@ -265,7 +270,12 @@ def _get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
 
 
 EAGER_BUFFER_SIZE = 128
-numpy_directory_allocator = JSONTableAllocator(analyses_path / 'datasets' / 'numpy', suffix='')
+numpy_directory_boiling_allocator = JSONTableAllocator(
+    analyses_path / 'datasets' / 'numpy' / 'boiling', suffix=''
+)
+numpy_directory_condensation_allocator = JSONTableAllocator(
+    analyses_path / 'datasets' / 'numpy' / 'condensation', suffix=''
+)
 
 
 def _video_dataset_from_video_and_transformers(
@@ -279,15 +289,20 @@ def _video_dataset_from_video_and_transformers(
     ) | map_transformers(compiled_transformers)
     video_info = _get_video_info(video)
 
-    directory = numpy_directory_allocator.allocate(video)
+    directory = (
+        numpy_directory_condensation_allocator
+        if _is_condensation_video(experiment_video)
+        else numpy_directory_boiling_allocator
+    ).allocate(video)
     numpy_cache = NumpyCache(
         directory,
         shape=(video_info.length, *video_info.shape),
         dtype=np.dtype(video_info.dtype),
     )
     return video().cache(
-        # EagerCache(numpy_cache, buffer_size=EAGER_BUFFER_SIZE),
         numpy_cache
+        if _is_condensation_video(experiment_video)
+        else EagerCache(numpy_cache, buffer_size=EAGER_BUFFER_SIZE),
     )
 
 
@@ -296,13 +311,31 @@ def _dataframe_targets_to_csv(targets: pd.DataFrame, path: Path) -> None:
 
 
 @cache(
-    JSONTableAllocator(analyses_path / 'datasets' / 'targets', suffix='.csv'),
+    JSONTableAllocator(analyses_path / 'datasets' / 'targets' / 'boiling', suffix='.csv'),
     saver=_dataframe_targets_to_csv,
     loader=pd.read_csv,
     exceptions=(OSError, AttributeError),
 )
-def _experiment_video_targets_as_dataframe(video: ExperimentVideo) -> pd.DataFrame:
+def _experiment_video_targets_as_dataframe_boiling(video: ExperimentVideo) -> pd.DataFrame:
     return video.targets()
+
+
+@cache(
+    JSONTableAllocator(analyses_path / 'datasets' / 'targets' / 'condensation', suffix='.csv'),
+    saver=_dataframe_targets_to_csv,
+    loader=pd.read_csv,
+    exceptions=(OSError, AttributeError),
+)
+def _experiment_video_targets_as_dataframe_condensation(video: ExperimentVideo) -> pd.DataFrame:
+    return video.targets()
+
+
+def _experiment_video_targets_as_dataframe(video: ExperimentVideo) -> pd.DataFrame:
+    return (
+        _experiment_video_targets_as_dataframe_condensation
+        if _is_condensation_video(video)
+        else _experiment_video_targets_as_dataframe_boiling
+    )(video)
 
 
 def _target_dataset_from_video(video: ExperimentVideo) -> SliceableDataset[Targets]:
@@ -323,7 +356,7 @@ def sliceable_dataset_from_video_and_transformers(
     return SliceableDataset.zip(
         video,
         targets,
-        strictness='none' if ev.name in CONDENSATION_VIDEO_TO_SETTER else 'one-off',
+        strictness='none' if _is_condensation_video(ev) else 'one-off',
     )
 
 
@@ -366,7 +399,7 @@ def get_image_dataset(
 
 
 # DEFAULT_PREFETCH_BUFFER_SIZE = 4
-DEFAULT_PREFETCH_BUFFER_SIZE = 1024
+DEFAULT_PREFETCH_BUFFER_SIZE = 2048
 
 
 def _default_filter_for_frames_dataset(
@@ -379,12 +412,18 @@ def _default_filter_for_frames_dataset(
     return _pred
 
 
-training_datasets_allocator = JSONTableAllocator(analyses_path / 'datasets' / 'training')
+training_datasets_allocator_boiling = JSONTableAllocator(
+    analyses_path / 'datasets' / 'training' / 'boiling'
+)
+training_datasets_allocator_condensation = JSONTableAllocator(
+    analyses_path / 'datasets' / 'training' / 'condensation'
+)
 
 
 def to_tensorflow(
     dataset: LazyDescribed[ImageDataset],
     *,
+    experiment: Literal['boiling1d', 'condensation'],
     batch_size: Optional[int] = None,
     prefilterer: Optional[LazyDescribed[Callable[[Image, Targets], bool]]] = None,
     filterer: Optional[Callable[..., bool]] = None,
@@ -402,7 +441,11 @@ def to_tensorflow(
             prefilterer is None or prefilterer()(image, targets)
         )
 
-    save_path = training_datasets_allocator.allocate(dataset, prefilterer)
+    save_path = {
+        'boiling1d': training_datasets_allocator_boiling,
+        'condensation': training_datasets_allocator_condensation,
+    }[experiment].allocate(dataset, prefilterer)
+
     logger.debug(f'Converting dataset to TF and saving to {save_path}')
 
     if shuffle is True:
@@ -440,6 +483,7 @@ def to_tensorflow(
 def to_tensorflow_triplet(
     dataset: LazyDescribed[ImageDatasetTriplet],
     *,
+    experiment: Literal['boiling1d', 'condensation'],
     batch_size: Optional[int] = None,
     prefilterer: Optional[LazyDescribed[Callable[[Image, Targets], bool]]] = None,
     filterer: Optional[Callable[..., bool]] = None,
@@ -458,6 +502,7 @@ def to_tensorflow_triplet(
         buffer_size=buffer_size,
         target=target,
         shuffle=shuffle,
+        experiment=experiment,
     )
 
     if include_train:
@@ -479,12 +524,6 @@ def to_tensorflow_triplet(
         ds_test = LazyDescribed.from_value_and_description(tf.data.Dataset.range(0), None)
 
     return DatasetTriplet(ds_train, ds_val, ds_test)
-
-
-"""### Default datasets
-
-#### On-wire pool boiling
-"""
 
 
 boiling_direct_preprocessors = make_boiling_processors.main(direct_visualization=True)
@@ -660,6 +699,7 @@ class FitBoilingModel(CachedFunction[_P, FitModelReturn]):
             filterer=_is_gt10,
             batch_size=params.batch_size,
             target=target,
+            experiment='boiling1d',
         )
 
         params.callbacks().extend(
@@ -699,6 +739,7 @@ class FitBoilingModel(CachedFunction[_P, FitModelReturn]):
                     batch_size=params.batch_size,
                     include_test=False,
                     target=target,
+                    experiment='boiling1d',
                 )
             ),
             params,
@@ -753,6 +794,7 @@ class FitCondensationModel(CachedFunction[_P, FitModelReturn]):
                     batch_size=params.batch_size,
                     include_test=False,
                     target=target,
+                    experiment='condensation',
                 )
             ),
             params,
@@ -1226,7 +1268,13 @@ boiling_target_name = 'Flux [W/cm**2]'
 
 """FIRST CONDENSATION CASE JUST FOR FUN"""
 
-first_frame = condensation_dataset()[0][0][0]
+(
+    condensation_dataset_train,
+    _condensation_dataset_val,
+    _condensation_dataset_test,
+) = condensation_dataset()
+
+first_frame, _data = condensation_dataset_train[0]
 with strategy_scope(strategy):
     architecture = hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=True)
 
@@ -1431,12 +1479,14 @@ ds_evaluation_direct = to_tensorflow(
     baseline_boiling_dataset_direct | subset('val'),
     batch_size=BATCH_SIZE,
     target='Flux [W/cm**2]',
+    experiment='boiling1d',
 )
 
 ds_evaluation_indirect = to_tensorflow(
     baseline_boiling_dataset_indirect | subset('val'),
     batch_size=BATCH_SIZE,
     target='Flux [W/cm**2]',
+    experiment='boiling1d',
 )
 
 
@@ -1655,6 +1705,7 @@ def boiling_cross_surface_evaluation(
         evaluation_dataset | subset('val'),
         batch_size=BATCH_SIZE,
         target='Flux [W/cm**2]',
+        experiment='boiling1d',
     )
 
     evaluation = model.architecture.evaluate(ds_evaluation_val())
