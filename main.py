@@ -368,14 +368,10 @@ DEFAULT_PREFETCH_BUFFER_SIZE = 1024
 
 def _default_filter_for_frames_dataset(
     dataset: ImageDataset,
-) -> Callable[[tuple[Image, Targets]], bool]:
-    def _pred(pair: tuple[Image, Targets]) -> bool:
-        if len(pair) != 2:
-            return False
-
-        first_frame, _ = dataset[0]
-        frame, _data = pair
-        return frame.shape == first_frame.shape and not np.allclose(frame, 0)
+) -> Callable[[Image, Targets], bool]:
+    def _pred(image: Image, _targets: Targets) -> bool:
+        first_frame, _first_targets = dataset[0]
+        return image.shape == first_frame.shape and not np.allclose(image, 0)
 
     return _pred
 
@@ -387,7 +383,7 @@ def to_tensorflow(
     dataset: LazyDescribed[ImageDataset],
     *,
     batch_size: Optional[int] = None,
-    prefilterer: Optional[LazyDescribed[Callable[[tuple[Image, Targets]], bool]]] = None,
+    prefilterer: Optional[LazyDescribed[Callable[[Image, Targets], bool]]] = None,
     filterer: Optional[Callable[..., bool]] = None,
     buffer_size: int = DEFAULT_PREFETCH_BUFFER_SIZE,
     target: Optional[str] = None,
@@ -398,7 +394,10 @@ def to_tensorflow(
     default_prefilterer = _default_filter_for_frames_dataset(dataset_value)
 
     def _prefilterer(element: tuple[Image, Targets]) -> bool:
-        return default_prefilterer(element) and (prefilterer is None or prefilterer()(element))
+        image, targets = element
+        return default_prefilterer(image, targets) and (
+            prefilterer is None or prefilterer()(image, targets)
+        )
 
     save_path = training_datasets_allocator.allocate(dataset, prefilterer)
     logger.debug(f'Converting dataset to TF and saving to {save_path}')
@@ -644,8 +643,7 @@ class FitBoilingModel(CachedFunction[_P, FitModelReturn]):
             stddev.
         """
 
-        def _is_not_outlier(pair: tuple[Image, Targets]) -> bool:
-            frame, data = pair
+        def _is_not_outlier(_frame: Image, data: Targets) -> bool:
             return abs(data['Power [W]'] - data['nominal_power']) < 5
 
         def _is_gt10(frame: Image, data: Targets) -> bool:
