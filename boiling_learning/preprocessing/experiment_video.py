@@ -16,6 +16,26 @@ from boiling_learning.utils.dataclasses import field
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 
+@dataclass(frozen=True)
+class _DataFrameColumnNames:
+    index: str = 'index'
+    name: str = 'name'
+    elapsed_time: str = 'elapsed_time'
+
+
+@dataclass(frozen=True)
+class _DataFrameColumnTypes:
+    index = int
+    path = str
+    name = str
+    elapsed_time = 'timedelta64[s]'
+    categories = 'category'
+
+
+_COLUMN_NAMES = _DataFrameColumnNames()
+_COLUMN_TYPES = _DataFrameColumnTypes()
+
+
 class ExperimentVideo:
     @dataclass
     class VideoData:
@@ -53,20 +73,6 @@ class ExperimentVideo:
         end_elapsed_time: str = 'end_elapsed_time'
         end_index: str = 'end_index'
 
-    @dataclass(frozen=True)
-    class DataFrameColumnNames:
-        index: str = 'index'
-        name: str = 'name'
-        elapsed_time: str = 'elapsed_time'
-
-    @dataclass(frozen=True)
-    class DataFrameColumnTypes:
-        index = int
-        path = str
-        name = str
-        elapsed_time = 'timedelta64[s]'
-        categories = 'category'
-
     def __init__(
         self,
         video_path: PathLike,
@@ -74,15 +80,11 @@ class ExperimentVideo:
         df_dir: Optional[PathLike] = None,
         df_suffix: str = '.csv',
         df_path: Optional[PathLike] = None,
-        column_names: DataFrameColumnNames = DataFrameColumnNames(),
-        column_types: DataFrameColumnTypes = DataFrameColumnTypes(),
     ) -> None:
         self.path = resolve(video_path)
         self.video: SliceableDataset[VideoFrame] = Video(self.path)
 
         self._data: Optional[ExperimentVideo.VideoData] = None
-        self.column_names = column_names
-        self.column_types = column_types
         self.df: Optional[pd.DataFrame] = None
         self._name = name or self.path.stem
 
@@ -186,9 +188,9 @@ class ExperimentVideo:
         col_types = funcy.merge(
             dict.fromkeys(video_data.categories, 'category'),
             {
-                self.column_names.index: self.column_types.index,
-                self.column_names.name: self.column_types.name,
-                # self.column_names.elapsed_time: self.column_types.elapsed_time
+                _COLUMN_NAMES.index: _COLUMN_TYPES.index,
+                _COLUMN_NAMES.name: _COLUMN_TYPES.name,
+                # _COLUMN_NAMES.elapsed_time: _COLUMN_TYPES.elapsed_time
                 # BUG: including the line above rounds elapsed time, breaking the whole pipeline
             },
         )
@@ -197,7 +199,7 @@ class ExperimentVideo:
         df = df.astype(col_types)
 
         with contextlib.suppress(KeyError):
-            elapsed_time_column = self.column_names.elapsed_time
+            elapsed_time_column = _COLUMN_NAMES.elapsed_time
             if df[elapsed_time_column].dtype.kind == 'm':
                 df[elapsed_time_column] = df[elapsed_time_column].dt.total_seconds()
 
@@ -226,8 +228,8 @@ class ExperimentVideo:
 
         data = {
             **self.data.categories,
-            self.column_names.name: self.name,
-            self.column_names.index: list(indices),
+            _COLUMN_NAMES.name: self.name,
+            _COLUMN_NAMES.index: list(indices),
         }
 
         if (
@@ -242,7 +244,7 @@ class ExperimentVideo:
                 ref_elapsed_time + delta * (index - ref_index) for index in indices
             ]
 
-            data[self.column_names.elapsed_time] = elapsed_time_list
+            data[_COLUMN_NAMES.elapsed_time] = elapsed_time_list
         elif enforce_time:
             raise ValueError(
                 'there is not enough time info in video data'
@@ -263,7 +265,7 @@ class ExperimentVideo:
         df = _sync_dataframes(
             source_df=source_df,
             dest_df=df,
-            dest_time_column=self.column_names.elapsed_time,
+            dest_time_column=_COLUMN_NAMES.elapsed_time,
         )
 
         if inplace:
@@ -304,7 +306,7 @@ class ExperimentVideo:
     def targets(self) -> pd.DataFrame:
         df = self.make_dataframe()
         df = self.convert_dataframe_type(df)
-        df.sort_values(by=self.column_names.index, inplace=True)
+        df.sort_values(by=_COLUMN_NAMES.index, inplace=True)
 
         return df
 
