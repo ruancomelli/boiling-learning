@@ -181,31 +181,6 @@ class ExperimentVideo:
         convert_video(self.path, dest_path, overwrite=overwrite)
         self.path = dest_path
 
-    def convert_dataframe_type(self, df: pd.DataFrame) -> pd.DataFrame:
-        video_data = self.data
-
-        assert video_data is not None
-
-        col_types = funcy.merge(
-            dict.fromkeys(video_data.categories, 'category'),
-            {
-                _COLUMN_NAMES.index: _COLUMN_TYPES.index,
-                _COLUMN_NAMES.name: _COLUMN_TYPES.name,
-                # _COLUMN_NAMES.elapsed_time: _COLUMN_TYPES.elapsed_time
-                # BUG: including the line above rounds elapsed time, breaking the whole pipeline
-            },
-        )
-
-        col_types = funcy.select_keys(set(df.columns), col_types)
-        df = df.astype(col_types)
-
-        with contextlib.suppress(KeyError):
-            elapsed_time_column = _COLUMN_NAMES.elapsed_time
-            if df[elapsed_time_column].dtype.kind == 'm':
-                df[elapsed_time_column] = df[elapsed_time_column].dt.total_seconds()
-
-        return df
-
     def make_dataframe(
         self,
         exist_load: bool = False,
@@ -253,7 +228,7 @@ class ExperimentVideo:
             )
 
         df = pd.DataFrame(data)
-        df = self.convert_dataframe_type(df)
+        df = _convert_dataframe_type(df, self.data)
 
         if inplace:
             self.df = df
@@ -306,7 +281,9 @@ class ExperimentVideo:
 
     def targets(self) -> pd.DataFrame:
         df = self.make_dataframe()
-        df = self.convert_dataframe_type(df)
+
+        assert self.data is not None
+        df = _convert_dataframe_type(df, self.data)
         df.sort_values(by=_COLUMN_NAMES.index, inplace=True)
 
         return df
@@ -320,6 +297,28 @@ def _encode_video(obj: ExperimentVideo) -> json.JSONDataType:
 @describe.instance(ExperimentVideo)
 def _describe_video(obj: ExperimentVideo) -> Path:
     return obj.path
+
+
+def _convert_dataframe_type(df: pd.DataFrame, video_data: VideoData) -> pd.DataFrame:
+    col_types = funcy.merge(
+        dict.fromkeys(video_data.categories, 'category'),
+        {
+            _COLUMN_NAMES.index: _COLUMN_TYPES.index,
+            _COLUMN_NAMES.name: _COLUMN_TYPES.name,
+            # _COLUMN_NAMES.elapsed_time: _COLUMN_TYPES.elapsed_time
+            # BUG: including the line above rounds elapsed time, breaking the whole pipeline
+        },
+    )
+
+    col_types = funcy.select_keys(set(df.columns), col_types)
+    df = df.astype(col_types)
+
+    with contextlib.suppress(KeyError):
+        elapsed_time_column = _COLUMN_NAMES.elapsed_time
+        if df[elapsed_time_column].dtype.kind == 'm':
+            df[elapsed_time_column] = df[elapsed_time_column].dt.total_seconds()
+
+    return df
 
 
 def _sync_dataframes(
