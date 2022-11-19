@@ -6,7 +6,7 @@ import parse
 import yaml
 from loguru import logger
 
-from boiling_learning.preprocessing.experiment_video import ExperimentVideo
+from boiling_learning.preprocessing.experiment_video import ExperimentVideo, VideoData
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.preprocessing.video import Video
 from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
@@ -85,7 +85,7 @@ def _set_ev_data(ev: ExperimentVideo, dataspec: dict[str, Any]) -> None:
 
     logger.debug(f'Getting video data for EV "{ev.name}"')
 
-    videodata = ExperimentVideo.VideoData(
+    videodata = VideoData(
         categories=categories,
         fps=Video(ev.path).fps(),
         # since there is no syncing between video and experimental data here,

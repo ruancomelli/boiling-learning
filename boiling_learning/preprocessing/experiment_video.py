@@ -16,6 +16,32 @@ from boiling_learning.utils.dataclasses import field
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 
+@dataclass
+class VideoData:
+    '''Class for video data representation.
+    # TODO: improve this doc
+
+    Attributes
+    ----------
+    categories: [...]. Example: {
+            'wire': 'NI80-...',
+            'nominal_power': 85
+        }
+    fps: [...]. Example: 30
+    ref_index: [...]. Example: 155
+    ref_elapsed_time: [...]. Example: 12103
+    '''
+
+    categories: Mapping[str, Any] = field(default_factory=dict)
+    fps: Optional[float] = None
+    ref_index: Optional[int] = None
+    ref_elapsed_time: Optional[timedelta] = None
+    start_elapsed_time: Optional[timedelta] = None
+    start_index: Optional[int] = None
+    end_elapsed_time: Optional[timedelta] = None
+    end_index: Optional[int] = None
+
+
 @dataclass(frozen=True)
 class _DataFrameColumnNames:
     index: str = 'index'
@@ -37,31 +63,6 @@ _COLUMN_TYPES = _DataFrameColumnTypes()
 
 
 class ExperimentVideo:
-    @dataclass
-    class VideoData:
-        '''Class for video data representation.
-        # TODO: improve this doc
-
-        Attributes
-        ----------
-        categories: [...]. Example: {
-                'wire': 'NI80-...',
-                'nominal_power': 85
-            }
-        fps: [...]. Example: 30
-        ref_index: [...]. Example: 155
-        ref_elapsed_time: [...]. Example: 12103
-        '''
-
-        categories: Mapping[str, Any] = field(default_factory=dict)
-        fps: Optional[float] = None
-        ref_index: Optional[int] = None
-        ref_elapsed_time: Optional[timedelta] = None
-        start_elapsed_time: Optional[timedelta] = None
-        start_index: Optional[int] = None
-        end_elapsed_time: Optional[timedelta] = None
-        end_index: Optional[int] = None
-
     @dataclass(frozen=True)
     class VideoDataKeys:
         categories: str = 'categories'
@@ -84,7 +85,7 @@ class ExperimentVideo:
         self.path = resolve(video_path)
         self.video: SliceableDataset[VideoFrame] = Video(self.path)
 
-        self._data: Optional[ExperimentVideo.VideoData] = None
+        self._data: Optional[VideoData] = None
         self.df: Optional[pd.DataFrame] = None
         self._name = name or self.path.stem
 

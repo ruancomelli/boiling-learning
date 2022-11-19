@@ -4,7 +4,7 @@ import json as _json
 from typing import Optional
 
 from boiling_learning.io.storage import dataclass
-from boiling_learning.preprocessing.experiment_video import ExperimentVideo
+from boiling_learning.preprocessing.experiment_video import ExperimentVideo, VideoData
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.utils.dataclasses import dataclass_from_mapping
 from boiling_learning.utils.pathutils import PathLike, resolve
@@ -70,7 +70,7 @@ class Case(ExperimentVideoDataset):
             raise RuntimeError(f'could not load video data from {data_path}. Got {video_data!r}.')
 
         video_data = {
-            name: dataclass_from_mapping(data, ExperimentVideo.VideoData, key_map=keys)
+            name: dataclass_from_mapping(data, VideoData, key_map=keys)
             for name, data in video_data.items()
         }
 
