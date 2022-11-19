@@ -15,7 +15,6 @@ from typing import (
     KeysView,
     NamedTuple,
     Optional,
-    TypeVar,
     Union,
     ValuesView,
 )
@@ -30,7 +29,6 @@ import tensorflow_addons as tfa
 from loguru import logger
 from rich.console import Console
 from rich.table import Table
-from skimage.io import imshow
 from typing_extensions import ParamSpec
 
 from boiling_learning.app.configuration import configure
@@ -69,7 +67,6 @@ from boiling_learning.model.training import (
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.preprocessing.transformers import Transformer
-from boiling_learning.preprocessing.video import VideoFrame
 from boiling_learning.scripts import (
     connect_gpus,
     load_cases,
@@ -236,14 +233,6 @@ def purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]:
     return [video.name for video in image_dataset if video.data is not None]
 
 
-# TODO: accept parameters directly in `get_image_dataset`
-# and stop using `GetImageDatasetParams` - but keep it internally
-# to avoid changing the description
-
-
-numpy_directory_allocator = JSONTableAllocator(analyses_path / 'datasets' / 'numpy', suffix='')
-
-
 def _compile_transformers(
     transformers: Iterable[Transformer[Image, Image]],
     experiment_video: ExperimentVideo,
@@ -276,6 +265,7 @@ def _get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
 
 
 EAGER_BUFFER_SIZE = 128
+numpy_directory_allocator = JSONTableAllocator(analyses_path / 'datasets' / 'numpy', suffix='')
 
 
 def _video_dataset_from_video_and_transformers(
@@ -334,22 +324,15 @@ def sliceable_dataset_from_video_and_transformers(
     )
 
 
-@dataclass(frozen=True)
-class GetImageDatasetParams:
-    image_dataset: ExperimentVideoDataset
-    transformers: list[Transformer[Image, Image]]
+def get_image_dataset(
+    image_dataset: ExperimentVideoDataset,
+    transformers: list[Transformer[Image, Image]],
     splits: DatasetSplits = DatasetSplits(
         train=Fraction(70, 100),
         val=Fraction(15, 100),
         test=Fraction(15, 100),
-    )
-
-
-def _get_image_dataset(
-    image_dataset: ExperimentVideoDataset,
-    transformers: list[Transformer[Image, Image]],
-    splits: DatasetSplits,
-) -> ImageDatasetTriplet:
+    ),
+) -> LazyDescribed[ImageDatasetTriplet]:
     purged_experiment_videos = purge_experiment_videos(image_dataset)
 
     ds_train_list = []
@@ -369,49 +352,24 @@ def _get_image_dataset(
     ds_val = SliceableDataset.concatenate(*ds_val_list)  # .cache(MemoryCache())
     ds_test = SliceableDataset.concatenate(*ds_test_list)  # .cache(MemoryCache())
 
-    return ds_train, ds_val, ds_test
-
-
-def get_image_dataset(
-    params: GetImageDatasetParams,
-) -> LazyDescribed[ImageDatasetTriplet]:
     return LazyDescribed.from_value_and_description(
-        _get_image_dataset(params.image_dataset, params.transformers, params.splits), params
+        DatasetTriplet(ds_train, ds_val, ds_test),
+        {
+            'image_dataset': image_dataset,
+            'transformers': transformers,
+            'splits': splits,
+        },
     )
 
-
-if OPTIONS.test:
-    get_image_dataset_params = GetImageDatasetParams(
-        boiling_cases_timed[0], transformers=boiling_direct_preprocessors
-    )
-    ds_train, ds_val, ds_test = get_image_dataset(get_image_dataset_params)()
-    ds_train_len = len(ds_train)
-    ds_val_len = len(ds_val)
-    ds_test_len = len(ds_test)
-    expected_length = sum(len(ev) for ev in boiling_cases_timed[0])
-    assert ds_train_len > ds_test_len > 0
-    assert (
-        ds_train_len + ds_val_len + ds_test_len == expected_length
-    ), f'{ds_train_len} + {ds_val_len} + {ds_test_len} == {ds_train_len + ds_val_len + ds_test_len} != {expected_length}'
-    sample_element = ds_train[0]
-    assert isinstance(sample_element[0], np.ndarray)
-    assert isinstance(sample_element[1], float)
-
-"""### Sliceable datasets"""
-
-
-_T = TypeVar('_T')
 
 # DEFAULT_PREFETCH_BUFFER_SIZE = 4
 DEFAULT_PREFETCH_BUFFER_SIZE = 1024
 
-training_datasets_allocator = JSONTableAllocator(analyses_path / 'datasets' / 'training')
-
 
 def _default_filter_for_frames_dataset(
     dataset: ImageDataset,
-) -> Callable[[tuple[VideoFrame, dict[str, Any]]], bool]:
-    def _pred(pair: tuple[VideoFrame, dict[str, Any]]) -> bool:
+) -> Callable[[tuple[Image, Targets]], bool]:
+    def _pred(pair: tuple[Image, Targets]) -> bool:
         if len(pair) != 2:
             return False
 
@@ -422,13 +380,14 @@ def _default_filter_for_frames_dataset(
     return _pred
 
 
+training_datasets_allocator = JSONTableAllocator(analyses_path / 'datasets' / 'training')
+
+
 def to_tensorflow(
     dataset: LazyDescribed[ImageDataset],
     *,
     batch_size: Optional[int] = None,
-    prefilterer: Optional[
-        LazyDescribed[Callable[[tuple[VideoFrame, dict[str, Any]]], bool]]
-    ] = None,
+    prefilterer: Optional[LazyDescribed[Callable[[tuple[Image, Targets]], bool]]] = None,
     filterer: Optional[Callable[..., bool]] = None,
     buffer_size: int = DEFAULT_PREFETCH_BUFFER_SIZE,
     target: Optional[str] = None,
@@ -438,7 +397,7 @@ def to_tensorflow(
 
     default_prefilterer = _default_filter_for_frames_dataset(dataset_value)
 
-    def _prefilterer(element: tuple[VideoFrame, dict[str, Any]]) -> bool:
+    def _prefilterer(element: tuple[Image, Targets]) -> bool:
         return default_prefilterer(element) and (prefilterer is None or prefilterer()(element))
 
     save_path = training_datasets_allocator.allocate(dataset, prefilterer)
@@ -480,7 +439,7 @@ def to_tensorflow_triplet(
     dataset: LazyDescribed[ImageDatasetTriplet],
     *,
     batch_size: Optional[int] = None,
-    prefilterer: Optional[LazyDescribed[Callable[[_T], bool]]] = None,
+    prefilterer: Optional[LazyDescribed[Callable[[Image, Targets], bool]]] = None,
     filterer: Optional[Callable[..., bool]] = None,
     buffer_size: int = DEFAULT_PREFETCH_BUFFER_SIZE,
     target: Optional[str] = None,
@@ -604,12 +563,12 @@ boiling_indirect_preprocessors = make_boiling_processors.main(direct_visualizati
 logger.debug('Getting datasets')
 
 boiling_direct_datasets = tuple(
-    get_image_dataset(GetImageDatasetParams(case, transformers=boiling_direct_preprocessors))
+    get_image_dataset(case, transformers=boiling_direct_preprocessors)
     for case in boiling_cases_timed
 )
 
 boiling_indirect_datasets = tuple(
-    get_image_dataset(GetImageDatasetParams(case, transformers=boiling_indirect_preprocessors))
+    get_image_dataset(case, transformers=boiling_indirect_preprocessors)
     for case in boiling_cases_timed
 )
 
@@ -655,7 +614,7 @@ condensation_dataset = (
     LazyDescribed.from_describable(
         tuple(
             (
-                get_image_dataset(GetImageDatasetParams(ds, condensation_preprocessors))
+                get_image_dataset(ds, condensation_preprocessors)
                 | dataset_sampler(CONDENSATION_SUBSAMPLE)
             )
             for ds in condensation_datasets
@@ -818,22 +777,6 @@ fit_condensation_model = FitCondensationModel(
         loader=load_with_strategy(strategy),
     )
 )
-
-
-if OPTIONS.test:
-    get_image_dataset_params = GetImageDatasetParams(
-        boiling_cases_timed[0],
-        transformers=boiling_direct_preprocessors,
-        dataset_size=None,
-    )
-
-    logger.info(f'Getting datasets...')
-    ds_train, ds_val, ds_test = get_image_dataset(get_image_dataset_params)
-    logger.info(f'Done')
-
-    frame, _ = ds_train[0]
-
-    imshow(frame.squeeze())
 
 
 @cache(
@@ -1165,7 +1108,7 @@ boiling_target_name = 'Flux [W/cm**2]'
 #     )
 # )
 
-# sample_frames: list[VideoFrame] = []
+# sample_frames: list[Image] = []
 # for case in boiling_cases_timed:
 #     get_image_dataset_params = GetImageDatasetParams(
 #         case,
@@ -1850,14 +1793,10 @@ condensation_all_cases = ExperimentVideoDataset.make_union(
     )
 )
 
-get_image_dataset_params = GetImageDatasetParams(
+ds_train, ds_val, ds_test = get_image_dataset(
     condensation_all_cases,
     transformers=condensation_preprocessors,
-    # dataset_size=Fraction(1, 100),
-    dataset_size=None,
 )
-
-ds_train, ds_val, ds_test = get_image_dataset(get_image_dataset_params)
 
 """#### First Condensation Case"""
 
@@ -1887,7 +1826,7 @@ get_image_dataset_params = GetImageDatasetParams(
 
 logger.info('Getting datasets...')
 # TODO: this should be set by `set_condensation_datasets_data`
-def _set_case_name(data: dict[str, Any]) -> dict[str, Any]:
+def _set_case_name(data: Targets) -> Targets:
     data['case_name'] = ':'.join(data['name'].split(':')[:2])
     return data
 
@@ -1903,7 +1842,7 @@ CLASSES = sorted(frozenset(targets(ds_train).map(itemgetter('case_name')).prefet
 N_CLASSES = len(CLASSES)
 
 
-def _set_case(data: dict[str, Any]) -> dict[str, Any]:
+def _set_case(data: Targets) -> Targets:
     data['case'] = CLASSES.index(data['case_name'])
     return data
 
