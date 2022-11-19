@@ -41,6 +41,27 @@ class VideoData:
     end_elapsed_time: Optional[timedelta] = None
     end_index: Optional[int] = None
 
+    def video_limits(self) -> tuple[int, Optional[int]]:
+        if self.start_index is not None:
+            start = self.start_index
+        elif self.start_elapsed_time is not None:
+            assert self.fps is not None
+
+            start = round(self.start_elapsed_time.total_seconds() * self.fps)
+        else:
+            start = 0
+
+        if self.end_index is not None:
+            end = self.end_index
+        elif self.end_elapsed_time is not None:
+            assert self.fps is not None
+
+            end = round(self.end_elapsed_time.total_seconds() * self.fps)
+        else:
+            end = None
+
+        return start, end
+
 
 @dataclass(frozen=True)
 class _DataFrameColumnNames:
@@ -139,36 +160,12 @@ class ExperimentVideo:
     @data.setter
     def data(self, data: VideoData) -> None:
         self._data = data
-        self._shrink_video_to_data()
-
-    def _shrink_video_to_data(self) -> None:
-        video_data = self.data
-
-        assert video_data is not None
 
         logger.debug(f"Shrinking video to data for EV \"{self.name}\"")
-
-        if video_data.start_index is not None:
-            start = video_data.start_index
-        elif video_data.start_elapsed_time is not None:
-            assert video_data.fps is not None
-
-            start = round(video_data.start_elapsed_time.total_seconds() * video_data.fps)
-        else:
-            start = 0
-
-        if video_data.end_index is not None:
-            end = video_data.end_index
-        elif video_data.end_elapsed_time is not None:
-            assert video_data.fps is not None
-
-            end = round(video_data.end_elapsed_time.total_seconds() * video_data.fps)
-        else:
-            end = None
+        start, end = data.video_limits()
 
         if start != 0 or end is not None:
             self.video = self.video[start:end]
-
         logger.debug(f"Video in range {start}-{end} for EV \"{self.name}\"")
 
     def convert_video(
