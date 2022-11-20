@@ -74,19 +74,14 @@ class SupportsSaveable(
     ...
 
 
-@typeclass(Saveable)
 def save(obj: Supports[Saveable], path: PathLike) -> None:
     '''Save objects.'''
-
-
-@save.instance(delegate=SupportsSerializable)
-def _save_serializable(instance: Supports[Serializable], path: PathLike) -> None:
     path = resolve(path, dir=True)
 
-    serialization_metadata = serialize(instance, path / DATA_FILENAME)
+    serialization_metadata = serialize(obj, path / DATA_FILENAME)
 
     metadata = {
-        'type': type(instance) if instance is not None else None,
+        'type': type(obj) if obj is not None else None,
         'metadata': serialization_metadata,
     }
     json.dump(metadata, path / METADATA_FILENAME)
