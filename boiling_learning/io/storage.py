@@ -32,25 +32,64 @@ class Serializable(AssociatedType):
     ...
 
 
+class _SerializableMeta(type):
+    def __instancecheck__(self, instance: Any) -> bool:
+        return serialize.supports(instance)
+
+
+class SupportsSerializable(Supports[Serializable], metaclass=_SerializableMeta):
+    ...
+
+
 @typeclass(Serializable)
 def serialize(instance: Supports[Serializable], path: Path) -> Metadata:
     '''Serialize object contents.'''
 
 
-def save(obj: Supports[Serializable], path: PathLike) -> None:
-    '''Save objects.'''
-    path = resolve(path, dir=True)
+class _DeserializableMeta(type):
+    def __instancecheck__(self, instance: Any) -> bool:
+        return instance in deserialize
 
-    serialization_metadata = serialize(obj, path / DATA_FILENAME)
 
-    metadata = {
-        'type': type(obj) if obj is not None else None,
-        'metadata': serialization_metadata,
-    }
-    json.dump(metadata, path / METADATA_FILENAME)
+class SupportsDeserializable(metaclass=_DeserializableMeta):
+    ...
 
 
 deserialize = TableDispatcher()
+
+
+class Saveable(AssociatedType):
+    ...
+
+
+class _SupportsSaveableMeta(type):
+    def __instancecheck__(self, instance: Any) -> bool:
+        return save.supports(instance)
+
+
+class SupportsSaveable(
+    Supports[Saveable],
+    metaclass=_SupportsSaveableMeta,
+):
+    ...
+
+
+@typeclass(Saveable)
+def save(obj: Supports[Saveable], path: PathLike) -> None:
+    '''Save objects.'''
+
+
+@save.instance(delegate=SupportsSerializable)
+def _save_serializable(instance: Supports[Serializable], path: PathLike) -> None:
+    path = resolve(path, dir=True)
+
+    serialization_metadata = serialize(instance, path / DATA_FILENAME)
+
+    metadata = {
+        'type': type(instance) if instance is not None else None,
+        'metadata': serialization_metadata,
+    }
+    json.dump(metadata, path / METADATA_FILENAME)
 
 
 def load(path: PathLike) -> Any:
