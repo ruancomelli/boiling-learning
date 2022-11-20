@@ -21,10 +21,8 @@ from typing import (
 )
 
 import funcy
-import matplotlib.pyplot as plt
 import modin.pandas as pd
 import numpy as np
-import seaborn as sns
 import tensorflow as tf
 import tensorflow_addons as tfa
 from loguru import logger
@@ -265,11 +263,9 @@ def _get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
 
 
 EAGER_BUFFER_SIZE = 128
-numpy_directory_boiling_allocator = JSONAllocator(
-    analyses_path / 'datasets' / 'numpy' / 'boiling', suffix=''
-)
+numpy_directory_boiling_allocator = JSONAllocator(analyses_path / 'datasets' / 'numpy' / 'boiling')
 numpy_directory_condensation_allocator = JSONAllocator(
-    analyses_path / 'datasets' / 'numpy' / 'condensation', suffix=''
+    analyses_path / 'datasets' / 'numpy' / 'condensation'
 )
 
 
@@ -802,7 +798,7 @@ class FitCondensationModel(CachedFunction[_P, FitModelReturn]):
 
 fit_boiling_model = FitBoilingModel(
     Cacher(
-        allocator=JSONAllocator(analyses_path / 'models' / 'boiling', suffix=''),
+        allocator=JSONAllocator(analyses_path / 'models' / 'boiling'),
         exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
         loader=load_with_strategy(strategy),
     )
@@ -810,7 +806,7 @@ fit_boiling_model = FitBoilingModel(
 
 fit_condensation_model = FitCondensationModel(
     Cacher(
-        allocator=JSONAllocator(analyses_path / 'models' / 'condensation', suffix=''),
+        allocator=JSONAllocator(analyses_path / 'models' / 'condensation'),
         exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
         loader=load_with_strategy(strategy),
     )
@@ -1053,51 +1049,51 @@ def autofit_to_dataset(
 PREFETCH = 2048
 
 
-@cache(JSONAllocator(analyses_path / 'cache' / 'targets'))
-def get_targets(
-    dataset: LazyDescribed[ImageDatasetTriplet],
-) -> tuple[list[Targets], list[Targets], list[Targets]]:
-    ds_train, ds_val, ds_test = dataset()
+# @cache(JSONAllocator(analyses_path / 'cache' / 'targets'))
+# def get_targets(
+#     dataset: LazyDescribed[ImageDatasetTriplet],
+# ) -> tuple[list[Targets], list[Targets], list[Targets]]:
+#     ds_train, ds_val, ds_test = dataset()
 
-    return (
-        list(targets(ds_train).prefetch(PREFETCH)),
-        list(targets(ds_val).prefetch(PREFETCH)),
-        list(targets(ds_test).prefetch(PREFETCH)),
-    )
+#     return (
+#         list(targets(ds_train).prefetch(PREFETCH)),
+#         list(targets(ds_val).prefetch(PREFETCH)),
+#         list(targets(ds_test).prefetch(PREFETCH)),
+#     )
 
 
-def plot_dataset_targets(
-    datasets: tuple[LazyDescribed[ImageDatasetTriplet], ...],
-    *,
-    target_name: str,
-    filter_target: Optional[Callable[[Targets], bool]] = None,
-) -> None:
-    sns.set_style('whitegrid')
+# def plot_dataset_targets(
+#     datasets: tuple[LazyDescribed[ImageDatasetTriplet], ...],
+#     *,
+#     target_name: str,
+#     filter_target: Optional[Callable[[Targets], bool]] = None,
+# ) -> None:
+#     sns.set_style('whitegrid')
 
-    f, axes = plt.subplots(len(datasets), 3, figsize=(9, 9), sharey='row')
+#     f, axes = plt.subplots(len(datasets), 3, figsize=(9, 9), sharey='row')
 
-    for row, splits in enumerate(datasets):
-        targets_train, targets_val, targets_test = get_targets(splits)
-        for col, (title, ys) in enumerate(
-            (
-                ('train', targets_train),
-                ('val', targets_val),
-                ('test', targets_test),
-            )
-        ):
-            y = [
-                target[target_name]
-                for target in ys
-                if filter_target is None or filter_target(target)
-            ]
-            x = range(len(y))
-            axes[row, col].scatter(x, y)
+#     for row, splits in enumerate(datasets):
+#         targets_train, targets_val, targets_test = get_targets(splits)
+#         for col, (title, ys) in enumerate(
+#             (
+#                 ('train', targets_train),
+#                 ('val', targets_val),
+#                 ('test', targets_test),
+#             )
+#         ):
+#             y = [
+#                 target[target_name]
+#                 for target in ys
+#                 if filter_target is None or filter_target(target)
+#             ]
+#             x = range(len(y))
+#             axes[row, col].scatter(x, y)
 
-            if not row:
-                axes[row, col].set_title(title)
+#             if not row:
+#                 axes[row, col].set_title(title)
 
-            if not col:
-                axes[row, col].set_ylabel(f'Dataset #{row + 1}')
+#             if not col:
+#                 axes[row, col].set_ylabel(f'Dataset #{row + 1}')
 
 
 """#### On-wire pool boiling"""

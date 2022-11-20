@@ -86,7 +86,7 @@ class JSONAllocator(Allocator):
             ],
             json.JSONDataType,
         ] = json_describe,
-        suffix: str = '.json',
+        suffix: str = '',
     ) -> None:
         root = resolve(path, dir=True)
         self.path = resolve(root / 'data', dir=True)
