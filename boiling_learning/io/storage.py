@@ -32,49 +32,12 @@ class Serializable(AssociatedType):
     ...
 
 
-class _SerializableMeta(type):
-    def __instancecheck__(self, instance: Any) -> bool:
-        return serialize.supports(instance)
-
-
-class SupportsSerializable(Supports[Serializable], metaclass=_SerializableMeta):
-    ...
-
-
 @typeclass(Serializable)
 def serialize(instance: Supports[Serializable], path: Path) -> Metadata:
     '''Serialize object contents.'''
 
 
-class _DeserializableMeta(type):
-    def __instancecheck__(self, instance: Any) -> bool:
-        return instance in deserialize
-
-
-class SupportsDeserializable(metaclass=_DeserializableMeta):
-    ...
-
-
-deserialize = TableDispatcher()
-
-
-class Saveable(AssociatedType):
-    ...
-
-
-class _SupportsSaveableMeta(type):
-    def __instancecheck__(self, instance: Any) -> bool:
-        return save.supports(instance)
-
-
-class SupportsSaveable(
-    Supports[Saveable],
-    metaclass=_SupportsSaveableMeta,
-):
-    ...
-
-
-def save(obj: Supports[Saveable], path: PathLike) -> None:
+def save(obj: Supports[Serializable], path: PathLike) -> None:
     '''Save objects.'''
     path = resolve(path, dir=True)
 
@@ -85,6 +48,9 @@ def save(obj: Supports[Saveable], path: PathLike) -> None:
         'metadata': serialization_metadata,
     }
     json.dump(metadata, path / METADATA_FILENAME)
+
+
+deserialize = TableDispatcher()
 
 
 def load(path: PathLike) -> Any:
