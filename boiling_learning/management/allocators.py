@@ -72,7 +72,7 @@ def _json_describe_describable(
     return json_describe(describe(instance))
 
 
-class JSONTableAllocator(Allocator):
+class JSONAllocator(Allocator):
     def __init__(
         self,
         path: PathLike,

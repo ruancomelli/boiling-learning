@@ -44,7 +44,7 @@ from boiling_learning.descriptions import describe
 from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
 from boiling_learning.io.storage import dataclass
 from boiling_learning.lazy import Lazy, LazyDescribed
-from boiling_learning.management.allocators import JSONTableAllocator
+from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import CachedFunction, Cacher, cache
 from boiling_learning.model.callbacks import (
     AdditionalValidationSets,
@@ -166,11 +166,6 @@ strategy = connect_gpus.main(require_gpu=False)
 strategy = LazyDescribed.from_value_and_description(strategy, typename(strategy))
 logger.info(f'Using distribute strategy: {describe(strategy)}')
 
-"""## Datasets
-
-### Image datasets
-"""
-
 boiling_cases_names = tuple(f'case {idx+1}' for idx in range(5))
 boiling_cases_names_timed = tuple(funcy.without(boiling_cases_names, 'case 1'))
 
@@ -229,7 +224,7 @@ def ensure_data_is_set(video: ExperimentVideo) -> None:
         setter()
 
 
-@cache(JSONTableAllocator(analyses_path / 'cache' / 'purged-experiment-videos'))
+@cache(JSONAllocator(analyses_path / 'cache' / 'purged-experiment-videos'))
 def purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]:
     for video in tuple(image_dataset):
         ensure_data_is_set(video)
@@ -258,7 +253,7 @@ class VideoInfo:
     dtype: str
 
 
-@cache(JSONTableAllocator(analyses_path / 'cache' / 'video-info'))
+@cache(JSONAllocator(analyses_path / 'cache' / 'video-info'))
 def _get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
     dataset = video()
     first_frame = dataset[0]
@@ -270,10 +265,10 @@ def _get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
 
 
 EAGER_BUFFER_SIZE = 128
-numpy_directory_boiling_allocator = JSONTableAllocator(
+numpy_directory_boiling_allocator = JSONAllocator(
     analyses_path / 'datasets' / 'numpy' / 'boiling', suffix=''
 )
-numpy_directory_condensation_allocator = JSONTableAllocator(
+numpy_directory_condensation_allocator = JSONAllocator(
     analyses_path / 'datasets' / 'numpy' / 'condensation', suffix=''
 )
 
@@ -311,7 +306,7 @@ def _dataframe_targets_to_csv(targets: pd.DataFrame, path: Path) -> None:
 
 
 @cache(
-    JSONTableAllocator(analyses_path / 'datasets' / 'targets' / 'boiling', suffix='.csv'),
+    JSONAllocator(analyses_path / 'datasets' / 'targets' / 'boiling', suffix='.csv'),
     saver=_dataframe_targets_to_csv,
     loader=pd.read_csv,
     exceptions=(OSError, AttributeError),
@@ -321,7 +316,7 @@ def _experiment_video_targets_as_dataframe_boiling(video: ExperimentVideo) -> pd
 
 
 @cache(
-    JSONTableAllocator(analyses_path / 'datasets' / 'targets' / 'condensation', suffix='.csv'),
+    JSONAllocator(analyses_path / 'datasets' / 'targets' / 'condensation', suffix='.csv'),
     saver=_dataframe_targets_to_csv,
     loader=pd.read_csv,
     exceptions=(OSError, AttributeError),
@@ -412,10 +407,10 @@ def _default_filter_for_frames_dataset(
     return _pred
 
 
-training_datasets_allocator_boiling = JSONTableAllocator(
+training_datasets_allocator_boiling = JSONAllocator(
     analyses_path / 'datasets' / 'training' / 'boiling'
 )
-training_datasets_allocator_condensation = JSONTableAllocator(
+training_datasets_allocator_condensation = JSONAllocator(
     analyses_path / 'datasets' / 'training' / 'condensation'
 )
 
@@ -807,7 +802,7 @@ class FitCondensationModel(CachedFunction[_P, FitModelReturn]):
 
 fit_boiling_model = FitBoilingModel(
     Cacher(
-        allocator=JSONTableAllocator(analyses_path / 'models' / 'boiling', suffix=''),
+        allocator=JSONAllocator(analyses_path / 'models' / 'boiling', suffix=''),
         exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
         loader=load_with_strategy(strategy),
     )
@@ -815,7 +810,7 @@ fit_boiling_model = FitBoilingModel(
 
 fit_condensation_model = FitCondensationModel(
     Cacher(
-        allocator=JSONTableAllocator(analyses_path / 'models' / 'condensation', suffix=''),
+        allocator=JSONAllocator(analyses_path / 'models' / 'condensation', suffix=''),
         exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
         loader=load_with_strategy(strategy),
     )
@@ -823,7 +818,7 @@ fit_condensation_model = FitCondensationModel(
 
 
 @cache(
-    allocator=JSONTableAllocator(analyses_path / 'autofit' / 'models'),
+    allocator=JSONAllocator(analyses_path / 'autofit' / 'models'),
     exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
     loader=load_with_strategy(strategy),
 )
@@ -969,9 +964,7 @@ def get_pretrained_baseline_boiling_model(
 # pretrained_baseline_boiling_model_architecture_indirect = get_pretrained_baseline_boiling_model(direct=False, normalize_images=False)
 
 
-_autofit_to_dataset_allocator = JSONTableAllocator(
-    analyses_path / 'autofit' / 'autofit-to-dataset'
-)
+_autofit_to_dataset_allocator = JSONAllocator(analyses_path / 'autofit' / 'autofit-to-dataset')
 
 
 def autofit_to_dataset(
@@ -1060,7 +1053,7 @@ def autofit_to_dataset(
 PREFETCH = 2048
 
 
-@cache(JSONTableAllocator(analyses_path / 'cache' / 'targets'))
+@cache(JSONAllocator(analyses_path / 'cache' / 'targets'))
 def get_targets(
     dataset: LazyDescribed[ImageDatasetTriplet],
 ) -> tuple[list[Targets], list[Targets], list[Targets]]:
@@ -1490,7 +1483,7 @@ ds_evaluation_indirect = to_tensorflow(
 )
 
 
-@cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-learning-curve'))
+@cache(JSONAllocator(analyses_path / 'studies' / 'boiling-learning-curve'))
 def boiling_learning_curve_point(
     fraction: Fraction, *, direct: bool = True, normalize_images: bool = False
 ) -> dict[str, float]:
@@ -1662,7 +1655,7 @@ logger.info('Analyzing cross-surface boiling evaluation')
 BATCH_SIZE = 200
 
 
-@cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-cross-surface'))
+@cache(JSONAllocator(analyses_path / 'studies' / 'boiling-cross-surface'))
 def boiling_cross_surface_evaluation(
     direct_visualization: bool,
     training_cases: tuple[int, ...],

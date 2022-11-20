@@ -6,7 +6,7 @@ import pytest
 from boiling_learning.descriptions import describe
 from boiling_learning.io.json import dump as saver
 from boiling_learning.io.json import load as loader
-from boiling_learning.management.allocators import JSONTableAllocator
+from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import Cacher, cache
 from boiling_learning.utils.functional import P
 
@@ -22,12 +22,12 @@ def cache_path(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def allocator(cache_path: Path) -> JSONTableAllocator:
-    return JSONTableAllocator(cache_path)
+def allocator(cache_path: Path) -> JSONAllocator:
+    return JSONAllocator(cache_path)
 
 
 class TestAllocators:
-    def test_JSONAllocator(self, allocator: JSONTableAllocator) -> None:
+    def test_JSONAllocator(self, allocator: JSONAllocator) -> None:
         p1 = P('3.14', 0, name='pi')
         p2 = P('hello')
 
@@ -39,7 +39,7 @@ class TestAllocators:
 
 
 class TestCacher:
-    def test_provide(self, allocator: JSONTableAllocator, filepath: Path):
+    def test_provide(self, allocator: JSONAllocator, filepath: Path):
         cacher = Cacher(allocator, saver=saver, loader=loader)
 
         MISSING = 0
@@ -57,7 +57,7 @@ class TestCacher:
         assert not filepath.is_file()
         assert cacher.provide(creator, filepath) == MISSING
 
-    def test_cache(self, allocator: JSONTableAllocator) -> None:
+    def test_cache(self, allocator: JSONAllocator) -> None:
         history = []
 
         def side_effect(number: float, name: str) -> None:
