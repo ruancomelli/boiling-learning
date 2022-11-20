@@ -23,6 +23,9 @@ Metadata = json.JSONDataType
 _DataClassType = TypeVar('_DataClassType', bound=Type[DataClass])
 _AnyCallable = TypeVar('_AnyCallable', bound=Callable[..., Any])
 
+DATA_FILENAME = '__data__'
+METADATA_FILENAME = '__boiling_learning_save_meta__.json'
+
 
 @final
 class Serializable(AssociatedType):
@@ -80,25 +83,23 @@ def save(obj: Supports[Saveable], path: PathLike) -> None:
 def _save_serializable(instance: Supports[Serializable], path: PathLike) -> None:
     path = resolve(path, dir=True)
 
-    serialization_metadata = serialize(instance, path / '__data__')
+    serialization_metadata = serialize(instance, path / DATA_FILENAME)
 
-    metadata_path = path / '__boiling_learning_save_meta__.json'
     metadata = {
         'type': type(instance) if instance is not None else None,
         'metadata': serialization_metadata,
     }
-    json.dump(metadata, metadata_path)
+    json.dump(metadata, path / METADATA_FILENAME)
 
 
 def load(path: PathLike) -> Any:
     path = resolve(path)
 
-    metadata_path = path / '__boiling_learning_save_meta__.json'
-    metadata = json.load(metadata_path)
+    metadata = json.load(path / METADATA_FILENAME)
 
     obj_type = metadata['type']
 
-    return deserialize[obj_type](path / '__data__', metadata['metadata'])
+    return deserialize[obj_type](path / DATA_FILENAME, metadata['metadata'])
 
 
 class _SimpleJSONEncodableMeta(type):
