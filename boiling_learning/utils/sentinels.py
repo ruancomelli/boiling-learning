@@ -6,9 +6,9 @@ from typing import TypeVar, Union
 _T = TypeVar('_T')
 
 
-class Sentinel(enum.Enum):
+class _Sentinel(enum.Enum):
     INSTANCE = enum.auto()
 
 
-EMPTY = Sentinel.INSTANCE
-Emptiable = Union[Sentinel, _T]
+EMPTY = _Sentinel.INSTANCE
+Emptiable = Union[_Sentinel, _T]
