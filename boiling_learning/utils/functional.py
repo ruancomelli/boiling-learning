@@ -8,7 +8,6 @@ import funcy
 
 from boiling_learning.descriptions import describe
 from boiling_learning.utils.frozendicts import frozendict
-from boiling_learning.utils.sentinels import EMPTY, Emptiable
 
 # TODO: when variadic generics are available, they will be very useful here
 _T = TypeVar('_T')
@@ -152,5 +151,5 @@ class Pack(Generic[_T, _S]):
 
 
 class P(Pack[_T, _S], Generic[_T, _S]):
-    def __init__(self, *args: _T, cls: Emptiable[Any] = EMPTY, **kwargs: _S) -> None:
+    def __init__(self, *args: _T, **kwargs: _S) -> None:
         super().__init__(args, kwargs)
