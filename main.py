@@ -659,6 +659,16 @@ condensation_dataset = (
 _P = ParamSpec('_P')
 
 
+def _boiling_outlier_filter(target: Targets) -> bool:
+    return abs(target['Power [W]'] - target['nominal_power']) < 5
+
+
+BOILING_OUTLIER_FILTER = LazyDescribed.from_value_and_description(
+    _boiling_outlier_filter, 'abs(Power [W] - nominal_power) < 5'
+)
+BOILING_HEAT_FLUX_TARGET = 'Flux [W/cm**2]'
+
+
 class FitBoilingModel(CachedFunction[_P, FitModelReturn]):
     def __init__(self, cacher: Cacher[FitModelReturn]) -> None:
         super().__init__(get_fit_model, cacher)
@@ -669,24 +679,19 @@ class FitBoilingModel(CachedFunction[_P, FitModelReturn]):
         datasets: LazyDescribed[ImageDatasetTriplet],
         params: FitModelParams,
         try_id: int = 0,
-        target: str = 'Flux [W/cm**2]',
+        target: str = BOILING_HEAT_FLUX_TARGET,
     ) -> FitModelReturn:
         """
         try_id: use this to force this model to be trained again. This may be used for instance to get a average and
             stddev.
         """
 
-        def _is_not_outlier(_frame: Image, data: Targets) -> bool:
-            return abs(data['Power [W]'] - data['nominal_power']) < 5
-
         def _is_gt10(frame: Image, data: Targets) -> bool:
             return data[target] >= 10
 
         ds_val_g10 = to_tensorflow(
             datasets | subset('val'),
-            prefilterer=LazyDescribed.from_value_and_description(
-                _is_not_outlier, 'abs(Power [W] - nominal_power) < 5'
-            ),
+            prefilterer=BOILING_OUTLIER_FILTER,
             filterer=_is_gt10,
             batch_size=params.batch_size,
             target=target,
@@ -724,9 +729,7 @@ class FitBoilingModel(CachedFunction[_P, FitModelReturn]):
                 subset()
                 for subset in to_tensorflow_triplet(
                     datasets,
-                    prefilterer=LazyDescribed.from_value_and_description(
-                        _is_not_outlier, 'abs(Power [W] - nominal_power) < 5'
-                    ),
+                    prefilterer=BOILING_OUTLIER_FILTER,
                     batch_size=params.batch_size,
                     include_test=False,
                     target=target,
@@ -823,12 +826,14 @@ def autofit(
     datasets: LazyDescribed[ImageDatasetTriplet],
     params: TuneModelParams,
     target: str,
+    experiment: Literal['boiling1d', 'condensation'],
 ) -> TuneModelReturn:
     ds_train, ds_val, ds_test = to_tensorflow_triplet(
         datasets,
         batch_size=params.batch_size,
         include_test=False,
         target=target,
+        experiment=experiment,
     )
 
     if not any(isinstance(callback, MemoryCleanUp) for callback in params.callbacks()):
@@ -952,7 +957,7 @@ def get_pretrained_baseline_boiling_model(
         compiled_model,
         baseline_boiling_dataset_direct if direct else baseline_boiling_dataset_indirect,
         get_baseline_fit_params(),
-        target='Flux [W/cm**2]',
+        target=BOILING_HEAT_FLUX_TARGET,
     )
 
 
@@ -967,6 +972,7 @@ def autofit_to_dataset(
     datasets: LazyDescribed[ImageDatasetTriplet],
     *,
     target: str,
+    experiment: Literal['boiling1d', 'condensation'],
     normalize_images: bool = True,
     max_model_size: Optional[int] = None,
     goal: Optional[float] = None,
@@ -1017,6 +1023,7 @@ def autofit_to_dataset(
         datasets=datasets,
         params=tune_model_params,
         target=target,
+        experiment=experiment,
     )
 
 
@@ -1099,19 +1106,16 @@ PREFETCH = 2048
 """#### On-wire pool boiling"""
 
 
-boiling_filter_target = lambda target: abs(target['Power [W]'] - target['nominal_power']) < 5
-boiling_target_name = 'Flux [W/cm**2]'
-
 # plot_dataset_targets(
 #     boiling_direct_datasets,
-#     target_name=boiling_target_name,
-#     filter_target=boiling_filter_target
+#     target_name=BOILING_HEAT_FLUX_TARGET,
+#     filter_target=BOILING_OUTLIER_FILTER
 # )
 
 # plot_dataset_targets(
 #     boiling_indirect_datasets,
-#     target_name=boiling_target_name,
-#     filter_target=boiling_filter_target
+#     target_name=BOILING_HEAT_FLUX_TARGET,
+#     filter_target=BOILING_OUTLIER_FILTER
 # )
 
 """#### Condensation"""
@@ -1251,7 +1255,7 @@ boiling_target_name = 'Flux [W/cm**2]'
 #         if not col:
 #             ax.set_ylabel(f"Dataset {row + 1}")
 
-#         ax.set_xlabel(f"{data['Flux [W/cm**2]']:.2f}W/cm² (#{data['index']})")
+#         ax.set_xlabel(f"{data[BOILING_HEAT_FLUX_TARGET]:.2f}W/cm² (#{data['index']})")
 #         ax.imshow(frame.squeeze(), cmap="gray")
 #         ax.grid(False)
 
@@ -1399,7 +1403,7 @@ for retrain_index in range(NUMBER_OF_RETRAINS):
             compiled_model,
             baseline_boiling_dataset_direct,
             fit_model_params,
-            target='Flux [W/cm**2]',
+            target=BOILING_HEAT_FLUX_TARGET,
             try_id=retrain_index,
         )
     print(model)
@@ -1450,7 +1454,9 @@ fit_model_params = FitModelParams(
 )
 
 with strategy_scope(strategy):
-    model = fit_boiling_model(compiled_model, DATASET, fit_model_params, target='Flux [W/cm**2]')
+    model = fit_boiling_model(
+        compiled_model, DATASET, fit_model_params, target=BOILING_HEAT_FLUX_TARGET
+    )
 pprint(model)
 logger.info('Done')
 
@@ -1467,14 +1473,14 @@ BATCH_SIZE = 200
 ds_evaluation_direct = to_tensorflow(
     baseline_boiling_dataset_direct | subset('val'),
     batch_size=BATCH_SIZE,
-    target='Flux [W/cm**2]',
+    target=BOILING_HEAT_FLUX_TARGET,
     experiment='boiling1d',
 )
 
 ds_evaluation_indirect = to_tensorflow(
     baseline_boiling_dataset_indirect | subset('val'),
     batch_size=BATCH_SIZE,
-    target='Flux [W/cm**2]',
+    target=BOILING_HEAT_FLUX_TARGET,
     experiment='boiling1d',
 )
 
@@ -1502,7 +1508,7 @@ def boiling_learning_curve_point(
     logger.info('Training...')
 
     model = fit_boiling_model(
-        compiled_model, datasets, get_baseline_fit_params(), target='Flux [W/cm**2]'
+        compiled_model, datasets, get_baseline_fit_params(), target=BOILING_HEAT_FLUX_TARGET
     )
 
     logger.info(f'Evaluating: {fraction}')
@@ -1554,20 +1560,22 @@ console.print(learning_curve_analysis)
 
 regular_wire_best_model_direct_visualization = autofit_to_dataset(
     baseline_boiling_dataset_direct,
-    target=boiling_target_name,
+    target=BOILING_HEAT_FLUX_TARGET,
     normalize_images=True,
     max_model_size=baseline_boiling_model_direct_size,
     goal=None,
+    experiment='boiling1d',
 )
 
 print(regular_wire_best_model_direct_visualization)
 
 regular_wire_best_model_indirect_visualization = autofit_to_dataset(
     baseline_boiling_dataset_indirect,
-    target=boiling_target_name,
+    target=BOILING_HEAT_FLUX_TARGET,
     normalize_images=True,
     max_model_size=baseline_boiling_model_indirect_size,
     goal=None,
+    experiment='boiling1d',
 )
 
 print(regular_wire_best_model_indirect_visualization)
@@ -1582,10 +1590,11 @@ regular_wire_best_model_direct_visualization_less_data = autofit_to_dataset(
     LazyDescribed.from_value_and_description(
         (ds_train(), ds_val(), None), (ds_train, ds_val, None)
     ),
-    target=boiling_target_name,
+    target=BOILING_HEAT_FLUX_TARGET,
     normalize_images=True,
     max_model_size=baseline_boiling_model_indirect_size,
     goal=None,
+    experiment='boiling1d',
 )
 
 print(regular_wire_best_model_direct_visualization_less_data)
@@ -1642,7 +1651,7 @@ print(regular_wire_best_model_direct_visualization_less_data)
 #     hypermodel,
 #     datasets=boiling_direct_datasets[1],
 #     params=tune_model_params,
-#     target='Flux [W/cm**2]',
+#     target=BOILING_HEAT_FLUX_TARGET,
 # )
 # print(regular_wire_best_model)
 
@@ -1683,7 +1692,10 @@ def boiling_cross_surface_evaluation(
     logger.info('Training...')
 
     model = fit_boiling_model(
-        compiled_model, training_dataset, get_baseline_fit_params(), target='Flux [W/cm**2]'
+        compiled_model,
+        training_dataset,
+        get_baseline_fit_params(),
+        target=BOILING_HEAT_FLUX_TARGET,
     )
 
     logger.info('Evaluating')
@@ -1693,7 +1705,7 @@ def boiling_cross_surface_evaluation(
     ds_evaluation_val = to_tensorflow(
         evaluation_dataset | subset('val'),
         batch_size=BATCH_SIZE,
-        target='Flux [W/cm**2]',
+        target=BOILING_HEAT_FLUX_TARGET,
         experiment='boiling1d',
     )
 
@@ -1794,7 +1806,7 @@ for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
 
 #     tune_model_return: TuneModelReturn = autofit_to_dataset(
 #         training_dataset,
-#         target=boiling_target_name,
+#         target=BOILING_HEAT_FLUX_TARGET,
 #         normalize_images=True,
 #         max_model_size=baseline_boiling_model_direct_size,
 #         goal=None,
@@ -1807,7 +1819,7 @@ for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
 #     ds_evaluation_val = to_tensorflow(
 #         evaluation_dataset | subset('val'),
 #         batch_size=BATCH_SIZE,
-#         target='Flux [W/cm**2]',
+#         target=BOILING_HEAT_FLUX_TARGET,
 #     )
 
 #     evaluation = tune_model_return.model.evaluate(ds_evaluation_val())
@@ -2080,7 +2092,7 @@ assert False, 'STOP!'
 # ds_train, ds_val, ds_test = datasets.value
 # first_frame, _ = ds_train[0]
 # ds_train, ds_val, _ = to_tensorflow_triplet(
-#     datasets, batch_size=BATCH_SIZE, include_test=False, target='Flux [W/cm**2]'
+#     datasets, batch_size=BATCH_SIZE, include_test=False, target=BOILING_HEAT_FLUX_TARGET
 # )
 # ds_train = ds_train.unbatch().prefetch(tf.data.AUTOTUNE)
 # ds_val = ds_val.unbatch().prefetch(tf.data.AUTOTUNE)
@@ -2142,7 +2154,7 @@ assert False, 'STOP!'
 # ds_train, ds_val, ds_test = datasets.value
 # first_frame, _ = ds_train[0]
 # ds_train, ds_val, _ = to_tensorflow_triplet(
-#     datasets, batch_size=BATCH_SIZE, include_test=False, target='Flux [W/cm**2]'
+#     datasets, batch_size=BATCH_SIZE, include_test=False, target=BOILING_HEAT_FLUX_TARGET
 # )
 # ds_train = ds_train.unbatch().prefetch(tf.data.AUTOTUNE)
 # ds_val = ds_val.unbatch().prefetch(tf.data.AUTOTUNE)
