@@ -447,7 +447,7 @@ def to_tensorflow(
         # DEBUG: I commented out the following line to avoid issues with dataset saving taking too long
         save_path=save_path,
         # DEBUG: try re-setting this to True
-        cache=False,
+        cache=True,
         batch_size=batch_size,
         prefilterer=_prefilterer,
         filterer=filterer,
@@ -659,7 +659,7 @@ condensation_dataset = (
 _P = ParamSpec('_P')
 
 
-def _boiling_outlier_filter(target: Targets) -> bool:
+def _boiling_outlier_filter(_image: Image, target: Targets) -> bool:
     return abs(target['Power [W]'] - target['nominal_power']) < 5
 
 
@@ -1053,7 +1053,7 @@ def autofit_to_dataset(
 """### Data Distribution"""
 
 
-PREFETCH = 2048
+PREFETCH = 1024 * 4
 
 
 # @cache(JSONAllocator(analyses_path / 'cache' / 'targets'))

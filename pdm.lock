@@ -1233,6 +1233,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "pandera"
+version = "0.13.4"
+requires_python = ">=3.7"
+summary = "A light-weight and flexible data validation and testing tool for statistical data objects."
+dependencies = [
+    "numpy>=1.19.0",
+    "packaging>=20.0",
+    "pandas>=1.2.0",
+    "pydantic",
+    "typing-inspect>=0.6.0",
+    "wrapt",
+]
+
+[[package]]
 name = "pandocfilters"
 version = "1.5.0"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
@@ -2188,7 +2202,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:ce408809b09ade9271f75bf60c2e6100588029c1463901c687c5478db51a3ed7"
+content_hash = "sha256:617f6e6bb8af3736a153eb41222546ebfebde168471f7de4104ece9a28181111"
 
 [metadata.files]
 "absl-py 1.3.0" = [
@@ -3583,6 +3597,10 @@ content_hash = "sha256:ce408809b09ade9271f75bf60c2e6100588029c1463901c687c5478db
     {url = "https://files.pythonhosted.org/packages/c9/80/207c30c09d0b650214f7826227d32236e3259e2ad2b8e0075b3feae4266c/pandas-1.5.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b156a971bc451c68c9e1f97567c94fd44155f073e3bceb1b0d195fd98ed12048"},
     {url = "https://files.pythonhosted.org/packages/d7/4e/bc3163c2f0b2f0728c398cad15e082efaa27e40fa579a0523e98caf10fdf/pandas-1.5.1.tar.gz", hash = "sha256:249cec5f2a5b22096440bd85c33106b6102e0672204abd2d5c014106459804ee"},
     {url = "https://files.pythonhosted.org/packages/e9/aa/1ba5c0835aa83af896cdb61df439335f39ca59392aff5fd1a06a152a7aae/pandas-1.5.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:32e3d9f65606b3f6e76555bfd1d0b68d94aff0929d82010b791b6254bf5a4b96"},
+]
+"pandera 0.13.4" = [
+    {url = "https://files.pythonhosted.org/packages/0e/65/efaa02d43606a9b24a8fe1ffdf8c80d30b3ad67c9945d3a050f7b08d1540/pandera-0.13.4-py3-none-any.whl", hash = "sha256:9e91687861406284270add1d467f204630377892e7a4b45809bb7546f0013153"},
+    {url = "https://files.pythonhosted.org/packages/bc/29/73500e974a2d6ff6fdde8102fc27ae9d85e9b4b998ed0178436a5cc4444b/pandera-0.13.4.tar.gz", hash = "sha256:6ef2b7ee00d3439ac815d4347984421a08502da1020cec60c06dd0135e8aee2f"},
 ]
 "pandocfilters 1.5.0" = [
     {url = "https://files.pythonhosted.org/packages/5e/a8/878258cffd53202a6cc1903c226cf09e58ae3df6b09f8ddfa98033286637/pandocfilters-1.5.0-py2.py3-none-any.whl", hash = "sha256:33aae3f25fd1a026079f5d27bdd52496f0e0803b3469282162bafdcbdf6ef14f"},

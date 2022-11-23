@@ -31,6 +31,7 @@ dependencies = [
     "Pillow>=7.1.2",
     "rich>=12.6.0",
     "typer[all]>=0.7.0",
+    "pandera>=0.13.4",
 ]
 
 requires-python = ">=3.9.14,<3.10"
