@@ -323,16 +323,23 @@ def _decode_types(instance: str) -> type:
 
 def serialize(obj: Supports[JSONEncodable]) -> SerializedJSONObject:
     '''Return a JSON serialization of an object.'''
+    return _nested_sort_dicts(_serialize(obj))
+
+
+def _serialize(obj: Supports[JSONEncodable]) -> SerializedJSONObject:
     if obj is None or isinstance(obj, (bool, int, str, float)):
         return obj
 
     if isinstance(obj, (list, tuple)):
-        return _nested_sort_dicts([encode_type(obj), *(serialize(item) for item in obj)])
+        return [encode_type(obj), *(serialize(item) for item in obj)]
 
     if isinstance(obj, Pack):
-        return _nested_sort_dicts([encode_type(obj), encode(obj.args), encode(obj.kwargs)])
+        return [encode_type(obj), encode(obj.args), encode(obj.kwargs)]
 
-    return _nested_sort_dicts([encode_type(obj), encode(obj)])
+    if isinstance(obj, dict):
+        return {key: serialize(value) for key, value in obj.items()}
+
+    return [encode_type(obj), encode(obj)]
 
 
 def deserialize(obj: SerializedJSONDataType) -> Any:
