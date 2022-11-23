@@ -45,7 +45,3 @@ def main(datapath: PathLike) -> list[ExperimentVideoDataset]:
 
             datasets.append(dataset)
     return datasets
-
-
-if __name__ == '__main__':
-    raise RuntimeError('*load_dataset_tree* cannot be executed as a standalone script yet.')

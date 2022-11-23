@@ -75,7 +75,3 @@
 #     downscaled = downscale(image, factors=final_downscale_factor)
 #     ax.imshow(downscaled, cmap='gray')
 #     ax.set_title(str(np.squeeze(downscaled).shape))
-
-
-# if __name__ == '__main__':
-#     raise RuntimeError('Cannot execute downscale analysis without an image!')

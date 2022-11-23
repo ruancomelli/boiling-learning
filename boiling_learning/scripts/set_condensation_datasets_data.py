@@ -154,9 +154,3 @@ def _group_datasets(
             datasets_dict[dataset_name].add(ev)
 
     return tuple(datasets_dict.values())
-
-
-if __name__ == '__main__':
-    raise RuntimeError(
-        '*set_condensation_datasets_data* cannot be executed as a standalone script yet.'
-    )

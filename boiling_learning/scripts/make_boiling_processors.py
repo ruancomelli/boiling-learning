@@ -184,7 +184,3 @@ def main(
             width=round(width * visualization_window_width)
         ),
     ]
-
-
-if __name__ == '__main__':
-    raise RuntimeError('*make_boiling_processors* cannot be executed as a standalone script yet.')

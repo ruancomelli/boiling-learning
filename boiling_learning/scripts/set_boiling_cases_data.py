@@ -95,7 +95,3 @@ def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> None:
     flux = power / lateral_area
 
     ev.df[full_heat_flux_key] = flux.to(heat_flux_unit).magnitude
-
-
-if __name__ == '__main__':
-    raise RuntimeError('*set_boiling_cases_data* cannot be executed as a standalone script yet.')

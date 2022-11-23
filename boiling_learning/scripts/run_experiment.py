@@ -695,7 +695,3 @@
 #     # plt.xlabel("Sample")
 #     # plt.ylabel("In-Phase")
 #     # plt.savefig('foo.png')
-
-
-# if __name__ == '__main__':
-#     main()

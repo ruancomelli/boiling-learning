@@ -115,9 +115,3 @@ def main(
             height=height, width=width
         ),
     ]
-
-
-if __name__ == '__main__':
-    raise RuntimeError(
-        '*make_condensation_processors* cannot be executed as a standalone script yet.'
-    )

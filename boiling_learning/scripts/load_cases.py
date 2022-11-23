@@ -13,7 +13,3 @@ def main(
         return tuple(case.convert_videos('.mp4', 'converted', overwrite=False) for case in cases)
 
     return cases
-
-
-if __name__ == '__main__':
-    raise RuntimeError('*load_cases* cannot be executed as a standalone script yet.')

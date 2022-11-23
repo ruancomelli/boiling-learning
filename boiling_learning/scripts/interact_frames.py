@@ -99,7 +99,3 @@
 
 #     with warnings.catch_warnings():
 #         _interact_dataset_frames(datasets, imshow)
-
-
-# if __name__ == '__main__':
-#     raise RuntimeError('*interact_frames* cannot be executed as a standalone script yet.')

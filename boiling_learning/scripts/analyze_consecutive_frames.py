@@ -64,7 +64,3 @@
 #     ax = fig.add_subplot(1, 2, 2)
 #     ax.imshow(frames[final_timeshift], cmap='gray')
 #     ax.set_title(f'Frame #{final_timeshift}')
-
-
-# if __name__ == '__main__':
-#     raise RuntimeError('Cannot execute consecutive frames analysis without images!')
