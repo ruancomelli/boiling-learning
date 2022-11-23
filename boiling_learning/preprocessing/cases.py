@@ -37,7 +37,10 @@ class Case(ExperimentVideoDataset):
         self.videos_dir = resolve(self.path / videos_dir_name, dir=True)
 
         self.update(
-            ExperimentVideo(video_path=video_path, df_dir=self.dataframes_dir, df_suffix='.csv')
+            ExperimentVideo(
+                video_path=video_path,
+                df_path=self.dataframes_dir / f'{video_path.stem}.csv',
+            )
             for video_path in self.videos_dir.rglob(f'*{video_suffix}')
         )
 

@@ -99,31 +99,17 @@ class ExperimentVideo:
     def __init__(
         self,
         video_path: PathLike,
+        df_path: PathLike,
         name: str = '',
-        df_dir: Optional[PathLike] = None,
-        df_suffix: str = '.csv',
-        df_path: Optional[PathLike] = None,
     ) -> None:
         self._path = resolve(video_path)
         self.video: SliceableDataset[VideoFrame] = Video(self.path)
 
         self._data: Optional[VideoData] = None
-        self.df: Optional[pd.DataFrame] = None
         self._name = name or self.path.stem
 
-        if None not in {df_dir, df_path}:
-            raise ValueError('at most one of (df_dir, df_path) must be given.')
-
-        if not df_suffix.startswith('.'):
-            raise ValueError('argument *df_suffix* must start with a dot \'.\'')
-
-        self.df_path = (
-            resolve(df_path)
-            if df_path is not None
-            else (resolve(df_dir) / self.name).with_suffix(df_suffix)
-            if df_dir is not None
-            else None
-        )
+        self.df: Optional[pd.DataFrame] = None
+        self.df_path = resolve(df_path)
 
     def __len__(self) -> int:
         return len(self.video)
@@ -235,9 +221,6 @@ class ExperimentVideo:
         return df
 
     def load_df(self, overwrite: bool = False, inplace: bool = True) -> pd.DataFrame:
-        if self.df_path is None:
-            raise ValueError('`df_path` is not defined yet')
-
         logger.debug(
             f'Loading dataframe for experiment video {self.name} from file {self.df_path}'
         )
@@ -255,9 +238,6 @@ class ExperimentVideo:
     def save_df(self, overwrite: bool = False) -> None:
         if self.df is None:
             raise ValueError('`df` is not defined')
-
-        if self.df_path is None:
-            raise ValueError('`df_path` is not defined yet')
 
         path = resolve(self.df_path, parents=True)
 
