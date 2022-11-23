@@ -1,4 +1,5 @@
 import contextlib
+from collections.abc import Iterable
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, Iterator, Mapping, Optional
@@ -225,7 +226,7 @@ class ExperimentVideo:
             )
 
         df = pd.DataFrame(data)
-        df = _convert_dataframe_type(df, self.data)
+        df = _convert_dataframe_type(df, self.data.categories)
 
         if inplace:
             self.df = df
@@ -280,7 +281,7 @@ class ExperimentVideo:
         df = self.make_dataframe()
 
         assert self.data is not None
-        df = _convert_dataframe_type(df, self.data)
+        df = _convert_dataframe_type(df, self.data.categories)
         df.sort_values(by=_COLUMN_NAMES.index, inplace=True)
 
         return df
@@ -296,9 +297,9 @@ def _describe_video(obj: ExperimentVideo) -> Path:
     return obj.path
 
 
-def _convert_dataframe_type(df: pd.DataFrame, video_data: VideoData) -> pd.DataFrame:
+def _convert_dataframe_type(df: pd.DataFrame, categories: Iterable[str]) -> pd.DataFrame:
     col_types = funcy.merge(
-        dict.fromkeys(video_data.categories, 'category'),
+        dict.fromkeys(categories, 'category'),
         {
             _COLUMN_NAMES.index: _COLUMN_TYPES.index,
             _COLUMN_NAMES.name: _COLUMN_TYPES.name,
@@ -321,13 +322,10 @@ def _convert_dataframe_type(df: pd.DataFrame, video_data: VideoData) -> pd.DataF
 def _sync_dataframes(
     source_df: pd.DataFrame,
     dest_df: pd.DataFrame,
-    source_time_column: Optional[str] = None,
     dest_time_column: Optional[str] = None,
 ) -> pd.DataFrame:
     allowed_index = (pd.DatetimeIndex, pd.TimedeltaIndex, pd.Float64Index)
 
-    if source_time_column is not None:
-        source_df = source_df.set_index(source_time_column, drop=False)
     if not isinstance(source_df.index, allowed_index):
         raise ValueError(
             f'the source DataFrame index must be one of {allowed_index}.'
@@ -337,6 +335,7 @@ def _sync_dataframes(
 
     if dest_time_column is not None:
         dest_df = dest_df.set_index(dest_time_column, drop=False)
+
     if not isinstance(dest_df.index, allowed_index):
         raise ValueError(
             f'the dest DataFrame index must be one of {allowed_index}.'
