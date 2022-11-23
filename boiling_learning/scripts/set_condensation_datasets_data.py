@@ -30,7 +30,7 @@ def main(
 
     datasets = tuple(datasets)
     dataspecpath = resolve(dataspecpath)
-    dataspec = yaml.safe_load(dataspecpath.read_text())
+    dataspec = yaml.safe_load(dataspecpath.read_text(encoding='utf8'))
 
     for dataset in datasets:
         logger.debug(f'Reading condensation dataset {dataset}')
@@ -126,7 +126,7 @@ def _make_dataframe(dataset: ExperimentVideoDataset) -> None:
     for ev in missing:
         logger.debug(f'Making dataframe for {ev.name}')
 
-        ev.make_dataframe(exist_load=True, enforce_time=True, inplace=True)
+        ev.make_dataframe(enforce_time=True, inplace=True)
 
         check_experiment_video_dataframe_indices(ev)
 

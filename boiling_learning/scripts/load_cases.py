@@ -1,7 +1,5 @@
 from typing import Iterable
 
-from loguru import logger
-
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.utils.pathutils import PathLike
 
@@ -13,9 +11,7 @@ def main(
 
     if convert_videos:
         for case in cases:
-            logger.info(f'Converting videos for case {case.name}...')
             case.convert_videos('.mp4', 'converted', overwrite=False)
-            logger.info(f'Successfully converted videos for case {case.name}...')
 
     return cases
 

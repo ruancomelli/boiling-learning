@@ -3,6 +3,8 @@ from __future__ import annotations
 import json as _json
 from typing import Optional
 
+from loguru import logger
+
 from boiling_learning.io.storage import dataclass
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo, VideoData
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
@@ -87,6 +89,8 @@ class Case(ExperimentVideoDataset):
     def convert_videos(
         self, new_suffix: str, new_videos_dir: PathLike, overwrite: bool = False
     ) -> None:
+        logger.info(f'Converting videos for case {self.name}...')
+
         if not new_suffix.startswith('.'):
             raise ValueError('new_suffix is expected to start with a dot (\'.\')')
 
@@ -96,3 +100,5 @@ class Case(ExperimentVideoDataset):
             dest_path = (new_videos_dir / tail).with_suffix(new_suffix)
             experiment_video.convert_video(dest_path, overwrite=overwrite)
         self.videos_dir = new_videos_dir
+
+        logger.info(f'Successfully converted videos for case {self.name}...')

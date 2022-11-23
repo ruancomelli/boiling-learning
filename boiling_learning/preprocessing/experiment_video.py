@@ -181,19 +181,12 @@ class ExperimentVideo:
 
     def make_dataframe(
         self,
-        exist_load: bool = False,
+        *,
         enforce_time: bool = False,
         inplace: bool = True,
     ) -> pd.DataFrame:
         if self.df is not None:
             return self.df
-
-        if exist_load:
-            if self.df_path is None:
-                raise ValueError('`df_path` is not defined yet.')
-
-            if self.df_path.is_file():
-                return self.load_df()
 
         if self.data is None:
             raise ValueError('cannot convert to DataFrame. Video data must be previously set.')
