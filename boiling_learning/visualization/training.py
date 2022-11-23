@@ -8,5 +8,6 @@ class TrainingHistory(pa.SchemaModel):
     target: Series[float] = pa.Field()
 
 
+@pa.check_types
 def plot_training_history(history: DataFrame[TrainingHistory]) -> None:
     plt.plot(history, x='epoch', y='target')

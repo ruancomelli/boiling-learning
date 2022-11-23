@@ -1887,7 +1887,7 @@ def _set_case_name(data: Targets) -> Targets:
 
 
 logger.info('Getting datasets...')
-condensation_all_cases = ExperimentVideoDataset.make_union(*condensation_datasets)
+condensation_all_cases = ExperimentVideoDataset().union(*condensation_datasets)
 ds = get_image_dataset(
     condensation_all_cases,
     transformers=condensation_preprocessors,
