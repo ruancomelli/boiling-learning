@@ -444,7 +444,8 @@ def to_tensorflow(
 
     tf_dataset = sliceable_dataset_to_tensorflow_dataset(
         dataset_value,
-        # DEBUG: I commented out the following line to avoid issues with dataset saving taking too long
+        # DEBUG: I commented out the following line to avoid issues with dataset saving taking too
+        # long
         save_path=save_path,
         # DEBUG: try re-setting this to True
         cache=True,
@@ -621,7 +622,12 @@ boiling_indirect_datasets = tuple(
 
 # for index, dataset in enumerate(boiling_direct_datasets):
 #     for subset_name, subset in zip(("train", "val", "test"), dataset()):
-#         path = analyses_path / "outputs" / "animations" / f"boiling-{index}-direct-{subset_name}.mp4"
+#         path = (
+#             analyses_path
+#             / "outputs"
+#             / "animations"
+#             / f"boiling-{index}-direct-{subset_name}.mp4"
+#         )
 
 #         if not path.is_file():
 #             save_as_video(
@@ -682,8 +688,8 @@ class FitBoilingModel(CachedFunction[_P, FitModelReturn]):
         target: str = BOILING_HEAT_FLUX_TARGET,
     ) -> FitModelReturn:
         """
-        try_id: use this to force this model to be trained again. This may be used for instance to get a average and
-            stddev.
+        try_id: use this to force this model to be trained again.
+            This may be used for instance to get a average and stddev.
         """
 
         def _is_gt10(frame: Image, data: Targets) -> bool:
@@ -715,7 +721,10 @@ class FitBoilingModel(CachedFunction[_P, FitModelReturn]):
                 # BackupAndRestore(workspace_path / 'backup', delete_on_end=False),
                 AdditionalValidationSets({'HF10': ds_val_g10()}),
                 MemoryCleanUp(),
-                # tf.keras.callbacks.TensorBoard(tensorboard_logs_path / datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), histogram_freq=1),
+                # tf.keras.callbacks.TensorBoard(
+                #     tensorboard_logs_path / datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
+                #     histogram_freq=1,
+                # ),
             )
         )
 
@@ -770,8 +779,11 @@ class FitCondensationModel(CachedFunction[_P, FitModelReturn]):
                     }
                 ),
                 # BackupAndRestore(workspace_path / 'backup', delete_on_end=False),
-                MemoryCleanUp()
-                # tf.keras.callbacks.TensorBoard(tensorboard_logs_path / datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), histogram_freq=1),
+                MemoryCleanUp(),
+                # tf.keras.callbacks.TensorBoard(
+                #     tensorboard_logs_path / datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
+                #     histogram_freq=1,
+                # ),
             )
         )
 
@@ -961,8 +973,12 @@ def get_pretrained_baseline_boiling_model(
     )
 
 
-# pretrained_baseline_boiling_model_architecture_direct = get_pretrained_baseline_boiling_model(direct=True, normalize_images=False)
-# pretrained_baseline_boiling_model_architecture_indirect = get_pretrained_baseline_boiling_model(direct=False, normalize_images=False)
+pretrained_baseline_boiling_model_architecture_direct = get_pretrained_baseline_boiling_model(
+    direct=True, normalize_images=False
+)
+pretrained_baseline_boiling_model_architecture_indirect = get_pretrained_baseline_boiling_model(
+    direct=False, normalize_images=False
+)
 
 
 _autofit_to_dataset_allocator = JSONAllocator(analyses_path / 'autofit' / 'autofit-to-dataset')
@@ -1029,26 +1045,28 @@ def autofit_to_dataset(
 
 """## Pre-processing analyses"""
 
-# TODO: generate a test case in which temperature is estimated from the boiling curve and that's what the models have to predict
-# TODO: data clean up; remove data from experiments where measured heatflux is 5W/cm2 or more away from its level
+# TODO: generate a test case in which temperature is estimated from the boiling curve and that's
+# what the models have to predict
+
+# TODO: data clean up; remove data from experiments where measured heatflux is 5W/cm2 or more away
+# from its level
 # TODO: fazer erro em função do y: ver se para maiores ys o erro vai subindo ou diminuindo
 # quem sabe fazer 3 ou mais modelos, um especializado para cada região de y; e quem sabe
 # usar um classificador pra escolher qual estimador não ajude muito
 # focar na arquitetura da rede, que é mais importante do que hiperparâmetros
 # otimizar as convolucionais pode ser mais importante do que otimizar as fully-connected
 
-# TODO: ReLU or LeakyReLU? https://www.quora.com/What-are-the-advantages-of-using-Leaky-Rectified-Linear-Units-Leaky-ReLU-over-normal-ReLU-in-deep-learning
-
 # TODO: hypothesis: it is better to _not_ normalize images.
 # Does this mean that the model uses the overall image brightness to do its inference?
 # If so, this is bad.
-# This can be assessed by training two models (one with normalized images and the other without) and comparing the
-# relative importance that each one of them gives to the areas without bubbles
+# This can be assessed by training two models (one with normalized images and the other without)
+# and comparing the relative importance that each one of them gives to the areas without bubbles
 
 # TODO: does the model tend to overestimate or underestimate values?
-# TODO: train the same network multiple times to get an average and stddev of the error. I noticed that, by training the
-# same model multiple times, I got R2 scores of ~0.96, 0.90 and 0.94. Hobold got 0.98... Maybe it's just because he
-# tried a lot of times until he got a good performance?
+# TODO: train the same network multiple times to get an average and stddev of the error. I noticed
+# that, by training the same model multiple times, I got R2 scores of ~0.96, 0.90 and 0.94.
+# Hobold got 0.98... Maybe it's just because he tried a lot of times until he got a good
+# performance?
 
 """### Data Distribution"""
 
@@ -1175,7 +1193,9 @@ PREFETCH = 1024 * 4
 
 # sns.set_style("whitegrid")
 
-# f, axes = plt.subplots(len(metrics), len(sample_frames), figsize=(16, 16), sharex="row", sharey="col")
+# f, axes = plt.subplots(
+#     len(metrics), len(sample_frames), figsize=(16, 16), sharex="row", sharey="col"
+# )
 
 # x = factors
 # preferred_factor = 4
@@ -1189,7 +1209,14 @@ PREFETCH = 1024 * 4
 
 #         ax.scatter(x, y, s=20, color='k')
 #         ax.scatter(x[0], y[0], facecolors="none", edgecolors="k", marker="$\odot$", s=100)
-#         ax.scatter(x[preferred_factor], y[preferred_factor], facecolors="none", edgecolors="k", marker="$\odot$", s=100)
+#         ax.scatter(
+#             x[preferred_factor],
+#             y[preferred_factor],
+#             facecolors="none",
+#             edgecolors="k",
+#             marker="$\odot$",
+#             s=100
+#         )
 
 #         if not row:
 #             ax.set_title(f"Dataset {col}")
@@ -1203,7 +1230,8 @@ PREFETCH = 1024 * 4
 # TODO: fix this!!!
 # since the dataset is already shuffled, I'm not taking consecutive frames
 
-# TODO: test defining the hold-out sets as literal slices, as in: ds_train, ds_val, ds_test = ds[:X], ds[X:Y], ds[Y:]
+# TODO: test defining the hold-out sets as literal slices, as in:
+# ds_train, ds_val, ds_test = ds[:X], ds[X:Y], ds[Y:]
 # where ds is NOT shuffled
 
 
@@ -1219,7 +1247,9 @@ PREFETCH = 1024 * 4
 
 # sns.set_style("whitegrid")
 
-# f, axes = plt.subplots(len(metrics), len(boiling_direct_datasets), figsize=(16, 16), sharex="row", sharey="col")
+# f, axes = plt.subplots(
+#     len(metrics), len(boiling_direct_datasets), figsize=(16, 16), sharex="row", sharey="col"
+# )
 
 # x = [index + 1 for index in frames_indices]
 # for col, splits in enumerate(boiling_direct_datasets):
@@ -1242,7 +1272,9 @@ PREFETCH = 1024 * 4
 #         ax.set_xscale("log")
 
 
-# f, axes = plt.subplots(len(boiling_direct_datasets), 3, figsize=(10, 16), sharex="row", sharey="col")
+# f, axes = plt.subplots(
+#     len(boiling_direct_datasets), 3, figsize=(10, 16), sharex="row", sharey="col"
+# )
 
 # x = [index + 1 for index in frames_indices]
 # for row, splits in enumerate(boiling_direct_datasets):
@@ -1839,52 +1871,28 @@ for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
 #     )
 # }
 
-condensation_all_cases = ExperimentVideoDataset.make_union(
-    *set_condensation_datasets_data.main(
-        condensation_datasets,
-        condensation_data_spec_path,
-    )
-)
-
-ds_train, ds_val, ds_test = get_image_dataset(
-    condensation_all_cases,
-    transformers=condensation_preprocessors,
-)
-
 """#### First Condensation Case"""
 
 # TODO: interesting analysis:
-# since the parametric studies use the same type of surface, I would expect that the network would get more confused
-
-# REGRESSION
-
+# since the parametric studies use the same type of surface, I would expect that the network would
+# get more confused
 
 logger.info('First condensation case')
 
 
-# condensation_all_cases = ExperimentVideoDataset.make_union(
-#     *set_condensation_datasets_data.main(
-#         condensation_datasets,
-#         condensation_data_spec_path,
-#     )
-# )
-
-condensation_all_cases = ExperimentVideoDataset.make_union(*condensation_datasets)
-
-get_image_dataset_params = GetImageDatasetParams(
-    condensation_all_cases,
-    transformers=condensation_preprocessors,
-    dataset_size=None,
-)
-
-logger.info('Getting datasets...')
-# TODO: this should be set by `set_condensation_datasets_data`
 def _set_case_name(data: Targets) -> Targets:
+    # TODO: this should be set by `set_condensation_datasets_data`
     data['case_name'] = ':'.join(data['name'].split(':')[:2])
     return data
 
 
-ds_train, ds_val, ds_test = get_image_dataset(get_image_dataset_params)
+logger.info('Getting datasets...')
+condensation_all_cases = ExperimentVideoDataset.make_union(*condensation_datasets)
+ds = get_image_dataset(
+    condensation_all_cases,
+    transformers=condensation_preprocessors,
+)
+ds_train, ds_val, ds_test = ds()
 ds_train = map_targets(ds_train, _set_case_name)
 ds_val = map_targets(ds_val, _set_case_name)
 ds_test = map_targets(ds_test, _set_case_name)
@@ -1906,7 +1914,9 @@ ds_test = map_targets(ds_test, _set_case)
 logger.info('Done')
 
 logger.info('Describing datasets...')
-datasets = Described(value=(ds_train, ds_val, ds_test), description=get_image_dataset_params)
+datasets = LazyDescribed.from_value_and_description(
+    value=(ds_train, ds_val, ds_test), description=ds
+)
 logger.info('Done')
 
 logger.info('Getting first frame...')
@@ -1919,7 +1929,7 @@ with strategy_scope(strategy):
         first_frame.shape,
         dropout=0.5,
         output_layer_policy='float32',
-        problem=ProblemType.CLASSIFICATION,
+        problem='classification',
         num_classes=N_CLASSES,
     )
     compile_params = CompileModelParams(
