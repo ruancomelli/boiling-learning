@@ -10,8 +10,7 @@ def main(
     cases = tuple(Case(casepath, video_suffix=video_suffix) for casepath in casepaths)
 
     if convert_videos:
-        for case in cases:
-            case.convert_videos('.mp4', 'converted', overwrite=False)
+        return tuple(case.convert_videos('.mp4', 'converted', overwrite=False) for case in cases)
 
     return cases
 

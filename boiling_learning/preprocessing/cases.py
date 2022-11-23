@@ -87,18 +87,28 @@ class Case(ExperimentVideoDataset):
                 del self[name]
 
     def convert_videos(
-        self, new_suffix: str, new_videos_dir: PathLike, overwrite: bool = False
-    ) -> None:
+        self,
+        new_suffix: str,
+        new_videos_dirname: str,
+        overwrite: bool = False,
+    ) -> Case:
         logger.info(f'Converting videos for case {self.name}...')
 
         if not new_suffix.startswith('.'):
             raise ValueError('new_suffix is expected to start with a dot (\'.\')')
 
-        new_videos_dir = resolve(new_videos_dir, root=self.path, dir=True)
+        new_videos_dir = resolve(self.path / new_videos_dirname, dir=True)
         for experiment_video in self:
             tail = experiment_video.path.relative_to(self.videos_dir)
             dest_path = (new_videos_dir / tail).with_suffix(new_suffix)
             experiment_video.convert_video(dest_path, overwrite=overwrite)
-        self.videos_dir = new_videos_dir
 
         logger.info(f'Successfully converted videos for case {self.name}...')
+
+        return Case(
+            path=self.path,
+            dataframes_dir_name=self.dataframes_dir.name,
+            videos_dir_name=new_videos_dirname,
+            video_suffix=new_suffix,
+            video_data_path=self.video_data_path,
+        )

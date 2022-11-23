@@ -104,7 +104,7 @@ class ExperimentVideo:
         df_suffix: str = '.csv',
         df_path: Optional[PathLike] = None,
     ) -> None:
-        self.path = resolve(video_path)
+        self._path = resolve(video_path)
         self.video: SliceableDataset[VideoFrame] = Video(self.path)
 
         self._data: Optional[VideoData] = None
@@ -149,11 +149,6 @@ class ExperimentVideo:
     def path(self) -> Path:
         return self._path
 
-    @path.setter
-    def path(self, path: PathLike) -> None:
-        self._path = resolve(path)
-        self.video = Video(self._path)
-
     @property
     def data(self) -> Optional[VideoData]:
         return self._data
@@ -177,7 +172,6 @@ class ExperimentVideo:
         """Use this function to move or convert video"""
         dest_path = resolve(dest_path, parents=True)
         convert_video(self.path, dest_path, overwrite=overwrite)
-        self.path = dest_path
 
     def make_dataframe(
         self,
