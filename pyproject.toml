@@ -6,21 +6,22 @@ authors = [
     {name = "Ruan Comelli", email = "ruancomelli@gmail.com"}
 ]
 dependencies = [
-    "frozendict>=2.2.0",
-    "funcy<2.0,>=1.17",
-    "more-itertools>=8.11.0",
-    "nidaqmx<1.0.0,>=0.5.7",
-    "numpy<1.22.0,>=1.19.5",
-    "parse<2.0.0,>=1.19.0",
-    "Pint<1.0,>=0.18",
-    "scikit-image<1.0.0,>=0.19.1",
+    "tensorflow>=2.10.0",
+    "tensorflow-addons>=0.18.0",
     "typing-extensions>=4.3.0",
-    "tensorflow>=2.9.1",
-    "classes<1.0.0,>=0.4.0",
-    "iteround<2.0.0,>=1.0.3",
+    "frozendict>=2.3.4",
+    "funcy>=1.17",
+    "more-itertools>=9.0.0",
+    "nidaqmx<1.0.0>=0.5.7",
+    "numpy>=1.23.0",
+    "parse<2.0.0>=1.19.0",
+    "pint>=0.20",
+    "scikit-image>=0.19.1",
+    "classes<1.0.0>=0.4.1",
+    "iteround<2.0.0>=1.0.3",
     "pyqtgraph==0.12.3",
-    "PyQt6<7.0.0,>=6.2.2",
-    "modin[all]>=0.12.1",
+    "PyQt6<7.0.0>=6.2.2",
+    "modin[ray]>=0.12.1",
     "loguru>=0.6.0",
     "decord==0.6.0",
     "keras-tuner>=1.1.2",
@@ -34,7 +35,7 @@ dependencies = [
     "pandera>=0.13.4",
 ]
 
-requires-python = ">=3.9.14,<3.10"
+requires-python = ">=3.10,<3.11"
 license = {text = "MIT"}
 readme = "README.md"
 keywords = ["python", "machine-learning", "deep-learning", "tensorflow", "phase-change"]
@@ -56,18 +57,6 @@ homepage = ""
 repository = "https://github.com/ruancomelli/boiling-learning"
 documentation = "https://github.com/ruancomelli/boiling_learning/blob/main/README.md"
 
-[project.optional-dependencies]
-scripts = [
-    "tensorflow-addons>=0.17.1",
-]
-
-[project.entry-points.tox]
-pdm = "tox_pdm.plugin"
-
-[build-system]
-requires = ["pdm-pep517"]
-build-backend = "pdm.pep517.api"
-
 [tool.pdm.dev-dependencies]
 test = [
     "pytest>=7.1.2",
@@ -79,7 +68,7 @@ test = [
 ]
 lint = [
     "black>=22.6.0",
-    "isort[requirements_deprecated_finder]>=5.10.1",
+    "isort>=5.10.1",
     "unimport>=0.11.1",
     "pylint>=2.14.5",
     "vulture>=2.5",
@@ -91,8 +80,6 @@ ci = [
 ]
 build = [
     "pip>=22.2.2",
-    "wheel>=0.37.1",
-    "setuptools>=63.4.2",
 ]
 types = [
     "mypy>=0.982",
@@ -100,6 +87,14 @@ types = [
     "types-PyYAML>=6.0.11",
     "funcy-stubs>=0.1.1",
 ]
+
+[project.entry-points.tox]
+pdm = "tox_pdm.plugin"
+
+[build-system]
+requires = ["pdm-pep517"]
+build-backend = "pdm.pep517.api"
+
 
 [tool.isort]
 profile = "black"
@@ -569,3 +564,5 @@ ignored-argument-names = "_.*|^ignored_|^unused_"
 # List of qualified module names which can have objects that can redefine
 # builtins.
 redefining-builtins-modules = ["six.moves", "past.builtins", "future.builtins", "builtins", "io"]
+
+[tool.pdm]
