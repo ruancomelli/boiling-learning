@@ -43,45 +43,36 @@ def test_subset_lazy() -> None:
     assert json_describe(train_subset) == [
         'builtins.tuple',
         'my_dataset',
-        [
-            'builtins.dict',
-            {
-                'function': ['types.FunctionType', 'boiling_learning.transforms.subset'],
-                'pack': ['boiling_learning.utils.functional.Pack', ['train'], {}],
-                'type': [
-                    'builtins.type',
-                    'boiling_learning.preprocessing.transformers.Transformer',
-                ],
-            },
-        ],
+        {
+            'function': ['types.FunctionType', 'boiling_learning.transforms.subset'],
+            'pack': ['boiling_learning.utils.functional.Pack', ['train'], {}],
+            'type': [
+                'builtins.type',
+                'boiling_learning.preprocessing.transformers.Transformer',
+            ],
+        },
     ]
     assert json_describe(val_subset) == [
         'builtins.tuple',
         'my_dataset',
-        [
-            'builtins.dict',
-            {
-                'function': ['types.FunctionType', 'boiling_learning.transforms.subset'],
-                'pack': ['boiling_learning.utils.functional.Pack', ['val'], {}],
-                'type': [
-                    'builtins.type',
-                    'boiling_learning.preprocessing.transformers.Transformer',
-                ],
-            },
-        ],
+        {
+            'function': ['types.FunctionType', 'boiling_learning.transforms.subset'],
+            'pack': ['boiling_learning.utils.functional.Pack', ['val'], {}],
+            'type': [
+                'builtins.type',
+                'boiling_learning.preprocessing.transformers.Transformer',
+            ],
+        },
     ]
     assert json_describe(test_subset) == [
         'builtins.tuple',
         'my_dataset',
-        [
-            'builtins.dict',
-            {
-                'function': ['types.FunctionType', 'boiling_learning.transforms.subset'],
-                'pack': ['boiling_learning.utils.functional.Pack', ['test'], {}],
-                'type': [
-                    'builtins.type',
-                    'boiling_learning.preprocessing.transformers.Transformer',
-                ],
-            },
-        ],
+        {
+            'function': ['types.FunctionType', 'boiling_learning.transforms.subset'],
+            'pack': ['boiling_learning.utils.functional.Pack', ['test'], {}],
+            'type': [
+                'builtins.type',
+                'boiling_learning.preprocessing.transformers.Transformer',
+            ],
+        },
     ]
