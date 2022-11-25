@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Callable, Generic, Iterable, Type, TypeVar
+from typing import Any, Callable, Generic, Iterable, ParamSpec, Type, TypeVar
 
 from loguru import logger
-from typing_extensions import ParamSpec
 
 from boiling_learning.io import LoaderFunction, SaverFunction
 from boiling_learning.io.storage import load, save

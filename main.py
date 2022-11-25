@@ -16,6 +16,7 @@ from typing import (
     Literal,
     NamedTuple,
     Optional,
+    ParamSpec,
     Union,
     ValuesView,
 )
@@ -28,7 +29,6 @@ import tensorflow_addons as tfa
 from loguru import logger
 from rich.console import Console
 from rich.table import Table
-from typing_extensions import ParamSpec
 
 from boiling_learning.app.configuration import configure
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
@@ -86,6 +86,9 @@ from boiling_learning.transforms import (
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.pathutils import resolve
 from boiling_learning.utils.typeutils import typename
+
+_P = ParamSpec('_P')
+
 
 # TODO: check
 # <https://stackoverflow.com/a/58970598/5811400> and <https://github.com/googlecolab/colabtools/issues/864#issuecomment-556437040> # noqa
@@ -662,9 +665,6 @@ condensation_dataset = (
 )
 
 
-_P = ParamSpec('_P')
-
-
 def _boiling_outlier_filter(_image: Image, target: Targets) -> bool:
     return abs(target['Power [W]'] - target['nominal_power']) < 5
 
@@ -955,6 +955,29 @@ def get_baseline_fit_params() -> FitModelParams:
             ]
         ),
     )
+
+
+(
+    condensation_dataset_train,
+    _condensation_dataset_val,
+    _condensation_dataset_test,
+) = condensation_dataset()
+
+first_frame, _data = condensation_dataset_train[0]
+with strategy_scope(strategy):
+    architecture = hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=True)
+
+compiled_model = compile_model(
+    architecture,
+    get_baseline_compile_params(),
+)
+trained_model = fit_condensation_model(
+    compiled_model,
+    condensation_dataset,
+    get_baseline_fit_params(),
+    target='mass_rate',
+)
+assert False
 
 
 def get_pretrained_baseline_boiling_model(

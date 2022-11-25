@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from functools import partial
 from itertools import chain
-from typing import Any, Callable, Generic, TypeVar
-
-from typing_extensions import Concatenate, ParamSpec
+from typing import Any, Callable, Concatenate, Generic, ParamSpec, TypeVar
 
 from boiling_learning.descriptions import describe
 from boiling_learning.io import json

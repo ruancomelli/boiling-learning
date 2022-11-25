@@ -2,6 +2,9 @@ from fractions import Fraction
 from typing import Generic, Optional, TypeVar
 
 import funcy
+
+# generic `NamedTuple`s were only introduced in Python 3.11 - until then we need to
+# import from `typing_extensions`
 from typing_extensions import NamedTuple
 
 from boiling_learning.io.storage import dataclass

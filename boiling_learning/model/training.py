@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from contextlib import contextmanager, nullcontext
 from datetime import timedelta
-from typing import Any, Callable, Iterator, Optional, TypedDict, TypeVar, Union
+from typing import Any, Callable, Iterator, Optional, ParamSpec, TypedDict, TypeVar, Union
 
 import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.losses import Loss
 from tensorflow.keras.metrics import Metric
 from tensorflow.keras.optimizers import Optimizer
-from typing_extensions import ParamSpec
 
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.descriptions import describe

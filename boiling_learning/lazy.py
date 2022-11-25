@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache, partial, wraps
-from typing import Any, Callable, Generic, TypeVar, Union
-
-from typing_extensions import Concatenate, ParamSpec
+from typing import Any, Callable, Concatenate, Generic, ParamSpec, TypeVar, Union
 
 from boiling_learning.descriptions import Describable, describe
 from boiling_learning.io import json
