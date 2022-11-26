@@ -675,157 +675,154 @@ BOILING_OUTLIER_FILTER = LazyDescribed.from_value_and_description(
 BOILING_HEAT_FLUX_TARGET = 'Flux [W/cm**2]'
 
 
-class FitBoilingModel(CachedFunction[_P, FitModelReturn]):
-    def __init__(self, cacher: Cacher[FitModelReturn]) -> None:
-        super().__init__(get_fit_model, cacher)
-
-    def __call__(
-        self,
-        compiled_model: CompiledModel,
-        datasets: LazyDescribed[ImageDatasetTriplet],
-        params: FitModelParams,
-        try_id: int = 0,
-        target: str = BOILING_HEAT_FLUX_TARGET,
-    ) -> FitModelReturn:
-        """
-        try_id: use this to force this model to be trained again.
-            This may be used for instance to get a average and stddev.
-        """
-
-        def _is_gt10(frame: Image, data: Targets) -> bool:
-            return data[target] >= 10
-
-        ds_val_g10 = to_tensorflow(
-            datasets | subset('val'),
-            prefilterer=BOILING_OUTLIER_FILTER,
-            filterer=_is_gt10,
-            batch_size=params.batch_size,
-            target=target,
-            experiment='boiling1d',
-        )
-
-        params.callbacks().extend(
-            (
-                TimePrinter(
-                    when={
-                        'on_epoch_begin',
-                        'on_epoch_end',
-                        'on_predict_begin',
-                        'on_predict_end',
-                        'on_test_begin',
-                        'on_test_end',
-                        'on_train_begin',
-                        'on_train_end',
-                    }
-                ),
-                # BackupAndRestore(workspace_path / 'backup', delete_on_end=False),
-                AdditionalValidationSets({'HF10': ds_val_g10()}),
-                MemoryCleanUp(),
-                # tf.keras.callbacks.TensorBoard(
-                #     tensorboard_logs_path / datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
-                #     histogram_freq=1,
-                # ),
-            )
-        )
-
-        workspace_path = resolve(
-            self.allocate(compiled_model, datasets, params, target, try_id), parents=True
-        )
-
-        creator: Callable[[], FitModelReturn] = P(
-            compiled_model,
-            tuple(
-                subset()
-                for subset in to_tensorflow_triplet(
-                    datasets,
-                    prefilterer=BOILING_OUTLIER_FILTER,
-                    batch_size=params.batch_size,
-                    include_test=False,
-                    target=target,
-                    experiment='boiling1d',
-                )
-            ),
-            params,
-            epoch_registry=RegisterEpoch(workspace_path / 'epoch.json'),
-            history_registry=SaveHistory(workspace_path / 'history.json', mode='a'),
-        ).partial(self.function)
-
-        return self.provide(creator, workspace_path / 'model')
-
-
-class FitCondensationModel(CachedFunction[_P, FitModelReturn]):
-    def __init__(self, cacher: Cacher[FitModelReturn]) -> None:
-        super().__init__(get_fit_model, cacher)
-
-    def __call__(
-        self,
-        compiled_model: CompiledModel,
-        datasets: LazyDescribed[ImageDatasetTriplet],
-        params: FitModelParams,
-        target: str,
-    ) -> FitModelReturn:
-        params.callbacks().extend(
-            (
-                TimePrinter(
-                    when={
-                        'on_epoch_begin',
-                        'on_epoch_end',
-                        'on_predict_begin',
-                        'on_predict_end',
-                        'on_test_begin',
-                        'on_test_end',
-                        'on_train_begin',
-                        'on_train_end',
-                    }
-                ),
-                # BackupAndRestore(workspace_path / 'backup', delete_on_end=False),
-                MemoryCleanUp(),
-                # tf.keras.callbacks.TensorBoard(
-                #     tensorboard_logs_path / datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
-                #     histogram_freq=1,
-                # ),
-            )
-        )
-
-        workspace_path = resolve(
-            self.allocate(compiled_model, datasets, params, target), parents=True
-        )
-
-        creator: Callable[[], FitModelReturn] = P(
-            compiled_model,
-            tuple(
-                subset()
-                for subset in to_tensorflow_triplet(
-                    datasets,
-                    batch_size=params.batch_size,
-                    include_test=False,
-                    target=target,
-                    experiment='condensation',
-                )
-            ),
-            params,
-            epoch_registry=RegisterEpoch(workspace_path / 'epoch.json'),
-            history_registry=SaveHistory(workspace_path / 'history.json', mode='a'),
-        ).partial(self.function)
-
-        return self.provide(creator, workspace_path / 'model')
-
-
-fit_boiling_model = FitBoilingModel(
+fit_boiling_model_cached_function = CachedFunction(
+    get_fit_model,
     Cacher(
         allocator=JSONAllocator(analyses_path / 'models' / 'boiling'),
         exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
         loader=load_with_strategy(strategy),
-    )
+    ),
 )
 
-fit_condensation_model = FitCondensationModel(
+
+def fit_boiling_model(
+    compiled_model: CompiledModel,
+    datasets: LazyDescribed[ImageDatasetTriplet],
+    params: FitModelParams,
+    try_id: int = 0,
+    target: str = BOILING_HEAT_FLUX_TARGET,
+) -> FitModelReturn:
+    """
+    try_id: use this to force this model to be trained again.
+        This may be used for instance to get a average and stddev.
+    """
+
+    def _is_gt10(_frame: Image, data: Targets) -> bool:
+        return data[target] >= 10
+
+    ds_val_g10 = to_tensorflow(
+        datasets | subset('val'),
+        prefilterer=BOILING_OUTLIER_FILTER,
+        filterer=_is_gt10,
+        batch_size=params.batch_size,
+        target=target,
+        experiment='boiling1d',
+    )
+
+    params.callbacks().extend(
+        (
+            TimePrinter(
+                when={
+                    'on_epoch_begin',
+                    'on_epoch_end',
+                    'on_predict_begin',
+                    'on_predict_end',
+                    'on_test_begin',
+                    'on_test_end',
+                    'on_train_begin',
+                    'on_train_end',
+                }
+            ),
+            # BackupAndRestore(workspace_path / 'backup', delete_on_end=False),
+            AdditionalValidationSets({'HF10': ds_val_g10()}),
+            MemoryCleanUp(),
+            # tf.keras.callbacks.TensorBoard(
+            #     tensorboard_logs_path / datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
+            #     histogram_freq=1,
+            # ),
+        )
+    )
+
+    workspace_path = resolve(
+        fit_boiling_model_cached_function.allocate(
+            compiled_model, datasets, params, target, try_id
+        ),
+        parents=True,
+    )
+
+    creator: Callable[[], FitModelReturn] = P(
+        compiled_model,
+        tuple(
+            subset()
+            for subset in to_tensorflow_triplet(
+                datasets,
+                prefilterer=BOILING_OUTLIER_FILTER,
+                batch_size=params.batch_size,
+                include_test=False,
+                target=target,
+                experiment='boiling1d',
+            )
+        ),
+        params,
+        epoch_registry=RegisterEpoch(workspace_path / 'epoch.json'),
+        history_registry=SaveHistory(workspace_path / 'history.json', mode='a'),
+    ).partial(fit_boiling_model_cached_function.function)
+
+    return fit_boiling_model_cached_function.provide(creator, workspace_path / 'model')
+
+
+fit_condensation_model_cached_function = CachedFunction(
+    get_fit_model,
     Cacher(
         allocator=JSONAllocator(analyses_path / 'models' / 'condensation'),
         exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
         loader=load_with_strategy(strategy),
-    )
+    ),
 )
+
+
+def fit_condensation_model(
+    compiled_model: CompiledModel,
+    datasets: LazyDescribed[ImageDatasetTriplet],
+    params: FitModelParams,
+    target: str,
+) -> FitModelReturn:
+    params.callbacks().extend(
+        (
+            TimePrinter(
+                when={
+                    'on_epoch_begin',
+                    'on_epoch_end',
+                    'on_predict_begin',
+                    'on_predict_end',
+                    'on_test_begin',
+                    'on_test_end',
+                    'on_train_begin',
+                    'on_train_end',
+                }
+            ),
+            # BackupAndRestore(workspace_path / 'backup', delete_on_end=False),
+            MemoryCleanUp(),
+            # tf.keras.callbacks.TensorBoard(
+            #     tensorboard_logs_path / datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
+            #     histogram_freq=1,
+            # ),
+        )
+    )
+
+    workspace_path = resolve(
+        fit_condensation_model_cached_function.allocate(compiled_model, datasets, params, target),
+        parents=True,
+    )
+
+    creator: Callable[[], FitModelReturn] = P(
+        compiled_model,
+        tuple(
+            subset()
+            for subset in to_tensorflow_triplet(
+                datasets,
+                batch_size=params.batch_size,
+                include_test=False,
+                target=target,
+                experiment='condensation',
+            )
+        ),
+        params,
+        epoch_registry=RegisterEpoch(workspace_path / 'epoch.json'),
+        history_registry=SaveHistory(workspace_path / 'history.json', mode='a'),
+    ).partial(fit_condensation_model_cached_function.function)
+
+    return fit_condensation_model_cached_function.provide(creator, workspace_path / 'model')
 
 
 @cache(
@@ -977,7 +974,6 @@ trained_model = fit_condensation_model(
     get_baseline_fit_params(),
     target='mass_rate',
 )
-assert False
 
 
 def get_pretrained_baseline_boiling_model(
