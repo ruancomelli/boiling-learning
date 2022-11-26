@@ -16,11 +16,9 @@ jobs:
     - uses: actions/checkout@v2
 
     # Set machine up
-    - name: Set up Python 3.7
+    - name: Set up Python
       id: setup-python
       uses: ./.github/actions/setup-python-environment
-      with:
-        python-version: '3.7'
 
     # Update Packages
     - name: Update dependencies to latest versions

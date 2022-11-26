@@ -14,11 +14,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up Python 3.7
+    - name: Set up Python
       id: setup-python
       uses: ./.github/actions/setup-python-environment
-      with:
-        python-version: 3.7
 
     - name: Lint with flake8
       run: |
