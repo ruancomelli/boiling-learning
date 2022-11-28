@@ -30,7 +30,9 @@ from rich.table import Table
 
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import MASTERS_PATH
-from boiling_learning.app.paths import ANALYSES_PATH, DATA_PATH
+from boiling_learning.app.datasets.boiling1d import BOILING_CASES_PATH, BOILING_EXPERIMENTS_PATH
+from boiling_learning.app.datasets.condensation import CONDENSATION_DATA_PATH
+from boiling_learning.app.paths import ANALYSES_PATH
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
 from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn, fit_hypermodel
@@ -105,12 +107,6 @@ configure(
     modin_engine='ray',
 )
 
-
-boiling_data_path = DATA_PATH / 'boiling1d'
-boiling_experiments_path = boiling_data_path / 'experiments'
-boiling_cases_path = boiling_data_path / 'cases'
-condensation_data_path = DATA_PATH / 'condensation'
-
 log_file = resolve(MASTERS_PATH / 'logs' / '{time}.log', parents=True)
 
 logger.remove()
@@ -147,10 +143,8 @@ logger.info(f'Options: {OPTIONS}')
 logger.info('Checking paths')
 check_all_paths_exist(
     (
-        ('Boiling data', boiling_data_path),
-        ('Boiling cases', boiling_cases_path),
-        ('Boiling experiments', boiling_experiments_path),
-        ('Contensation data', condensation_data_path),
+        ('Boiling cases', BOILING_CASES_PATH),
+        ('Boiling experiments', BOILING_EXPERIMENTS_PATH),
         ('Analyses', ANALYSES_PATH),
     )
 )
@@ -165,9 +159,9 @@ boiling_cases_names_timed = tuple(funcy.without(boiling_cases_names, 'case 1'))
 
 logger.info('Preparing datasets')
 logger.info('Loading cases')
-logger.info(f'Loading boiling cases from {boiling_cases_path}')
+logger.info(f'Loading boiling cases from {BOILING_CASES_PATH}')
 boiling_cases = load_cases.main(
-    (boiling_cases_path / case_name for case_name in boiling_cases_names),
+    (BOILING_CASES_PATH / case_name for case_name in boiling_cases_names),
     video_suffix='.MP4',
     convert_videos=OPTIONS.convert_videos,
 )
@@ -176,16 +170,16 @@ boiling_cases_timed = tuple(
 )
 
 boiling_experiments_map = {
-    'case 1': boiling_experiments_path / 'Experiment 2020-08-03 16-19' / 'data.csv',
-    'case 2': boiling_experiments_path / 'Experiment 2020-08-05 14-15' / 'data.csv',
-    'case 3': boiling_experiments_path / 'Experiment 2020-08-05 17-02' / 'data.csv',
-    'case 4': boiling_experiments_path / 'Experiment 2020-08-28 15-28' / 'data.csv',
-    'case 5': boiling_experiments_path / 'Experiment 2020-09-10 13-53' / 'data.csv',
+    'case 1': BOILING_EXPERIMENTS_PATH / 'Experiment 2020-08-03 16-19' / 'data.csv',
+    'case 2': BOILING_EXPERIMENTS_PATH / 'Experiment 2020-08-05 14-15' / 'data.csv',
+    'case 3': BOILING_EXPERIMENTS_PATH / 'Experiment 2020-08-05 17-02' / 'data.csv',
+    'case 4': BOILING_EXPERIMENTS_PATH / 'Experiment 2020-08-28 15-28' / 'data.csv',
+    'case 5': BOILING_EXPERIMENTS_PATH / 'Experiment 2020-09-10 13-53' / 'data.csv',
 }
 
-logger.info(f'Loading condensation cases from {condensation_data_path}')
-condensation_datasets = load_dataset_tree.main(condensation_data_path)
-condensation_data_spec_path = condensation_data_path / 'data_spec.yaml'
+logger.info(f'Loading condensation cases from {CONDENSATION_DATA_PATH}')
+condensation_datasets = load_dataset_tree.main(CONDENSATION_DATA_PATH)
+condensation_data_spec_path = CONDENSATION_DATA_PATH / 'data_spec.yaml'
 
 BOILING_VIDEO_TO_SETTER = {
     video.name: partial(
@@ -222,7 +216,6 @@ def ensure_data_is_set(video: ExperimentVideo) -> None:
 def purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]:
     for video in tuple(image_dataset):
         ensure_data_is_set(video)
-        # assert video.data is not None or video not in image_dataset, (video.name, image_dataset)
 
     return [video.name for video in image_dataset if video.data is not None]
 
