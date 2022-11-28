@@ -38,7 +38,6 @@ from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_d
 from boiling_learning.datasets.cache import EagerCache, NumpyCache
 from boiling_learning.datasets.datasets import DatasetSplits, DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset, map_targets, targets
-from boiling_learning.descriptions import describe
 from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
 from boiling_learning.io.storage import dataclass
 from boiling_learning.lazy import Lazy, LazyDescribed
@@ -67,7 +66,6 @@ from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.scripts import (
-    connect_gpus,
     load_cases,
     load_dataset_tree,
     make_boiling_processors,
@@ -85,7 +83,6 @@ from boiling_learning.transforms import (
 )
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.pathutils import resolve
-from boiling_learning.utils.typeutils import typename
 
 # TODO: check
 # <https://stackoverflow.com/a/58970598/5811400> and <https://github.com/googlecolab/colabtools/issues/864#issuecomment-556437040> # noqa
@@ -98,11 +95,12 @@ from boiling_learning.utils.typeutils import typename
 # fluxo nominal e o valor predito
 # TODO: esse vídeo pode ser para as quatro superfícies ao mesmo tempo
 
-configure(
+strategy = configure(
     force_gpu_allow_growth=True,
     use_xla=True,
     mixed_precision_global_policy='mixed_float16',
     modin_engine='ray',
+    require_gpu=True,
 )
 
 
@@ -134,21 +132,17 @@ logger.info('Checking paths')
 check_all_paths_exist(
     (
         ('Boiling cases', BOILING_DATA_PATH),
+        ('Condensation cases', CONDENSATION_DATA_PATH),
         ('Analyses', ANALYSES_PATH),
     )
 )
 logger.info('Succesfully checked paths')
 
-strategy = connect_gpus.main(require_gpu=False)
-strategy = LazyDescribed.from_value_and_description(strategy, typename(strategy))
-logger.info(f'Using distribute strategy: {describe(strategy)}')
-
-
 logger.info('Preparing datasets')
+
 logger.info('Loading cases')
+
 logger.info(f'Loading boiling cases from {BOILING_DATA_PATH}')
-
-
 boiling_cases = load_cases.main(
     (BOILING_DATA_PATH / case_name for case_name in ('case 1', 'case 2', 'case 3', 'case 4')),
     video_suffix='.MP4',
@@ -160,14 +154,19 @@ condensation_datasets = load_dataset_tree.main(CONDENSATION_DATA_PATH)
 condensation_data_spec_path = CONDENSATION_DATA_PATH / 'data_spec.yaml'
 
 BOILING_VIDEO_TO_SETTER = {
-    video.name: partial(set_boiling_cases_data.main, boiling_cases)
+    video.name: partial(
+        set_boiling_cases_data.main,
+        boiling_cases,
+    )
     for case in boiling_cases
     for video in case
 }
 
 CONDENSATION_VIDEO_TO_SETTER = {
     video.name: partial(
-        set_condensation_datasets_data.main, condensation_datasets, condensation_data_spec_path
+        set_condensation_datasets_data.main,
+        condensation_datasets,
+        condensation_data_spec_path,
     )
     for img_ds in condensation_datasets
     for video in img_ds
