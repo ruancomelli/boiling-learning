@@ -1,5 +1,4 @@
 import itertools
-import sys
 from dataclasses import replace
 from fractions import Fraction
 from functools import partial
@@ -29,7 +28,6 @@ from rich.console import Console
 from rich.table import Table
 
 from boiling_learning.app.configuration import configure
-from boiling_learning.app.constants import MASTERS_PATH
 from boiling_learning.app.datasets.boiling1d import BOILING_CASES_PATH, BOILING_EXPERIMENTS_PATH
 from boiling_learning.app.datasets.condensation import CONDENSATION_DATA_PATH
 from boiling_learning.app.paths import ANALYSES_PATH
@@ -106,14 +104,6 @@ configure(
     mixed_precision_global_policy='mixed_float16',
     modin_engine='ray',
 )
-
-log_file = resolve(MASTERS_PATH / 'logs' / '{time}.log', parents=True)
-
-logger.remove()
-logger.add(sys.stderr, level='DEBUG')
-logger.add(str(log_file), level='DEBUG')
-
-logger.info('Initializing script')
 
 
 class Options(NamedTuple):
