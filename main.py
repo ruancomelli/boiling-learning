@@ -30,6 +30,7 @@ from rich.table import Table
 
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import MASTERS_PATH
+from boiling_learning.app.paths import ANALYSES_PATH, DATA_PATH
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
 from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn, fit_hypermodel
@@ -104,14 +105,11 @@ configure(
     modin_engine='ray',
 )
 
-data_path = MASTERS_PATH / 'data'
-analyses_path = MASTERS_PATH / 'analyses'
 
-boiling_data_path = data_path / 'boiling1d'
+boiling_data_path = DATA_PATH / 'boiling1d'
 boiling_experiments_path = boiling_data_path / 'experiments'
 boiling_cases_path = boiling_data_path / 'cases'
-condensation_data_path = data_path / 'condensation'
-tensorboard_logs_path = resolve(analyses_path / 'models' / 'logs', dir=True)
+condensation_data_path = DATA_PATH / 'condensation'
 
 log_file = resolve(MASTERS_PATH / 'logs' / '{time}.log', parents=True)
 
@@ -153,7 +151,7 @@ check_all_paths_exist(
         ('Boiling cases', boiling_cases_path),
         ('Boiling experiments', boiling_experiments_path),
         ('Contensation data', condensation_data_path),
-        ('Analyses', analyses_path),
+        ('Analyses', ANALYSES_PATH),
     )
 )
 logger.info('Succesfully checked paths')
@@ -220,7 +218,7 @@ def ensure_data_is_set(video: ExperimentVideo) -> None:
         setter()
 
 
-@cache(JSONAllocator(analyses_path / 'cache' / 'purged-experiment-videos'))
+@cache(JSONAllocator(ANALYSES_PATH / 'cache' / 'purged-experiment-videos'))
 def purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]:
     for video in tuple(image_dataset):
         ensure_data_is_set(video)
@@ -249,7 +247,7 @@ class VideoInfo:
     dtype: str
 
 
-@cache(JSONAllocator(analyses_path / 'cache' / 'video-info'))
+@cache(JSONAllocator(ANALYSES_PATH / 'cache' / 'video-info'))
 def _get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
     dataset = video()
     first_frame = dataset[0]
@@ -261,9 +259,9 @@ def _get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
 
 
 EAGER_BUFFER_SIZE = 2048
-numpy_directory_boiling_allocator = JSONAllocator(analyses_path / 'datasets' / 'numpy' / 'boiling')
+numpy_directory_boiling_allocator = JSONAllocator(ANALYSES_PATH / 'datasets' / 'numpy' / 'boiling')
 numpy_directory_condensation_allocator = JSONAllocator(
-    analyses_path / 'datasets' / 'numpy' / 'condensation'
+    ANALYSES_PATH / 'datasets' / 'numpy' / 'condensation'
 )
 
 
@@ -300,7 +298,7 @@ def _dataframe_targets_to_csv(targets: pd.DataFrame, path: Path) -> None:
 
 
 @cache(
-    JSONAllocator(analyses_path / 'datasets' / 'targets' / 'boiling', suffix='.csv'),
+    JSONAllocator(ANALYSES_PATH / 'datasets' / 'targets' / 'boiling', suffix='.csv'),
     saver=_dataframe_targets_to_csv,
     loader=pd.read_csv,
     exceptions=(OSError, AttributeError),
@@ -310,7 +308,7 @@ def _experiment_video_targets_as_dataframe_boiling(video: ExperimentVideo) -> pd
 
 
 @cache(
-    JSONAllocator(analyses_path / 'datasets' / 'targets' / 'condensation', suffix='.csv'),
+    JSONAllocator(ANALYSES_PATH / 'datasets' / 'targets' / 'condensation', suffix='.csv'),
     saver=_dataframe_targets_to_csv,
     loader=pd.read_csv,
     exceptions=(OSError, AttributeError),
@@ -402,10 +400,10 @@ def _default_filter_for_frames_dataset(
 
 
 training_datasets_allocator_boiling = JSONAllocator(
-    analyses_path / 'datasets' / 'training' / 'boiling'
+    ANALYSES_PATH / 'datasets' / 'training' / 'boiling'
 )
 training_datasets_allocator_condensation = JSONAllocator(
-    analyses_path / 'datasets' / 'training' / 'condensation'
+    ANALYSES_PATH / 'datasets' / 'training' / 'condensation'
 )
 
 
@@ -621,7 +619,7 @@ for is_direct, datasets in (
 # for index, dataset in enumerate(boiling_direct_datasets):
 #     for subset_name, subset in zip(("train", "val", "test"), dataset()):
 #         path = (
-#             analyses_path
+#             ANALYSES_PATH
 #             / "outputs"
 #             / "animations"
 #             / f"boiling-{index}-direct-{subset_name}.mp4"
@@ -673,7 +671,7 @@ BOILING_HEAT_FLUX_TARGET = 'Flux [W/cm**2]'
 fit_boiling_model_cached_function = CachedFunction(
     get_fit_model,
     Cacher(
-        allocator=JSONAllocator(analyses_path / 'models' / 'boiling'),
+        allocator=JSONAllocator(ANALYSES_PATH / 'models' / 'boiling'),
         exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
         loader=load_with_strategy(strategy),
     ),
@@ -759,7 +757,7 @@ def fit_boiling_model(
 fit_condensation_model_cached_function = CachedFunction(
     get_fit_model,
     Cacher(
-        allocator=JSONAllocator(analyses_path / 'models' / 'condensation'),
+        allocator=JSONAllocator(ANALYSES_PATH / 'models' / 'condensation'),
         exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
         loader=load_with_strategy(strategy),
     ),
@@ -821,7 +819,7 @@ def fit_condensation_model(
 
 
 @cache(
-    allocator=JSONAllocator(analyses_path / 'autofit' / 'models'),
+    allocator=JSONAllocator(ANALYSES_PATH / 'autofit' / 'models'),
     exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
     loader=load_with_strategy(strategy),
 )
@@ -995,7 +993,7 @@ pretrained_baseline_boiling_model_architecture_indirect = get_pretrained_baselin
 )
 
 
-_autofit_to_dataset_allocator = JSONAllocator(analyses_path / 'autofit' / 'autofit-to-dataset')
+_autofit_to_dataset_allocator = JSONAllocator(ANALYSES_PATH / 'autofit' / 'autofit-to-dataset')
 
 
 def autofit_to_dataset(
@@ -1088,7 +1086,7 @@ def autofit_to_dataset(
 PREFETCH = 1024 * 4
 
 
-# @cache(JSONAllocator(analyses_path / 'cache' / 'targets'))
+# @cache(JSONAllocator(ANALYSES_PATH / 'cache' / 'targets'))
 # def get_targets(
 #     dataset: LazyDescribed[ImageDatasetTriplet],
 # ) -> tuple[list[Targets], list[Targets], list[Targets]]:
@@ -1531,7 +1529,7 @@ ds_evaluation_indirect = to_tensorflow(
 )
 
 
-@cache(JSONAllocator(analyses_path / 'studies' / 'boiling-learning-curve'))
+@cache(JSONAllocator(ANALYSES_PATH / 'studies' / 'boiling-learning-curve'))
 def boiling_learning_curve_point(
     fraction: Fraction, *, direct: bool = True, normalize_images: bool = False
 ) -> dict[str, float]:
@@ -1706,7 +1704,7 @@ logger.info('Analyzing cross-surface boiling evaluation')
 BATCH_SIZE = 200
 
 
-@cache(JSONAllocator(analyses_path / 'studies' / 'boiling-cross-surface'))
+@cache(JSONAllocator(ANALYSES_PATH / 'studies' / 'boiling-cross-surface'))
 def boiling_cross_surface_evaluation(
     direct_visualization: bool,
     training_cases: tuple[int, ...],
@@ -1831,7 +1829,7 @@ for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
 # BATCH_SIZE = 200
 
 
-# @cache(JSONTableAllocator(analyses_path / 'studies' / 'boiling-cross-surface-automl'))
+# @cache(JSONTableAllocator(ANALYSES_PATH / 'studies' / 'boiling-cross-surface-automl'))
 # def boiling_cross_surface_evaluation_automl(
 #     direct_visualization: bool, training_cases: tuple[int, ...], evaluation_cases: tuple[int, ...]
 # ) -> dict[str, float]:
@@ -2157,7 +2155,7 @@ assert False, 'STOP!'
 # auto_model = ak.AutoModel(
 #     inputs=input_node,
 #     outputs=output_node,
-#     directory=analyses_path / 'temp' / 'auto_tune_hoboldnet2-5',
+#     directory=ANALYSES_PATH / 'temp' / 'auto_tune_hoboldnet2-5',
 #     overwrite=True,
 #     distribution_strategy=strategy.value,
 # )
