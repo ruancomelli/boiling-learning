@@ -1,5 +1,4 @@
 import itertools
-import os
 import sys
 from dataclasses import replace
 from fractions import Fraction
@@ -16,7 +15,6 @@ from typing import (
     Literal,
     NamedTuple,
     Optional,
-    ParamSpec,
     Union,
     ValuesView,
 )
@@ -31,6 +29,7 @@ from rich.console import Console
 from rich.table import Table
 
 from boiling_learning.app.configuration import configure
+from boiling_learning.app.constants import MASTERS_PATH
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
 from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn, fit_hypermodel
@@ -87,9 +86,6 @@ from boiling_learning.utils.functional import P
 from boiling_learning.utils.pathutils import resolve
 from boiling_learning.utils.typeutils import typename
 
-_P = ParamSpec('_P')
-
-
 # TODO: check
 # <https://stackoverflow.com/a/58970598/5811400> and <https://github.com/googlecolab/colabtools/issues/864#issuecomment-556437040> # noqa
 # TODO: na condensação, fazer crop determinístico!!!
@@ -108,16 +104,16 @@ configure(
     modin_engine='ray',
 )
 
-masters_path = resolve(os.environ['MASTERS_PATH'])
-data_path = masters_path / 'data'
+data_path = MASTERS_PATH / 'data'
+analyses_path = MASTERS_PATH / 'analyses'
+
 boiling_data_path = data_path / 'boiling1d'
 boiling_experiments_path = boiling_data_path / 'experiments'
 boiling_cases_path = boiling_data_path / 'cases'
 condensation_data_path = data_path / 'condensation'
-analyses_path = masters_path / 'analyses'
 tensorboard_logs_path = resolve(analyses_path / 'models' / 'logs', dir=True)
 
-log_file = resolve(masters_path / 'logs' / '{time}.log', parents=True)
+log_file = resolve(MASTERS_PATH / 'logs' / '{time}.log', parents=True)
 
 logger.remove()
 logger.add(sys.stderr, level='DEBUG')
@@ -153,7 +149,6 @@ logger.info(f'Options: {OPTIONS}')
 logger.info('Checking paths')
 check_all_paths_exist(
     (
-        ('Masters', masters_path),
         ('Boiling data', boiling_data_path),
         ('Boiling cases', boiling_cases_path),
         ('Boiling experiments', boiling_experiments_path),
@@ -265,7 +260,7 @@ def _get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
     )
 
 
-EAGER_BUFFER_SIZE = 128
+EAGER_BUFFER_SIZE = 2048
 numpy_directory_boiling_allocator = JSONAllocator(analyses_path / 'datasets' / 'numpy' / 'boiling')
 numpy_directory_condensation_allocator = JSONAllocator(
     analyses_path / 'datasets' / 'numpy' / 'condensation'
@@ -608,18 +603,18 @@ boiling_indirect_datasets = tuple(
     for case in boiling_cases_timed
 )
 
-# for is_direct, datasets in (
-#     (True, boiling_direct_datasets),
-#     (False, boiling_indirect_datasets),
-# ):
-#     for index, dataset in enumerate(datasets):
-#         for subset_name, subset in zip(('train', 'val', 'test'), dataset()):
-#             logger.info(
-#                 f"Iterating over {'direct' if is_direct else 'indirect'} {subset_name} "
-#                 f'dataset #{index}.'
-#             )
-#             for frame, targets in subset:
-#                 pass
+for is_direct, datasets in (
+    (True, boiling_direct_datasets),
+    (False, boiling_indirect_datasets),
+):
+    for index, dataset in enumerate(datasets):
+        for subset_name, subset_ in zip(('train', 'val', 'test'), dataset()):
+            logger.info(
+                f"Iterating over {'direct' if is_direct else 'indirect'} {subset_name} "
+                f'dataset #{index}.'
+            )
+            for frame, targets_ in subset_:
+                pass
 
 # logger.debug("Done")
 

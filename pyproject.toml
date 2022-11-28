@@ -137,7 +137,7 @@ warn_unreachable = true
 warn_unused_configs = true
 warn_unused_ignores = true
 plugins = [
-    "classes.contrib.mypy.classes_plugin",
+    # "classes.contrib.mypy.classes_plugin",
 	"numpy.typing.mypy_plugin",
 ]
 
