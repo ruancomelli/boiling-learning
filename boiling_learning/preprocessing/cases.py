@@ -3,11 +3,13 @@ from __future__ import annotations
 import json as _json
 from typing import Optional
 
+import modin.pandas as pd
 from loguru import logger
 
 from boiling_learning.io.storage import dataclass
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo, VideoData
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
+from boiling_learning.preprocessing.experimental_data import ExperimentalData
 from boiling_learning.utils.dataclasses import dataclass_from_mapping
 from boiling_learning.utils.pathutils import PathLike, resolve
 
@@ -25,6 +27,7 @@ class Case(ExperimentVideoDataset):
         videos_dir_name: str = 'videos',
         video_suffix: str = '.mp4',
         video_data_path: Optional[PathLike] = None,
+        experimental_data_path: Optional[PathLike] = None,
     ) -> None:
         super().__init__()
 
@@ -44,7 +47,9 @@ class Case(ExperimentVideoDataset):
             for video_path in self.videos_dir.rglob(f'*{video_suffix}')
         )
 
-        self.video_data_path = video_data_path or self.path / 'data.json'
+        self.video_data_path = resolve(video_data_path or self.path / 'data.json')
+        self.experimental_data_path = resolve(experimental_data_path or self.path / 'data.csv')
+        self.df: Optional[pd.DataFrame] = None
 
     @property
     def name(self) -> str:
@@ -88,6 +93,18 @@ class Case(ExperimentVideoDataset):
         if remove_absent:
             for name in self_keys - video_data_keys:
                 del self[name]
+
+    def get_experimental_data(self) -> pd.DataFrame:
+        if self.df is not None:
+            return self.df
+
+        return (
+            ExperimentalData(self.experimental_data_path)
+            .as_dataframe()
+            .drop(columns='Time instant')
+            .astype({'Elapsed time': 'float64'})
+            .set_index('Elapsed time')
+        )
 
     def convert_videos(
         self,

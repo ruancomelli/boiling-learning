@@ -28,7 +28,7 @@ from rich.console import Console
 from rich.table import Table
 
 from boiling_learning.app.configuration import configure
-from boiling_learning.app.datasets.boiling1d import BOILING_CASES_PATH, BOILING_EXPERIMENTS_PATH
+from boiling_learning.app.datasets.boiling1d import BOILING_DATA_PATH
 from boiling_learning.app.datasets.condensation import CONDENSATION_DATA_PATH
 from boiling_learning.app.paths import ANALYSES_PATH
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
@@ -133,8 +133,7 @@ logger.info(f'Options: {OPTIONS}')
 logger.info('Checking paths')
 check_all_paths_exist(
     (
-        ('Boiling cases', BOILING_CASES_PATH),
-        ('Boiling experiments', BOILING_EXPERIMENTS_PATH),
+        ('Boiling cases', BOILING_DATA_PATH),
         ('Analyses', ANALYSES_PATH),
     )
 )
@@ -147,17 +146,11 @@ logger.info(f'Using distribute strategy: {describe(strategy)}')
 
 logger.info('Preparing datasets')
 logger.info('Loading cases')
-logger.info(f'Loading boiling cases from {BOILING_CASES_PATH}')
+logger.info(f'Loading boiling cases from {BOILING_DATA_PATH}')
 
-boiling_experiments_map = {
-    'case 1': BOILING_EXPERIMENTS_PATH / 'Experiment 2020-08-05 14-15' / 'data.csv',
-    'case 2': BOILING_EXPERIMENTS_PATH / 'Experiment 2020-08-05 17-02' / 'data.csv',
-    'case 3': BOILING_EXPERIMENTS_PATH / 'Experiment 2020-08-28 15-28' / 'data.csv',
-    'case 4': BOILING_EXPERIMENTS_PATH / 'Experiment 2020-09-10 13-53' / 'data.csv',
-}
 
 boiling_cases = load_cases.main(
-    (BOILING_CASES_PATH / case_name for case_name in boiling_experiments_map),
+    (BOILING_DATA_PATH / case_name for case_name in ('case 1', 'case 2', 'case 3', 'case 4')),
     video_suffix='.MP4',
     convert_videos=OPTIONS.convert_videos,
 )
@@ -167,11 +160,7 @@ condensation_datasets = load_dataset_tree.main(CONDENSATION_DATA_PATH)
 condensation_data_spec_path = CONDENSATION_DATA_PATH / 'data_spec.yaml'
 
 BOILING_VIDEO_TO_SETTER = {
-    video.name: partial(
-        set_boiling_cases_data.main,
-        boiling_cases,
-        case_experiment_map=boiling_experiments_map,
-    )
+    video.name: partial(set_boiling_cases_data.main, boiling_cases)
     for case in boiling_cases
     for video in case
 }

@@ -1,6 +1,4 @@
-from functools import lru_cache
-from pathlib import Path
-from typing import Iterable, Mapping
+from typing import Iterable
 
 import modin.pandas as pd
 import numpy as np
@@ -9,32 +7,20 @@ from loguru import logger
 from boiling_learning.data.samples import WIRE_SAMPLES
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
-from boiling_learning.preprocessing.experimental_data import ExperimentalData
 from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
-from boiling_learning.utils.pathutils import PathLike, resolve
 from boiling_learning.utils.printing import add_unit_post_fix
 from boiling_learning.utils.units import unit_registry as ureg
 
 
-def main(
-    cases: Iterable[Case],
-    *,
-    case_experiment_map: Mapping[str, PathLike],
-) -> None:
+def main(cases: Iterable[Case], /) -> None:
     logger.info('Setting boiling data')
 
     for case in cases:
-        set_case(case, case_experiment_path=case_experiment_map[case.name])
+        set_case(case)
 
 
-def set_case(
-    case: Case,
-    *,
-    case_experiment_path: PathLike,
-) -> None:
+def set_case(case: Case, /) -> None:
     case.set_video_data_from_file(remove_absent=True)
-
-    case_experiment_path = resolve(case_experiment_path)
 
     for ev in case:
         try:
@@ -44,19 +30,7 @@ def set_case(
         except FileNotFoundError:
             logger.debug(f'Failed to load data for {ev.name}')
 
-            df = _get_experimental_data_from_path(case_experiment_path)
-            _set_experiment_video_data(ev, df)
-
-
-@lru_cache(maxsize=None)
-def _get_experimental_data_from_path(case_experiment_path: Path) -> pd.DataFrame:
-    return (
-        ExperimentalData(case_experiment_path)
-        .as_dataframe()
-        .drop(columns='Time instant')
-        .astype({'Elapsed time': 'float64'})
-        .set_index('Elapsed time')
-    )
+            _set_experiment_video_data(ev, case.get_experimental_data())
 
 
 def _set_experiment_video_data(ev: ExperimentVideo, df: pd.DataFrame) -> None:
