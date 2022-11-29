@@ -5,18 +5,7 @@ from functools import partial
 from operator import itemgetter
 from pathlib import Path
 from pprint import pprint
-from typing import (
-    Any,
-    Callable,
-    ItemsView,
-    Iterable,
-    KeysView,
-    Literal,
-    NamedTuple,
-    Optional,
-    Union,
-    ValuesView,
-)
+from typing import Callable, Iterable, Literal, NamedTuple, Optional, Union
 
 import funcy
 import modin.pandas as pd
@@ -28,7 +17,10 @@ from rich.console import Console
 from rich.table import Table
 
 from boiling_learning.app.configuration import configure
-from boiling_learning.app.datasets.boiling1d import BOILING_DATA_PATH
+from boiling_learning.app.datasets.boiling1d import (
+    BOILING_DATA_PATH,
+    load_experiment_video_datasets,
+)
 from boiling_learning.app.datasets.condensation import CONDENSATION_DATA_PATH
 from boiling_learning.app.paths import ANALYSES_PATH
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
@@ -66,7 +58,6 @@ from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.scripts import (
-    load_cases,
     load_dataset_tree,
     make_boiling_processors,
     make_condensation_processors,
@@ -107,22 +98,12 @@ strategy = configure(
 class Options(NamedTuple):
     test: bool = False
     login_user: bool = False
-    convert_videos: bool = True
     pre_load_videos: bool = False
     interact_processed_frames: bool = False
     analyze_downsampling: bool = False
     analyze_consecutive_frames: bool = False
     analyze_learning_curve: bool = True
     analyze_cross_evaluation: bool = True
-
-    def keys(self) -> KeysView[str]:
-        return self._asdict().keys()
-
-    def values(self) -> ValuesView[Any]:
-        return self._asdict().values()
-
-    def items(self) -> ItemsView[str, Any]:
-        return self._asdict().items()
 
 
 OPTIONS = Options()
@@ -140,14 +121,7 @@ logger.info('Succesfully checked paths')
 
 logger.info('Preparing datasets')
 
-logger.info('Loading cases')
-
-logger.info(f'Loading boiling cases from {BOILING_DATA_PATH}')
-boiling_cases = load_cases.main(
-    (BOILING_DATA_PATH / case_name for case_name in ('case 1', 'case 2', 'case 3', 'case 4')),
-    video_suffix='.MP4',
-    convert_videos=OPTIONS.convert_videos,
-)
+boiling_cases = load_experiment_video_datasets()
 
 logger.info(f'Loading condensation cases from {CONDENSATION_DATA_PATH}')
 condensation_datasets = load_dataset_tree.main(CONDENSATION_DATA_PATH)
@@ -224,7 +198,7 @@ def _get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
     )
 
 
-EAGER_BUFFER_SIZE = 512
+EAGER_BUFFER_SIZE = 128
 numpy_directory_boiling_allocator = JSONAllocator(ANALYSES_PATH / 'datasets' / 'numpy' / 'boiling')
 numpy_directory_condensation_allocator = JSONAllocator(
     ANALYSES_PATH / 'datasets' / 'numpy' / 'condensation'
@@ -373,6 +347,8 @@ training_datasets_allocator_boiling = JSONAllocator(
 training_datasets_allocator_condensation = JSONAllocator(
     ANALYSES_PATH / 'datasets' / 'training' / 'condensation'
 )
+
+BOILING_BASELINE_BATCH_SIZE = 200
 
 
 def to_tensorflow(
@@ -1377,7 +1353,7 @@ print('Evaluation:', validated_model_indirect_normalized.evaluation)
 
 logger.info('Analyzing effects of random initialization')
 
-NUMBER_OF_RETRAINS = 7
+NUMBER_OF_RETRAINS = 8
 evaluations = []
 for retrain_index in range(NUMBER_OF_RETRAINS):
     logger.info('Compiling...')
@@ -1478,18 +1454,16 @@ logger.info('Done')
 
 logger.info('Analyzing learning curve')
 
-BATCH_SIZE = 200
-
 ds_evaluation_direct = to_tensorflow(
     baseline_boiling_dataset_direct | subset('val'),
-    batch_size=BATCH_SIZE,
+    batch_size=BOILING_BASELINE_BATCH_SIZE,
     target=BOILING_HEAT_FLUX_TARGET,
     experiment='boiling1d',
 )
 
 ds_evaluation_indirect = to_tensorflow(
     baseline_boiling_dataset_indirect | subset('val'),
-    batch_size=BATCH_SIZE,
+    batch_size=BOILING_BASELINE_BATCH_SIZE,
     target=BOILING_HEAT_FLUX_TARGET,
     experiment='boiling1d',
 )
@@ -1667,7 +1641,6 @@ print(regular_wire_best_model_direct_visualization_less_data)
 
 
 logger.info('Analyzing cross-surface boiling evaluation')
-BATCH_SIZE = 200
 
 
 @cache(JSONAllocator(ANALYSES_PATH / 'studies' / 'boiling-cross-surface'))
@@ -1714,10 +1687,12 @@ def boiling_cross_surface_evaluation(
 
     ds_evaluation_val = to_tensorflow(
         evaluation_dataset | subset('val'),
-        batch_size=BATCH_SIZE,
+        batch_size=BOILING_BASELINE_BATCH_SIZE,
         target=BOILING_HEAT_FLUX_TARGET,
         experiment='boiling1d',
     )
+
+    print(next(ds_evaluation_val().as_numpy_iterator()))
 
     evaluation = model.architecture.evaluate(ds_evaluation_val())
     logger.info(f'Done: {evaluation}')
@@ -1792,7 +1767,7 @@ for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
 
 
 # logger.info('Analyzing cross-surface boiling evaluation with AutoML')
-# BATCH_SIZE = 200
+# BOILING_BASELINE_BATCH_SIZE = 200
 
 
 # @cache(JSONTableAllocator(ANALYSES_PATH / 'studies' / 'boiling-cross-surface-automl'))
@@ -1828,7 +1803,7 @@ for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
 
 #     ds_evaluation_val = to_tensorflow(
 #         evaluation_dataset | subset('val'),
-#         batch_size=BATCH_SIZE,
+#         batch_size=BOILING_BASELINE_BATCH_SIZE,
 #         target=BOILING_HEAT_FLUX_TARGET,
 #     )
 
@@ -1935,7 +1910,7 @@ assert False, 'STOP!'
 # """### AutoKeras"""
 
 
-# BATCH_SIZE = 32
+# BOILING_BASELINE_BATCH_SIZE = 32
 
 # get_image_dataset_params = GetImageDatasetParams(
 #     boiling_cases[0],
@@ -1948,7 +1923,10 @@ assert False, 'STOP!'
 # ds_train, ds_val, ds_test = datasets.value
 # first_frame, _ = ds_train[0]
 # ds_train, ds_val, _ = to_tensorflow_triplet(
-#     datasets, batch_size=BATCH_SIZE, include_test=False, target=BOILING_HEAT_FLUX_TARGET
+#     datasets,
+#     batch_size=BOILING_BASELINE_BATCH_SIZE,
+#     include_test=False,
+#     target=BOILING_HEAT_FLUX_TARGET,
 # )
 # ds_train = ds_train.unbatch().prefetch(tf.data.AUTOTUNE)
 # ds_val = ds_val.unbatch().prefetch(tf.data.AUTOTUNE)
@@ -1990,14 +1968,14 @@ assert False, 'STOP!'
 #         tf.keras.callbacks.TerminateOnNaN(),
 #         # TimePrinter()
 #     ],
-#     batch_size=BATCH_SIZE,
+#     batch_size=BOILING_BASELINE_BATCH_SIZE,
 # )
 
 
 # logger.info('Done')
 
 
-# BATCH_SIZE = 32
+# BOILING_BASELINE_BATCH_SIZE = 32
 
 # get_image_dataset_params = GetImageDatasetParams(
 #     boiling_cases[0],
@@ -2010,7 +1988,10 @@ assert False, 'STOP!'
 # ds_train, ds_val, ds_test = datasets.value
 # first_frame, _ = ds_train[0]
 # ds_train, ds_val, _ = to_tensorflow_triplet(
-#     datasets, batch_size=BATCH_SIZE, include_test=False, target=BOILING_HEAT_FLUX_TARGET
+#     datasets,
+#     batch_size=BOILING_BASELINE_BATCH_SIZE,
+#     include_test=False,
+#     target=BOILING_HEAT_FLUX_TARGET
 # )
 # ds_train = ds_train.unbatch().prefetch(tf.data.AUTOTUNE)
 # ds_val = ds_val.unbatch().prefetch(tf.data.AUTOTUNE)
@@ -2044,7 +2025,7 @@ assert False, 'STOP!'
 #         tf.keras.callbacks.TerminateOnNaN(),
 #         # TimePrinter()
 #     ],
-#     batch_size=BATCH_SIZE,
+#     batch_size=BOILING_BASELINE_BATCH_SIZE,
 # )
 
 

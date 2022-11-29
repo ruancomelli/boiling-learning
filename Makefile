@@ -1,5 +1,5 @@
-.PROJECT = boiling_learning
-.TESTS_FOLDER = tests
+.PROJECT = boiling_learning/**/*.py
+.TESTS_FOLDER = tests/**/*.py
 
 .UNIMPORT = $(shell pdm run unimport --remove --gitignore --ignore-init --include-star-import $(.PROJECT) $(.TESTS_FOLDER))
 .BLACK = $(shell pdm run black $(.PROJECT) $(.TESTS_FOLDER))

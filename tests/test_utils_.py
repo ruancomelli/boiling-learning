@@ -36,7 +36,7 @@ class Test_geometry:
         cylinder = Cylinder(length=10, diameter=2)
 
         assert cylinder.radius() == 1
-        assert cylinder.volume() == math.pi * 1 ** 2 * 10
+        assert cylinder.volume() == math.pi * 1**2 * 10
 
     def test_RectangularPrism(self) -> None:
         prism = RectangularPrism(width=5, thickness=3, length=10)
