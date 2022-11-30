@@ -29,10 +29,19 @@ def configure(
     _configure_tensorflow(use_xla, mixed_precision_global_policy)
     _configure_modin_engine(modin_engine)
 
-    strategy = _configure_gpu(require_gpu=require_gpu, nvidia_output=nvidia_output)
-    strategy = LazyDescribed.from_value_and_description(strategy, typename(strategy))
-    logger.info(f'Using distribute strategy: {describe(strategy)}')
-    return strategy
+    strategy: tf.distribute.Strategy = _configure_gpu(
+        require_gpu=require_gpu, nvidia_output=nvidia_output
+    )
+    lazy_strategy = LazyDescribed.from_value_and_description(
+        strategy,
+        # type-ignore is necessary until the classes plugin works again
+        typename(strategy),  # type: ignore[arg-type]
+    )
+
+    # type-ignore is necessary until the classes plugin works again
+    strategy_description: str = describe(lazy_strategy)  # type: ignore[arg-type]
+    logger.info(f'Using distribute strategy: {strategy_description}')
+    return lazy_strategy
 
 
 def _configure_logger() -> None:
