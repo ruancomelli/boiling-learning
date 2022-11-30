@@ -89,7 +89,7 @@ class CachedFunction(Generic[_P, _R]):
     def provide(self, creator: CreatorFunction[_R], path: Path) -> _R:
         return self.cacher.provide(creator, path)
 
-    def allocate(self, *args: _P.args, **kwargs: _P.kwargs) -> Path:
+    def allocate(self, *args: Any, **kwargs: Any) -> Path:
         return self.cacher.allocate(*args, **kwargs)
 
 
