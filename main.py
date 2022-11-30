@@ -20,7 +20,10 @@ from boiling_learning.app import options
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
 from boiling_learning.app.datasets.boiling1d import BOILING_CASES, BOILING_DATA_PATH
-from boiling_learning.app.datasets.condensation import CONDENSATION_DATA_PATH
+from boiling_learning.app.datasets.condensation import (
+    CONDENSATION_DATA_PATH,
+    CONDENSATION_DATA_SPEC_PATH,
+)
 from boiling_learning.app.paths import ANALYSES_PATH
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
@@ -108,7 +111,6 @@ logger.info('Preparing datasets')
 
 logger.info(f'Loading condensation cases from {CONDENSATION_DATA_PATH}')
 condensation_datasets = load_dataset_tree.main(CONDENSATION_DATA_PATH)
-condensation_data_spec_path = CONDENSATION_DATA_PATH / 'data_spec.yaml'
 
 BOILING_VIDEO_TO_SETTER = {
     video.name: partial(set_boiling_cases_data.main, case())
@@ -120,7 +122,7 @@ CONDENSATION_VIDEO_TO_SETTER = {
     video.name: partial(
         set_condensation_datasets_data.main,
         condensation_datasets,
-        condensation_data_spec_path,
+        CONDENSATION_DATA_SPEC_PATH,
     )
     for img_ds in condensation_datasets
     for video in img_ds
@@ -133,18 +135,17 @@ def _is_condensation_video(ev: ExperimentVideo) -> bool:
     return ev.name in CONDENSATION_VIDEO_TO_SETTER
 
 
-def ensure_data_is_set(video: ExperimentVideo) -> None:
+def ensure_data_is_set(video: ExperimentVideo) -> bool:
     if video.data is None:
         setter = VIDEO_TO_SETTER[video.name]
         setter()
 
+    return video.data is not None
+
 
 @cache(JSONAllocator(ANALYSES_PATH / 'cache' / 'purged-experiment-videos'))
 def _purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]:
-    for video in tuple(image_dataset):
-        ensure_data_is_set(video)
-
-    return [video.name for video in image_dataset if video.data is not None]
+    return [video.name for video in tuple(image_dataset) if ensure_data_is_set(video)]
 
 
 def _compile_transformers(
