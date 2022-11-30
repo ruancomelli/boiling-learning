@@ -17,10 +17,7 @@ from rich.console import Console
 from rich.table import Table
 
 from boiling_learning.app.configuration import configure
-from boiling_learning.app.datasets.boiling1d import (
-    BOILING_DATA_PATH,
-    load_experiment_video_datasets,
-)
+from boiling_learning.app.datasets.boiling1d import BOILING_CASES, BOILING_DATA_PATH
 from boiling_learning.app.datasets.condensation import CONDENSATION_DATA_PATH
 from boiling_learning.app.paths import ANALYSES_PATH
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
@@ -121,19 +118,14 @@ logger.info('Succesfully checked paths')
 
 logger.info('Preparing datasets')
 
-boiling_cases = load_experiment_video_datasets()
-
 logger.info(f'Loading condensation cases from {CONDENSATION_DATA_PATH}')
 condensation_datasets = load_dataset_tree.main(CONDENSATION_DATA_PATH)
 condensation_data_spec_path = CONDENSATION_DATA_PATH / 'data_spec.yaml'
 
 BOILING_VIDEO_TO_SETTER = {
-    video.name: partial(
-        set_boiling_cases_data.main,
-        boiling_cases,
-    )
-    for case in boiling_cases
-    for video in case
+    video.name: partial(set_boiling_cases_data.main, case())
+    for case in BOILING_CASES
+    for video in case()
 }
 
 CONDENSATION_VIDEO_TO_SETTER = {
@@ -160,7 +152,7 @@ def ensure_data_is_set(video: ExperimentVideo) -> None:
 
 
 @cache(JSONAllocator(ANALYSES_PATH / 'cache' / 'purged-experiment-videos'))
-def purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]:
+def _purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]:
     for video in tuple(image_dataset):
         ensure_data_is_set(video)
 
@@ -198,7 +190,7 @@ def _get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
     )
 
 
-EAGER_BUFFER_SIZE = 128
+EAGER_BUFFER_SIZE = 128 * 4
 numpy_directory_boiling_allocator = JSONAllocator(ANALYSES_PATH / 'datasets' / 'numpy' / 'boiling')
 numpy_directory_condensation_allocator = JSONAllocator(
     ANALYSES_PATH / 'datasets' / 'numpy' / 'condensation'
@@ -298,7 +290,7 @@ def get_image_dataset(
         test=Fraction(15, 100),
     ),
 ) -> LazyDescribed[ImageDatasetTriplet]:
-    purged_experiment_videos = purge_experiment_videos(image_dataset)
+    purged_experiment_videos = _purge_experiment_videos(image_dataset)
 
     ds_train_list = []
     ds_val_list = []
@@ -328,7 +320,7 @@ def get_image_dataset(
 
 
 # DEFAULT_PREFETCH_BUFFER_SIZE = 4
-DEFAULT_PREFETCH_BUFFER_SIZE = 2048
+DEFAULT_PREFETCH_BUFFER_SIZE = 2048 * 2
 
 
 def _default_filter_for_frames_dataset(
@@ -388,7 +380,8 @@ def to_tensorflow(
         # long
         save_path=save_path,
         # DEBUG: try re-setting this to True
-        cache=True,
+        cache=False,
+        # cache=True,
         batch_size=batch_size,
         prefilterer=_prefilterer,
         filterer=filterer,
@@ -463,14 +456,14 @@ boiling_indirect_preprocessors = make_boiling_processors.main(direct_visualizati
 
 # logger.debug("Displaying directly visualized boiling frames")
 
-# TOTAL_EXAMPLES = sum(1 for case in boiling_cases for ev in case)
+# TOTAL_EXAMPLES = sum(1 for case in boiling_cases() for ev in case)
 # N_COLS = 4
 # N_ROWS = math.ceil(TOTAL_EXAMPLES / N_COLS)
 
 # fig, axs = plt.subplots(N_ROWS, N_COLS, figsize=(N_COLS*8, N_ROWS*8))
 
 # index = 0
-# for case in boiling_cases:
+# for case in boiling_cases():
 #     for ev in sorted(case, key=lambda ev: ev.name):
 #         try:
 #             transformer = _compile_transformers(boiling_direct_preprocessors, ev)
@@ -501,14 +494,14 @@ boiling_indirect_preprocessors = make_boiling_processors.main(direct_visualizati
 
 # logger.debug("Displaying indirectly visualized boiling frames")
 
-# TOTAL_EXAMPLES = sum(1 for case in boiling_cases for ev in case)
+# TOTAL_EXAMPLES = sum(1 for case in boiling_cases() for ev in case)
 # N_COLS = 4
 # N_ROWS = math.ceil(TOTAL_EXAMPLES / N_COLS)
 
 # fig, axs = plt.subplots(N_ROWS, N_COLS, figsize=(N_COLS*8, N_ROWS*8))
 
 # index = 0
-# for case in boiling_cases:
+# for case in boiling_cases():
 #     for ev in sorted(case, key=lambda ev: ev.name):
 #         try:
 #             transformer = _compile_transformers(boiling_indirect_preprocessors, ev)
@@ -536,11 +529,12 @@ boiling_indirect_preprocessors = make_boiling_processors.main(direct_visualizati
 logger.debug('Getting datasets')
 
 boiling_direct_datasets = tuple(
-    get_image_dataset(case, transformers=boiling_direct_preprocessors) for case in boiling_cases
+    get_image_dataset(case(), transformers=boiling_direct_preprocessors) for case in BOILING_CASES
 )
 
 boiling_indirect_datasets = tuple(
-    get_image_dataset(case, transformers=boiling_indirect_preprocessors) for case in boiling_cases
+    get_image_dataset(case(), transformers=boiling_indirect_preprocessors)
+    for case in BOILING_CASES
 )
 
 # for is_direct, datasets in (
@@ -1117,7 +1111,7 @@ PREFETCH = 1024 * 4
 # )
 
 # sample_frames: list[Image] = []
-# for case in boiling_cases:
+# for case in boiling_cases():
 #     get_image_dataset_params = GetImageDatasetParams(
 #         case,
 #         transformers=preprocessors,
@@ -1913,7 +1907,7 @@ assert False, 'STOP!'
 # BOILING_BASELINE_BATCH_SIZE = 32
 
 # get_image_dataset_params = GetImageDatasetParams(
-#     boiling_cases[0],
+#     boiling_cases()[0],
 #     transformers=(*boiling_direct_preprocessors, ImageNormalizer()),
 #     dataset_size=None,
 # )
@@ -1978,7 +1972,7 @@ assert False, 'STOP!'
 # BOILING_BASELINE_BATCH_SIZE = 32
 
 # get_image_dataset_params = GetImageDatasetParams(
-#     boiling_cases[0],
+#     boiling_cases()[0],
 #     transformers=(*boiling_direct_preprocessors, ImageNormalizer()),
 #     dataset_size=None,
 # )
@@ -2156,10 +2150,10 @@ assert False, 'STOP!'
 # """## Old Code"""
 
 # reference_datasets_boiling = (
-#     boiling_cases[0]['GOPR2868'].as_tf_dataset(),
-#     boiling_cases[1]['GOPR2878'].as_tf_dataset(),
-#     boiling_cases[2]['GOPR2908'].as_tf_dataset(),
-#     boiling_cases[3]['GOPR2948'].as_tf_dataset(),
+#     boiling_cases()[0]['GOPR2868'].as_tf_dataset(),
+#     boiling_cases()[1]['GOPR2878'].as_tf_dataset(),
+#     boiling_cases()[2]['GOPR2908'].as_tf_dataset(),
+#     boiling_cases()[3]['GOPR2948'].as_tf_dataset(),
 # )
 # reference_datasets_condensation = (
 #     condensation_datasets_dict['stainless steel:polished'][

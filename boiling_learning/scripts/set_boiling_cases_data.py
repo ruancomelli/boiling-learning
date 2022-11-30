@@ -1,5 +1,3 @@
-from typing import Iterable
-
 import modin.pandas as pd
 import numpy as np
 from loguru import logger
@@ -12,14 +10,9 @@ from boiling_learning.utils.printing import add_unit_post_fix
 from boiling_learning.utils.units import unit_registry as ureg
 
 
-def main(cases: Iterable[Case], /) -> None:
-    logger.info('Setting boiling data')
+def main(case: Case, /) -> None:
+    logger.info(f'Setting boiling data for case {case.name}')
 
-    for case in cases:
-        set_case(case)
-
-
-def set_case(case: Case, /) -> None:
     case.set_video_data_from_file(remove_absent=True)
 
     for ev in case:
