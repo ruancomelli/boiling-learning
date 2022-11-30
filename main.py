@@ -1,12 +1,10 @@
 import itertools
 from dataclasses import replace
 from fractions import Fraction
-from functools import partial
 from operator import itemgetter
 from pprint import pprint
-from typing import Callable, Literal, Optional, Union
+from typing import Callable, Literal, Optional
 
-import numpy as np
 import tensorflow as tf
 import tensorflow_addons as tfa
 from loguru import logger
@@ -16,6 +14,7 @@ from rich.table import Table
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
 from boiling_learning.app.datasets.boiling1d import BOILING_CASES, BOILING_DATA_PATH
+from boiling_learning.app.datasets.bridging import to_tensorflow, to_tensorflow_triplet
 from boiling_learning.app.datasets.condensation import (
     CONDENSATION_DATA_PATH,
     CONDENSATION_DATASETS,
@@ -25,10 +24,9 @@ from boiling_learning.app.paths import ANALYSES_PATH
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
 from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn, fit_hypermodel
-from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_dataset
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import map_targets, targets
-from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
+from boiling_learning.image_datasets import Image, ImageDatasetTriplet, Targets
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import CachedFunction, Cacher, cache
@@ -94,136 +92,6 @@ check_all_paths_exist(
 logger.info('Succesfully checked paths')
 
 logger.info('Preparing datasets')
-
-# DEFAULT_PREFETCH_BUFFER_SIZE = 4
-DEFAULT_PREFETCH_BUFFER_SIZE = 2048 * 2
-
-
-def _default_filter_for_frames_dataset(
-    dataset: ImageDataset,
-) -> Callable[[Image, Targets], bool]:
-    def _pred(image: Image, _targets: Targets) -> bool:
-        first_frame, _first_targets = dataset[0]
-        return image.shape == first_frame.shape and not np.allclose(image, 0)
-
-    return _pred
-
-
-training_datasets_allocator_boiling = JSONAllocator(
-    ANALYSES_PATH / 'datasets' / 'training' / 'boiling'
-)
-training_datasets_allocator_condensation = JSONAllocator(
-    ANALYSES_PATH / 'datasets' / 'training' / 'condensation'
-)
-
-
-def to_tensorflow(
-    dataset: LazyDescribed[ImageDataset],
-    *,
-    experiment: Literal['boiling1d', 'condensation'],
-    batch_size: Optional[int] = None,
-    prefilterer: Optional[LazyDescribed[Callable[[Image, Targets], bool]]] = None,
-    filterer: Optional[Callable[..., bool]] = None,
-    buffer_size: int = DEFAULT_PREFETCH_BUFFER_SIZE,
-    target: Optional[str] = None,
-    shuffle: Union[bool, int] = True,
-) -> LazyDescribed[tf.data.Dataset]:
-    dataset_value = dataset()
-
-    default_prefilterer = _default_filter_for_frames_dataset(dataset_value)
-
-    def _prefilterer(element: tuple[Image, Targets]) -> bool:
-        image, targets = element
-        return default_prefilterer(image, targets) and (
-            prefilterer is None or prefilterer()(image, targets)
-        )
-
-    save_path = {
-        'boiling1d': training_datasets_allocator_boiling,
-        'condensation': training_datasets_allocator_condensation,
-    }[experiment].allocate(dataset, prefilterer)
-
-    logger.debug(f'Converting dataset to TF and saving to {save_path}')
-
-    if shuffle is True:
-        dataset_value = dataset_value.shuffle()
-
-    tf_dataset = sliceable_dataset_to_tensorflow_dataset(
-        dataset_value,
-        # DEBUG: I commented out the following line to avoid issues with dataset saving taking too
-        # long
-        save_path=save_path,
-        # DEBUG: try re-setting this to True
-        cache=False,
-        # cache=True,
-        batch_size=batch_size,
-        prefilterer=_prefilterer,
-        filterer=filterer,
-        prefetch=buffer_size,
-        expand_to_batch_size=True,
-        deterministic=False,
-        target=target,
-    )
-
-    if shuffle and shuffle is not True:
-        tf_dataset = tf_dataset.shuffle(shuffle)
-
-    return LazyDescribed.from_value_and_description(
-        tf_dataset,
-        (
-            dataset,
-            ('prefilterer', prefilterer),
-            ('batch', batch_size),
-            ('target', target),
-        ),
-    )
-
-
-def to_tensorflow_triplet(
-    dataset: LazyDescribed[ImageDatasetTriplet],
-    *,
-    experiment: Literal['boiling1d', 'condensation'],
-    batch_size: Optional[int] = None,
-    prefilterer: Optional[LazyDescribed[Callable[[Image, Targets], bool]]] = None,
-    filterer: Optional[Callable[..., bool]] = None,
-    buffer_size: int = DEFAULT_PREFETCH_BUFFER_SIZE,
-    target: Optional[str] = None,
-    include_train: bool = True,
-    include_val: bool = True,
-    include_test: bool = True,
-    shuffle: Union[bool, int] = True,
-) -> DatasetTriplet[LazyDescribed[tf.data.Dataset]]:
-    _to_tensorflow = partial(
-        to_tensorflow,
-        batch_size=batch_size,
-        prefilterer=prefilterer,
-        filterer=filterer,
-        buffer_size=buffer_size,
-        target=target,
-        shuffle=shuffle,
-        experiment=experiment,
-    )
-
-    if include_train:
-        logger.debug('Converting TRAIN set to tensorflow')
-        ds_train = _to_tensorflow(dataset | subset('train'))
-    else:
-        ds_train = LazyDescribed.from_value_and_description(tf.data.Dataset.range(0), None)
-
-    if include_val:
-        logger.debug('Converting VAL set to tensorflow')
-        ds_val = _to_tensorflow(dataset | subset('val'))
-    else:
-        ds_val = LazyDescribed.from_value_and_description(tf.data.Dataset.range(0), None)
-
-    if include_test:
-        logger.debug('Converting TEST set to tensorflow')
-        ds_test = _to_tensorflow(dataset | subset('test'))
-    else:
-        ds_test = LazyDescribed.from_value_and_description(tf.data.Dataset.range(0), None)
-
-    return DatasetTriplet(ds_train, ds_val, ds_test)
-
 
 boiling_direct_preprocessors = make_boiling_processors.main(direct_visualization=True)
 boiling_indirect_preprocessors = make_boiling_processors.main(direct_visualization=False)
