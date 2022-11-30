@@ -51,6 +51,7 @@ This project uses [ZeroVer](https://0ver.org/), a versioning scheme in which sof
 
 Given a version number `0.x.y`, the minor version `x` will be incremented whenever intentional breaking changes are introduced. If no new breaking changes are added, new releases will only increment the patch version `y` for both bug fixes and new features. This is similar to how [SemVer](https://semver.org/) treats the major and the minor version numbers, respectively.
 
+<!--
 Installation
 ---
 
@@ -142,7 +143,7 @@ This uses [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 The release scripts forwards all arguments to [Commitizen's bump command](https://github.com/commitizen-tools/commitizen/blob/master/docs/bump.md), so anything they accept works here as well. In particular, another thing you may wish to do is to bump a prerelease version:
 ```sh
 . ./scripts/release.sh --prerelease [alpha|beta|rc]
-```
+``` -->
 
 Upcoming
 ---
