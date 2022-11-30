@@ -21,6 +21,10 @@ from boiling_learning.app.datasets.condensation import (
 )
 from boiling_learning.app.datasets.generators import get_image_dataset
 from boiling_learning.app.paths import ANALYSES_PATH
+from boiling_learning.app.preprocessing.defaults import (
+    default_boiling_preprocessors,
+    default_condensation_preprocessors,
+)
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
 from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn, fit_hypermodel
@@ -50,7 +54,6 @@ from boiling_learning.model.training import (
     strategy_scope,
 )
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
-from boiling_learning.scripts import make_boiling_processors, make_condensation_processors
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist
 from boiling_learning.transforms import (
     dataset_sampler,
@@ -93,8 +96,8 @@ logger.info('Succesfully checked paths')
 
 logger.info('Preparing datasets')
 
-boiling_direct_preprocessors = make_boiling_processors.main(direct_visualization=True)
-boiling_indirect_preprocessors = make_boiling_processors.main(direct_visualization=False)
+boiling_direct_preprocessors = default_boiling_preprocessors(direct_visualization=True)
+boiling_indirect_preprocessors = default_boiling_preprocessors(direct_visualization=False)
 
 # logger.debug("Displaying directly visualized boiling frames")
 
@@ -219,7 +222,7 @@ boiling_indirect_datasets = tuple(
 # TODO: choose this correctly!!
 CONDENSATION_SUBSAMPLE = Fraction(1, 60)
 
-condensation_preprocessors = make_condensation_processors.main(
+condensation_preprocessors = default_condensation_preprocessors(
     downscale_factor=5, height=8 * 12, width=8 * 12
 )
 condensation_dataset = (
