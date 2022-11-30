@@ -129,11 +129,28 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
             else range(start)
         )
 
+    @overload
     @staticmethod
     def zip(
-        *datasets: Unpack[tuple[SliceableDataset[Unpack[_Ts]]]],
+        __dataset1: SliceableDataset[_T],
         strictness: Literal['none', 'one-off', 'strict'] = 'strict',
-    ) -> ZippedSliceableDataset[Unpack[_Ts]]:
+    ) -> ZippedSliceableDataset[_T]:
+        ...
+
+    @overload
+    @staticmethod
+    def zip(
+        __dataset1: SliceableDataset[_T],
+        __dataset2: SliceableDataset[_U],
+        strictness: Literal['none', 'one-off', 'strict'] = 'strict',
+    ) -> ZippedSliceableDataset[_T, _U]:
+        ...
+
+    @staticmethod  # type: ignore[misc] # does not handle overloads
+    def zip(
+        *datasets: SliceableDataset[_T],
+        strictness: Literal['none', 'one-off', 'strict'] = 'strict',
+    ) -> ZippedSliceableDataset[Unpack[tuple[_T, ...]]]:
         return ZippedSliceableDataset(*datasets, strictness=strictness)
 
     def cache(self, cache: SliceableDatasetCache[_T]) -> CachedSliceableDataset[_T]:
@@ -143,7 +160,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
         return SliceableDataset.zip(SliceableDataset.range(len(self)), self)
 
     def extend(self, dataset: SliceableDataset[_U]) -> ConcatenateSliceableDataset[Union[_T, _U]]:
-        return ConcatenateSliceableDataset(self, dataset)
+        return ConcatenateSliceableDataset(self, dataset)  # type: ignore[arg-type]
 
     def repeat(self, count: int) -> SliceableDataset[_T]:
         return SliceableDataset.concatenate(*(self for _ in range(count)))
@@ -377,10 +394,15 @@ class ComposedIndicesSliceableDataset(SliceableDataset[_T]):
         return tuple(self._indices[index] for index in indices)
 
 
-class ZippedSliceableDataset(SliceableDataset[tuple[Unpack[_Ts]]], Generic[Unpack[_Ts]]):
+class ZippedSliceableDataset(
+    # due to limitations in the type system, we cannot correctly annotate the parameter
+    # `datasets`, leaving `_Ts` unbound
+    SliceableDataset[tuple[Unpack[_Ts]]],  # type: ignore[valid-type]
+    Generic[Unpack[_Ts]],
+):
     def __init__(
         self,
-        *datasets: Unpack[tuple[Unpack[_Ts]]],
+        *datasets: SliceableDataset[Any],
         strictness: Literal['none', 'one-off', 'strict'] = 'strict',
     ) -> None:
         self._ancestors = datasets
@@ -395,7 +417,10 @@ class ZippedSliceableDataset(SliceableDataset[tuple[Unpack[_Ts]]], Generic[Unpac
         return self._length
 
     def getitem_from_index(self, index: int) -> tuple[Unpack[_Ts]]:
-        return tuple(dataset[index] for dataset in self._ancestors)
+        # due to limitations in the type-system, cannot properly return the correct type
+        # this is because we cannot correctly annotate `self._ancestors` to be something
+        # like `(SD[_T1], SD[_T2], SD[_T3], ...)` (where `SD = SliceableDataset`).
+        return tuple(dataset[index] for dataset in self._ancestors)  # type: ignore[return-value]
 
     def getitem_from_indices(self, indices: Iterable[int]) -> SliceableDataset[tuple[Unpack[_Ts]]]:
         return ZippedSliceableDataset(*(dataset[indices] for dataset in self._ancestors))
@@ -405,11 +430,17 @@ class ZippedSliceableDataset(SliceableDataset[tuple[Unpack[_Ts]]], Generic[Unpac
         return f'{self.__class__.__name__}({reprs})'
 
     def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[tuple[Unpack[_Ts]]]:
-        if indices is None:
-            return tuple(zip(*(dataset.fetch() for dataset in self._ancestors)))
+        if indices is not None:
+            indices = tuple(indices)
 
-        indices = tuple(indices)
-        return tuple(zip(*(dataset.fetch(indices) for dataset in self._ancestors)))
+        return tuple(
+            zip(
+                *(
+                    dataset.fetch(indices)  # type: ignore[return-value]
+                    for dataset in self._ancestors
+                )
+            )
+        )
 
     def _check_lengths(self, lengths: list[int]) -> None:
         if self._strictness == 'one-off':
