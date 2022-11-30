@@ -16,7 +16,9 @@ from loguru import logger
 from rich.console import Console
 from rich.table import Table
 
+from boiling_learning.app import options
 from boiling_learning.app.configuration import configure
+from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
 from boiling_learning.app.datasets.boiling1d import BOILING_CASES, BOILING_DATA_PATH
 from boiling_learning.app.datasets.condensation import CONDENSATION_DATA_PATH
 from boiling_learning.app.paths import ANALYSES_PATH
@@ -190,7 +192,6 @@ def _get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
     )
 
 
-EAGER_BUFFER_SIZE = 128 * 4
 numpy_directory_boiling_allocator = JSONAllocator(ANALYSES_PATH / 'datasets' / 'numpy' / 'boiling')
 numpy_directory_condensation_allocator = JSONAllocator(
     ANALYSES_PATH / 'datasets' / 'numpy' / 'condensation'
@@ -223,7 +224,7 @@ def _video_dataset_from_video_and_transformers(
     return video().cache(
         numpy_cache
         if _is_condensation_video(experiment_video)
-        else EagerCache(numpy_cache, buffer_size=EAGER_BUFFER_SIZE),
+        else EagerCache(numpy_cache, buffer_size=options.EAGER_BUFFER_SIZE),
     )
 
 
@@ -339,8 +340,6 @@ training_datasets_allocator_boiling = JSONAllocator(
 training_datasets_allocator_condensation = JSONAllocator(
     ANALYSES_PATH / 'datasets' / 'training' / 'condensation'
 )
-
-BOILING_BASELINE_BATCH_SIZE = 200
 
 
 def to_tensorflow(
