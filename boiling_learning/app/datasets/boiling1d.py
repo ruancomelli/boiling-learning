@@ -6,7 +6,6 @@ from boiling_learning.preprocessing.cases import Case
 from boiling_learning.utils.pathutils import PathLike
 
 BOILING_DATA_PATH = DATA_PATH / 'boiling1d'
-BOILING_EXPERIMENTS_PATH = BOILING_DATA_PATH / 'experiments'
 
 
 def _case_from_path(path: PathLike, /) -> LazyDescribed[Case]:

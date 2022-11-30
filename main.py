@@ -23,6 +23,7 @@ from boiling_learning.app.datasets.boiling1d import BOILING_CASES, BOILING_DATA_
 from boiling_learning.app.datasets.condensation import (
     CONDENSATION_DATA_PATH,
     CONDENSATION_DATA_SPEC_PATH,
+    CONDENSATION_DATASETS,
 )
 from boiling_learning.app.paths import ANALYSES_PATH
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
@@ -60,7 +61,6 @@ from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.scripts import (
-    load_dataset_tree,
     make_boiling_processors,
     make_condensation_processors,
     set_boiling_cases_data,
@@ -108,23 +108,19 @@ check_all_paths_exist(
 logger.info('Succesfully checked paths')
 
 logger.info('Preparing datasets')
-
-logger.info(f'Loading condensation cases from {CONDENSATION_DATA_PATH}')
-condensation_datasets = load_dataset_tree.main(CONDENSATION_DATA_PATH)
-
 BOILING_VIDEO_TO_SETTER = {
-    video.name: partial(set_boiling_cases_data.main, case())
+    video: partial(set_boiling_cases_data.main, case())
     for case in BOILING_CASES
     for video in case()
 }
 
 CONDENSATION_VIDEO_TO_SETTER = {
-    video.name: partial(
+    video: partial(
         set_condensation_datasets_data.main,
-        [img_ds() for img_ds in condensation_datasets],
+        [img_ds() for img_ds in CONDENSATION_DATASETS],
         CONDENSATION_DATA_SPEC_PATH,
     )
-    for img_ds in condensation_datasets
+    for img_ds in CONDENSATION_DATASETS
     for video in img_ds()
 }
 
@@ -132,12 +128,12 @@ VIDEO_TO_SETTER = BOILING_VIDEO_TO_SETTER | CONDENSATION_VIDEO_TO_SETTER
 
 
 def _is_condensation_video(ev: ExperimentVideo) -> bool:
-    return ev.name in CONDENSATION_VIDEO_TO_SETTER
+    return ev in CONDENSATION_VIDEO_TO_SETTER
 
 
 def ensure_data_is_set(video: ExperimentVideo) -> bool:
     if video.data is None:
-        setter = VIDEO_TO_SETTER[video.name]
+        setter = VIDEO_TO_SETTER[video]
         setter()
 
     return video.data is not None
@@ -157,7 +153,8 @@ def _compile_transformers(
         for transformer in transformers
     )
     return LazyDescribed.from_value_and_description(
-        funcy.rcompose(*compiled_transformers), compiled_transformers
+        funcy.rcompose(*compiled_transformers),
+        compiled_transformers,
     )
 
 
@@ -573,7 +570,7 @@ condensation_dataset = (
                 get_image_dataset(ds(), condensation_preprocessors)
                 | dataset_sampler(CONDENSATION_SUBSAMPLE)
             )
-            for ds in condensation_datasets
+            for ds in CONDENSATION_DATASETS
         )
     )
     | datasets_concatenater()
@@ -1073,7 +1070,7 @@ PREFETCH = 1024 * 4
 """#### Condensation"""
 
 # TODO: ensure that this works!
-# plot_dataset_targets(condensation_datasets)
+# plot_dataset_targets(CONDENSATION_DATASETS)
 
 """### Downscaling"""
 
@@ -1820,7 +1817,7 @@ def _set_case_name(data: Targets) -> Targets:
 
 
 logger.info('Getting datasets...')
-condensation_all_cases = ExperimentVideoDataset().union(*condensation_datasets)
+condensation_all_cases = ExperimentVideoDataset().union(*CONDENSATION_DATASETS)
 ds = get_image_dataset(
     condensation_all_cases,
     transformers=condensation_preprocessors,
