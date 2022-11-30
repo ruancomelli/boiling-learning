@@ -5,7 +5,7 @@ from functools import partial
 from operator import itemgetter
 from pathlib import Path
 from pprint import pprint
-from typing import Callable, Iterable, Literal, NamedTuple, Optional, Union
+from typing import Callable, Iterable, Literal, Optional, Union
 
 import funcy
 import modin.pandas as pd
@@ -93,20 +93,6 @@ strategy = configure(
     require_gpu=True,
 )
 
-
-class Options(NamedTuple):
-    test: bool = False
-    login_user: bool = False
-    pre_load_videos: bool = False
-    interact_processed_frames: bool = False
-    analyze_downsampling: bool = False
-    analyze_consecutive_frames: bool = False
-    analyze_learning_curve: bool = True
-    analyze_cross_evaluation: bool = True
-
-
-OPTIONS = Options()
-logger.info(f'Options: {OPTIONS}')
 
 logger.info('Checking paths')
 check_all_paths_exist(
@@ -2190,56 +2176,55 @@ assert False, 'STOP!'
 # <https://drive.google.com/drive/u/1/folders/1hVLDeLOlklVqIN-W6eGbRUqTxMXZTF74>
 # # It seems that FPS is already 1, so frame #30 happens 30s after frame #0.
 
-# if OPTIONS['analyze_consecutive_frames']:
-#     for reference_datasets, preprocessors, final_timeshift, timeshifts in (
-#         (
-#             reference_datasets_boiling,
-#             boiling_direct_preprocessors,
-#             1,
-#             (0, 1, 2, 3, 5, 10, 20, 30, 60),
-#         ),
-#         (
-#             reference_datasets_condensation,
-#             condensation_preprocessors,
-#             300,
-#             (0, 1, 2, 3, 5, 10, 20, 30, 60, 120, 300, 600, 1200, 1600, 3600, 7200),
-#         ),
-#     ):
-#         for dataset in reference_datasets:
-#             n_frames = max(timeshifts) + 1
+# for reference_datasets, preprocessors, final_timeshift, timeshifts in (
+#     (
+#         reference_datasets_boiling,
+#         boiling_direct_preprocessors,
+#         1,
+#         (0, 1, 2, 3, 5, 10, 20, 30, 60),
+#     ),
+#     (
+#         reference_datasets_condensation,
+#         condensation_preprocessors,
+#         300,
+#         (0, 1, 2, 3, 5, 10, 20, 30, 60, 120, 300, 600, 1200, 1600, 3600, 7200),
+#     ),
+# ):
+#     for dataset in reference_datasets:
+#         n_frames = max(timeshifts) + 1
 
-#             preprocessors = select_preprocessors(preprocessors)
+#         preprocessors = select_preprocessors(preprocessors)
 
-#             dataset = bl.datasets.apply_transformers(dataset, preprocessors)
-#             _, data = list(dataset.take(1).as_numpy_iterator())[0]
-#             print(data)
-#             frames = {
-#                 idx: frame
-#                 for idx, frame in enumerate(
-#                     dataset.map(lambda image, data: image).take(n_frames).as_numpy_iterator()
-#                 )
-#                 if idx in timeshifts
-#             }
-
-#             fig = plt.figure()
-#             ax = fig.add_subplot(1, 1, 1)
-#             ax.imshow(frames[0], cmap='gray')
-#             fig.show()
-
-#             analyze_consecutive_frames.main(
-#                 frames.items(),
-#                 metrics={
-#                     'Retained variance': retained_variance,
-#                     'Cross-entropy ratio': shannon_cross_entropy_ratio,
-#                     'Entropy ratio': shannon_entropy_ratio,
-#                     'NMI ratio': normalized_mutual_information,
-#                     'Structural similarity': structural_similarity_ratio,
-#                 },
-#                 timeshifts=timeshifts,
-#                 final_timeshift=final_timeshift,
-#                 xscale='symlog',
-#                 figsize=(4, 3),
+#         dataset = bl.datasets.apply_transformers(dataset, preprocessors)
+#         _, data = list(dataset.take(1).as_numpy_iterator())[0]
+#         print(data)
+#         frames = {
+#             idx: frame
+#             for idx, frame in enumerate(
+#                 dataset.map(lambda image, data: image).take(n_frames).as_numpy_iterator()
 #             )
+#             if idx in timeshifts
+#         }
+
+#         fig = plt.figure()
+#         ax = fig.add_subplot(1, 1, 1)
+#         ax.imshow(frames[0], cmap='gray')
+#         fig.show()
+
+#         analyze_consecutive_frames.main(
+#             frames.items(),
+#             metrics={
+#                 'Retained variance': retained_variance,
+#                 'Cross-entropy ratio': shannon_cross_entropy_ratio,
+#                 'Entropy ratio': shannon_entropy_ratio,
+#                 'NMI ratio': normalized_mutual_information,
+#                 'Structural similarity': structural_similarity_ratio,
+#             },
+#             timeshifts=timeshifts,
+#             final_timeshift=final_timeshift,
+#             xscale='symlog',
+#             figsize=(4, 3),
+#         )
 
 # # import matplotlib.pyplot as plt
 # # import numpy as np
