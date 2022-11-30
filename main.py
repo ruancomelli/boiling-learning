@@ -121,11 +121,11 @@ BOILING_VIDEO_TO_SETTER = {
 CONDENSATION_VIDEO_TO_SETTER = {
     video.name: partial(
         set_condensation_datasets_data.main,
-        condensation_datasets,
+        [img_ds() for img_ds in condensation_datasets],
         CONDENSATION_DATA_SPEC_PATH,
     )
     for img_ds in condensation_datasets
-    for video in img_ds
+    for video in img_ds()
 }
 
 VIDEO_TO_SETTER = BOILING_VIDEO_TO_SETTER | CONDENSATION_VIDEO_TO_SETTER
@@ -570,7 +570,7 @@ condensation_dataset = (
     LazyDescribed.from_describable(
         tuple(
             (
-                get_image_dataset(ds, condensation_preprocessors)
+                get_image_dataset(ds(), condensation_preprocessors)
                 | dataset_sampler(CONDENSATION_SUBSAMPLE)
             )
             for ds in condensation_datasets
