@@ -140,6 +140,10 @@ plugins = [
     # "classes.contrib.mypy.classes_plugin",
 	"numpy.typing.mypy_plugin",
 ]
+enable_incomplete_feature = [
+    "TypeVarTuple",
+    "Unpack"
+]
 
 [tool.commitizen]
 tag_format = "v$major.$minor.$patch$prerelease"
