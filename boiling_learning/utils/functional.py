@@ -5,9 +5,9 @@ from itertools import chain
 from typing import Any, Callable, Generic, Iterable, Iterator, Mapping, TypeVar, Union, overload
 
 import funcy
+from frozendict import frozendict
 
 from boiling_learning.descriptions import describe
-from boiling_learning.utils.frozendicts import frozendict
 
 # TODO: when variadic generics are available, they will be very useful here
 _T = TypeVar('_T')

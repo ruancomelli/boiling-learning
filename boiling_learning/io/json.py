@@ -10,9 +10,9 @@ from types import FunctionType
 from typing import Any, Optional, Protocol, TypedDict, TypeVar, Union, runtime_checkable
 
 from classes import AssociatedType, Supports, typeclass
+from frozendict import frozendict
 
 from boiling_learning.utils.dataclasses import is_dataclass_instance, shallow_asdict
-from boiling_learning.utils.frozendicts import frozendict
 from boiling_learning.utils.functional import P, Pack
 from boiling_learning.utils.pathutils import PathLike, resolve
 from boiling_learning.utils.table_dispatch import TableDispatcher

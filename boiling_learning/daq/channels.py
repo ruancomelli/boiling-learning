@@ -1,11 +1,11 @@
 import enum
 from typing import Optional, Type, TypeVar, Union
 
+from frozendict import frozendict
 from nidaqmx.constants import ChannelType as NIChannelType
 from nidaqmx.task import Task
 
 from boiling_learning.daq.devices import Device
-from boiling_learning.utils.frozendicts import frozendict
 
 T = TypeVar('T')
 

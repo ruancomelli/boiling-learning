@@ -5,9 +5,9 @@ from types import FunctionType
 from typing import Any, Generic, Protocol, Type, TypeVar, Union, final, runtime_checkable
 
 from classes import AssociatedType, Supports, typeclass
+from frozendict import frozendict
 
 from boiling_learning.utils.dataclasses import is_dataclass_instance, shallow_asdict
-from boiling_learning.utils.frozendicts import frozendict
 
 _AnyType = TypeVar('_AnyType', bound=Type[Any])
 _Description = TypeVar('_Description')

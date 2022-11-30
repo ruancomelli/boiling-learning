@@ -1,5 +1,6 @@
+from frozendict import frozendict
+
 from boiling_learning.utils import geometry
-from boiling_learning.utils.frozendicts import frozendict
 from boiling_learning.utils.units import unit_registry as ureg
 
 WIRE_SAMPLES = frozendict[int, geometry.Prism](
