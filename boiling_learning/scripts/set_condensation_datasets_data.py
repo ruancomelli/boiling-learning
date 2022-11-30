@@ -4,7 +4,7 @@ from typing import Any, Iterable, Optional
 
 import parse
 import yaml
-from frozendict import frozendict
+from frozendict import frozendict  # type: ignore[attr-defined]
 from loguru import logger
 
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo, VideoData

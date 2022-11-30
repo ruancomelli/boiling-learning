@@ -10,7 +10,7 @@ from types import FunctionType
 from typing import Any, Optional, Protocol, TypedDict, TypeVar, Union, runtime_checkable
 
 from classes import AssociatedType, Supports, typeclass
-from frozendict import frozendict
+from frozendict import frozendict  # type: ignore[attr-defined]
 
 from boiling_learning.utils.dataclasses import is_dataclass_instance, shallow_asdict
 from boiling_learning.utils.functional import P, Pack

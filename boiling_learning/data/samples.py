@@ -1,4 +1,4 @@
-from frozendict import frozendict
+from frozendict import frozendict  # type: ignore[attr-defined]
 
 from boiling_learning.utils import geometry
 from boiling_learning.utils.units import unit_registry as ureg

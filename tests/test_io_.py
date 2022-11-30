@@ -1,7 +1,7 @@
 from typing import Any
 
 import pytest
-from frozendict import frozendict
+from frozendict import frozendict  # type: ignore[attr-defined]
 
 from boiling_learning.io import json
 from boiling_learning.utils.functional import P

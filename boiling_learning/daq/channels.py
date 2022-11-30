@@ -1,7 +1,7 @@
 import enum
 from typing import Optional, Type, TypeVar, Union
 
-from frozendict import frozendict
+from frozendict import frozendict  # type: ignore[attr-defined]
 from nidaqmx.constants import ChannelType as NIChannelType
 from nidaqmx.task import Task
 

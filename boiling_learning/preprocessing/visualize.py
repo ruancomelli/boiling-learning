@@ -18,7 +18,7 @@
 # from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 # from boiling_learning.preprocessing.transformers import Transformer
 # from boiling_learning.preprocessing.video import VideoFrame
-# from frozendict import frozendict
+# from frozendict import frozendict # type: ignore[attr-defined]
 # from boiling_learning.utils.functional import P, Pack, nth_arg
 
 # _T = TypeVar('_T')
