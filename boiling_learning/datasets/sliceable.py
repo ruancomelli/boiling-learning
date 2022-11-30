@@ -102,9 +102,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
 
     # Constructors:
     @staticmethod
-    def concatenate(
-        *datasets: Unpack[SliceableDataset[Unpack[_Ts]]],
-    ) -> ConcatenateSliceableDataset[Unpack[_Ts]]:
+    def concatenate(*datasets: SliceableDataset[_T]) -> ConcatenateSliceableDataset[_T]:
         return ConcatenateSliceableDataset(*datasets)
 
     @staticmethod
@@ -144,7 +142,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
     def enumerate(self) -> ZippedSliceableDataset[int, _T]:
         return SliceableDataset.zip(SliceableDataset.range(len(self)), self)
 
-    def extend(self, dataset: SliceableDataset[_U]) -> ConcatenateSliceableDataset[_T, _U]:
+    def extend(self, dataset: SliceableDataset[_U]) -> ConcatenateSliceableDataset[Union[_T, _U]]:
         return ConcatenateSliceableDataset(self, dataset)
 
     def repeat(self, count: int) -> SliceableDataset[_T]:
@@ -350,6 +348,9 @@ class GetItemSliceableDataset(SliceableDataset[_T]):
     def getitem_from_index(self, index: int) -> _T:
         return self._getitem(index)
 
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self._getitem}, {self._length})'
+
 
 class ComposedIndicesSliceableDataset(SliceableDataset[_T]):
     def __init__(self, ancestor: SliceableDataset[_T], indices: Iterable[int]) -> None:
@@ -436,8 +437,8 @@ class ZippedSliceableDataset(SliceableDataset[tuple[Unpack[_Ts]]], Generic[Unpac
             )
 
 
-class ConcatenateSliceableDataset(SliceableDataset[Union[Unpack[_Ts]]], Generic[Unpack[_Ts]]):
-    def __init__(self, *datasets: Unpack[SliceableDataset[_Ts]]) -> None:
+class ConcatenateSliceableDataset(SliceableDataset[_T]):
+    def __init__(self, *datasets: SliceableDataset[_T]) -> None:
         self._ancestors = datasets
 
     def __len__(self) -> int:
@@ -447,11 +448,11 @@ class ConcatenateSliceableDataset(SliceableDataset[Union[Unpack[_Ts]]], Generic[
         ancestors = ', '.join(repr(ancestor) for ancestor in self._ancestors)
         return f'{self.__class__.__name__}({ancestors})'
 
-    def getitem_from_index(self, index: int) -> Union[Unpack[_Ts]]:
+    def getitem_from_index(self, index: int) -> _T:
         ancestor_index, relative_index = self._absolute_index_to_ancestor_and_relative_index(index)
         return self._ancestors[ancestor_index][relative_index]
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[Union[_T, _U], ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[_T, ...]:
         if indices is None:
             return tuple(
                 itertools.chain.from_iterable(ancestor.fetch() for ancestor in self._ancestors)
@@ -464,7 +465,7 @@ class ConcatenateSliceableDataset(SliceableDataset[Union[Unpack[_Ts]]], Generic[
             )
             grouped_indices[ancestor_index].append((position, relative_index))
 
-        position_value_pairs: list[tuple[int, Union[Unpack[_Ts]]]] = []
+        position_value_pairs: list[tuple[int, _T]] = []
         for ancestor_index, position_relative_index_pairs in grouped_indices.items():
             if not position_relative_index_pairs:
                 continue
