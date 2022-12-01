@@ -8,8 +8,8 @@ import modin.pandas as pd
 import numpy as np
 
 from boiling_learning.app import options
-from boiling_learning.app.datasets.boiling1d import BOILING_CASES
-from boiling_learning.app.datasets.condensation import (
+from boiling_learning.app.datasets.raw.boiling1d import BOILING_CASES
+from boiling_learning.app.datasets.raw.condensation import (
     CONDENSATION_DATA_SPEC_PATH,
     CONDENSATION_DATASETS,
 )
@@ -57,7 +57,7 @@ NUMPY_DIRECTORY_ALLOCATORS: dict[_IsCondensation, JSONAllocator] = {
 
 def get_image_dataset(
     image_dataset: ExperimentVideoDataset,
-    transformers: list[Transformer[Image, Image]],
+    transformers: list[Transformer[Image, Image] | dict[str, Transformer[Image, Image]]],
     splits: DatasetSplits = DatasetSplits(
         train=Fraction(70, 100),
         val=Fraction(15, 100),
@@ -122,7 +122,7 @@ def _ensure_data_is_set(video: ExperimentVideo) -> bool:
 
 def _sliceable_dataset_from_video_and_transformers(
     ev: ExperimentVideo,
-    transformers: Iterable[Transformer[Image, Image]],
+    transformers: Iterable[Transformer[Image, Image] | dict[str, Transformer[Image, Image]]],
 ) -> ImageDataset:
     _ensure_data_is_set(ev)
     video = _video_dataset_from_video_and_transformers(ev, transformers)
@@ -176,7 +176,7 @@ def _experiment_video_targets_as_dataframe_condensation(video: ExperimentVideo) 
 
 def _video_dataset_from_video_and_transformers(
     experiment_video: ExperimentVideo,
-    transformers: Iterable[Transformer[Image, Image]],
+    transformers: Iterable[Transformer[Image, Image] | dict[str, Transformer[Image, Image]]],
 ) -> SliceableDataset[Image]:
     compiled_transformers = compile_transformers(transformers, experiment_video)
 

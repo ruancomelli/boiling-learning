@@ -13,18 +13,19 @@ from rich.table import Table
 
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
-from boiling_learning.app.datasets.boiling1d import BOILING_CASES, BOILING_DATA_PATH
 from boiling_learning.app.datasets.bridging import to_tensorflow, to_tensorflow_triplet
-from boiling_learning.app.datasets.condensation import (
+from boiling_learning.app.datasets.generators import get_image_dataset
+from boiling_learning.app.datasets.preprocessed.boiling1d import (
+    BOILING_DIRECT_DATASETS,
+    BOILING_INDIRECT_DATASETS,
+)
+from boiling_learning.app.datasets.preprocessing import default_condensation_preprocessors
+from boiling_learning.app.datasets.raw.boiling1d import BOILING_DATA_PATH
+from boiling_learning.app.datasets.raw.condensation import (
     CONDENSATION_DATA_PATH,
     CONDENSATION_DATASETS,
 )
-from boiling_learning.app.datasets.generators import get_image_dataset
 from boiling_learning.app.paths import ANALYSES_PATH
-from boiling_learning.app.preprocessing.defaults import (
-    default_boiling_preprocessors,
-    default_condensation_preprocessors,
-)
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
 from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn, fit_hypermodel
@@ -94,64 +95,10 @@ check_all_paths_exist(
 )
 logger.info('Succesfully checked paths')
 
-logger.info('Preparing datasets')
-
-boiling_direct_preprocessors = default_boiling_preprocessors(direct_visualization=True)
-boiling_indirect_preprocessors = default_boiling_preprocessors(direct_visualization=False)
-
-
-# fig.show()
-
-# logger.debug("Done")
-
-# logger.debug("Displaying indirectly visualized boiling frames")
-
-# TOTAL_EXAMPLES = sum(1 for case in boiling_cases() for ev in case)
-# N_COLS = 4
-# N_ROWS = math.ceil(TOTAL_EXAMPLES / N_COLS)
-
-# fig, axs = plt.subplots(N_ROWS, N_COLS, figsize=(N_COLS*8, N_ROWS*8))
-
-# index = 0
-# for case in boiling_cases():
-#     for ev in sorted(case, key=lambda ev: ev.name):
-#         try:
-#             transformer = _compile_transformers(boiling_indirect_preprocessors, ev)
-#         except KeyError:
-#             # some experiment videos have no transformers associated
-#             continue
-
-#         frame = transformer()(ev.video[0])
-
-#         col = index % N_COLS
-#         row = index // N_COLS
-
-#         axs[row, col].imshow(frame.squeeze(), cmap="gray")
-#         axs[row, col].set_title(f"{case.name} - {ev.name}")
-#         axs[row, col].grid(False)
-
-#         index += 1
-
-# logger.debug("Showing figure")
-
-# fig.show()
-
-# logger.debug("Done")
-
-logger.debug('Getting datasets')
-
-boiling_direct_datasets = tuple(
-    get_image_dataset(case(), transformers=boiling_direct_preprocessors) for case in BOILING_CASES
-)
-
-boiling_indirect_datasets = tuple(
-    get_image_dataset(case(), transformers=boiling_indirect_preprocessors)
-    for case in BOILING_CASES
-)
 
 # for is_direct, datasets in (
-#     (True, boiling_direct_datasets),
-#     (False, boiling_indirect_datasets),
+#     (True, BOILING_DIRECT_DATASETS),
+#     (False, BOILING_INDIRECT_DATASETS),
 # ):
 #     for index, dataset in enumerate(datasets):
 #         for subset_name, subset_ in zip(('train', 'val', 'test'), dataset()):
@@ -164,7 +111,7 @@ boiling_indirect_datasets = tuple(
 
 # logger.debug("Done")
 
-# for index, dataset in enumerate(boiling_direct_datasets):
+# for index, dataset in enumerate(BOILING_DIRECT_DATASETS):
 #     for subset_name, subset in zip(("train", "val", "test"), dataset()):
 #         path = (
 #             ANALYSES_PATH
@@ -408,8 +355,8 @@ def autofit(
 
 logger.info('Getting sample frames')
 
-baseline_boiling_dataset_direct = boiling_direct_datasets[0]
-baseline_boiling_dataset_indirect = boiling_indirect_datasets[0]
+baseline_boiling_dataset_direct = BOILING_DIRECT_DATASETS[0]
+baseline_boiling_dataset_indirect = BOILING_INDIRECT_DATASETS[0]
 
 ds_train_direct, _, _ = baseline_boiling_dataset_direct()
 first_frame_direct, _ = ds_train_direct[0]
@@ -685,13 +632,13 @@ PREFETCH = 1024 * 4
 
 
 # plot_dataset_targets(
-#     boiling_direct_datasets,
+#     BOILING_DIRECT_DATASETS,
 #     target_name=BOILING_HEAT_FLUX_TARGET,
 #     filter_target=BOILING_OUTLIER_FILTER
 # )
 
 # plot_dataset_targets(
-#     boiling_indirect_datasets,
+#     BOILING_INDIRECT_DATASETS,
 #     target_name=BOILING_HEAT_FLUX_TARGET,
 #     filter_target=BOILING_OUTLIER_FILTER
 # )
@@ -808,11 +755,11 @@ PREFETCH = 1024 * 4
 # sns.set_style("whitegrid")
 
 # f, axes = plt.subplots(
-#     len(metrics), len(boiling_direct_datasets), figsize=(16, 16), sharex="row", sharey="col"
+#     len(metrics), len(BOILING_DIRECT_DATASETS), figsize=(16, 16), sharex="row", sharey="col"
 # )
 
 # x = [index + 1 for index in frames_indices]
-# for col, splits in enumerate(boiling_direct_datasets):
+# for col, splits in enumerate(BOILING_DIRECT_DATASETS):
 #     ds_train, _, _ = splits()
 #     frames = features(ds_train).fetch(frames_indices)
 #     for row, metric in enumerate(metrics):
@@ -833,11 +780,11 @@ PREFETCH = 1024 * 4
 
 
 # f, axes = plt.subplots(
-#     len(boiling_direct_datasets), 3, figsize=(10, 16), sharex="row", sharey="col"
+#     len(BOILING_DIRECT_DATASETS), 3, figsize=(10, 16), sharex="row", sharey="col"
 # )
 
 # x = [index + 1 for index in frames_indices]
-# for row, splits in enumerate(boiling_direct_datasets):
+# for row, splits in enumerate(BOILING_DIRECT_DATASETS):
 #     for col, split_name, split in zip(range(3), ("Train", "Val", "Test"), splits()):
 #         ax = axes[row, col]
 #         frame, data = split.shuffle()[0]
@@ -1013,7 +960,7 @@ pprint(evaluations)
 
 logger.info('Testing with other wire')
 
-DATASET = boiling_direct_datasets[2]
+DATASET = BOILING_DIRECT_DATASETS[2]
 
 logger.info('Compiling...')
 first_frame, _ = DATASET()[0][0]
@@ -1239,7 +1186,7 @@ print(regular_wire_best_model_direct_visualization_less_data)
 
 # regular_wire_best_model = autofit(
 #     hypermodel,
-#     datasets=boiling_direct_datasets[1],
+#     datasets=BOILING_DIRECT_DATASETS[1],
 #     params=tune_model_params,
 #     target=BOILING_HEAT_FLUX_TARGET,
 # )
@@ -1262,7 +1209,7 @@ def boiling_cross_surface_evaluation(
         f"| {'Direct' if direct_visualization else 'Indirect'} visualization"
     )
 
-    all_datasets = boiling_direct_datasets if direct_visualization else boiling_indirect_datasets
+    all_datasets = BOILING_DIRECT_DATASETS if direct_visualization else BOILING_INDIRECT_DATASETS
     training_datasets = tuple(all_datasets[training_case] for training_case in training_cases)
     evaluation_datasets = tuple(
         all_datasets[evaluation_case] for evaluation_case in evaluation_cases
@@ -1386,7 +1333,7 @@ for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
 #         f"| {'Direct' if direct_visualization else 'Indirect'} visualization"
 #     )
 
-#     all_datasets = boiling_direct_datasets if direct_visualization else boiling_indirect_datasets
+#     all_datasets = BOILING_DIRECT_DATASETS if direct_visualization else BOILING_INDIRECT_DATASETS
 #     training_datasets = tuple(all_datasets[training_case] for training_case in training_cases)
 #     evaluation_datasets = tuple(
 #         all_datasets[evaluation_case] for evaluation_case in evaluation_cases

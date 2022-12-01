@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import typer
 from loguru import logger
 
-from boiling_learning.app.datasets.boiling1d import BOILING_CASES
 from boiling_learning.app.datasets.generators import compile_transformers
+from boiling_learning.app.datasets.preprocessing import default_boiling_preprocessors
+from boiling_learning.app.datasets.raw.boiling1d import BOILING_CASES
 from boiling_learning.app.paths import STUDIES_PATH
-from boiling_learning.app.preprocessing.defaults import default_boiling_preprocessors
 from boiling_learning.image_datasets import Image
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import cache
