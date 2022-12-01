@@ -8,7 +8,7 @@
 
 
 # def validate(
-#     direct: bool = typer.Option(..., '--direct/--indirect'),
+# direct: bool = typer.Option(..., '--direct/--indirect'),
 #     normalize: bool = typer.Option(...),
 # ) -> None:
 #     """Validate current implementation against reference."""

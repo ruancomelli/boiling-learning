@@ -93,6 +93,20 @@ def get_image_dataset(
     )
 
 
+def compile_transformers(
+    transformers: Iterable[Transformer[Image, Image] | dict[str, Transformer[Image, Image]]],
+    experiment_video: ExperimentVideo,
+) -> LazyDescribed[Callable[[Image], Image]]:
+    compiled_transformers = tuple(
+        transformer[experiment_video.name] if isinstance(transformer, dict) else transformer
+        for transformer in transformers
+    )
+    return LazyDescribed.from_value_and_description(
+        funcy.rcompose(*compiled_transformers),
+        compiled_transformers,
+    )
+
+
 @cache(JSONAllocator(ANALYSES_PATH / 'cache' / 'purged-experiment-videos'))
 def _purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]:
     return [video.name for video in tuple(image_dataset) if _ensure_data_is_set(video)]
@@ -164,7 +178,7 @@ def _video_dataset_from_video_and_transformers(
     experiment_video: ExperimentVideo,
     transformers: Iterable[Transformer[Image, Image]],
 ) -> SliceableDataset[Image]:
-    compiled_transformers = _compile_transformers(transformers, experiment_video)
+    compiled_transformers = compile_transformers(transformers, experiment_video)
 
     video = LazyDescribed.from_value_and_description(
         experiment_video.video, experiment_video
@@ -185,20 +199,6 @@ def _video_dataset_from_video_and_transformers(
         numpy_cache
         if _is_condensation_video(experiment_video)
         else EagerCache(numpy_cache, buffer_size=options.EAGER_BUFFER_SIZE),
-    )
-
-
-def _compile_transformers(
-    transformers: Iterable[Transformer[Image, Image]],
-    experiment_video: ExperimentVideo,
-) -> LazyDescribed[Callable[[Image], Image]]:
-    compiled_transformers = tuple(
-        transformer[experiment_video.name] if isinstance(transformer, dict) else transformer
-        for transformer in transformers
-    )
-    return LazyDescribed.from_value_and_description(
-        funcy.rcompose(*compiled_transformers),
-        compiled_transformers,
     )
 
 

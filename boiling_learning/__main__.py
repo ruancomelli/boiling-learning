@@ -1,10 +1,9 @@
 import typer
 
-# from boiling_learning.app.studies.validation import validate
+from boiling_learning.app.studies.display_example_frames import display_example_frames
 
 app = typer.Typer()
-
-# app.command()(validate)
+app.command()(display_example_frames)
 
 
 if __name__ == '__main__':

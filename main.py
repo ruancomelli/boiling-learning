@@ -99,39 +99,6 @@ logger.info('Preparing datasets')
 boiling_direct_preprocessors = default_boiling_preprocessors(direct_visualization=True)
 boiling_indirect_preprocessors = default_boiling_preprocessors(direct_visualization=False)
 
-# logger.debug("Displaying directly visualized boiling frames")
-
-# TOTAL_EXAMPLES = sum(1 for case in boiling_cases() for ev in case)
-# N_COLS = 4
-# N_ROWS = math.ceil(TOTAL_EXAMPLES / N_COLS)
-
-# fig, axs = plt.subplots(N_ROWS, N_COLS, figsize=(N_COLS*8, N_ROWS*8))
-
-# index = 0
-# for case in boiling_cases():
-#     for ev in sorted(case, key=lambda ev: ev.name):
-#         try:
-#             transformer = _compile_transformers(boiling_direct_preprocessors, ev)
-#         except KeyError:
-#             # some experiment videos have no transformers associated
-#             continue
-
-#         logger.debug(f"Getting frame #0 from case {case.name} and video {ev.name}")
-#         frame = ev.video[0]
-#         logger.debug("Transforming frame")
-#         frame = transformer()(frame)
-
-#         logger.debug("Showing frame")
-#         col = index % N_COLS
-#         row = index // N_COLS
-
-#         axs[row, col].imshow(frame.squeeze(), cmap="gray")
-#         axs[row, col].set_title(f"{case.name} - {ev.name}")
-#         axs[row, col].grid(False)
-
-#         index += 1
-
-# logger.debug("Showing figure")
 
 # fig.show()
 
