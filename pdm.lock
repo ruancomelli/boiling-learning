@@ -445,6 +445,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "imageio-ffmpeg"
+version = "0.4.7"
+requires_python = ">=3.5"
+summary = "FFMPEG wrapper for Python"
+
+[[package]]
+name = "imageio"
+version = "2.22.4"
+extras = ["ffmpeg"]
+requires_python = ">=3.7"
+summary = "Library for reading and writing a wide range of image, video, scientific, and volumetric data formats."
+dependencies = [
+    "imageio-ffmpeg",
+    "imageio==2.22.4",
+    "psutil",
+]
+
+[[package]]
 name = "importlib-resources"
 version = "5.10.0"
 requires_python = ">=3.7"
@@ -1531,7 +1549,7 @@ dependencies = [
 
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:3ba77983897abce6044b4d957791c3c2a123e165348716cb34f7c414bb336072"
+content_hash = "sha256:6db7922f1c69d844a4ecb144b185f4046c5f6421e1d9ba393982789dcf2856fa"
 
 [metadata.files]
 "absl-py 1.3.0" = [
@@ -2130,6 +2148,14 @@ content_hash = "sha256:3ba77983897abce6044b4d957791c3c2a123e165348716cb34f7c414b
 "imageio 2.22.4" = [
     {url = "https://files.pythonhosted.org/packages/33/4d/d31ab40bb761fb381c7514e6070c6e1643c44f83a2a48a83e4066227737f/imageio-2.22.4-py3-none-any.whl", hash = "sha256:bb173f8af27e4921f59539c4d45068fcedb892e58261fce8253f31c9a0ff9ccf"},
     {url = "https://files.pythonhosted.org/packages/b9/82/8134900c9e441127375c7578a2b1b2bbde7b3676436d5c4098ef4281c401/imageio-2.22.4.tar.gz", hash = "sha256:0fae027addf02bc89c73a56cc157ad84557f8b8b84aa19b4cb706fefca2d88ff"},
+]
+"imageio-ffmpeg 0.4.7" = [
+    {url = "https://files.pythonhosted.org/packages/55/14/f4c090d3a97aa2822f2c82296867fadb0e7a6fffce00f3d000364ea621a0/imageio_ffmpeg-0.4.7-py3-none-win32.whl", hash = "sha256:6aba52ddf0a64442ffcb8d30ac6afb668186acec99ecbc7ae5bd171c4f500bbc"},
+    {url = "https://files.pythonhosted.org/packages/9c/e9/e1aa872f0b6a806b8f4bfdd667cf5ff8de979388ae2798615b306041ac7e/imageio-ffmpeg-0.4.7.tar.gz", hash = "sha256:7a08838f97f363e37ca41821b864fd3fdc99ab1fe2421040c78eb5f56a9e723e"},
+    {url = "https://files.pythonhosted.org/packages/b7/d2/d838be81d375cc461083a30fca976ce325d052bf5ece1bfe9a4fe92d0a57/imageio_ffmpeg-0.4.7-py3-none-win_amd64.whl", hash = "sha256:8e724d12dfe83e2a6eb39619e820243ca96c81c47c2648e66e05f7ee24e14312"},
+    {url = "https://files.pythonhosted.org/packages/da/5c/3846fad2cd26cfe64fcab0759426e87f67537564699981ab1da6c7890e4f/imageio_ffmpeg-0.4.7-py3-none-manylinux2014_aarch64.whl", hash = "sha256:fc60686ef03c2d0f842901b206223c30051a6a120384458761390104470846fd"},
+    {url = "https://files.pythonhosted.org/packages/e5/3b/fdf3e75462e93b7806ffecad6c5aa35f2cc76b9f2faaedf5e43194ceff09/imageio_ffmpeg-0.4.7-py3-none-manylinux2010_x86_64.whl", hash = "sha256:27b48c32becae1658aa81c3a6b922538e4099edf5fbcbdb4ff5dbc84b8ffd3d3"},
+    {url = "https://files.pythonhosted.org/packages/f5/2b/6b62b267bf5c8ecc2754e38dac615480d02ca7a4df672863b2206cdc5cf6/imageio_ffmpeg-0.4.7-py3-none-macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:6514f1380daf42815bc8c83aad63f33e0b8b47133421ddafe7b410cd8dfbbea5"},
 ]
 "importlib-resources 5.10.0" = [
     {url = "https://files.pythonhosted.org/packages/06/72/6bf0df4fe7a139147f5d6b473f16d5aefb7bc5b719ba5dd33f230d35760f/importlib_resources-5.10.0.tar.gz", hash = "sha256:c01b1b94210d9849f286b86bb51bcea7cd56dde0600d8db721d7b81330711668"},

@@ -111,25 +111,6 @@ logger.info('Succesfully checked paths')
 
 # logger.debug("Done")
 
-# for index, dataset in enumerate(BOILING_DIRECT_DATASETS):
-#     for subset_name, subset in zip(("train", "val", "test"), dataset()):
-#         path = (
-#             ANALYSES_PATH
-#             / "outputs"
-#             / "animations"
-#             / f"boiling-{index}-direct-{subset_name}.mp4"
-#         )
-
-#         if not path.is_file():
-#             save_as_video(
-#                 path,
-#                 subset[::60].prefetch(256),
-#                 display_data={
-#                     "index": "Index",
-#                     "Flux [W/cm**2]": "Flux [W/cm²]"
-#                 },
-#                 fps=30
-#             )
 
 """#### Condensation"""
 
@@ -422,7 +403,7 @@ baseline_boiling_model_indirect_size = int(
 
 def get_baseline_fit_params() -> FitModelParams:
     return FitModelParams(
-        batch_size=200,
+        batch_size=BOILING_BASELINE_BATCH_SIZE,
         epochs=100,
         callbacks=LazyDescribed.from_list(
             [

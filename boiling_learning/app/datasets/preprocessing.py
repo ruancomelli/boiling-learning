@@ -11,6 +11,7 @@ from boiling_learning.preprocessing.image import (
     random_cropper,
 )
 from boiling_learning.preprocessing.transformers import Transformer
+from boiling_learning.utils.mathutils import round_to_multiple
 
 ExperimentVideoName: TypeAlias = str
 
@@ -179,9 +180,10 @@ def default_boiling_preprocessors(
         },
         grayscaler(),
         downscaler(downscale_factor),
-        cropper(height=height, bottom_border=bottom_border),
+        # round for extra speed -- NVIDIA's Tensor Cores benefit a lot from this
+        cropper(height=round_to_multiple(height, base=16), bottom_border=bottom_border),
         {'center': center_cropper, 'random': random_cropper}[crop_mode](
-            width=round(width * visualization_window_width)
+            width=round_to_multiple(width * visualization_window_width, base=16),
         ),
     ]
 
@@ -284,6 +286,7 @@ def default_condensation_preprocessors(
         grayscaler(),
         downscaler(downscale_factor),
         {'center': center_cropper, 'random': random_cropper}[crop_mode](
-            height=height, width=width
+            height=round_to_multiple(height, base=16),
+            width=round_to_multiple(width, base=16),
         ),
     ]
