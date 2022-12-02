@@ -16,7 +16,7 @@ from boiling_learning.datasets.datasets import DatasetSplits, DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
 from boiling_learning.io.storage import dataclass
-from boiling_learning.lazy import Lazy, LazyDescribed
+from boiling_learning.lazy import LazyDescribed, eager
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
@@ -195,11 +195,11 @@ class VideoInfo:
 
 
 @cache(JSONAllocator(ANALYSES_PATH / 'cache' / 'video-info'))
-def _get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
-    dataset = video()
-    first_frame = dataset[0]
+@eager
+def _get_video_info(video: SliceableDataset[Image]) -> VideoInfo:
+    first_frame = video[0]
     return VideoInfo(
-        length=len(dataset),
+        length=len(video),
         shape=first_frame.shape,
         dtype=str(first_frame.dtype),
     )
