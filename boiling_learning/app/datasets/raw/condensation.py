@@ -42,6 +42,24 @@ def _experiment_video_dataset_from_case_and_subcase(
     )
 
 
+def _experiment_videos_from_subcase_dir(
+    case_name: str, subcase_dir: Path
+) -> Iterator[ExperimentVideo]:
+    logger.info(f'Loading condensation dataset {case_name}:{subcase_dir.name}')
+
+    for testdir in subcase_dir.iterdir():
+        videopaths = (testdir / 'videos').glob('*.mp4')
+        for video_path in videopaths:
+            logger.debug(f'Adding video from {video_path}')
+            video_name = video_path.stem
+            ev_name = ':'.join((case_name, subcase_dir.name, testdir.name, video_name))
+            yield ExperimentVideo(
+                df_path=video_path.with_suffix('.csv'),
+                video_path=video_path,
+                name=ev_name,
+            )
+
+
 def _set_condensation_datasets_data(
     datasets: Iterable[LazyDescribed[ExperimentVideoDataset]], dataspecpath: PathLike
 ) -> tuple[LazyDescribed[ExperimentVideoDataset], ...]:
@@ -65,38 +83,6 @@ def _set_condensation_datasets_data(
     logger.debug(f'Condensation datasets: {grouped_datasets}')
 
     return grouped_datasets
-
-
-CONDENSATION_DATASETS = tuple(
-    _set_condensation_datasets_data(
-        (
-            _experiment_video_dataset_from_case_and_subcase(case_dir.name, subcase_dir)
-            for case_dir in CONDENSATION_DATA_PATH.iterdir()
-            if case_dir.is_dir()
-            for subcase_dir in case_dir.iterdir()
-            if subcase_dir.is_dir()
-        ),
-        CONDENSATION_DATA_SPEC_PATH,
-    )
-)
-
-
-def _experiment_videos_from_subcase_dir(
-    case_name: str, subcase_dir: Path
-) -> Iterator[ExperimentVideo]:
-    logger.info(f'Loading condensation dataset {case_name}:{subcase_dir.name}')
-
-    for testdir in subcase_dir.iterdir():
-        videopaths = (testdir / 'videos').glob('*.mp4')
-        for video_path in videopaths:
-            logger.debug(f'Adding video from {video_path}')
-            video_name = video_path.stem
-            ev_name = ':'.join((case_name, subcase_dir.name, testdir.name, video_name))
-            yield ExperimentVideo(
-                df_path=video_path.with_suffix('.csv'),
-                video_path=video_path,
-                name=ev_name,
-            )
 
 
 def _set_ev_data(ev: ExperimentVideo, dataspec: dict[str, Any]) -> None:
@@ -205,3 +191,17 @@ def _parse_timedelta(s: Optional[str]) -> Optional[timedelta]:
         return None
 
     return timedelta(hours=int(m['h']), minutes=int(m['min']), seconds=int(m['s']))
+
+
+CONDENSATION_DATASETS = tuple(
+    _set_condensation_datasets_data(
+        (
+            _experiment_video_dataset_from_case_and_subcase(case_dir.name, subcase_dir)
+            for case_dir in CONDENSATION_DATA_PATH.iterdir()
+            if case_dir.is_dir()
+            for subcase_dir in case_dir.iterdir()
+            if subcase_dir.is_dir()
+        ),
+        CONDENSATION_DATA_SPEC_PATH,
+    )
+)

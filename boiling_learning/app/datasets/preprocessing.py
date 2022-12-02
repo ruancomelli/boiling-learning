@@ -181,9 +181,9 @@ def default_boiling_preprocessors(
         grayscaler(),
         downscaler(downscale_factor),
         # round for extra speed -- NVIDIA's Tensor Cores benefit a lot from this
-        cropper(height=round_to_multiple(height, base=16), bottom_border=bottom_border),
+        cropper(height=round_to_multiple(height, base=8), bottom_border=bottom_border),
         {'center': center_cropper, 'random': random_cropper}[crop_mode](
-            width=round_to_multiple(width * visualization_window_width, base=16),
+            width=round_to_multiple(width * visualization_window_width, base=8),
         ),
     ]
 
@@ -286,7 +286,7 @@ def default_condensation_preprocessors(
         grayscaler(),
         downscaler(downscale_factor),
         {'center': center_cropper, 'random': random_cropper}[crop_mode](
-            height=round_to_multiple(height, base=16),
-            width=round_to_multiple(width, base=16),
+            height=round_to_multiple(height, base=8),
+            width=round_to_multiple(width, base=8),
         ),
     ]
