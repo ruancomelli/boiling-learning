@@ -9,10 +9,7 @@ import numpy as np
 
 from boiling_learning.app import options
 from boiling_learning.app.datasets.raw.boiling1d import BOILING_CASES
-from boiling_learning.app.datasets.raw.condensation import (
-    CONDENSATION_DATA_SPEC_PATH,
-    CONDENSATION_DATASETS,
-)
+from boiling_learning.app.datasets.raw.condensation import CONDENSATION_DATASETS
 from boiling_learning.app.paths import ANALYSES_PATH
 from boiling_learning.datasets.cache import EagerCache, NumpyCache
 from boiling_learning.datasets.datasets import DatasetSplits, DatasetTriplet
@@ -25,7 +22,7 @@ from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.preprocessing.transformers import Transformer
-from boiling_learning.scripts import set_boiling_cases_data, set_condensation_datasets_data
+from boiling_learning.scripts import set_boiling_cases_data
 from boiling_learning.transforms import map_transformers
 
 _IsCondensation: TypeAlias = bool
@@ -35,18 +32,6 @@ BOILING_VIDEO_TO_SETTER = {
     for case in BOILING_CASES
     for video in case()
 }
-
-CONDENSATION_VIDEO_TO_SETTER = {
-    video: partial(
-        set_condensation_datasets_data.main,
-        [img_ds() for img_ds in CONDENSATION_DATASETS],
-        CONDENSATION_DATA_SPEC_PATH,
-    )
-    for img_ds in CONDENSATION_DATASETS
-    for video in img_ds()
-}
-
-VIDEO_TO_SETTER = BOILING_VIDEO_TO_SETTER | CONDENSATION_VIDEO_TO_SETTER
 
 
 NUMPY_DIRECTORY_ALLOCATORS: dict[_IsCondensation, JSONAllocator] = {
@@ -114,7 +99,7 @@ def _purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]
 
 def _ensure_data_is_set(video: ExperimentVideo) -> bool:
     if video.data is None:
-        setter = VIDEO_TO_SETTER[video]
+        setter = BOILING_VIDEO_TO_SETTER[video]
         setter()
 
     return video.data is not None
@@ -221,4 +206,4 @@ def _get_video_info(video: Lazy[SliceableDataset[Image]]) -> VideoInfo:
 
 
 def _is_condensation_video(ev: ExperimentVideo) -> _IsCondensation:
-    return ev in CONDENSATION_VIDEO_TO_SETTER
+    return any(ev in dataset() for dataset in CONDENSATION_DATASETS)

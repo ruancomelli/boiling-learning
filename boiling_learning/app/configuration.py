@@ -26,12 +26,13 @@ def configure(
 ) -> LazyDescribed[tf.distribute.Strategy]:
     _configure_logger()
     _configure_gpu_growth(force_gpu_allow_growth)
-    _configure_tensorflow(use_xla, mixed_precision_global_policy)
-    _configure_modin_engine(modin_engine)
-
     strategy: tf.distribute.Strategy = _configure_gpu(
         require_gpu=require_gpu, nvidia_output=nvidia_output
     )
+
+    _configure_tensorflow(use_xla, mixed_precision_global_policy)
+    _configure_modin_engine(modin_engine)
+
     lazy_strategy = LazyDescribed.from_value_and_description(
         strategy,
         # type-ignore is necessary until the classes plugin works again
