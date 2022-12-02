@@ -275,6 +275,14 @@ version = "1.2.0"
 summary = "Get the currently executing AST node of a frame, and other information"
 
 [[package]]
+name = "ffmpeg-python"
+version = "0.2.0"
+summary = "Python bindings for FFmpeg - with complex filtering support"
+dependencies = [
+    "future",
+]
+
+[[package]]
 name = "filelock"
 version = "3.8.0"
 requires_python = ">=3.7"
@@ -334,6 +342,12 @@ dependencies = [
     "funcy==1.17",
     "typing-extensions>=3.10.0",
 ]
+
+[[package]]
+name = "future"
+version = "0.18.2"
+requires_python = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
+summary = "Clean single-source support for Python 3 and 2"
 
 [[package]]
 name = "gast"
@@ -1549,7 +1563,7 @@ dependencies = [
 
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:6db7922f1c69d844a4ecb144b185f4046c5f6421e1d9ba393982789dcf2856fa"
+content_hash = "sha256:fec966af51207dc1bb3bff1dafc581cad8b2b4fe49f88692080eaeec03c47543"
 
 [metadata.files]
 "absl-py 1.3.0" = [
@@ -1918,6 +1932,10 @@ content_hash = "sha256:6db7922f1c69d844a4ecb144b185f4046c5f6421e1d9ba393982789dc
     {url = "https://files.pythonhosted.org/packages/28/3c/bc3819dd8b1a1588c9215a87271b6178cc5498acaa83885211f5d4d9e693/executing-1.2.0-py2.py3-none-any.whl", hash = "sha256:0314a69e37426e3608aada02473b4161d4caf5a4b244d1d0c48072b8fee7bacc"},
     {url = "https://files.pythonhosted.org/packages/8f/ac/89ff37d8594b0eef176b7cec742ac868fef853b8e18df0309e3def9f480b/executing-1.2.0.tar.gz", hash = "sha256:19da64c18d2d851112f09c287f8d3dbbdf725ab0e569077efb6cdcbd3497c107"},
 ]
+"ffmpeg-python 0.2.0" = [
+    {url = "https://files.pythonhosted.org/packages/d7/0c/56be52741f75bad4dc6555991fabd2e07b432d333da82c11ad701123888a/ffmpeg_python-0.2.0-py3-none-any.whl", hash = "sha256:ac441a0404e053f8b6a1113a77c0f452f1cfc62f6344a769475ffdc0f56c23c5"},
+    {url = "https://files.pythonhosted.org/packages/dd/5e/d5f9105d59c1325759d838af4e973695081fbbc97182baf73afc78dec266/ffmpeg-python-0.2.0.tar.gz", hash = "sha256:65225db34627c578ef0e11c8b1eb528bb35e024752f6f10b78c011f6f64c4127"},
+]
 "filelock 3.8.0" = [
     {url = "https://files.pythonhosted.org/packages/94/b3/ff2845971788613e646e667043fdb5f128e2e540aefa09a3c55be8290d6d/filelock-3.8.0-py3-none-any.whl", hash = "sha256:617eb4e5eedc82fc5f47b6d61e4d11cb837c56cb4544e39081099fa17ad109d4"},
     {url = "https://files.pythonhosted.org/packages/95/55/b897882bffb8213456363e646bf9e9fa704ffda5a7d140edf935a9e02c7b/filelock-3.8.0.tar.gz", hash = "sha256:55447caa666f2198c5b6b13a26d2084d26fa5b115c00d065664b2124680c4edc"},
@@ -2040,6 +2058,9 @@ content_hash = "sha256:6db7922f1c69d844a4ecb144b185f4046c5f6421e1d9ba393982789dc
 "funcy-stubs 0.1.1" = [
     {url = "https://files.pythonhosted.org/packages/6f/9e/dded3a7ff47a8eec204d8973c941d5b5808f4e5c9cff74a19cdc90052696/funcy_stubs-0.1.1-py3-none-any.whl", hash = "sha256:9d29dd1c4a1ed15f54beeacc4ba24dc8c3b484497687ea6171e63ecd1e5b8882"},
     {url = "https://files.pythonhosted.org/packages/e9/0a/0e86f8138e0ab8604b84291aacc572de034312d397b54d535d38423b1fa7/funcy-stubs-0.1.1.tar.gz", hash = "sha256:84517d032ff3d9c163baf036727cb3d14b05cf07f2f3d7269e6028ffd25d1c60"},
+]
+"future 0.18.2" = [
+    {url = "https://files.pythonhosted.org/packages/45/0b/38b06fd9b92dc2b68d58b75f900e97884c45bedd2ff83203d933cf5851c9/future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
 ]
 "gast 0.4.0" = [
     {url = "https://files.pythonhosted.org/packages/83/4a/07c7e59cef23fb147454663c3271c21da68ba2ab141427c20548ae5a8a4d/gast-0.4.0.tar.gz", hash = "sha256:40feb7b8b8434785585ab224d1568b857edb18297e5a3047f1ba012bc83b42c1"},
