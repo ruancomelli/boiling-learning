@@ -11,7 +11,7 @@ from boiling_learning.app import options
 from boiling_learning.app.datasets.raw.boiling1d import BOILING_CASES
 from boiling_learning.app.datasets.raw.condensation import CONDENSATION_DATASETS
 from boiling_learning.app.paths import ANALYSES_PATH
-from boiling_learning.datasets.cache import EagerCache, NumpyCache
+from boiling_learning.datasets.cache import NumpyCache
 from boiling_learning.datasets.datasets import DatasetSplits, DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
@@ -33,6 +33,10 @@ BOILING_VIDEO_TO_SETTER = {
     for video in case()
 }
 
+EXTRACTED_FRAMES_DIRECTORY_ALLOCATORS: dict[_IsCondensation, JSONAllocator] = {
+    False: JSONAllocator(ANALYSES_PATH / 'datasets' / 'frames' / 'boiling'),
+    True: JSONAllocator(ANALYSES_PATH / 'datasets' / 'frames' / 'condensation'),
+}
 
 NUMPY_DIRECTORY_ALLOCATORS: dict[_IsCondensation, JSONAllocator] = {
     False: JSONAllocator(ANALYSES_PATH / 'datasets' / 'numpy' / 'boiling'),
@@ -165,25 +169,30 @@ def _video_dataset_from_video_and_transformers(
 ) -> SliceableDataset[Image]:
     compiled_transformers = compile_transformers(transformers, experiment_video)
 
-    video = LazyDescribed.from_value_and_description(
-        experiment_video.frames(), experiment_video
-    ) | map_transformers(compiled_transformers)
-    video_info = _get_video_info(video)
+    if options.EXTRACT_FRAMES:
+        extracted_frames_directory = EXTRACTED_FRAMES_DIRECTORY_ALLOCATORS[
+            _is_condensation_video(experiment_video)
+        ].allocate(experiment_video)
 
-    directory = NUMPY_DIRECTORY_ALLOCATORS[_is_condensation_video(experiment_video)].allocate(
-        video
+        frames = experiment_video.extract_frames(extracted_frames_directory)
+    else:
+        frames = experiment_video.frames()
+
+    frames = LazyDescribed.from_value_and_description(frames, experiment_video) | map_transformers(
+        compiled_transformers
     )
+    video_info = _get_video_info(frames)
 
-    numpy_cache = NumpyCache(
-        directory,
-        shape=(video_info.length, *video_info.shape),
-        dtype=np.dtype(video_info.dtype),
-    )
+    numpy_cache_directory = NUMPY_DIRECTORY_ALLOCATORS[
+        _is_condensation_video(experiment_video)
+    ].allocate(frames)
 
-    return video().cache(
-        numpy_cache
-        if _is_condensation_video(experiment_video)
-        else EagerCache(numpy_cache, buffer_size=options.EAGER_BUFFER_SIZE),
+    return frames().cache(
+        NumpyCache(
+            numpy_cache_directory,
+            shape=(video_info.length, *video_info.shape),
+            dtype=np.dtype(video_info.dtype),
+        )
     )
 
 
