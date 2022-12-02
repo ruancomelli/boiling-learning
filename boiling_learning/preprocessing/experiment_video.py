@@ -2,7 +2,7 @@ import contextlib
 from collections.abc import Iterable
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Iterator, Mapping, Optional
+from typing import Any, Mapping, Optional
 
 import funcy
 import modin.pandas as pd
@@ -110,12 +110,6 @@ class ExperimentVideo:
 
         self.df: Optional[pd.DataFrame] = None
         self.df_path = resolve(df_path)
-
-    def __len__(self) -> int:
-        return len(self.video)
-
-    def __iter__(self) -> Iterator[VideoFrame]:
-        return iter(self.video)
 
     def __str__(self) -> str:
         kwargs = {
