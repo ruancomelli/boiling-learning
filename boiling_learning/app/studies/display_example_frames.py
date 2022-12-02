@@ -67,4 +67,4 @@ def display_example_frames(
 
 @cache(JSONAllocator(EXAMPLE_FRAMES_STUDY_PATH / 'cache'))
 def _get_first_frame(ev: ExperimentVideo) -> Image:
-    return ev.video[0]
+    return ev.frames()[0]

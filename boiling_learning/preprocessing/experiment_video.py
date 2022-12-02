@@ -103,13 +103,16 @@ class ExperimentVideo:
         name: str = '',
     ) -> None:
         self._path = resolve(video_path)
-        self.video: SliceableDataset[VideoFrame] = Video(self.path)
+        self._video = Video(self.path)
 
         self._data: Optional[VideoData] = None
         self._name = name or self.path.stem
 
         self.df: Optional[pd.DataFrame] = None
         self.df_path = resolve(df_path)
+
+        self.start = 0
+        self._end: int | None = None
 
     def __str__(self) -> str:
         kwargs = {
@@ -138,11 +141,17 @@ class ExperimentVideo:
         self._data = data
 
         logger.debug(f"Shrinking video to data for EV \"{self.name}\"")
-        start, end = data.video_limits()
+        self.start, self._end = data.video_limits()
 
-        if start != 0 or end is not None:
-            self.video = self.video[start:end]
-        logger.debug(f"Video in range {start}-{end} for EV \"{self.name}\"")
+        logger.debug(f"Video in range {self.start}-{self.end} for EV \"{self.name}\"")
+
+    @property
+    def end(self) -> int:
+        return self._end if self._end is not None else len(self._video)
+
+    def frames(self) -> SliceableDataset[VideoFrame]:
+        # I don't know why Black reformats this so strangely... flake8 complains
+        return self._video[self.start : self.end]  # noqa
 
     def convert_video(
         self,

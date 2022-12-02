@@ -166,7 +166,7 @@ def _video_dataset_from_video_and_transformers(
     compiled_transformers = compile_transformers(transformers, experiment_video)
 
     video = LazyDescribed.from_value_and_description(
-        experiment_video.video, experiment_video
+        experiment_video.frames(), experiment_video
     ) | map_transformers(compiled_transformers)
     video_info = _get_video_info(video)
 
