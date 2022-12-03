@@ -16,6 +16,7 @@ def boiling_datasets(
         get_image_dataset(
             case(),
             transformers=default_boiling_preprocessors(direct_visualization=direct_visualization),
+            experiment='boiling1d',
         )
         for case in boiling_cases()
     )

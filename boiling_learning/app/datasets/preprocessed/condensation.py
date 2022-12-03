@@ -23,6 +23,7 @@ def condensation_dataset() -> LazyDescribed[ImageDatasetTriplet]:
                 get_image_dataset(
                     ds(),
                     preprocessors,
+                    experiment='condensation',
                 )
                 for ds in condensation_datasets()
             )
