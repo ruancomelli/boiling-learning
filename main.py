@@ -119,7 +119,12 @@ logger.info('Succesfully checked paths')
 condensation_preprocessors = default_condensation_preprocessors(
     downscale_factor=5, height=8 * 12, width=8 * 12
 )
-condensation_dataset = CONDENSATION_DATASETS | datasets_concatenater()
+condensation_dataset = (
+    LazyDescribed.from_describable(
+        tuple(get_image_dataset(ds(), condensation_preprocessors) for ds in CONDENSATION_DATASETS)
+    )
+    | datasets_concatenater()
+)
 
 
 def _boiling_outlier_filter(_image: Image, target: Targets) -> bool:
