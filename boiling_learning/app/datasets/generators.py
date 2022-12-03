@@ -169,7 +169,7 @@ def _video_dataset_from_video_and_transformers(
 ) -> SliceableDataset[Image]:
     compiled_transformers = compile_transformers(transformers, experiment_video)
 
-    if options.EXTRACT_FRAMES:
+    if options.EXTRACT_FRAMES and not _is_condensation_video(experiment_video):
         extracted_frames_directory = EXTRACTED_FRAMES_DIRECTORY_ALLOCATORS[
             _is_condensation_video(experiment_video)
         ].allocate(experiment_video)
