@@ -6,7 +6,6 @@ from typing import Literal, Optional
 
 import more_itertools as mit
 import tensorflow as tf
-import tensorflow_addons as tfa
 from loguru import logger
 from rich.console import Console
 from rich.table import Table
@@ -26,6 +25,12 @@ from boiling_learning.app.paths import analyses_path
 from boiling_learning.app.training.boiling1d import (
     DEFAULT_BOILING_HEAT_FLUX_TARGET,
     fit_boiling_model,
+    get_baseline_boiling_architecture,
+    get_pretrained_baseline_boiling_model,
+)
+from boiling_learning.app.training.common import (
+    get_baseline_compile_params,
+    get_baseline_fit_params,
 )
 from boiling_learning.app.training.condensation import fit_condensation_model
 from boiling_learning.automl.hypermodels import ConvImageRegressor
@@ -37,11 +42,9 @@ from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.model.definitions import hoboldnet2
-from boiling_learning.model.model import ModelArchitecture
 from boiling_learning.model.training import (
     CompileModelParams,
     FitModelParams,
-    FitModelReturn,
     compile_model,
     strategy_scope,
 )
@@ -100,60 +103,22 @@ logger.info('Succesfully checked paths')
 
 condensation_dataset_train, _, _ = condensation_dataset()()
 print(mit.ilen(condensation_dataset_train[::60].prefetch(128 * 2)))
-assert False, 'STOP!'
 
 
 """### Baseline on-wire pool boiling"""
-
-logger.info('Getting sample frames')
-
-baseline_boiling_dataset_direct = boiling_datasets(direct_visualization=True)[0]
-baseline_boiling_dataset_indirect = boiling_datasets(direct_visualization=False)[0]
-
-ds_train_direct, _, _ = baseline_boiling_dataset_direct()
-first_frame_direct, _ = ds_train_direct[0]
-ds_train_indirect, _, _ = baseline_boiling_dataset_indirect()
-first_frame_indirect, _ = ds_train_indirect[0]
-
-baseline_boiling_mse_direct = 13  # W / cm**2
-baseline_boiling_mse_indirect = 33  # W / cm**2
-
-logger.info('Done getting sample frames')
-
-
-def get_baseline_compile_params() -> CompileModelParams:
-    with strategy_scope(strategy):
-        return CompileModelParams(
-            loss=tf.keras.losses.MeanSquaredError(),
-            optimizer=tf.keras.optimizers.Adam(1e-3),
-            metrics=[
-                tf.keras.metrics.MeanSquaredError('MSE'),
-                tf.keras.metrics.RootMeanSquaredError('RMS'),
-                tf.keras.metrics.MeanAbsoluteError('MAE'),
-                tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
-                tfa.metrics.RSquare('R2'),
-            ],
-        )
-
-
-def get_baseline_boiling_model(
-    direct: bool = True, normalize_images: bool = True
-) -> ModelArchitecture:
-    first_frame = first_frame_direct if direct else first_frame_indirect
-
-    with strategy_scope(strategy):
-        return hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=normalize_images)
-
-
 logger.info('Getting direct baseline model')
-baseline_boiling_model_architecture_direct = get_baseline_boiling_model(
-    direct=True, normalize_images=False
+baseline_boiling_model_architecture_direct = get_baseline_boiling_architecture(
+    direct_visualization=True,
+    normalize_images=False,
+    strategy=strategy,
 )
 logger.info('Done getting direct baseline model')
 
 logger.info('Getting indirect baseline model')
-baseline_boiling_model_architecture_indirect = get_baseline_boiling_model(
-    direct=False, normalize_images=False
+baseline_boiling_model_architecture_indirect = get_baseline_boiling_architecture(
+    direct_visualization=False,
+    normalize_images=False,
+    strategy=strategy,
 )
 logger.info('Done getting indirect baseline model')
 
@@ -172,33 +137,11 @@ baseline_boiling_model_indirect_size = int(
 )
 
 
-def get_baseline_fit_params() -> FitModelParams:
-    return FitModelParams(
-        batch_size=BOILING_BASELINE_BATCH_SIZE,
-        epochs=100,
-        callbacks=LazyDescribed.from_list(
-            [
-                LazyDescribed.from_constructor(tf.keras.callbacks.TerminateOnNaN),
-                LazyDescribed.from_constructor(
-                    tf.keras.callbacks.EarlyStopping,
-                    monitor='val_loss',
-                    min_delta=0,
-                    patience=10,
-                    baseline=None,
-                    mode='auto',
-                    restore_best_weights=True,
-                    verbose=1,
-                ),
-            ]
-        ),
-    )
-
-
 (
     condensation_dataset_train,
     _condensation_dataset_val,
     _condensation_dataset_test,
-) = condensation_dataset()
+) = condensation_dataset()()
 
 first_frame, _data = condensation_dataset_train[0]
 with strategy_scope(strategy):
@@ -206,37 +149,26 @@ with strategy_scope(strategy):
 
 compiled_model = compile_model(
     architecture,
-    get_baseline_compile_params(),
+    get_baseline_compile_params(strategy=strategy),
 )
 trained_model = fit_condensation_model(
     compiled_model,
-    condensation_dataset,
+    condensation_dataset(),
     get_baseline_fit_params(),
     target='mass_rate',
+    strategy=strategy,
 )
-
-
-def get_pretrained_baseline_boiling_model(
-    direct: bool = True, normalize_images: bool = True
-) -> FitModelReturn:
-    compiled_model = compile_model(
-        get_baseline_boiling_model(direct=direct, normalize_images=normalize_images),
-        get_baseline_compile_params(),
-    )
-
-    return fit_boiling_model(
-        compiled_model,
-        baseline_boiling_dataset_direct if direct else baseline_boiling_dataset_indirect,
-        get_baseline_fit_params(),
-        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-    )
 
 
 pretrained_baseline_boiling_model_architecture_direct = get_pretrained_baseline_boiling_model(
-    direct=True, normalize_images=False
+    direct_visualization=True,
+    normalize_images=False,
+    strategy=strategy,
 )
 pretrained_baseline_boiling_model_architecture_indirect = get_pretrained_baseline_boiling_model(
-    direct=False, normalize_images=False
+    direct_visualization=False,
+    normalize_images=False,
+    strategy=strategy,
 )
 
 
@@ -252,7 +184,7 @@ def autofit_to_dataset(
     max_model_size: Optional[int] = None,
     goal: Optional[float] = None,
 ) -> TuneModelReturn:
-    compile_params = get_baseline_compile_params()
+    compile_params = get_baseline_compile_params(strategy=strategy)
 
     hypermodel = ConvImageRegressor(
         loss=compile_params.loss,
@@ -299,6 +231,7 @@ def autofit_to_dataset(
         params=tune_model_params,
         target=target,
         experiment=experiment,
+        strategy=strategy,
     )
 
 
@@ -577,25 +510,37 @@ trained_model = fit_condensation_model(
 
 #### Validation
 """
+baseline_boiling_dataset_direct = boiling_datasets(direct_visualization=True)[0]
+baseline_boiling_dataset_indirect = boiling_datasets(direct_visualization=False)[0]
 
-validated_model_direct = get_pretrained_baseline_boiling_model(direct=True, normalize_images=False)
+validated_model_direct = get_pretrained_baseline_boiling_model(
+    direct_visualization=True,
+    normalize_images=False,
+    strategy=strategy,
+)
 print(validated_model_direct)
 print('Evaluation:', validated_model_direct.evaluation)
 
 validated_model_indirect = get_pretrained_baseline_boiling_model(
-    direct=False, normalize_images=False
+    direct_visualization=False,
+    normalize_images=False,
+    strategy=strategy,
 )
 print(validated_model_indirect)
 print('Evaluation:', validated_model_indirect.evaluation)
 
 validated_model_direct_normalized = get_pretrained_baseline_boiling_model(
-    direct=True, normalize_images=True
+    direct_visualization=True,
+    normalize_images=True,
+    strategy=strategy,
 )
 print(validated_model_direct_normalized)
 print('Evaluation:', validated_model_direct_normalized.evaluation)
 
 validated_model_indirect_normalized = get_pretrained_baseline_boiling_model(
-    direct=False, normalize_images=True
+    direct_visualization=False,
+    normalize_images=True,
+    strategy=strategy,
 )
 print(validated_model_indirect_normalized)
 print('Evaluation:', validated_model_indirect_normalized.evaluation)
@@ -661,42 +606,24 @@ logger.info('Analyzing effects of random initialization')
 NUMBER_OF_RETRAINS = 8
 evaluations = []
 for retrain_index in range(NUMBER_OF_RETRAINS):
-    logger.info('Compiling...')
-    with strategy_scope(strategy):
-        compiled_model = compile_model(
-            baseline_boiling_model_architecture_direct, get_baseline_compile_params()
-        )
-    logger.info('Done')
-
-    logger.info('Training...')
-    fit_model_params = FitModelParams(
-        batch_size=200,
-        epochs=100,
-        callbacks=LazyDescribed.from_list(
-            [
-                LazyDescribed.from_constructor(tf.keras.callbacks.TerminateOnNaN),
-                LazyDescribed.from_constructor(
-                    tf.keras.callbacks.EarlyStopping,
-                    monitor='val_loss',
-                    min_delta=0,
-                    patience=10,  # got error ~9 with Adam 1e-4
-                    baseline=None,
-                    mode='auto',
-                    restore_best_weights=True,
-                    verbose=1,
-                ),
-            ]
+    compiled_model = compile_model(
+        get_baseline_boiling_architecture(
+            direct_visualization=True,
+            normalize_images=False,
+            strategy=strategy,
         ),
+        get_baseline_compile_params(strategy=strategy),
     )
 
-    with strategy_scope(strategy):
-        model = fit_boiling_model(
-            compiled_model,
-            baseline_boiling_dataset_direct,
-            fit_model_params,
-            target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-            try_id=retrain_index,
-        )
+    model = fit_boiling_model(
+        compiled_model,
+        baseline_boiling_dataset_direct,
+        get_baseline_fit_params(),
+        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
+        strategy=strategy,
+        try_id=retrain_index,
+    )
+
     print(model)
     best_performance = min(model.history, key=lambda data: data['val_loss'])
     evaluations.append(best_performance)
@@ -720,7 +647,7 @@ first_frame, _ = DATASET()[0][0]
 with strategy_scope(strategy):
     # TODO: replace this with utility function!
     architecture = hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=False)
-    compiled_model = compile_model(architecture, get_baseline_compile_params())
+    compiled_model = compile_model(architecture, get_baseline_compile_params(strategy=strategy))
 logger.info('Done')
 
 logger.info('Training...')
@@ -746,7 +673,11 @@ fit_model_params = FitModelParams(
 
 with strategy_scope(strategy):
     model = fit_boiling_model(
-        compiled_model, DATASET, fit_model_params, target=DEFAULT_BOILING_HEAT_FLUX_TARGET
+        compiled_model,
+        DATASET,
+        fit_model_params,
+        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
+        strategy=strategy,
     )
 pprint(model)
 logger.info('Done')
@@ -776,21 +707,27 @@ ds_evaluation_indirect = to_tensorflow(
 
 @cache(JSONAllocator(analyses_path() / 'studies' / 'boiling-learning-curve'))
 def boiling_learning_curve_point(
-    fraction: Fraction, *, direct: bool = True, normalize_images: bool = False
+    fraction: Fraction, *, direct_visualization: bool = True, normalize_images: bool = False
 ) -> dict[str, float]:
     logger.info(f'Analyzing fraction {fraction}')
 
     logger.info('Getting datasets...')
     datasets = (
-        baseline_boiling_dataset_direct if direct else baseline_boiling_dataset_indirect
+        baseline_boiling_dataset_direct
+        if direct_visualization
+        else baseline_boiling_dataset_indirect
     ) | dataset_sampler(fraction)
     logger.info('Done')
 
     logger.info('Compiling...')
     with strategy_scope(strategy):
         compiled_model = compile_model(
-            get_baseline_boiling_model(direct=direct, normalize_images=normalize_images),
-            get_baseline_compile_params(),
+            get_baseline_boiling_architecture(
+                direct_visualization=direct_visualization,
+                normalize_images=normalize_images,
+                strategy=strategy,
+            ),
+            get_baseline_compile_params(strategy=strategy),
         )
     logger.info('Done')
 
@@ -807,7 +744,7 @@ def boiling_learning_curve_point(
     with strategy_scope(strategy):
         compile_model(model.architecture, get_baseline_compile_params())
     evaluation = model.architecture.evaluate(
-        (ds_evaluation_direct if direct else ds_evaluation_indirect)()
+        (ds_evaluation_direct if direct_visualization else ds_evaluation_indirect)()
     )
 
     logger.info('Done')
@@ -817,7 +754,7 @@ def boiling_learning_curve_point(
 
 boiling_learning_curve = {
     fraction: boiling_learning_curve_point(
-        fraction, direct=direct, normalize_images=normalize_images
+        fraction, direct_visualization=direct, normalize_images=normalize_images
     )
     for fraction in (
         Fraction(1, 100),
@@ -974,8 +911,8 @@ def boiling_cross_surface_evaluation(
     evaluation_dataset = LazyDescribed.from_describable(evaluation_datasets) | datasets_merger()
 
     with strategy_scope(strategy):
-        architecture = get_baseline_boiling_model(
-            direct=direct_visualization,
+        architecture = get_baseline_boiling_architecture(
+            direct_visualization=direct_visualization,
             normalize_images=normalize_images,
         )
         compiled_model = compile_model(architecture, get_baseline_compile_params())

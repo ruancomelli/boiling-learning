@@ -3,7 +3,12 @@ from collections.abc import Callable
 import tensorflow as tf
 
 from boiling_learning.app.datasets.bridging import to_tensorflow, to_tensorflow_triplet
-from boiling_learning.app.training.common import cached_fit_model_function
+from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
+from boiling_learning.app.training.common import (
+    cached_fit_model_function,
+    get_baseline_compile_params,
+    get_baseline_fit_params,
+)
 from boiling_learning.image_datasets import Image, ImageDatasetTriplet, Targets
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.model.callbacks import (
@@ -13,7 +18,15 @@ from boiling_learning.model.callbacks import (
     SaveHistory,
     TimePrinter,
 )
-from boiling_learning.model.training import CompiledModel, FitModelParams, FitModelReturn
+from boiling_learning.model.definitions import hoboldnet2
+from boiling_learning.model.model import ModelArchitecture
+from boiling_learning.model.training import (
+    CompiledModel,
+    FitModelParams,
+    FitModelReturn,
+    compile_model,
+    strategy_scope,
+)
 from boiling_learning.transforms import subset
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.pathutils import resolve
@@ -33,6 +46,7 @@ def fit_boiling_model(
     compiled_model: CompiledModel,
     datasets: LazyDescribed[ImageDatasetTriplet],
     params: FitModelParams,
+    *,
     strategy: LazyDescribed[tf.distribute.Strategy],
     try_id: int = 0,
     target: str = DEFAULT_BOILING_HEAT_FLUX_TARGET,
@@ -100,3 +114,42 @@ def fit_boiling_model(
     ).partial(fitter.function)
 
     return fitter.provide(creator, workspace_path / 'model')
+
+
+def get_baseline_boiling_architecture(
+    *,
+    strategy: LazyDescribed[tf.distribute.Strategy],
+    direct_visualization: bool = True,
+    normalize_images: bool = True,
+) -> ModelArchitecture:
+    baseline_boiling_dataset = boiling_datasets(direct_visualization=direct_visualization)[0]
+
+    ds_train, _, _ = baseline_boiling_dataset()
+    first_frame, _ = ds_train[0]
+
+    with strategy_scope(strategy):
+        return hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=normalize_images)
+
+
+def get_pretrained_baseline_boiling_model(
+    *,
+    strategy: LazyDescribed[tf.distribute.Strategy],
+    direct_visualization: bool = True,
+    normalize_images: bool = True,
+) -> FitModelReturn:
+    compiled_model = compile_model(
+        get_baseline_boiling_architecture(
+            direct_visualization=direct_visualization,
+            normalize_images=normalize_images,
+            strategy=strategy,
+        ),
+        get_baseline_compile_params(strategy=strategy),
+    )
+
+    return fit_boiling_model(
+        compiled_model,
+        boiling_datasets(direct_visualization=direct_visualization)[0],
+        get_baseline_fit_params(),
+        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
+        strategy=strategy,
+    )

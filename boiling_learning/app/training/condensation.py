@@ -16,6 +16,7 @@ def fit_condensation_model(
     compiled_model: CompiledModel,
     datasets: LazyDescribed[ImageDatasetTriplet],
     params: FitModelParams,
+    *,
     strategy: LazyDescribed[tf.distribute.Strategy],
     target: str,
 ) -> FitModelReturn:
