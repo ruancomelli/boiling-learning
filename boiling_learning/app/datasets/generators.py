@@ -1,5 +1,5 @@
+import functools
 from fractions import Fraction
-from functools import partial
 from pathlib import Path
 from typing import Callable, Iterable, TypeAlias
 
@@ -8,9 +8,9 @@ import modin.pandas as pd
 import numpy as np
 
 from boiling_learning.app import options
-from boiling_learning.app.datasets.raw.boiling1d import BOILING_CASES
-from boiling_learning.app.datasets.raw.condensation import CONDENSATION_DATASETS
-from boiling_learning.app.paths import ANALYSES_PATH
+from boiling_learning.app.datasets.raw.boiling1d import boiling_cases
+from boiling_learning.app.datasets.raw.condensation import condensation_datasets
+from boiling_learning.app.paths import analyses_path
 from boiling_learning.datasets.cache import NumpyCache
 from boiling_learning.datasets.datasets import DatasetSplits, DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
@@ -27,22 +27,6 @@ from boiling_learning.transforms import map_transformers
 
 _IsCondensation: TypeAlias = bool
 
-BOILING_VIDEO_TO_SETTER = {
-    video: partial(set_boiling_cases_data.main, case())
-    for case in BOILING_CASES
-    for video in case()
-}
-
-EXTRACTED_FRAMES_DIRECTORY_ALLOCATORS: dict[_IsCondensation, JSONAllocator] = {
-    False: JSONAllocator(ANALYSES_PATH / 'datasets' / 'frames' / 'boiling'),
-    True: JSONAllocator(ANALYSES_PATH / 'datasets' / 'frames' / 'condensation'),
-}
-
-NUMPY_DIRECTORY_ALLOCATORS: dict[_IsCondensation, JSONAllocator] = {
-    False: JSONAllocator(ANALYSES_PATH / 'datasets' / 'numpy' / 'boiling'),
-    True: JSONAllocator(ANALYSES_PATH / 'datasets' / 'numpy' / 'condensation'),
-}
-
 
 def get_image_dataset(
     image_dataset: ExperimentVideoDataset,
@@ -53,7 +37,7 @@ def get_image_dataset(
         test=Fraction(15, 100),
     ),
 ) -> LazyDescribed[ImageDatasetTriplet]:
-    purged_experiment_videos = _purge_experiment_videos(image_dataset)
+    purged_experiment_videos = _experiment_video_purger()(image_dataset)
 
     ds_train_list = []
     ds_val_list = []
@@ -96,15 +80,18 @@ def compile_transformers(
     )
 
 
-@cache(JSONAllocator(ANALYSES_PATH / 'cache' / 'purged-experiment-videos'))
-def _purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]:
-    return [video.name for video in tuple(image_dataset) if _ensure_data_is_set(video)]
+def _experiment_video_purger() -> Callable[[ExperimentVideoDataset], list[str]]:
+    @cache(JSONAllocator(analyses_path() / 'cache' / 'purged-experiment-videos'))
+    def _purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]:
+        return [video.name for video in tuple(image_dataset) if _ensure_data_is_set(video)]
+
+    return _purge_experiment_videos
 
 
 def _ensure_data_is_set(video: ExperimentVideo) -> bool:
-    if video.data is None:
-        setter = BOILING_VIDEO_TO_SETTER[video]
-        setter()
+    if video.data is None and not _is_condensation_video(video):
+        case = next(case() for case in boiling_cases() if video in case())
+        set_boiling_cases_data.main(case)
 
     return video.data is not None
 
@@ -132,35 +119,34 @@ def _target_dataset_from_video(video: ExperimentVideo) -> SliceableDataset[Targe
 
 
 def _experiment_video_targets_as_dataframe(video: ExperimentVideo) -> pd.DataFrame:
-    return (
-        _experiment_video_targets_as_dataframe_condensation
-        if _is_condensation_video(video)
-        else _experiment_video_targets_as_dataframe_boiling
-    )(video)
+    return _experiment_video_target_getter(_is_condensation_video(video))(video)
+
+
+@functools.cache
+def _experiment_video_target_getter(
+    is_condensation: _IsCondensation,
+) -> Callable[[ExperimentVideo], pd.DataFrame]:
+    allocator_path = (
+        analyses_path()
+        / 'datasets'
+        / 'targets'
+        / ('condensation' if is_condensation else 'boiling')
+    )
+
+    @cache(
+        JSONAllocator(allocator_path, suffix='.csv'),
+        saver=_dataframe_targets_to_csv,
+        loader=pd.read_csv,
+        exceptions=(OSError, AttributeError),
+    )
+    def _target_getter(video: ExperimentVideo) -> pd.DataFrame:
+        return video.targets()
+
+    return _target_getter
 
 
 def _dataframe_targets_to_csv(targets: pd.DataFrame, path: Path) -> None:
     targets.to_csv(path, index=False)
-
-
-@cache(
-    JSONAllocator(ANALYSES_PATH / 'datasets' / 'targets' / 'boiling', suffix='.csv'),
-    saver=_dataframe_targets_to_csv,
-    loader=pd.read_csv,
-    exceptions=(OSError, AttributeError),
-)
-def _experiment_video_targets_as_dataframe_boiling(video: ExperimentVideo) -> pd.DataFrame:
-    return video.targets()
-
-
-@cache(
-    JSONAllocator(ANALYSES_PATH / 'datasets' / 'targets' / 'condensation', suffix='.csv'),
-    saver=_dataframe_targets_to_csv,
-    loader=pd.read_csv,
-    exceptions=(OSError, AttributeError),
-)
-def _experiment_video_targets_as_dataframe_condensation(video: ExperimentVideo) -> pd.DataFrame:
-    return video.targets()
 
 
 def _video_dataset_from_video_and_transformers(
@@ -170,9 +156,9 @@ def _video_dataset_from_video_and_transformers(
     compiled_transformers = compile_transformers(transformers, experiment_video)
 
     if options.EXTRACT_FRAMES and not _is_condensation_video(experiment_video):
-        extracted_frames_directory = EXTRACTED_FRAMES_DIRECTORY_ALLOCATORS[
+        extracted_frames_directory = _extracted_frames_directory_allocator(
             _is_condensation_video(experiment_video)
-        ].allocate(experiment_video)
+        ).allocate(experiment_video)
 
         frames = experiment_video.extract_frames(extracted_frames_directory)
     else:
@@ -181,11 +167,11 @@ def _video_dataset_from_video_and_transformers(
     frames = LazyDescribed.from_value_and_description(frames, experiment_video) | map_transformers(
         compiled_transformers
     )
-    video_info = _get_video_info(frames)
+    video_info = _video_info_getter()(frames)
 
-    numpy_cache_directory = NUMPY_DIRECTORY_ALLOCATORS[
+    numpy_cache_directory = _numpy_directory_allocator(
         _is_condensation_video(experiment_video)
-    ].allocate(frames)
+    ).allocate(frames)
 
     return frames().cache(
         NumpyCache(
@@ -196,6 +182,22 @@ def _video_dataset_from_video_and_transformers(
     )
 
 
+@functools.cache
+def _extracted_frames_directory_allocator(is_condensation: _IsCondensation) -> JSONAllocator:
+    return {
+        False: JSONAllocator(analyses_path() / 'datasets' / 'frames' / 'boiling'),
+        True: JSONAllocator(analyses_path() / 'datasets' / 'frames' / 'condensation'),
+    }[is_condensation]
+
+
+@functools.cache
+def _numpy_directory_allocator(is_condensation: _IsCondensation) -> JSONAllocator:
+    return {
+        False: JSONAllocator(analyses_path() / 'datasets' / 'numpy' / 'boiling'),
+        True: JSONAllocator(analyses_path() / 'datasets' / 'numpy' / 'condensation'),
+    }[is_condensation]
+
+
 @dataclass
 class VideoInfo:
     length: int
@@ -203,16 +205,19 @@ class VideoInfo:
     dtype: str
 
 
-@cache(JSONAllocator(ANALYSES_PATH / 'cache' / 'video-info'))
-@eager
-def _get_video_info(video: SliceableDataset[Image]) -> VideoInfo:
-    first_frame = video[0]
-    return VideoInfo(
-        length=len(video),
-        shape=first_frame.shape,
-        dtype=str(first_frame.dtype),
-    )
+def _video_info_getter() -> Callable[[SliceableDataset[Image]], VideoInfo]:
+    @cache(JSONAllocator(analyses_path() / 'cache' / 'video-info'))
+    @eager
+    def _get_video_info(video: SliceableDataset[Image]) -> VideoInfo:
+        first_frame = video[0]
+        return VideoInfo(
+            length=len(video),
+            shape=first_frame.shape,
+            dtype=str(first_frame.dtype),
+        )
+
+    return _get_video_info
 
 
 def _is_condensation_video(ev: ExperimentVideo) -> _IsCondensation:
-    return any(ev in dataset() for dataset in CONDENSATION_DATASETS)
+    return any(ev in dataset() for dataset in condensation_datasets())

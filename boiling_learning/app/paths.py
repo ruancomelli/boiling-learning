@@ -1,5 +1,15 @@
-from boiling_learning.app.constants import MASTERS_PATH
+from pathlib import Path
 
-DATA_PATH = MASTERS_PATH / 'data'
-ANALYSES_PATH = MASTERS_PATH / 'analyses'
-STUDIES_PATH = ANALYSES_PATH / 'studies'
+from boiling_learning.app.constants import masters_path
+
+
+def data_path() -> Path:
+    return masters_path() / 'data'
+
+
+def analyses_path() -> Path:
+    return masters_path() / 'analyses'
+
+
+def studies_path() -> Path:
+    return analyses_path() / 'studies'

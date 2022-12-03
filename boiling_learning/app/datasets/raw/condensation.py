@@ -1,6 +1,7 @@
 import re
 from collections.abc import Iterator
 from datetime import timedelta
+from functools import cache
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
@@ -9,7 +10,7 @@ import yaml
 from frozendict import frozendict  # type: ignore[attr-defined]
 from loguru import logger
 
-from boiling_learning.app.paths import DATA_PATH
+from boiling_learning.app.paths import data_path
 from boiling_learning.lazy import LazyCallable, LazyDescribed
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo, VideoData
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
@@ -17,8 +18,27 @@ from boiling_learning.preprocessing.video import Video
 from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
 from boiling_learning.utils.pathutils import PathLike, resolve
 
-CONDENSATION_DATA_PATH = DATA_PATH / 'condensation'
-CONDENSATION_DATA_SPEC_PATH = CONDENSATION_DATA_PATH / 'data_spec.yaml'
+
+def condensation_data_path() -> Path:
+    return data_path() / 'condensation'
+
+
+def condensation_data_spec_path() -> Path:
+    return condensation_data_path() / 'data_spec.yaml'
+
+
+@cache
+def condensation_datasets() -> tuple[LazyDescribed[ExperimentVideoDataset], ...]:
+    return _set_condensation_datasets_data(
+        (
+            _experiment_video_dataset_from_case_and_subcase(case_dir.name, subcase_dir)
+            for case_dir in condensation_data_path().iterdir()
+            if case_dir.is_dir()
+            for subcase_dir in case_dir.iterdir()
+            if subcase_dir.is_dir()
+        ),
+        condensation_data_spec_path(),
+    )
 
 
 _SUBCASE_PATTERNS = frozendict(
@@ -191,17 +211,3 @@ def _parse_timedelta(s: Optional[str]) -> Optional[timedelta]:
         return None
 
     return timedelta(hours=int(m['h']), minutes=int(m['min']), seconds=int(m['s']))
-
-
-CONDENSATION_DATASETS = tuple(
-    _set_condensation_datasets_data(
-        (
-            _experiment_video_dataset_from_case_and_subcase(case_dir.name, subcase_dir)
-            for case_dir in CONDENSATION_DATA_PATH.iterdir()
-            if case_dir.is_dir()
-            for subcase_dir in case_dir.iterdir()
-            if subcase_dir.is_dir()
-        ),
-        CONDENSATION_DATA_SPEC_PATH,
-    )
-)

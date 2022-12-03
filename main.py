@@ -5,6 +5,7 @@ from operator import itemgetter
 from pprint import pprint
 from typing import Callable, Literal, Optional
 
+import more_itertools as mit
 import tensorflow as tf
 import tensorflow_addons as tfa
 from loguru import logger
@@ -15,17 +16,14 @@ from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
 from boiling_learning.app.datasets.bridging import to_tensorflow, to_tensorflow_triplet
 from boiling_learning.app.datasets.generators import get_image_dataset
-from boiling_learning.app.datasets.preprocessed.boiling1d import (
-    BOILING_DIRECT_DATASETS,
-    BOILING_INDIRECT_DATASETS,
-)
+from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
 from boiling_learning.app.datasets.preprocessing import default_condensation_preprocessors
-from boiling_learning.app.datasets.raw.boiling1d import BOILING_DATA_PATH
+from boiling_learning.app.datasets.raw.boiling1d import boiling_data_path
 from boiling_learning.app.datasets.raw.condensation import (
-    CONDENSATION_DATA_PATH,
-    CONDENSATION_DATASETS,
+    condensation_data_path,
+    condensation_datasets,
 )
-from boiling_learning.app.paths import ANALYSES_PATH
+from boiling_learning.app.paths import analyses_path
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
 from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn, fit_hypermodel
@@ -88,9 +86,9 @@ strategy = configure(
 logger.info('Checking paths')
 check_all_paths_exist(
     (
-        ('Boiling cases', BOILING_DATA_PATH),
-        ('Condensation cases', CONDENSATION_DATA_PATH),
-        ('Analyses', ANALYSES_PATH),
+        ('Boiling cases', boiling_data_path()),
+        ('Condensation cases', condensation_data_path()),
+        ('Analyses', analyses_path()),
     )
 )
 logger.info('Succesfully checked paths')
@@ -121,10 +119,16 @@ condensation_preprocessors = default_condensation_preprocessors(
 )
 condensation_dataset = (
     LazyDescribed.from_describable(
-        tuple(get_image_dataset(ds(), condensation_preprocessors) for ds in CONDENSATION_DATASETS)
+        tuple(
+            get_image_dataset(ds(), condensation_preprocessors) for ds in condensation_datasets()
+        )
     )
     | datasets_concatenater()
 )
+
+condensation_dataset_train, _, _ = condensation_dataset()
+print(mit.ilen(condensation_dataset_train.prefetch(128 * 2)))
+assert False, 'STOP!'
 
 
 def _boiling_outlier_filter(_image: Image, target: Targets) -> bool:
@@ -140,7 +144,7 @@ BOILING_HEAT_FLUX_TARGET = 'Flux [W/cm**2]'
 fit_boiling_model_cached_function = CachedFunction(
     get_fit_model,
     Cacher(
-        allocator=JSONAllocator(ANALYSES_PATH / 'models' / 'boiling'),
+        allocator=JSONAllocator(analyses_path() / 'models' / 'boiling'),
         exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
         loader=load_with_strategy(strategy),
     ),
@@ -226,7 +230,7 @@ def fit_boiling_model(
 fit_condensation_model_cached_function = CachedFunction(
     get_fit_model,
     Cacher(
-        allocator=JSONAllocator(ANALYSES_PATH / 'models' / 'condensation'),
+        allocator=JSONAllocator(analyses_path() / 'models' / 'condensation'),
         exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
         loader=load_with_strategy(strategy),
     ),
@@ -288,7 +292,7 @@ def fit_condensation_model(
 
 
 @cache(
-    allocator=JSONAllocator(ANALYSES_PATH / 'autofit' / 'models'),
+    allocator=JSONAllocator(analyses_path() / 'autofit' / 'models'),
     exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
     loader=load_with_strategy(strategy),
 )
@@ -329,8 +333,8 @@ def autofit(
 
 logger.info('Getting sample frames')
 
-baseline_boiling_dataset_direct = BOILING_DIRECT_DATASETS[0]
-baseline_boiling_dataset_indirect = BOILING_INDIRECT_DATASETS[0]
+baseline_boiling_dataset_direct = boiling_datasets(direct_visualization=True)[0]
+baseline_boiling_dataset_indirect = boiling_datasets(direct_visualization=False)[0]
 
 ds_train_direct, _, _ = baseline_boiling_dataset_direct()
 first_frame_direct, _ = ds_train_direct[0]
@@ -462,7 +466,7 @@ pretrained_baseline_boiling_model_architecture_indirect = get_pretrained_baselin
 )
 
 
-_autofit_to_dataset_allocator = JSONAllocator(ANALYSES_PATH / 'autofit' / 'autofit-to-dataset')
+_autofit_to_dataset_allocator = JSONAllocator(analyses_path() / 'autofit' / 'autofit-to-dataset')
 
 
 def autofit_to_dataset(
@@ -555,7 +559,7 @@ def autofit_to_dataset(
 PREFETCH = 1024 * 4
 
 
-# @cache(JSONAllocator(ANALYSES_PATH / 'cache' / 'targets'))
+# @cache(JSONAllocator(analyses_path() / 'cache' / 'targets'))
 # def get_targets(
 #     dataset: LazyDescribed[ImageDatasetTriplet],
 # ) -> tuple[list[Targets], list[Targets], list[Targets]]:
@@ -620,7 +624,7 @@ PREFETCH = 1024 * 4
 """#### Condensation"""
 
 # TODO: ensure that this works!
-# plot_dataset_targets(CONDENSATION_DATASETS)
+# plot_dataset_targets(CONDENSATION_DATASETS())
 
 """### Downscaling"""
 
@@ -934,7 +938,7 @@ pprint(evaluations)
 
 logger.info('Testing with other wire')
 
-DATASET = BOILING_DIRECT_DATASETS[2]
+DATASET = boiling_datasets(direct_visualization=True)[2]
 
 logger.info('Compiling...')
 first_frame, _ = DATASET()[0][0]
@@ -996,7 +1000,7 @@ ds_evaluation_indirect = to_tensorflow(
 )
 
 
-@cache(JSONAllocator(ANALYSES_PATH / 'studies' / 'boiling-learning-curve'))
+@cache(JSONAllocator(analyses_path() / 'studies' / 'boiling-learning-curve'))
 def boiling_learning_curve_point(
     fraction: Fraction, *, direct: bool = True, normalize_images: bool = False
 ) -> dict[str, float]:
@@ -1170,7 +1174,7 @@ print(regular_wire_best_model_direct_visualization_less_data)
 logger.info('Analyzing cross-surface boiling evaluation')
 
 
-@cache(JSONAllocator(ANALYSES_PATH / 'studies' / 'boiling-cross-surface'))
+@cache(JSONAllocator(analyses_path() / 'studies' / 'boiling-cross-surface'))
 def boiling_cross_surface_evaluation(
     direct_visualization: bool,
     training_cases: tuple[int, ...],
@@ -1183,7 +1187,7 @@ def boiling_cross_surface_evaluation(
         f"| {'Direct' if direct_visualization else 'Indirect'} visualization"
     )
 
-    all_datasets = BOILING_DIRECT_DATASETS if direct_visualization else BOILING_INDIRECT_DATASETS
+    all_datasets = boiling_datasets(direct_visualization=direct_visualization)
     training_datasets = tuple(all_datasets[training_case] for training_case in training_cases)
     evaluation_datasets = tuple(
         all_datasets[evaluation_case] for evaluation_case in evaluation_cases
@@ -1297,7 +1301,7 @@ for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
 # BOILING_BASELINE_BATCH_SIZE = 200
 
 
-# @cache(JSONTableAllocator(ANALYSES_PATH / 'studies' / 'boiling-cross-surface-automl'))
+# @cache(JSONTableAllocator(analyses_path() / 'studies' / 'boiling-cross-surface-automl'))
 # def boiling_cross_surface_evaluation_automl(
 #     direct_visualization: bool, training_cases: tuple[int, ...], evaluation_cases: tuple[int, ...]
 # ) -> dict[str, float]:
@@ -1367,7 +1371,7 @@ def _set_case_name(data: Targets) -> Targets:
 
 
 logger.info('Getting datasets...')
-condensation_all_cases = ExperimentVideoDataset().union(*CONDENSATION_DATASETS)
+condensation_all_cases = ExperimentVideoDataset().union(*condensation_datasets())
 ds = get_image_dataset(
     condensation_all_cases,
     transformers=condensation_preprocessors,
@@ -1629,7 +1633,7 @@ assert False, 'STOP!'
 # auto_model = ak.AutoModel(
 #     inputs=input_node,
 #     outputs=output_node,
-#     directory=ANALYSES_PATH / 'temp' / 'auto_tune_hoboldnet2-5',
+#     directory=analyses_path() / 'temp' / 'auto_tune_hoboldnet2-5',
 #     overwrite=True,
 #     distribution_strategy=strategy.value,
 # )

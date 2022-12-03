@@ -1,18 +1,17 @@
 import os
 import sys
+from pathlib import Path
 from typing import Literal, Optional
 
 import tensorflow as tf
 from loguru import logger
 from modin.config import Engine
 
-from boiling_learning.app.constants import MASTERS_PATH
+from boiling_learning.app.constants import masters_path
 from boiling_learning.descriptions import describe
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.utils.pathutils import resolve
 from boiling_learning.utils.typeutils import typename
-
-LOG_FILE_PATH = resolve(MASTERS_PATH / 'logs' / '{time}.log', parents=True)
 
 
 def configure(
@@ -48,9 +47,13 @@ def configure(
 def _configure_logger() -> None:
     logger.remove()  # remove default logger configuration
     logger.add(sys.stderr, level='DEBUG')
-    logger.add(str(LOG_FILE_PATH), level='DEBUG')
+    logger.add(str(_log_file_path()), level='DEBUG')
 
     logger.info('Initializing script')
+
+
+def _log_file_path() -> Path:
+    return resolve(masters_path() / 'logs' / '{time}.log', parents=True)
 
 
 def _configure_gpu_growth(force_gpu_allow_growth: bool) -> None:

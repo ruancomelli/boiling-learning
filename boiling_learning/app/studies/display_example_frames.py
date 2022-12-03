@@ -1,4 +1,6 @@
+import functools
 import math
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -7,15 +9,13 @@ from loguru import logger
 
 from boiling_learning.app.datasets.generators import compile_transformers
 from boiling_learning.app.datasets.preprocessing import default_boiling_preprocessors
-from boiling_learning.app.datasets.raw.boiling1d import BOILING_CASES
-from boiling_learning.app.paths import STUDIES_PATH
+from boiling_learning.app.datasets.raw.boiling1d import boiling_cases
+from boiling_learning.app.paths import studies_path
 from boiling_learning.image_datasets import Image
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.utils.pathutils import resolve
-
-EXAMPLE_FRAMES_STUDY_PATH = STUDIES_PATH / 'example-frames'
 
 
 def display_example_frames(
@@ -25,7 +25,7 @@ def display_example_frames(
 ) -> None:
     logger.debug(f"Displaying {'directly' if direct else 'indirectly'} visualized boiling frames")
 
-    total_examples_count = sum(len(case()) for case in BOILING_CASES)
+    total_examples_count = sum(len(case()) for case in boiling_cases())
     number_of_rows = math.ceil(total_examples_count / number_of_columns)
 
     preprocessors = default_boiling_preprocessors(direct_visualization=direct)
@@ -35,7 +35,7 @@ def display_example_frames(
     )
 
     index = 0
-    for case in BOILING_CASES:
+    for case in boiling_cases():
         for ev in sorted(case(), key=lambda ev: ev.name):
             try:
                 transformer = compile_transformers(preprocessors, ev)
@@ -44,7 +44,7 @@ def display_example_frames(
                 continue
 
             logger.debug(f'Getting example frame from case {case().name} and video {ev.name}')
-            frame = _get_first_frame(ev)
+            frame = _first_frame_getter()(ev)
             logger.debug('Transforming frame')
             frame = transformer()(frame)
 
@@ -59,12 +59,20 @@ def display_example_frames(
             index += 1
 
     if not output_path.is_absolute():
-        output_path = EXAMPLE_FRAMES_STUDY_PATH / 'frames' / output_path
+        output_path = _example_frames_study_path() / 'frames' / output_path
 
     logger.debug(f'Saving figure to {output_path}')
     fig.savefig(resolve(output_path, parents=True))
 
 
-@cache(JSONAllocator(EXAMPLE_FRAMES_STUDY_PATH / 'cache'))
-def _get_first_frame(ev: ExperimentVideo) -> Image:
-    return ev.frames()[0]
+@functools.cache
+def _first_frame_getter() -> Callable[[ExperimentVideo], Image]:
+    @cache(JSONAllocator(_example_frames_study_path() / 'cache'))
+    def _get_first_frame(ev: ExperimentVideo) -> Image:
+        return ev.frames()[0]
+
+    return _get_first_frame
+
+
+def _example_frames_study_path() -> Path:
+    return studies_path() / 'example-frames'

@@ -1,4 +1,4 @@
-from functools import partial
+from functools import cache, partial
 from typing import Callable, Literal, Optional, Union
 
 import numpy as np
@@ -6,18 +6,13 @@ import tensorflow as tf
 from loguru import logger
 
 from boiling_learning.app.options import PREFETCH_BUFFER_SIZE
-from boiling_learning.app.paths import ANALYSES_PATH
+from boiling_learning.app.paths import analyses_path
 from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_dataset
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.transforms import subset
-
-TRAINING_DATASETS_ALLOCATORS: dict[Literal['boiling1d', 'condensation'], JSONAllocator] = {
-    'boiling1d': JSONAllocator(ANALYSES_PATH / 'datasets' / 'training' / 'boiling'),
-    'condensation': JSONAllocator(ANALYSES_PATH / 'datasets' / 'training' / 'condensation'),
-}
 
 
 def to_tensorflow(
@@ -40,7 +35,7 @@ def to_tensorflow(
             prefilterer is None or prefilterer()(image, targets)
         )
 
-    save_path = TRAINING_DATASETS_ALLOCATORS[experiment].allocate(dataset, prefilterer)
+    save_path = _training_datasets_allocator(experiment).allocate(dataset, prefilterer)
 
     logger.debug(f'Converting dataset to TF and saving to {save_path}')
 
@@ -120,6 +115,16 @@ def to_tensorflow_triplet(
         ds_test = LazyDescribed.from_value_and_description(tf.data.Dataset.range(0), None)
 
     return DatasetTriplet(ds_train, ds_val, ds_test)
+
+
+@cache
+def _training_datasets_allocator(
+    experiment: Literal['boiling1d', 'condensation']
+) -> JSONAllocator:
+    return {
+        'boiling1d': JSONAllocator(analyses_path() / 'datasets' / 'training' / 'boiling'),
+        'condensation': JSONAllocator(analyses_path() / 'datasets' / 'training' / 'condensation'),
+    }[experiment]
 
 
 def _default_filter_for_frames_dataset(

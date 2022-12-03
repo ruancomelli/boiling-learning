@@ -1,13 +1,11 @@
+from pathlib import Path
+
 import typer
 
-from boiling_learning.app.datasets.preprocessed.boiling1d import (
-    BOILING_DIRECT_DATASETS,
-    BOILING_INDIRECT_DATASETS,
-)
-from boiling_learning.app.paths import STUDIES_PATH
+from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
+from boiling_learning.app.paths import studies_path
 from boiling_learning.visualization.video import save_as_video
 
-ANIMATIONS_PATH = STUDIES_PATH / 'animations'
 PREFETCH_BUFFER_SIZE = 256
 
 
@@ -16,12 +14,10 @@ def animate(
     each: int = typer.Option(60),
     fps: int = typer.Option(30),
 ) -> None:
-    for index, dataset in enumerate(
-        BOILING_DIRECT_DATASETS if direct else BOILING_INDIRECT_DATASETS, start=1
-    ):
+    for index, dataset in enumerate(boiling_datasets(direct_visualization=direct), start=1):
         for subset_name, subset in zip(('train', 'val', 'test'), dataset()):
             path = (
-                ANIMATIONS_PATH
+                _animations_path()
                 / f"boiling-case-{index}-{'direct' if direct else 'indirect'}-{subset_name}.mp4"
             )
 
@@ -32,3 +28,7 @@ def animate(
                     display_data={'index': 'Index', 'Flux [W/cm**2]': 'Flux [W/cm²]'},
                     fps=fps,
                 )
+
+
+def _animations_path() -> Path:
+    return studies_path() / 'animations'

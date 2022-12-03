@@ -1,11 +1,16 @@
+from functools import cache
+from pathlib import Path
+
 from loguru import logger
 
-from boiling_learning.app.paths import DATA_PATH
+from boiling_learning.app.paths import data_path
 from boiling_learning.lazy import LazyCallable, LazyDescribed
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.utils.pathutils import PathLike
 
-BOILING_DATA_PATH = DATA_PATH / 'boiling1d'
+
+def boiling_data_path() -> Path:
+    return data_path() / 'boiling1d'
 
 
 def _case_from_path(path: PathLike, /) -> LazyDescribed[Case]:
@@ -26,7 +31,9 @@ def _load_case_from_path(path: PathLike, /) -> Case:
     )
 
 
-BOILING_CASES = tuple(
-    _case_from_path(BOILING_DATA_PATH / case_name)
-    for case_name in ('case 1', 'case 2', 'case 3', 'case 4')
-)
+@cache
+def boiling_cases() -> tuple[LazyDescribed[Case], ...]:
+    return tuple(
+        _case_from_path(boiling_data_path() / case_name)
+        for case_name in ('case 1', 'case 2', 'case 3', 'case 4')
+    )
