@@ -27,7 +27,17 @@ def regularized_untangled_file_name(details):
 
 def untangle_file_name(file_name):
     pattern = re.compile(
-        r'RTD Temperature (?P<day>[0-9]{2})-(?P<month>[0-9]{2})-(?P<year>[0-9]{4}) -- (?P<hour>[0-9]{2})(?P<minute>[0-9]{2}) -- (?P<temperature_unity>[0-9]{1,2})_(?P<temperature_decy>[0-9]{2})C -- (?P<attempt>[0-9]+)\.(?P<extension>.*)'
+        r"""
+            RTD Temperature
+            (?P<day>[0-9]{2})-(?P<month>[0-9]{2})-(?P<year>[0-9]{4})
+            --
+            (?P<hour>[0-9]{2})(?P<minute>[0-9]{2})
+            --
+            (?P<temperature_unity>[0-9]{1,2})_(?P<temperature_decy>[0-9]{2})C
+            --
+            (?P<attempt>[0-9]+)\.(?P<extension>.*)
+        """,
+        re.VERBOSE,
     )
     match = pattern.search(file_name)
     groupdict = match.groupdict()
