@@ -15,9 +15,8 @@ from rich.table import Table
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
 from boiling_learning.app.datasets.bridging import to_tensorflow, to_tensorflow_triplet
-from boiling_learning.app.datasets.generators import get_image_dataset
 from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
-from boiling_learning.app.datasets.preprocessing import default_condensation_preprocessors
+from boiling_learning.app.datasets.preprocessed.condensation import condensation_dataset
 from boiling_learning.app.datasets.raw.boiling1d import boiling_data_path
 from boiling_learning.app.datasets.raw.condensation import (
     condensation_data_path,
@@ -54,12 +53,7 @@ from boiling_learning.model.training import (
 )
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist
-from boiling_learning.transforms import (
-    dataset_sampler,
-    datasets_concatenater,
-    datasets_merger,
-    subset,
-)
+from boiling_learning.transforms import dataset_sampler, datasets_merger, subset
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.pathutils import resolve
 
@@ -112,22 +106,8 @@ logger.info('Succesfully checked paths')
 
 """#### Condensation"""
 
-# TODO: choose this correctly!!
-
-condensation_preprocessors = default_condensation_preprocessors(
-    downscale_factor=5, height=8 * 12, width=8 * 12
-)
-condensation_dataset = (
-    LazyDescribed.from_describable(
-        tuple(
-            get_image_dataset(ds(), condensation_preprocessors) for ds in condensation_datasets()
-        )
-    )
-    | datasets_concatenater()
-)
-
-condensation_dataset_train, _, _ = condensation_dataset()
-print(mit.ilen(condensation_dataset_train.prefetch(128 * 2)))
+condensation_dataset_train, _, _ = condensation_dataset()()
+print(mit.ilen(condensation_dataset_train[::60].prefetch(128 * 2)))
 assert False, 'STOP!'
 
 
@@ -1372,10 +1352,7 @@ def _set_case_name(data: Targets) -> Targets:
 
 logger.info('Getting datasets...')
 condensation_all_cases = ExperimentVideoDataset().union(*condensation_datasets())
-ds = get_image_dataset(
-    condensation_all_cases,
-    transformers=condensation_preprocessors,
-)
+ds = condensation_dataset()
 ds_train, ds_val, ds_test = ds()
 ds_train = map_targets(ds_train, _set_case_name)
 ds_val = map_targets(ds_val, _set_case_name)
