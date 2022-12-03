@@ -25,7 +25,7 @@ from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.scripts import set_boiling_cases_data
 from boiling_learning.transforms import map_transformers
 
-_IsCondensation: TypeAlias = bool
+IsCondensation: TypeAlias = bool
 
 
 def get_image_dataset(
@@ -124,7 +124,7 @@ def _experiment_video_targets_as_dataframe(video: ExperimentVideo) -> pd.DataFra
 
 @functools.cache
 def _experiment_video_target_getter(
-    is_condensation: _IsCondensation,
+    is_condensation: IsCondensation,
 ) -> Callable[[ExperimentVideo], pd.DataFrame]:
     allocator_path = (
         analyses_path()
@@ -183,7 +183,7 @@ def _video_dataset_from_video_and_transformers(
 
 
 @functools.cache
-def _extracted_frames_directory_allocator(is_condensation: _IsCondensation) -> JSONAllocator:
+def _extracted_frames_directory_allocator(is_condensation: IsCondensation) -> JSONAllocator:
     return {
         False: JSONAllocator(analyses_path() / 'datasets' / 'frames' / 'boiling'),
         True: JSONAllocator(analyses_path() / 'datasets' / 'frames' / 'condensation'),
@@ -191,7 +191,7 @@ def _extracted_frames_directory_allocator(is_condensation: _IsCondensation) -> J
 
 
 @functools.cache
-def _numpy_directory_allocator(is_condensation: _IsCondensation) -> JSONAllocator:
+def _numpy_directory_allocator(is_condensation: IsCondensation) -> JSONAllocator:
     return {
         False: JSONAllocator(analyses_path() / 'datasets' / 'numpy' / 'boiling'),
         True: JSONAllocator(analyses_path() / 'datasets' / 'numpy' / 'condensation'),
@@ -219,5 +219,5 @@ def _video_info_getter() -> Callable[[SliceableDataset[Image]], VideoInfo]:
     return _get_video_info
 
 
-def _is_condensation_video(ev: ExperimentVideo) -> _IsCondensation:
+def _is_condensation_video(ev: ExperimentVideo) -> IsCondensation:
     return any(ev in dataset() for dataset in condensation_datasets())

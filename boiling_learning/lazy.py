@@ -38,6 +38,9 @@ class LazyDescribed(Lazy[_T]):
     def __describe__(self) -> json.JSONDataType:
         return self._description
 
+    def __hash__(self) -> int:
+        return hash(self._description)
+
     @classmethod
     def from_value_and_description(
         cls, value: _T, description: Describable[json.JSONDataType]

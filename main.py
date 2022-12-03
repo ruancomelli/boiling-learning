@@ -3,7 +3,7 @@ from dataclasses import replace
 from fractions import Fraction
 from operator import itemgetter
 from pprint import pprint
-from typing import Callable, Literal, Optional
+from typing import Literal, Optional
 
 import more_itertools as mit
 import tensorflow as tf
@@ -23,39 +23,34 @@ from boiling_learning.app.datasets.raw.condensation import (
     condensation_datasets,
 )
 from boiling_learning.app.paths import analyses_path
+from boiling_learning.app.training.boiling1d import (
+    DEFAULT_BOILING_HEAT_FLUX_TARGET,
+    fit_boiling_model,
+)
+from boiling_learning.app.training.condensation import fit_condensation_model
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
 from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn, fit_hypermodel
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import map_targets, targets
-from boiling_learning.image_datasets import Image, ImageDatasetTriplet, Targets
+from boiling_learning.image_datasets import ImageDatasetTriplet, Targets
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
-from boiling_learning.management.cacher import CachedFunction, Cacher, cache
-from boiling_learning.model.callbacks import (
-    AdditionalValidationSets,
-    MemoryCleanUp,
-    RegisterEpoch,
-    SaveHistory,
-    TimePrinter,
-)
+from boiling_learning.management.cacher import cache
+from boiling_learning.model.callbacks import MemoryCleanUp
 from boiling_learning.model.definitions import hoboldnet2
 from boiling_learning.model.model import ModelArchitecture, rename_model_layers
 from boiling_learning.model.training import (
-    CompiledModel,
     CompileModelParams,
     FitModelParams,
     FitModelReturn,
     compile_model,
-    get_fit_model,
     load_with_strategy,
     strategy_scope,
 )
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist
 from boiling_learning.transforms import dataset_sampler, datasets_merger, subset
-from boiling_learning.utils.functional import P
-from boiling_learning.utils.pathutils import resolve
 
 # TODO: check
 # <https://stackoverflow.com/a/58970598/5811400> and <https://github.com/googlecolab/colabtools/issues/864#issuecomment-556437040> # noqa
@@ -109,166 +104,6 @@ logger.info('Succesfully checked paths')
 condensation_dataset_train, _, _ = condensation_dataset()()
 print(mit.ilen(condensation_dataset_train[::60].prefetch(128 * 2)))
 assert False, 'STOP!'
-
-
-def _boiling_outlier_filter(_image: Image, target: Targets) -> bool:
-    return abs(target['Power [W]'] - target['nominal_power']) < 5
-
-
-BOILING_OUTLIER_FILTER = LazyDescribed.from_value_and_description(
-    _boiling_outlier_filter, 'abs(Power [W] - nominal_power) < 5'
-)
-BOILING_HEAT_FLUX_TARGET = 'Flux [W/cm**2]'
-
-
-fit_boiling_model_cached_function = CachedFunction(
-    get_fit_model,
-    Cacher(
-        allocator=JSONAllocator(analyses_path() / 'models' / 'boiling'),
-        exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
-        loader=load_with_strategy(strategy),
-    ),
-)
-
-
-def fit_boiling_model(
-    compiled_model: CompiledModel,
-    datasets: LazyDescribed[ImageDatasetTriplet],
-    params: FitModelParams,
-    try_id: int = 0,
-    target: str = BOILING_HEAT_FLUX_TARGET,
-) -> FitModelReturn:
-    """
-    try_id: use this to force this model to be trained again.
-        This may be used for instance to get a average and stddev.
-    """
-
-    def _is_gt10(_frame: Image, data: Targets) -> bool:
-        return data[target] >= 10
-
-    ds_val_g10 = to_tensorflow(
-        datasets | subset('val'),
-        prefilterer=BOILING_OUTLIER_FILTER,
-        filterer=_is_gt10,
-        batch_size=params.batch_size,
-        target=target,
-        experiment='boiling1d',
-    )
-
-    params.callbacks().extend(
-        (
-            TimePrinter(
-                when={
-                    'on_epoch_begin',
-                    'on_epoch_end',
-                    'on_predict_begin',
-                    'on_predict_end',
-                    'on_test_begin',
-                    'on_test_end',
-                    'on_train_begin',
-                    'on_train_end',
-                }
-            ),
-            # BackupAndRestore(workspace_path / 'backup', delete_on_end=False),
-            AdditionalValidationSets({'HF10': ds_val_g10()}),
-            MemoryCleanUp(),
-            # tf.keras.callbacks.TensorBoard(
-            #     tensorboard_logs_path / datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
-            #     histogram_freq=1,
-            # ),
-        )
-    )
-
-    workspace_path = resolve(
-        fit_boiling_model_cached_function.allocate(
-            compiled_model, datasets, params, target, try_id
-        ),
-        parents=True,
-    )
-
-    creator: Callable[[], FitModelReturn] = P(
-        compiled_model,
-        tuple(
-            subset()
-            for subset in to_tensorflow_triplet(
-                datasets,
-                prefilterer=BOILING_OUTLIER_FILTER,
-                batch_size=params.batch_size,
-                include_test=False,
-                target=target,
-                experiment='boiling1d',
-            )
-        ),
-        params,
-        epoch_registry=RegisterEpoch(workspace_path / 'epoch.json'),
-        history_registry=SaveHistory(workspace_path / 'history.json', mode='a'),
-    ).partial(fit_boiling_model_cached_function.function)
-
-    return fit_boiling_model_cached_function.provide(creator, workspace_path / 'model')
-
-
-fit_condensation_model_cached_function = CachedFunction(
-    get_fit_model,
-    Cacher(
-        allocator=JSONAllocator(analyses_path() / 'models' / 'condensation'),
-        exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
-        loader=load_with_strategy(strategy),
-    ),
-)
-
-
-def fit_condensation_model(
-    compiled_model: CompiledModel,
-    datasets: LazyDescribed[ImageDatasetTriplet],
-    params: FitModelParams,
-    target: str,
-) -> FitModelReturn:
-    params.callbacks().extend(
-        (
-            TimePrinter(
-                when={
-                    'on_epoch_begin',
-                    'on_epoch_end',
-                    'on_predict_begin',
-                    'on_predict_end',
-                    'on_test_begin',
-                    'on_test_end',
-                    'on_train_begin',
-                    'on_train_end',
-                }
-            ),
-            # BackupAndRestore(workspace_path / 'backup', delete_on_end=False),
-            MemoryCleanUp(),
-            # tf.keras.callbacks.TensorBoard(
-            #     tensorboard_logs_path / datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
-            #     histogram_freq=1,
-            # ),
-        )
-    )
-
-    workspace_path = resolve(
-        fit_condensation_model_cached_function.allocate(compiled_model, datasets, params, target),
-        parents=True,
-    )
-
-    creator: Callable[[], FitModelReturn] = P(
-        compiled_model,
-        tuple(
-            subset()
-            for subset in to_tensorflow_triplet(
-                datasets,
-                batch_size=params.batch_size,
-                include_test=False,
-                target=target,
-                experiment='condensation',
-            )
-        ),
-        params,
-        epoch_registry=RegisterEpoch(workspace_path / 'epoch.json'),
-        history_registry=SaveHistory(workspace_path / 'history.json', mode='a'),
-    ).partial(fit_condensation_model_cached_function.function)
-
-    return fit_condensation_model_cached_function.provide(creator, workspace_path / 'model')
 
 
 @cache(
@@ -434,7 +269,7 @@ def get_pretrained_baseline_boiling_model(
         compiled_model,
         baseline_boiling_dataset_direct if direct else baseline_boiling_dataset_indirect,
         get_baseline_fit_params(),
-        target=BOILING_HEAT_FLUX_TARGET,
+        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
     )
 
 
@@ -591,13 +426,13 @@ PREFETCH = 1024 * 4
 
 # plot_dataset_targets(
 #     BOILING_DIRECT_DATASETS,
-#     target_name=BOILING_HEAT_FLUX_TARGET,
+#     target_name=DEFAULT_BOILING_HEAT_FLUX_TARGET,
 #     filter_target=BOILING_OUTLIER_FILTER
 # )
 
 # plot_dataset_targets(
 #     BOILING_INDIRECT_DATASETS,
-#     target_name=BOILING_HEAT_FLUX_TARGET,
+#     target_name=DEFAULT_BOILING_HEAT_FLUX_TARGET,
 #     filter_target=BOILING_OUTLIER_FILTER
 # )
 
@@ -752,7 +587,7 @@ PREFETCH = 1024 * 4
 #         if not col:
 #             ax.set_ylabel(f"Dataset {row + 1}")
 
-#         ax.set_xlabel(f"{data[BOILING_HEAT_FLUX_TARGET]:.2f}W/cm² (#{data['index']})")
+#         ax.set_xlabel(f"{data[DEFAULT_BOILING_HEAT_FLUX_TARGET]:.2f}W/cm² (#{data['index']})")
 #         ax.imshow(frame.squeeze(), cmap="gray")
 #         ax.grid(False)
 
@@ -900,7 +735,7 @@ for retrain_index in range(NUMBER_OF_RETRAINS):
             compiled_model,
             baseline_boiling_dataset_direct,
             fit_model_params,
-            target=BOILING_HEAT_FLUX_TARGET,
+            target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
             try_id=retrain_index,
         )
     print(model)
@@ -952,7 +787,7 @@ fit_model_params = FitModelParams(
 
 with strategy_scope(strategy):
     model = fit_boiling_model(
-        compiled_model, DATASET, fit_model_params, target=BOILING_HEAT_FLUX_TARGET
+        compiled_model, DATASET, fit_model_params, target=DEFAULT_BOILING_HEAT_FLUX_TARGET
     )
 pprint(model)
 logger.info('Done')
@@ -968,14 +803,14 @@ logger.info('Analyzing learning curve')
 ds_evaluation_direct = to_tensorflow(
     baseline_boiling_dataset_direct | subset('val'),
     batch_size=BOILING_BASELINE_BATCH_SIZE,
-    target=BOILING_HEAT_FLUX_TARGET,
+    target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
     experiment='boiling1d',
 )
 
 ds_evaluation_indirect = to_tensorflow(
     baseline_boiling_dataset_indirect | subset('val'),
     batch_size=BOILING_BASELINE_BATCH_SIZE,
-    target=BOILING_HEAT_FLUX_TARGET,
+    target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
     experiment='boiling1d',
 )
 
@@ -1003,7 +838,10 @@ def boiling_learning_curve_point(
     logger.info('Training...')
 
     model = fit_boiling_model(
-        compiled_model, datasets, get_baseline_fit_params(), target=BOILING_HEAT_FLUX_TARGET
+        compiled_model,
+        datasets,
+        get_baseline_fit_params(),
+        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
     )
 
     logger.info(f'Evaluating: {fraction}')
@@ -1055,7 +893,7 @@ console.print(learning_curve_analysis)
 
 regular_wire_best_model_direct_visualization = autofit_to_dataset(
     baseline_boiling_dataset_direct,
-    target=BOILING_HEAT_FLUX_TARGET,
+    target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
     normalize_images=True,
     max_model_size=baseline_boiling_model_direct_size,
     goal=None,
@@ -1066,7 +904,7 @@ print(regular_wire_best_model_direct_visualization)
 
 regular_wire_best_model_indirect_visualization = autofit_to_dataset(
     baseline_boiling_dataset_indirect,
-    target=BOILING_HEAT_FLUX_TARGET,
+    target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
     normalize_images=True,
     max_model_size=baseline_boiling_model_indirect_size,
     goal=None,
@@ -1085,7 +923,7 @@ regular_wire_best_model_direct_visualization_less_data = autofit_to_dataset(
     LazyDescribed.from_value_and_description(
         (ds_train(), ds_val(), None), (ds_train, ds_val, None)
     ),
-    target=BOILING_HEAT_FLUX_TARGET,
+    target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
     normalize_images=True,
     max_model_size=baseline_boiling_model_indirect_size,
     goal=None,
@@ -1146,7 +984,7 @@ print(regular_wire_best_model_direct_visualization_less_data)
 #     hypermodel,
 #     datasets=BOILING_DIRECT_DATASETS[1],
 #     params=tune_model_params,
-#     target=BOILING_HEAT_FLUX_TARGET,
+#     target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
 # )
 # print(regular_wire_best_model)
 
@@ -1189,7 +1027,7 @@ def boiling_cross_surface_evaluation(
         compiled_model,
         training_dataset,
         get_baseline_fit_params(),
-        target=BOILING_HEAT_FLUX_TARGET,
+        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
     )
 
     logger.info('Evaluating')
@@ -1199,7 +1037,7 @@ def boiling_cross_surface_evaluation(
     ds_evaluation_val = to_tensorflow(
         evaluation_dataset | subset('val'),
         batch_size=BOILING_BASELINE_BATCH_SIZE,
-        target=BOILING_HEAT_FLUX_TARGET,
+        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
         experiment='boiling1d',
     )
 
@@ -1302,7 +1140,7 @@ for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
 
 #     tune_model_return: TuneModelReturn = autofit_to_dataset(
 #         training_dataset,
-#         target=BOILING_HEAT_FLUX_TARGET,
+#         target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
 #         normalize_images=True,
 #         max_model_size=baseline_boiling_model_direct_size,
 #         goal=None,
@@ -1315,7 +1153,7 @@ for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
 #     ds_evaluation_val = to_tensorflow(
 #         evaluation_dataset | subset('val'),
 #         batch_size=BOILING_BASELINE_BATCH_SIZE,
-#         target=BOILING_HEAT_FLUX_TARGET,
+#         target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
 #     )
 
 #     evaluation = tune_model_return.model.evaluate(ds_evaluation_val())
@@ -1434,7 +1272,7 @@ assert False, 'STOP!'
 #     datasets,
 #     batch_size=BOILING_BASELINE_BATCH_SIZE,
 #     include_test=False,
-#     target=BOILING_HEAT_FLUX_TARGET,
+#     target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
 # )
 # ds_train = ds_train.unbatch().prefetch(tf.data.AUTOTUNE)
 # ds_val = ds_val.unbatch().prefetch(tf.data.AUTOTUNE)
@@ -1499,7 +1337,7 @@ assert False, 'STOP!'
 #     datasets,
 #     batch_size=BOILING_BASELINE_BATCH_SIZE,
 #     include_test=False,
-#     target=BOILING_HEAT_FLUX_TARGET
+#     target=DEFAULT_BOILING_HEAT_FLUX_TARGET
 # )
 # ds_train = ds_train.unbatch().prefetch(tf.data.AUTOTUNE)
 # ds_val = ds_val.unbatch().prefetch(tf.data.AUTOTUNE)
