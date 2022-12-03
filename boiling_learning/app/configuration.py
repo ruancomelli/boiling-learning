@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 from pathlib import Path
 from typing import Literal, Optional
@@ -23,6 +24,7 @@ def configure(
     require_gpu: bool = False,
     nvidia_output: Optional[str] = None,
 ) -> LazyDescribed[tf.distribute.Strategy]:
+    _configure_random_state()
     _configure_logger()
     _configure_gpu_growth(force_gpu_allow_growth)
     strategy: tf.distribute.Strategy = _configure_gpu(
@@ -42,6 +44,10 @@ def configure(
     strategy_description: str = describe(lazy_strategy)  # type: ignore[arg-type]
     logger.info(f'Using distribute strategy: {strategy_description}')
     return lazy_strategy
+
+
+def _configure_random_state() -> None:
+    random.seed(1997)
 
 
 def _configure_logger() -> None:
