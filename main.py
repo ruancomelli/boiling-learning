@@ -1,5 +1,4 @@
 import itertools
-from dataclasses import replace
 from fractions import Fraction
 from operator import itemgetter
 from pprint import pprint
@@ -12,9 +11,10 @@ from loguru import logger
 from rich.console import Console
 from rich.table import Table
 
+from boiling_learning.app.automl.tuning import autofit
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
-from boiling_learning.app.datasets.bridging import to_tensorflow, to_tensorflow_triplet
+from boiling_learning.app.datasets.bridging import to_tensorflow
 from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
 from boiling_learning.app.datasets.preprocessed.condensation import condensation_dataset
 from boiling_learning.app.datasets.raw.boiling1d import boiling_data_path
@@ -28,24 +28,21 @@ from boiling_learning.app.training.boiling1d import (
     fit_boiling_model,
 )
 from boiling_learning.app.training.condensation import fit_condensation_model
-from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
+from boiling_learning.automl.hypermodels import ConvImageRegressor
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
-from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn, fit_hypermodel
-from boiling_learning.datasets.datasets import DatasetTriplet
+from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn
 from boiling_learning.datasets.sliceable import map_targets, targets
 from boiling_learning.image_datasets import ImageDatasetTriplet, Targets
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import cache
-from boiling_learning.model.callbacks import MemoryCleanUp
 from boiling_learning.model.definitions import hoboldnet2
-from boiling_learning.model.model import ModelArchitecture, rename_model_layers
+from boiling_learning.model.model import ModelArchitecture
 from boiling_learning.model.training import (
     CompileModelParams,
     FitModelParams,
     FitModelReturn,
     compile_model,
-    load_with_strategy,
     strategy_scope,
 )
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
@@ -104,44 +101,6 @@ logger.info('Succesfully checked paths')
 condensation_dataset_train, _, _ = condensation_dataset()()
 print(mit.ilen(condensation_dataset_train[::60].prefetch(128 * 2)))
 assert False, 'STOP!'
-
-
-@cache(
-    allocator=JSONAllocator(analyses_path() / 'autofit' / 'models'),
-    exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
-    loader=load_with_strategy(strategy),
-)
-def autofit(
-    hypermodel: HyperModel,
-    datasets: LazyDescribed[ImageDatasetTriplet],
-    params: TuneModelParams,
-    target: str,
-    experiment: Literal['boiling1d', 'condensation'],
-) -> TuneModelReturn:
-    ds_train, ds_val, ds_test = to_tensorflow_triplet(
-        datasets,
-        batch_size=params.batch_size,
-        include_test=False,
-        target=target,
-        experiment=experiment,
-    )
-
-    if not any(isinstance(callback, MemoryCleanUp) for callback in params.callbacks()):
-        params.callbacks().append(MemoryCleanUp())
-
-    tuned_model = fit_hypermodel(
-        hypermodel,
-        DatasetTriplet(
-            ds_train().unbatch().prefetch(tf.data.AUTOTUNE),
-            ds_val().unbatch().prefetch(tf.data.AUTOTUNE),
-            ds_test(),
-        ),
-        params,
-    )
-
-    tuned_model = replace(tuned_model, model=rename_model_layers(tuned_model.model))
-
-    return tuned_model
 
 
 """### Baseline on-wire pool boiling"""

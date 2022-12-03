@@ -21,7 +21,7 @@ class TuneModelReturn:
 
 def fit_hypermodel(
     hypermodel: HyperModel, datasets: DatasetTriplet[tf.data.Dataset], params: TuneModelParams
-) -> ModelArchitecture:
+) -> TuneModelReturn:
     ds_train, ds_val, _ = datasets
 
     automodel = hypermodel.automodel
