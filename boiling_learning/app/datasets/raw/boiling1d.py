@@ -68,7 +68,6 @@ def _set_boiling_case_data(case: Case, /) -> Case:
 
 def _set_experiment_video_data(ev: ExperimentVideo, df: pd.DataFrame) -> None:
     ev.df = ev.sync_time_series(df)
-    ev.make_dataframe(enforce_time=True, inplace=True)
     check_experiment_video_dataframe_indices(ev)
     ev.df = _regularize_experiment_video_dataframe(ev)
     ev.save_df()
