@@ -233,12 +233,9 @@ class ExperimentVideo:
             pd.read_csv(self.df_path, skipinitialspace=True),
         )
 
-    def save_df(self) -> None:
-        if self.df is None:
-            raise ValueError('`df` is not defined')
-
+    def save_df(self, df: pd.DataFrame, /) -> None:
         path = resolve(self.df_path, parents=True)
-        self.df.to_csv(path, index=False)
+        df.to_csv(path, index=False)
 
     def targets(self) -> pd.DataFrame:
         assert self.data is not None

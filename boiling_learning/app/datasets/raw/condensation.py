@@ -175,7 +175,7 @@ def _make_dataframe(dataset: ExperimentVideoDataset) -> None:
 
         check_experiment_video_dataframe_indices(ev)
 
-        ev.save_df()
+        ev.save_df(ev.df)
 
 
 def _group_datasets(

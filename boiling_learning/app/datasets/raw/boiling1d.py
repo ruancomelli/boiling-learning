@@ -70,7 +70,7 @@ def _set_experiment_video_data(ev: ExperimentVideo, df: pd.DataFrame) -> None:
     ev.df = ev.sync_time_series(df)
     check_experiment_video_dataframe_indices(ev)
     ev.df = _regularize_experiment_video_dataframe(ev)
-    ev.save_df()
+    ev.save_df(ev.df)
 
 
 def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> pd.DataFrame:
