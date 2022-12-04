@@ -35,12 +35,16 @@ def to_tensorflow(
             prefilterer is None or prefilterer()(image, targets)
         )
 
-    save_path = _training_datasets_allocator(experiment).allocate(dataset, prefilterer)
-
-    logger.debug(f'Converting dataset to TF and saving to {save_path}')
-
     if shuffle is True:
         dataset_value = dataset_value.shuffle()
+
+    save_path = _training_datasets_allocator(experiment).allocate(
+        dataset,
+        prefilterer,
+        shuffle,
+    )
+
+    logger.debug(f'Converting dataset to TF and saving to {save_path}')
 
     tf_dataset = sliceable_dataset_to_tensorflow_dataset(
         dataset_value,

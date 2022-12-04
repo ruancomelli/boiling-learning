@@ -39,18 +39,17 @@ def get_image_dataset(
     ds_train_list = []
     ds_val_list = []
     ds_test_list = []
-    for video in sorted(image_dataset, key=lambda ev: ev.name):
-        if video.name in purged_experiment_videos:
-            dataset = _sliceable_dataset_from_video_and_transformers(
-                video,
-                transformers,
-                experiment=experiment,
-            )
-            ev_train, ev_val, ev_test = dataset.split(splits.train, splits.val, splits.test)
+    for video in purged_experiment_videos:
+        dataset = _sliceable_dataset_from_video_and_transformers(
+            video,
+            transformers,
+            experiment=experiment,
+        )
+        ev_train, ev_val, ev_test = dataset.split(splits.train, splits.val, splits.test)
 
-            ds_train_list.append(ev_train)
-            ds_val_list.append(ev_val)
-            ds_test_list.append(ev_test)
+        ds_train_list.append(ev_train)
+        ds_val_list.append(ev_val)
+        ds_test_list.append(ev_test)
 
     # TODO: re-add memory caching here
     ds_train = SliceableDataset.concatenate(*ds_train_list)  # .cache(MemoryCache())
@@ -83,10 +82,17 @@ def compile_transformers(
 
 def _experiment_video_purger(
     *, experiment: Literal['boiling1d', 'condensation']
-) -> Callable[[ExperimentVideoDataset], list[str]]:
+) -> Callable[[ExperimentVideoDataset], list[ExperimentVideo]]:
     @cache(JSONAllocator(analyses_path() / 'cache' / 'purged-experiment-videos' / experiment))
-    def _purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]:
+    def _purged_experiment_video_names(image_dataset: ExperimentVideoDataset) -> list[str]:
         return [video.name for video in tuple(image_dataset) if video.data is not None]
+
+    def _purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[ExperimentVideo]:
+        purged_experiment_video_names = frozenset(_purged_experiment_video_names(image_dataset))
+        return sorted(
+            (video for video in image_dataset if video.name in purged_experiment_video_names),
+            key=lambda ev: ev.name,
+        )
 
     return _purge_experiment_videos
 
