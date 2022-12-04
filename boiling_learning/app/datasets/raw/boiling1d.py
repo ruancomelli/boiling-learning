@@ -71,7 +71,7 @@ def _set_experiment_video_data(ev: ExperimentVideo, df: pd.DataFrame) -> None:
     ev.make_dataframe(enforce_time=True, inplace=True)
     check_experiment_video_dataframe_indices(ev)
     ev.df = _regularize_experiment_video_dataframe(ev)
-    ev.save_df(overwrite=False)
+    ev.save_df()
 
 
 def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> pd.DataFrame:

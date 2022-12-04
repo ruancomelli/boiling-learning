@@ -245,14 +245,12 @@ class ExperimentVideo:
 
         return df
 
-    def save_df(self, overwrite: bool = False) -> None:
+    def save_df(self) -> None:
         if self.df is None:
             raise ValueError('`df` is not defined')
 
         path = resolve(self.df_path, parents=True)
-
-        if overwrite or not path.is_file():
-            self.df.to_csv(path, index=False)
+        self.df.to_csv(path, index=False)
 
     def targets(self) -> pd.DataFrame:
         df = self.make_dataframe()
