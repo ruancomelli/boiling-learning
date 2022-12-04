@@ -282,7 +282,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
 
         return tuple(splits)
 
-    def prefetch(self, buffer_size: Optional[int]) -> PrefetchedDataset[_T]:
+    def prefetch(self, buffer_size: int | None = None) -> PrefetchedDataset[_T]:
         return PrefetchedDataset(self, buffer_size)
 
     def batch(self, batch_size: int) -> BatchSliceableDataset[_T]:
