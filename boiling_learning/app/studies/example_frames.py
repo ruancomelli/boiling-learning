@@ -24,7 +24,6 @@ app = typer.Typer()
 def boiling1d(
     number_of_columns: int = typer.Option(4),
     direct: bool = typer.Option(..., '--direct/--indirect'),
-    output_path: Path = typer.Option(Path('example.png'), '--output-path'),
 ) -> None:
     logger.debug(f"Displaying {'directly' if direct else 'indirectly'} visualized boiling frames")
 
@@ -34,7 +33,9 @@ def boiling1d(
     preprocessors = default_boiling_preprocessors(direct_visualization=direct)
 
     fig, axs = plt.subplots(
-        number_of_rows, number_of_columns, figsize=(number_of_columns * 8, number_of_rows * 8)
+        number_of_rows,
+        number_of_columns,
+        figsize=(number_of_columns * 8, number_of_rows * 8),
     )
 
     index = 0
@@ -61,8 +62,10 @@ def boiling1d(
 
             index += 1
 
-    if not output_path.is_absolute():
-        output_path = _example_frames_study_path() / 'frames' / output_path
+    output_path = resolve(
+        _example_frames_figures_path() / f"boiling1d-{'direct' if direct else 'indirect'}.png",
+        parents=True,
+    )
 
     logger.debug(f'Saving figure to {output_path}')
     fig.savefig(resolve(output_path, parents=True))
@@ -71,18 +74,25 @@ def boiling1d(
 @app.command()
 def condensation(
     number_of_columns: int = typer.Option(4),
-    output_path: Path = typer.Option(Path('example.png'), '--output-path'),
 ) -> None:
     raise NotImplementedError
 
 
 @functools.cache
 def _first_frame_getter() -> Callable[[ExperimentVideo], Image]:
-    @cache(JSONAllocator(_example_frames_study_path() / 'cache'))
+    @cache(JSONAllocator(_frames_cache_path()))
     def _get_first_frame(ev: ExperimentVideo) -> Image:
         return ev.frames()[0]
 
     return _get_first_frame
+
+
+def _example_frames_figures_path() -> Path:
+    return _example_frames_study_path() / 'frames'
+
+
+def _frames_cache_path() -> Path:
+    return _example_frames_study_path() / 'cache'
 
 
 def _example_frames_study_path() -> Path:
