@@ -8,7 +8,6 @@ import modin.pandas as pd
 import numpy as np
 
 from boiling_learning.app import options
-from boiling_learning.app.datasets.raw.boiling1d import boiling_cases
 from boiling_learning.app.paths import analyses_path
 from boiling_learning.datasets.cache import NumpyCache
 from boiling_learning.datasets.datasets import DatasetSplits, DatasetTriplet
@@ -21,7 +20,6 @@ from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.preprocessing.transformers import Transformer
-from boiling_learning.scripts import set_boiling_cases_data
 from boiling_learning.transforms import map_transformers
 
 
@@ -88,24 +86,9 @@ def _experiment_video_purger(
 ) -> Callable[[ExperimentVideoDataset], list[str]]:
     @cache(JSONAllocator(analyses_path() / 'cache' / 'purged-experiment-videos' / experiment))
     def _purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]:
-        return [
-            video.name
-            for video in tuple(image_dataset)
-            if _ensure_data_is_set(video, experiment=experiment)
-        ]
+        return [video.name for video in tuple(image_dataset) if video.data is not None]
 
     return _purge_experiment_videos
-
-
-def _ensure_data_is_set(
-    video: ExperimentVideo,
-    experiment: Literal['boiling1d', 'condensation'],
-) -> bool:
-    if video.data is None and experiment == 'boiling1d':
-        case = next(case() for case in boiling_cases() if video in case())
-        set_boiling_cases_data.main(case)
-
-    return video.data is not None
 
 
 def _sliceable_dataset_from_video_and_transformers(
@@ -114,7 +97,6 @@ def _sliceable_dataset_from_video_and_transformers(
     *,
     experiment: Literal['boiling1d', 'condensation'],
 ) -> ImageDataset:
-    _ensure_data_is_set(ev, experiment=experiment)
     video = _video_dataset_from_video_and_transformers(ev, transformers, experiment=experiment)
     targets = _target_dataset_from_video(ev, experiment=experiment)
 
