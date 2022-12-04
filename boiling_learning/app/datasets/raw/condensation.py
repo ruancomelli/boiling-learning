@@ -162,7 +162,7 @@ def _make_dataframe(dataset: ExperimentVideoDataset) -> None:
     for ev in dataset:
         try:
             logger.debug(f'Trying to load data for {ev.name}')
-            ev.load_df(overwrite=False, inplace=True)
+            ev.df = ev.load_df(overwrite=False)
             logger.debug(f'Succesfully loaded data for {ev.name}')
         except FileNotFoundError:
             logger.debug(f'Failed to load data for {ev.name}')

@@ -1,4 +1,5 @@
 import contextlib
+import typing
 from collections.abc import Iterable
 from datetime import timedelta
 from pathlib import Path
@@ -219,7 +220,7 @@ class ExperimentVideo:
 
         return df
 
-    def load_df(self, overwrite: bool = False, inplace: bool = True) -> pd.DataFrame:
+    def load_df(self, overwrite: bool = False) -> pd.DataFrame:
         logger.debug(
             f'Loading dataframe for experiment video {self.name} from file {self.df_path}'
         )
@@ -227,12 +228,10 @@ class ExperimentVideo:
         if not overwrite and self.df is not None:
             return self.df
 
-        df: pd.DataFrame = pd.read_csv(self.df_path, skipinitialspace=True)
-
-        if inplace:
-            self.df = df
-
-        return df
+        return typing.cast(
+            pd.DataFrame,
+            pd.read_csv(self.df_path, skipinitialspace=True),
+        )
 
     def save_df(self) -> None:
         if self.df is None:
