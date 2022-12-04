@@ -169,19 +169,14 @@ class ExperimentVideo:
         dest_path = resolve(dest_path, parents=True)
         convert_video(self.path, dest_path, overwrite=overwrite)
 
-    def make_dataframe(
-        self,
-        *,
-        enforce_time: bool = False,
-        inplace: bool = True,
-    ) -> pd.DataFrame:
+    def make_dataframe(self, *, enforce_time: bool = False) -> pd.DataFrame:
         if self.df is not None:
             return self.df
 
         if self.data is None:
             raise ValueError('cannot convert to DataFrame. Video data must be previously set.')
 
-        indices = range(len(self))
+        indices = range(len(self.frames()))
 
         data = {
             **self.data.categories,
@@ -210,9 +205,6 @@ class ExperimentVideo:
 
         df = pd.DataFrame(data)
         df = _convert_dataframe_type(df, self.data.categories)
-
-        if inplace:
-            self.df = df
 
         return df
 
@@ -250,9 +242,9 @@ class ExperimentVideo:
         self.df.to_csv(path, index=False)
 
     def targets(self) -> pd.DataFrame:
-        df = self.make_dataframe()
-
         assert self.data is not None
+
+        df = self.make_dataframe()
         df = _convert_dataframe_type(df, self.data.categories)
         df.sort_values(by=_COLUMN_NAMES.index, inplace=True)
 

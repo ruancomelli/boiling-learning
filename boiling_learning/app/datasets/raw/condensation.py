@@ -171,7 +171,7 @@ def _make_dataframe(dataset: ExperimentVideoDataset) -> None:
     for ev in missing:
         logger.debug(f'Making dataframe for {ev.name}')
 
-        ev.make_dataframe(enforce_time=True, inplace=True)
+        ev.df = ev.make_dataframe(enforce_time=True)
 
         check_experiment_video_dataframe_indices(ev)
 
