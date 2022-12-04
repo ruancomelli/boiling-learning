@@ -216,17 +216,14 @@ class ExperimentVideo:
 
         return df
 
-    def sync_time_series(self, source_df: pd.DataFrame, inplace: bool = True) -> pd.DataFrame:
-        df = self.make_dataframe(enforce_time=True, inplace=inplace)
+    def sync_time_series(self, source_df: pd.DataFrame) -> pd.DataFrame:
+        df = self.make_dataframe(enforce_time=True)
 
         df = _sync_dataframes(
             source_df=source_df,
             dest_df=df,
             dest_time_column=_COLUMN_NAMES.elapsed_time,
         )
-
-        if inplace:
-            self.df = df
 
         return df
 
