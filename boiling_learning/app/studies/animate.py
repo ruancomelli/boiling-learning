@@ -9,7 +9,11 @@ from boiling_learning.visualization.video import save_as_video
 PREFETCH_BUFFER_SIZE = 256
 
 
-def animate(
+app = typer.Typer()
+
+
+@app.command()
+def boiling1d(
     direct: bool = typer.Option(..., '--direct/--indirect'),
     each: int = typer.Option(60),
     fps: int = typer.Option(30),
@@ -28,6 +32,13 @@ def animate(
                     display_data={'index': 'Index', 'Flux [W/cm**2]': 'Flux [W/cm²]'},
                     fps=fps,
                 )
+
+
+@app.command()
+def condensation(
+    fps: int = typer.Option(30),
+) -> None:
+    raise NotImplementedError
 
 
 def _animations_path() -> Path:

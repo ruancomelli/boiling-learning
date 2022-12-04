@@ -1,13 +1,11 @@
 import typer
 
-from boiling_learning.app.studies.animate import animate
-from boiling_learning.app.studies.display_example_frames import display_example_frames
-from boiling_learning.app.studies.validation import validate
+from boiling_learning.app.studies import animate, example_frames, validate
 
 app = typer.Typer()
-app.command()(animate)
-app.command()(display_example_frames)
-app.command()(validate)
+app.add_typer(animate.app, name='animate')
+app.add_typer(example_frames.app, name='example-frames')
+app.add_typer(validate.app, name='validate')
 
 
 if __name__ == '__main__':

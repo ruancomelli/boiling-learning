@@ -17,8 +17,11 @@ from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.utils.pathutils import resolve
 
+app = typer.Typer()
 
-def display_example_frames(
+
+@app.command()
+def boiling1d(
     number_of_columns: int = typer.Option(4),
     direct: bool = typer.Option(..., '--direct/--indirect'),
     output_path: Path = typer.Option(Path('example.png'), '--output-path'),
@@ -63,6 +66,14 @@ def display_example_frames(
 
     logger.debug(f'Saving figure to {output_path}')
     fig.savefig(resolve(output_path, parents=True))
+
+
+@app.command()
+def condensation(
+    number_of_columns: int = typer.Option(4),
+    output_path: Path = typer.Option(Path('example.png'), '--output-path'),
+) -> None:
+    raise NotImplementedError
 
 
 @functools.cache

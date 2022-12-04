@@ -8,7 +8,8 @@ app = typer.Typer()
 console = rich.console.Console()
 
 
-def validate(
+@app.command()
+def boiling1d(
     direct: bool = typer.Option(..., '--direct/--indirect'),
     normalize: bool = typer.Option(...),
 ) -> None:
@@ -28,3 +29,8 @@ def validate(
     )
 
     console.print(model.evaluation)
+
+
+@app.command()
+def condensation() -> None:
+    raise NotImplementedError
