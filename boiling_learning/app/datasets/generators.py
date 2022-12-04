@@ -86,7 +86,7 @@ def compile_transformers(
 def _experiment_video_purger(
     *, experiment: Literal['boiling1d', 'condensation']
 ) -> Callable[[ExperimentVideoDataset], list[str]]:
-    @cache(JSONAllocator(analyses_path() / 'cache' / 'purged-experiment-videos'))
+    @cache(JSONAllocator(analyses_path() / 'cache' / 'purged-experiment-videos' / experiment))
     def _purge_experiment_videos(image_dataset: ExperimentVideoDataset) -> list[str]:
         return [
             video.name

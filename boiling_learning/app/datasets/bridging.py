@@ -121,10 +121,7 @@ def to_tensorflow_triplet(
 def _training_datasets_allocator(
     experiment: Literal['boiling1d', 'condensation']
 ) -> JSONAllocator:
-    return {
-        'boiling1d': JSONAllocator(analyses_path() / 'datasets' / 'training' / 'boiling'),
-        'condensation': JSONAllocator(analyses_path() / 'datasets' / 'training' / 'condensation'),
-    }[experiment]
+    return JSONAllocator(analyses_path() / 'datasets' / 'training' / experiment)
 
 
 def _default_filter_for_frames_dataset(
