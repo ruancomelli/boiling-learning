@@ -1,6 +1,7 @@
 import typing
+from collections.abc import Callable, Mapping
 from dataclasses import asdict, field, fields, is_dataclass
-from typing import Any, Callable, Mapping, Optional, Type, TypeGuard, TypeVar, Union
+from typing import Any, Protocol, TypeGuard, TypeVar
 
 __all__ = (
     'asdict',
@@ -11,11 +12,15 @@ __all__ = (
     'is_dataclass_instance',
 )
 
-DataClass = Any
+
+class DataClass(Protocol):
+    __dataclass_fields__: dict[str, Any]
+
+
 _DataClass = TypeVar('_DataClass', bound=DataClass)
 
 
-def is_dataclass_class(obj: Any) -> TypeGuard[Type[DataClass]]:
+def is_dataclass_class(obj: Any) -> TypeGuard[type[DataClass]]:
     return isinstance(obj, type) and is_dataclass(obj)
 
 
@@ -26,7 +31,7 @@ def is_dataclass_instance(obj: Any) -> TypeGuard[DataClass]:
 def dataclass_from_mapping(
     mapping: Mapping[str, Any],
     dataclass_factory: Callable[..., _DataClass],
-    key_map: Optional[Union[DataClass, Mapping[str, str]]] = None,
+    key_map: DataClass | Mapping[str, str] | None = None,
 ) -> _DataClass:
     if not is_dataclass_class(dataclass_factory):
         raise ValueError('*dataclass_factory* must be a dataclass.')

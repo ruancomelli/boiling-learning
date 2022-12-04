@@ -9,13 +9,13 @@ from typing import Any, Callable, Type, TypeVar, final
 
 from classes import AssociatedType, Supports, typeclass
 
-from boiling_learning.io import json
-from boiling_learning.utils.dataclasses import (
+from boiling_learning.dataclasses import (
     DataClass,
     is_dataclass_class,
     is_dataclass_instance,
     shallow_asdict,
 )
+from boiling_learning.io import json
 from boiling_learning.utils.pathutils import PathLike, resolve
 from boiling_learning.utils.table_dispatch import TableDispatcher
 

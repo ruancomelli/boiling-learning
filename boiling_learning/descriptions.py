@@ -7,7 +7,7 @@ from typing import Any, Generic, Protocol, Type, TypeVar, Union, final, runtime_
 from classes import AssociatedType, Supports, typeclass
 from frozendict import frozendict  # type: ignore[attr-defined]
 
-from boiling_learning.utils.dataclasses import is_dataclass_instance, shallow_asdict
+from boiling_learning.dataclasses import is_dataclass_instance, shallow_asdict
 
 _AnyType = TypeVar('_AnyType', bound=Type[Any])
 _Description = TypeVar('_Description')

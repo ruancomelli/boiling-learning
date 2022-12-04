@@ -12,7 +12,7 @@ from typing import Any, Optional, Protocol, TypedDict, TypeVar, Union, runtime_c
 from classes import AssociatedType, Supports, typeclass
 from frozendict import frozendict  # type: ignore[attr-defined]
 
-from boiling_learning.utils.dataclasses import is_dataclass_instance, shallow_asdict
+from boiling_learning.dataclasses import is_dataclass_instance, shallow_asdict
 from boiling_learning.utils.functional import P, Pack
 from boiling_learning.utils.pathutils import PathLike, resolve
 from boiling_learning.utils.table_dispatch import TableDispatcher
