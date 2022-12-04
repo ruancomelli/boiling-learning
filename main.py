@@ -2,7 +2,6 @@ import itertools
 from fractions import Fraction
 from operator import itemgetter
 from pprint import pprint
-from typing import Literal, Optional
 
 import more_itertools as mit
 import tensorflow as tf
@@ -10,7 +9,7 @@ from loguru import logger
 from rich.console import Console
 from rich.table import Table
 
-from boiling_learning.app.automl.tuning import autofit
+from boiling_learning.app.automl.autofit_dataset import autofit_dataset
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
 from boiling_learning.app.datasets.bridging import to_tensorflow
@@ -33,11 +32,8 @@ from boiling_learning.app.training.common import (
     get_baseline_fit_params,
 )
 from boiling_learning.app.training.condensation import fit_condensation_model
-from boiling_learning.automl.hypermodels import ConvImageRegressor
-from boiling_learning.automl.tuners import EarlyStoppingGreedy
-from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn
 from boiling_learning.datasets.sliceable import map_targets, targets
-from boiling_learning.image_datasets import ImageDatasetTriplet, Targets
+from boiling_learning.image_datasets import Targets
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import cache
@@ -170,69 +166,6 @@ pretrained_baseline_boiling_model_architecture_indirect = get_pretrained_baselin
     normalize_images=False,
     strategy=strategy,
 )
-
-
-_autofit_to_dataset_allocator = JSONAllocator(analyses_path() / 'autofit' / 'autofit-to-dataset')
-
-
-def autofit_to_dataset(
-    datasets: LazyDescribed[ImageDatasetTriplet],
-    *,
-    target: str,
-    experiment: Literal['boiling1d', 'condensation'],
-    normalize_images: bool = True,
-    max_model_size: Optional[int] = None,
-    goal: Optional[float] = None,
-) -> TuneModelReturn:
-    compile_params = get_baseline_compile_params(strategy=strategy)
-
-    hypermodel = ConvImageRegressor(
-        loss=compile_params.loss,
-        metrics=compile_params.metrics,
-        tuner=EarlyStoppingGreedy,
-        directory=_autofit_to_dataset_allocator.allocate(
-            ConvImageRegressor,
-            datasets,
-            tuner=EarlyStoppingGreedy,
-            loss=compile_params.loss,
-            metrics=compile_params.metrics,
-            normalize_images=normalize_images,
-            max_model_size=max_model_size,
-            goal=goal,
-        ),
-        max_model_size=max_model_size,
-        strategy=strategy,
-        normalize_images=normalize_images,
-        goal=goal,
-    )
-
-    tune_model_params = TuneModelParams(
-        batch_size=32,
-        callbacks=LazyDescribed.from_list(
-            [
-                LazyDescribed.from_constructor(tf.keras.callbacks.TerminateOnNaN),
-                LazyDescribed.from_constructor(
-                    tf.keras.callbacks.EarlyStopping,
-                    monitor='val_loss',
-                    min_delta=0,
-                    patience=10,
-                    baseline=None,
-                    mode='auto',
-                    restore_best_weights=True,
-                    verbose=1,
-                ),
-            ]
-        ),
-    )
-
-    return autofit(
-        hypermodel,
-        datasets=datasets,
-        params=tune_model_params,
-        target=target,
-        experiment=experiment,
-        strategy=strategy,
-    )
 
 
 """## Pre-processing analyses"""
@@ -787,7 +720,7 @@ console.print(learning_curve_analysis)
 
 """#### Auto ML"""
 
-regular_wire_best_model_direct_visualization = autofit_to_dataset(
+regular_wire_best_model_direct_visualization = autofit_dataset(
     baseline_boiling_dataset_direct,
     target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
     normalize_images=True,
@@ -798,7 +731,7 @@ regular_wire_best_model_direct_visualization = autofit_to_dataset(
 
 print(regular_wire_best_model_direct_visualization)
 
-regular_wire_best_model_indirect_visualization = autofit_to_dataset(
+regular_wire_best_model_indirect_visualization = autofit_dataset(
     baseline_boiling_dataset_indirect,
     target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
     normalize_images=True,
@@ -815,7 +748,7 @@ print(regular_wire_best_model_indirect_visualization)
 ds_train = baseline_boiling_dataset_direct | dataset_sampler(Fraction(1, 100)) | subset('train')
 ds_val = baseline_boiling_dataset_direct | subset('val')
 
-regular_wire_best_model_direct_visualization_less_data = autofit_to_dataset(
+regular_wire_best_model_direct_visualization_less_data = autofit_dataset(
     LazyDescribed.from_value_and_description(
         (ds_train(), ds_val(), None), (ds_train, ds_val, None)
     ),

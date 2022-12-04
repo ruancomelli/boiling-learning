@@ -30,15 +30,15 @@ def _set_experiment_video_data(ev: ExperimentVideo, df: pd.DataFrame) -> None:
     ev.sync_time_series(df, inplace=True)
     ev.make_dataframe(enforce_time=True, inplace=True)
     check_experiment_video_dataframe_indices(ev)
-    _regularize_experiment_video_dataframe(ev)
+    ev.df = _regularize_experiment_video_dataframe(ev)
     ev.save_df(overwrite=False)
 
 
-def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> None:
+def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> pd.DataFrame:
     assert ev.df is not None
     assert ev.data is not None
 
-    ev.df = ev.df.drop(
+    df = ev.df.drop(
         columns=[
             'Time instant',
             'Flux [W/m^2]',
@@ -58,7 +58,9 @@ def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> None:
     full_heat_flux_key = add_unit_post_fix('Flux', heat_flux_unit)
 
     lateral_area = WIRE_SAMPLES[sample_id].lateral_area()
-    power = np.array(ev.df[full_power_key]) * power_unit
+    power = np.array(df[full_power_key]) * power_unit
     flux = power / lateral_area
 
-    ev.df[full_heat_flux_key] = flux.to(heat_flux_unit).magnitude
+    df[full_heat_flux_key] = flux.to(heat_flux_unit).magnitude
+
+    return df
