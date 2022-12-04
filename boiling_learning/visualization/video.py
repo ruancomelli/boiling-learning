@@ -93,9 +93,8 @@ def _annotate_image(
             for key, translated in display_data.items()
         )
     )
-    text = '\n'.join(display_items)
 
-    if text:
+    if text := '\n'.join(display_items):
         draw = ImageDraw.Draw(image)
         draw.text(absolute_text_position, text, fill=text_color)
 
