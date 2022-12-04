@@ -1,3 +1,4 @@
+from functools import cache
 from typing import Literal, Optional
 
 import tensorflow as tf
@@ -11,8 +12,6 @@ from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn
 from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
-
-_autofit_to_dataset_allocator = JSONAllocator(analyses_path() / 'autofit' / 'autofit-to-dataset')
 
 
 def autofit_dataset(
@@ -31,7 +30,7 @@ def autofit_dataset(
         loss=compile_params.loss,
         metrics=compile_params.metrics,
         tuner=EarlyStoppingGreedy,
-        directory=_autofit_to_dataset_allocator.allocate(
+        directory=_get_autofit_to_dataset_allocator(experiment).allocate(
             ConvImageRegressor,
             datasets,
             tuner=EarlyStoppingGreedy,
@@ -74,3 +73,11 @@ def autofit_dataset(
         experiment=experiment,
         strategy=strategy,
     )
+
+
+@cache
+def _get_autofit_to_dataset_allocator(
+    experiment: Literal['boiling1d', 'condensation'],
+    /,
+) -> JSONAllocator:
+    return JSONAllocator(analyses_path() / 'autofit' / 'autofit-to-dataset' / experiment)
