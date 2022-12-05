@@ -20,3 +20,10 @@ def boiling_datasets(
         )
         for case in boiling_cases()
     )
+
+
+def baseline_boiling_dataset(
+    *,
+    direct_visualization: bool,
+) -> LazyDescribed[ImageDatasetTriplet]:
+    return boiling_datasets(direct_visualization=direct_visualization)[0]

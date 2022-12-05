@@ -56,7 +56,7 @@ def sliceable_dataset_to_tensorflow_dataset(
             # TODO: now passing the typespec is optional... try removing it!
             ds = tf.data.Dataset.load(
                 str(save_path),
-                # auto_spec(dataset[0])
+                reader_func=_make_reader_func(deterministic=deterministic),
             )
         except FileNotFoundError:
             logger.debug(f'File does not exist: {save_path}')
@@ -66,7 +66,6 @@ def sliceable_dataset_to_tensorflow_dataset(
             ds.save(str(save_path))
             ds = tf.data.Dataset.load(
                 str(save_path),
-                # auto_spec(dataset[0]),
                 reader_func=_make_reader_func(deterministic=deterministic),
             )
 

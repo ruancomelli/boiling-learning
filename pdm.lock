@@ -1562,7 +1562,7 @@ dependencies = [
 ]
 
 [metadata]
-lock_version = "4.0"
+lock_version = "4.1"
 content_hash = "sha256:fec966af51207dc1bb3bff1dafc581cad8b2b4fe49f88692080eaeec03c47543"
 
 [metadata.files]

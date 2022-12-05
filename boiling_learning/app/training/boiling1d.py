@@ -3,7 +3,7 @@ from collections.abc import Callable
 import tensorflow as tf
 
 from boiling_learning.app.datasets.bridging import to_tensorflow, to_tensorflow_triplet
-from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
+from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
 from boiling_learning.app.training.common import (
     cached_fit_model_function,
     get_baseline_compile_params,
@@ -122,9 +122,9 @@ def get_baseline_boiling_architecture(
     direct_visualization: bool = True,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
-    baseline_boiling_dataset = boiling_datasets(direct_visualization=direct_visualization)[0]
+    dataset = baseline_boiling_dataset(direct_visualization=direct_visualization)
 
-    ds_train, _, _ = baseline_boiling_dataset()
+    ds_train, _, _ = dataset()
     first_frame, _ = ds_train[0]
 
     with strategy_scope(strategy):
@@ -148,7 +148,7 @@ def get_pretrained_baseline_boiling_model(
 
     return fit_boiling_model(
         compiled_model,
-        boiling_datasets(direct_visualization=direct_visualization)[0],
+        baseline_boiling_dataset(direct_visualization=direct_visualization),
         get_baseline_fit_params(),
         target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
         strategy=strategy,
