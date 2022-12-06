@@ -51,7 +51,6 @@ def _cached_autofit_function(
         ds_train, ds_val, ds_test = to_tensorflow_triplet(
             datasets,
             batch_size=params.batch_size,
-            include_test=False,
             target=target,
             experiment=experiment,
         )
@@ -64,7 +63,7 @@ def _cached_autofit_function(
             DatasetTriplet(
                 ds_train().unbatch().prefetch(tf.data.AUTOTUNE),
                 ds_val().unbatch().prefetch(tf.data.AUTOTUNE),
-                ds_test(),
+                ds_test().unbatch().prefetch(tf.data.AUTOTUNE),
             ),
             params,
         )

@@ -6,9 +6,12 @@ import tensorflow_addons as tfa
 
 from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
 from boiling_learning.app.paths import analyses_path
+from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import CachedFunction, Cacher
+from boiling_learning.model.definitions import hoboldnet2
+from boiling_learning.model.model import ModelArchitecture
 from boiling_learning.model.training import (
     CompileModelParams,
     FitModelParams,
@@ -72,3 +75,17 @@ def get_baseline_fit_params() -> FitModelParams:
             ]
         ),
     )
+
+
+def get_baseline_architecture(
+    dataset: LazyDescribed[ImageDatasetTriplet],
+    /,
+    *,
+    strategy: LazyDescribed[tf.distribute.Strategy],
+    normalize_images: bool = True,
+) -> ModelArchitecture:
+    ds_train, _, _ = dataset()
+    first_frame, _ = ds_train[0]
+
+    with strategy_scope(strategy):
+        return hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=normalize_images)

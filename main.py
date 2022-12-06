@@ -45,13 +45,7 @@ from boiling_learning.model.training import (
 )
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist
-from boiling_learning.transforms import (
-    dataset_sampler,
-    datasets_merger,
-    prefetcher,
-    slicer,
-    subset,
-)
+from boiling_learning.transforms import dataset_sampler, datasets_merger, subset
 
 # TODO: check
 # <https://stackoverflow.com/a/58970598/5811400> and <https://github.com/googlecolab/colabtools/issues/864#issuecomment-556437040> # noqa
@@ -131,30 +125,6 @@ baseline_boiling_model_indirect_size = int(
         non_trainable=False,
     )
 )
-
-
-(
-    condensation_dataset_train,
-    _condensation_dataset_val,
-    _condensation_dataset_test,
-) = condensation_dataset()()
-
-first_frame, _data = condensation_dataset_train[0]
-with strategy_scope(strategy):
-    architecture = hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=True)
-
-trained_model = fit_condensation_model(
-    compile_model(
-        architecture,
-        get_baseline_compile_params(strategy=strategy),
-    ),
-    condensation_dataset() | slicer(slice(None, None, 60)) | prefetcher(128 * 2),
-    get_baseline_fit_params(),
-    target='mass_rate',
-    strategy=strategy,
-)
-console.print(trained_model.evaluation)
-assert False, 'STOP!'
 
 pretrained_baseline_boiling_model_architecture_direct = get_pretrained_baseline_boiling_model(
     direct_visualization=True,
@@ -422,7 +392,7 @@ PREFETCH = 1024 * 4
     condensation_dataset_train,
     _condensation_dataset_val,
     _condensation_dataset_test,
-) = condensation_dataset()()
+) = condensation_dataset(each=60)()
 
 first_frame, _data = condensation_dataset_train[0]
 with strategy_scope(strategy):
@@ -434,7 +404,7 @@ compiled_model = compile_model(
 )
 trained_model = fit_condensation_model(
     compiled_model,
-    condensation_dataset(),
+    condensation_dataset(each=60),
     get_baseline_fit_params(),
     target='mass_rate',
     strategy=strategy,
@@ -1020,7 +990,7 @@ def _set_case_name(data: Targets) -> Targets:
 
 logger.info('Getting datasets...')
 condensation_all_cases = ExperimentVideoDataset().union(*condensation_datasets())
-ds = condensation_dataset()
+ds = condensation_dataset(each=60)
 ds_train, ds_val, ds_test = ds()
 ds_train = map_targets(ds_train, _set_case_name)
 ds_val = map_targets(ds_val, _set_case_name)

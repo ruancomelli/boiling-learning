@@ -6,6 +6,7 @@ from boiling_learning.app.datasets.bridging import to_tensorflow, to_tensorflow_
 from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
 from boiling_learning.app.training.common import (
     cached_fit_model_function,
+    get_baseline_architecture,
     get_baseline_compile_params,
     get_baseline_fit_params,
 )
@@ -18,14 +19,12 @@ from boiling_learning.model.callbacks import (
     SaveHistory,
     TimePrinter,
 )
-from boiling_learning.model.definitions import hoboldnet2
 from boiling_learning.model.model import ModelArchitecture
 from boiling_learning.model.training import (
     CompiledModel,
     FitModelParams,
     FitModelReturn,
     compile_model,
-    strategy_scope,
 )
 from boiling_learning.transforms import subset
 from boiling_learning.utils.functional import P
@@ -103,7 +102,6 @@ def fit_boiling_model(
                 datasets,
                 prefilterer=DEFAULT_BOILING_OUTLIER_FILTER,
                 batch_size=params.batch_size,
-                include_test=False,
                 target=target,
                 experiment='boiling1d',
             )
@@ -122,13 +120,11 @@ def get_baseline_boiling_architecture(
     direct_visualization: bool = True,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
-    dataset = baseline_boiling_dataset(direct_visualization=direct_visualization)
-
-    ds_train, _, _ = dataset()
-    first_frame, _ = ds_train[0]
-
-    with strategy_scope(strategy):
-        return hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=normalize_images)
+    return get_baseline_architecture(
+        baseline_boiling_dataset(direct_visualization=direct_visualization),
+        strategy=strategy,
+        normalize_images=normalize_images,
+    )
 
 
 def get_pretrained_baseline_boiling_model(

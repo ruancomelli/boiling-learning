@@ -84,7 +84,8 @@ class FitModelReturn:
     trained_epochs: int
     history: tuple[dict[str, Any], ...]
     train_time: timedelta
-    evaluation: Evaluation
+    validation_metrics: Evaluation
+    test_metrics: Evaluation
 
 
 def get_fit_model(
@@ -95,7 +96,7 @@ def get_fit_model(
     epoch_registry: RegisterEpoch,
     history_registry: SaveHistory,
 ) -> FitModelReturn:
-    ds_train, ds_val, _ = datasets
+    ds_train, ds_val, ds_test = datasets
 
     with Timer() as timer:
         compiled_model.architecture.model.fit(
@@ -113,7 +114,8 @@ def get_fit_model(
         trained_epochs=epoch_registry.last_epoch(),
         history=tuple(history_registry.history),
         train_time=duration,
-        evaluation=compiled_model.architecture.evaluate(ds_val),
+        validation_metrics=compiled_model.architecture.evaluate(ds_val),
+        test_metrics=compiled_model.architecture.evaluate(ds_test),
     )
 
 

@@ -14,3 +14,5 @@ def masters_path() -> Path:
 BOILING_BASELINE_BATCH_SIZE = round_to_multiple(200, base=8)
 BASELINE_BOILING_MSE_DIRECT = 13  # W / cm**2
 BASELINE_BOILING_MSE_INDIRECT = 33  # W / cm**2
+
+DEFAULT_CONDENSATION_MASS_RATE_TARGET = 'mass_rate'

@@ -3,6 +3,7 @@ import typer
 
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.training.boiling1d import get_pretrained_baseline_boiling_model
+from boiling_learning.app.training.condensation import get_pretrained_baseline_condensation_model
 
 app = typer.Typer()
 console = rich.console.Console()
@@ -27,9 +28,27 @@ def boiling1d(
         strategy=strategy,
     )
 
-    console.print(model.evaluation)
+    console.print(model.validation_metrics)
+    console.print(model.test_metrics)
 
 
 @app.command()
-def condensation() -> None:
-    raise NotImplementedError
+def condensation(
+    each: int = typer.Option(60),
+    normalize: bool = typer.Option(...),
+) -> None:
+    strategy = configure(
+        force_gpu_allow_growth=True,
+        use_xla=True,
+        modin_engine='ray',
+        require_gpu=True,
+    )
+
+    model = get_pretrained_baseline_condensation_model(
+        each=each,
+        normalize_images=normalize,
+        strategy=strategy,
+    )
+
+    console.print(model.validation_metrics)
+    console.print(model.test_metrics)

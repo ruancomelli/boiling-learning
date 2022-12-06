@@ -85,9 +85,6 @@ def to_tensorflow_triplet(
     prefilterer: Optional[LazyDescribed[Callable[[Image, Targets], bool]]] = None,
     filterer: Optional[Callable[..., bool]] = None,
     target: Optional[str] = None,
-    include_train: bool = True,
-    include_val: bool = True,
-    include_test: bool = True,
     shuffle: Union[bool, int] = True,
 ) -> DatasetTriplet[LazyDescribed[tf.data.Dataset]]:
     _to_tensorflow = partial(
@@ -100,24 +97,12 @@ def to_tensorflow_triplet(
         experiment=experiment,
     )
 
-    if include_train:
-        logger.debug('Converting TRAIN set to tensorflow')
-        ds_train = _to_tensorflow(dataset | subset('train'))
-    else:
-        ds_train = LazyDescribed.from_value_and_description(tf.data.Dataset.range(0), None)
-
-    if include_val:
-        logger.debug('Converting VAL set to tensorflow')
-        ds_val = _to_tensorflow(dataset | subset('val'))
-    else:
-        ds_val = LazyDescribed.from_value_and_description(tf.data.Dataset.range(0), None)
-
-    if include_test:
-        logger.debug('Converting TEST set to tensorflow')
-        ds_test = _to_tensorflow(dataset | subset('test'))
-    else:
-        ds_test = LazyDescribed.from_value_and_description(tf.data.Dataset.range(0), None)
-
+    logger.debug('Converting TRAIN set to tensorflow')
+    ds_train = _to_tensorflow(dataset | subset('train'))
+    logger.debug('Converting VAL set to tensorflow')
+    ds_val = _to_tensorflow(dataset | subset('val'))
+    logger.debug('Converting TEST set to tensorflow')
+    ds_test = _to_tensorflow(dataset | subset('test'))
     return DatasetTriplet(ds_train, ds_val, ds_test)
 
 
