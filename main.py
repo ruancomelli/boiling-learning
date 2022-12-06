@@ -30,7 +30,6 @@ from boiling_learning.app.training.common import (
     get_baseline_compile_params,
     get_baseline_fit_params,
 )
-from boiling_learning.app.training.condensation import fit_condensation_model
 from boiling_learning.datasets.sliceable import map_targets, targets
 from boiling_learning.image_datasets import Targets
 from boiling_learning.lazy import LazyDescribed
@@ -238,87 +237,6 @@ PREFETCH = 1024 * 4
 
 """### Downscaling"""
 
-# from itertools import takewhile
-#
-
-# from boiling_learning.preprocessing.image import (
-#     Downscaler,
-#     normalized_mutual_information,
-#     retained_variance,
-#     shannon_cross_entropy_ratio,
-#     shannon_entropy_ratio,
-#     structural_similarity_ratio
-# )
-
-# preprocessors = list(
-#     takewhile(
-#         lambda preprocessor: not isinstance(preprocessor, Downscaler),
-#         boiling_direct_preprocessors
-#     )
-# )
-
-# sample_frames: list[Image] = []
-# for case in boiling_cases():
-#     get_image_dataset_params = GetImageDatasetParams(
-#         case,
-#         transformers=preprocessors,
-#     )
-
-#     logger.info(f"Getting datasets...")
-#     ds_train, _, _ = get_image_dataset(get_image_dataset_params)()
-#     logger.info(f"Done")
-
-#     sample_frame, _ = ds_train[0]
-#     sample_frames.append(sample_frame)
-
-# import matplotlib.ticker as tck
-
-# from skimage.metrics import normalized_mutual_information as nmi
-
-# factors = range(1, 10)
-
-# metrics = [
-#     retained_variance,
-#     shannon_cross_entropy_ratio,
-#     shannon_entropy_ratio,
-#     structural_similarity_ratio,
-#     normalized_mutual_information,
-#     nmi
-# ]
-
-# sns.set_style("whitegrid")
-
-# f, axes = plt.subplots(
-#     len(metrics), len(sample_frames), figsize=(16, 16), sharex="row", sharey="col"
-# )
-
-# x = factors
-# preferred_factor = 4
-# for col, sample_frame in enumerate(sample_frames):
-#     downscaled_frames = [Downscaler(factor)(sample_frame) for factor in factors]
-
-#     for row, metric in enumerate(metrics):
-#         ax = axes[row, col]
-
-#         y = [metric(sample_frame, downscaled_frame) for downscaled_frame in downscaled_frames]
-
-#         ax.scatter(x, y, s=20, color='k')
-#         ax.scatter(x[0], y[0], facecolors="none", edgecolors="k", marker="$\odot$", s=100)
-#         ax.scatter(
-#             x[preferred_factor],
-#             y[preferred_factor],
-#             facecolors="none",
-#             edgecolors="k",
-#             marker="$\odot$",
-#             s=100
-#         )
-
-#         if not row:
-#             ax.set_title(f"Dataset {col}")
-#         if not col:
-#             ax.set_ylabel(" ".join(metric.__name__.split("_")).title())
-
-#         ax.xaxis.grid(True, which='minor')
 
 """### Consecutive frames"""
 
@@ -385,30 +303,6 @@ PREFETCH = 1024 * 4
 #         ax.set_xlabel(f"{data[DEFAULT_BOILING_HEAT_FLUX_TARGET]:.2f}W/cm² (#{data['index']})")
 #         ax.imshow(frame.squeeze(), cmap="gray")
 #         ax.grid(False)
-
-"""FIRST CONDENSATION CASE JUST FOR FUN"""
-
-(
-    condensation_dataset_train,
-    _condensation_dataset_val,
-    _condensation_dataset_test,
-) = condensation_dataset(each=60)()
-
-first_frame, _data = condensation_dataset_train[0]
-with strategy_scope(strategy):
-    architecture = hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=True)
-
-compiled_model = compile_model(
-    architecture,
-    get_baseline_compile_params(strategy=strategy),
-)
-trained_model = fit_condensation_model(
-    compiled_model,
-    condensation_dataset(each=60),
-    get_baseline_fit_params(),
-    target='mass_rate',
-    strategy=strategy,
-)
 
 """### On-Wire Pool Boiling
 
