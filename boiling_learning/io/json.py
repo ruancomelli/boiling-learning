@@ -321,6 +321,17 @@ def _decode_types(instance: str) -> type:
     return getattr(module, typename)
 
 
+@encode.instance(slice)
+def _encode_slice(instance: slice) -> list[int | None]:
+    return serialize((instance.start, instance.stop, instance.step))
+
+
+@decode.dispatch(slice)
+def _decode_slice(instance: list[int | None]) -> slice:
+    start, stop, step = map(deserialize, instance)
+    return slice(start, stop, step)
+
+
 def serialize(obj: Supports[JSONEncodable]) -> SerializedJSONObject:
     '''Return a JSON serialization of an object.'''
     return _nested_sort_dicts(_serialize(obj))

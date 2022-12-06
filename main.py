@@ -3,7 +3,6 @@ from fractions import Fraction
 from operator import itemgetter
 from pprint import pprint
 
-import more_itertools as mit
 import tensorflow as tf
 from loguru import logger
 from rich.console import Console
@@ -46,7 +45,13 @@ from boiling_learning.model.training import (
 )
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist
-from boiling_learning.transforms import dataset_sampler, datasets_merger, subset
+from boiling_learning.transforms import (
+    dataset_sampler,
+    datasets_merger,
+    prefetcher,
+    slicer,
+    subset,
+)
 
 # TODO: check
 # <https://stackoverflow.com/a/58970598/5811400> and <https://github.com/googlecolab/colabtools/issues/864#issuecomment-556437040> # noqa
@@ -62,11 +67,12 @@ from boiling_learning.transforms import dataset_sampler, datasets_merger, subset
 strategy = configure(
     force_gpu_allow_growth=True,
     use_xla=True,
-    mixed_precision_global_policy='mixed_float16',
+    # mixed_precision_global_policy='mixed_float16',
     modin_engine='ray',
     require_gpu=True,
 )
 
+console = Console()
 
 logger.info('Checking paths')
 check_all_paths_exist(
@@ -93,12 +99,6 @@ logger.info('Succesfully checked paths')
 #                 pass
 
 # logger.debug("Done")
-
-
-"""#### Condensation"""
-
-condensation_dataset_train, _, _ = condensation_dataset()()
-print(mit.ilen(condensation_dataset_train[::60].prefetch(128 * 2)))
 
 
 """### Baseline on-wire pool boiling"""
@@ -143,18 +143,18 @@ first_frame, _data = condensation_dataset_train[0]
 with strategy_scope(strategy):
     architecture = hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=True)
 
-compiled_model = compile_model(
-    architecture,
-    get_baseline_compile_params(strategy=strategy),
-)
 trained_model = fit_condensation_model(
-    compiled_model,
-    condensation_dataset(),
+    compile_model(
+        architecture,
+        get_baseline_compile_params(strategy=strategy),
+    ),
+    condensation_dataset() | slicer(slice(None, None, 60)) | prefetcher(128 * 2),
     get_baseline_fit_params(),
     target='mass_rate',
     strategy=strategy,
 )
-
+console.print(trained_model.evaluation)
+assert False, 'STOP!'
 
 pretrained_baseline_boiling_model_architecture_direct = get_pretrained_baseline_boiling_model(
     direct_visualization=True,
@@ -422,7 +422,7 @@ PREFETCH = 1024 * 4
     condensation_dataset_train,
     _condensation_dataset_val,
     _condensation_dataset_test,
-) = condensation_dataset()
+) = condensation_dataset()()
 
 first_frame, _data = condensation_dataset_train[0]
 with strategy_scope(strategy):
@@ -430,13 +430,14 @@ with strategy_scope(strategy):
 
 compiled_model = compile_model(
     architecture,
-    get_baseline_compile_params(),
+    get_baseline_compile_params(strategy=strategy),
 )
 trained_model = fit_condensation_model(
     compiled_model,
-    condensation_dataset,
+    condensation_dataset(),
     get_baseline_fit_params(),
     target='mass_rate',
+    strategy=strategy,
 )
 
 """### On-Wire Pool Boiling

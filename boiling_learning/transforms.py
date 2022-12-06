@@ -12,6 +12,30 @@ _Element = TypeVar('_Element')
 
 @wrap_as_partial_transformer
 @eager
+def slicer(
+    datasets: DatasetTriplet[_Dataset],
+    slice_: slice,
+) -> DatasetTriplet[_Dataset]:
+    ds_train, ds_val, ds_test = datasets
+    return DatasetTriplet(ds_train[slice_], ds_val[slice_], ds_test[slice_])
+
+
+@wrap_as_partial_transformer
+@eager
+def prefetcher(
+    datasets: DatasetTriplet[_Dataset],
+    buffer_size: int | None = None,
+) -> DatasetTriplet[_Dataset]:
+    ds_train, ds_val, ds_test = datasets
+    return DatasetTriplet(
+        ds_train.prefetch(buffer_size),
+        ds_val.prefetch(buffer_size),
+        ds_test.prefetch(buffer_size),
+    )
+
+
+@wrap_as_partial_transformer
+@eager
 def map_transformers(
     dataset: SliceableDataset[_Element],
     compiled_transformers: LazyDescribed[Callable[[_Element], _Element]],
