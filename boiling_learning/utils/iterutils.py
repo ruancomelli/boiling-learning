@@ -1,6 +1,7 @@
 import itertools
 import typing
-from typing import Iterable, TypeVar
+from collections.abc import Iterable, Iterator
+from typing import TypeVar
 
 import more_itertools as mit
 
@@ -18,4 +19,12 @@ def unsort(iterable: Iterable[_T]) -> tuple[Iterable[int], Iterable[_T]]:
     return (
         typing.cast(Iterable[int], unsorters),
         typing.cast(Iterable[_T], sorted_items),
+    )
+
+
+def accumulate_parts(iterable: Iterable[_T]) -> Iterator[tuple[_T, ...]]:
+    return itertools.accumulate(
+        iterable,
+        lambda current, item: current + (item,),
+        initial=(),
     )

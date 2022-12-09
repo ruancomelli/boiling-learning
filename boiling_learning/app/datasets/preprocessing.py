@@ -20,10 +20,12 @@ RECOMMENDED_DIRECT_HEIGHT = 120
 RECOMMENDED_INDIRECT_HEIGHT = 72
 RECOMMENDED_WIDTH = 196
 
+RECOMMENDED_DOWNSCALE_FACTOR = 4
+
 
 def default_boiling_preprocessors(
     direct_visualization: bool = True,
-    downscale_factor: int = 4,
+    downscale_factor: int = RECOMMENDED_DOWNSCALE_FACTOR,
     height: Optional[int] = None,
     bottom_border: Optional[int] = None,
     width: int = RECOMMENDED_WIDTH,
