@@ -53,7 +53,6 @@ def to_tensorflow(
         save_path=save_path,
         # DEBUG: try re-setting this to True
         cache=True,
-        # cache=True,
         batch_size=batch_size,
         prefilterer=_prefilterer,
         filterer=filterer,

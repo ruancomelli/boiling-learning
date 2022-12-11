@@ -16,13 +16,14 @@ class TuneModelParams:
 @dataclass(frozen=True)
 class TuneModelReturn:
     model: ModelArchitecture
-    evaluation: Evaluation
+    validation_metrics: Evaluation
+    test_metrics: Evaluation
 
 
 def fit_hypermodel(
     hypermodel: HyperModel, datasets: DatasetTriplet[tf.data.Dataset], params: TuneModelParams
 ) -> TuneModelReturn:
-    ds_train, ds_val, _ = datasets
+    ds_train, ds_val, ds_test = datasets
 
     automodel = hypermodel.automodel
     automodel.fit(
@@ -36,5 +37,6 @@ def fit_hypermodel(
 
     return TuneModelReturn(
         model=model,
-        evaluation=model.evaluate(ds_val.batch(params.batch_size)),
+        validation_metrics=model.evaluate(ds_val.batch(params.batch_size)),
+        test_metrics=model.evaluate(ds_test.batch(params.batch_size)),
     )
