@@ -1,4 +1,5 @@
 import typing
+from collections.abc import Iterator
 from typing import Any, Optional, Union
 
 import autokeras as ak
@@ -9,7 +10,7 @@ from boiling_learning.automl.blocks import ImageNormalizationBlock, LayersBlock
 from boiling_learning.io import json
 from boiling_learning.lazy import Lazy
 from boiling_learning.management.allocators import Allocator
-from boiling_learning.model.model import anonymize_model_json
+from boiling_learning.model.model import ModelArchitecture, anonymize_model_json
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 
@@ -27,6 +28,18 @@ class HyperModel(kt.HyperModel):
 
     def __describe__(self) -> dict[str, Any]:
         return typing.cast(dict[str, Any], json.encode(self))
+
+    def iter_best_models(self) -> Iterator[ModelArchitecture]:
+        tuner = self.automodel.tuner
+
+        for trial in tuner.oracle.get_best_trials(
+            # a hack to get all possible trials:
+            # see how `num_trials` is only used for slicing a list:
+            # https://github.com/keras-team/keras-tuner/blob/d559fdd3a33cc5f2a4d58cf59f9636510d5e1c7d/keras_tuner/engine/oracle.py#L397
+            num_models=None
+        ):
+            model = tuner.load_model(trial)
+            yield ModelArchitecture(model)
 
 
 class ImageRegressor(HyperModel):
