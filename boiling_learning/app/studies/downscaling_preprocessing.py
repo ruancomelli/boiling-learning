@@ -202,4 +202,4 @@ def condensation(
 
 
 def _downscaling_study_path() -> Path:
-    return studies_path() / 'downscaling'
+    return studies_path() / 'downscaling-preprocessing'
