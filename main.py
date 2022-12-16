@@ -1,7 +1,6 @@
 import itertools
 from fractions import Fraction
 from operator import itemgetter
-from pprint import pprint
 
 import tensorflow as tf
 from loguru import logger
@@ -36,12 +35,7 @@ from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.model.definitions import hoboldnet2
-from boiling_learning.model.training import (
-    CompileModelParams,
-    FitModelParams,
-    compile_model,
-    strategy_scope,
-)
+from boiling_learning.model.training import CompileModelParams, compile_model, strategy_scope
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist
 from boiling_learning.transforms import dataset_sampler, datasets_merger, subset
@@ -311,37 +305,6 @@ PREFETCH = 1024 * 4
 baseline_boiling_dataset_direct = boiling_datasets(direct_visualization=True)[0]
 baseline_boiling_dataset_indirect = boiling_datasets(direct_visualization=False)[0]
 
-validated_model_direct = get_pretrained_baseline_boiling_model(
-    direct_visualization=True,
-    normalize_images=False,
-    strategy=strategy,
-)
-print(validated_model_direct)
-print('Evaluation:', validated_model_direct.evaluation)
-
-validated_model_indirect = get_pretrained_baseline_boiling_model(
-    direct_visualization=False,
-    normalize_images=False,
-    strategy=strategy,
-)
-print(validated_model_indirect)
-print('Evaluation:', validated_model_indirect.evaluation)
-
-validated_model_direct_normalized = get_pretrained_baseline_boiling_model(
-    direct_visualization=True,
-    normalize_images=True,
-    strategy=strategy,
-)
-print(validated_model_direct_normalized)
-print('Evaluation:', validated_model_direct_normalized.evaluation)
-
-validated_model_indirect_normalized = get_pretrained_baseline_boiling_model(
-    direct_visualization=False,
-    normalize_images=True,
-    strategy=strategy,
-)
-print(validated_model_indirect_normalized)
-print('Evaluation:', validated_model_indirect_normalized.evaluation)
 
 # !pip install shap
 
@@ -397,88 +360,6 @@ print('Evaluation:', validated_model_indirect_normalized.evaluation)
 # explainer = GradCAM()
 # grid = explainer.explain(baseline_boiling_dataset_direct()[1][0], model.architecture.model, )
 
-"""#### Retrain randomness"""
-
-logger.info('Analyzing effects of random initialization')
-
-NUMBER_OF_RETRAINS = 8
-evaluations = []
-for retrain_index in range(NUMBER_OF_RETRAINS):
-    compiled_model = compile_model(
-        get_baseline_boiling_architecture(
-            direct_visualization=True,
-            normalize_images=False,
-            strategy=strategy,
-        ),
-        get_baseline_compile_params(strategy=strategy),
-    )
-
-    model = fit_boiling_model(
-        compiled_model,
-        baseline_boiling_dataset_direct,
-        get_baseline_fit_params(),
-        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-        strategy=strategy,
-        try_id=retrain_index,
-    )
-
-    print(model)
-    best_performance = min(model.history, key=lambda data: data['val_loss'])
-    evaluations.append(best_performance)
-    logger.info('Done')
-
-pprint(evaluations)
-
-"""#### Other wire - training"""
-
-# %%time
-# %tensorboard --logdir $tensorboard_logs_path
-
-
-logger.info('Testing with other wire')
-
-DATASET = boiling_datasets(direct_visualization=True)[2]
-
-logger.info('Compiling...')
-first_frame, _ = DATASET()[0][0]
-
-with strategy_scope(strategy):
-    # TODO: replace this with utility function!
-    architecture = hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=False)
-    compiled_model = compile_model(architecture, get_baseline_compile_params(strategy=strategy))
-logger.info('Done')
-
-logger.info('Training...')
-fit_model_params = FitModelParams(
-    batch_size=200,
-    epochs=100,
-    callbacks=LazyDescribed.from_list(
-        [
-            LazyDescribed.from_constructor(tf.keras.callbacks.TerminateOnNaN),
-            LazyDescribed.from_constructor(
-                tf.keras.callbacks.EarlyStopping,
-                monitor='val_loss',
-                min_delta=0,
-                patience=10,
-                baseline=None,
-                mode='auto',
-                restore_best_weights=True,
-                verbose=1,
-            ),
-        ]
-    ),
-)
-
-with strategy_scope(strategy):
-    model = fit_boiling_model(
-        compiled_model,
-        DATASET,
-        fit_model_params,
-        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-        strategy=strategy,
-    )
-pprint(model)
-logger.info('Done')
 
 """#### Boiling learning curve"""
 
