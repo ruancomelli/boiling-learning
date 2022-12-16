@@ -21,7 +21,6 @@ _CUSTOM_LAYERS = (ImageNormalization, RandomBrightness)
 _CUSTOM_OBJECTS = {layer.__name__: layer for layer in _CUSTOM_LAYERS}
 
 _Any = TypeVar('_Any')
-
 Evaluation = dict[str, Any]
 
 
@@ -94,7 +93,7 @@ def _deserialize_model(path: Path, _metadata: Metadata) -> ModelArchitecture:
     return architecture
 
 
-def model_memory_usage_in_bytes(
+def _model_memory_usage_in_bytes(
     architecture: ModelArchitecture, *, batch_size: int
 ) -> Quantity[int]:
     """Return the estimated memory usage of a given Keras model in bytes.
@@ -120,7 +119,7 @@ def model_memory_usage_in_bytes(
     internal_model_mem_count: Quantity[int] = 0 * ureg.byte
     for layer in model.layers:
         if isinstance(layer, tf.keras.Model):
-            internal_model_mem_count += model_memory_usage_in_bytes(layer, batch_size=batch_size)
+            internal_model_mem_count += _model_memory_usage_in_bytes(layer, batch_size=batch_size)
 
         single_layer_mem: int = tf.as_dtype(layer.dtype or default_dtype).size
         out_shape = layer.output_shape

@@ -80,12 +80,11 @@ def fit_condensation_model(
 
 def get_baseline_condensation_architecture(
     *,
-    each: int,
     strategy: LazyDescribed[tf.distribute.Strategy],
     normalize_images: bool = True,
 ) -> ModelArchitecture:
     return get_baseline_architecture(
-        condensation_dataset(each=each),
+        condensation_dataset(each=1),
         strategy=strategy,
         normalize_images=normalize_images,
     )
@@ -100,7 +99,6 @@ def get_pretrained_baseline_condensation_model(
 ) -> FitModelReturn:
     compiled_model = compile_model(
         get_baseline_condensation_architecture(
-            each=each,
             normalize_images=normalize_images,
             strategy=strategy,
         ),

@@ -6,12 +6,17 @@ import tensorflow as tf
 from boiling_learning.app.automl.tuning import autofit
 from boiling_learning.app.paths import analyses_path
 from boiling_learning.app.training.common import get_baseline_compile_params
-from boiling_learning.automl.hypermodels import ConvImageRegressor
+from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
 from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn
 from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
+
+
+class AutofitHypermodel:
+    hypermodel: HyperModel
+    tune_model_return: TuneModelReturn
 
 
 def autofit_dataset(
@@ -23,7 +28,7 @@ def autofit_dataset(
     normalize_images: bool = True,
     max_model_size: Optional[int] = None,
     goal: Optional[float] = None,
-) -> TuneModelReturn:
+) -> AutofitHypermodel:
     compile_params = get_baseline_compile_params(strategy=strategy)
 
     hypermodel = ConvImageRegressor(
@@ -65,7 +70,7 @@ def autofit_dataset(
         ),
     )
 
-    return autofit(
+    tune_model_return = autofit(
         hypermodel,
         datasets=datasets,
         params=tune_model_params,
@@ -73,6 +78,8 @@ def autofit_dataset(
         experiment=experiment,
         strategy=strategy,
     )
+
+    return AutofitHypermodel(hypermodel=hypermodel, tune_model_return=tune_model_return)
 
 
 @cache
