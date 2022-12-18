@@ -9,12 +9,12 @@ from rich.console import Console
 from rich.table import Table
 
 from boiling_learning.app.configuration import configure
-from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
+from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
 from boiling_learning.app.paths import studies_path
 from boiling_learning.app.training.boiling1d import (
     DEFAULT_BOILING_HEAT_FLUX_TARGET,
     fit_boiling_model,
-    get_baseline_boiling_architecture,
+    get_pretrained_baseline_boiling_model,
 )
 from boiling_learning.app.training.common import (
     get_baseline_compile_params,
@@ -46,7 +46,7 @@ def boiling1d(
         require_gpu=True,
     )
 
-    datasets = baseline_boiling_dataset(direct_visualization=direct)
+    datasets = boiling_datasets(direct_visualization=direct)[1]
 
     table = Table(
         'Subsample',
@@ -64,13 +64,15 @@ def boiling1d(
             else datasets
         )
 
-        architecture = get_baseline_boiling_architecture(
+        pretrained_model = get_pretrained_baseline_boiling_model(
             direct_visualization=direct,
             normalize_images=True,
             strategy=strategy,
         )
 
-        compiled_model = LazyDescribed.from_describable(architecture) | compile_model(
+        compiled_model = LazyDescribed.from_describable(
+            pretrained_model.architecture
+        ) | compile_model(
             get_baseline_compile_params(strategy=strategy),
         )
 

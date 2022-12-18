@@ -15,6 +15,7 @@ from boiling_learning.app.training.common import (
     get_baseline_compile_params,
     get_baseline_fit_params,
 )
+from boiling_learning.lazy import LazyDescribed
 from boiling_learning.model.training import compile_model
 
 app = typer.Typer()
@@ -52,12 +53,13 @@ def boiling1d(
             transformers=preprocessors,
             experiment='boiling1d',
         )
-        compiled_model = compile_model(
+        compiled_model = LazyDescribed.from_describable(
             get_baseline_architecture(
                 dataset,
                 normalize_images=True,
                 strategy=strategy,
-            ),
+            )
+        ) | compile_model(
             get_baseline_compile_params(strategy=strategy),
         )
 

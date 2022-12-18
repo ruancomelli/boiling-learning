@@ -11,6 +11,7 @@ from boiling_learning.app.training.boiling1d import (
 )
 from boiling_learning.app.training.common import get_baseline_compile_params
 from boiling_learning.app.training.condensation import get_pretrained_baseline_condensation_model
+from boiling_learning.lazy import LazyDescribed
 from boiling_learning.model.evaluate import evaluate_with_uncertainty
 from boiling_learning.model.training import compile_model
 
@@ -45,13 +46,12 @@ def boiling1d(
         experiment='boiling1d',
     )
 
-    compiled_model = compile_model(
-        model.architecture,
+    compiled_model = LazyDescribed.from_describable(model.architecture) | compile_model(
         get_baseline_compile_params(strategy=strategy),
     )
 
-    validation_metrics = evaluate_with_uncertainty(compiled_model.architecture, ds_val())
-    test_metrics = evaluate_with_uncertainty(compiled_model.architecture, ds_test())
+    validation_metrics = evaluate_with_uncertainty(compiled_model(), ds_val())
+    test_metrics = evaluate_with_uncertainty(compiled_model(), ds_test())
 
     console.print(model.validation_metrics)
     console.print(model.test_metrics)

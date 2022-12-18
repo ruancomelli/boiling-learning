@@ -133,8 +133,7 @@ def _boiling_cross_surface_evaluation(
         normalize_images=normalize_images,
         strategy=strategy,
     )
-    compiled_model = compile_model(
-        architecture,
+    compiled_model = LazyDescribed.from_describable(architecture) | compile_model(
         get_baseline_compile_params(strategy=strategy),
     )
 
@@ -150,8 +149,7 @@ def _boiling_cross_surface_evaluation(
 
     logger.info('Evaluating')
 
-    compiled_model = compile_model(
-        model.architecture,
+    compiled_model = LazyDescribed.from_describable(model.architecture) | compile_model(
         get_baseline_compile_params(strategy=strategy),
     )
 

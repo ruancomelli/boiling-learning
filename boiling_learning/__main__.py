@@ -10,6 +10,7 @@ from boiling_learning.app.studies import (
     image_normalization,
     learning_curve,
     preprocessing,
+    transfer_learning_curve,
     validate,
 )
 
@@ -23,6 +24,7 @@ app.add_typer(example_frames.app, name='example-frames')
 app.add_typer(image_normalization.app, name='image-normalization')
 app.add_typer(learning_curve.app, name='learning-curve')
 app.add_typer(preprocessing.app, name='preprocessing')
+app.add_typer(transfer_learning_curve.app, name='transfer-learning-curve')
 app.add_typer(validate.app, name='validate')
 
 

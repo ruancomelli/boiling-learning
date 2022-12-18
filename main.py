@@ -477,7 +477,7 @@ with strategy_scope(strategy):
             # tfa.metrics.F1Score(N_CLASSES, name='F1'),
         ],
     )
-    compiled_model = compile_model(architecture, compile_params)
+    compiled_model = architecture | compile_model(compile_params)
 
 assert False, 'STOP!'
 

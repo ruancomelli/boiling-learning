@@ -15,18 +15,13 @@ from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.model.callbacks import MemoryCleanUp, RegisterEpoch, SaveHistory, TimePrinter
 from boiling_learning.model.model import ModelArchitecture
-from boiling_learning.model.training import (
-    CompiledModel,
-    FitModelParams,
-    FitModelReturn,
-    compile_model,
-)
+from boiling_learning.model.training import FitModelParams, FitModelReturn, compile_model
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.pathutils import resolve
 
 
 def fit_condensation_model(
-    compiled_model: CompiledModel,
+    model: LazyDescribed[ModelArchitecture],
     datasets: LazyDescribed[ImageDatasetTriplet],
     params: FitModelParams,
     *,
@@ -55,12 +50,12 @@ def fit_condensation_model(
     fitter = cached_fit_model_function('condensation', strategy=strategy)
 
     workspace_path = resolve(
-        fitter.allocate(compiled_model, datasets, params, target),
+        fitter.allocate(model, datasets, params, target),
         parents=True,
     )
 
     creator: Callable[[], FitModelReturn] = P(
-        compiled_model,
+        model(),
         tuple(
             subset()
             for subset in to_tensorflow_triplet(
@@ -97,11 +92,12 @@ def get_pretrained_baseline_condensation_model(
     normalize_images: bool = True,
     target: str = DEFAULT_CONDENSATION_MASS_RATE_TARGET,
 ) -> FitModelReturn:
-    compiled_model = compile_model(
+    compiled_model = LazyDescribed.from_describable(
         get_baseline_condensation_architecture(
             normalize_images=normalize_images,
             strategy=strategy,
-        ),
+        )
+    ) | compile_model(
         get_baseline_compile_params(strategy=strategy),
     )
 

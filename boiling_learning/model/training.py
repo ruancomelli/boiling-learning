@@ -14,9 +14,10 @@ from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.descriptions import describe
 from boiling_learning.io import json
 from boiling_learning.io.storage import dataclass, load
-from boiling_learning.lazy import Lazy, LazyDescribed
+from boiling_learning.lazy import Lazy, LazyDescribed, eager
 from boiling_learning.model.callbacks import RegisterEpoch, SaveHistory
 from boiling_learning.model.model import Evaluation, ModelArchitecture
+from boiling_learning.preprocessing.transformers import wrap_as_partial_transformer
 from boiling_learning.utils.timing import Timer
 from boiling_learning.utils.typeutils import typename
 
@@ -54,21 +55,19 @@ class CompileModelParams:
     metrics: Optional[list[Metric]]
 
 
-@dataclass(frozen=True)
-class CompiledModel:
-    architecture: ModelArchitecture
-    params: CompileModelParams
-
-    def compile(self) -> None:
-        self.architecture.model.compile(
-            optimizer=self.params.optimizer, loss=self.params.loss, metrics=self.params.metrics
-        )
-
-
-def compile_model(architecture: ModelArchitecture, params: CompileModelParams) -> CompiledModel:
-    compiled_model = CompiledModel(architecture, params)
-    compiled_model.compile()
-    return compiled_model
+@wrap_as_partial_transformer
+@eager
+def compile_model(
+    architecture: ModelArchitecture,
+    params: CompileModelParams,
+) -> ModelArchitecture:
+    cloned = architecture.clone()
+    cloned.model.compile(
+        optimizer=params.optimizer,
+        loss=params.loss,
+        metrics=params.metrics,
+    )
+    return cloned
 
 
 @dataclass(frozen=True)
@@ -89,7 +88,7 @@ class FitModelReturn:
 
 
 def get_fit_model(
-    compiled_model: CompiledModel,
+    model: ModelArchitecture,
     datasets: DatasetTriplet[tf.data.Dataset],
     params: FitModelParams,
     *,
@@ -99,7 +98,7 @@ def get_fit_model(
     ds_train, ds_val, ds_test = datasets
 
     with Timer() as timer:
-        compiled_model.architecture.model.fit(
+        model.model.fit(
             ds_train,
             validation_data=ds_val,
             epochs=params.epochs,
@@ -110,12 +109,12 @@ def get_fit_model(
     assert duration is not None
 
     return FitModelReturn(
-        architecture=compiled_model.architecture,
+        architecture=model,
         trained_epochs=epoch_registry.last_epoch(),
         history=tuple(history_registry.history),
         train_time=duration,
-        validation_metrics=compiled_model.architecture.evaluate(ds_val),
-        test_metrics=compiled_model.architecture.evaluate(ds_test),
+        validation_metrics=model.evaluate(ds_val),
+        test_metrics=model.evaluate(ds_test),
     )
 
 

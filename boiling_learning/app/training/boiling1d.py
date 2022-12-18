@@ -20,12 +20,7 @@ from boiling_learning.model.callbacks import (
     TimePrinter,
 )
 from boiling_learning.model.model import ModelArchitecture
-from boiling_learning.model.training import (
-    CompiledModel,
-    FitModelParams,
-    FitModelReturn,
-    compile_model,
-)
+from boiling_learning.model.training import FitModelParams, FitModelReturn, compile_model
 from boiling_learning.transforms import subset
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.pathutils import resolve
@@ -42,7 +37,7 @@ DEFAULT_BOILING_HEAT_FLUX_TARGET = 'Flux [W/cm**2]'
 
 
 def fit_boiling_model(
-    compiled_model: CompiledModel,
+    model: LazyDescribed[ModelArchitecture],
     datasets: LazyDescribed[ImageDatasetTriplet],
     params: FitModelParams,
     *,
@@ -90,12 +85,12 @@ def fit_boiling_model(
     fitter = cached_fit_model_function('boiling1d', strategy=strategy)
 
     workspace_path = resolve(
-        fitter.allocate(compiled_model, datasets, params, target, try_id),
+        fitter.allocate(model, datasets, params, target, try_id),
         parents=True,
     )
 
     creator: Callable[[], FitModelReturn] = P(
-        compiled_model,
+        model(),
         tuple(
             subset()
             for subset in to_tensorflow_triplet(
@@ -133,17 +128,18 @@ def get_pretrained_baseline_boiling_model(
     direct_visualization: bool = True,
     normalize_images: bool = True,
 ) -> FitModelReturn:
-    compiled_model = compile_model(
+    model = LazyDescribed.from_describable(
         get_baseline_boiling_architecture(
             direct_visualization=direct_visualization,
             normalize_images=normalize_images,
             strategy=strategy,
-        ),
+        )
+    ) | compile_model(
         get_baseline_compile_params(strategy=strategy),
     )
 
     return fit_boiling_model(
-        compiled_model,
+        model,
         baseline_boiling_dataset(direct_visualization=direct_visualization),
         get_baseline_fit_params(),
         target=DEFAULT_BOILING_HEAT_FLUX_TARGET,

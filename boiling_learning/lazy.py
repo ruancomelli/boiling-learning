@@ -70,17 +70,14 @@ class LazyCallable(Generic[_P, _T]):
         return Lazy(partial(self._call, *args, **kwargs))
 
 
-class LazyTransform(Lazy[_S]):
+class LazyTransform(LazyDescribed[_S]):
     def __init__(self, arg: Lazy[_T], transform: Callable[[_T], _S]) -> None:
         self._arg = arg
         self._transform = transform
-        super().__init__(self._eval)
+        super().__init__(self._eval, self._pipeline())
 
     def _eval(self) -> _S:
         return self._transform(self._arg())
-
-    def __describe__(self) -> json.JSONDataType:
-        return describe(self._pipeline())
 
     def _pipeline(self) -> tuple[Any, ...]:
         return (
