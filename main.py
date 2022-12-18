@@ -1,14 +1,10 @@
-from fractions import Fraction
 from operator import itemgetter
 
 import tensorflow as tf
 from loguru import logger
 from rich.console import Console
-from rich.table import Table
 
 from boiling_learning.app.configuration import configure
-from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
-from boiling_learning.app.datasets.bridging import to_tensorflow
 from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
 from boiling_learning.app.datasets.preprocessed.condensation import condensation_dataset
 from boiling_learning.app.datasets.raw.boiling1d import boiling_data_path
@@ -18,25 +14,16 @@ from boiling_learning.app.datasets.raw.condensation import (
 )
 from boiling_learning.app.paths import analyses_path
 from boiling_learning.app.training.boiling1d import (
-    DEFAULT_BOILING_HEAT_FLUX_TARGET,
-    fit_boiling_model,
     get_baseline_boiling_architecture,
     get_pretrained_baseline_boiling_model,
-)
-from boiling_learning.app.training.common import (
-    get_baseline_compile_params,
-    get_baseline_fit_params,
 )
 from boiling_learning.datasets.sliceable import map_targets, targets
 from boiling_learning.image_datasets import Targets
 from boiling_learning.lazy import LazyDescribed
-from boiling_learning.management.allocators import JSONAllocator
-from boiling_learning.management.cacher import cache
 from boiling_learning.model.definitions import hoboldnet2
 from boiling_learning.model.training import CompileModelParams, compile_model, strategy_scope
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist
-from boiling_learning.transforms import dataset_sampler, subset
 
 # TODO: check
 # <https://stackoverflow.com/a/58970598/5811400> and <https://github.com/googlecolab/colabtools/issues/864#issuecomment-556437040> # noqa
@@ -357,110 +344,6 @@ baseline_boiling_dataset_indirect = boiling_datasets(direct_visualization=False)
 
 # explainer = GradCAM()
 # grid = explainer.explain(baseline_boiling_dataset_direct()[1][0], model.architecture.model, )
-
-
-"""#### Boiling learning curve"""
-
-# %%time
-# %tensorboard --logdir $tensorboard_logs_path
-
-
-logger.info('Analyzing learning curve')
-
-ds_evaluation_direct = to_tensorflow(
-    baseline_boiling_dataset_direct | subset('val'),
-    batch_size=BOILING_BASELINE_BATCH_SIZE,
-    target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-    experiment='boiling1d',
-)
-
-ds_evaluation_indirect = to_tensorflow(
-    baseline_boiling_dataset_indirect | subset('val'),
-    batch_size=BOILING_BASELINE_BATCH_SIZE,
-    target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-    experiment='boiling1d',
-)
-
-
-@cache(JSONAllocator(analyses_path() / 'studies' / 'boiling-learning-curve'))
-def boiling_learning_curve_point(
-    fraction: Fraction, *, direct_visualization: bool = True, normalize_images: bool = False
-) -> dict[str, float]:
-    logger.info(f'Analyzing fraction {fraction}')
-
-    logger.info('Getting datasets...')
-    datasets = (
-        baseline_boiling_dataset_direct
-        if direct_visualization
-        else baseline_boiling_dataset_indirect
-    ) | dataset_sampler(fraction)
-    logger.info('Done')
-
-    logger.info('Compiling...')
-    with strategy_scope(strategy):
-        compiled_model = compile_model(
-            get_baseline_boiling_architecture(
-                direct_visualization=direct_visualization,
-                normalize_images=normalize_images,
-                strategy=strategy,
-            ),
-            get_baseline_compile_params(strategy=strategy),
-        )
-    logger.info('Done')
-
-    logger.info('Training...')
-
-    model = fit_boiling_model(
-        compiled_model,
-        datasets,
-        get_baseline_fit_params(),
-        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-    )
-
-    logger.info(f'Evaluating: {fraction}')
-    with strategy_scope(strategy):
-        compile_model(model.architecture, get_baseline_compile_params())
-    evaluation = model.architecture.evaluate(
-        (ds_evaluation_direct if direct_visualization else ds_evaluation_indirect)()
-    )
-
-    logger.info('Done')
-
-    return evaluation
-
-
-boiling_learning_curve = {
-    fraction: boiling_learning_curve_point(
-        fraction, direct_visualization=direct, normalize_images=normalize_images
-    )
-    for fraction in (
-        Fraction(1, 100),
-        Fraction(1, 20),
-        Fraction(1, 10),
-        Fraction(1, 2),
-        Fraction(1, 1),
-    )
-    for direct in (False, True)
-    for normalize_images in (False, True)
-}
-
-
-METRIC_NAMES = ('MSE', 'RMS', 'MAE', 'MAPE', 'R2')
-
-console = Console()
-
-learning_curve_analysis = Table(title='Learning curve analysis')
-learning_curve_analysis.add_column('Dataset fraction', justify='center')
-
-for metric_name in METRIC_NAMES:
-    learning_curve_analysis.add_column(metric_name, justify='right')
-
-for fraction, metrics in boiling_learning_curve.items():
-    learning_curve_analysis.add_row(
-        str(fraction), *(f'{metrics[metric_name]:.2f}' for metric_name in METRIC_NAMES)
-    )
-
-console.print(learning_curve_analysis)
 
 
 """#### Cross-surface boiling evaluation with AutoML"""

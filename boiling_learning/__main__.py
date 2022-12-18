@@ -8,6 +8,7 @@ from boiling_learning.app.studies import (
     downscaling_training,
     example_frames,
     image_normalization,
+    learning_curve,
     preprocessing,
     validate,
 )
@@ -20,6 +21,7 @@ app.add_typer(downscaling_preprocessing.app, name='downscaling-preprocessing')
 app.add_typer(downscaling_training.app, name='downscaling-training')
 app.add_typer(example_frames.app, name='example-frames')
 app.add_typer(image_normalization.app, name='image-normalization')
+app.add_typer(learning_curve.app, name='learning-curve')
 app.add_typer(preprocessing.app, name='preprocessing')
 app.add_typer(validate.app, name='validate')
 

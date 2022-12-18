@@ -101,20 +101,32 @@ def _boiling_cross_surface_evaluation(
 ) -> dict[str, float]:
     logger.info(
         f'Training on cases {training_cases} '
-        f'| evaluation on {evaluation_cases} '
+        f'| Evaluating on {evaluation_cases} '
         f"| {'Direct' if direct_visualization else 'Indirect'} visualization"
     )
 
     all_boiling_datasets = boiling_datasets(direct_visualization=direct_visualization)
-    training_datasets = tuple(
-        all_boiling_datasets[training_case] for training_case in training_cases
-    )
-    evaluation_datasets = tuple(
-        all_boiling_datasets[evaluation_case] for evaluation_case in evaluation_cases
-    )
 
-    training_dataset = LazyDescribed.from_describable(training_datasets) | datasets_merger()
-    evaluation_dataset = LazyDescribed.from_describable(evaluation_datasets) | datasets_merger()
+    if len(training_cases) > 1:
+        training_datasets = tuple(
+            all_boiling_datasets[training_case] for training_case in training_cases
+        )
+
+        training_dataset = LazyDescribed.from_describable(training_datasets) | datasets_merger()
+    else:
+        (training_case,) = training_cases
+        training_dataset = all_boiling_datasets[training_case]
+
+    if len(evaluation_cases) > 1:
+        evaluation_datasets = tuple(
+            all_boiling_datasets[evaluation_case] for evaluation_case in evaluation_cases
+        )
+        evaluation_dataset = (
+            LazyDescribed.from_describable(evaluation_datasets) | datasets_merger()
+        )
+    else:
+        (evaluation_case,) = evaluation_cases
+        evaluation_dataset = all_boiling_datasets[evaluation_case]
 
     architecture = get_baseline_boiling_architecture(
         direct_visualization=direct_visualization,
