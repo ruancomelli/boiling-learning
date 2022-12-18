@@ -3,6 +3,7 @@ import typer
 from boiling_learning.app.studies import (
     animate,
     automl,
+    cross_surface,
     downscaling_preprocessing,
     downscaling_training,
     example_frames,
@@ -14,6 +15,7 @@ from boiling_learning.app.studies import (
 app = typer.Typer()
 app.add_typer(animate.app, name='animate')
 app.add_typer(automl.app, name='automl')
+app.add_typer(cross_surface.app, name='cross-surface')
 app.add_typer(downscaling_preprocessing.app, name='downscaling-preprocessing')
 app.add_typer(downscaling_training.app, name='downscaling-training')
 app.add_typer(example_frames.app, name='example-frames')

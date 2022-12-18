@@ -1,4 +1,3 @@
-import itertools
 from fractions import Fraction
 from operator import itemgetter
 
@@ -38,7 +37,7 @@ from boiling_learning.model.definitions import hoboldnet2
 from boiling_learning.model.training import CompileModelParams, compile_model, strategy_scope
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist
-from boiling_learning.transforms import dataset_sampler, datasets_merger, subset
+from boiling_learning.transforms import dataset_sampler, subset
 
 # TODO: check
 # <https://stackoverflow.com/a/58970598/5811400> and <https://github.com/googlecolab/colabtools/issues/864#issuecomment-556437040> # noqa
@@ -509,7 +508,6 @@ print(regular_wire_best_model_direct_visualization_less_data)
 
 """#### Other wire - auto ML"""
 
-
 # with strategy_scope(strategy):
 #     loss = tf.keras.losses.MeanSquaredError()
 #     metrics = [
@@ -563,127 +561,6 @@ print(regular_wire_best_model_direct_visualization_less_data)
 # )
 # print(regular_wire_best_model)
 
-
-logger.info('Analyzing cross-surface boiling evaluation')
-
-
-@cache(JSONAllocator(analyses_path() / 'studies' / 'boiling-cross-surface'))
-def boiling_cross_surface_evaluation(
-    direct_visualization: bool,
-    training_cases: tuple[int, ...],
-    evaluation_cases: tuple[int, ...],
-    normalize_images: bool = True,
-) -> dict[str, float]:
-    logger.info(
-        f'Training on cases {training_cases} '
-        f'| evaluation on {evaluation_cases} '
-        f"| {'Direct' if direct_visualization else 'Indirect'} visualization"
-    )
-
-    all_datasets = boiling_datasets(direct_visualization=direct_visualization)
-    training_datasets = tuple(all_datasets[training_case] for training_case in training_cases)
-    evaluation_datasets = tuple(
-        all_datasets[evaluation_case] for evaluation_case in evaluation_cases
-    )
-
-    training_dataset = LazyDescribed.from_describable(training_datasets) | datasets_merger()
-    evaluation_dataset = LazyDescribed.from_describable(evaluation_datasets) | datasets_merger()
-
-    with strategy_scope(strategy):
-        architecture = get_baseline_boiling_architecture(
-            direct_visualization=direct_visualization,
-            normalize_images=normalize_images,
-        )
-        compiled_model = compile_model(architecture, get_baseline_compile_params())
-
-    logger.info('Training...')
-
-    model = fit_boiling_model(
-        compiled_model,
-        training_dataset,
-        get_baseline_fit_params(),
-        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-    )
-
-    logger.info('Evaluating')
-    with strategy_scope(strategy):
-        compile_model(model.architecture, get_baseline_compile_params())
-
-    ds_evaluation_val = to_tensorflow(
-        evaluation_dataset | subset('val'),
-        batch_size=BOILING_BASELINE_BATCH_SIZE,
-        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-        experiment='boiling1d',
-    )
-
-    print(next(ds_evaluation_val().as_numpy_iterator()))
-
-    evaluation = model.architecture.evaluate(ds_evaluation_val())
-    logger.info(f'Done: {evaluation}')
-
-    return evaluation
-
-
-cases_indices = ((0,), (1,), (0, 1), (2,), (3,), (2, 3), (0, 1, 2, 3))
-
-boiling_cross_surface = {
-    (is_direct, training_cases, evaluation_cases): boiling_cross_surface_evaluation(
-        is_direct, training_cases, evaluation_cases, normalize_images=True
-    )
-    for is_direct, training_cases, evaluation_cases in itertools.product(
-        (False, True), cases_indices, cases_indices
-    )
-}
-
-print(boiling_cross_surface)
-
-
-console = Console()
-
-
-def _format_sets(indices: tuple[int, ...]) -> str:
-    return ' + '.join(map(str, indices))
-
-
-def _get_and_format_results(direct_result: float, indirect_result: float) -> str:
-    formatted_direct_result = f'[bold]{direct_result:.4f}[/bold]'
-    formatted_indirect_result = f'{indirect_result:.4f}'
-
-    ratio = (indirect_result - direct_result) / direct_result
-    formatted_ratio = (
-        f'[bold][bright_red]{ratio:+.2%}[/bright_red][/bold]'
-        if ratio > 0
-        else f'[bold][bright_green]{ratio:+.2%}[/bright_green][/bold]'
-    )
-
-    return f'{formatted_direct_result}\n{formatted_indirect_result}\n({formatted_ratio})'
-
-
-for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
-    cross_surface_analysis = Table(
-        'Train \\ Eval',
-        *(map(_format_sets, cases_indices)),
-        title=f'Cross surface analysis - {metric_name}',
-    )
-
-    for training_indices in cases_indices:
-        cross_surface_analysis.add_row(
-            _format_sets(training_indices),
-            *map(
-                _get_and_format_results,
-                (
-                    boiling_cross_surface[(True, training_indices, evaluation_cases)][metric_name]
-                    for evaluation_cases in cases_indices
-                ),
-                (
-                    boiling_cross_surface[(False, training_indices, evaluation_cases)][metric_name]
-                    for evaluation_cases in cases_indices
-                ),
-            ),
-            end_section=True,
-        )
-
-    console.print(cross_surface_analysis)
 
 """#### Cross-surface boiling evaluation with AutoML"""
 
