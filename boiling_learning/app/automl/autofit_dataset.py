@@ -32,15 +32,15 @@ def autofit_dataset(
     compile_params = get_baseline_compile_params(strategy=strategy)
 
     hypermodel = ConvImageRegressor(
-        loss=compile_params.loss,
-        metrics=compile_params.metrics,
+        loss=compile_params['loss'],
+        metrics=compile_params['metrics'],
         tuner=EarlyStoppingGreedy,
         directory=_get_autofit_to_dataset_allocator(experiment).allocate(
             ConvImageRegressor,
             datasets,
             tuner=EarlyStoppingGreedy,
-            loss=compile_params.loss,
-            metrics=compile_params.metrics,
+            loss=compile_params['loss'],
+            metrics=compile_params['metrics'],
             normalize_images=normalize_images,
             max_model_size=max_model_size,
             goal=goal,

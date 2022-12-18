@@ -133,7 +133,7 @@ def _boiling_cross_surface_evaluation(
         normalize_images=normalize_images,
         strategy=strategy,
     ) | compile_model(
-        get_baseline_compile_params(strategy=strategy),
+        **get_baseline_compile_params(strategy=strategy),
     )
 
     logger.info('Training...')
@@ -149,7 +149,7 @@ def _boiling_cross_surface_evaluation(
     logger.info('Evaluating')
 
     model = fit_model.architecture | compile_model(
-        get_baseline_compile_params(strategy=strategy),
+        **get_baseline_compile_params(strategy=strategy),
     )
 
     ds_evaluation_val = to_tensorflow(

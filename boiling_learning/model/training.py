@@ -48,24 +48,21 @@ def _encode_configurable(instance: Union[Loss, Metric, Optimizer]) -> json.JSOND
     return json.serialize(describe(instance))
 
 
-@dataclass(frozen=True)
-class CompileModelParams:
-    loss: Loss
-    optimizer: Optimizer
-    metrics: Optional[list[Metric]]
-
-
 @wrap_as_partial_transformer
 @eager
 def compile_model(
     architecture: ModelArchitecture,
-    params: CompileModelParams,
+    /,
+    *,
+    loss: Loss,
+    optimizer: Optimizer,
+    metrics: Optional[list[Metric]],
 ) -> ModelArchitecture:
     cloned = architecture.clone()
     cloned.model.compile(
-        optimizer=params.optimizer,
-        loss=params.loss,
-        metrics=params.metrics,
+        optimizer=optimizer,
+        loss=loss,
+        metrics=metrics,
     )
     return cloned
 

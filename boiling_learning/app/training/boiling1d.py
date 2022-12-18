@@ -133,7 +133,7 @@ def get_pretrained_baseline_boiling_model(
         normalize_images=normalize_images,
         strategy=strategy,
     ) | compile_model(
-        get_baseline_compile_params(strategy=strategy),
+        **get_baseline_compile_params(strategy=strategy),
     )
 
     return fit_boiling_model(

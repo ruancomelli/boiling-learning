@@ -1,5 +1,5 @@
 import functools
-from typing import Literal
+from typing import Literal, TypedDict
 
 import tensorflow as tf
 import tensorflow_addons as tfa
@@ -13,7 +13,6 @@ from boiling_learning.management.cacher import CachedFunction, Cacher
 from boiling_learning.model.definitions import hoboldnet2
 from boiling_learning.model.model import ModelArchitecture
 from boiling_learning.model.training import (
-    CompileModelParams,
     FitModelParams,
     get_fit_model,
     load_with_strategy,
@@ -37,22 +36,28 @@ def cached_fit_model_function(
     )
 
 
+class _CompileModelParams(TypedDict):
+    loss: tf.keras.losses.Loss
+    optimizer: tf.keras.optimizers.Optimizer
+    metrics: list[tf.keras.metrics.Metric]
+
+
 def get_baseline_compile_params(
     *,
     strategy: LazyDescribed[tf.distribute.Strategy],
-) -> CompileModelParams:
+) -> _CompileModelParams:
     with strategy_scope(strategy):
-        return CompileModelParams(
-            loss=tf.keras.losses.MeanSquaredError(),
-            optimizer=tf.keras.optimizers.Adam(1e-3),
-            metrics=[
+        return {
+            'loss': tf.keras.losses.MeanSquaredError(),
+            'optimizer': tf.keras.optimizers.Adam(1e-3),
+            'metrics': [
                 tf.keras.metrics.MeanSquaredError('MSE'),
                 tf.keras.metrics.RootMeanSquaredError('RMS'),
                 tf.keras.metrics.MeanAbsoluteError('MAE'),
                 tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
                 tfa.metrics.RSquare('R2'),
             ],
-        )
+        }
 
 
 def get_baseline_fit_params() -> FitModelParams:

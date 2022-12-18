@@ -47,7 +47,7 @@ def boiling1d(
     )
 
     compiled_model = LazyDescribed.from_describable(model.architecture) | compile_model(
-        get_baseline_compile_params(strategy=strategy),
+        **get_baseline_compile_params(strategy=strategy),
     )
 
     validation_metrics = evaluate_with_uncertainty(compiled_model(), ds_val())

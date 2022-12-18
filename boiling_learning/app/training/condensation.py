@@ -92,13 +92,11 @@ def get_pretrained_baseline_condensation_model(
     normalize_images: bool = True,
     target: str = DEFAULT_CONDENSATION_MASS_RATE_TARGET,
 ) -> FitModelReturn:
-    compiled_model = LazyDescribed.from_describable(
-        get_baseline_condensation_architecture(
-            normalize_images=normalize_images,
-            strategy=strategy,
-        )
+    compiled_model = get_baseline_condensation_architecture(
+        normalize_images=normalize_images,
+        strategy=strategy,
     ) | compile_model(
-        get_baseline_compile_params(strategy=strategy),
+        **get_baseline_compile_params(strategy=strategy),
     )
 
     return fit_condensation_model(

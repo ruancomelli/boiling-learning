@@ -21,7 +21,7 @@ from boiling_learning.datasets.sliceable import map_targets, targets
 from boiling_learning.image_datasets import Targets
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.model.definitions import hoboldnet2
-from boiling_learning.model.training import CompileModelParams, compile_model, strategy_scope
+from boiling_learning.model.training import compile_model, strategy_scope
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist
 
@@ -467,7 +467,7 @@ with strategy_scope(strategy):
         problem='classification',
         num_classes=N_CLASSES,
     )
-    compile_params = CompileModelParams(
+    compiled_model = architecture | compile_model(
         loss=tf.keras.losses.SparseCategoricalCrossentropy(),
         optimizer=tf.keras.optimizers.Adam(1e-4),
         metrics=[
@@ -477,7 +477,6 @@ with strategy_scope(strategy):
             # tfa.metrics.F1Score(N_CLASSES, name='F1'),
         ],
     )
-    compiled_model = architecture | compile_model(compile_params)
 
 assert False, 'STOP!'
 

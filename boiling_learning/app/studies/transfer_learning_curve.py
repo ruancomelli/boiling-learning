@@ -73,7 +73,7 @@ def boiling1d(
         compiled_model = LazyDescribed.from_describable(
             pretrained_model.architecture
         ) | compile_model(
-            get_baseline_compile_params(strategy=strategy),
+            **get_baseline_compile_params(strategy=strategy),
         )
 
         fit_model = fit_boiling_model(
