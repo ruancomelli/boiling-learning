@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 import rich
 import typer
 
@@ -11,6 +13,7 @@ from boiling_learning.app.training.boiling1d import (
     get_baseline_boiling_architecture,
 )
 from boiling_learning.app.training.condensation import get_baseline_condensation_architecture
+from boiling_learning.transforms import dataset_sampler
 
 app = typer.Typer()
 console = rich.console.Console()
@@ -20,6 +23,7 @@ console = rich.console.Console()
 def boiling1d(
     direct: bool = typer.Option(..., '--direct/--indirect'),
     normalize: bool = typer.Option(...),
+    each: int = typer.Option(1),
 ) -> None:
     strategy = configure(
         force_gpu_allow_growth=True,
@@ -41,8 +45,13 @@ def boiling1d(
         )
     )
 
+    datasets = baseline_boiling_dataset(direct_visualization=direct)
+
+    if each != 1:
+        datasets = datasets | dataset_sampler(Fraction(1, each), subset='train')
+
     autofit_result = autofit_dataset(
-        baseline_boiling_dataset(direct_visualization=direct),
+        datasets,
         target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
         normalize_images=normalize,
         max_model_size=baseline_architecture_size,

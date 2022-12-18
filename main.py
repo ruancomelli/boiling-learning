@@ -6,7 +6,6 @@ from loguru import logger
 from rich.console import Console
 from rich.table import Table
 
-from boiling_learning.app.automl.autofit_dataset import autofit_dataset
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
 from boiling_learning.app.datasets.bridging import to_tensorflow
@@ -462,104 +461,6 @@ for fraction, metrics in boiling_learning_curve.items():
     )
 
 console.print(learning_curve_analysis)
-
-"""#### Auto ML"""
-
-regular_wire_best_model_direct_visualization = autofit_dataset(
-    baseline_boiling_dataset_direct,
-    target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-    normalize_images=True,
-    max_model_size=baseline_boiling_model_direct_size,
-    goal=None,
-    experiment='boiling1d',
-)
-
-print(regular_wire_best_model_direct_visualization)
-
-regular_wire_best_model_indirect_visualization = autofit_dataset(
-    baseline_boiling_dataset_indirect,
-    target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-    normalize_images=True,
-    max_model_size=baseline_boiling_model_indirect_size,
-    goal=None,
-    experiment='boiling1d',
-)
-
-print(regular_wire_best_model_indirect_visualization)
-
-"""#### AutoML - Less data"""
-
-
-ds_train = baseline_boiling_dataset_direct | dataset_sampler(Fraction(1, 100)) | subset('train')
-ds_val = baseline_boiling_dataset_direct | subset('val')
-
-regular_wire_best_model_direct_visualization_less_data = autofit_dataset(
-    LazyDescribed.from_value_and_description(
-        (ds_train(), ds_val(), None), (ds_train, ds_val, None)
-    ),
-    target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-    normalize_images=True,
-    max_model_size=baseline_boiling_model_indirect_size,
-    goal=None,
-    experiment='boiling1d',
-)
-
-print(regular_wire_best_model_direct_visualization_less_data)
-
-"""#### Other wire - auto ML"""
-
-# with strategy_scope(strategy):
-#     loss = tf.keras.losses.MeanSquaredError()
-#     metrics = [
-#         tf.keras.metrics.MeanSquaredError('MSE'),
-#         tf.keras.metrics.RootMeanSquaredError('RMS'),
-#         tf.keras.metrics.MeanAbsoluteError('MAE'),
-#         tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
-#         tfa.metrics.RSquare('R2'),
-#     ]
-
-# hypermodel = ConvImageRegressor(
-#     loss=loss,
-#     metrics=metrics,
-#     tuner=EarlyStoppingGreedy,
-#     directory=hypermodel_allocator,
-#     max_model_size=int(
-#         baseline_boiling_model_architecture.count_parameters(trainable=True, non_trainable=False)
-#     ),
-#     strategy=strategy,
-#     goal=baseline_boiling_loss,
-#     normalize_images=False,
-# )
-
-# tune_model_params = TuneModelParams(
-#     batch_size=16,
-#     callbacks=Described.from_list(
-#         [
-#             Described.from_constructor(tf.keras.callbacks.TerminateOnNaN, P()),
-#             Described.from_constructor(
-#                 tf.keras.callbacks.EarlyStopping,
-#                 P(
-#                     monitor='val_loss',
-#                     min_delta=0,
-#                     # patience=2,
-#                     patience=10,
-#                     baseline=None,
-#                     mode='auto',
-#                     restore_best_weights=True,
-#                     verbose=1,
-#                 ),
-#             ),
-#         ]
-#     ),
-# )
-
-# regular_wire_best_model = autofit(
-#     hypermodel,
-#     datasets=BOILING_DIRECT_DATASETS[1],
-#     params=tune_model_params,
-#     target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-# )
-# print(regular_wire_best_model)
 
 
 """#### Cross-surface boiling evaluation with AutoML"""
