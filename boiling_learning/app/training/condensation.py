@@ -77,7 +77,7 @@ def get_baseline_condensation_architecture(
     *,
     strategy: LazyDescribed[tf.distribute.Strategy],
     normalize_images: bool = True,
-) -> ModelArchitecture:
+) -> LazyDescribed[ModelArchitecture]:
     return get_baseline_architecture(
         condensation_dataset(each=1),
         strategy=strategy,

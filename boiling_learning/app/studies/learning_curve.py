@@ -20,7 +20,6 @@ from boiling_learning.app.training.common import (
     get_baseline_compile_params,
     get_baseline_fit_params,
 )
-from boiling_learning.lazy import LazyDescribed
 from boiling_learning.model.training import compile_model
 from boiling_learning.transforms import dataset_sampler
 from boiling_learning.utils.pathutils import resolve
@@ -64,18 +63,16 @@ def boiling1d(
             else datasets
         )
 
-        architecture = get_baseline_boiling_architecture(
+        model = get_baseline_boiling_architecture(
             direct_visualization=direct,
             normalize_images=True,
             strategy=strategy,
-        )
-
-        compiled_model = LazyDescribed.from_describable(architecture) | compile_model(
+        ) | compile_model(
             get_baseline_compile_params(strategy=strategy),
         )
 
         fit_model = fit_boiling_model(
-            compiled_model,
+            model,
             subsampled,
             get_baseline_fit_params(),
             target=DEFAULT_BOILING_HEAT_FLUX_TARGET,

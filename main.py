@@ -79,7 +79,7 @@ baseline_boiling_model_architecture_direct = get_baseline_boiling_architecture(
     direct_visualization=True,
     normalize_images=False,
     strategy=strategy,
-)
+)()
 logger.info('Done getting direct baseline model')
 
 logger.info('Getting indirect baseline model')
@@ -87,7 +87,7 @@ baseline_boiling_model_architecture_indirect = get_baseline_boiling_architecture
     direct_visualization=False,
     normalize_images=False,
     strategy=strategy,
-)
+)()
 logger.info('Done getting indirect baseline model')
 
 baseline_boiling_model_direct_size = int(

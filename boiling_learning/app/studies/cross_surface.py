@@ -128,19 +128,18 @@ def _boiling_cross_surface_evaluation(
         (evaluation_case,) = evaluation_cases
         evaluation_dataset = all_boiling_datasets[evaluation_case]
 
-    architecture = get_baseline_boiling_architecture(
+    model = get_baseline_boiling_architecture(
         direct_visualization=direct_visualization,
         normalize_images=normalize_images,
         strategy=strategy,
-    )
-    compiled_model = LazyDescribed.from_describable(architecture) | compile_model(
+    ) | compile_model(
         get_baseline_compile_params(strategy=strategy),
     )
 
     logger.info('Training...')
 
-    model = fit_boiling_model(
-        compiled_model,
+    fit_model = fit_boiling_model(
+        model,
         training_dataset,
         get_baseline_fit_params(),
         target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
@@ -149,7 +148,7 @@ def _boiling_cross_surface_evaluation(
 
     logger.info('Evaluating')
 
-    compiled_model = LazyDescribed.from_describable(model.architecture) | compile_model(
+    model = fit_model.architecture | compile_model(
         get_baseline_compile_params(strategy=strategy),
     )
 
@@ -160,7 +159,7 @@ def _boiling_cross_surface_evaluation(
         experiment='boiling1d',
     )
 
-    evaluation = model.architecture.evaluate(ds_evaluation_val())
+    evaluation = model.evaluate(ds_evaluation_val())
 
     logger.info(f'Done: {evaluation}')
 

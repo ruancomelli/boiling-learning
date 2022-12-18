@@ -83,9 +83,15 @@ def get_baseline_architecture(
     *,
     strategy: LazyDescribed[tf.distribute.Strategy],
     normalize_images: bool = True,
-) -> ModelArchitecture:
+) -> LazyDescribed[ModelArchitecture]:
     ds_train, _, _ = dataset()
     first_frame, _ = ds_train[0]
 
     with strategy_scope(strategy):
-        return hoboldnet2(first_frame.shape, dropout=0.5, normalize_images=normalize_images)
+        return LazyDescribed.from_describable(
+            hoboldnet2(
+                first_frame.shape,
+                dropout=0.5,
+                normalize_images=normalize_images,
+            )
+        )

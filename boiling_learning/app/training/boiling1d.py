@@ -114,7 +114,7 @@ def get_baseline_boiling_architecture(
     strategy: LazyDescribed[tf.distribute.Strategy],
     direct_visualization: bool = True,
     normalize_images: bool = True,
-) -> ModelArchitecture:
+) -> LazyDescribed[ModelArchitecture]:
     return get_baseline_architecture(
         baseline_boiling_dataset(direct_visualization=direct_visualization),
         strategy=strategy,
@@ -128,12 +128,10 @@ def get_pretrained_baseline_boiling_model(
     direct_visualization: bool = True,
     normalize_images: bool = True,
 ) -> FitModelReturn:
-    model = LazyDescribed.from_describable(
-        get_baseline_boiling_architecture(
-            direct_visualization=direct_visualization,
-            normalize_images=normalize_images,
-            strategy=strategy,
-        )
+    model = get_baseline_boiling_architecture(
+        direct_visualization=direct_visualization,
+        normalize_images=normalize_images,
+        strategy=strategy,
     ) | compile_model(
         get_baseline_compile_params(strategy=strategy),
     )
