@@ -2,17 +2,12 @@ import rich
 import typer
 
 from boiling_learning.app.configuration import configure
-from boiling_learning.app.datasets.bridging import to_tensorflow_triplet
 from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
-from boiling_learning.app.training.boiling1d import (
-    DEFAULT_BOILING_HEAT_FLUX_TARGET,
-    DEFAULT_BOILING_OUTLIER_FILTER,
-    get_pretrained_baseline_boiling_model,
-)
+from boiling_learning.app.training.boiling1d import get_pretrained_baseline_boiling_model
 from boiling_learning.app.training.common import get_baseline_compile_params
 from boiling_learning.app.training.condensation import get_pretrained_baseline_condensation_model
+from boiling_learning.app.training.evaluation import evaluate_boiling_model_with_dataset
 from boiling_learning.lazy import LazyDescribed
-from boiling_learning.model.evaluate import evaluate_with_uncertainty
 from boiling_learning.model.training import compile_model
 
 app = typer.Typer()
@@ -38,23 +33,16 @@ def boiling1d(
         strategy=strategy,
     )
 
-    _, ds_val, ds_test = to_tensorflow_triplet(
-        baseline_boiling_dataset(direct_visualization=direct),
-        prefilterer=DEFAULT_BOILING_OUTLIER_FILTER,
-        batch_size=None,
-        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-        experiment='boiling1d',
-    )
-
     compiled_model = LazyDescribed.from_describable(model.architecture) | compile_model(
         **get_baseline_compile_params(strategy=strategy),
     )
 
-    validation_metrics = evaluate_with_uncertainty(compiled_model(), ds_val())
-    test_metrics = evaluate_with_uncertainty(compiled_model(), ds_test())
+    evaluation_dataset = baseline_boiling_dataset(direct_visualization=direct)
 
-    console.print(model.validation_metrics)
-    console.print(model.test_metrics)
+    _, validation_metrics, test_metrics = evaluate_boiling_model_with_dataset(
+        compiled_model,
+        evaluation_dataset,
+    )
 
     console.print(validation_metrics)
     console.print(test_metrics)

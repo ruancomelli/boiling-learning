@@ -58,13 +58,16 @@ def compile_model(
     optimizer: Optimizer,
     metrics: Optional[list[Metric]],
 ) -> ModelArchitecture:
-    cloned = architecture.clone()
-    cloned.model.compile(
+    # TODO: create a clone here to ensure pureness
+    # needs to do the clone in the same `strategy` as metrics
+    # architecture = architecture.clone()
+
+    architecture.model.compile(
         optimizer=optimizer,
         loss=loss,
         metrics=metrics,
     )
-    return cloned
+    return architecture
 
 
 @dataclass(frozen=True)

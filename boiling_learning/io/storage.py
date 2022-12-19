@@ -15,7 +15,9 @@ from boiling_learning.dataclasses import (
     is_dataclass_instance,
     shallow_asdict,
 )
+from boiling_learning.descriptions import describe
 from boiling_learning.io import json
+from boiling_learning.lazy import LazyDescribed
 from boiling_learning.utils.pathutils import PathLike, resolve
 from boiling_learning.utils.table_dispatch import TableDispatcher
 
@@ -234,6 +236,20 @@ def _serialize_timedelta(instance: timedelta, path: Path) -> None:
 @deserialize.dispatch(timedelta)
 def _deserialize_timedelta(path: Path, _metadata: Metadata) -> timedelta:
     return timedelta(seconds=load(path))
+
+
+@serialize.instance(LazyDescribed)
+def _serialize_lazy_described(instance: LazyDescribed, path: Path) -> None:
+    save(instance(), path / 'value')
+    save(describe(instance), path / 'description')
+
+
+@deserialize.dispatch(LazyDescribed)
+def _deserialize_lazy_described(path: Path, _metadata: Metadata) -> LazyDescribed:
+    return LazyDescribed.from_value_and_description(
+        load(path / 'value'),
+        load(path / 'description'),
+    )
 
 
 class DataclassOfSaveableFieldsMeta(type):
