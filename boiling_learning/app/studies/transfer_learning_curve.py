@@ -4,7 +4,6 @@ from pathlib import Path
 import tensorflow as tf
 import typer
 from loguru import logger
-from rich.columns import Columns
 from rich.console import Console
 from rich.table import Table
 
@@ -29,12 +28,7 @@ from boiling_learning.transforms import dataset_sampler
 app = typer.Typer()
 console = Console()
 
-FRACTIONS = (
-    (0,)
-    + tuple(Fraction(i + 1, 100) for i in range(10))
-    + tuple(Fraction(i + 1, 10) for i in range(10))
-)
-LEARNING_RATES = tuple(10 ** (-exp) for exp in range(10))
+FRACTIONS = (0, Fraction(1, 100), Fraction(1, 10), 1)
 
 
 @app.command()
@@ -53,85 +47,67 @@ def boiling1d(
     datasets = boiling_datasets(direct_visualization=direct)[1]
 
     validation_losses: list[float] = []
-    tables: list[Table] = []
 
-    for learning_rate in LEARNING_RATES:
-        for freeze_body, freeze_pre in (
-            (True, True),
-            # (True, False),
-            # (False, False),
-        ):
-            table = Table(
-                'Subsample',
-                'Validation loss',
-                'Test loss',
-                'Epochs trained',
-                title=f'Learning curve - {learning_rate=} | {freeze_body=} | {freeze_pre=}',
+    table = Table(
+        'Subsample',
+        'Validation\nloss',
+        'Test\nloss',
+        'Epochs\ntrained',
+        title='Learning curve',
+    )
+
+    for fraction in FRACTIONS:
+        subsampled = (
+            datasets | dataset_sampler(count=fraction, subset='train')
+            if fraction != 1
+            else datasets
+        )
+
+        pretrained_model = get_pretrained_baseline_boiling_model(
+            direct_visualization=direct,
+            normalize_images=True,
+            strategy=strategy,
+        )
+
+        compiled_model = pretrained_model.architecture | compile_model(
+            **get_baseline_compile_params(strategy=strategy),
+        )
+        if fraction:
+            fit_model = fit_boiling_model(
+                compiled_model,
+                subsampled,
+                get_baseline_fit_params(),
+                target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
+                strategy=strategy,
             )
 
-            for fraction in FRACTIONS:
-                subsampled = (
-                    datasets | dataset_sampler(count=fraction, subset='train')
-                    if fraction != 1
-                    else datasets
-                )
+            trained_epochs = fit_model.trained_epochs
+            validation_metrics = fit_model.validation_metrics
+            test_metrics = fit_model.test_metrics
+        else:
+            _, validation_metrics, test_metrics = evaluate_boiling_model_with_dataset(
+                compiled_model,
+                datasets,
+            )
 
-                pretrained_model = get_pretrained_baseline_boiling_model(
-                    direct_visualization=direct,
-                    normalize_images=True,
-                    strategy=strategy,
-                )
+            trained_epochs = 0
+            validation_metrics = {
+                metric_name: metric.value for metric_name, metric in validation_metrics.items()
+            }
+            test_metrics = {
+                metric_name: metric.value for metric_name, metric in test_metrics.items()
+            }
 
-                compiled_model = _freeze(
-                    pretrained_model.architecture,
-                    strategy=strategy,
-                    body=freeze_body,
-                    pre=freeze_pre,
-                ) | compile_model(
-                    **get_baseline_compile_params(
-                        strategy=strategy,
-                        learning_rate=learning_rate,
-                    ),
-                )
-                if fraction:
-                    fit_model = fit_boiling_model(
-                        compiled_model,
-                        subsampled,
-                        get_baseline_fit_params(),
-                        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-                        strategy=strategy,
-                    )
+        table.add_row(
+            f'{fraction} ({float(fraction):.0%})',
+            f'{validation_metrics["MSE"]:.2f}',
+            f'{test_metrics["MSE"]:.2f}',
+            str(trained_epochs),
+        )
 
-                    trained_epochs = fit_model.trained_epochs
-                    validation_metrics = fit_model.validation_metrics
-                    test_metrics = fit_model.test_metrics
-                else:
-                    _, validation_metrics, test_metrics = evaluate_boiling_model_with_dataset(
-                        compiled_model,
-                        datasets,
-                    )
+        validation_losses.append(validation_metrics['MSE'])
 
-                    trained_epochs = 0
-                    validation_metrics = {
-                        metric_name: metric.value
-                        for metric_name, metric in validation_metrics.items()
-                    }
-                    test_metrics = {
-                        metric_name: metric.value for metric_name, metric in test_metrics.items()
-                    }
-
-                table.add_row(
-                    f'{fraction} ({float(fraction):.0%})',
-                    f'{validation_metrics["MSE"]:.2f}',
-                    f'{test_metrics["MSE"]:.2f}',
-                    str(trained_epochs),
-                )
-
-                validation_losses.append(validation_metrics['MSE'])
-
-            tables.append(table)
-
-    console.print(Columns(tables))
+    console.print(table)
 
     # TODO: fix this
     # sns.set_style('whitegrid')

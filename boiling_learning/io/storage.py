@@ -257,10 +257,7 @@ class DataclassOfSaveableFieldsMeta(type):
         return is_dataclass_instance(instance) and save.supports(shallow_asdict(instance))
 
 
-class DataclassOfSaveableFields(
-    DataClass,
-    metaclass=DataclassOfSaveableFieldsMeta,
-):
+class DataclassOfSaveableFields(metaclass=DataclassOfSaveableFieldsMeta):
     ...
 
 

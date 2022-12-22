@@ -59,22 +59,31 @@ def get_baseline_compile_params(
         }
 
 
-def get_baseline_fit_params() -> FitModelParams:
+def get_baseline_fit_params(
+    *,
+    early_stopping_patience: int | None = 10,
+) -> FitModelParams:
     return FitModelParams(
         batch_size=BOILING_BASELINE_BATCH_SIZE,
         epochs=100,
         callbacks=LazyDescribed.from_list(
             [
                 LazyDescribed.from_constructor(tf.keras.callbacks.TerminateOnNaN),
-                LazyDescribed.from_constructor(
-                    tf.keras.callbacks.EarlyStopping,
-                    monitor='val_loss',
-                    min_delta=0,
-                    patience=10,
-                    baseline=None,
-                    mode='auto',
-                    restore_best_weights=True,
-                    verbose=1,
+                *(
+                    [
+                        LazyDescribed.from_constructor(
+                            tf.keras.callbacks.EarlyStopping,
+                            monitor='val_loss',
+                            min_delta=0,
+                            patience=early_stopping_patience,
+                            baseline=None,
+                            mode='auto',
+                            restore_best_weights=True,
+                            verbose=1,
+                        ),
+                    ]
+                    if early_stopping_patience is not None
+                    else []
                 ),
             ]
         ),

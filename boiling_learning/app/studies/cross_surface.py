@@ -22,13 +22,18 @@ from boiling_learning.app.training.common import (
     get_baseline_fit_params,
 )
 from boiling_learning.lazy import LazyDescribed
-from boiling_learning.management.allocators import JSONAllocator
-from boiling_learning.management.cacher import cache
 from boiling_learning.model.training import compile_model
 from boiling_learning.transforms import datasets_merger, subset
 
 app = typer.Typer()
 console = Console()
+
+METRICS = (
+    'MSE',
+    # 'MAPE',
+    # 'RMS',
+    # 'R2',
+)
 
 
 @app.command()
@@ -42,12 +47,13 @@ def boiling1d() -> None:
 
     cases_indices = ((0,), (1,), (0, 1), (2,), (3,), (2, 3), (0, 1, 2, 3))
 
-    cross_surface_evaluator = cache(JSONAllocator(_cross_surface_study_path() / 'boiling1d'))(
-        _boiling_cross_surface_evaluation
-    )
+    # cross_surface_evaluator = cache(JSONAllocator(_cross_surface_study_path() / 'boiling1d'))(
+    #     _boiling_cross_surface_evaluation
+    # )
+    cross_surface_evaluator = _boiling_cross_surface_evaluation
 
     tables: list[Table] = []
-    for metric_name in ('MSE', 'MAPE', 'RMS', 'R2'):
+    for metric_name in METRICS:
         table = Table(
             'Train \\ Eval',
             *(map(_format_sets, cases_indices)),
@@ -96,7 +102,6 @@ def _boiling_cross_surface_evaluation(
     direct_visualization: bool,
     training_cases: tuple[int, ...],
     evaluation_cases: tuple[int, ...],
-    normalize_images: bool = True,
     strategy: LazyDescribed[tf.distribute.Strategy],
 ) -> dict[str, float]:
     logger.info(
@@ -130,7 +135,7 @@ def _boiling_cross_surface_evaluation(
 
     model = get_baseline_boiling_architecture(
         direct_visualization=direct_visualization,
-        normalize_images=normalize_images,
+        normalize_images=True,
         strategy=strategy,
     ) | compile_model(
         **get_baseline_compile_params(strategy=strategy),
@@ -159,7 +164,7 @@ def _boiling_cross_surface_evaluation(
         experiment='boiling1d',
     )
 
-    evaluation = model.evaluate(ds_evaluation_val())
+    evaluation = model().evaluate(ds_evaluation_val())
 
     logger.info(f'Done: {evaluation}')
 
