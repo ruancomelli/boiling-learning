@@ -127,7 +127,7 @@ class _ListOfSaveableMeta(type):
         return isinstance(instance, list) and all(save.supports(item) for item in instance)
 
 
-class ListOfSaveable(metaclass=_ListOfSaveableMeta):
+class ListOfSaveable(list[Supports[Saveable]], metaclass=_ListOfSaveableMeta):
     pass
 
 
@@ -144,7 +144,7 @@ class _TupleOfSaveableMeta(type):
         return isinstance(instance, tuple) and all(save.supports(item) for item in instance)
 
 
-class TupleOfSaveable(metaclass=_TupleOfSaveableMeta):
+class TupleOfSaveable(tuple[Supports[Saveable], ...], metaclass=_TupleOfSaveableMeta):
     pass
 
 
@@ -160,7 +160,7 @@ class _DictOfSaveableMeta(type):
         )
 
 
-class DictOfSaveable(metaclass=_DictOfSaveableMeta):
+class DictOfSaveable(dict[str, Supports[Saveable]], metaclass=_DictOfSaveableMeta):
     pass
 
 
@@ -239,7 +239,7 @@ def _deserialize_timedelta(path: Path, _metadata: Metadata) -> timedelta:
 
 
 @serialize.instance(LazyDescribed)
-def _serialize_lazy_described(instance: LazyDescribed, path: Path) -> None:
+def _serialize_lazy_described(instance: LazyDescribed[Any], path: Path) -> None:
     save(instance(), path / 'value')
     save(describe(instance), path / 'description')
 
@@ -258,6 +258,7 @@ class DataclassOfSaveableFieldsMeta(type):
 
 
 class DataclassOfSaveableFields(
+    DataClass,
     metaclass=DataclassOfSaveableFieldsMeta,
 ):
     ...

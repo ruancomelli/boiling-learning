@@ -7,6 +7,7 @@ import tensorflow_addons as tfa
 
 from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
 from boiling_learning.app.paths import analyses_path
+from boiling_learning.distribute import strategy_scope
 from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.io.storage import dataclass
 from boiling_learning.lazy import LazyDescribed
@@ -14,12 +15,7 @@ from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import CachedFunction, Cacher
 from boiling_learning.model.definitions import hoboldnet2
 from boiling_learning.model.model import Evaluation, ModelArchitecture
-from boiling_learning.model.training import (
-    FitModelParams,
-    get_fit_model,
-    load_with_strategy,
-    strategy_scope,
-)
+from boiling_learning.model.training import FitModelParams, get_fit_model, load_with_strategy
 
 
 @functools.cache

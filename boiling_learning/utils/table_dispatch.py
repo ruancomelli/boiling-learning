@@ -7,12 +7,12 @@ class DispatchError(Exception):
     pass
 
 
-class TableDispatcher(dict[type, Callable[..., Any]]):
+class TableDispatcher(dict[type | None, Callable[..., Any]]):
     def __init__(self, default: Optional[Callable[..., Any]] = None) -> None:
         super().__init__()
         self._default: Optional[Callable[..., Any]] = default
 
-    def dispatch(self, key: type) -> Callable[[_Callable], _Callable]:
+    def dispatch(self, key: type | None) -> Callable[[_Callable], _Callable]:
         def _dispatcher(call: _Callable) -> _Callable:
             self[key] = call
             return call

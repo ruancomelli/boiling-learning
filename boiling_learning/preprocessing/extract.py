@@ -64,8 +64,8 @@ def _is_done_extracting(directory: Path) -> bool:
     return _done_path_for_directory(directory).exists()
 
 
-def _mark_as_done_extracting(directory: Path) -> bool:
-    return _done_path_for_directory(directory).touch(exist_ok=True)
+def _mark_as_done_extracting(directory: Path) -> None:
+    _done_path_for_directory(directory).touch(exist_ok=True)
 
 
 def _done_path_for_directory(directory: Path) -> Path:

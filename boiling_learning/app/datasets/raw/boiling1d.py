@@ -10,7 +10,6 @@ from boiling_learning.data.samples import WIRE_SAMPLES
 from boiling_learning.lazy import LazyCallable, LazyDescribed
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
-from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
 from boiling_learning.utils.pathutils import PathLike
 from boiling_learning.utils.printing import add_unit_post_fix
 from boiling_learning.utils.units import unit_registry as ureg
@@ -68,7 +67,6 @@ def _set_boiling_case_data(case: Case, /) -> Case:
 
 def _set_experiment_video_data(ev: ExperimentVideo, df: pd.DataFrame) -> None:
     ev.df = ev.sync_time_series(df)
-    check_experiment_video_dataframe_indices(ev)
     ev.df = _regularize_experiment_video_dataframe(ev)
     ev.save_df(ev.df)
 

@@ -1,5 +1,5 @@
 import enum
-from typing import Optional, Type, TypeVar, Union
+from typing import Optional, Type, TypeVar
 
 from frozendict import frozendict  # type: ignore[attr-defined]
 from nidaqmx.constants import ChannelType as NIChannelType
@@ -139,7 +139,7 @@ class Channel:
     def read(
         self,
         task: Task,
-        readings: Union[list[float], list[list[float]]],
+        readings: list[float] | list[list[float]],
         dtype: Type[T] = list,
     ) -> Optional[T]:
         if not Channel.channel_table[task.name]:

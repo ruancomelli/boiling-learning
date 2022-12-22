@@ -10,10 +10,12 @@ from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
 from boiling_learning.automl.tuners import EarlyStoppingGreedy
 from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn
 from boiling_learning.image_datasets import ImageDatasetTriplet
+from boiling_learning.io.storage import dataclass
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
 
 
+@dataclass
 class AutofitHypermodel:
     hypermodel: HyperModel
     tune_model_return: TuneModelReturn
@@ -27,7 +29,7 @@ def autofit_dataset(
     experiment: Literal['boiling1d', 'condensation'],
     normalize_images: bool = True,
     max_model_size: Optional[int] = None,
-    goal: Optional[float] = None,
+    goal: float | None = None,
 ) -> AutofitHypermodel:
     compile_params = get_baseline_compile_params(strategy=strategy)
 

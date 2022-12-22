@@ -15,7 +15,6 @@ from boiling_learning.lazy import LazyCallable, LazyDescribed
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo, VideoData
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.preprocessing.video import Video
-from boiling_learning.scripts.utils.setting_data import check_experiment_video_dataframe_indices
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 
@@ -172,9 +171,6 @@ def _make_dataframe(dataset: ExperimentVideoDataset) -> None:
         logger.debug(f'Making dataframe for {ev.name}')
 
         ev.df = ev.make_dataframe(enforce_time=True)
-
-        check_experiment_video_dataframe_indices(ev)
-
         ev.save_df(ev.df)
 
 
