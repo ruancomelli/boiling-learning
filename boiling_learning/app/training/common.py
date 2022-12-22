@@ -1,5 +1,6 @@
 import functools
-from typing import Literal, TypedDict
+from datetime import timedelta
+from typing import Any, Literal, TypedDict
 
 import tensorflow as tf
 import tensorflow_addons as tfa
@@ -7,11 +8,12 @@ import tensorflow_addons as tfa
 from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
 from boiling_learning.app.paths import analyses_path
 from boiling_learning.image_datasets import ImageDatasetTriplet
+from boiling_learning.io.storage import dataclass
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import CachedFunction, Cacher
 from boiling_learning.model.definitions import hoboldnet2
-from boiling_learning.model.model import ModelArchitecture
+from boiling_learning.model.model import Evaluation, ModelArchitecture
 from boiling_learning.model.training import (
     FitModelParams,
     get_fit_model,
@@ -45,11 +47,12 @@ class _CompileModelParams(TypedDict):
 def get_baseline_compile_params(
     *,
     strategy: LazyDescribed[tf.distribute.Strategy],
+    learning_rate: float = 1e-3,
 ) -> _CompileModelParams:
     with strategy_scope(strategy):
         return {
             'loss': tf.keras.losses.MeanSquaredError(),
-            'optimizer': tf.keras.optimizers.Adam(1e-3),
+            'optimizer': tf.keras.optimizers.Adam(learning_rate),
             'metrics': [
                 tf.keras.metrics.MeanSquaredError('MSE'),
                 tf.keras.metrics.RootMeanSquaredError('RMS'),
@@ -100,3 +103,13 @@ def get_baseline_architecture(
                 normalize_images=normalize_images,
             )
         )
+
+
+@dataclass(frozen=True)
+class LazyFitModelReturn:
+    architecture: LazyDescribed[ModelArchitecture]
+    trained_epochs: int
+    history: tuple[dict[str, Any], ...]
+    train_time: timedelta
+    validation_metrics: Evaluation
+    test_metrics: Evaluation

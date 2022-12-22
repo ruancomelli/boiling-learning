@@ -11,8 +11,10 @@ import more_itertools as mit
 import tensorflow as tf
 from pint import Quantity
 
+from boiling_learning.distribute import strategy_scope
 from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, serialize
+from boiling_learning.lazy import Lazy
 from boiling_learning.model.layers import ImageNormalization, RandomBrightness
 from boiling_learning.utils.pathutils import resolve
 from boiling_learning.utils.units import unit_registry as ureg
@@ -62,8 +64,13 @@ class ModelArchitecture:
     def evaluate(self, data: tf.data.Dataset) -> Evaluation:
         return self.model.evaluate(data, return_dict=True)
 
-    def clone(self) -> ModelArchitecture:
-        return ModelArchitecture(tf.keras.models.clone_model(self.model))
+    def clone(
+        self,
+        *,
+        strategy: Lazy[tf.distribute.Strategy] | None = None,
+    ) -> ModelArchitecture:
+        with strategy_scope(strategy):
+            return ModelArchitecture(tf.keras.models.clone_model(self.model))
 
 
 @serialize.instance(ModelArchitecture)

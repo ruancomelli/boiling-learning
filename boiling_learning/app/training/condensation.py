@@ -6,6 +6,7 @@ from boiling_learning.app.constants import DEFAULT_CONDENSATION_MASS_RATE_TARGET
 from boiling_learning.app.datasets.bridging import to_tensorflow_triplet
 from boiling_learning.app.datasets.preprocessed.condensation import condensation_dataset
 from boiling_learning.app.training.common import (
+    LazyFitModelReturn,
     cached_fit_model_function,
     get_baseline_architecture,
     get_baseline_compile_params,
@@ -27,7 +28,7 @@ def fit_condensation_model(
     *,
     strategy: LazyDescribed[tf.distribute.Strategy],
     target: str,
-) -> FitModelReturn:
+) -> LazyFitModelReturn:
     params.callbacks().extend(
         (
             TimePrinter(
@@ -70,7 +71,24 @@ def fit_condensation_model(
         history_registry=SaveHistory(workspace_path / 'history.json', mode='a'),
     ).partial(fitter.function)
 
-    return fitter.provide(creator, workspace_path / 'model')
+    fit_model_return = fitter.provide(creator, workspace_path / 'model')
+
+    return LazyFitModelReturn(
+        LazyDescribed.from_value_and_description(
+            fit_model_return.architecture,
+            (
+                model,
+                datasets,
+                params,
+                target,
+            ),
+        ),
+        trained_epochs=fit_model_return.trained_epochs,
+        history=fit_model_return.history,
+        train_time=fit_model_return.train_time,
+        validation_metrics=fit_model_return.validation_metrics,
+        test_metrics=fit_model_return.test_metrics,
+    )
 
 
 def get_baseline_condensation_architecture(

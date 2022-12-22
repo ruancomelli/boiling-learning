@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from contextlib import contextmanager, nullcontext
 from datetime import timedelta
-from typing import Any, Callable, Iterator, Optional, ParamSpec, TypedDict, TypeVar, Union
+from typing import Any, Callable, Optional, ParamSpec, TypedDict, TypeVar, Union
 
 import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
@@ -12,6 +11,7 @@ from tensorflow.keras.optimizers import Optimizer
 
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.descriptions import describe
+from boiling_learning.distribute import strategy_scope
 from boiling_learning.io import json
 from boiling_learning.io.storage import dataclass, load
 from boiling_learning.lazy import Lazy, LazyDescribed, eager
@@ -116,14 +116,6 @@ def get_fit_model(
         validation_metrics=model.evaluate(ds_val),
         test_metrics=model.evaluate(ds_test),
     )
-
-
-@contextmanager
-def strategy_scope(strategy: Optional[Lazy[tf.distribute.Strategy]]) -> Iterator[None]:
-    context = strategy().scope() if strategy is not None else nullcontext()
-
-    with context:
-        yield
 
 
 def _wrap_with_strategy(

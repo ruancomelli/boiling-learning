@@ -7,7 +7,6 @@ from boiling_learning.app.training.boiling1d import get_pretrained_baseline_boil
 from boiling_learning.app.training.common import get_baseline_compile_params
 from boiling_learning.app.training.condensation import get_pretrained_baseline_condensation_model
 from boiling_learning.app.training.evaluation import evaluate_boiling_model_with_dataset
-from boiling_learning.lazy import LazyDescribed
 from boiling_learning.model.training import compile_model
 
 app = typer.Typer()
@@ -33,7 +32,7 @@ def boiling1d(
         strategy=strategy,
     )
 
-    compiled_model = LazyDescribed.from_describable(model.architecture) | compile_model(
+    compiled_model = model.architecture | compile_model(
         **get_baseline_compile_params(strategy=strategy),
     )
 

@@ -13,15 +13,12 @@ from boiling_learning.app.datasets.raw.condensation import (
     condensation_datasets,
 )
 from boiling_learning.app.paths import analyses_path
-from boiling_learning.app.training.boiling1d import (
-    get_baseline_boiling_architecture,
-    get_pretrained_baseline_boiling_model,
-)
 from boiling_learning.datasets.sliceable import map_targets, targets
+from boiling_learning.distribute import strategy_scope
 from boiling_learning.image_datasets import Targets
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.model.definitions import hoboldnet2
-from boiling_learning.model.training import compile_model, strategy_scope
+from boiling_learning.model.training import compile_model
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.scripts.utils.initialization import check_all_paths_exist
 
@@ -71,49 +68,6 @@ logger.info('Succesfully checked paths')
 #                 pass
 
 # logger.debug("Done")
-
-
-"""### Baseline on-wire pool boiling"""
-logger.info('Getting direct baseline model')
-baseline_boiling_model_architecture_direct = get_baseline_boiling_architecture(
-    direct_visualization=True,
-    normalize_images=False,
-    strategy=strategy,
-)()
-logger.info('Done getting direct baseline model')
-
-logger.info('Getting indirect baseline model')
-baseline_boiling_model_architecture_indirect = get_baseline_boiling_architecture(
-    direct_visualization=False,
-    normalize_images=False,
-    strategy=strategy,
-)()
-logger.info('Done getting indirect baseline model')
-
-baseline_boiling_model_direct_size = int(
-    baseline_boiling_model_architecture_direct.count_parameters(
-        trainable=True,
-        non_trainable=False,
-    )
-)
-
-baseline_boiling_model_indirect_size = int(
-    baseline_boiling_model_architecture_indirect.count_parameters(
-        trainable=True,
-        non_trainable=False,
-    )
-)
-
-pretrained_baseline_boiling_model_architecture_direct = get_pretrained_baseline_boiling_model(
-    direct_visualization=True,
-    normalize_images=False,
-    strategy=strategy,
-)
-pretrained_baseline_boiling_model_architecture_indirect = get_pretrained_baseline_boiling_model(
-    direct_visualization=False,
-    normalize_images=False,
-    strategy=strategy,
-)
 
 
 """## Pre-processing analyses"""
