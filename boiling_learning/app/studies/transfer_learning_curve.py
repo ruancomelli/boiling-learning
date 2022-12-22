@@ -34,6 +34,7 @@ FRACTIONS = (
     + tuple(Fraction(i + 1, 100) for i in range(10))
     + tuple(Fraction(i + 1, 10) for i in range(10))
 )
+LEARNING_RATES = tuple(10 ** (-exp) for exp in range(10))
 
 
 @app.command()
@@ -54,7 +55,7 @@ def boiling1d(
     validation_losses: list[float] = []
     tables: list[Table] = []
 
-    for learning_rate in (1e-1, 1e-3, 1e-5, 1e-7, 1e-9):
+    for learning_rate in LEARNING_RATES:
         for freeze_body, freeze_pre in (
             (True, True),
             # (True, False),
