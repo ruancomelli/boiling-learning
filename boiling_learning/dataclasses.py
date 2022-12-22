@@ -31,7 +31,7 @@ def is_dataclass_instance(obj: Any) -> TypeGuard[DataClass]:
 def dataclass_from_mapping(
     mapping: Mapping[str, Any],
     dataclass_factory: Callable[..., _DataClass],
-    key_map: DataClass | Mapping[str, str] | None = None,
+    key_map: Mapping[str, str] | None = None,
 ) -> _DataClass:
     if not is_dataclass_class(dataclass_factory):
         raise ValueError('*dataclass_factory* must be a dataclass.')
@@ -39,9 +39,6 @@ def dataclass_from_mapping(
     dataclass_field_names = frozenset(field.name for field in fields(dataclass_factory))
 
     if key_map is not None:
-        if is_dataclass_instance(key_map):
-            key_map = asdict(key_map)
-
         translator = {
             original_name: final_name
             for final_name, original_name in key_map.items()

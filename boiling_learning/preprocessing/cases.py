@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json as _json
+from dataclasses import asdict
 from typing import Optional
 
 import modin.pandas as pd
@@ -80,7 +81,11 @@ class Case(ExperimentVideoDataset):
             raise RuntimeError(f'could not load video data from {data_path}. Got {video_data!r}.')
 
         video_data = {
-            name: dataclass_from_mapping(data, VideoData, key_map=keys)
+            name: dataclass_from_mapping(
+                data,
+                VideoData,
+                key_map=asdict(keys),
+            )
             for name, data in video_data.items()
         }
 
