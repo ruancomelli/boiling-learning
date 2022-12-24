@@ -43,7 +43,7 @@ repos:
   - id: check-ast
 
 - repo: https://github.com/pycqa/flake8
-  rev: 4.0.1
+  rev: 6.0.0
   hooks:
   - id: flake8
     args: [--count, --show-source, --statistics, boiling_learning]

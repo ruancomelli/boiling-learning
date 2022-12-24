@@ -17,10 +17,8 @@ from boiling_learning.app.paths import studies_path
 from boiling_learning.image_datasets import Image
 from boiling_learning.preprocessing.image import (
     downscaler,
-    normalized_mutual_information,
-    retained_variance,
-    shannon_cross_entropy_ratio,
-    structural_similarity_ratio,
+    nbins_retained_variance,
+    nbins_shannon_entropy_ratio,
 )
 from boiling_learning.utils.pathutils import resolve
 
@@ -35,19 +33,21 @@ def pixels_in_image(sample_frame: Image, downscaled_frame: Image) -> int:
 
 
 METRICS = (
-    (retained_variance, 'linear'),
-    (shannon_cross_entropy_ratio, 'linear'),
+    # (retained_variance, 'linear'),
+    (nbins_retained_variance, 'linear'),
+    # (shannon_cross_entropy_ratio, 'linear'),
+    (nbins_shannon_entropy_ratio, 'linear'),
     # (shannon_entropy_ratio, 'linear'),
-    (structural_similarity_ratio, 'linear'),
-    (normalized_mutual_information, 'log'),
-    (pixels_in_image, 'log'),
+    # (structural_similarity_ratio, 'linear'),
+    # (normalized_mutual_information, 'log'),
+    # (pixels_in_image, 'log'),
 )
 
 
 @app.command()
 def boiling1d(
     direct: bool = typer.Option(..., '--direct/--indirect'),
-    factors: list[int] = typer.Option(list(range(1, 10)) + list(range(10, 100, 10))),
+    factors: list[int] = typer.Option(list(range(1, 10)) + list(range(10, 50, 10))),
 ) -> None:
     sample_frames: list[Image] = []
 
@@ -74,7 +74,7 @@ def boiling1d(
     f, axes = plt.subplots(
         NROWS,
         NCOLS,
-        figsize=(NROWS * 4, NCOLS * 6),
+        figsize=(NCOLS * 6, NROWS * 4),
         sharex='col',
         sharey='row',
     )

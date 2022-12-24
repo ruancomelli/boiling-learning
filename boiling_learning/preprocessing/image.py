@@ -4,7 +4,6 @@ from typing import Optional, TypeVar, Union, overload
 
 import numpy as np
 import tensorflow as tf
-from skimage.exposure import histogram
 from skimage.measure import shannon_entropy
 from skimage.metrics import normalized_mutual_information as _normalized_mutual_information
 from skimage.metrics import structural_similarity
@@ -248,8 +247,8 @@ def shannon_cross_entropy(
     ref = np.squeeze(ref)
     image = np.squeeze(image)
 
-    ref_histogram, _ = histogram(ref, nbins=nbins, normalize=True)
-    img_histogram, _ = histogram(image, nbins=nbins, normalize=True)
+    ref_histogram, _ = np.histogram(ref, bins=nbins, density=True)
+    img_histogram, _ = np.histogram(image, bins=nbins, density=True)
 
     ref_histogram = np.clip(ref_histogram, epsilon, 1 - epsilon)
     img_histogram = np.clip(img_histogram, epsilon, 1 - epsilon)
@@ -267,6 +266,26 @@ def shannon_cross_entropy_ratio(
 
 def shannon_entropy_ratio(ref: VideoFrame, image: VideoFrame) -> float:
     return typing.cast(float, shannon_entropy(image) / shannon_entropy(ref))
+
+
+def nbins_retained_variance(ref: VideoFrame, image: VideoFrame) -> float:
+    ref_hist = _hist(ref)
+    image_hist = _hist(image)
+
+    return float(np.var(image_hist - image_hist.mean()) / np.var(ref_hist - ref_hist.mean()))
+
+
+def nbins_shannon_entropy_ratio(ref: VideoFrame, image: VideoFrame) -> float:
+    ref_hist = _hist(ref)
+    image_hist = _hist(image)
+    return np.sum(ref_hist * np.log(image_hist)) / np.sum(ref_hist * np.log(ref_hist))
+
+
+def _hist(image: VideoFrame) -> np.ndarray:
+    hist, _ = np.histogram((image - image.mean()).flatten(), bins=100)
+    hist = hist / hist.sum()
+    hist[hist == 0] = np.finfo(float).eps
+    return hist
 
 
 def _reshape_to_largest(image0: VideoFrame, image1: VideoFrame) -> tuple[VideoFrame, VideoFrame]:
