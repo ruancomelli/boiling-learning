@@ -73,7 +73,7 @@ lint = [
     "isort>=5.10.1",
     "unimport>=0.11.1",
     "pylint>=2.14.5",
-    "vulture>=2.5",
+    "vulture>=2.6",
     "flake8>=6.0.0",
 ]
 ci = [
