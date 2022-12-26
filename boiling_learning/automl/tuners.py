@@ -162,8 +162,9 @@ class _FixedMaxModelSizeTuner(_SaveBestModelAtTrainingEndTuner):
         # Stop if `build()` does not return a valid model.
         if not isinstance(model, tf.keras.models.Model):
             raise RuntimeError(
-                'Model-building function did not return a valid Keras Model instance, '
-                f'found {model}'
+                'Expected the model-building function, or HyperModel.build() to '
+                'return a valid Keras Model instance. '
+                f'Received: {model} of type {type(model)}.'
             )
 
         return model
