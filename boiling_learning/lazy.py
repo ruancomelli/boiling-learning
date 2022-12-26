@@ -74,7 +74,7 @@ class LazyTransform(LazyDescribed[_S]):
     def __init__(self, arg: Lazy[_T], transform: Callable[[_T], _S]) -> None:
         self._arg = arg
         self._transform = transform
-        super().__init__(self._eval, self._pipeline())
+        super().__init__(Lazy(self._eval), self._pipeline())
 
     def _eval(self) -> _S:
         return self._transform(self._arg())
