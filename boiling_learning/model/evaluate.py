@@ -1,3 +1,4 @@
+from numbers import Real
 from typing import Any, Generic, Literal, TypeAlias, TypeVar
 
 import numpy as np
@@ -7,7 +8,7 @@ from scipy.stats import bootstrap
 from boiling_learning.io.storage import dataclass
 from boiling_learning.model.model import ModelArchitecture
 
-_T = TypeVar('_T')
+_T = TypeVar('_T', bound=Real)
 MetricName: TypeAlias = str
 
 
@@ -33,9 +34,9 @@ def evaluate_with_uncertainty(
 ) -> dict[str, UncertainValue]:
     histograms: dict[MetricName, list[Any]] = {}
     for x, y in dataset.batch(bins):
-        evaluation = model.model.evaluate(x, y, return_dict=True)
-        for key, value in evaluation.items():
-            histograms.setdefault(key, []).append(value)
+        evaluation = model.evaluate(x, y)
+        for metric_name, metric_value in evaluation.items():
+            histograms.setdefault(metric_name, []).append(metric_value)
 
     return {
         key: _uncertain_value_from_histogram(

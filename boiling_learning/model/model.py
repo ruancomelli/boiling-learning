@@ -55,14 +55,25 @@ class ModelArchitecture:
         if trainable and non_trainable:
             return typing.cast(int, self.model.count_params())
         elif trainable:
-            return sum(tf.keras.backend.count_params(p) for p in self.model.trainable_weights)
+            return int(sum(tf.keras.backend.count_params(p) for p in self.model.trainable_weights))
         elif non_trainable:
-            return sum(tf.keras.backend.count_params(p) for p in self.model.non_trainable_weights)
+            return int(
+                sum(tf.keras.backend.count_params(p) for p in self.model.non_trainable_weights)
+            )
         else:
             raise ValueError('at least one of `trainable` and `non_trainable` must be true')
 
-    def evaluate(self, data: tf.data.Dataset) -> Evaluation:
-        return self.model.evaluate(data, return_dict=True)
+    def evaluate(
+        self,
+        data: tf.data.Dataset,
+        data_y: tf.data.Dataset | None = None,
+        /,
+    ) -> Evaluation:
+        if data_y is None:
+            return typing.cast(Evaluation, self.model.evaluate(data, return_dict=True))
+
+        x, y = data, data_y
+        return typing.cast(Evaluation, self.model.evaluate(x, y, return_dict=True))
 
     def clone(
         self,
