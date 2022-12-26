@@ -32,14 +32,15 @@ class HyperModel(kt.HyperModel):
     def iter_best_models(self) -> Iterator[ModelArchitecture]:
         tuner = self.automodel.tuner
 
-        for trial in tuner.oracle.get_best_trials(
-            # a hack to get all possible trials:
-            # see how `num_trials` is only used for slicing a list:
-            # https://github.com/keras-team/keras-tuner/blob/d559fdd3a33cc5f2a4d58cf59f9636510d5e1c7d/keras_tuner/engine/oracle.py#L397
-            num_models=None
-        ):
-            model = tuner.load_model(trial)
-            yield ModelArchitecture(model)
+        return (
+            ModelArchitecture(tuner.load_model(trial))
+            for trial in tuner.oracle.get_best_trials(
+                # a hack to get all possible trials:
+                # see how `num_trials` is only used for slicing a list:
+                # https://github.com/keras-team/keras-tuner/blob/d559fdd3a33cc5f2a4d58cf59f9636510d5e1c7d/keras_tuner/engine/oracle.py#L397
+                num_trials=None
+            )
+        )
 
 
 class ImageRegressor(HyperModel):
