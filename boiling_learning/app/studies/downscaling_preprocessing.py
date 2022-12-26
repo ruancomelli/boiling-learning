@@ -7,8 +7,7 @@ import seaborn as sns
 import typer
 
 from boiling_learning.app.datasets.generators import get_image_dataset
-from boiling_learning.app.datasets.preprocessing import (
-    default_boiling_preprocessors,
+from boiling_learning.app.datasets.preprocessing import (  # default_boiling_preprocessors,
     default_condensation_preprocessors,
 )
 from boiling_learning.app.datasets.raw.boiling1d import boiling_cases
@@ -17,8 +16,11 @@ from boiling_learning.app.paths import studies_path
 from boiling_learning.image_datasets import Image
 from boiling_learning.preprocessing.image import (
     downscaler,
+    grayscaler,
+    image_dtype_converter,
     nbins_retained_variance,
     nbins_shannon_entropy_ratio,
+    retained_variance,
 )
 from boiling_learning.utils.pathutils import resolve
 
@@ -33,7 +35,7 @@ def pixels_in_image(sample_frame: Image, downscaled_frame: Image) -> int:
 
 
 METRICS = (
-    # (retained_variance, 'linear'),
+    (retained_variance, 'linear'),
     (nbins_retained_variance, 'linear'),
     # (shannon_cross_entropy_ratio, 'linear'),
     (nbins_shannon_entropy_ratio, 'linear'),
@@ -51,9 +53,11 @@ def boiling1d(
 ) -> None:
     sample_frames: list[Image] = []
 
-    preprocessors = default_boiling_preprocessors(direct_visualization=direct)[
-        :BOILING_DOWNSCALING_INDEX
-    ]
+    preprocessors = [image_dtype_converter('float32'), grayscaler()]
+
+    # preprocessors = default_boiling_preprocessors(direct_visualization=direct)[
+    #     :BOILING_DOWNSCALING_INDEX
+    # ]
 
     for case in boiling_cases():
         dataset = get_image_dataset(

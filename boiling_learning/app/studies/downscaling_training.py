@@ -24,7 +24,7 @@ console = Console()
 @app.command()
 def boiling1d(
     direct: bool = typer.Option(..., '--direct/--indirect'),
-    factors: list[int] = typer.Option(list(range(1, 10)) + list(range(10, 100, 10))),
+    factors: list[int] = typer.Option(list(range(1, 6))),
 ) -> None:
     strategy = configure(
         force_gpu_allow_growth=True,
@@ -73,6 +73,9 @@ def boiling1d(
             str(fit_model.validation_metrics['MSE']),
             str(fit_model.test_metrics['MSE']),
         )
+
+    # TODO: plotting the SHAP index would be great to explain why DS = 4 is better than
+    # DS = 1 or DS = 5 !!!
 
     console.print(table)
 
