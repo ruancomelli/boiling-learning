@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import tensorflow as tf
 import typer
 from loguru import logger
@@ -11,7 +9,6 @@ from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
 from boiling_learning.app.datasets.bridging import to_tensorflow
 from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
-from boiling_learning.app.paths import studies_path
 from boiling_learning.app.training.boiling1d import (
     DEFAULT_BOILING_HEAT_FLUX_TARGET,
     fit_boiling_model,
@@ -187,7 +184,3 @@ def _get_and_format_results(direct_result: float, indirect_result: float) -> str
 
 def _format_sets(indices: tuple[int, ...]) -> str:
     return ' + '.join(map(str, indices))
-
-
-def _cross_surface_study_path() -> Path:
-    return studies_path() / 'cross-surface'
