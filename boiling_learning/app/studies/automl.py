@@ -76,7 +76,7 @@ def boiling1d(
         )
 
         compiled_model = LazyDescribed.from_describable(
-            autofit_result.tune_model_return.model
+            autofit_result.hypermodel.best_model()
         ) | compile_model(
             **get_baseline_compile_params(strategy=strategy),
         )
