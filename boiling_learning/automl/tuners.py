@@ -6,6 +6,7 @@ from typing import Any, Optional, TypedDict
 import autokeras as ak
 import keras_tuner as kt
 import tensorflow as tf
+from keras_tuner.engine.trial import Trial, TrialStatus
 from loguru import logger
 from tensorflow.keras import backend as K
 
@@ -13,11 +14,15 @@ from boiling_learning.utils.pathutils import resolve
 
 
 class PopulateSpaceReturn(TypedDict):
-    status: kt.engine.trial.TrialStatus
+    status: TrialStatus
     values: Optional[dict[str, Any]]
 
 
-class EarlyStoppingGreedyOracle(ak.tuners.greedy.GreedyOracle):
+class GreedyOracle(ak.tuners.greedy.GreedyOracle):  # type: ignore
+    pass
+
+
+class EarlyStoppingGreedyOracle(GreedyOracle):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.stop_search = False
@@ -25,7 +30,7 @@ class EarlyStoppingGreedyOracle(ak.tuners.greedy.GreedyOracle):
     def populate_space(self, trial_id: str) -> PopulateSpaceReturn:
         if self.stop_search:
             return {
-                'status': kt.engine.trial.TrialStatus.STOPPED,
+                'status': TrialStatus.STOPPED,
                 'values': None,
             }
         return typing.cast(PopulateSpaceReturn, super().populate_space(trial_id))
@@ -48,7 +53,7 @@ class EarlyStoppingHyperbandOracle(kt.oracles.HyperbandOracle):
     def populate_space(self, trial_id: str) -> PopulateSpaceReturn:
         if self.stop_search:
             return {
-                'status': kt.engine.trial.TrialStatus.STOPPED,
+                'status': TrialStatus.STOPPED,
                 'values': None,
             }
         return typing.cast(PopulateSpaceReturn, super().populate_space(trial_id))
@@ -63,7 +68,11 @@ class EarlyStoppingHyperbandOracle(kt.oracles.HyperbandOracle):
         self.stop_search = state['stop_search']
 
 
-class _SaveBestModelAtTrainingEndTuner(ak.engine.tuner.AutoTuner):
+class AutoTuner(ak.engine.tuner.AutoTuner):
+    pass
+
+
+class _SaveBestModelAtTrainingEndTuner(AutoTuner):
     """Only save models at the end of the training.
 
     If early stopping was defined as a callback, replace ``KerasTuner``'s ``SaveBestEpoch`` with
@@ -71,7 +80,10 @@ class _SaveBestModelAtTrainingEndTuner(ak.engine.tuner.AutoTuner):
     """
 
     def _build_and_fit_model(
-        self, trial: kt.engine.trial.Trial, *fit_args: Any, **fit_kwargs: Any
+        self,
+        trial: Trial,
+        *fit_args: Any,
+        **fit_kwargs: Any,
     ) -> dict[str, list[Any]]:
         if 'callbacks' in fit_kwargs:
             callbacks = fit_kwargs['callbacks']
@@ -107,13 +119,13 @@ class _SaveBestModelAtTrainingEndTuner(ak.engine.tuner.AutoTuner):
 
 
 class _FixedMaxModelSizeTuner(_SaveBestModelAtTrainingEndTuner):
-    def on_trial_end(self, trial: kt.engine.trial.Trial) -> None:
+    def on_trial_end(self, trial: Trial) -> None:
         # Send status to Logger
         if self.logger:
             self.logger.report_trial_state(trial.trial_id, trial.get_state())
 
-        if trial.get_state().get('status') != kt.engine.trial.TrialStatus.INVALID:
-            self.oracle.end_trial(trial.trial_id, kt.engine.trial.TrialStatus.COMPLETED)
+        if trial.get_state().get('status') != TrialStatus.INVALID:
+            self.oracle.end_trial(trial.trial_id, TrialStatus.COMPLETED)
 
         self.oracle.update_space(trial.hyperparameters)
         # Display needs the updated trial scored by the Oracle.
@@ -121,7 +133,7 @@ class _FixedMaxModelSizeTuner(_SaveBestModelAtTrainingEndTuner):
         self.save()
 
     def _build_and_fit_model(
-        self, trial: kt.engine.trial.Trial, *fit_args: Any, **fit_kwargs: Any
+        self, trial: Trial, *fit_args: Any, **fit_kwargs: Any
     ) -> dict[str, list[Any]]:
         with contextlib.suppress(tf.errors.ResourceExhaustedError, tf.errors.InternalError):
             with self.distribution_strategy.scope():
@@ -144,12 +156,12 @@ class _FixedMaxModelSizeTuner(_SaveBestModelAtTrainingEndTuner):
 
             logger.info(f'Skipping model with size: {model_size} ({max_model_size_message})')
 
-        self.oracle.end_trial(trial.trial_id, kt.engine.trial.TrialStatus.INVALID)
+        self.oracle.end_trial(trial.trial_id, TrialStatus.INVALID)
 
-        dummy_history_obj = tf.keras.callbacks.History()
-        dummy_history_obj.on_train_begin()
-        dummy_history_obj.history.setdefault('val_loss', []).append(_HUGE_NUMBER)
-        return typing.cast(dict[str, list[Any]], dummy_history_obj)
+        placeholder_history_obj = tf.keras.callbacks.History()
+        placeholder_history_obj.on_train_begin()
+        placeholder_history_obj.history.setdefault('val_loss', []).append(_HUGE_NUMBER)
+        return typing.cast(dict[str, list[Any]], placeholder_history_obj)
 
     def _try_build(self, hp: kt.HyperParameters) -> tf.keras.Model:
         # clean-up TF graph from previously stored (defunct) graph
@@ -171,9 +183,11 @@ class _FixedMaxModelSizeTuner(_SaveBestModelAtTrainingEndTuner):
 
     def maybe_compute_model_size(self, model: tf.keras.models.Model) -> int:
         """Compute the size of a given model, if it has been built."""
-        if model.built:
-            return sum(tf.keras.backend.count_params(p) for p in model.trainable_weights)
-        return 0
+        return (
+            sum(int(tf.keras.backend.count_params(p)) for p in model.trainable_weights)
+            if model.built
+            else 0
+        )
 
 
 class EarlyStoppingGreedy(_FixedMaxModelSizeTuner):
@@ -204,7 +218,7 @@ class EarlyStoppingGreedy(_FixedMaxModelSizeTuner):
 
     def on_epoch_end(
         self,
-        trial: kt.engine.trial.Trial,
+        trial: Trial,
         model: tf.keras.models.Model,
         epoch: str,
         logs: Optional[dict[str, Any]] = None,
@@ -251,7 +265,7 @@ class EarlyStoppingHyperband(_FixedMaxModelSizeTuner):
 
     def on_epoch_end(
         self,
-        trial: kt.engine.trial.Trial,
+        trial: Trial,
         model: tf.keras.models.Model,
         epoch: str,
         logs: Optional[dict[str, Any]] = None,
@@ -279,4 +293,9 @@ class SaveBestEpoch(tf.keras.callbacks.Callback):
         self.filepath = filepath
 
     def on_train_end(self, logs: Optional[dict[str, Any]] = None) -> None:
+        if not isinstance(self.model, tf.keras.models.Model):
+            raise RuntimeError(
+                'Expected a valid Keras model instance,'
+                f'got {self.model} of type {type(self.model)}.'
+            )
         self.model.save_weights(self.filepath)

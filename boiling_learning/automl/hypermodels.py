@@ -29,6 +29,9 @@ class HyperModel(kt.HyperModel):
     def __describe__(self) -> dict[str, Any]:
         return typing.cast(dict[str, Any], json.encode(self))
 
+    def best_model(self) -> ModelArchitecture:
+        return next(self.iter_best_models())
+
     def iter_best_models(self) -> Iterator[ModelArchitecture]:
         tuner = self.automodel.tuner
 
