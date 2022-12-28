@@ -4,7 +4,10 @@ import typer
 from skimage.io import imsave
 
 from boiling_learning.app.datasets.generators import get_image_dataset
-from boiling_learning.app.datasets.preprocessing import default_boiling_preprocessors
+from boiling_learning.app.datasets.preprocessing import (
+    RECOMMENDED_DOWNSCALE_FACTOR,
+    default_boiling_preprocessors,
+)
 from boiling_learning.app.datasets.raw.boiling1d import boiling_cases
 from boiling_learning.app.paths import studies_path
 from boiling_learning.utils.iterutils import accumulate_parts
@@ -17,10 +20,16 @@ app = typer.Typer()
 def boiling1d(
     direct: bool = typer.Option(..., '--direct/--indirect'),
     frame: int = typer.Option(0),
+    ds: int = typer.Option(RECOMMENDED_DOWNSCALE_FACTOR),
 ) -> None:
     for case_index, case in enumerate(boiling_cases(), start=1):
         for step, preprocessors in enumerate(
-            accumulate_parts(default_boiling_preprocessors(direct_visualization=direct))
+            accumulate_parts(
+                default_boiling_preprocessors(
+                    direct_visualization=direct,
+                    downscale_factor=ds,
+                )
+            )
         ):
             dataset = get_image_dataset(
                 case(),
@@ -36,6 +45,7 @@ def boiling1d(
                 / (
                     'boiling1d'
                     f"-{'direct' if direct else 'indirect'}"
+                    f'-ds-{ds}'
                     f'-case-{case_index}'
                     f'-frame-{frame}'
                     f'-step-{step}'
