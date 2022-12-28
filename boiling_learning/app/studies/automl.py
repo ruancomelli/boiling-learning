@@ -1,25 +1,31 @@
 from fractions import Fraction
+from pathlib import Path
 
-import rich
 import typer
+from rich.columns import Columns
+from rich.console import Console
+from rich.table import Table
 
 from boiling_learning.app.automl.autofit_dataset import autofit_dataset
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
+from boiling_learning.app.paths import studies_path
 from boiling_learning.app.training.boiling1d import (
     DEFAULT_BOILING_HEAT_FLUX_TARGET,
-    get_baseline_boiling_architecture,
+    get_pretrained_baseline_boiling_model,
 )
+from boiling_learning.app.training.common import get_baseline_compile_params
+from boiling_learning.app.training.evaluation import evaluate_boiling_model_with_dataset
+from boiling_learning.lazy import LazyDescribed
+from boiling_learning.model.training import compile_model
 from boiling_learning.transforms import dataset_sampler
 
 app = typer.Typer()
-console = rich.console.Console()
+console = Console()
 
 
 @app.command()
 def boiling1d(
-    direct: bool = typer.Option(..., '--direct/--indirect'),
-    normalize: bool = typer.Option(...),
     each: int = typer.Option(1),
 ) -> None:
     strategy = configure(
@@ -29,38 +35,112 @@ def boiling1d(
         require_gpu=True,
     )
 
-    baseline_architecture = get_baseline_boiling_architecture(
-        direct_visualization=direct,
-        normalize_images=normalize,
-        strategy=strategy,
-    )
+    tables: list[Table] = []
+    for direct in (True,):
+        # for direct in (False, True):
+        table = Table(
+            'Validation loss',
+            'Test loss',
+            title=(
+                'Automatic machine learning - '
+                + ('direct' if direct else 'indirect')
+                + ' visualization'
+            ),
+        )
 
-    baseline_architecture_size = int(
-        baseline_architecture().count_parameters(
+        baseline_fit_return = get_pretrained_baseline_boiling_model(
+            direct_visualization=direct,
+            normalize_images=True,
+            strategy=strategy,
+        )
+
+        # baseline_loss = baseline_fit_return.validation_metrics['MSE']
+        baseline_architecture_size = baseline_fit_return.architecture().count_parameters(
             trainable=True,
             non_trainable=False,
         )
-    )
 
-    datasets = baseline_boiling_dataset(direct_visualization=direct)
+        datasets = baseline_boiling_dataset(direct_visualization=direct)
 
-    if each != 1:
-        datasets = datasets | dataset_sampler(Fraction(1, each), subset='train')
+        if each != 1:
+            datasets = datasets | dataset_sampler(Fraction(1, each), subset='train')
 
-    autofit_result = autofit_dataset(
-        datasets,
-        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-        normalize_images=normalize,
-        max_model_size=baseline_architecture_size,
-        goal=None,
-        experiment='boiling1d',
-        strategy=strategy,
-    )
+        autofit_result = autofit_dataset(
+            datasets,
+            target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
+            normalize_images=True,
+            max_model_size=baseline_architecture_size,
+            goal=None,
+            experiment='boiling1d',
+            strategy=strategy,
+        )
 
-    console.print(autofit_result.tune_model_return.validation_metrics)
-    console.print(autofit_result.tune_model_return.test_metrics)
+        compiled_model = LazyDescribed.from_describable(
+            autofit_result.tune_model_return.model
+        ) | compile_model(
+            **get_baseline_compile_params(strategy=strategy),
+        )
+
+        _, validation_metrics, test_metrics = evaluate_boiling_model_with_dataset(
+            compiled_model,
+            datasets,
+        )
+
+        table.add_row(
+            str(validation_metrics['MSE']),
+            str(test_metrics['MSE']),
+        )
+        tables.append(table)
+
+        # save_path = _automl_study_path() / f"boiling1d-{'direct' if direct else 'indirect'}.png"
+
+        # sizes = []
+        # losses = []
+        # for model in autofit_result.hypermodel.iter_best_models():
+        #     compiled_model = LazyDescribed.from_describable(model) | compile_model(
+        #         **get_baseline_compile_params(strategy=strategy),
+        #     )
+
+        #     _, validation_metrics, _ = evaluate_boiling_model_with_dataset(
+        #         compiled_model,
+        #         datasets,
+        #     )
+
+        #     model_size = model.count_parameters(
+        #         trainable=True,
+        #         non_trainable=False,
+        #     )
+
+        #     sizes.append(model_size)
+        #     losses.append(validation_metrics["MSE"])
+
+        # sns.set_style('whitegrid')
+
+        # f, ax = plt.subplots(
+        #     1,
+        #     1,
+        #     figsize=(6, 4),
+        #     sharex='col',
+        #     sharey='row',
+        # )
+        # ax.scatter(sizes, losses, s=20, color='k')
+        # ax.scatter(
+        #     baseline_architecture_size,
+        #     baseline_loss,
+        #     facecolors='none',
+        #     edgecolors='k',
+        #     marker='$\\odot$',
+        #     s=100,
+        # )
+        # f.savefig(str(save_path))
+
+    console.print(Columns(tables))
 
 
 @app.command()
 def condensation(normalize: bool = typer.Option(...)) -> None:
     raise NotImplementedError
+
+
+def _automl_study_path() -> Path:
+    return studies_path() / 'automl'

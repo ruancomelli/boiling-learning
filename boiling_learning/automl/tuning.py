@@ -21,9 +21,14 @@ class TuneModelReturn:
 
 
 def fit_hypermodel(
-    hypermodel: HyperModel, datasets: DatasetTriplet[tf.data.Dataset], params: TuneModelParams
+    hypermodel: HyperModel,
+    datasets: DatasetTriplet[LazyDescribed[tf.data.Dataset]],
+    params: TuneModelParams,
 ) -> TuneModelReturn:
-    ds_train, ds_val, ds_test = datasets
+    lazy_ds_train, lazy_ds_val, lazy_ds_test = datasets
+    ds_train = lazy_ds_train().prefetch(tf.data.AUTOTUNE)
+    ds_val = lazy_ds_val().prefetch(tf.data.AUTOTUNE)
+    ds_test = lazy_ds_test().prefetch(tf.data.AUTOTUNE)
 
     automodel = hypermodel.automodel
     automodel.fit(

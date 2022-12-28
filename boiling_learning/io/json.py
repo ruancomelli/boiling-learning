@@ -5,7 +5,7 @@ import json as _json
 from datetime import timedelta
 from fractions import Fraction
 from importlib import import_module
-from pathlib import Path
+from pathlib import Path, PosixPath
 from types import FunctionType
 from typing import Any, Optional, Protocol, TypedDict, TypeVar, Union, runtime_checkable
 
@@ -109,6 +109,7 @@ def _encode_Path(instance: Path) -> str:
     return str(instance)
 
 
+@decode.dispatch(PosixPath)
 @decode.dispatch(Path)
 def _decode_Path(obj: str) -> Path:
     return Path(obj)
@@ -291,9 +292,9 @@ def _encode_fraction(instance: Fraction) -> list[int]:
 
 
 @decode.dispatch(Fraction)
-def _decode_fraction(instance: list[int]) -> Fraction:
-    numerator, denominator = instance
-    return Fraction(deserialize(numerator), deserialize(denominator))
+def _decode_fraction(instance: tuple[int, ...]) -> Fraction:
+    numerator, denominator = deserialize(instance)
+    return Fraction(numerator, denominator)
 
 
 @encode.instance(timedelta)
@@ -370,7 +371,7 @@ def deserialize(obj: SerializedJSONDataType) -> Any:
 
         if obj_type is Pack:
             args, kwargs = encoded_items
-            return Pack(decode[list](args), decode[dict](kwargs))
+            return Pack(decode[tuple](args), decode[dict](kwargs))
 
         (encoded_item,) = encoded_items
         return decode[obj_type](encoded_item)

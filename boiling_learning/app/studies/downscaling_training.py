@@ -1,4 +1,5 @@
 import typer
+from rich.columns import Columns
 from rich.console import Console
 from rich.table import Table
 
@@ -23,8 +24,7 @@ console = Console()
 
 @app.command()
 def boiling1d(
-    direct: bool = typer.Option(..., '--direct/--indirect'),
-    factors: list[int] = typer.Option(list(range(1, 6))),
+    factors: list[int] = typer.Option(list(range(1, 7))),
 ) -> None:
     strategy = configure(
         force_gpu_allow_growth=True,
@@ -35,49 +35,53 @@ def boiling1d(
 
     case = boiling_cases()[0]
 
-    table = Table(
-        'Factor',
-        'Validation loss',
-        'Test loss',
-        title='Downscaling analysis',
-    )
-
-    for factor in factors:
-        preprocessors = default_boiling_preprocessors(
-            direct_visualization=direct,
-            downscale_factor=factor,
-        )
-        dataset = get_image_dataset(
-            case(),
-            transformers=preprocessors,
-            experiment='boiling1d',
-        )
-        compiled_model = get_baseline_architecture(
-            dataset,
-            normalize_images=True,
-            strategy=strategy,
-        ) | compile_model(
-            **get_baseline_compile_params(strategy=strategy),
+    tables: list[Table] = []
+    for direct in (False, True):
+        table = Table(
+            'Factor',
+            'Validation loss',
+            'Test loss',
+            title='Downscaling analysis',
         )
 
-        fit_model = fit_boiling_model(
-            compiled_model,
-            dataset,
-            get_baseline_fit_params(),
-            target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-            strategy=strategy,
-        )
+        for factor in factors:
+            preprocessors = default_boiling_preprocessors(
+                direct_visualization=direct,
+                downscale_factor=factor,
+            )
+            dataset = get_image_dataset(
+                case(),
+                transformers=preprocessors,
+                experiment='boiling1d',
+            )
+            compiled_model = get_baseline_architecture(
+                dataset,
+                normalize_images=True,
+                strategy=strategy,
+            ) | compile_model(
+                **get_baseline_compile_params(strategy=strategy),
+            )
 
-        table.add_row(
-            str(factor),
-            str(fit_model.validation_metrics['MSE']),
-            str(fit_model.test_metrics['MSE']),
-        )
+            fit_model = fit_boiling_model(
+                compiled_model,
+                dataset,
+                get_baseline_fit_params(),
+                target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
+                strategy=strategy,
+            )
+
+            table.add_row(
+                str(factor),
+                str(fit_model.validation_metrics['MSE']),
+                str(fit_model.test_metrics['MSE']),
+            )
+
+        tables.append(table)
 
     # TODO: plotting the SHAP index would be great to explain why DS = 4 is better than
     # DS = 1 or DS = 5 !!!
 
-    console.print(table)
+    console.print(Columns(tables))
 
 
 @app.command()

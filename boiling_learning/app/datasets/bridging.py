@@ -48,10 +48,7 @@ def to_tensorflow(
 
     tf_dataset = sliceable_dataset_to_tensorflow_dataset(
         dataset_value,
-        # DEBUG: I commented out the following line to avoid issues with dataset saving taking too
-        # long
         save_path=save_path,
-        # DEBUG: try re-setting this to True
         cache=True,
         batch_size=batch_size,
         prefilterer=_prefilterer,

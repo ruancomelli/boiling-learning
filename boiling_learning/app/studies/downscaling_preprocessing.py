@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -26,13 +27,11 @@ METRICS = (
     (nbins_shannon_entropy_ratio, 'linear'),
 )
 
-# TODO: make sure this convention is correct and followed everywhere
-# TODO: double-check that the order is correct here
 DATASET_MARKER_STYLE = (
     ('Thick wire', 'k', 'o'),
     ('Thin wire', 'r', '.'),
-    ('Vertical ribbon', 'b', '^'),
     ('Horizontal ribbon', 'g', '>'),
+    ('Vertical ribbon', 'b', '^'),
 )
 
 INITIAL_PREPROCESSORS = [
@@ -46,48 +45,11 @@ def boiling1d(
     direct: bool = typer.Option(..., '--direct/--indirect'),
     factors: list[int] = typer.Option(list(range(1, 10)) + list(range(10, 50, 10))),
 ) -> None:
-    sns.set_style('whitegrid')
-
-    NROWS = len(METRICS)
-
-    f, axes = plt.subplots(
-        NROWS,
-        1,
-        figsize=(6, NROWS * 4),
-        sharex='col',
+    _plot_downscaling_preprocessing(
+        direct,
+        output_path=_downscaling_study_path() / 'boiling1d.png',
+        factors=factors,
     )
-
-    for case, (dataset_name, color, marker) in zip(boiling_cases(), DATASET_MARKER_STYLE):
-        dataset = get_image_dataset(
-            case(),
-            transformers=INITIAL_PREPROCESSORS,
-            experiment='boiling1d',
-        )
-
-        ds_train, _, _ = dataset()
-        sample_frame, _ = ds_train[0]
-        downscaled_frames = [downscaler(factor)(sample_frame) for factor in factors]
-
-        for row, (metric, y_scale) in enumerate(METRICS):
-            ax = axes[row]
-
-            y = [metric(sample_frame, downscaled_frame) for downscaled_frame in downscaled_frames]
-
-            ax.scatter(factors, y, color=color, marker=marker, label=dataset_name)
-
-            ax.set_xscale('log')
-            ax.set_yscale(y_scale)
-            ax.legend()
-
-            ax.set_ylabel(' '.join(metric.__name__.split('_')).title())
-
-            ax.xaxis.grid(True, which='minor')
-
-    output_path = resolve(
-        _downscaling_study_path() / f"boiling1d-{'direct' if direct else 'indirect'}.png",
-        parents=True,
-    )
-    f.savefig(str(output_path))
 
 
 @app.command()
@@ -163,6 +125,53 @@ def condensation(
         parents=True,
     )
     f.savefig(str(output_path))
+
+
+def _plot_downscaling_preprocessing(
+    cases,
+    /,
+    *,
+    factors: Sequence[int],
+    output_path: Path,
+) -> None:
+    sns.set_style('whitegrid')
+
+    NROWS = len(METRICS)
+
+    f, axes = plt.subplots(
+        NROWS,
+        1,
+        figsize=(6, NROWS * 4),
+        sharex='col',
+    )
+
+    for case, (dataset_name, color, marker) in zip(boiling_cases(), DATASET_MARKER_STYLE):
+        dataset = get_image_dataset(
+            case(),
+            transformers=INITIAL_PREPROCESSORS,
+            experiment='boiling1d',
+        )
+
+        ds_train, _, _ = dataset()
+        sample_frame, _ = ds_train[0]
+        downscaled_frames = [downscaler(factor)(sample_frame) for factor in factors]
+
+        for row, (metric, y_scale) in enumerate(METRICS):
+            ax = axes[row]
+
+            y = [metric(sample_frame, downscaled_frame) for downscaled_frame in downscaled_frames]
+
+            ax.scatter(factors, y, color=color, marker=marker, label=dataset_name)
+
+            ax.set_xscale('log')
+            ax.set_yscale(y_scale)
+            ax.legend()
+
+            ax.set_ylabel(' '.join(metric.__name__.split('_')).title())
+
+            ax.xaxis.grid(True, which='minor')
+
+    f.savefig(resolve(output_path, parents=True))
 
 
 def _downscaling_study_path() -> Path:
