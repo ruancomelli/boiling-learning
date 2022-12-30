@@ -109,7 +109,7 @@ def get_pretrained_baseline_condensation_model(
     strategy: LazyDescribed[tf.distribute.Strategy],
     normalize_images: bool = True,
     target: str = DEFAULT_CONDENSATION_MASS_RATE_TARGET,
-) -> FitModelReturn:
+) -> LazyFitModelReturn:
     compiled_model = get_baseline_condensation_architecture(
         normalize_images=normalize_images,
         strategy=strategy,

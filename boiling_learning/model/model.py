@@ -14,7 +14,7 @@ from pint import Quantity
 from boiling_learning.distribute import strategy_scope
 from boiling_learning.io import json
 from boiling_learning.io.storage import Metadata, deserialize, serialize
-from boiling_learning.lazy import Lazy
+from boiling_learning.lazy import Lazy, LazyDescribed
 from boiling_learning.model.layers import ImageNormalization, RandomBrightness
 from boiling_learning.utils.pathutils import resolve
 from boiling_learning.utils.units import unit_registry as ureg
@@ -159,6 +159,8 @@ def rename_model_layers(
     model: ModelArchitecture,
     renamer: Optional[Callable[[str], str]] = None,
     custom_objects: Any = _CUSTOM_OBJECTS,
+    *,
+    strategy: LazyDescribed[tf.distribute.Strategy],
 ) -> ModelArchitecture:
     '''Rename layers and model while keeping the pre-trained weights.
 
@@ -188,10 +190,12 @@ def rename_model_layers(
         output_layer[0] = old_to_new[output_layer[0]]
 
     config['name'] = renamer(config['name'])
-    new_model = tf.keras.Model.from_config(config, custom_objects)
 
-    for layer in new_model.layers:
-        layer.set_weights(model.model.get_layer(new_to_old[layer.name]).get_weights())
+    with strategy_scope(strategy):
+        new_model = tf.keras.Model.from_config(config, custom_objects)
+
+        for layer in new_model.layers:
+            layer.set_weights(model.model.get_layer(new_to_old[layer.name]).get_weights())
 
     return ModelArchitecture(new_model)
 

@@ -38,7 +38,7 @@ def fit_hypermodel(
         batch_size=params.batch_size,
     )
 
-    model = ModelArchitecture(automodel.export_model())
+    model = hypermodel.best_model()
 
     return TuneModelReturn(
         model=model,

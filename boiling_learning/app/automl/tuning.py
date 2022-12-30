@@ -6,7 +6,6 @@ import tensorflow as tf
 from boiling_learning.app.datasets.bridging import to_tensorflow_triplet
 from boiling_learning.automl.hypermodels import HyperModel
 from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn, fit_hypermodel
-from boiling_learning.distribute import strategy_scope
 from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.model.callbacks import MemoryCleanUp
@@ -31,12 +30,15 @@ def autofit(
     if not any(isinstance(callback, MemoryCleanUp) for callback in params.callbacks()):
         params.callbacks().append(MemoryCleanUp())
 
-    tuned_model = fit_hypermodel(hypermodel, datasets_tf, params)
+    tuned_model = fit_hypermodel(
+        hypermodel,
+        datasets_tf,
+        params,
+    )
 
-    with strategy_scope(strategy):
-        tuned_model = replace(
-            tuned_model,
-            model=rename_model_layers(tuned_model.model),
-        )
+    tuned_model = replace(
+        tuned_model,
+        model=rename_model_layers(tuned_model.model, strategy=strategy),
+    )
 
     return tuned_model
