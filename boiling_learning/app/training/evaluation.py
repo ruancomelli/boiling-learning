@@ -9,7 +9,7 @@ from boiling_learning.model.model import ModelArchitecture
 def evaluate_boiling_model_with_dataset(
     model: LazyDescribed[ModelArchitecture],
     evaluation_dataset: LazyDescribed[ImageDatasetTriplet],
-) -> DatasetTriplet[dict[str, UncertainValue[float]]]:
+) -> DatasetTriplet[dict[str, UncertainValue]]:
     ds_train, ds_val, ds_test = default_boiling_bridging_gt10(
         evaluation_dataset,
         batch_size=None,

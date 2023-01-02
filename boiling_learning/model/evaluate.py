@@ -1,5 +1,4 @@
-from numbers import Real
-from typing import Any, Generic, Literal, TypeAlias, TypeVar
+from typing import Any, Literal, TypeAlias
 
 import numpy as np
 import tensorflow as tf
@@ -8,15 +7,14 @@ from scipy.stats import bootstrap
 from boiling_learning.io.storage import dataclass
 from boiling_learning.model.model import ModelArchitecture
 
-_T = TypeVar('_T', bound=Real)
 MetricName: TypeAlias = str
 
 
 @dataclass
-class UncertainValue(Generic[_T]):
-    value: _T
-    upper: _T
-    lower: _T
+class UncertainValue:
+    value: float
+    upper: float
+    lower: float
 
     def __str__(self) -> str:
         upper_diff = self.upper - self.value
@@ -28,39 +26,37 @@ def evaluate_with_uncertainty(
     model: ModelArchitecture,
     dataset: tf.data.Dataset,
     *,
-    bins: int = 100,
+    batches: int = 10000,
+    samples: int = 1000,
     method: Literal['percentile', 'basic', 'bca'] = 'bca',
     confidence_level: float = 0.95,
 ) -> dict[str, UncertainValue]:
     histograms: dict[MetricName, list[Any]] = {}
-    for x, y in dataset.batch(bins):
+    for x, y in dataset.repeat().batch(samples).take(batches):
         evaluation = model.evaluate(x, y)
         for metric_name, metric_value in evaluation.items():
-            histograms.setdefault(metric_name, []).append(metric_value)
+            histograms.setdefault(metric_name, []).append(float(metric_value))
 
     return {
         key: _uncertain_value_from_histogram(
             histogram,
             method=method,
             confidence_level=confidence_level,
-            bins=bins,
         )
         for key, histogram in histograms.items()
     }
 
 
 def _uncertain_value_from_histogram(
-    histogram: list[_T],
+    histogram: list[float],
     method: Literal['percentile', 'basic', 'bca'] = 'bca',
     confidence_level: float = 0.95,
-    bins: int = 100,
-) -> UncertainValue[_T]:
+) -> UncertainValue:
     confidence_interval = bootstrap(
         (histogram,),
         np.mean,
         method=method,
         confidence_level=confidence_level,
-        n_resamples=bins,
     ).confidence_interval
 
     return UncertainValue(
