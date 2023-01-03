@@ -156,8 +156,11 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
     def cache(self, cache: SliceableDatasetCache[_T]) -> CachedSliceableDataset[_T]:
         return CachedSliceableDataset(self, cache)
 
-    def enumerate(self) -> ZippedSliceableDataset[int, _T]:
-        return SliceableDataset.zip(SliceableDataset.range(len(self)), self)
+    def enumerate(self, *, start: int = 0) -> ZippedSliceableDataset[int, _T]:
+        return SliceableDataset.zip(
+            SliceableDataset.range(start, start + len(self)),
+            self,
+        )
 
     def extend(self, dataset: SliceableDataset[_U]) -> ConcatenateSliceableDataset[Union[_T, _U]]:
         return ConcatenateSliceableDataset(self, dataset)  # type: ignore[arg-type]

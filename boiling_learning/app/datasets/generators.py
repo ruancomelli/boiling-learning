@@ -8,7 +8,7 @@ import modin.pandas as pd
 import numpy as np
 
 from boiling_learning.app import options
-from boiling_learning.app.paths import analyses_path
+from boiling_learning.app.paths import analyses_path, shared_cache_path
 from boiling_learning.datasets.cache import NumpyCache
 from boiling_learning.datasets.datasets import DatasetSplits, DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
@@ -39,12 +39,17 @@ def get_image_dataset(
     ds_train_list = []
     ds_val_list = []
     ds_test_list = []
+    current_size = 0
     for video in purged_experiment_videos:
         dataset = _sliceable_dataset_from_video_and_transformers(
             video,
             transformers,
             experiment=experiment,
         )
+
+        dataset = _add_indices_to_targets(dataset, current_size=current_size)
+        current_size += len(dataset)
+
         ev_train, ev_val, ev_test = dataset.split(splits.train, splits.val, splits.test)
 
         ds_train_list.append(ev_train)
@@ -83,7 +88,7 @@ def compile_transformers(
 def _experiment_video_purger(
     *, experiment: Literal['boiling1d', 'condensation']
 ) -> Callable[[ExperimentVideoDataset], list[ExperimentVideo]]:
-    @cache(JSONAllocator(analyses_path() / 'cache' / 'purged-experiment-videos' / experiment))
+    @cache(JSONAllocator(shared_cache_path() / 'purged-experiment-videos' / experiment))
     def _purged_experiment_video_names(image_dataset: ExperimentVideoDataset) -> list[str]:
         return [video.name for video in tuple(image_dataset) if video.data is not None]
 
@@ -205,7 +210,7 @@ class VideoInfo:
 
 
 def _video_info_getter() -> Callable[[SliceableDataset[Image]], VideoInfo]:
-    @cache(JSONAllocator(analyses_path() / 'cache' / 'video-info'))
+    @cache(JSONAllocator(shared_cache_path() / 'video-info'))
     @eager
     def _get_video_info(video: SliceableDataset[Image]) -> VideoInfo:
         first_frame = video[0]
@@ -216,3 +221,15 @@ def _video_info_getter() -> Callable[[SliceableDataset[Image]], VideoInfo]:
         )
 
     return _get_video_info
+
+
+def _add_indices_to_targets(dataset: ImageDataset, /, *, current_size: int) -> ImageDataset:
+    return dataset.enumerate(start=current_size).map(_convert_enumerate_index_to_target)
+
+
+def _convert_enumerate_index_to_target(
+    element: tuple[int, tuple[Image, Targets]]
+) -> tuple[Image, Targets]:
+    index, (image, targets) = element
+    expanded_targets = targets | {'index': index}
+    return image, expanded_targets

@@ -1,11 +1,7 @@
-import functools
-from collections.abc import Callable
 from fractions import Fraction
 from pathlib import Path
-from typing import Literal
 
 import matplotlib.pyplot as plt
-import seaborn as sns
 import typer
 from rich.columns import Columns
 from rich.console import Console
@@ -22,12 +18,11 @@ from boiling_learning.app.training.boiling1d import (
 )
 from boiling_learning.app.training.common import get_baseline_compile_params
 from boiling_learning.app.training.condensation import get_pretrained_baseline_condensation_model
-from boiling_learning.app.training.evaluation import evaluate_boiling_model_with_dataset
-from boiling_learning.image_datasets import ImageDatasetTriplet
+from boiling_learning.app.training.evaluation import (
+    cached_model_evaluator,
+    evaluate_boiling_model_with_dataset,
+)
 from boiling_learning.lazy import LazyDescribed
-from boiling_learning.management.allocators import JSONAllocator
-from boiling_learning.management.cacher import cache
-from boiling_learning.model.model import ModelArchitecture
 from boiling_learning.model.training import compile_model
 from boiling_learning.transforms import dataset_sampler
 
@@ -100,7 +95,7 @@ def boiling1d(
         )
         tables.append(table)
 
-        model_evaluator = _cached_model_evaluator('boiling1d')
+        model_evaluator = cached_model_evaluator('boiling1d')
         trainable_sizes = []
         total_sizes = []
         losses = []
@@ -117,8 +112,6 @@ def boiling1d(
             trainable_sizes.append(trainable_size)
             total_sizes.append(total_size)
             losses.append(validation_loss)
-
-        sns.set_style('whitegrid')
 
         save_path = (
             _automl_study_path()
@@ -222,7 +215,7 @@ def condensation(
     )
     console.print(table)
 
-    model_evaluator = _cached_model_evaluator('condensation')
+    model_evaluator = cached_model_evaluator('condensation')
     trainable_sizes = []
     total_sizes = []
     losses = []
@@ -239,8 +232,6 @@ def condensation(
         trainable_sizes.append(trainable_size)
         total_sizes.append(total_size)
         losses.append(validation_loss)
-
-    sns.set_style('whitegrid')
 
     save_path = _automl_study_path() / f'condensation-each-{each}-trainable.png'
     f, ax = plt.subplots(1, 1, figsize=(6, 4))
@@ -277,46 +268,6 @@ def condensation(
     f.savefig(str(save_path))
 
     console.print(table)
-
-
-@functools.cache
-def _cached_model_evaluator(
-    experiment: Literal['boiling1d', 'condensation'],
-    /,
-) -> Callable[
-    [LazyDescribed[ModelArchitecture], LazyDescribed[ImageDatasetTriplet]],
-    tuple[int, int, float, float],
-]:
-    @cache(JSONAllocator(_model_evaluations_path() / experiment))
-    def model_evaluator(
-        model: LazyDescribed[ModelArchitecture], datasets: LazyDescribed[ImageDatasetTriplet]
-    ) -> tuple[int, int, float, float]:
-        _, validation_metrics, test_metrics = evaluate_boiling_model_with_dataset(
-            model,
-            datasets,
-        )
-
-        trainable_size = model().count_parameters(
-            trainable=True,
-            non_trainable=False,
-        )
-        total_size = model().count_parameters(
-            trainable=True,
-            non_trainable=True,
-        )
-
-        return (
-            trainable_size,
-            total_size,
-            validation_metrics['MSE'].value,
-            test_metrics['MSE'].value,
-        )
-
-    return model_evaluator
-
-
-def _model_evaluations_path() -> Path:
-    return _automl_study_path() / 'evaluations'
 
 
 def _automl_study_path() -> Path:
