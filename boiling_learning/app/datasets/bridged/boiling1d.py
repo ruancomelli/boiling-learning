@@ -1,12 +1,14 @@
+from typing import Any
+
 import tensorflow as tf
 
 from boiling_learning.app.datasets.bridging import to_tensorflow_triplet
 from boiling_learning.datasets.datasets import DatasetTriplet
-from boiling_learning.image_datasets import Image, ImageDatasetTriplet, Targets
+from boiling_learning.image_datasets import ImageDatasetTriplet, Targets
 from boiling_learning.lazy import LazyDescribed
 
 
-def _boiling_outlier_filter(_image: Image, target: Targets) -> bool:
+def _boiling_outlier_filter(_image: Any, target: Targets) -> bool:
     return abs(target['Power [W]'] - target['nominal_power']) < 5
 
 

@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 from typing import Literal, Optional
 
+import seaborn as sns
 import tensorflow as tf
 from loguru import logger
 from modin.config import Engine
@@ -33,6 +34,8 @@ def configure(
 
     _configure_tensorflow(use_xla, mixed_precision_global_policy)
     _configure_modin_engine(modin_engine)
+
+    _configure_seaborn()
 
     lazy_strategy = LazyDescribed.from_value_and_description(
         strategy,
@@ -77,6 +80,10 @@ def _configure_tensorflow(
 
 def _configure_modin_engine(modin_engine: Literal['ray']) -> None:
     Engine.put(modin_engine)
+
+
+def _configure_seaborn() -> None:
+    sns.set_style('whitegrid')
 
 
 def _configure_gpu(

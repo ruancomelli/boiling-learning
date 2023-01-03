@@ -2,7 +2,6 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import seaborn as sns
 import typer
 
 from boiling_learning.app.datasets.generators import get_image_dataset
@@ -69,8 +68,6 @@ def condensation(
         sample_frame, _ = ds_train[0]
         sample_frames.append(sample_frame)
 
-    sns.set_style('whitegrid')
-
     NROWS = len(METRICS)
     NCOLS = len(sample_frames)
 
@@ -134,8 +131,6 @@ def _plot_downscaling_preprocessing(
     factors: Sequence[int],
     output_path: Path,
 ) -> None:
-    sns.set_style('whitegrid')
-
     NROWS = len(METRICS)
 
     f, axes = plt.subplots(

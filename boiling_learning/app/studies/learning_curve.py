@@ -2,7 +2,6 @@ from fractions import Fraction
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import seaborn as sns
 import typer
 from loguru import logger
 from rich.console import Console
@@ -89,7 +88,6 @@ def boiling1d(
 
     console.print(table)
 
-    sns.set_style('whitegrid')
     f, ax = plt.subplots(1, 1, figsize=(4, 4))
     ax.scatter(list(map(float, FRACTIONS)), validation_losses)
     ax.set_xticks(list(map(float, FRACTIONS)))

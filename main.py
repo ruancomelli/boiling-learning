@@ -120,8 +120,6 @@ PREFETCH = 1024 * 4
 #     target_name: str,
 #     filter_target: Optional[Callable[[Targets], bool]] = None,
 # ) -> None:
-#     sns.set_style('whitegrid')
-
 #     f, axes = plt.subplots(len(datasets), 3, figsize=(9, 9), sharey='row')
 
 #     for row, splits in enumerate(datasets):

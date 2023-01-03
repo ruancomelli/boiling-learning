@@ -110,7 +110,6 @@ def boiling1d(
     console.print(table)
 
     # TODO: fix this
-    # sns.set_style('whitegrid')
     # f, ax = plt.subplots(1, 1, figsize=(4, 4))
     # ax.scatter(list(map(float, FRACTIONS)), validation_losses)
     # ax.set_xticks(list(map(float, FRACTIONS)))
