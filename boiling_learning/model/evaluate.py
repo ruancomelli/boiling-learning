@@ -22,6 +22,9 @@ class UncertainValue:
         return f'{self.value} + {upper_diff} - {lower_diff}'
 
 
+UncertainEvaluation: TypeAlias = dict[MetricName, UncertainValue]
+
+
 def evaluate_with_uncertainty(
     model: ModelArchitecture,
     dataset: tf.data.Dataset,
@@ -30,7 +33,7 @@ def evaluate_with_uncertainty(
     samples: int = 1000,
     method: Literal['percentile', 'basic', 'bca'] = 'bca',
     confidence_level: float = 0.95,
-) -> dict[str, UncertainValue]:
+) -> UncertainEvaluation:
     histograms: dict[MetricName, list[Any]] = {}
     for x, y in dataset.repeat().batch(samples).take(batches):
         evaluation = model.evaluate(x, y)
