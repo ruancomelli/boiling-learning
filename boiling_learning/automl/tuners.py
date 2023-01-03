@@ -1,7 +1,8 @@
 import contextlib
 import gc
 import typing
-from typing import Any, Optional, TypedDict
+from collections.abc import Iterable, Iterator
+from typing import Any, Literal, Optional, TypedDict
 
 import autokeras as ak
 import keras_tuner as kt
@@ -10,6 +11,7 @@ from keras_tuner.engine.trial import Trial, TrialStatus
 from loguru import logger
 from tensorflow.keras import backend as K
 
+from boiling_learning.model.model import ModelArchitecture
 from boiling_learning.utils.pathutils import resolve
 
 
@@ -22,7 +24,34 @@ class GreedyOracle(ak.tuners.greedy.GreedyOracle):  # type: ignore
     pass
 
 
+class BayesianOracle(kt.oracles.BayesianOptimizationOracle):  # type: ignore
+    pass
+
+
 class EarlyStoppingGreedyOracle(GreedyOracle):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.stop_search = False
+
+    def populate_space(self, trial_id: str) -> PopulateSpaceReturn:
+        if self.stop_search:
+            return {
+                'status': TrialStatus.STOPPED,
+                'values': None,
+            }
+        return typing.cast(PopulateSpaceReturn, super().populate_space(trial_id))
+
+    def get_state(self) -> dict[str, Any]:
+        state = super().get_state()
+        state.update(stop_search=self.stop_search)
+        return typing.cast(dict[str, Any], state)
+
+    def set_state(self, state: dict[str, Any]) -> None:
+        super().set_state(state)
+        self.stop_search = state['stop_search']
+
+
+class EarlyStoppingBayesianOracle(BayesianOracle):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.stop_search = False
@@ -69,7 +98,38 @@ class EarlyStoppingHyperbandOracle(kt.oracles.HyperbandOracle):
 
 
 class AutoTuner(ak.engine.tuner.AutoTuner):
-    pass
+    def best_model(self) -> ModelArchitecture:
+        return next(self.iter_best_models())
+
+    def iter_best_models(self) -> Iterator[ModelArchitecture]:
+        return self._models_from_trials(self.iter_trials(order='best'))
+
+    def iter_trained_models(self) -> Iterator[ModelArchitecture]:
+        return self._models_from_trials(self.iter_trials(order='trained'))
+
+    def _models_from_trials(self, trials: Iterable[Trial]) -> Iterator[ModelArchitecture]:
+        return (ModelArchitecture(self.load_model(trial)) for trial in trials)
+
+    def iter_trials(self, *, order: Literal['trained', 'best']) -> Iterator[Trial]:
+        if order == 'trained':
+            return self._iter_completed_trials()
+        else:
+            return self._iter_best_trials()
+
+    def _iter_best_trials(self) -> Iterator[Trial]:
+        return iter(
+            self.oracle.get_best_trials(
+                # a hack to get all possible trials:
+                # see how `num_trials` is only used for slicing a list:
+                # https://github.com/keras-team/keras-tuner/blob/d559fdd3a33cc5f2a4d58cf59f9636510d5e1c7d/keras_tuner/engine/oracle.py#L397
+                num_trials=None
+            )
+        )
+
+    def _iter_completed_trials(self) -> Iterator[Trial]:
+        return (
+            trial for trial in self.oracle.trials.values() if trial.status == TrialStatus.COMPLETED
+        )
 
 
 class _SaveBestModelAtTrainingEndTuner(AutoTuner):
@@ -209,6 +269,49 @@ class EarlyStoppingGreedy(_FixedMaxModelSizeTuner):
             objective=objective,
             max_trials=max_trials,
             initial_hps=initial_hps,
+            seed=seed,
+            hyperparameters=hyperparameters,
+            tune_new_entries=tune_new_entries,
+            allow_new_entries=allow_new_entries,
+        )
+        super().__init__(oracle=oracle, **kwargs)
+
+    def on_epoch_end(
+        self,
+        trial: Trial,
+        model: tf.keras.models.Model,
+        epoch: str,
+        logs: Optional[dict[str, Any]] = None,
+    ) -> None:
+        super().on_epoch_end(trial, model, epoch, logs)
+
+        if self.goal is not None:
+            objective = self.oracle.objective
+            loss = objective.get_value(logs)
+
+            if objective.better_than(loss, self.goal):
+                logger.info(f'Got {loss}, and the desired objective is {self.goal}. Stopping now.')
+                model.stop_training = True
+                self.oracle.stop_search = True
+
+
+class EarlyStoppingBayesian(_FixedMaxModelSizeTuner):
+    def __init__(
+        self,
+        *,
+        goal: Any = None,
+        objective: str = 'val_loss',
+        max_trials: int = 10,
+        seed: Optional[int] = None,
+        hyperparameters: Optional[kt.HyperParameters] = None,
+        tune_new_entries: bool = True,
+        allow_new_entries: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        self.goal = goal
+        oracle = EarlyStoppingBayesianOracle(
+            objective=objective,
+            max_trials=max_trials,
             seed=seed,
             hyperparameters=hyperparameters,
             tune_new_entries=tune_new_entries,

@@ -7,6 +7,7 @@ import keras_tuner as kt
 import tensorflow as tf
 
 from boiling_learning.automl.blocks import ImageNormalizationBlock, LayersBlock
+from boiling_learning.automl.tuners import AutoTuner
 from boiling_learning.io import json
 from boiling_learning.lazy import Lazy
 from boiling_learning.management.allocators import Allocator
@@ -18,8 +19,12 @@ class HyperModel(kt.HyperModel):
     def __init__(self, automodel: ak.AutoModel) -> None:
         self.automodel = automodel
 
+    @property
+    def tuner(self) -> AutoTuner:
+        return self.automodel.tuner
+
     def get_config(self) -> dict[str, Any]:
-        return typing.cast(dict[str, Any], self.automodel.tuner.hypermodel.get_config())
+        return typing.cast(dict[str, Any], self.tuner.hypermodel.get_config())
 
     def __json_encode__(self) -> dict[str, Any]:
         return anonymize_model_json(
@@ -30,20 +35,10 @@ class HyperModel(kt.HyperModel):
         return typing.cast(dict[str, Any], json.encode(self))
 
     def best_model(self) -> ModelArchitecture:
-        return next(self.iter_best_models())
+        return self.tuner.best_model()
 
     def iter_best_models(self) -> Iterator[ModelArchitecture]:
-        tuner = self.automodel.tuner
-
-        return (
-            ModelArchitecture(tuner.load_model(trial))
-            for trial in tuner.oracle.get_best_trials(
-                # a hack to get all possible trials:
-                # see how `num_trials` is only used for slicing a list:
-                # https://github.com/keras-team/keras-tuner/blob/d559fdd3a33cc5f2a4d58cf59f9636510d5e1c7d/keras_tuner/engine/oracle.py#L397
-                num_trials=None
-            )
-        )
+        return self.tuner.iter_best_models()
 
 
 class ImageRegressor(HyperModel):
