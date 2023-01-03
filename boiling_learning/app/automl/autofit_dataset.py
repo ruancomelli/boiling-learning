@@ -7,18 +7,11 @@ from boiling_learning.app.automl.tuning import autofit
 from boiling_learning.app.paths import analyses_path
 from boiling_learning.app.training.common import get_baseline_compile_params
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
-from boiling_learning.automl.tuners import EarlyStoppingBayesian
-from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn
+from boiling_learning.automl.tuners import EarlyStoppingGreedy
+from boiling_learning.automl.tuning import TuneModelParams
 from boiling_learning.image_datasets import ImageDatasetTriplet
-from boiling_learning.io.storage import dataclass
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
-
-
-@dataclass
-class AutofitHypermodel:
-    hypermodel: HyperModel
-    tune_model_return: TuneModelReturn
 
 
 def autofit_dataset(
@@ -30,17 +23,17 @@ def autofit_dataset(
     normalize_images: bool = True,
     max_model_size: Optional[int] = None,
     goal: float | None = None,
-) -> AutofitHypermodel:
+) -> HyperModel:
     compile_params = get_baseline_compile_params(strategy=strategy)
 
     hypermodel = ConvImageRegressor(
         loss=compile_params['loss'],
         metrics=compile_params['metrics'],
-        tuner=EarlyStoppingBayesian,
+        tuner=EarlyStoppingGreedy,
         directory=_get_autofit_to_dataset_allocator(experiment).allocate(
             ConvImageRegressor,
             datasets,
-            tuner=EarlyStoppingBayesian,
+            tuner=EarlyStoppingGreedy,
             loss=compile_params['loss'],
             metrics=compile_params['metrics'],
             normalize_images=normalize_images,
@@ -72,7 +65,7 @@ def autofit_dataset(
         ),
     )
 
-    tune_model_return = autofit(
+    autofit(
         hypermodel,
         datasets=datasets,
         params=tune_model_params,
@@ -81,7 +74,7 @@ def autofit_dataset(
         strategy=strategy,
     )
 
-    return AutofitHypermodel(hypermodel=hypermodel, tune_model_return=tune_model_return)
+    return hypermodel
 
 
 @cache

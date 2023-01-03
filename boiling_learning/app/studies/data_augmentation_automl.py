@@ -74,7 +74,7 @@ def boiling1d() -> None:
                 goal=None,
                 experiment='boiling1d',
                 strategy=strategy,
-            ).hypermodel
+            )
 
             compiled_model = LazyDescribed.from_describable(
                 hypermodel.best_model()

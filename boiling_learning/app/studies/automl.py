@@ -78,7 +78,7 @@ def boiling1d(
             goal=None,
             experiment='boiling1d',
             strategy=strategy,
-        ).hypermodel
+        )
 
         compiled_model = LazyDescribed.from_describable(hypermodel.best_model()) | compile_model(
             **get_baseline_compile_params(strategy=strategy),
@@ -198,7 +198,7 @@ def condensation(
         goal=None,
         experiment='condensation',
         strategy=strategy,
-    ).hypermodel
+    )
 
     compiled_model = LazyDescribed.from_describable(hypermodel.best_model()) | compile_model(
         **get_baseline_compile_params(strategy=strategy),
