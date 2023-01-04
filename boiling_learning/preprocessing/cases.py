@@ -11,7 +11,6 @@ from boiling_learning.dataclasses import dataclass_from_mapping
 from boiling_learning.io.storage import dataclass
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo, VideoData
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
-from boiling_learning.preprocessing.experimental_data import ExperimentalData
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 
@@ -104,8 +103,7 @@ class Case(ExperimentVideoDataset):
             return self.df
 
         return (
-            ExperimentalData(self.experimental_data_path)
-            .as_dataframe()
+            pd.read_csv(self.experimental_data_path)
             .drop(columns='Time instant')
             .astype({'Elapsed time': 'float64'})
             .set_index('Elapsed time')
