@@ -9,7 +9,7 @@ from boiling_learning.app.paths import data_path
 from boiling_learning.data.samples import WIRE_SAMPLES
 from boiling_learning.lazy import LazyCallable, LazyDescribed
 from boiling_learning.preprocessing.cases import Case
-from boiling_learning.preprocessing.experiment_video import ExperimentVideo
+from boiling_learning.preprocessing.experiment_video import ExperimentVideo, VideoData
 from boiling_learning.utils.pathutils import PathLike
 from boiling_learning.utils.printing import add_unit_post_fix
 from boiling_learning.utils.units import unit_registry as ureg
@@ -65,17 +65,19 @@ def _set_boiling_case_data(case: Case, /) -> Case:
     return case
 
 
-def _set_experiment_video_data(ev: ExperimentVideo, df: pd.DataFrame) -> None:
-    ev.df = ev.sync_time_series(df)
-    ev.df = _regularize_experiment_video_dataframe(ev)
+def _set_experiment_video_data(ev: ExperimentVideo, source: pd.DataFrame) -> None:
+    dataframe = ev.sync_time_series(source)
+
+    assert ev.data is not None
+    ev.df = _regularize_experiment_video_dataframe(dataframe, ev.data)
+
     ev.save_df(ev.df)
 
 
-def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> pd.DataFrame:
-    assert ev.df is not None
-    assert ev.data is not None
-
-    df = ev.df.drop(
+def _regularize_experiment_video_dataframe(
+    dataframe: pd.DataFrame, data: VideoData
+) -> pd.DataFrame:
+    dataframe = dataframe.drop(
         columns=[
             'Time instant',
             'Flux [W/m^2]',
@@ -89,15 +91,15 @@ def _regularize_experiment_video_dataframe(ev: ExperimentVideo) -> pd.DataFrame:
 
     power_unit = ureg.watt
     heat_flux_unit = ureg.watt / ureg.centimeter**2
-    sample_id = ev.data.categories['sample_id']
+    sample_id = data.categories['sample_id']
 
     full_power_key = add_unit_post_fix('Power', power_unit)
     full_heat_flux_key = add_unit_post_fix('Flux', heat_flux_unit)
 
     lateral_area = WIRE_SAMPLES[sample_id].lateral_area()
-    power = np.array(df[full_power_key]) * power_unit
+    power = np.array(dataframe[full_power_key]) * power_unit
     flux = power / lateral_area
 
-    df[full_heat_flux_key] = flux.to(heat_flux_unit).magnitude
+    dataframe[full_heat_flux_key] = flux.to(heat_flux_unit).magnitude
 
-    return df
+    return dataframe

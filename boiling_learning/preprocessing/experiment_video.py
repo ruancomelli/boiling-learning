@@ -107,10 +107,10 @@ class ExperimentVideo:
         self._path = resolve(video_path)
         self._video = Video(self.path)
 
-        self._data: Optional[VideoData] = None
+        self._data: VideoData | None = None
         self._name = name or self.path.stem
 
-        self.df: Optional[pd.DataFrame] = None
+        self.df: pd.DataFrame | None = None
         self.df_path = resolve(df_path)
 
         self.start = 0
@@ -201,7 +201,7 @@ class ExperimentVideo:
         elif enforce_time:
             raise ValueError(
                 'there is not enough time info in video data'
-                ' (set *enforce_time*=False to suppress this error).'
+                ' (set `enforce_time=False` to suppress this error).'
             )
 
         df = pd.DataFrame(data)
