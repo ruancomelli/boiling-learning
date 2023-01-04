@@ -34,7 +34,7 @@ class DataclassOfJSONEncodableFields(
 def _encode_dataclass(
     instance: DataclassOfJSONEncodableFields,
 ) -> dict[str, json.SerializedJSONObject]:
-    return serialize(shallow_asdict(instance))
+    return json.serialize(shallow_asdict(instance))
 
 
 class DataclassOfSaveableFieldsMeta(type):
