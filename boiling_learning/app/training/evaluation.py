@@ -40,7 +40,7 @@ def cached_model_evaluator(
     [LazyDescribed[ModelArchitecture], LazyDescribed[ImageDatasetTriplet]],
     ModelEvaluation,
 ]:
-    @cache(JSONAllocator(shared_cache_path() / experiment))
+    @cache(JSONAllocator(shared_cache_path() / 'evaluations' / experiment))
     def model_evaluator(
         model: LazyDescribed[ModelArchitecture], datasets: LazyDescribed[ImageDatasetTriplet]
     ) -> ModelEvaluation:

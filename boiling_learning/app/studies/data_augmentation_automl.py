@@ -1,3 +1,5 @@
+import itertools
+
 import typer
 from rich.columns import Columns
 from rich.console import Console
@@ -13,7 +15,7 @@ from boiling_learning.app.training.boiling1d import (
     get_pretrained_baseline_boiling_model,
 )
 from boiling_learning.app.training.common import get_baseline_compile_params
-from boiling_learning.app.training.evaluation import evaluate_boiling_model_with_dataset
+from boiling_learning.app.training.evaluation import cached_model_evaluator
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.model.training import compile_model
 
@@ -30,69 +32,66 @@ def boiling1d() -> None:
         require_gpu=True,
     )
 
+    model_evaluator = cached_model_evaluator('boiling1d')
     case = boiling_cases()[0]
-
     tables: list[Table] = []
-    for direct in False, True:
+    for direct, crop_mode in itertools.product((False, True), ('center', 'random')):
         table = Table(
-            'Crop mode',
-            'Validation loss',
-            'Test loss',
+            'Metric',
+            'Training',
+            'Validation',
+            'Test',
             title=(
                 'Automatic machine learning - '
                 + ('direct' if direct else 'indirect')
-                + ' visualization'
+                + f' visualization - {crop_mode} crop.'
             ),
         )
-        for crop_mode in 'center', 'random':
-            baseline_fit_return = get_pretrained_baseline_boiling_model(
-                direct_visualization=direct,
-                normalize_images=True,
-                strategy=strategy,
-            )
+        baseline_fit_return = get_pretrained_baseline_boiling_model(
+            direct_visualization=direct,
+            normalize_images=True,
+            strategy=strategy,
+        )
 
-            baseline_architecture_size = baseline_fit_return.architecture().count_parameters(
-                trainable=True,
-                non_trainable=False,
-            )
+        baseline_architecture_size = baseline_fit_return.architecture().count_parameters(
+            trainable=True,
+            non_trainable=False,
+        )
 
-            preprocessors = default_boiling_preprocessors(
-                direct_visualization=direct,
-                crop_mode=crop_mode,
-            )
-            datasets = get_image_dataset(
-                case(),
-                transformers=preprocessors,
-                experiment='boiling1d',
-            )
+        preprocessors = default_boiling_preprocessors(
+            direct_visualization=direct,
+            crop_mode=crop_mode,
+        )
+        datasets = get_image_dataset(
+            case(),
+            transformers=preprocessors,
+            experiment='boiling1d',
+        )
 
-            hypermodel = autofit_dataset(
-                datasets,
-                target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-                normalize_images=True,
-                max_model_size=baseline_architecture_size,
-                goal=None,
-                experiment='boiling1d',
-                strategy=strategy,
-            )
+        hypermodel = autofit_dataset(
+            datasets,
+            target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
+            normalize_images=True,
+            max_model_size=baseline_architecture_size,
+            goal=None,
+            experiment='boiling1d',
+            strategy=strategy,
+        )
 
-            compiled_model = LazyDescribed.from_describable(
-                hypermodel.best_model()
-            ) | compile_model(
-                **get_baseline_compile_params(strategy=strategy),
-            )
+        compiled_model = LazyDescribed.from_describable(hypermodel.best_model()) | compile_model(
+            **get_baseline_compile_params(strategy=strategy),
+        )
 
-            _, validation_metrics, test_metrics = evaluate_boiling_model_with_dataset(
-                compiled_model,
-                datasets,
-            )
-
+        evaluation = model_evaluator(compiled_model, datasets)
+        for metric in evaluation.metrics_names:
             table.add_row(
-                crop_mode,
-                str(validation_metrics['MSE']),
-                str(test_metrics['MSE']),
+                metric,
+                str(evaluation.training_metrics[metric]),
+                str(evaluation.validation_metrics[metric]),
+                str(evaluation.test_metrics[metric]),
             )
-            tables.append(table)
+
+        tables.append(table)
 
     console.print(Columns(tables))
 

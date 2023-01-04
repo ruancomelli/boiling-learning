@@ -26,7 +26,7 @@ _T = TypeVar('_T')
 
 
 @describe.instance(Metric)
-def _describe_typename(instance: Metric) -> str:
+def _describe_metric(instance: Metric) -> str:
     return typename(instance)
 
 

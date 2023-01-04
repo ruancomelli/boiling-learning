@@ -63,7 +63,7 @@ def _uncertain_value_from_histogram(
     ).confidence_interval
 
     return UncertainValue(
-        np.mean(histogram),
-        lower=confidence_interval.low,
-        upper=confidence_interval.high,
+        float(np.mean(histogram)),
+        lower=float(confidence_interval.low),
+        upper=float(confidence_interval.high),
     )
