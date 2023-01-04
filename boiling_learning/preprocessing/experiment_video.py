@@ -106,6 +106,7 @@ class ExperimentVideo:
         df_path: PathLike,
         name: str = '',
         data: VideoData | None = None,
+        df: pd.DataFrame | None = None,
     ) -> None:
         self._path = resolve(video_path)
         self._video = Video(self.path)
@@ -113,7 +114,7 @@ class ExperimentVideo:
         self._data = data
         self._name = name or self.path.stem
 
-        self.df: pd.DataFrame | None = None
+        self.df = df
         self.df_path = resolve(df_path)
 
     def with_data(self, data: VideoData) -> ExperimentVideo:
@@ -122,6 +123,7 @@ class ExperimentVideo:
             self.df_path,
             name=self.name,
             data=data,
+            df=self.df,
         )
 
     def __str__(self) -> str:
@@ -135,6 +137,10 @@ class ExperimentVideo:
         return f'{self.__class__.__name__}({joined_kwargs})'
 
     @property
+    def data(self) -> VideoData | None:
+        return self._data
+
+    @property
     def name(self) -> str:
         return self._name
 
@@ -143,28 +149,17 @@ class ExperimentVideo:
         return self._path
 
     @property
-    def data(self) -> Optional[VideoData]:
-        return self._data
-
-    @data.setter
-    def data(self, data: VideoData) -> None:
-        self._data = data
-
-        logger.debug(f"Shrinking video to data for EV \"{self.name}\"")
-        logger.debug(f"Video in range {self.start}-{self.end} for EV \"{self.name}\"")
-
-    @property
     def start(self) -> int:
-        if self._data is None:
+        if self.data is None:
             return 0
 
-        start, _ = self._data.video_limits()
+        start, _ = self.data.video_limits()
         return start
 
     @property
     def end(self) -> int:
-        if self._data is not None:
-            _, end = self._data.video_limits()
+        if self.data is not None:
+            _, end = self.data.video_limits()
 
             if end is not None:
                 return end

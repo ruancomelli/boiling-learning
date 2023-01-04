@@ -10,6 +10,7 @@ from boiling_learning.data.samples import WIRE_SAMPLES
 from boiling_learning.lazy import LazyCallable, LazyDescribed
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo, VideoData
+from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.utils.pathutils import PathLike
 from boiling_learning.utils.printing import add_unit_post_fix
 from boiling_learning.utils.units import unit_registry as ureg
@@ -20,14 +21,14 @@ def boiling_data_path() -> Path:
 
 
 @cache
-def boiling_cases() -> tuple[LazyDescribed[Case], ...]:
+def boiling_cases() -> tuple[LazyDescribed[ExperimentVideoDataset], ...]:
     return tuple(
         _case_from_path(boiling_data_path() / case_name)
         for case_name in ('case 1', 'case 2', 'case 3', 'case 4')
     )
 
 
-def _case_from_path(path: PathLike, /) -> LazyDescribed[Case]:
+def _case_from_path(path: PathLike, /) -> LazyDescribed[ExperimentVideoDataset]:
     return LazyDescribed(
         _load_case_from_path(path),
         # type-ignore is necessary until the classes plugin works again
@@ -36,7 +37,7 @@ def _case_from_path(path: PathLike, /) -> LazyDescribed[Case]:
 
 
 @LazyCallable
-def _load_case_from_path(path: PathLike, /) -> Case:
+def _load_case_from_path(path: PathLike, /) -> ExperimentVideoDataset:
     logger.info(f'Loading boiling case from {path}')
     return _set_boiling_case_data(
         Case(path, video_suffix='.MP4').convert_videos(
@@ -47,12 +48,12 @@ def _load_case_from_path(path: PathLike, /) -> Case:
     )
 
 
-def _set_boiling_case_data(case: Case, /) -> Case:
+def _set_boiling_case_data(case: Case, /) -> ExperimentVideoDataset:
     logger.info(f'Setting boiling data for case {case.name}')
 
-    case.set_video_data_from_file(remove_absent=True)
+    dataset = case.set_video_data_from_file()
 
-    for ev in case:
+    for ev in dataset:
         try:
             logger.debug(f'Trying to load data for {ev.name}')
             ev.df = ev.load_df()
@@ -62,7 +63,7 @@ def _set_boiling_case_data(case: Case, /) -> Case:
 
             _set_experiment_video_data(ev, case.get_experimental_data())
 
-    return case
+    return dataset
 
 
 def _set_experiment_video_data(ev: ExperimentVideo, source: pd.DataFrame) -> None:

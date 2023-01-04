@@ -55,9 +55,8 @@ class Case(ExperimentVideoDataset):
     def set_video_data_from_file(
         self,
         *,
-        remove_absent: bool = False,
         keys: VideoDataKeys = VideoDataKeys(),
-    ) -> None:
+    ) -> ExperimentVideoDataset:
         data_path = resolve(self.video_data_path)
         video_data = _json.loads(data_path.read_text(encoding='utf8'))
 
@@ -85,15 +84,9 @@ class Case(ExperimentVideoDataset):
             for name, data in video_data.items()
         }
 
-        video_data_keys = frozenset(video_data.keys())
-        self_keys = frozenset(self.keys())
-
-        for name in self_keys & video_data_keys:
-            self[name].data = video_data[name]
-
-        if remove_absent:
-            for name in self_keys - video_data_keys:
-                del self[name]
+        return ExperimentVideoDataset(
+            ev.with_data(video_data[ev.name]) for ev in self if ev.name in video_data
+        )
 
     def get_experimental_data(self) -> pd.DataFrame:
         if self.df is not None:

@@ -88,11 +88,7 @@ def _set_condensation_datasets_data(
     dataspecpath = resolve(dataspecpath)
     dataspec = yaml.safe_load(dataspecpath.read_text(encoding='utf8'))
 
-    for dataset in eager_datasets:
-        logger.debug(f'Reading condensation dataset {dataset}')
-
-        for ev in dataset:
-            _set_ev_data(ev, dataspec)
+    eager_datasets = tuple(_set_ev_dataset_data(dataset, dataspec) for dataset in eager_datasets)
 
     grouped_datasets = _group_datasets(eager_datasets)
 
@@ -104,7 +100,15 @@ def _set_condensation_datasets_data(
     return grouped_datasets
 
 
-def _set_ev_data(ev: ExperimentVideo, dataspec: dict[str, Any]) -> None:
+def _set_ev_dataset_data(
+    dataset: ExperimentVideoDataset, dataspec: dict[str, Any]
+) -> ExperimentVideoDataset:
+    return ExperimentVideoDataset(
+        ev for ev in (_set_ev_data(ev, dataspec) for ev in dataset) if ev is not None
+    )
+
+
+def _set_ev_data(ev: ExperimentVideo, dataspec: dict[str, Any]) -> ExperimentVideo | None:
     case, subcase, test_name, video_name = ev.name.split(':')
 
     # TODO: add average mass rate to categories?
@@ -137,7 +141,7 @@ def _set_ev_data(ev: ExperimentVideo, dataspec: dict[str, Any]) -> None:
         ]
     except KeyError:
         # skip cases for which no data is available
-        return
+        return None
 
     logger.debug(f'Getting video data for EV "{ev.name}"')
 
@@ -153,7 +157,7 @@ def _set_ev_data(ev: ExperimentVideo, dataspec: dict[str, Any]) -> None:
     )
 
     logger.debug(f'Setting video data for EV "{ev.name}"')
-    ev.data = videodata
+    return ev.with_data(videodata)
 
 
 def _make_dataframe(dataset: ExperimentVideoDataset) -> None:
