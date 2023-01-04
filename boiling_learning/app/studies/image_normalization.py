@@ -30,7 +30,8 @@ def boiling1d() -> None:
     for normalize, direct_visualization in itertools.product((False, True), repeat=2):
         table = Table(
             'Metric',
-            'Training' 'Validation',
+            'Training',
+            'Validation',
             'Test',
             title=(
                 ('Normalized' if normalize else 'Non-normalized')

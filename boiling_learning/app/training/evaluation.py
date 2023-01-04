@@ -28,8 +28,18 @@ class ModelEvaluation:
     test_metrics: UncertainEvaluation
 
     @property
-    def metrics_names(self) -> tuple[str, ...]:
-        return tuple(self.training_metrics)
+    def metrics_names(self) -> list[str]:
+        return sorted(
+            self.training_metrics,
+            key=lambda metric_name: {
+                'loss': 0,
+                'MSE': 1,
+                'RMS': 2,
+                'MAE': 3,
+                'MAPE': 4,
+                'R2': 5,
+            }.get(metric_name, 10),
+        )
 
 
 @functools.cache
