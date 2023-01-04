@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from math import floor, log10
 from typing import Any, Literal, TypeAlias
 
 import numpy as np
@@ -17,9 +20,23 @@ class UncertainValue:
     lower: float
 
     def __str__(self) -> str:
-        upper_diff = self.upper - self.value
-        lower_diff = self.value - self.lower
-        return f'{self.value} + {upper_diff} - {lower_diff}'
+        return f'{self.value} + {self.upper} - {self.lower}'
+
+    def rounded(self) -> UncertainValue:
+        position_to_round = min(
+            _position_of_most_significant_digit(self.upper),
+            _position_of_most_significant_digit(self.lower),
+        )
+
+        rounded_mean = round(self.value, position_to_round)
+        rounded_upper = round(self.upper, position_to_round)
+        rounded_lower = round(self.lower, position_to_round)
+
+        return UncertainValue(
+            rounded_mean,
+            rounded_upper,
+            rounded_lower,
+        )
 
 
 UncertainEvaluation: TypeAlias = dict[MetricName, UncertainValue]
@@ -62,8 +79,13 @@ def _uncertain_value_from_histogram(
         confidence_level=confidence_level,
     ).confidence_interval
 
+    mean = float(np.mean(histogram))
     return UncertainValue(
-        float(np.mean(histogram)),
-        lower=float(confidence_interval.low),
-        upper=float(confidence_interval.high),
+        mean,
+        lower=mean - float(confidence_interval.low),
+        upper=float(confidence_interval.high) - mean,
     )
+
+
+def _position_of_most_significant_digit(x: float, /) -> int:
+    return -int(floor(log10(abs(x))))

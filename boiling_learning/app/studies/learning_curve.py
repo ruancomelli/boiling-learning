@@ -2,6 +2,8 @@ from fractions import Fraction
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 import typer
 from loguru import logger
 from rich.console import Console
@@ -19,6 +21,7 @@ from boiling_learning.app.training.common import (
     get_baseline_compile_params,
     get_baseline_fit_params,
 )
+from boiling_learning.app.training.evaluation import cached_model_evaluator
 from boiling_learning.model.training import compile_model
 from boiling_learning.transforms import dataset_sampler
 from boiling_learning.utils.pathutils import resolve
@@ -48,13 +51,15 @@ def boiling1d(
 
     table = Table(
         'Subsample',
+        'Training loss',
         'Validation loss',
         'Test loss',
         title='Learning curve',
     )
 
-    validation_losses: list[float] = []
+    evaluator = cached_model_evaluator('boiling1d')
 
+    losses: list[tuple[Fraction, float, str]] = []
     for fraction in FRACTIONS:
         subsampled = (
             datasets | dataset_sampler(count=fraction, subset='train')
@@ -78,20 +83,31 @@ def boiling1d(
             strategy=strategy,
         )
 
+        compiled_model = fit_model.architecture | compile_model(
+            **get_baseline_compile_params(strategy=strategy),
+        )
+        evaluation = evaluator(compiled_model, subsampled)
+
         table.add_row(
             f'{fraction} ({float(fraction):.0%})',
-            f'{fit_model.validation_metrics["MSE"]:.2f}',
-            f'{fit_model.test_metrics["MSE"]:.2f}',
+            f'{evaluation.training_metrics["MSE"]}',
+            f'{evaluation.validation_metrics["MSE"]}',
+            f'{evaluation.test_metrics["MSE"]}',
         )
 
-        validation_losses.append(fit_model.validation_metrics['MSE'])
+        losses.extend(
+            (
+                (fraction, evaluation.training_metrics['MSE'], 'train'),
+                (fraction, evaluation.validation_metrics['MSE'], 'val'),
+                (fraction, evaluation.test_metrics['MSE'], 'test'),
+            )
+        )
 
     console.print(table)
 
+    plot_data = pd.DataFrame(losses, columns=['fraction', 'loss', 'subset'])
     f, ax = plt.subplots(1, 1, figsize=(4, 4))
-    ax.scatter(list(map(float, FRACTIONS)), validation_losses)
-    ax.set_xticks(list(map(float, FRACTIONS)))
-    ax.set_xticklabels(FRACTIONS)
+    sns.scatterplot(ax=ax, data=plot_data, x='fraction', y='loss', hue='subset')
     ax.set_xlabel('Dataset subsample')
     ax.set_ylabel('Validation loss')
     ax.set_xscale('log')
