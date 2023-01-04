@@ -55,7 +55,7 @@ def _set_boiling_case_data(case: Case, /) -> Case:
     for ev in case:
         try:
             logger.debug(f'Trying to load data for {ev.name}')
-            ev.df = ev.load_df(overwrite=False)
+            ev.df = ev.load_df()
             logger.debug(f'Succesfully loaded data for {ev.name}')
         except FileNotFoundError:
             logger.debug(f'Failed to load data for {ev.name}')

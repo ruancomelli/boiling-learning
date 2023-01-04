@@ -220,12 +220,12 @@ class ExperimentVideo:
 
         return df
 
-    def load_df(self, overwrite: bool = False) -> pd.DataFrame:
+    def load_df(self) -> pd.DataFrame:
         logger.debug(
             f'Loading dataframe for experiment video {self.name} from file {self.df_path}'
         )
 
-        if not overwrite and self.df is not None:
+        if self.df is not None:
             return self.df
 
         return typing.cast(
