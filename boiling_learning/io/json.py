@@ -12,7 +12,6 @@ from typing import Any, Optional, Protocol, TypedDict, TypeVar, Union, runtime_c
 from classes import AssociatedType, Supports, typeclass
 from frozendict import frozendict  # type: ignore[attr-defined]
 
-from boiling_learning.dataclasses import is_dataclass_instance, shallow_asdict
 from boiling_learning.utils.functional import P, Pack
 from boiling_learning.utils.pathutils import PathLike, resolve
 from boiling_learning.utils.table_dispatch import TableDispatcher
@@ -266,24 +265,6 @@ def _encode_frozendict(
 @decode.dispatch(frozendict)
 def _decode_frozendict(obj: dict[str, Any]) -> frozendict:
     return frozendict(deserialize(obj))
-
-
-class DataclassOfJSONEncodableFieldsMeta(type):
-    def __instancecheck__(self, instance: Any) -> bool:
-        return is_dataclass_instance(instance) and encode.supports(shallow_asdict(instance))
-
-
-class DataclassOfJSONEncodableFields(
-    metaclass=DataclassOfJSONEncodableFieldsMeta,
-):
-    ...
-
-
-@encode.instance(delegate=DataclassOfJSONEncodableFields)
-def _encode_dataclass(
-    instance: DataclassOfJSONEncodableFields,
-) -> dict[str, SerializedJSONObject]:
-    return serialize(shallow_asdict(instance))
 
 
 @encode.instance(Fraction)

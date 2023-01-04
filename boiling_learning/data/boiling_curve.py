@@ -2,7 +2,7 @@ from typing import Literal
 
 from pint import Quantity
 
-from boiling_learning.io.storage import dataclass
+from boiling_learning.io.dataclasses import dataclass
 from boiling_learning.utils.units import unit_registry as ureg
 
 Q_ = ureg.Quantity

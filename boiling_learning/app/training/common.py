@@ -9,7 +9,7 @@ from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
 from boiling_learning.app.paths import analyses_path
 from boiling_learning.distribute import strategy_scope
 from boiling_learning.image_datasets import ImageDatasetTriplet
-from boiling_learning.io.storage import dataclass
+from boiling_learning.io.dataclasses import dataclass
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import CachedFunction, Cacher

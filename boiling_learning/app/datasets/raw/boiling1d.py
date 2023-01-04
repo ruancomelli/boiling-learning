@@ -1,17 +1,21 @@
-from functools import cache
+import functools
 from pathlib import Path
+from typing import Literal
 
 import modin.pandas as pd
 import numpy as np
 from loguru import logger
 
-from boiling_learning.app.paths import data_path
+from boiling_learning.app.paths import data_path, shared_cache_path
 from boiling_learning.data.samples import WIRE_SAMPLES
+from boiling_learning.io.storage import load, save
 from boiling_learning.lazy import LazyCallable, LazyDescribed
+from boiling_learning.management.allocators import JSONAllocator
+from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.cases import Case
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo, VideoData
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
-from boiling_learning.utils.pathutils import PathLike
+from boiling_learning.utils.pathutils import PathLike, resolve
 from boiling_learning.utils.printing import add_unit_post_fix
 from boiling_learning.utils.units import unit_registry as ureg
 
@@ -20,7 +24,7 @@ def boiling_data_path() -> Path:
     return data_path() / 'boiling1d'
 
 
-@cache
+@functools.cache
 def boiling_cases() -> tuple[LazyDescribed[ExperimentVideoDataset], ...]:
     return tuple(
         _case_from_path(boiling_data_path() / case_name)
@@ -39,12 +43,66 @@ def _case_from_path(path: PathLike, /) -> LazyDescribed[ExperimentVideoDataset]:
 @LazyCallable
 def _load_case_from_path(path: PathLike, /) -> ExperimentVideoDataset:
     logger.info(f'Loading boiling case from {path}')
-    return _set_boiling_case_data(
-        Case(path, video_suffix='.MP4').convert_videos(
-            '.mp4',
-            'converted',
-            overwrite=False,
+    loader = _cached_load_case_from_path(experiment='boiling1d')
+    return loader(resolve(path))
+
+
+def _cached_load_case_from_path(*, experiment: Literal['boiling1d', 'condensation']):
+    @cache(
+        JSONAllocator(shared_cache_path() / 'experiment-video-datasets' / experiment),
+        saver=custom_experiment_video_dataset_save,
+        loader=custom_experiment_video_dataset_load,
+    )
+    def _load_case_from_path(path: Path, /) -> ExperimentVideoDataset:
+        return _set_boiling_case_data(
+            Case(path, video_suffix='.MP4').convert_videos(
+                '.mp4',
+                'converted',
+                overwrite=False,
+            )
         )
+
+    return _load_case_from_path
+
+
+def custom_experiment_video_dataset_save(
+    experiment_video_dataset: ExperimentVideoDataset, path: PathLike
+) -> None:
+    path = resolve(path, dir=True)
+    save(len(experiment_video_dataset), path / 'length')
+    for index, ev in enumerate(experiment_video_dataset):
+        custom_experiment_video_save(ev, path / str(index))
+
+
+def custom_experiment_video_dataset_load(path: PathLike) -> ExperimentVideoDataset:
+    path = resolve(path)
+    length = load(path / 'length')
+
+    return ExperimentVideoDataset(
+        custom_experiment_video_load(path / str(index)) for index in range(length)
+    )
+
+
+def custom_experiment_video_save(ev: ExperimentVideo, path: Path) -> None:
+    save(
+        {
+            'video_path': ev.path,
+            'df_path': ev.df_path,
+            'name': ev.name,
+        },
+        path / 'properties',
+    )
+    save(ev.data, path / 'video_data')
+    ev.df.to_csv(path / 'data.csv', index=False)
+
+
+def custom_experiment_video_load(path: Path) -> ExperimentVideo:
+    properties = load(path / 'properties')
+    data = load(path / 'video_data')
+    df = pd.read_csv(path / 'data.csv')
+
+    return ExperimentVideo(
+        properties['video_path'], properties['df_path'], properties['name'], data, df
     )
 
 

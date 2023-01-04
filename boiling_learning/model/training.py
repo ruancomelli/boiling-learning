@@ -13,7 +13,8 @@ from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.descriptions import describe
 from boiling_learning.distribute import strategy_scope
 from boiling_learning.io import json
-from boiling_learning.io.storage import dataclass, load
+from boiling_learning.io.dataclasses import dataclass
+from boiling_learning.io.storage import load
 from boiling_learning.lazy import Lazy, LazyDescribed, eager
 from boiling_learning.model.callbacks import RegisterEpoch, SaveHistory
 from boiling_learning.model.model import Evaluation, ModelArchitecture

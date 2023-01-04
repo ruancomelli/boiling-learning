@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from scipy.stats import bootstrap
 
-from boiling_learning.io.storage import dataclass
+from boiling_learning.io.dataclasses import dataclass
 from boiling_learning.model.model import ModelArchitecture
 
 MetricName: TypeAlias = str
@@ -29,7 +29,7 @@ def evaluate_with_uncertainty(
     model: ModelArchitecture,
     dataset: tf.data.Dataset,
     *,
-    batches: int = 10000,
+    batches: int = 1000,
     samples: int = 1000,
     method: Literal['percentile', 'basic', 'bca'] = 'bca',
     confidence_level: float = 0.95,

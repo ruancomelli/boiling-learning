@@ -15,7 +15,7 @@ from boiling_learning.dataclasses import field
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.descriptions import describe
 from boiling_learning.io import json
-from boiling_learning.io.storage import dataclass
+from boiling_learning.io.dataclasses import dataclass
 from boiling_learning.preprocessing.extract import ExtractedFramesDataset
 from boiling_learning.preprocessing.video import Video, VideoFrame, convert_video
 from boiling_learning.utils.pathutils import PathLike, resolve

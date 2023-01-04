@@ -8,7 +8,7 @@ import modin.pandas as pd
 from loguru import logger
 
 from boiling_learning.dataclasses import dataclass_from_mapping
-from boiling_learning.io.storage import dataclass
+from boiling_learning.io.dataclasses import dataclass
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo, VideoData
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.utils.pathutils import PathLike, resolve

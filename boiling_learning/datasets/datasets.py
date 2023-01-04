@@ -7,7 +7,7 @@ import funcy
 # import from `typing_extensions`
 from typing_extensions import NamedTuple
 
-from boiling_learning.io.storage import dataclass
+from boiling_learning.io.dataclasses import dataclass
 
 _T = TypeVar('_T')
 

@@ -13,7 +13,7 @@ from boiling_learning.datasets.cache import NumpyCache
 from boiling_learning.datasets.datasets import DatasetSplits, DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
-from boiling_learning.io.storage import dataclass
+from boiling_learning.io.dataclasses import dataclass
 from boiling_learning.lazy import LazyDescribed, eager
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import cache

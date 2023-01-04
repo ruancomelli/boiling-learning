@@ -6,7 +6,7 @@ from boiling_learning.app.datasets.bridged.boiling1d import default_boiling_brid
 from boiling_learning.app.paths import shared_cache_path
 from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.image_datasets import ImageDatasetTriplet
-from boiling_learning.io.storage import dataclass
+from boiling_learning.io.dataclasses import dataclass
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import cache
