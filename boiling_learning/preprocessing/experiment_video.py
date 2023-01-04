@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import contextlib
 import typing
 from collections.abc import Iterable
@@ -103,18 +105,24 @@ class ExperimentVideo:
         video_path: PathLike,
         df_path: PathLike,
         name: str = '',
+        data: VideoData | None = None,
     ) -> None:
         self._path = resolve(video_path)
         self._video = Video(self.path)
 
-        self._data: VideoData | None = None
+        self._data = data
         self._name = name or self.path.stem
 
         self.df: pd.DataFrame | None = None
         self.df_path = resolve(df_path)
 
-        self.start = 0
-        self._end: int | None = None
+    def with_data(self, data: VideoData) -> ExperimentVideo:
+        return ExperimentVideo(
+            self.path,
+            self.df_path,
+            name=self.name,
+            data=data,
+        )
 
     def __str__(self) -> str:
         kwargs = {
@@ -143,13 +151,25 @@ class ExperimentVideo:
         self._data = data
 
         logger.debug(f"Shrinking video to data for EV \"{self.name}\"")
-        self.start, self._end = data.video_limits()
-
         logger.debug(f"Video in range {self.start}-{self.end} for EV \"{self.name}\"")
 
     @property
+    def start(self) -> int:
+        if self._data is None:
+            return 0
+
+        start, _ = self._data.video_limits()
+        return start
+
+    @property
     def end(self) -> int:
-        return self._end if self._end is not None else len(self._video)
+        if self._data is not None:
+            _, end = self._data.video_limits()
+
+            if end is not None:
+                return end
+
+        return len(self._video)
 
     def frames(self) -> SliceableDataset[VideoFrame]:
         # I don't know why Black reformats this so strangely... flake8 complains

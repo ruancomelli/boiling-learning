@@ -29,17 +29,14 @@ class Case(ExperimentVideoDataset):
         video_data_path: Optional[PathLike] = None,
         experimental_data_path: Optional[PathLike] = None,
     ) -> None:
-        super().__init__()
-
         if not video_suffix.startswith('.'):
-            raise ValueError('argument *video_suffix* must start with a dot \'.\'')
+            raise ValueError('argument `video_suffix` must start with a dot \'.\'')
 
         self.path = resolve(path, dir=True)
-
         self.dataframes_dir = resolve(self.path / dataframes_dir_name, dir=True)
         self.videos_dir = resolve(self.path / videos_dir_name, dir=True)
 
-        self.update(
+        super().__init__(
             ExperimentVideo(
                 video_path=video_path,
                 df_path=self.dataframes_dir / f'{video_path.stem}.csv',
@@ -49,7 +46,7 @@ class Case(ExperimentVideoDataset):
 
         self.video_data_path = resolve(video_data_path or self.path / 'data.json')
         self.experimental_data_path = resolve(experimental_data_path or self.path / 'data.csv')
-        self.df: Optional[pd.DataFrame] = None
+        self.df: pd.DataFrame | None = None
 
     @property
     def name(self) -> str:
