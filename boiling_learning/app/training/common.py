@@ -36,19 +36,18 @@ def cached_fit_model_function(
 
 class _CompileModelParams(TypedDict):
     loss: tf.keras.losses.Loss
-    optimizer: tf.keras.optimizers.Optimizer
+    optimizer: tf.keras.optimizers.Optimizer | str
     metrics: list[tf.keras.metrics.Metric]
 
 
 def get_baseline_compile_params(
     *,
     strategy: LazyDescribed[tf.distribute.Strategy],
-    learning_rate: float = 1e-3,
 ) -> _CompileModelParams:
     with strategy_scope(strategy):
         return {
             'loss': tf.keras.losses.MeanSquaredError(),
-            'optimizer': tf.keras.optimizers.Adam(learning_rate),
+            'optimizer': 'adam',
             'metrics': [
                 tf.keras.metrics.MeanSquaredError('MSE'),
                 tf.keras.metrics.RootMeanSquaredError('RMS'),

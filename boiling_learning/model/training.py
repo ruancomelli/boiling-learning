@@ -56,7 +56,7 @@ def compile_model(
     /,
     *,
     loss: Loss,
-    optimizer: Optimizer,
+    optimizer: Optimizer | str,
     metrics: Optional[list[Metric]],
 ) -> ModelArchitecture:
     # TODO: create a clone here to ensure pureness
