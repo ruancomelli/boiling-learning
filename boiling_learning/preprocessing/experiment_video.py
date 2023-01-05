@@ -172,9 +172,7 @@ class ExperimentVideo:
 
     def extract_frames(self, directory: Path, /) -> SliceableDataset[VideoFrame]:
         # I don't know why Black reformats this so strangely... flake8 complains
-        return ExtractedFramesDataset.from_video(self._video, directory)[
-            self.start : self.end  # noqa
-        ]
+        return ExtractedFramesDataset(self._video, directory)[self.start : self.end]  # noqa
 
     def convert_video(
         self,

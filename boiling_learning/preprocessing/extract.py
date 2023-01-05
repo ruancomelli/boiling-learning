@@ -21,11 +21,12 @@ class NoFramesError(Exception):
 
 
 class ExtractedFramesDataset(SequenceSliceableDataset[Image]):
-    def __init__(self, path: PathLike) -> None:
-        self.path = resolve(path)
+    def __init__(self, video: Video, path: PathLike, /) -> None:
+        self.path = resolve(path, dir=True)
+        self.video = video
 
-        if not _is_done_extracting(self.path):
-            raise NoFramesError
+        if not self._is_done_extracting():
+            self._extract_frames()
 
         super().__init__(
             imread_collection(
@@ -34,39 +35,31 @@ class ExtractedFramesDataset(SequenceSliceableDataset[Image]):
             )
         )
 
-    @classmethod
-    def from_video(cls, video: Video, directory: PathLike, /) -> ExtractedFramesDataset:
+    def _extract_frames(self) -> None:
         # Original code: $ ffmpeg -i "video.mov" -f image2 "video-frame%05d.png"
-        # Source 2: <https://forums.fast.ai/t/extracting-frames-from-video-file-with-ffmpeg/29818>
-        directory = resolve(directory, dir=True)
+        # Source: <https://forums.fast.ai/t/extracting-frames-from-video-file-with-ffmpeg/29818>
+        logger.info(f'Extracting frames from {self.video.path} to {self.path}')
 
-        if not _is_done_extracting(directory):
-            logger.info(f'Extracting frames from {video.path} to {directory}')
+        number_of_digits = len(str(len(self.video)))
+        filename_pattern = f'%{number_of_digits}d.png'
 
-            number_of_digits = len(str(len(video)))
-            filename_pattern = f'%{number_of_digits}d.png'
+        try:
+            (
+                ffmpeg.input(str(self.video.path))
+                .output(str(self.path / filename_pattern), format='image2')
+                .run()
+            )
+        except Exception as e:
+            raise ExtractionError from e
 
-            try:
-                (
-                    ffmpeg.input(str(video.path))
-                    .output(str(directory / filename_pattern), format='image2')
-                    .run()
-                )
-            except Exception as e:
-                raise ExtractionError from e
+        self._mark_as_done_extracting()
 
-            _mark_as_done_extracting(directory)
+    def _is_done_extracting(self) -> bool:
+        return _done_path_for_directory(self.path).exists()
 
-        return ExtractedFramesDataset(directory)
-
-
-def _is_done_extracting(directory: Path) -> bool:
-    return _done_path_for_directory(directory).exists()
+    def _mark_as_done_extracting(self) -> None:
+        _done_path_for_directory(self.path).touch(exist_ok=True)
 
 
-def _mark_as_done_extracting(directory: Path) -> None:
-    _done_path_for_directory(directory).touch(exist_ok=True)
-
-
-def _done_path_for_directory(directory: Path) -> Path:
+def _done_path_for_directory(directory: Path, /) -> Path:
     return directory / '__done__'
