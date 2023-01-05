@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import gc
 import os
 import subprocess
@@ -73,8 +74,12 @@ class Video(SliceableDataset[VideoFrame]):
         # workaround for limiting memory usage
         os.environ['DECORD_EOF_RETRY_MAX'] = '128'
 
-        self.path = resolve(path)
-        self._video: Optional[decord.VideoReader] = None
+        self._path = resolve(path)
+        self._video: decord.VideoReader | None = None
+
+    @property
+    def path(self) -> Path:
+        return self._path
 
     def getitem_from_index(self, index: int) -> VideoFrameU8:
         with self as frames:
@@ -91,10 +96,12 @@ class Video(SliceableDataset[VideoFrame]):
             for frame in frames:
                 yield frame.asnumpy()
 
+    @functools.cache
     def __len__(self) -> int:
         with self as frames:
             return len(frames)
 
+    @functools.cache
     def fps(self) -> float:
         with self as frames:
             return typing.cast(float, frames.get_avg_fps())
