@@ -56,7 +56,7 @@ class _MinimalFetchCache(SliceableDatasetCache[_Any]):
     def _current_indices(self) -> frozenset[int]:
         pass
 
-    def missing_indices(self, indices: tuple[int, ...]) -> frozenset[int]:
+    def missing_indices(self, indices: Iterable[int]) -> frozenset[int]:
         return frozenset(indices) - self._current_indices()
 
     def fetch_from(
@@ -66,8 +66,7 @@ class _MinimalFetchCache(SliceableDatasetCache[_Any]):
     ) -> tuple[_Any, ...]:
         indices = tuple(range(len(source)) if indices is None else indices)
 
-        missing_indices = tuple(self.missing_indices(indices))
-        if missing_indices:
+        if missing_indices := tuple(self.missing_indices(indices)):
             self._store(
                 dict(
                     zip(
@@ -88,8 +87,7 @@ class MemoryCache(_MinimalFetchCache[_Any]):
         self._storage.update(pairs)
 
     def _fetch(self, indices: tuple[int, ...]) -> tuple[_Any, ...]:
-        missing = self.missing_indices(indices).intersection(indices)
-        if missing:
+        if missing := self.missing_indices(indices).intersection(indices):
             raise ValueError(f'Required missing indices: {sorted(missing)}')
 
         return tuple(self._storage[index] for index in indices)
@@ -129,8 +127,7 @@ class NumpyCache(_MinimalFetchCache[_Array]):
             _json.dump(new_indices, file)
 
     def _fetch(self, indices: tuple[int, ...]) -> tuple[_Array, ...]:
-        missing = self.missing_indices(indices).intersection(indices)
-        if missing:
+        if missing := self.missing_indices(indices).intersection(indices):
             raise ValueError(f'Required missing indices: {sorted(missing)}')
 
         # sort the indices, fetch the frames and unsort them back
