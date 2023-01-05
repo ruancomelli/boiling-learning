@@ -7,6 +7,7 @@ from boiling_learning.app.studies import (
     data_augmentation,
     data_augmentation_automl,
     data_split,
+    dataset_sizes,
     downscaling_preprocessing,
     downscaling_training,
     example_frames,
@@ -26,6 +27,7 @@ app.add_typer(cross_surface.app, name='cross-surface')
 app.add_typer(data_augmentation.app, name='data-augmentation')
 app.add_typer(data_augmentation_automl.app, name='data-augmentation-automl')
 app.add_typer(data_split.app, name='data-split')
+app.add_typer(dataset_sizes.app, name='dataset-sizes')
 app.add_typer(downscaling_preprocessing.app, name='downscaling-preprocessing')
 app.add_typer(downscaling_training.app, name='downscaling-training')
 app.add_typer(example_frames.app, name='example-frames')
