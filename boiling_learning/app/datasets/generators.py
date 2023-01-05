@@ -165,7 +165,7 @@ def _video_dataset_from_video_and_transformers(
 ) -> SliceableDataset[Image]:
     compiled_transformers = compile_transformers(transformers, experiment_video)
 
-    if options.EXTRACT_FRAMES and experiment == 'boiling1d':
+    if options.EXTRACT_FRAMES:
         extracted_frames_directory = _extracted_frames_directory_allocator(experiment).allocate(
             experiment_video
         )

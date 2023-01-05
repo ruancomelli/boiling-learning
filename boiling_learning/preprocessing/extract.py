@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
 
 import ffmpeg
+import imageio
 from loguru import logger
-from skimage.io import imread_collection
 
-from boiling_learning.datasets.sliceable import SequenceSliceableDataset
+from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.image_datasets import Image
 from boiling_learning.preprocessing.video import Video
 from boiling_learning.utils.pathutils import PathLike, resolve
@@ -16,46 +17,70 @@ class ExtractionError(Exception):
     pass
 
 
-class ExtractedFramesDataset(SequenceSliceableDataset[Image]):
+class ExtractedFramesDataset(SliceableDataset[Image]):
     def __init__(self, video: Video, path: PathLike, /) -> None:
         self.path = resolve(path, dir=True)
         self.video = video
 
-        if not self._is_done_extracting():
-            self._extract_frames()
+    def __len__(self) -> int:
+        return len(self.video)
 
-        super().__init__(
-            imread_collection(
-                str(self.path / '*.png'),
-                conserve_memory=True,  # if I ever need caching, use a memory cache
-            )
-        )
+    def __repr__(self) -> str:
+        return f'ExtractedFramesDataset({self.video.path}, {self.path})'
 
-    def _extract_frames(self) -> None:
+    def getitem_from_index(self, index: int) -> Image:
+        return self.fetch((index,))[0]
+
+    def fetch(self, indices: Iterable[int] | None = None) -> tuple[Image, ...]:
+        indices = tuple(range(len(self.video)) if indices is None else indices)
+
+        self._extract_frames(index for index in indices if self._is_missing(index))
+
+        for index in indices:
+            if self._is_missing(index):
+                raise ExtractionError(f'failed to extract frame #{index}')
+
+        return tuple(self._load_frame(index) for index in indices)
+
+    def _load_frame(self, index: int) -> Image:
+        return imageio.imread(self._index_to_path(index))
+
+    def _is_missing(self, index: int) -> bool:
+        return not self._index_to_path(index).exists()
+
+    def _index_to_path(self, index: int) -> Path:
+        return self.path / self._index_to_filename(index)
+
+    def _index_to_filename(self, index: int) -> str:
+        number_of_digits = self._filename_number_of_digits()
+        index_str = str(index)
+        leading_zeros = '0' * (number_of_digits - len(index_str))
+        return f'{leading_zeros}{index_str}{self._filename_suffix()}'
+
+    def _extract_frames(self, indices: Iterable[int]) -> None:
         # Original code: $ ffmpeg -i "video.mov" -f image2 "video-frame%05d.png"
         # Source: <https://forums.fast.ai/t/extracting-frames-from-video-file-with-ffmpeg/29818>
-        logger.info(f'Extracting frames from {self.video.path} to {self.path}')
+        indices = tuple(indices)
+        logger.info(f'Extracting frames {indices} from {self.video.path} to {self.path}')
 
-        number_of_digits = len(str(len(self.video)))
-        filename_pattern = f'%{number_of_digits}d.png'
+        filename_pattern = f'%{self._filename_number_of_digits()}d{self._filename_suffix()}'
 
         try:
             (
                 ffmpeg.input(str(self.video.path))
-                .output(str(self.path / filename_pattern), format='image2')
+                .filter('select', '+'.join(f'eq(n,{index})' for index in indices))
+                .output(
+                    str(self.path / filename_pattern),
+                    frame_pts=True,
+                    vsync=0,
+                )
                 .run()
             )
         except Exception as e:
             raise ExtractionError from e
 
-        self._mark_as_done_extracting()
+    def _filename_number_of_digits(self) -> int:
+        return len(str(len(self)))
 
-    def _is_done_extracting(self) -> bool:
-        return _done_path_for_directory(self.path).exists()
-
-    def _mark_as_done_extracting(self) -> None:
-        _done_path_for_directory(self.path).touch(exist_ok=True)
-
-
-def _done_path_for_directory(directory: Path, /) -> Path:
-    return directory / '__done__'
+    def _filename_suffix(self) -> str:
+        return '.png'
