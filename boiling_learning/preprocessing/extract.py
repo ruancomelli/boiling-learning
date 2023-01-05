@@ -16,10 +16,6 @@ class ExtractionError(Exception):
     pass
 
 
-class NoFramesError(Exception):
-    pass
-
-
 class ExtractedFramesDataset(SequenceSliceableDataset[Image]):
     def __init__(self, video: Video, path: PathLike, /) -> None:
         self.path = resolve(path, dir=True)
