@@ -8,7 +8,7 @@ from boiling_learning.app.datasets.bridged.boiling1d import DEFAULT_BOILING_OUTL
 from boiling_learning.app.datasets.bridging import to_tensorflow_triplet
 from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
 from boiling_learning.app.paths import studies_path
-from boiling_learning.datasets.datasets import DatasetTriplet
+from boiling_learning.datasets.splits import DatasetTriplet
 from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.visualization.video import save_as_video

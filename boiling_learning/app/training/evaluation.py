@@ -4,7 +4,7 @@ from typing import Literal
 
 from boiling_learning.app.datasets.bridged.boiling1d import default_boiling_bridging_gt10
 from boiling_learning.app.paths import shared_cache_path
-from boiling_learning.datasets.datasets import DatasetTriplet
+from boiling_learning.datasets.splits import DatasetTriplet
 from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.io.dataclasses import dataclass
 from boiling_learning.lazy import LazyDescribed

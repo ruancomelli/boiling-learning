@@ -1,5 +1,5 @@
 from fractions import Fraction
-from typing import Generic, Optional, TypeVar
+from typing import Generic, TypeVar
 
 import funcy
 
@@ -20,9 +20,9 @@ class DatasetTriplet(NamedTuple, Generic[_T]):
 
 @dataclass(frozen=True)
 class DatasetSplits:
-    train: Optional[Fraction] = None
-    test: Optional[Fraction] = None
-    val: Optional[Fraction] = Fraction(0)
+    train: Fraction | None = None
+    test: Fraction | None = None
+    val: Fraction | None = Fraction(0)
 
     def __post_init__(self) -> None:
         splits = (self.train, self.val, self.test)

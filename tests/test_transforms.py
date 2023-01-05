@@ -1,5 +1,5 @@
-from boiling_learning.datasets.datasets import DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
+from boiling_learning.datasets.splits import DatasetTriplet
 from boiling_learning.lazy import Lazy, LazyDescribed
 from boiling_learning.management.allocators import json_describe
 from boiling_learning.transforms import subset

@@ -3,7 +3,7 @@ from typing import Any
 import tensorflow as tf
 
 from boiling_learning.app.datasets.bridging import to_tensorflow_triplet
-from boiling_learning.datasets.datasets import DatasetTriplet
+from boiling_learning.datasets.splits import DatasetTriplet
 from boiling_learning.image_datasets import ImageDatasetTriplet, Targets
 from boiling_learning.lazy import LazyDescribed
 

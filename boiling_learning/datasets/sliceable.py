@@ -254,7 +254,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
     def split(self, *sizes: Optional[Union[int, Fraction]]) -> tuple[SliceableDataset[_T], ...]:
         ...
 
-    def split(self, *sizes: Optional[Union[int, Fraction]]) -> tuple[SliceableDataset[_T], ...]:
+    def split(self, *sizes: int | Fraction | None) -> tuple[SliceableDataset[_T], ...]:
         if sizes.count(None) > 1:
             raise TypeError('`split` supports at most one `None` size.')
 

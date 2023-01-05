@@ -9,7 +9,7 @@ from tensorflow.keras.losses import Loss
 from tensorflow.keras.metrics import Metric
 from tensorflow.keras.optimizers import Optimizer
 
-from boiling_learning.datasets.datasets import DatasetTriplet
+from boiling_learning.datasets.splits import DatasetTriplet
 from boiling_learning.descriptions import describe
 from boiling_learning.distribute import strategy_scope
 from boiling_learning.io import json

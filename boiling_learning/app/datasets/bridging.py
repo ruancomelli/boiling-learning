@@ -8,7 +8,7 @@ from loguru import logger
 from boiling_learning.app.options import PREFETCH_BUFFER_SIZE
 from boiling_learning.app.paths import analyses_path
 from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_dataset
-from boiling_learning.datasets.datasets import DatasetTriplet
+from boiling_learning.datasets.splits import DatasetTriplet
 from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator

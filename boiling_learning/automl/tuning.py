@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 from boiling_learning.automl.hypermodels import HyperModel
-from boiling_learning.datasets.datasets import DatasetTriplet
+from boiling_learning.datasets.splits import DatasetTriplet
 from boiling_learning.io.dataclasses import dataclass
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.model.model import Evaluation, ModelArchitecture

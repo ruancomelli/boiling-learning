@@ -10,8 +10,8 @@ import numpy as np
 from boiling_learning.app import options
 from boiling_learning.app.paths import analyses_path, shared_cache_path
 from boiling_learning.datasets.cache import NumpyCache
-from boiling_learning.datasets.datasets import DatasetSplits, DatasetTriplet
 from boiling_learning.datasets.sliceable import SliceableDataset
+from boiling_learning.datasets.splits import DatasetSplits, DatasetTriplet
 from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
 from boiling_learning.io.dataclasses import dataclass
 from boiling_learning.lazy import LazyDescribed, eager
