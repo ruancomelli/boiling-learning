@@ -16,6 +16,7 @@ from boiling_learning.app.studies import (
     preprocessing,
     transfer_learning_curve,
     validate,
+    visualization_window,
 )
 
 app = typer.Typer()
@@ -34,6 +35,7 @@ app.add_typer(learning_curve.app, name='learning-curve')
 app.add_typer(preprocessing.app, name='preprocessing')
 app.add_typer(transfer_learning_curve.app, name='transfer-learning-curve')
 app.add_typer(validate.app, name='validate')
+app.add_typer(visualization_window.app, name='visualization-window')
 
 
 if __name__ == '__main__':
