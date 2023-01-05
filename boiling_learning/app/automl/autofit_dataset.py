@@ -7,7 +7,7 @@ from boiling_learning.app.automl.tuning import autofit
 from boiling_learning.app.paths import analyses_path
 from boiling_learning.app.training.common import get_baseline_compile_params
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
-from boiling_learning.automl.tuners import EarlyStoppingGreedy
+from boiling_learning.automl.tuners import AutoTuner, EarlyStoppingGreedy
 from boiling_learning.automl.tuning import TuneModelParams
 from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.lazy import LazyDescribed
@@ -23,17 +23,18 @@ def autofit_dataset(
     normalize_images: bool = True,
     max_model_size: Optional[int] = None,
     goal: float | None = None,
+    tuner_class: type[AutoTuner] = EarlyStoppingGreedy,
 ) -> HyperModel:
     compile_params = get_baseline_compile_params(strategy=strategy)
 
     hypermodel = ConvImageRegressor(
         loss=compile_params['loss'],
         metrics=compile_params['metrics'],
-        tuner=EarlyStoppingGreedy,
+        tuner=tuner_class,
         directory=_get_autofit_to_dataset_allocator(experiment).allocate(
             ConvImageRegressor,
             datasets,
-            tuner=EarlyStoppingGreedy,
+            tuner=tuner_class,
             loss=compile_params['loss'],
             metrics=compile_params['metrics'],
             normalize_images=normalize_images,
