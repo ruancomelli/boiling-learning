@@ -58,8 +58,12 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
         return f'{leading_zeros}{index_str}{self._filename_suffix()}'
 
     def _extract_frames(self, indices: Iterable[int]) -> None:
-        # Original code: $ ffmpeg -i "video.mov" -f image2 "video-frame%05d.png"
-        # Source: <https://forums.fast.ai/t/extracting-frames-from-video-file-with-ffmpeg/29818>
+        # Original code:
+        # 1: $ ffmpeg -i "video.mov" -f image2 "video-frame%05d.png"
+        # 2: $ ffmpeg -i in.mp4 -vf select='eq(n\,100)+eq(n\,184)+eq(n\,213)' -vsync 0 frames%d.jpg
+        # Source 1: https://forums.fast.ai/t/extracting-frames-from-video-file-with-ffmpeg/29818
+        # Source 2:
+        # https://stackoverflow.com/questions/38253406/extract-list-of-specific-frames-using-ffmpeg
         indices = tuple(indices)
         logger.info(f'Extracting frames {indices} from {self.video.path} to {self.path}')
 
@@ -71,8 +75,8 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
                 .filter('select', '+'.join(f'eq(n,{index})' for index in indices))
                 .output(
                     str(self.path / filename_pattern),
-                    frame_pts=True,
-                    vsync=0,
+                    frame_pts=True,  # saves each frame with their index as their name
+                    vsync=0,  # avoids duplicates
                 )
                 .run()
             )

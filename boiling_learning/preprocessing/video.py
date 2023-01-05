@@ -1,15 +1,19 @@
 from __future__ import annotations
 
+import enum
 import functools
 import gc
+import math
 import os
 import subprocess
 import typing
+from fractions import Fraction
 from pathlib import Path
 from types import TracebackType
 from typing import Iterable, Iterator, Optional, Type, Union
 
 import decord
+import ffmpeg
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
@@ -69,6 +73,11 @@ def convert_video(
         logger.info('Succesfully converted video')
 
 
+class VideoFormat(enum.Enum):
+    MP4 = enum.auto()
+    MTS = enum.auto()
+
+
 class Video(SliceableDataset[VideoFrame]):
     def __init__(self, path: PathLike) -> None:
         # workaround for limiting memory usage
@@ -98,8 +107,25 @@ class Video(SliceableDataset[VideoFrame]):
 
     @functools.cache
     def __len__(self) -> int:
-        with self as frames:
-            return len(frames)
+        video_format = self.get_format()
+        if video_format is VideoFormat.MP4:
+            with self as frames:
+                return len(frames)
+        elif video_format is VideoFormat.MTS:
+            # `decord` does not seem to calculate the length of `.MTS` files correctly, so we
+            # revert to this method.
+            # Source: adapted from
+            # https://github.com/kkroening/ffmpeg-python/blob/master/examples/video_info.py
+            probe = ffmpeg.probe(str(self.path))
+            video_stream = next(
+                stream for stream in probe['streams'] if stream['codec_type'] == 'video'
+            )
+
+            fps = Fraction(video_stream['avg_frame_rate'])
+            duration = float(video_stream['duration'])
+            return math.floor(fps * duration)
+        else:
+            raise ValueError(f'unsupported video format: {video_format}')
 
     @functools.cache
     def fps(self) -> float:
@@ -132,6 +158,10 @@ class Video(SliceableDataset[VideoFrame]):
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.path})'
+
+    def get_format(self) -> VideoFormat:
+        suffix = self.path.suffix.removeprefix('.').upper()
+        return VideoFormat[suffix]
 
 
 class OpenVideoError(Exception):
