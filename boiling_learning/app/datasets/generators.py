@@ -21,6 +21,7 @@ from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.transforms import map_transformers
+from boiling_learning.utils.random import random_state
 
 
 def get_image_dataset(
@@ -50,6 +51,8 @@ def get_image_dataset(
         dataset = _add_indices_to_targets(dataset, current_size=current_size)
         current_size += len(dataset)
 
+        with random_state(1997):
+            dataset = dataset.shuffle()
         ev_train, ev_val, ev_test = dataset.split(splits.train, splits.val, splits.test)
 
         ds_train_list.append(ev_train)
