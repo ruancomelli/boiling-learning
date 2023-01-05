@@ -10,6 +10,7 @@ from rich.table import Table
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
 from boiling_learning.app.displaying.latex import latexify
+from boiling_learning.app.displaying.units import METRICS_UNITS_HEAT_FLUX
 from boiling_learning.app.paths import studies_path
 from boiling_learning.app.training.boiling1d import get_pretrained_baseline_boiling_model
 from boiling_learning.app.training.common import get_baseline_compile_params
@@ -111,6 +112,7 @@ def _latex_table_lines(
         yield '\\\\'  # latex line-break
         for metric_name in evaluation.metrics_names:
             yield f'& \\gls{{{metric_name.lower()}}}'
+            yield f'& {METRICS_UNITS_HEAT_FLUX[metric_name.lower()]}'
 
             for direct_visualization in True, None, False:
                 if direct_visualization is None:
