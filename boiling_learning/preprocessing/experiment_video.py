@@ -170,9 +170,17 @@ class ExperimentVideo:
         # I don't know why Black reformats this so strangely... flake8 complains
         return self._video[self.start : self.end]  # noqa
 
-    def extract_frames(self, directory: Path, /) -> SliceableDataset[VideoFrame]:
+    def extract_frames(
+        self,
+        directory: Path,
+        /,
+        *,
+        eager: bool = False,
+    ) -> SliceableDataset[VideoFrame]:
         # I don't know why Black reformats this so strangely... flake8 complains
-        return ExtractedFramesDataset(self._video, directory)[self.start : self.end]  # noqa
+        return ExtractedFramesDataset(self._video, directory, eager=eager)[
+            self.start : self.end  # noqa
+        ]
 
     def convert_video(
         self,

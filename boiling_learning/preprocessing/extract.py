@@ -13,14 +13,35 @@ from boiling_learning.preprocessing.video import Video
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 
-class ExtractionError(Exception):
+class ExtractionError(RuntimeError):
+    pass
+
+
+class LoadImageError(RuntimeError):
     pass
 
 
 class ExtractedFramesDataset(SliceableDataset[Image]):
-    def __init__(self, video: Video, path: PathLike, /) -> None:
+    '''A dataset composed of extracted frames.
+
+    Args:
+        eager: in non-eager mode, every call to `fetch` will extract the required
+            frames. In eager mode, calls to `fetch` will extract _all_ possible frames.
+            Use eager mode when you know that all frames will be used since it is much
+            more efficient to extract all frames at once.
+    '''
+
+    def __init__(
+        self,
+        video: Video,
+        path: PathLike,
+        /,
+        *,
+        eager: bool = False,
+    ) -> None:
         self.path = resolve(path, dir=True)
         self.video = video
+        self._eager = eager
 
     def __len__(self) -> int:
         return len(self.video)
@@ -32,9 +53,13 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
         return self.fetch((index,))[0]
 
     def fetch(self, indices: Iterable[int] | None = None) -> tuple[Image, ...]:
-        indices = tuple(range(len(self.video)) if indices is None else indices)
+        all_indices = range(len(self.video))
+        indices = tuple(all_indices if indices is None else indices)
 
-        self._extract_frames(index for index in indices if self._is_missing(index))
+        if missing_indices := sorted(
+            filter(self._is_missing, all_indices if self._eager else indices)
+        ):
+            self._extract_frames(missing_indices)
 
         for index in indices:
             if self._is_missing(index):
@@ -43,7 +68,11 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
         return tuple(self._load_frame(index) for index in indices)
 
     def _load_frame(self, index: int) -> Image:
-        return imageio.imread(self._index_to_path(index))
+        path = self._index_to_path(index)
+        try:
+            return imageio.imread(path)
+        except (ValueError, RuntimeError) as e:
+            raise LoadImageError(f'failed to load frame #{index} from {path}') from e
 
     def _is_missing(self, index: int) -> bool:
         return not self._index_to_path(index).exists()
