@@ -4,6 +4,7 @@ from boiling_learning.app.studies import (
     animate,
     automl,
     automl_strategies,
+    consecutive_frames,
     cross_surface,
     data_augmentation,
     data_augmentation_automl,
@@ -25,6 +26,7 @@ app = typer.Typer()
 app.add_typer(animate.app, name='animate')
 app.add_typer(automl.app, name='automl')
 app.add_typer(automl_strategies.app, name='automl-strategies')
+app.add_typer(consecutive_frames.app, name='consecutive-frames')
 app.add_typer(cross_surface.app, name='cross-surface')
 app.add_typer(data_augmentation.app, name='data-augmentation')
 app.add_typer(data_augmentation_automl.app, name='data-augmentation-automl')

@@ -34,6 +34,7 @@ def get_image_dataset(
         test=Fraction(15, 100),
     ),
     experiment: Literal['boiling1d', 'condensation'],
+    shuffle: bool = True,
 ) -> LazyDescribed[ImageDatasetTriplet]:
     purged_experiment_videos = _experiment_video_purger(experiment=experiment)(image_dataset)
 
@@ -51,8 +52,10 @@ def get_image_dataset(
         dataset = _add_indices_to_targets(dataset, current_size=current_size)
         current_size += len(dataset)
 
-        with random_state(1997):
-            dataset = dataset.shuffle()
+        if shuffle:
+            with random_state(1997):
+                dataset = dataset.shuffle()
+
         ev_train, ev_val, ev_test = dataset.split(splits.train, splits.val, splits.test)
 
         ds_train_list.append(ev_train)
@@ -173,7 +176,10 @@ def _video_dataset_from_video_and_transformers(
             experiment_video
         )
 
-        frames = experiment_video.extract_frames(extracted_frames_directory)
+        frames = experiment_video.extract_frames(
+            extracted_frames_directory,
+            eager=experiment == 'boiling1d',
+        )
     else:
         frames = experiment_video.frames()
 

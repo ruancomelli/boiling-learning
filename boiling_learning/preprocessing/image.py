@@ -7,7 +7,7 @@ import tensorflow as tf
 from scipy.stats import entropy
 from skimage.measure import shannon_entropy
 from skimage.metrics import normalized_mutual_information as _normalized_mutual_information
-from skimage.metrics import structural_similarity
+from skimage.metrics import structural_similarity as _structural_similarity
 from skimage.transform import resize
 
 from boiling_learning.preprocessing.transformers import wrap_as_partial_transformer
@@ -220,16 +220,18 @@ def structural_similarity_ratio(ref: VideoFrame, image: VideoFrame) -> float:
     # TODO: use https://www.tensorflow.org/api_docs/python/tf/image/structural_similarity ?
     # see
     # <https://www.wikiwand.com/en/Structural_similarity#/Application_of_the_formula>
+    return structural_similarity(ref, image) / structural_similarity(ref, ref)
+
+
+def structural_similarity(ref: VideoFrame, image: VideoFrame) -> float:
     WINDOW_SIZE = 11
 
     ref, image = _reshape_to_largest(ref, image)
-    ref = np.squeeze(ref)
-    image = np.squeeze(image)
 
-    return typing.cast(
-        float,
-        structural_similarity(ref, image, win_size=WINDOW_SIZE)
-        / structural_similarity(ref, ref, win_size=WINDOW_SIZE),
+    return _structural_similarity(
+        np.squeeze(ref),
+        np.squeeze(image),
+        win_size=WINDOW_SIZE,
     )
 
 
