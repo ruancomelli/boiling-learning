@@ -118,6 +118,9 @@ def _latex_table_lines(
         yield ('\\multicolumn{2}{l}{Direct}' if direct else '\\multicolumn{2}{l}{Indirect}')
         yield '\\\\'  # latex line-break
         for metric_name in evaluation.metrics_names:
+            if metric_name == 'loss':
+                continue
+
             yield f'& \\gls{{{metric_name.lower()}}}'
             yield f'& {METRICS_UNITS_HEAT_FLUX[metric_name.lower()]}'
 

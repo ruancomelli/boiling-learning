@@ -1,5 +1,6 @@
 import typer
 
+from boiling_learning.app.figures import inclination_effects
 from boiling_learning.app.studies import (
     animate,
     automl,
@@ -37,6 +38,7 @@ app.add_typer(downscaling_training.app, name='downscaling-training')
 app.add_typer(example_frames.app, name='example-frames')
 app.add_typer(image_brightness.app, name='image-brightness')
 app.add_typer(image_normalization.app, name='image-normalization')
+app.add_typer(inclination_effects.app, name='inclination-effects')
 app.add_typer(learning_curve.app, name='learning-curve')
 app.add_typer(preprocessing.app, name='preprocessing')
 app.add_typer(transfer_learning_curve.app, name='transfer-learning-curve')
