@@ -62,6 +62,7 @@ def main() -> None:
     )
 
     data = pd.DataFrame(DATA, columns=['Excess temperature', 'Heat flux', 'Inclination'])
+    data['Heat flux'] /= 1e4  # W/m^2 -> W/cm^2
 
     grid = sns.lmplot(
         data=data,
@@ -87,5 +88,6 @@ def main() -> None:
     grid.ax.minorticks_off()
     grid.ax.set(xticks=[5, 10, 20])
     grid.ax.xaxis.set_major_formatter(lambda val, pos: int(val))
+    grid.ax.yaxis.set_major_formatter(lambda val, pos: int(val))
     # grid.ax.xaxis.set_major_locator(MaxNLocator('auto', integer=True))
     grid.figure.savefig(figures_path() / 'surface-inclination-effects.pdf')
