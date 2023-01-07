@@ -5,8 +5,8 @@ import numpy as np
 import tensorflow as tf
 from loguru import logger
 
+from boiling_learning.app.constants import high_speed_cache_path
 from boiling_learning.app.options import PREFETCH_BUFFER_SIZE
-from boiling_learning.app.paths import analyses_path
 from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_dataset
 from boiling_learning.datasets.splits import DatasetTriplet
 from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
@@ -106,7 +106,7 @@ def to_tensorflow_triplet(
 def _training_datasets_allocator(
     experiment: Literal['boiling1d', 'condensation']
 ) -> JSONAllocator:
-    return JSONAllocator(analyses_path() / 'datasets' / 'training' / experiment)
+    return JSONAllocator(high_speed_cache_path() / 'datasets' / 'training' / experiment)
 
 
 def _default_filter_for_frames_dataset(
