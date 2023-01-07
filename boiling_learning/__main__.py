@@ -1,6 +1,6 @@
 import typer
 
-from boiling_learning.app.figures import inclination_effects
+from boiling_learning.app.figures import diameter_effects, inclination_effects
 from boiling_learning.app.studies import (
     animate,
     automl,
@@ -33,6 +33,7 @@ app.add_typer(data_augmentation.app, name='data-augmentation')
 app.add_typer(data_augmentation_automl.app, name='data-augmentation-automl')
 app.add_typer(data_split.app, name='data-split')
 app.add_typer(dataset_sizes.app, name='dataset-sizes')
+app.add_typer(diameter_effects.app, name='diameter-effects')
 app.add_typer(downscaling_preprocessing.app, name='downscaling-preprocessing')
 app.add_typer(downscaling_training.app, name='downscaling-training')
 app.add_typer(example_frames.app, name='example-frames')
