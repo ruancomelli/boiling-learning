@@ -84,6 +84,24 @@ def _configure_modin_engine(modin_engine: Literal['ray']) -> None:
 
 def _configure_seaborn() -> None:
     sns.set_style('whitegrid')
+    sns.set(
+        rc={
+            'text.usetex': True,
+            'font.size': 12.0,
+            'font.family': 'serif',
+            'font.serif': 'Computer Modern',
+            'axes.titlesize': 'medium',
+            'figure.titlesize': 'medium',
+            'text.latex.preamble': '\n'.join(
+                (
+                    '\\usepackage{amsmath}',
+                    '\\usepackage{amssymb}',
+                    '\\usepackage[per-mode=symbol]{siunitx}',
+                )
+            ),
+        },
+        style='whitegrid',
+    )
 
 
 def _configure_gpu(
