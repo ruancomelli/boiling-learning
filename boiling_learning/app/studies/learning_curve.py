@@ -11,6 +11,7 @@ from rich.table import Table
 
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
+from boiling_learning.app.displaying import units
 from boiling_learning.app.paths import studies_path
 from boiling_learning.app.training.boiling1d import (
     DEFAULT_BOILING_HEAT_FLUX_TARGET,
@@ -108,16 +109,12 @@ def boiling1d(
     plot_data = pd.DataFrame(losses, columns=['fraction', 'loss', 'subset'])
     f, ax = plt.subplots(1, 1, figsize=(4, 4))
     sns.scatterplot(ax=ax, data=plot_data, x='fraction', y='loss', hue='subset')
-    ax.set_xlabel('Dataset subsample')
-    ax.set_ylabel('Validation loss')
+    ax.set_xlabel('Dataset subsample size')
+    ax.set_ylabel(f'Loss [{units["mse"]}]')
     ax.set_xscale('log')
     ax.set_yscale('log')
 
-    figure_path = resolve(
-        _learning_curve_study_path() / f"boiling1d-{'direct' if direct else 'indirect'}.png",
-        parents=True,
-    )
-    f.savefig(str(figure_path))
+    f.savefig(_learning_curve_study_path() / f"boiling1d-{'direct' if direct else 'indirect'}.png")
 
 
 @app.command()
@@ -126,4 +123,4 @@ def condensation() -> None:
 
 
 def _learning_curve_study_path() -> Path:
-    return studies_path() / 'learning-curve'
+    return resolve(studies_path() / 'learning-curve', dir=True)

@@ -8,7 +8,7 @@ import typer
 
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.datasets.bridged.boiling1d import DEFAULT_BOILING_OUTLIER_FILTER
-from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
+from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
 from boiling_learning.app.paths import studies_path
 from boiling_learning.app.training.boiling1d import DEFAULT_BOILING_HEAT_FLUX_TARGET
 from boiling_learning.datasets.sliceable import targets
@@ -29,16 +29,22 @@ def boiling1d() -> None:
         require_gpu=True,
     )
 
-    datasets = baseline_boiling_dataset(
-        # use indirect visualization to save memory since images aren't really necessary
-        direct_visualization=False
-    )
+    datasets = boiling_datasets(direct_visualization=False)
+    f, axes = plt.subplots(len(datasets), 1, figsize=(6, 4))
+    for index, (ax, dataset) in enumerate(zip(axes, datasets)):
+        data = _sorted_boiling_datasets(dataset)
 
-    data = _sorted_boiling_datasets(datasets)
+        sns.scatterplot(
+            ax=ax,
+            data=data,
+            x='index',
+            y='heat flux',
+            hue='class',
+            alpha=0.5,
+        )
+        ax.set_title(f'Dataset {index}')
 
-    f, ax = plt.subplots(1, 1, figsize=(6, 4))
-    sns.scatterplot(ax=ax, data=data, x='index', y='heat flux', hue='class', alpha=0.5)
-    f.savefig(str(_data_split_study_path() / 'boiling1d.png'))
+    f.savefig(str(_data_split_study_path() / 'boiling1d.pdf'))
 
 
 @app.command()
