@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import typing
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -60,42 +61,61 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
     def fetch(self, indices: Iterable[int] | None = None) -> tuple[Image, ...]:
         all_indices = range(len(self.video))
         indices = tuple(all_indices if indices is None else indices)
+        unique_indices = frozenset(indices)
 
         logger.debug(f'Fetching frames {indices}')
 
-        if missing_indices := sorted(
-            filter(self._is_missing, all_indices if self._eager else indices)
+        if missing_indices := frozenset(
+            filter(self._is_missing, all_indices if self._eager else unique_indices)
         ):
             self._extract_frames(missing_indices)
 
-        for index in indices:
+        for index in unique_indices:
             if self._is_missing(index):
                 raise ExtractionError(f'failed to extract frame #{index}')
 
         if self._robust:
-            indexed_frames = tuple((index, self._load_frame(index)) for index in indices)
+            indexed_frames = {index: self._maybe_load_frame(index) for index in unique_indices}
 
             if failed_indices := tuple(
-                index for index, frame in indexed_frames if _is_empty_frame(frame)
+                index for index, frame in indexed_frames.items() if frame is None
             ):
                 for failed_index in failed_indices:
                     self._index_to_path(failed_index).unlink()
                 self._extract_frames(failed_indices)
 
-                indexed_frames = tuple((index, self._load_frame(index)) for index in indices)
+                renewed_frames = {index: self._maybe_load_frame(index) for index in failed_indices}
 
                 if failed_indices := tuple(
-                    index for index, frame in indexed_frames if _is_empty_frame(frame)
+                    index for index, frame in renewed_frames.items() if frame is None
                 ):
                     raise RuntimeError(
                         f'Failed generate frames even in robust mode for {self}: {failed_indices}'
                     )
 
-            logger.debug('Done fetching frames')
-            return tuple(frame for _, frame in indexed_frames)
+                indexed_frames |= renewed_frames
+
+            frames = tuple(
+                # we checked before that no image is `None`
+                typing.cast(Image, indexed_frames[index])
+                for index in indices
+            )
+        else:
+            frames = tuple(self._load_frame(index) for index in indices)
 
         logger.debug('Done fetching frames')
-        return tuple(self._load_frame(index) for index in indices)
+        return frames
+
+    def _maybe_load_frame(self, index: int, /) -> Image | None:
+        try:
+            frame = self._load_frame(index)
+        except LoadImageError:
+            return None
+
+        if _is_empty_frame(frame):
+            return None
+
+        return frame
 
     def _load_frame(self, index: int, /) -> Image:
         path = self._index_to_path(index)
@@ -123,7 +143,7 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
         # Source 1: https://forums.fast.ai/t/extracting-frames-from-video-file-with-ffmpeg/29818
         # Source 2:
         # https://stackoverflow.com/questions/38253406/extract-list-of-specific-frames-using-ffmpeg
-        indices = tuple(indices)
+        indices = sorted(frozenset(indices))
 
         if not indices:
             logger.info(
