@@ -43,7 +43,7 @@ def get_image_dataset(
     ds_test_list = []
     current_size = 0
     for video in purged_experiment_videos:
-        dataset = _sliceable_dataset_from_video_and_transformers(
+        dataset = sliceable_dataset_from_video_and_transformers(
             video,
             transformers,
             experiment=experiment,
@@ -108,7 +108,7 @@ def _experiment_video_purger(
     return _purge_experiment_videos
 
 
-def _sliceable_dataset_from_video_and_transformers(
+def sliceable_dataset_from_video_and_transformers(
     ev: ExperimentVideo,
     transformers: Iterable[Transformer[Image, Image] | dict[str, Transformer[Image, Image]]],
     *,

@@ -29,6 +29,9 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
             frames. In eager mode, calls to `fetch` will extract _all_ possible frames.
             Use eager mode when you know that all frames will be used since it is much
             more efficient to extract all frames at once.
+        robust: occasionally the frame extraction procedure may fail, yielding
+            completely black images. In the `robust` mode, such frames are automatically
+            deleted and re-extracted during the fetching step.
     '''
 
     def __init__(
@@ -38,10 +41,12 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
         /,
         *,
         eager: bool = False,
+        robust: bool = True,
     ) -> None:
         self.path = resolve(path, dir=True)
         self.video = video
         self._eager = eager
+        self._robust = robust
 
     def __len__(self) -> int:
         return len(self.video)
@@ -56,6 +61,8 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
         all_indices = range(len(self.video))
         indices = tuple(all_indices if indices is None else indices)
 
+        logger.debug(f'Fetching frames {indices}')
+
         if missing_indices := sorted(
             filter(self._is_missing, all_indices if self._eager else indices)
         ):
@@ -65,9 +72,32 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
             if self._is_missing(index):
                 raise ExtractionError(f'failed to extract frame #{index}')
 
+        if self._robust:
+            indexed_frames = tuple((index, self._load_frame(index)) for index in indices)
+
+            if failed_indices := tuple(
+                index for index, frame in indexed_frames if _is_empty_frame(frame)
+            ):
+                for failed_index in failed_indices:
+                    self._index_to_path(failed_index).unlink()
+                self._extract_frames(failed_indices)
+
+                indexed_frames = tuple((index, self._load_frame(index)) for index in indices)
+
+                if failed_indices := tuple(
+                    index for index, frame in indexed_frames if _is_empty_frame(frame)
+                ):
+                    raise RuntimeError(
+                        f'Failed generate frames even in robust mode for {self}: {failed_indices}'
+                    )
+
+            logger.debug('Done fetching frames')
+            return tuple(frame for _, frame in indexed_frames)
+
+        logger.debug('Done fetching frames')
         return tuple(self._load_frame(index) for index in indices)
 
-    def _load_frame(self, index: int) -> Image:
+    def _load_frame(self, index: int, /) -> Image:
         path = self._index_to_path(index)
         try:
             return imageio.imread(path)
@@ -94,6 +124,14 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
         # Source 2:
         # https://stackoverflow.com/questions/38253406/extract-list-of-specific-frames-using-ffmpeg
         indices = tuple(indices)
+
+        if not indices:
+            logger.info(
+                f'Skipping frame extraction from {self.video.path} to {self.path}'
+                ' since no indices were provided'
+            )
+            return
+
         logger.info(f'Extracting frames {indices} from {self.video.path} to {self.path}')
 
         filename_pattern = f'%{self._filename_number_of_digits()}d{self._filename_suffix()}'
@@ -117,3 +155,7 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
 
     def _filename_suffix(self) -> str:
         return '.png'
+
+
+def _is_empty_frame(frame: Image) -> bool:
+    return abs(float(frame.mean())) < 1e-8
