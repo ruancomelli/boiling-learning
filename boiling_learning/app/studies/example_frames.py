@@ -1,74 +1,65 @@
-import functools
-import math
-from collections.abc import Callable
 from pathlib import Path
 
-import matplotlib.pyplot as plt
+import numpy as np
 import typer
 from loguru import logger
+from PIL import Image
 
-from boiling_learning.app.datasets.generators import compile_transformers
+from boiling_learning.app.datasets.bridged.boiling1d import DEFAULT_BOILING_HEAT_FLUX_TARGET
+from boiling_learning.app.datasets.generators import sliceable_dataset_from_video_and_transformers
 from boiling_learning.app.datasets.preprocessing import default_boiling_preprocessors
 from boiling_learning.app.datasets.raw.boiling1d import boiling_cases
 from boiling_learning.app.paths import studies_path
-from boiling_learning.image_datasets import Image
-from boiling_learning.management.allocators import JSONAllocator
-from boiling_learning.management.cacher import cache
-from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.utils.pathutils import resolve
 
 app = typer.Typer()
 
 
 @app.command()
-def boiling1d(
-    number_of_columns: int = typer.Option(4),
-    direct: bool = typer.Option(..., '--direct/--indirect'),
-) -> None:
-    logger.debug(f"Displaying {'directly' if direct else 'indirectly'} visualized boiling frames")
+def boiling1d() -> None:
+    for direct in False, True:
+        direct_label = 'direct' if direct else 'indirect'
+        logger.info(f'Generating {direct_label} images')
+        for quality in 'original', 'cropped', 'final':
+            logger.info(f'Quality: {quality}')
+            preprocessors = (
+                []
+                if quality == 'original'
+                else default_boiling_preprocessors(direct_visualization=direct)[:3]
+                if quality == 'cropped'
+                else default_boiling_preprocessors(direct_visualization=direct)
+            )
+            for case_index, case in enumerate(boiling_cases()):
+                logger.info(f'Getting frames from dataset #{case_index}')
+                for ev in sorted(case(), key=lambda ev: ev.name):
+                    logger.debug(f'Getting example frame from video {ev.name}')
 
-    total_examples_count = sum(len(case()) for case in boiling_cases())
-    number_of_rows = math.ceil(total_examples_count / number_of_columns)
+                    dataset = sliceable_dataset_from_video_and_transformers(
+                        ev,
+                        preprocessors,
+                        experiment='boiling1d',
+                    )
 
-    preprocessors = default_boiling_preprocessors(direct_visualization=direct)
+                    frame, targets = dataset[0]
+                    power = targets['nominal_power']
+                    heat_flux = targets[DEFAULT_BOILING_HEAT_FLUX_TARGET]
 
-    fig, axs = plt.subplots(
-        number_of_rows,
-        number_of_columns,
-        figsize=(number_of_columns * 8, number_of_rows * 8),
-    )
+                    output_path = _example_frames_study_path() / (
+                        'boiling1d'
+                        f'-{direct_label}'
+                        f'-{quality}'
+                        f'-dataset-{case_index}'
+                        f'-ev-{ev.name}'
+                        f'-power-{power}'
+                        f'-hf-{heat_flux:.2f}'
+                        f'.png'
+                    )
 
-    index = 0
-    for case in boiling_cases():
-        for ev in sorted(case(), key=lambda ev: ev.name):
-            try:
-                transformer = compile_transformers(preprocessors, ev)
-            except KeyError:
-                # some experiment videos have no transformers associated
-                continue
-
-            logger.debug(f'Getting example frame from case {case().name} and video {ev.name}')
-            frame = _first_frame_getter()(ev)
-            logger.debug('Transforming frame')
-            frame = transformer()(frame)
-
-            logger.debug('Showing frame')
-            col = index % number_of_columns
-            row = index // number_of_columns
-
-            axs[row, col].imshow(frame.squeeze(), cmap='gray')
-            axs[row, col].set_title(f'{case().name} - {ev.name}')
-            axs[row, col].grid(False)
-
-            index += 1
-
-    output_path = resolve(
-        _example_frames_figures_path() / f"boiling1d-{'direct' if direct else 'indirect'}.png",
-        parents=True,
-    )
-
-    logger.debug(f'Saving figure to {output_path}')
-    fig.savefig(resolve(output_path, parents=True))
+                    if quality == 'original':
+                        im = Image.fromarray(frame)
+                    else:
+                        im = Image.fromarray((frame * 255).astype(np.uint8).squeeze())
+                    im.save(output_path)
 
 
 @app.command()
@@ -78,22 +69,5 @@ def condensation(
     raise NotImplementedError
 
 
-@functools.cache
-def _first_frame_getter() -> Callable[[ExperimentVideo], Image]:
-    @cache(JSONAllocator(_frames_cache_path()))
-    def _get_first_frame(ev: ExperimentVideo) -> Image:
-        return ev.frames()[0]
-
-    return _get_first_frame
-
-
-def _example_frames_figures_path() -> Path:
-    return _example_frames_study_path() / 'frames'
-
-
-def _frames_cache_path() -> Path:
-    return _example_frames_study_path() / 'cache'
-
-
 def _example_frames_study_path() -> Path:
-    return studies_path() / 'example-frames'
+    return resolve(studies_path() / 'example-frames', dir=True)

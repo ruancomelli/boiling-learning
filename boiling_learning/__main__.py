@@ -14,6 +14,7 @@ from boiling_learning.app.studies import (
     downscaling_preprocessing,
     downscaling_training,
     example_frames,
+    example_frames_matrix,
     image_brightness,
     image_normalization,
     learning_curve,
@@ -37,6 +38,7 @@ app.add_typer(diameter_effects.app, name='diameter-effects')
 app.add_typer(downscaling_preprocessing.app, name='downscaling-preprocessing')
 app.add_typer(downscaling_training.app, name='downscaling-training')
 app.add_typer(example_frames.app, name='example-frames')
+app.add_typer(example_frames_matrix.app, name='example-frames-matrix')
 app.add_typer(image_brightness.app, name='image-brightness')
 app.add_typer(image_normalization.app, name='image-normalization')
 app.add_typer(inclination_effects.app, name='inclination-effects')
