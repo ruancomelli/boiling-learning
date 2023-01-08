@@ -108,21 +108,21 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
 
     def _maybe_load_frame(self, index: int, /) -> Image | None:
         try:
-            frame = self._load_frame(index)
+            return self._load_frame(index)
         except LoadImageError:
             return None
-
-        if _is_empty_frame(frame):
-            return None
-
-        return frame
 
     def _load_frame(self, index: int, /) -> Image:
         path = self._index_to_path(index)
         try:
-            return imageio.imread(path)
+            frame = imageio.imread(path)
         except (ValueError, RuntimeError) as e:
             raise LoadImageError(f'failed to load frame #{index} from {path}') from e
+
+        if self._robust and _is_empty_frame(frame):
+            raise LoadImageError(f'frame #{index} from {path} is empty')
+
+        return frame
 
     def _is_missing(self, index: int) -> bool:
         return not self._index_to_path(index).exists()
