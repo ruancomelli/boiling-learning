@@ -43,13 +43,16 @@ def boiling1d(direct: bool = typer.Option(..., '--direct/--indirect')) -> None:
         showfliers=False,  # exclude outliers
     )
     f.savefig(
-        str(_data_split_study_path() / f'boiling1d-{"direct" if direct else "indirect"}-boxen.pdf')
+        str(
+            _image_brightness_study_path()
+            / f'boiling1d-{"direct" if direct else "indirect"}-boxen.pdf'
+        )
     )
 
 
 def _cached_data_getter():
     @cache(
-        JSONAllocator(_data_split_study_path() / 'boiling1d', suffix='.csv'),
+        JSONAllocator(_image_brightness_study_path() / 'boiling1d', suffix='.csv'),
         saver=_dataframe_to_csv,
         loader=pd.read_csv,
         exceptions=(OSError, AttributeError),
@@ -104,5 +107,5 @@ def _sorted_boiling_datasets(datasets: LazyDescribed[ImageDatasetTriplet]) -> pd
     return df
 
 
-def _data_split_study_path() -> Path:
+def _image_brightness_study_path() -> Path:
     return resolve(studies_path() / 'image-brightness', dir=True)

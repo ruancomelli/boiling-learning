@@ -13,9 +13,6 @@ from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.visualization.video import save_as_video
 
-PREFETCH_BUFFER_SIZE = 256
-
-
 app = typer.Typer()
 
 

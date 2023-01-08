@@ -44,11 +44,6 @@ def boiling1d() -> None:
 
     cases_indices = ((0,), (1,), (0, 1), (2,), (3,), (2, 3), (0, 1, 2, 3))
 
-    # cross_surface_evaluator = cache(JSONAllocator(_cross_surface_study_path() / 'boiling1d'))(
-    #     _boiling_cross_surface_evaluation
-    # )
-    cross_surface_evaluator = _boiling_cross_surface_evaluation
-
     tables: list[Table] = []
     for metric_name in METRICS:
         table = Table(
@@ -63,7 +58,7 @@ def boiling1d() -> None:
                 *map(
                     _get_and_format_results,
                     (
-                        cross_surface_evaluator(
+                        _boiling_cross_surface_evaluation(
                             direct_visualization=True,
                             training_cases=training_indices,
                             evaluation_cases=evaluation_cases,
@@ -72,7 +67,7 @@ def boiling1d() -> None:
                         for evaluation_cases in cases_indices
                     ),
                     (
-                        cross_surface_evaluator(
+                        _boiling_cross_surface_evaluation(
                             direct_visualization=False,
                             training_cases=training_indices,
                             evaluation_cases=evaluation_cases,

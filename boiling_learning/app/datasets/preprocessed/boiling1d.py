@@ -11,12 +11,14 @@ from boiling_learning.lazy import LazyDescribed
 def boiling_datasets(
     *,
     direct_visualization: bool,
+    shuffle: bool = True,
 ) -> tuple[LazyDescribed[ImageDatasetTriplet], ...]:
     return tuple(
         get_image_dataset(
             case(),
             transformers=default_boiling_preprocessors(direct_visualization=direct_visualization),
             experiment='boiling1d',
+            shuffle=shuffle,
         )
         for case in boiling_cases()
     )

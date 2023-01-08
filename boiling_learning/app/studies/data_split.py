@@ -29,7 +29,7 @@ def boiling1d() -> None:
         require_gpu=True,
     )
 
-    datasets = boiling_datasets(direct_visualization=False)
+    datasets = boiling_datasets(direct_visualization=True)
     f, axes = plt.subplots(len(datasets), 1, figsize=(6, 4))
     for index, (ax, dataset) in enumerate(zip(axes, datasets)):
         data = _sorted_boiling_datasets(dataset)
