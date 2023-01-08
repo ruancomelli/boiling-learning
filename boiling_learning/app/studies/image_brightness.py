@@ -21,7 +21,7 @@ console = rich.console.Console()
 
 
 @app.command()
-def boiling1d(direct: bool = typer.Option(..., '--direct/--indirect')) -> None:
+def boiling1d() -> None:
     configure(
         force_gpu_allow_growth=True,
         use_xla=True,
@@ -29,25 +29,26 @@ def boiling1d(direct: bool = typer.Option(..., '--direct/--indirect')) -> None:
         require_gpu=True,
     )
 
-    data = _cached_data_getter()(direct_visualization=direct)
+    for direct in False, True:
+        data = _cached_data_getter()(direct_visualization=direct)
 
-    f, ax = plt.subplots(1, 1, figsize=(12, 4))
-    sns.boxenplot(
-        ax=ax,
-        data=data,
-        x='nominal power',
-        y='brightness',
-        hue='subset',
-        hue_order=['train', 'val', 'test'],
-        linewidth=0.5,
-        showfliers=False,  # exclude outliers
-    )
-    f.savefig(
-        str(
-            _image_brightness_study_path()
-            / f'boiling1d-{"direct" if direct else "indirect"}-boxen.pdf'
+        f, ax = plt.subplots(1, 1, figsize=(12, 4))
+        sns.boxenplot(
+            ax=ax,
+            data=data,
+            x='nominal power',
+            y='brightness',
+            hue='subset',
+            hue_order=['train', 'val', 'test'],
+            linewidth=0.5,
+            showfliers=False,  # exclude outliers
         )
-    )
+        f.savefig(
+            str(
+                _image_brightness_study_path()
+                / f'boiling1d-{"direct" if direct else "indirect"}-boxen.pdf'
+            )
+        )
 
 
 def _cached_data_getter():
