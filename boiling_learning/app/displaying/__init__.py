@@ -7,11 +7,13 @@ units: Final = {
     'mae': '\\si{\\watt\\per\\square\\cm}',
     'mape': '\\si{\\percent}',
     'r2': '---',
+    'power': '\\si{\\watt}',
     'heat flux': '\\si{\\watt\\per\\square\\cm}',
     'temperature': '\\si{\\celsius}',
 }
 
 glossary: Final = {
-    'excess temperature': '\\Delta T_{\\mathrm{e}}',
+    'power': 'q',
     'heat flux': 'q^{\\prime\\prime}',
+    'excess temperature': '\\Delta T_{\\mathrm{e}}',
 }

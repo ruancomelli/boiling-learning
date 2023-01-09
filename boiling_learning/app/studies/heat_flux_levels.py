@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pandas as pd
 import rich
 import typer
@@ -12,9 +10,7 @@ from boiling_learning.app.datasets.bridged.boiling1d import (
     DEFAULT_BOILING_OUTLIER_FILTER,
 )
 from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
-from boiling_learning.app.paths import studies_path
 from boiling_learning.datasets.sliceable import targets
-from boiling_learning.utils.pathutils import resolve
 
 app = typer.Typer()
 console = rich.console.Console()
@@ -53,8 +49,8 @@ def boiling1d() -> None:
             .mean()
         )
 
-        for _, nominal_power, heat_flux in data.itertuples():
-            table.add_row(nominal_power, heat_flux)
+        for nominal_power, heat_flux in data.itertuples():
+            table.add_row(str(nominal_power), str(heat_flux))
 
         tables.append(table)
 
@@ -67,7 +63,3 @@ def condensation(
     normalize: bool = typer.Option(...),
 ) -> None:
     raise NotImplementedError
-
-
-def _heat_flix_levels_study_path() -> Path:
-    return resolve(studies_path() / 'heat-flux-levels', dir=True)
