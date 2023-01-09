@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 import typer
+from rich.columns import Columns
 from rich.console import Console
 from rich.table import Table
 
@@ -11,6 +12,7 @@ from boiling_learning.app.configuration import configure
 from boiling_learning.app.datasets.generators import get_image_dataset
 from boiling_learning.app.datasets.preprocessing import default_boiling_preprocessors
 from boiling_learning.app.datasets.raw.boiling1d import boiling_cases
+from boiling_learning.app.displaying import units
 from boiling_learning.app.paths import studies_path
 from boiling_learning.app.training.boiling1d import (
     DEFAULT_BOILING_HEAT_FLUX_TARGET,
@@ -32,7 +34,6 @@ console = Console()
 
 @app.command()
 def boiling1d(
-    direct: bool = typer.Option(..., '--direct/--indirect'),
     factors: list[int] = typer.Option(list(range(1, 7))),
 ) -> None:
     strategy = configure(
@@ -45,108 +46,112 @@ def boiling1d(
     case = boiling_cases()[0]
     evaluator = cached_model_evaluator('boiling1d')
     evaluations: list[tuple[int, str, UncertainValue]] = []
+    tables: list[Table] = []
 
-    table = Table(
-        'Factor',
-        'Training',
-        'Validation',
-        'Test',
-        title='Downscaling analysis',
-    )
+    for direct in False, True:
+        direct_label = 'direct' if direct else 'indirect'
 
-    for factor in factors:
-        preprocessors = default_boiling_preprocessors(
-            direct_visualization=direct,
-            downscale_factor=factor,
-        )
-        datasets = get_image_dataset(
-            case(),
-            transformers=preprocessors,
-            experiment='boiling1d',
-        )
-        compiled_model = get_baseline_architecture(
-            datasets,
-            normalize_images=True,
-            strategy=strategy,
-        ) | compile_model(
-            **get_baseline_compile_params(strategy=strategy),
+        table = Table(
+            'Factor',
+            'Training',
+            'Validation',
+            'Test',
+            title=f'Downscaling analysis - {direct_label}',
         )
 
-        fit_model = fit_boiling_model(
-            compiled_model,
-            datasets,
-            get_baseline_fit_params(),
-            target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-            strategy=strategy,
-        )
-
-        compiled_model = fit_model.architecture | compile_model(
-            **get_baseline_compile_params(strategy=strategy),
-        )
-        evaluation = evaluator(compiled_model, datasets)
-
-        evaluations.extend(
-            (
-                (factor, 'train', evaluation.training_metrics['MSE'].value),
-                (
-                    factor,
-                    'train',
-                    evaluation.training_metrics['MSE'].value
-                    - evaluation.training_metrics['MSE'].lower,
-                ),
-                (
-                    factor,
-                    'train',
-                    evaluation.training_metrics['MSE'].value
-                    + evaluation.training_metrics['MSE'].upper,
-                ),
-                (factor, 'val', evaluation.validation_metrics['MSE'].value),
-                (
-                    factor,
-                    'val',
-                    evaluation.validation_metrics['MSE'].value
-                    - evaluation.validation_metrics['MSE'].lower,
-                ),
-                (
-                    factor,
-                    'val',
-                    evaluation.validation_metrics['MSE'].value
-                    + evaluation.validation_metrics['MSE'].upper,
-                ),
-                (factor, 'test', evaluation.test_metrics['MSE'].value),
-                (
-                    factor,
-                    'test',
-                    evaluation.test_metrics['MSE'].value - evaluation.test_metrics['MSE'].lower,
-                ),
-                (
-                    factor,
-                    'test',
-                    evaluation.test_metrics['MSE'].value + evaluation.test_metrics['MSE'].upper,
-                ),
+        for factor in factors:
+            preprocessors = default_boiling_preprocessors(
+                direct_visualization=direct,
+                downscale_factor=factor,
             )
-        )
+            datasets = get_image_dataset(
+                case(),
+                transformers=preprocessors,
+                experiment='boiling1d',
+            )
+            compiled_model = get_baseline_architecture(
+                datasets,
+                normalize_images=True,
+                strategy=strategy,
+            ) | compile_model(
+                **get_baseline_compile_params(strategy=strategy),
+            )
 
-        table.add_row(
-            f'{factor}',
-            f'{evaluation.training_metrics["MSE"]}',
-            f'{evaluation.validation_metrics["MSE"]}',
-            f'{evaluation.test_metrics["MSE"]}',
-        )
+            fit_model = fit_boiling_model(
+                compiled_model,
+                datasets,
+                get_baseline_fit_params(),
+                target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
+                strategy=strategy,
+            )
 
-    console.print(table)
+            compiled_model = fit_model.architecture | compile_model(
+                **get_baseline_compile_params(strategy=strategy),
+            )
+            evaluation = evaluator(compiled_model, datasets)
 
-    plot_data = pd.DataFrame(evaluations, columns=['downscaling factor', 'subset', 'loss'])
-    f, ax = plt.subplots(1, 1, figsize=(4, 4))
-    sns.barplot(ax=ax, data=plot_data, x='downscaling factor', y='Loss', hue='subset')
-    ax.set_xlabel('Downscaling factor')
-    ax.set_ylabel('Loss')
+            evaluations.extend(
+                (
+                    (factor, 'Training', evaluation.training_metrics['MSE'].value),
+                    (
+                        factor,
+                        'Training',
+                        evaluation.training_metrics['MSE'].value
+                        - evaluation.training_metrics['MSE'].lower,
+                    ),
+                    (
+                        factor,
+                        'Training',
+                        evaluation.training_metrics['MSE'].value
+                        + evaluation.training_metrics['MSE'].upper,
+                    ),
+                    (factor, 'Validation', evaluation.validation_metrics['MSE'].value),
+                    (
+                        factor,
+                        'Validation',
+                        evaluation.validation_metrics['MSE'].value
+                        - evaluation.validation_metrics['MSE'].lower,
+                    ),
+                    (
+                        factor,
+                        'Validation',
+                        evaluation.validation_metrics['MSE'].value
+                        + evaluation.validation_metrics['MSE'].upper,
+                    ),
+                    (factor, 'Test', evaluation.test_metrics['MSE'].value),
+                    (
+                        factor,
+                        'Test',
+                        evaluation.test_metrics['MSE'].value
+                        - evaluation.test_metrics['MSE'].lower,
+                    ),
+                    (
+                        factor,
+                        'Test',
+                        evaluation.test_metrics['MSE'].value
+                        + evaluation.test_metrics['MSE'].upper,
+                    ),
+                )
+            )
 
-    figure_path = resolve(
-        _downscaling_training_study_path() / f"boiling1d-{'direct' if direct else 'indirect'}.png",
-        parents=True,
-    )
-    f.savefig(str(figure_path))
+            table.add_row(
+                f'{factor}',
+                f'{evaluation.training_metrics["MSE"]}',
+                f'{evaluation.validation_metrics["MSE"]}',
+                f'{evaluation.test_metrics["MSE"]}',
+            )
+
+        tables.append(table)
+
+        plot_data = pd.DataFrame(evaluations, columns=['Downscaling factor', 'Subset', 'Loss'])
+        f, ax = plt.subplots(1, 1, figsize=(4, 4))
+        sns.barplot(ax=ax, data=plot_data, x='Downscaling factor', y='Loss', hue='Subset')
+        ax.set_xlabel('Downscaling factor')
+        ax.set_ylabel(f'Loss [{units["mse"]}]')
+
+        f.savefig(_downscaling_training_study_path() / f'boiling1d-{direct_label}.pdf')
+
+    console.print(Columns(tables))
 
 
 @app.command()
