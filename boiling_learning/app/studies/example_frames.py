@@ -14,6 +14,8 @@ from boiling_learning.utils.pathutils import resolve
 
 app = typer.Typer()
 
+DOWNSCALING_INDEX = 3
+
 
 @app.command()
 def boiling1d() -> None:
@@ -25,7 +27,7 @@ def boiling1d() -> None:
             preprocessors = (
                 []
                 if quality == 'original'
-                else default_boiling_preprocessors(direct_visualization=direct)[:3]
+                else default_boiling_preprocessors(direct_visualization=direct)[:DOWNSCALING_INDEX]
                 if quality == 'cropped'
                 else default_boiling_preprocessors(direct_visualization=direct)
             )
