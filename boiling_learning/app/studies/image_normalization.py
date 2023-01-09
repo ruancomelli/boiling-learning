@@ -111,6 +111,9 @@ def _latex_table_lines(
         )
         yield '\\\\'  # latex line-break
         for metric_name in evaluation.metrics_names:
+            if metric_name == 'loss':
+                continue
+
             yield f'& \\gls{{{metric_name.lower()}}}'
             yield f'& {units[metric_name.lower()]}'
 
