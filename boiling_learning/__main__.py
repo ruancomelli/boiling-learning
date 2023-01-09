@@ -1,6 +1,6 @@
 import typer
 
-from boiling_learning.app.figures import diameter_effects, inclination_effects
+from boiling_learning.app.figures import boiling_curve, diameter_effects, inclination_effects
 from boiling_learning.app.studies import (
     animate,
     automl,
@@ -29,6 +29,7 @@ app = typer.Typer()
 app.add_typer(animate.app, name='animate')
 app.add_typer(automl.app, name='automl')
 app.add_typer(automl_strategies.app, name='automl-strategies')
+app.add_typer(boiling_curve.app, name='boiling-curve')
 app.add_typer(consecutive_frames.app, name='consecutive-frames')
 app.add_typer(cross_surface.app, name='cross-surface')
 app.add_typer(data_augmentation.app, name='data-augmentation')
