@@ -63,8 +63,6 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
         indices = tuple(all_indices if indices is None else indices)
         unique_indices = frozenset(indices)
 
-        logger.debug(f'Fetching frames {indices}')
-
         if missing_indices := frozenset(
             filter(self._is_missing, all_indices if self._eager else unique_indices)
         ):
@@ -72,39 +70,41 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
 
         for index in unique_indices:
             if self._is_missing(index):
-                raise ExtractionError(f'failed to extract frame #{index}')
+                raise ExtractionError(f'failed to extract frame #{index} for {self}')
 
-        if self._robust:
-            indexed_frames = {index: self._maybe_load_frame(index) for index in unique_indices}
+        return (
+            self._robust_fetch_frames(indices)
+            if self._robust
+            else tuple(self._load_frame(index) for index in indices)
+        )
+
+    def _robust_fetch_frames(self, indices: tuple[int, ...], /) -> tuple[Image, ...]:
+        unique_indices = frozenset(indices)
+        indexed_frames = {index: self._maybe_load_frame(index) for index in unique_indices}
+
+        if failed_indices := tuple(
+            index for index, frame in indexed_frames.items() if frame is None
+        ):
+            for failed_index in failed_indices:
+                self._index_to_path(failed_index).unlink()
+            self._extract_frames(failed_indices)
+
+            renewed_frames = {index: self._maybe_load_frame(index) for index in failed_indices}
 
             if failed_indices := tuple(
-                index for index, frame in indexed_frames.items() if frame is None
+                index for index, frame in renewed_frames.items() if frame is None
             ):
-                for failed_index in failed_indices:
-                    self._index_to_path(failed_index).unlink()
-                self._extract_frames(failed_indices)
+                raise RuntimeError(
+                    f'Failed generate frames {failed_indices} in robust mode for {self}'
+                )
 
-                renewed_frames = {index: self._maybe_load_frame(index) for index in failed_indices}
+            indexed_frames |= renewed_frames
 
-                if failed_indices := tuple(
-                    index for index, frame in renewed_frames.items() if frame is None
-                ):
-                    raise RuntimeError(
-                        f'Failed generate frames even in robust mode for {self}: {failed_indices}'
-                    )
-
-                indexed_frames |= renewed_frames
-
-            frames = tuple(
-                # we checked before that no image is `None`
-                typing.cast(Image, indexed_frames[index])
-                for index in indices
-            )
-        else:
-            frames = tuple(self._load_frame(index) for index in indices)
-
-        logger.debug('Done fetching frames')
-        return frames
+        return tuple(
+            # we checked before that no image is `None`
+            typing.cast(Image, indexed_frames[index])
+            for index in indices
+        )
 
     def _maybe_load_frame(self, index: int, /) -> Image | None:
         try:
@@ -117,10 +117,10 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
         try:
             frame = imageio.imread(path)
         except (ValueError, RuntimeError) as e:
-            raise LoadImageError(f'failed to load frame #{index} from {path}') from e
+            raise LoadImageError(f'failed to load frame #{index} for {self}') from e
 
         if self._robust and _is_empty_frame(frame):
-            raise LoadImageError(f'frame #{index} from {path} is empty')
+            raise LoadImageError(f'frame #{index} for {self} is empty')
 
         return frame
 
@@ -146,13 +146,10 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
         indices = sorted(frozenset(indices))
 
         if not indices:
-            logger.info(
-                f'Skipping frame extraction from {self.video.path} to {self.path}'
-                ' since no indices were provided'
-            )
+            logger.info(f'Skipping frame extraction for {self} since no indices were provided')
             return
 
-        logger.info(f'Extracting frames {indices} from {self.video.path} to {self.path}')
+        logger.info(f'Extracting frames {indices} for {self}')
 
         filename_pattern = f'%{self._filename_number_of_digits()}d{self._filename_suffix()}'
 
