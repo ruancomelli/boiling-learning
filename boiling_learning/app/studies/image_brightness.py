@@ -7,8 +7,10 @@ import seaborn as sns
 import typer
 
 from boiling_learning.app.configuration import configure
+from boiling_learning.app.constants import figures_path
 from boiling_learning.app.datasets.bridged.boiling1d import DEFAULT_BOILING_OUTLIER_FILTER
 from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
+from boiling_learning.app.displaying import glossary, units
 from boiling_learning.app.paths import studies_path
 from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.lazy import LazyDescribed
@@ -38,16 +40,22 @@ def boiling1d() -> None:
             data=data,
             x='nominal power',
             y='brightness',
-            hue='subset',
-            hue_order=['train', 'val', 'test'],
+            hue='Subset',
+            hue_order=['Training', 'Validation', 'Test'],
             linewidth=0.5,
             showfliers=False,  # exclude outliers
         )
+        ax.set(
+            xlabel=f'Nominal power, {glossary["power"]} [{units["power"]}]',
+            ylabel='Brightness',
+        )
+
         f.savefig(
-            str(
-                _image_brightness_study_path()
-                / f'boiling1d-{"direct" if direct else "indirect"}-boxen.pdf'
-            )
+            _image_brightness_study_path()
+            / f'boiling1d-{"direct" if direct else "indirect"}-boxen.pdf'
+        )
+        f.savefig(
+            _results_path() / f'brightness-distribution-{"direct" if direct else "indirect"}.pdf'
         )
 
 
@@ -90,9 +98,9 @@ def _sorted_boiling_datasets(datasets: LazyDescribed[ImageDatasetTriplet]) -> pd
                     class_name,
                 )
                 for class_name, ds in (
-                    ('train', ds_train),
-                    ('val', ds_val),
-                    ('test', ds_test),
+                    ('Training', ds_train),
+                    ('Validation', ds_val),
+                    ('Test', ds_test),
                 )
                 for image, target in ds.prefetch(1024)
                 if DEFAULT_BOILING_OUTLIER_FILTER()(None, target)
@@ -102,7 +110,7 @@ def _sorted_boiling_datasets(datasets: LazyDescribed[ImageDatasetTriplet]) -> pd
                 power_hf_et_class[2],
             ),
         ),
-        columns=['nominal power', 'brightness', 'elapsed time', 'subset'],
+        columns=['nominal power', 'brightness', 'elapsed time', 'Subset'],
     )
     df['index'] = range(len(df))
     return df
@@ -110,3 +118,7 @@ def _sorted_boiling_datasets(datasets: LazyDescribed[ImageDatasetTriplet]) -> pd
 
 def _image_brightness_study_path() -> Path:
     return resolve(studies_path() / 'image-brightness', dir=True)
+
+
+def _results_path() -> Path:
+    return resolve(figures_path() / 'results', dir=True)
