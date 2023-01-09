@@ -24,6 +24,7 @@ def boiling1d() -> None:
         'Training length',
         'Validation length',
         'Test length',
+        'Total size',
         title='Dataset sizes',
     )
 
@@ -35,6 +36,7 @@ def boiling1d() -> None:
             str(len(train)),
             str(len(val)),
             str(len(test)),
+            str(len(train) + len(val) + len(test)),
         )
 
     console.print(table)
