@@ -80,16 +80,17 @@ def boiling1d(
         ax.set_yscale('linear')
         ax.xaxis.grid(True, which='minor')
 
-    f.savefig(resolve(_consecutive_frames_study_path() / 'boiling1d.pdf'))
+    f.savefig(_consecutive_frames_study_path() / 'boiling1d.pdf')
 
 
 def _boiling_preprocessors() -> list[
-    Transformer[VideoFrameOrFrames, VideoFrameOrFrames]
-    | dict[str, Transformer[VideoFrameOrFrames, VideoFrameOrFrames]]
+    list[
+        Transformer[VideoFrameOrFrames, VideoFrameOrFrames]
+        | dict[str, Transformer[VideoFrameOrFrames, VideoFrameOrFrames]]
+    ]
 ]:
     return [
-        image_dtype_converter('float32'),
-        grayscaler(),
+        [image_dtype_converter('float32'), grayscaler()],
     ]
 
 

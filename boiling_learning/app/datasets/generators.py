@@ -26,7 +26,7 @@ from boiling_learning.utils.random import random_state
 
 def get_image_dataset(
     image_dataset: ExperimentVideoDataset,
-    transformers: list[Transformer[Image, Image] | dict[str, Transformer[Image, Image]]],
+    transformers: Iterable[list[Transformer[Image, Image] | dict[str, Transformer[Image, Image]]]],
     *,
     splits: DatasetSplits = DatasetSplits(
         train=Fraction(70, 100),
@@ -35,6 +35,7 @@ def get_image_dataset(
     ),
     experiment: Literal['boiling1d', 'condensation'],
     shuffle: bool = True,
+    use_numpy_cache: bool = True,
 ) -> LazyDescribed[ImageDatasetTriplet]:
     purged_experiment_videos = _experiment_video_purger(experiment=experiment)(image_dataset)
 
@@ -47,6 +48,7 @@ def get_image_dataset(
             video,
             transformers,
             experiment=experiment,
+            use_numpy_cache=use_numpy_cache,
         )
 
         dataset = _add_indices_to_targets(dataset, current_size=current_size)
@@ -71,7 +73,11 @@ def get_image_dataset(
         DatasetTriplet(ds_train, ds_val, ds_test),
         {
             'image_dataset': image_dataset,
-            'transformers': transformers,
+            'transformers': [
+                transformer
+                for transformer_group in transformers
+                for transformer in transformer_group
+            ],
             'splits': splits,
         },
     )
@@ -110,11 +116,17 @@ def _experiment_video_purger(
 
 def sliceable_dataset_from_video_and_transformers(
     ev: ExperimentVideo,
-    transformers: Iterable[Transformer[Image, Image] | dict[str, Transformer[Image, Image]]],
+    transformers: Iterable[list[Transformer[Image, Image] | dict[str, Transformer[Image, Image]]]],
     *,
     experiment: Literal['boiling1d', 'condensation'],
+    use_numpy_cache: bool = True,
 ) -> ImageDataset:
-    video = _video_dataset_from_video_and_transformers(ev, transformers, experiment=experiment)
+    video = _video_dataset_from_video_and_transformers(
+        ev,
+        transformers,
+        experiment=experiment,
+        use_numpy_cache=use_numpy_cache,
+    )
     targets = _target_dataset_from_video(ev, experiment=experiment)
 
     # return SliceableDataset.zip(video, targets, strictness='one-off')
@@ -165,12 +177,11 @@ def _dataframe_targets_to_csv(targets: pd.DataFrame, path: Path) -> None:
 
 def _video_dataset_from_video_and_transformers(
     experiment_video: ExperimentVideo,
-    transformers: Iterable[Transformer[Image, Image] | dict[str, Transformer[Image, Image]]],
+    transformers: Iterable[list[Transformer[Image, Image] | dict[str, Transformer[Image, Image]]]],
     *,
     experiment: Literal['boiling1d', 'condensation'],
+    use_numpy_cache: bool = True,
 ) -> SliceableDataset[Image]:
-    compiled_transformers = compile_transformers(transformers, experiment_video)
-
     if options.EXTRACT_FRAMES:
         extracted_frames_directory = _extracted_frames_directory_allocator(experiment).allocate(
             experiment_video
@@ -183,20 +194,28 @@ def _video_dataset_from_video_and_transformers(
     else:
         frames = experiment_video.frames()
 
-    frames = LazyDescribed.from_value_and_description(frames, experiment_video) | map_transformers(
-        compiled_transformers
-    )
-    video_info = _video_info_getter()(frames)
-
-    numpy_cache_directory = _numpy_directory_allocator(experiment).allocate(frames)
-
-    return frames().cache(
-        NumpyCache(
-            numpy_cache_directory,
-            shape=(video_info.length, *video_info.shape),
-            dtype=np.dtype(video_info.dtype),
+    frames = LazyDescribed.from_value_and_description(frames, experiment_video)
+    for transformer_group in transformers:
+        frames = frames | map_transformers(
+            compile_transformers(transformer_group, experiment_video)
         )
-    )
+
+        video_info = _video_info_getter()(frames)
+        numpy_cache_directory = _numpy_directory_allocator(experiment).allocate(frames)
+
+        if use_numpy_cache:
+            frames = LazyDescribed.from_value_and_description(
+                frames().cache(
+                    NumpyCache(
+                        numpy_cache_directory,
+                        shape=(video_info.length, *video_info.shape),
+                        dtype=np.dtype(video_info.dtype),
+                    )
+                ),
+                frames,
+            )
+
+    return frames()
 
 
 @functools.cache
