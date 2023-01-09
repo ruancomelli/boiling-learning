@@ -217,9 +217,6 @@ def normalized_mutual_information(
 
 
 def structural_similarity_ratio(ref: VideoFrame, image: VideoFrame) -> float:
-    # TODO: use https://www.tensorflow.org/api_docs/python/tf/image/structural_similarity ?
-    # see
-    # <https://www.wikiwand.com/en/Structural_similarity#/Application_of_the_formula>
     return structural_similarity(ref, image) / structural_similarity(ref, ref)
 
 
@@ -295,8 +292,6 @@ def nbins_shannon_entropy_ratio(ref: VideoFrame, image: VideoFrame, /) -> float:
     return (entropy(ref_hist) + entropy(ref_hist, image_hist)) / (
         entropy(ref_hist) + entropy(ref_hist, ref_hist)
     )
-
-    return np.sum(ref_hist * np.log(image_hist)) / np.sum(ref_hist * np.log(ref_hist))
 
 
 def _hist(image: VideoFrame, /) -> np.ndarray:
