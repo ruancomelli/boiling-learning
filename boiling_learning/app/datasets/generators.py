@@ -36,7 +36,7 @@ def get_image_dataset(
     ),
     experiment: Literal['boiling1d', 'condensation'],
     shuffle: bool = True,
-    use_numpy_cache: bool = True,
+    cache_stages: tuple[int, ...] | None = None,
 ) -> LazyDescribed[ImageDatasetTriplet]:
     purged_experiment_videos = _experiment_video_purger(experiment=experiment)(image_dataset)
 
@@ -49,7 +49,7 @@ def get_image_dataset(
             video,
             transformers,
             experiment=experiment,
-            use_numpy_cache=use_numpy_cache,
+            cache_stages=cache_stages,
         )
 
         dataset = _add_indices_to_targets(dataset, current_size=current_size)
@@ -120,13 +120,13 @@ def sliceable_dataset_from_video_and_transformers(
     transformers: Iterable[list[Transformer[Image, Image] | dict[str, Transformer[Image, Image]]]],
     *,
     experiment: Literal['boiling1d', 'condensation'],
-    use_numpy_cache: bool = True,
+    cache_stages: tuple[int, ...] | None = None,
 ) -> ImageDataset:
     video = _video_dataset_from_video_and_transformers(
         ev,
         transformers,
         experiment=experiment,
-        use_numpy_cache=use_numpy_cache,
+        cache_stages=cache_stages,
     )
     targets = _target_dataset_from_video(ev, experiment=experiment)
 
@@ -181,7 +181,7 @@ def _video_dataset_from_video_and_transformers(
     transformers: Iterable[list[Transformer[Image, Image] | dict[str, Transformer[Image, Image]]]],
     *,
     experiment: Literal['boiling1d', 'condensation'],
-    use_numpy_cache: bool = True,
+    cache_stages: tuple[int, ...] | None = None,
 ) -> SliceableDataset[Image]:
     if options.EXTRACT_FRAMES:
         extracted_frames_directory = _extracted_frames_directory_allocator(experiment).allocate(
@@ -196,7 +196,8 @@ def _video_dataset_from_video_and_transformers(
         frames = experiment_video.frames()
 
     frames = LazyDescribed.from_value_and_description(frames, experiment_video)
-    for transformer_group in transformers:
+    transformers = list(transformers)
+    for index, transformer_group in enumerate(transformers):
         described_frames = frames | map_transformers(
             compile_transformers(transformer_group, experiment_video)
         )
@@ -214,7 +215,7 @@ def _video_dataset_from_video_and_transformers(
         video_info = _video_info_getter()(frames)
         numpy_cache_directory = _numpy_directory_allocator(experiment).allocate(frames)
 
-        if use_numpy_cache:
+        if cache_stages is None or index in cache_stages:
             frames = LazyDescribed.from_value_and_description(
                 frames().cache(
                     NumpyCache(
