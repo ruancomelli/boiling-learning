@@ -38,29 +38,33 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
 
     def __init__(
         self,
-        video: Video,
+        video_path: PathLike,
         path: PathLike,
         /,
         *,
+        length: int | None = None,
         eager: bool = False,
         robust: bool = True,
     ) -> None:
+        self.video_path = resolve(video_path)
         self.path = resolve(path, dir=True)
-        self.video = video
+
         self._eager = eager
         self._robust = robust
 
+        self._length = length if length is not None else len(Video(self.video_path))
+
     def __len__(self) -> int:
-        return len(self.video)
+        return self._length
 
     def __repr__(self) -> str:
-        return f'ExtractedFramesDataset({self.video.path}, {self.path})'
+        return f'ExtractedFramesDataset({self.video_path}, {self.path})'
 
     def getitem_from_index(self, index: int) -> Image:
         return self.fetch((index,))[0]
 
     def fetch(self, indices: Iterable[int] | None = None) -> Images:
-        all_indices = range(len(self.video))
+        all_indices = range(len(self))
         indices = tuple(all_indices if indices is None else indices)
         unique_indices = frozenset(indices)
 
@@ -156,7 +160,7 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
 
         try:
             (
-                ffmpeg.input(str(self.video.path))
+                ffmpeg.input(str(self.video_path))
                 .filter('select', '+'.join(f'eq(n,{index})' for index in indices))
                 .output(
                     str(self.path / filename_pattern),

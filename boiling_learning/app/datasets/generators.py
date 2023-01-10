@@ -20,6 +20,7 @@ from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
+from boiling_learning.preprocessing.extract import ExtractedFramesDataset
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.transforms import map_transformers
 from boiling_learning.utils.random import random_state
@@ -184,14 +185,21 @@ def _video_dataset_from_video_and_transformers(
     cache_stages: tuple[int, ...] | None = None,
 ) -> SliceableDataset[Image]:
     if options.EXTRACT_FRAMES:
+        described_frames = LazyDescribed.from_describable(experiment_video.video)
+        video_info = _video_info_getter()(described_frames)
+
         extracted_frames_directory = _extracted_frames_directory_allocator(experiment).allocate(
             experiment_video
         )
 
-        frames = experiment_video.extract_frames(
+        frames = ExtractedFramesDataset(
+            experiment_video.path,
             extracted_frames_directory,
             eager=experiment == 'boiling1d',
-        )
+            length=video_info.length,
+        )[
+            experiment_video.start : experiment_video.end  # noqa
+        ]
     else:
         frames = experiment_video.frames()
 

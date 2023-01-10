@@ -16,7 +16,6 @@ from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.descriptions import describe
 from boiling_learning.io import json
 from boiling_learning.io.dataclasses import dataclass
-from boiling_learning.preprocessing.extract import ExtractedFramesDataset
 from boiling_learning.preprocessing.video import Video, VideoFrame, convert_video
 from boiling_learning.utils.pathutils import PathLike, resolve
 
@@ -137,6 +136,10 @@ class ExperimentVideo:
         return f'{self.__class__.__name__}({joined_kwargs})'
 
     @property
+    def video(self) -> Video:
+        return self._video
+
+    @property
     def data(self) -> VideoData | None:
         return self._data
 
@@ -169,18 +172,6 @@ class ExperimentVideo:
     def frames(self) -> SliceableDataset[VideoFrame]:
         # I don't know why Black reformats this so strangely... flake8 complains
         return self._video[self.start : self.end]  # noqa
-
-    def extract_frames(
-        self,
-        directory: Path,
-        /,
-        *,
-        eager: bool = False,
-    ) -> SliceableDataset[VideoFrame]:
-        # I don't know why Black reformats this so strangely... flake8 complains
-        return ExtractedFramesDataset(self._video, directory, eager=eager)[
-            self.start : self.end  # noqa
-        ]
 
     def convert_video(
         self,
