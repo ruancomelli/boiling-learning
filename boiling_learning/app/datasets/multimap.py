@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Sequence
 
 import numpy as np
-from loguru import logger
 
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.image_datasets import Image, Images
@@ -32,11 +31,6 @@ class MultiMapSliceableDataset(SliceableDataset[Image]):
         return MultiMapSliceableDataset(self._map, self._ancestor[indices])
 
     def fetch(self, indices: Iterable[int] | None = None) -> Images:
-        if indices is not None:
-            indices = tuple(indices)
-
-        logger.info(f'Multimapping frames {indices}')
-
         images = _ensure_array(self._ancestor.fetch(indices))
         return self._map(images)
 
