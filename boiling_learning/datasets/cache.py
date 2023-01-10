@@ -10,11 +10,11 @@ import numpy as np
 from loguru import logger
 
 from boiling_learning.datasets.sliceable import SliceableDataset, SliceableDatasetCache
+from boiling_learning.image_datasets import Image, Images
 from boiling_learning.utils.iterutils import unsort
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 _Any = TypeVar('_Any')
-_Array = TypeVar('_Array', bound=np.ndarray)
 
 
 class NoCache(SliceableDatasetCache[_Any]):
@@ -100,7 +100,7 @@ class MemoryCache(_MinimalFetchCache[_Any]):
         return f'{self.__class__.__name__}()'
 
 
-class NumpyCache(_MinimalFetchCache[_Array]):
+class NumpyCache(_MinimalFetchCache[Image]):
     def __init__(
         self,
         directory: PathLike,
@@ -112,7 +112,7 @@ class NumpyCache(_MinimalFetchCache[_Array]):
         self._shape = shape
         self._dtype = dtype
 
-    def _store(self, pairs: dict[int, _Array]) -> None:
+    def _store(self, pairs: dict[int, Image]) -> None:
         logger.debug(f'Storing {len(pairs)} items {sorted(pairs)} to {self._data_path}')
 
         indices = list(pairs)
@@ -127,7 +127,7 @@ class NumpyCache(_MinimalFetchCache[_Array]):
         with self._indices_path.open('w') as file:
             _json.dump(new_indices, file)
 
-    def _fetch(self, indices: tuple[int, ...]) -> tuple[_Array, ...]:
+    def _fetch(self, indices: tuple[int, ...]) -> Images:
         if missing := self.missing_indices(indices).intersection(indices):
             raise ValueError(f'Required missing indices: {sorted(missing)}')
 
@@ -135,8 +135,7 @@ class NumpyCache(_MinimalFetchCache[_Array]):
         unsorters, sorted_indices = unsort(indices)
         sorted_indices = list(sorted_indices)
 
-        frames = self._data(mode='r')[sorted_indices]
-        return tuple(frames[unsorter] for unsorter in unsorters)
+        return self._data(mode='r')[sorted_indices][list(unsorters)]
 
     def _current_indices(self) -> frozenset[int]:
         if not self._indices_path.is_file():
