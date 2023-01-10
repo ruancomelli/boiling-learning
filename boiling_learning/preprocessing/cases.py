@@ -4,7 +4,7 @@ import json as _json
 from dataclasses import asdict
 from typing import Optional
 
-import modin.pandas as pd
+import pandas as pd
 from loguru import logger
 
 from boiling_learning.dataclasses import dataclass_from_mapping

@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Callable, Iterable, Literal
 
 import funcy
-import modin.pandas as pd
 import numpy as np
+import pandas as pd
 
 from boiling_learning.app import options
 from boiling_learning.app.datasets.multimap import MultiMapSliceableDataset

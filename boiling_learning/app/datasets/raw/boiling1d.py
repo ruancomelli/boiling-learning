@@ -2,8 +2,8 @@ import functools
 from pathlib import Path
 from typing import Literal
 
-import modin.pandas as pd
 import numpy as np
+import pandas as pd
 from loguru import logger
 
 from boiling_learning.app.paths import data_path, shared_cache_path

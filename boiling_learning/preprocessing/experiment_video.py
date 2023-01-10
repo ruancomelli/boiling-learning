@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Mapping, Optional
 
 import funcy
-import modin.pandas as pd
+import pandas as pd
 from loguru import logger
 
 from boiling_learning.dataclasses import field

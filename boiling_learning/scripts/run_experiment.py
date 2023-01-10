@@ -8,7 +8,7 @@
 # from typing import Iterable
 
 # import matplotlib as mpl
-# import modin.pandas as pd
+# import pandas as pd
 # import nidaqmx
 # import numpy as np
 # import pyqtgraph as pg
