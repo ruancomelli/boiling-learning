@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import json as _json
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Iterable, Literal, Optional, TypeVar
 
@@ -36,7 +37,7 @@ class NoCache(SliceableDatasetCache[_Any]):
         self,
         source: SliceableDataset[_Any],
         indices: Optional[Iterable[int]] = None,
-    ) -> tuple[_Any, ...]:
+    ) -> Sequence[_Any]:
         return source.fetch(indices)
 
     def __repr__(self) -> str:
@@ -49,7 +50,7 @@ class _MinimalFetchCache(SliceableDatasetCache[_Any]):
         pass
 
     @abc.abstractmethod
-    def _fetch(self, indices: tuple[int, ...]) -> tuple[_Any, ...]:
+    def _fetch(self, indices: tuple[int, ...]) -> Sequence[_Any]:
         pass
 
     @abc.abstractmethod
@@ -63,7 +64,7 @@ class _MinimalFetchCache(SliceableDatasetCache[_Any]):
         self,
         source: SliceableDataset[_Any],
         indices: Optional[Iterable[int]] = None,
-    ) -> tuple[_Any, ...]:
+    ) -> Sequence[_Any]:
         indices = tuple(range(len(source)) if indices is None else indices)
 
         if missing_indices := tuple(self.missing_indices(indices)):
@@ -188,7 +189,7 @@ class EagerCache(SliceableDatasetCache[_Any]):
         self,
         source: SliceableDataset[_Any],
         indices: Optional[Iterable[int]] = None,
-    ) -> tuple[_Any, ...]:
+    ) -> Sequence[_Any]:
         all_indices = range(len(source))
         indices = tuple(all_indices if indices is None else indices)
 

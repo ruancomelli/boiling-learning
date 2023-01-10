@@ -5,22 +5,10 @@ import itertools
 import math
 import random
 from collections import defaultdict
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from fractions import Fraction
 from operator import itemgetter
-from typing import (
-    Any,
-    Callable,
-    Generic,
-    Iterable,
-    Iterator,
-    Literal,
-    Optional,
-    Sequence,
-    TypeGuard,
-    TypeVar,
-    Union,
-    overload,
-)
+from typing import Any, Generic, Literal, Optional, TypeGuard, TypeVar, Union, overload
 
 import more_itertools as mit
 from iteround import saferound
@@ -297,7 +285,7 @@ class SliceableDataset(abc.ABC, Sequence[_T]):
     def flatten(self) -> SliceableDataset[Any]:
         return self.unbatch().flatten() if _is_nested_sliceable_dataset(self) else self
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[_T, ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Sequence[_T]:
         return tuple(self[indices] if indices is not None else self)
 
     def _is_boolean_mask(self, key: Any) -> TypeGuard[BooleanMask]:
@@ -330,7 +318,7 @@ class ProxySliceableDataset(SliceableDataset[_T]):
     def getitem_from_boolean_mask(self, mask: BooleanMask) -> SliceableDataset[_T]:
         return self._ancestor[mask]
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[_T, ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Sequence[_T]:
         return self._ancestor.fetch(indices)
 
     def __repr__(self) -> str:
@@ -389,7 +377,7 @@ class ComposedIndicesSliceableDataset(SliceableDataset[_T]):
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self._ancestor}, {self._indices})'
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[_T, ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Sequence[_T]:
         rebased_indices = self._indices if indices is None else self._rebase_indices(indices)
         return self._ancestor.fetch(rebased_indices)
 
@@ -587,7 +575,7 @@ class CachedSliceableDataset(SliceableDataset[_T]):
     def getitem_from_index(self, index: int) -> _T:
         return self.fetch((index,))[0]
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[_T, ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> Sequence[_T]:
         return self._cache.fetch_from(self._ancestor, indices)
 
     def __repr__(self) -> str:
@@ -598,7 +586,7 @@ class SliceableDatasetCache(abc.ABC, Generic[_T]):
     @abc.abstractmethod
     def fetch_from(
         self, source: SliceableDataset[_T], indices: Optional[Iterable[int]] = None
-    ) -> tuple[_T, ...]:
+    ) -> Sequence[_T]:
         pass
 
     @abc.abstractmethod

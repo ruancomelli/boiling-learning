@@ -8,6 +8,7 @@ import modin.pandas as pd
 import numpy as np
 
 from boiling_learning.app import options
+from boiling_learning.app.datasets.multimap import MultiMapSliceableDataset
 from boiling_learning.app.paths import analyses_path, shared_cache_path
 from boiling_learning.datasets.cache import NumpyCache
 from boiling_learning.datasets.sliceable import SliceableDataset
@@ -196,9 +197,19 @@ def _video_dataset_from_video_and_transformers(
 
     frames = LazyDescribed.from_value_and_description(frames, experiment_video)
     for transformer_group in transformers:
-        frames = frames | map_transformers(
+        described_frames = frames | map_transformers(
             compile_transformers(transformer_group, experiment_video)
         )
+        for transformer in transformer_group:
+            frames = LazyDescribed.from_value_and_description(
+                MultiMapSliceableDataset(
+                    transformer[experiment_video.name]
+                    if isinstance(transformer, dict)
+                    else transformer,
+                    frames(),
+                ),
+                described_frames,
+            )
 
         video_info = _video_info_getter()(frames)
         numpy_cache_directory = _numpy_directory_allocator(experiment).allocate(frames)

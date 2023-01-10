@@ -94,11 +94,11 @@ class Video(SliceableDataset[VideoFrame]):
         with self as frames:
             return typing.cast(VideoFrameU8, frames[index].asnumpy())
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> tuple[VideoFrameU8, ...]:
+    def fetch(self, indices: Optional[Iterable[int]] = None) -> VideoFrames:
         indices = range(len(self)) if indices is None else list(indices)
 
         with self as frames:
-            return tuple(frames.get_batch(indices).asnumpy())
+            return frames.get_batch(indices).asnumpy()
 
     def __iter__(self) -> Iterator[VideoFrameU8]:
         with self as frames:

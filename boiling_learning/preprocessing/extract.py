@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import typing
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from pathlib import Path
 
 import ffmpeg
 import imageio
+import numpy as np
 from loguru import logger
 
 from boiling_learning.datasets.sliceable import SliceableDataset
-from boiling_learning.image_datasets import Image
+from boiling_learning.image_datasets import Image, Images
 from boiling_learning.preprocessing.video import Video
 from boiling_learning.utils.pathutils import PathLike, resolve
 
@@ -58,7 +59,7 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
     def getitem_from_index(self, index: int) -> Image:
         return self.fetch((index,))[0]
 
-    def fetch(self, indices: Iterable[int] | None = None) -> tuple[Image, ...]:
+    def fetch(self, indices: Iterable[int] | None = None) -> Images:
         all_indices = range(len(self.video))
         indices = tuple(all_indices if indices is None else indices)
         unique_indices = frozenset(indices)
@@ -72,13 +73,13 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
             if self._is_missing(index):
                 raise ExtractionError(f'failed to extract frame #{index} for {self}')
 
-        return (
-            self._robust_fetch_frames(indices)
+        return np.stack(
+            list(self._robust_fetch_frames(indices))
             if self._robust
-            else tuple(self._load_frame(index) for index in indices)
+            else [self._load_frame(index) for index in indices]
         )
 
-    def _robust_fetch_frames(self, indices: tuple[int, ...], /) -> tuple[Image, ...]:
+    def _robust_fetch_frames(self, indices: tuple[int, ...], /) -> Iterator[Image]:
         unique_indices = frozenset(indices)
         indexed_frames = {index: self._maybe_load_frame(index) for index in unique_indices}
 
@@ -100,7 +101,7 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
 
             indexed_frames |= renewed_frames
 
-        return tuple(
+        return (
             # we checked before that no image is `None`
             typing.cast(Image, indexed_frames[index])
             for index in indices
