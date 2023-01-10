@@ -185,9 +185,6 @@ def _video_dataset_from_video_and_transformers(
     cache_stages: tuple[int, ...] | None = None,
 ) -> SliceableDataset[Image]:
     if options.EXTRACT_FRAMES:
-        described_frames = LazyDescribed.from_describable(experiment_video.video)
-        video_info = _video_info_getter()(described_frames)
-
         extracted_frames_directory = _extracted_frames_directory_allocator(experiment).allocate(
             experiment_video
         )
@@ -196,7 +193,7 @@ def _video_dataset_from_video_and_transformers(
             experiment_video.path,
             extracted_frames_directory,
             eager=experiment == 'boiling1d',
-            length=video_info.length,
+            length=_video_info_getter()(experiment_video.video).length,
         )[
             experiment_video.start : experiment_video.end  # noqa
         ]
