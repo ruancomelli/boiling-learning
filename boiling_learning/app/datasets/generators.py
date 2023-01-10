@@ -217,10 +217,9 @@ def _video_dataset_from_video_and_transformers(
                 described_frames,
             )
 
-        video_info = _video_info_getter()(frames)
-        numpy_cache_directory = _numpy_directory_allocator(experiment).allocate(frames)
-
         if cache_stages is None or index in cache_stages:
+            video_info = _video_info_getter()(frames)
+            numpy_cache_directory = _numpy_directory_allocator(experiment).allocate(frames)
             frames = LazyDescribed.from_value_and_description(
                 frames().cache(
                     NumpyCache(
