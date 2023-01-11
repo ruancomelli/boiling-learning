@@ -2,12 +2,10 @@ import os
 import random
 import sys
 from pathlib import Path
-from typing import Literal, Optional
 
 import seaborn as sns
 import tensorflow as tf
 from loguru import logger
-from modin.config import Engine
 
 from boiling_learning.app.constants import masters_path
 from boiling_learning.descriptions import describe
@@ -18,12 +16,11 @@ from boiling_learning.utils.typeutils import typename
 
 def configure(
     *,
-    modin_engine: Literal['ray'],
     force_gpu_allow_growth: bool = False,
     use_xla: bool = False,
     mixed_precision_global_policy: str = 'float32',
     require_gpu: bool = False,
-    nvidia_output: Optional[str] = None,
+    nvidia_output: str | None = None,
 ) -> LazyDescribed[tf.distribute.Strategy]:
     _configure_random_state()
     _configure_logger()
@@ -33,7 +30,6 @@ def configure(
     )
 
     _configure_tensorflow(use_xla, mixed_precision_global_policy)
-    _configure_modin_engine(modin_engine)
 
     _configure_seaborn()
 
@@ -78,10 +74,6 @@ def _configure_tensorflow(
     tf.keras.mixed_precision.set_global_policy(mixed_precision_global_policy)
 
 
-def _configure_modin_engine(modin_engine: Literal['ray']) -> None:
-    Engine.put(modin_engine)
-
-
 def _configure_seaborn() -> None:
     sns.set_style('whitegrid')
     sns.set(
@@ -106,7 +98,7 @@ def _configure_seaborn() -> None:
 
 def _configure_gpu(
     require_gpu: bool = True,
-    nvidia_output: Optional[str] = None,
+    nvidia_output: str | None = None,
 ) -> tf.distribute.Strategy:
     logger.info('Connecting to GPUs')
 

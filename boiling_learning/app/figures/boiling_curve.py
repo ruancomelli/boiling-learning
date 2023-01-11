@@ -91,7 +91,6 @@ def main() -> None:
     configure(
         force_gpu_allow_growth=True,
         use_xla=True,
-        modin_engine='ray',
         require_gpu=True,
     )
 

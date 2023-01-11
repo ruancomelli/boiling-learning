@@ -96,7 +96,6 @@ strategy = configure(
     force_gpu_allow_growth=True,
     use_xla=True,
     # mixed_precision_global_policy='mixed_float16',
-    modin_engine='ray',
     require_gpu=True,
 )
 

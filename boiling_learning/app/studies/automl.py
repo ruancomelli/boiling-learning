@@ -33,7 +33,6 @@ def boiling1d(
     strategy = configure(
         force_gpu_allow_growth=True,
         use_xla=True,
-        modin_engine='ray',
         require_gpu=True,
     )
     model_evaluator = cached_model_evaluator('boiling1d')

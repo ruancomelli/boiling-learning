@@ -101,7 +101,8 @@ def _get_data(
             for subset_name in 'train', 'val', 'test':
                 dataset = datasets | subset(subset_name)
 
-                for index in range(len(dataset)):
+                for index in [0]:
+                    # for index in range(len(dataset())):
                     result = _per_frame_data_getter(
                         dataset,
                         index=index,
