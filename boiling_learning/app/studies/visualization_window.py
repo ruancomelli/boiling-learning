@@ -96,9 +96,9 @@ def boiling1d() -> None:
 
             losses.extend(
                 (
-                    (fraction, evaluation.training_metrics['MSE'], 'train'),
-                    (fraction, evaluation.validation_metrics['MSE'], 'val'),
-                    (fraction, evaluation.test_metrics['MSE'], 'test'),
+                    (fraction, evaluation.training_metrics['MSE'].value, 'train'),
+                    (fraction, evaluation.validation_metrics['MSE'].value, 'val'),
+                    (fraction, evaluation.test_metrics['MSE'].value, 'test'),
                 )
             )
 
