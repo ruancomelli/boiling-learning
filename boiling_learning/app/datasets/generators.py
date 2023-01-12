@@ -10,7 +10,7 @@ import pandas as pd
 from boiling_learning.app import options
 from boiling_learning.app.datasets.multimap import MultiMapSliceableDataset
 from boiling_learning.app.paths import analyses_path, shared_cache_path
-from boiling_learning.datasets.cache import NumpyCache
+from boiling_learning.datasets.hdf5_cache import HDF5NumpyCache
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.datasets.splits import DatasetSplits, DatasetTriplet
 from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
@@ -222,7 +222,7 @@ def _video_dataset_from_video_and_transformers(
             numpy_cache_directory = _numpy_directory_allocator(experiment).allocate(frames)
             frames = LazyDescribed.from_value_and_description(
                 frames().cache(
-                    NumpyCache(
+                    HDF5NumpyCache(
                         numpy_cache_directory,
                         shape=(video_info.length, *video_info.shape),
                         dtype=np.dtype(video_info.dtype),

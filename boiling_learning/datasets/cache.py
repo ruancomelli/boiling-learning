@@ -44,7 +44,7 @@ class NoCache(SliceableDatasetCache[_Any]):
         return 'NoCache()'
 
 
-class _MinimalFetchCache(SliceableDatasetCache[_Any]):
+class MinimalFetchCache(SliceableDatasetCache[_Any]):
     @abc.abstractmethod
     def _store(self, pairs: dict[int, _Any]) -> None:
         pass
@@ -80,7 +80,7 @@ class _MinimalFetchCache(SliceableDatasetCache[_Any]):
         return self._fetch(indices)
 
 
-class MemoryCache(_MinimalFetchCache[_Any]):
+class MemoryCache(MinimalFetchCache[_Any]):
     def __init__(self) -> None:
         self._storage: dict[int, _Any] = {}
 
@@ -100,7 +100,7 @@ class MemoryCache(_MinimalFetchCache[_Any]):
         return f'{self.__class__.__name__}()'
 
 
-class NumpyCache(_MinimalFetchCache[Image]):
+class NumpyCache(MinimalFetchCache[Image]):
     def __init__(
         self,
         directory: PathLike,
@@ -178,7 +178,7 @@ class NumpyCache(_MinimalFetchCache[Image]):
 class EagerCache(SliceableDatasetCache[_Any]):
     def __init__(
         self,
-        wrapped: _MinimalFetchCache[_Any],
+        wrapped: MinimalFetchCache[_Any],
         buffer_size: int,
     ) -> None:
         self._wrapped = wrapped
