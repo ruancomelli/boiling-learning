@@ -4,6 +4,8 @@ from classes import AssociatedType, Supports, typeclass
 
 from boiling_learning.model.evaluate import UncertainValue
 
+NEW_LINE_TOKEN = '\\\\'
+
 
 class LaTeXEncodable(AssociatedType):
     ...

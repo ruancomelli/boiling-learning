@@ -9,7 +9,7 @@ from rich.table import Table
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
 from boiling_learning.app.displaying import units
-from boiling_learning.app.displaying.latex import latexify
+from boiling_learning.app.displaying.latex import NEW_LINE_TOKEN, latexify
 from boiling_learning.app.paths import studies_path
 from boiling_learning.app.training.boiling1d import get_pretrained_baseline_boiling_model
 from boiling_learning.app.training.common import get_baseline_compile_params
@@ -115,7 +115,7 @@ def _latex_table_lines(
 ) -> Iterator[str]:
     for direct in True, False:
         yield ('\\multicolumn{2}{l}{Direct}' if direct else '\\multicolumn{2}{l}{Indirect}')
-        yield '\\\\'  # latex line-break
+        yield NEW_LINE_TOKEN
         for metric_name in evaluation.metrics_names:
             if metric_name == 'loss':
                 continue
@@ -135,7 +135,7 @@ def _latex_table_lines(
                 yield '&'
                 yield f'& {latexify(_REFERENCE_EVALUATIONS[(metric_name, direct, "val")])}'
                 yield f'& {latexify(_REFERENCE_EVALUATIONS[(metric_name, direct, "test")])}'
-            yield '\\\\'
+            yield NEW_LINE_TOKEN
 
 
 @app.command()
