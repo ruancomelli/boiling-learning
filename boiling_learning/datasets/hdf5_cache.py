@@ -27,20 +27,6 @@ class HDF5NumpyCache(MinimalFetchCache[Image]):
         self._shape = shape
         self._dtype = dtype
 
-        if not self._data_path.exists() and self._numpy_data_path.exists():
-            logger.info(f'Migrating data from {self._numpy_data_path} to {self._data_path}')
-            self._migrate_from_numpy()
-            logger.info('Done')
-
-    def _migrate_from_numpy(self) -> None:
-        with self._open_data() as data:
-            data[:] = np.memmap(
-                self._numpy_data_path,
-                mode='r',
-                dtype=self._dtype,
-                shape=self._shape,
-            )
-
     def _store(self, pairs: dict[int, Image]) -> None:
         logger.debug(f'Storing {len(pairs)} items {sorted(pairs)} to {self._data_path}')
 
@@ -78,13 +64,29 @@ class HDF5NumpyCache(MinimalFetchCache[Image]):
             return frozenset(_json.load(file))
 
     @contextmanager
-    def _open_data(self) -> Iterator[h5py.Dataset]:
+    def _open_data(self, *, migrate: bool = True) -> Iterator[h5py.Dataset]:
+        if migrate and self._numpy_data_path.exists():
+            if not self._data_path.exists():
+                logger.info(f'Migrating data from {self._numpy_data_path} to {self._data_path}')
+                self._migrate_from_numpy()
+                logger.info('Done')
+            self._numpy_data_path.unlink()
+
         with h5py.File(self._data_path, 'a') as file:
             yield file.require_dataset(
                 self._data_dataset_name,
                 shape=self._shape,
                 dtype=self._dtype,
                 exact=True,
+            )
+
+    def _migrate_from_numpy(self) -> None:
+        with self._open_data(migrate=False) as data:
+            data[:] = np.memmap(
+                self._numpy_data_path,
+                mode='r',
+                dtype=self._dtype,
+                shape=self._shape,
             )
 
     @property
