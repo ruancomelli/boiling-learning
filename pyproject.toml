@@ -119,7 +119,7 @@ requirements = true
 include = '\.py|\.pyi|\.ipynb$'
 line-length = 99
 skip-string-normalization = true
-target-version = ['py37']
+target-version = ['py310']
 
 [tool.mypy]
 follow_imports = "normal"
