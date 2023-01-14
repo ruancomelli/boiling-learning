@@ -1,6 +1,6 @@
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.datasets.splits import DatasetTriplet
-from boiling_learning.lazy import Lazy, LazyDescribed
+from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import json_describe
 from boiling_learning.transforms import subset
 
@@ -11,10 +11,11 @@ def test_subset() -> None:
     ds_test = SliceableDataset.range(6, 9)
 
     ds = DatasetTriplet(ds_train, ds_val, ds_test)
+    described_ds = LazyDescribed.from_value_and_description(ds, 'my_dataset')
 
-    train_subset = Lazy.from_value(ds) | subset('train')
-    val_subset = Lazy.from_value(ds) | subset('val')
-    test_subset = Lazy.from_value(ds) | subset('test')
+    train_subset = described_ds | subset('train')
+    val_subset = described_ds | subset('val')
+    test_subset = described_ds | subset('test')
 
     assert list(train_subset()) == list(ds_train) == [0, 1, 2]
     assert list(val_subset()) == list(ds_val) == [3, 4, 5]
@@ -27,7 +28,8 @@ def test_subset_lazy() -> None:
     ds_test = SliceableDataset.range(6, 9)
 
     ds = LazyDescribed.from_value_and_description(
-        DatasetTriplet(ds_train, ds_val, ds_test), 'my_dataset'
+        DatasetTriplet(ds_train, ds_val, ds_test),
+        'my_dataset',
     )
 
     assert json_describe(ds) == 'my_dataset'
