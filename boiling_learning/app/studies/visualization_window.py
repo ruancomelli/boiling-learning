@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 import typer
+from rich.columns import Columns
 from rich.console import Console
 from rich.table import Table
 
@@ -39,6 +40,8 @@ def boiling1d() -> None:
         use_xla=True,
         require_gpu=True,
     )
+
+    tables: list[Table] = []
 
     for direct in False, True:
         direct_label = 'direct' if direct else 'indirect'
@@ -102,7 +105,7 @@ def boiling1d() -> None:
                 )
             )
 
-        console.print(table)
+        tables.append(table)
 
         plot_data = pd.DataFrame(
             losses, columns=['visualization window fraction', 'loss', 'subset']
@@ -121,6 +124,8 @@ def boiling1d() -> None:
             parents=True,
         )
         f.savefig(str(figure_path))
+
+    console.print(Columns(tables))
 
 
 @app.command()
