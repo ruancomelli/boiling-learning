@@ -7,7 +7,7 @@ repos:
     stages: [commit-msg]
 
 - repo: https://github.com/hakancelikdev/unimport
-  rev: 004b5dd0c8112330275beb52c4ccfce016a4b945
+  rev: 0.12.3
   hooks:
   - id: unimport
     args: [--check, --gitignore, --ignore-init, --include-star-import, boiling_learning, tests]
