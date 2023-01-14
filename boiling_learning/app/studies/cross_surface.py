@@ -6,8 +6,6 @@ from rich.console import Console
 from rich.table import Table
 
 from boiling_learning.app.configuration import configure
-from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
-from boiling_learning.app.datasets.bridging import to_tensorflow
 from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
 from boiling_learning.app.training.boiling1d import (
     DEFAULT_BOILING_HEAT_FLUX_TARGET,
@@ -18,9 +16,10 @@ from boiling_learning.app.training.common import (
     get_baseline_compile_params,
     get_baseline_fit_params,
 )
+from boiling_learning.app.training.evaluation import ModelEvaluation, cached_model_evaluator
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.model.training import compile_model
-from boiling_learning.transforms import datasets_merger, subset
+from boiling_learning.transforms import datasets_merger
 
 app = typer.Typer()
 console = Console()
@@ -62,7 +61,9 @@ def boiling1d() -> None:
                             training_cases=training_indices,
                             evaluation_cases=evaluation_cases,
                             strategy=strategy,
-                        )[metric_name]
+                        )
+                        .validation_metrics[metric_name]
+                        .value
                         for evaluation_cases in cases_indices
                     ),
                     (
@@ -71,7 +72,9 @@ def boiling1d() -> None:
                             training_cases=training_indices,
                             evaluation_cases=evaluation_cases,
                             strategy=strategy,
-                        )[metric_name]
+                        )
+                        .validation_metrics[metric_name]
+                        .value
                         for evaluation_cases in cases_indices
                     ),
                 ),
@@ -94,7 +97,7 @@ def _boiling_cross_surface_evaluation(
     training_cases: tuple[int, ...],
     evaluation_cases: tuple[int, ...],
     strategy: LazyDescribed[tf.distribute.Strategy],
-) -> dict[str, float]:
+) -> ModelEvaluation:
     logger.info(
         f'Training on cases {training_cases} '
         f'| Evaluating on {evaluation_cases} '
@@ -148,16 +151,10 @@ def _boiling_cross_surface_evaluation(
         **get_baseline_compile_params(strategy=strategy),
     )
 
-    ds_evaluation_val = to_tensorflow(
-        evaluation_dataset | subset('val'),
-        batch_size=BOILING_BASELINE_BATCH_SIZE,
-        target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-        experiment='boiling1d',
-    )
+    evaluator = cached_model_evaluator('boiling1d')
+    evaluation = evaluator(model, evaluation_dataset)
 
-    evaluation = model().evaluate(ds_evaluation_val())
-
-    logger.info(f'Done: {evaluation}')
+    logger.info(f'Done evaluating: {evaluation}')
 
     return evaluation
 
