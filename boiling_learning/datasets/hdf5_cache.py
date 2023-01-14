@@ -22,18 +22,22 @@ class HDF5NumpyCache(MinimalFetchCache[Image]):
         *,
         shape: tuple[int, ...],
         dtype: np.dtype,
+        disallow_null: bool = True,
     ) -> None:
         self._directory = resolve(directory, dir=True)
         self._shape = shape
         self._dtype = dtype
+        self._disallow_null = disallow_null
 
     def _store(self, pairs: dict[int, Image]) -> None:
         logger.debug(f'Storing {len(pairs)} items {sorted(pairs)} to {self._data_path}')
 
-        indices = list(pairs)
+        indices_frames = sorted(pairs.items(), key=lambda pair: pair[0])
+        indices = [index for index, _ in indices_frames]
+        frames = np.array([frame for _, frame in indices_frames])
 
         with self._open_data() as data:
-            data[indices] = tuple(pairs.values())
+            data[indices] = frames
 
         _current_indices = self._current_indices()
         new_indices = sorted(_current_indices.union(indices))
@@ -52,7 +56,14 @@ class HDF5NumpyCache(MinimalFetchCache[Image]):
         sorted_indices = list(sorted_indices)
 
         with self._open_data() as data:
-            return data[sorted_indices][list(unsorters)]
+            fetched_data = data[sorted_indices][list(unsorters)]
+
+        if self._disallow_null:
+            for index, image in zip(indices, fetched_data):
+                if float(np.absolute(image).mean()) < 1e-6:
+                    raise ValueError(f'got empty image from {self._data_path} @ {index}: {image}')
+
+        return fetched_data
 
     def _current_indices(self) -> frozenset[int]:
         if not self._indices_path.is_file():
