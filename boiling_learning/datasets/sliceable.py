@@ -8,7 +8,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from fractions import Fraction
 from operator import itemgetter
-from typing import Any, Generic, Literal, Optional, TypeGuard, TypeVar, Union, overload
+from typing import Any, Generic, Literal, Optional, TypeAlias, TypeGuard, TypeVar, Union, overload
 
 import more_itertools as mit
 from iteround import saferound
@@ -492,8 +492,8 @@ class ConcatenateSliceableDataset(SliceableDataset[_T]):
             if not position_relative_index_pairs:
                 continue
 
-            positions, replative_indices = mit.unzip(position_relative_index_pairs)
-            values = self._ancestors[ancestor_index].fetch(replative_indices)
+            positions, relative_indices = mit.unzip(position_relative_index_pairs)
+            values = self._ancestors[ancestor_index].fetch(relative_indices)
             position_value_pairs.extend(zip(positions, values))
 
         return tuple(value for _, value in sorted(position_value_pairs, key=itemgetter(0)))
@@ -557,9 +557,6 @@ class PrefetchedDataset(ProxySliceableDataset[_T]):
         self._buffer_size = buffer_size if buffer_size is not None else len(self)
 
     def __iter__(self) -> Iterator[_T]:
-        # for batch in self.batch(self._buffer_size):
-        #     yield from batch.fetch()
-
         for buffer_indices in SliceableDataset.range(len(self)).batch(self._buffer_size):
             yield from self.fetch(buffer_indices)
 
@@ -594,14 +591,22 @@ class SliceableDatasetCache(abc.ABC, Generic[_T]):
         pass
 
 
-SupervisedSliceableDataset = SliceableDataset[tuple[_X, _Y]]
+SupervisedSliceableDataset: TypeAlias = SliceableDataset[tuple[_X, _Y]]
 
 
 def features(dataset: SupervisedSliceableDataset[_X, _Y]) -> SliceableDataset[_X]:
+    # TODO: huge optimization opportunity:
+    # - for ZipSliceableDataset, return the first ancestor
+    # - for other types of datasets, try to inspect its parents and recurse using
+    # `features`. For instance:
+    #     features(ConcatenateSliceableDataset(dataset1, dataset2))
+    #     == ConcatSliceableDataset(features(dataset1), features(dataset2))
+    # - when impossible to recurse, use the current implementation
     return dataset.map(itemgetter(0))
 
 
 def targets(dataset: SupervisedSliceableDataset[_X, _Y]) -> SliceableDataset[_Y]:
+    # TODO: huge optimization opportunity: similar to `features`
     return dataset.map(itemgetter(1))
 
 
@@ -612,38 +617,39 @@ def unzip(
 
 
 def map_features(
-    dataset: SupervisedSliceableDataset[_X, _Y], __map_features: Callable[[_X], _X2]
+    dataset: SupervisedSliceableDataset[_X, _Y], feature_mapper: Callable[[_X], _X2], /
 ) -> SupervisedSliceableDataset[_X2, _Y]:
     def map_func(pair: tuple[_X, _Y]) -> tuple[_X2, _Y]:
         feature, target = pair
-        return __map_features(feature), target
+        return feature_mapper(feature), target
 
     return dataset.map(map_func)
 
 
 def map_targets(
-    dataset: SupervisedSliceableDataset[_X, _Y], __map_targets: Callable[[_Y], _Y2]
+    dataset: SupervisedSliceableDataset[_X, _Y], target_mapper: Callable[[_Y], _Y2], /
 ) -> SupervisedSliceableDataset[_X, _Y2]:
     def map_func(pair: tuple[_X, _Y]) -> tuple[_X, _Y2]:
         feature, target = pair
-        return feature, __map_targets(target)
+        return feature, target_mapper(target)
 
     return dataset.map(map_func)
 
 
 def map_pair(
     dataset: SupervisedSliceableDataset[_X, _Y],
-    __map_features: Callable[[_X], _X2],
-    __map_targets: Callable[[_Y], _Y2],
+    feature_mapper: Callable[[_X], _X2],
+    target_mapper: Callable[[_Y], _Y2],
+    /,
 ) -> SupervisedSliceableDataset[_X2, _Y2]:
     def map_func(pair: tuple[_X, _Y]) -> tuple[_X2, _Y2]:
         feature, target = pair
-        return __map_features(feature), __map_targets(target)
+        return feature_mapper(feature), target_mapper(target)
 
     return dataset.map(map_func)
 
 
 def _is_nested_sliceable_dataset(
-    ds: SliceableDataset[Any],
+    ds: SliceableDataset[Any], /
 ) -> TypeGuard[SliceableDataset[SliceableDataset[Any]]]:
     return bool(ds) and isinstance(ds[0], SliceableDataset)
