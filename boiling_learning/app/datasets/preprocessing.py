@@ -1,5 +1,5 @@
 from fractions import Fraction
-from typing import Literal, Optional, TypeAlias, Union
+from typing import Final, Literal, TypeAlias
 
 from boiling_learning.preprocessing.image import (
     VideoFrameOrFrames,
@@ -16,20 +16,27 @@ from boiling_learning.utils.mathutils import round_to_multiple
 ExperimentVideoName: TypeAlias = str
 
 # equal to Hobold's:
-RECOMMENDED_DIRECT_HEIGHT = 120
-RECOMMENDED_INDIRECT_HEIGHT = 72
-RECOMMENDED_WIDTH = 196
+DEFAULT_DIRECT_HEIGHT: Final = 120
+DEFAULT_INDIRECT_HEIGHT: Final = 72
+DEFAULT_WIDTH: Final = 196
+DEFAULT_DOWNSCALE_FACTOR: Final = 5
+DEFAULT_VISUALIZATION_WINDOW_WIDTH: Final = Fraction(60, 100)
 
-RECOMMENDED_DOWNSCALE_FACTOR = 5
+# equal to Hobold's:
+RECOMMENDED_DIRECT_HEIGHT: Final = 120
+RECOMMENDED_INDIRECT_HEIGHT: Final = 72
+RECOMMENDED_WIDTH: Final = 196
+RECOMMENDED_DOWNSCALE_FACTOR: Final = 5
+RECOMMENDED_VISUALIZATION_WINDOW_WIDTH: Final = Fraction(60, 100)
 
 
 def default_boiling_preprocessors(
     direct_visualization: bool = True,
-    downscale_factor: int = RECOMMENDED_DOWNSCALE_FACTOR,
-    height: Optional[int] = None,
-    bottom_border: Optional[int] = None,
-    width: int = RECOMMENDED_WIDTH,
-    visualization_window_width: Fraction = Fraction(60, 100),
+    downscale_factor: int = DEFAULT_DOWNSCALE_FACTOR,
+    height: int | None = None,
+    bottom_border: int | None = None,
+    width: int = DEFAULT_WIDTH,
+    visualization_window_width: Fraction = DEFAULT_VISUALIZATION_WINDOW_WIDTH,
     crop_mode: Literal['center', 'random'] = 'center',
 ) -> list[
     list[
@@ -38,10 +45,10 @@ def default_boiling_preprocessors(
     ]
 ]:
     if height is None:
-        height = RECOMMENDED_DIRECT_HEIGHT if direct_visualization else RECOMMENDED_INDIRECT_HEIGHT
+        height = DEFAULT_DIRECT_HEIGHT if direct_visualization else DEFAULT_INDIRECT_HEIGHT
 
     if bottom_border is None:
-        bottom_border = RECOMMENDED_DIRECT_HEIGHT - height
+        bottom_border = DEFAULT_DIRECT_HEIGHT - height
 
     return [
         [
@@ -200,10 +207,8 @@ def default_condensation_preprocessors(
     width: int = 8 * 12,
     crop_mode: Literal['center', 'random'] = 'center',
 ) -> list[
-    Union[
-        Transformer[VideoFrameOrFrames, VideoFrameOrFrames],
-        dict[ExperimentVideoName, Transformer[VideoFrameOrFrames, VideoFrameOrFrames]],
-    ]
+    Transformer[VideoFrameOrFrames, VideoFrameOrFrames]
+    | dict[ExperimentVideoName, Transformer[VideoFrameOrFrames, VideoFrameOrFrames]],
 ]:
     return [
         image_dtype_converter('float32'),

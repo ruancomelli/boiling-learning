@@ -9,7 +9,7 @@ from skimage.io import imsave
 from boiling_learning.app.constants import figures_path
 from boiling_learning.app.datasets.generators import get_image_dataset
 from boiling_learning.app.datasets.preprocessing import (
-    RECOMMENDED_DOWNSCALE_FACTOR,
+    DEFAULT_DOWNSCALE_FACTOR,
     default_boiling_preprocessors,
 )
 from boiling_learning.app.datasets.raw.boiling1d import boiling_cases
@@ -28,7 +28,7 @@ VISUALIZATION_STEP = 5
 @app.command()
 def boiling1d(
     frame: int = typer.Option(0),
-    ds: int = typer.Option(RECOMMENDED_DOWNSCALE_FACTOR),
+    ds: int = typer.Option(DEFAULT_DOWNSCALE_FACTOR),
 ) -> None:
     table = Table(
         'Dataset',
@@ -68,7 +68,7 @@ def boiling1d(
                 )
                 imsave(output_path, sample_frame)
 
-                if case_index == 0 and ds == RECOMMENDED_DOWNSCALE_FACTOR:
+                if case_index == 0 and ds == DEFAULT_DOWNSCALE_FACTOR:
                     imsave(
                         _preprocessing_figures_path()
                         / (

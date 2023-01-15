@@ -41,8 +41,7 @@ DATASET_MARKER_STYLE = (
 
 @app.command()
 def boiling1d(
-    # factors: list[int] = typer.Option(list(range(1, 10)) + list(range(10, 40, 10)))
-    factors: list[int] = typer.Option(list(range(1, 11)))
+    factors: list[int] = typer.Option(list(range(1, 10)) + list(range(10, 40, 10)))
 ) -> None:
     factors = sorted(frozenset(factors) | {1})
 
