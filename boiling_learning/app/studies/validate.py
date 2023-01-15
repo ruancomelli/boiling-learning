@@ -77,9 +77,7 @@ def boiling1d() -> None:
     console.print(Columns(tables))
 
     text = _build_latex_table(evaluations, evaluation)
-
-    with (_validation_study_path() / 'boiling1d-results.txt').open('w') as file:
-        file.write(text)
+    (_validation_study_path() / 'boiling1d-results.txt').write_text(text)
 
 
 _REFERENCE_EVALUATIONS = {
@@ -113,19 +111,24 @@ def _latex_table_lines(
     evaluations: dict[tuple[str, bool, str], UncertainValue],
     evaluation: ModelEvaluation,
 ) -> Iterator[str]:
+    evaluations = {
+        (metric_name.lower(), direct, subset): value
+        for (metric_name, direct, subset), value in evaluations.items()
+    }
+
     for direct in True, False:
         yield ('\\multicolumn{2}{l}{Direct}' if direct else '\\multicolumn{2}{l}{Indirect}')
         yield NEW_LINE_TOKEN
-        for metric_name in evaluation.metrics_names:
+        for metric_name in map(str.lower, evaluation.metrics_names):
             if metric_name == 'loss':
                 continue
 
-            yield f'& \\gls{{{metric_name.lower()}}}'
-            yield f'& {units[metric_name.lower()]}'
+            yield f'& \\gls{{{metric_name}}}'
+            yield f'& {units[metric_name]}'
 
             for subset in 'train', 'val', 'test':
                 uncertain_value = evaluations[(metric_name, direct, subset)]
-                yield f'& {latexify(uncertain_value.rounded())}'
+                yield f'& {latexify(uncertain_value)}'
 
             if (metric_name, direct, 'val') in _REFERENCE_EVALUATIONS and (
                 metric_name,
@@ -135,6 +138,7 @@ def _latex_table_lines(
                 yield '&'
                 yield f'& {latexify(_REFERENCE_EVALUATIONS[(metric_name, direct, "val")])}'
                 yield f'& {latexify(_REFERENCE_EVALUATIONS[(metric_name, direct, "test")])}'
+
             yield NEW_LINE_TOKEN
 
 
@@ -160,4 +164,4 @@ def condensation(
 
 
 def _validation_study_path() -> Path:
-    return resolve(studies_path() / 'validation', dir=True)
+    return resolve(studies_path() / 'validate', dir=True)

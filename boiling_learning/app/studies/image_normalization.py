@@ -124,8 +124,7 @@ def _latex_table_lines(
                         uncertain_value = evaluations[
                             (normalized, direct_visualization, metric_name, subset)
                         ]
-                        rounded_uncertain_value = uncertain_value.rounded()
-                        yield f'& {latexify(rounded_uncertain_value)}'
+                        yield f'& {latexify(uncertain_value)}'
             yield NEW_LINE_TOKEN
 
 
