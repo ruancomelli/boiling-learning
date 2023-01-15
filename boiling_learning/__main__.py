@@ -1,5 +1,6 @@
 import typer
 
+from boiling_learning.app.examples import image_standardization
 from boiling_learning.app.figures import boiling_curve, diameter_effects, inclination_effects
 from boiling_learning.app.studies import (
     animate,
@@ -44,6 +45,7 @@ app.add_typer(example_frames_matrix.app, name='example-frames-matrix')
 app.add_typer(heat_flux_levels.app, name='heat-flux-levels')
 app.add_typer(image_brightness.app, name='image-brightness')
 app.add_typer(image_normalization.app, name='image-normalization')
+app.add_typer(image_standardization.app, name='image-standardization')
 app.add_typer(inclination_effects.app, name='inclination-effects')
 app.add_typer(learning_curve.app, name='learning-curve')
 app.add_typer(preprocessing.app, name='preprocessing')
