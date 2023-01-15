@@ -21,6 +21,7 @@ from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
 from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
 from boiling_learning.preprocessing.extract import ExtractedFramesDataset
+from boiling_learning.preprocessing.image import image_dtype_converter
 from boiling_learning.preprocessing.transformers import Transformer
 from boiling_learning.transforms import map_transformers
 from boiling_learning.utils.random import random_state
@@ -207,16 +208,20 @@ def _video_dataset_from_video_and_transformers(
             compile_transformers(transformer_group, experiment_video)
         )
         for transformer in transformer_group:
-            frames = LazyDescribed.from_value_and_description(
-                MultiMapSliceableDataset(
-                    transformer[experiment_video.name]
-                    if isinstance(transformer, dict)
-                    else transformer,
-                    frames(),
-                ),
-                described_frames,
+            compiled_transformer = (
+                transformer[experiment_video.name]
+                if isinstance(transformer, dict)
+                else transformer
             )
-
+            mapped_frames = (
+                MultiMapSliceableDataset(
+                    compiled_transformer,
+                    frames(),
+                )
+                if _should_be_multimapped(compiled_transformer)
+                else frames().map(compiled_transformer)
+            )
+            frames = LazyDescribed.from_value_and_description(mapped_frames, described_frames)
         if cache_stages is None or index in cache_stages:
             video_info = _video_info_getter()(frames)
             numpy_cache_directory = _numpy_directory_allocator(experiment).allocate(frames)
@@ -277,3 +282,8 @@ def _convert_enumerate_index_to_target(
     index, (image, targets) = element
     expanded_targets = targets | {'index': index}
     return image, expanded_targets
+
+
+def _should_be_multimapped(transformer: Transformer[Image, Image]) -> bool:
+    image_dtype_converter_function = image_dtype_converter.args[0]
+    return transformer.function is not image_dtype_converter_function
