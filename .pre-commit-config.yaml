@@ -7,19 +7,19 @@ repos:
     stages: [commit-msg]
 
 - repo: https://github.com/hakancelikdev/unimport
-  rev: 0.12.3
+  rev: 33ead41ee30f1d323a9c2fcfd0114297efbbc4d5
   hooks:
   - id: unimport
     args: [--check, --gitignore, --ignore-init, --include-star-import, boiling_learning, tests]
 
 - repo: https://github.com/psf/black
-  rev: 22.10.0
+  rev: 22.12.0
   hooks:
   - id: black
     args: [--config, pyproject.toml]
 
 - repo: https://github.com/pycqa/isort
-  rev: 5.10.1
+  rev: 5.11.4
   hooks:
   - id: isort
     name: isort (python)
@@ -34,7 +34,7 @@ repos:
     args: [--check]
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.3.0
+  rev: v4.4.0
   hooks:
   - id: double-quote-string-fixer
   - id: end-of-file-fixer
@@ -49,7 +49,7 @@ repos:
     args: [--count, --show-source, --statistics, boiling_learning]
 
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.4.0
+  rev: v2.5.0
   hooks:
   - id: pretty-format-yaml
     args: [--autofix, --indent, '2']
