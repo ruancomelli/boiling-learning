@@ -9,10 +9,12 @@ from rich.console import Console
 from rich.table import Table
 
 from boiling_learning.app.configuration import configure
+from boiling_learning.app.constants import figures_path
 from boiling_learning.app.datasets.generators import get_image_dataset
 from boiling_learning.app.datasets.preprocessing import default_boiling_preprocessors
 from boiling_learning.app.datasets.raw.boiling1d import boiling_cases
-from boiling_learning.app.displaying import units
+from boiling_learning.app.displaying import glossary, units
+from boiling_learning.app.displaying.figures import save_figure
 from boiling_learning.app.paths import studies_path
 from boiling_learning.app.training.boiling1d import (
     DEFAULT_BOILING_HEAT_FLUX_TARGET,
@@ -44,7 +46,6 @@ def boiling1d(
 
     case = boiling_cases()[0]
     evaluator = cached_model_evaluator('boiling1d')
-    evaluations: list[tuple[int, str, UncertainValue]] = []
     tables: list[Table] = []
 
     for direct in False, True:
@@ -57,6 +58,8 @@ def boiling1d(
             'Test',
             title=f'Downscaling analysis - {direct_label}',
         )
+
+        evaluations: list[tuple[int, str, UncertainValue]] = []
 
         for factor in factors:
             preprocessors = default_boiling_preprocessors(
@@ -92,44 +95,8 @@ def boiling1d(
             evaluations.extend(
                 (
                     (factor, 'Training', evaluation.training_metrics['MSE'].value),
-                    (
-                        factor,
-                        'Training',
-                        evaluation.training_metrics['MSE'].value
-                        - evaluation.training_metrics['MSE'].lower,
-                    ),
-                    (
-                        factor,
-                        'Training',
-                        evaluation.training_metrics['MSE'].value
-                        + evaluation.training_metrics['MSE'].upper,
-                    ),
                     (factor, 'Validation', evaluation.validation_metrics['MSE'].value),
-                    (
-                        factor,
-                        'Validation',
-                        evaluation.validation_metrics['MSE'].value
-                        - evaluation.validation_metrics['MSE'].lower,
-                    ),
-                    (
-                        factor,
-                        'Validation',
-                        evaluation.validation_metrics['MSE'].value
-                        + evaluation.validation_metrics['MSE'].upper,
-                    ),
                     (factor, 'Test', evaluation.test_metrics['MSE'].value),
-                    (
-                        factor,
-                        'Test',
-                        evaluation.test_metrics['MSE'].value
-                        - evaluation.test_metrics['MSE'].lower,
-                    ),
-                    (
-                        factor,
-                        'Test',
-                        evaluation.test_metrics['MSE'].value
-                        + evaluation.test_metrics['MSE'].upper,
-                    ),
                 )
             )
 
@@ -143,12 +110,30 @@ def boiling1d(
         tables.append(table)
 
         plot_data = pd.DataFrame(evaluations, columns=['Downscaling factor', 'Subset', 'Loss'])
-        f, ax = plt.subplots(1, 1, figsize=(4, 4))
-        sns.barplot(ax=ax, data=plot_data, x='Downscaling factor', y='Loss', hue='Subset')
-        ax.set_xlabel('Downscaling factor')
-        ax.set_ylabel(f'Loss [{units["mse"]}]')
+        f, ax = plt.subplots(1, 1, figsize=(2.8, 2.8))
 
-        f.savefig(_downscaling_training_study_path() / f'boiling1d-{direct_label}.pdf')
+        sns.scatterplot(
+            ax=ax,
+            data=plot_data,
+            x='Downscaling factor',
+            y='Loss',
+            hue='Subset',
+            alpha=0.75,
+        )
+
+        ax.grid(visible=False, which='both', axis='x')
+        ax.grid(visible=True, which='major', axis='y')
+        ax.set(
+            xlabel=f'Downscaling factor, ${glossary["downscaling factor"]}$',
+            ylabel=f'Loss [{units["mse"]}]',
+            yscale='log',
+            xticks=factors,
+        )
+
+        save_figure(f, _downscaling_training_study_path() / f'boiling1d-{direct_label}.pdf')
+        save_figure(
+            f, _downscaling_training_study_figures_path() / f'boiling1d-{direct_label}.pdf'
+        )
 
     console.print(Columns(tables))
 
@@ -158,6 +143,10 @@ def condensation(
     factors: list[int] = typer.Option(list(range(1, 10))),
 ) -> None:
     raise NotImplementedError
+
+
+def _downscaling_training_study_figures_path() -> Path:
+    return resolve(figures_path() / 'results' / 'downscaling', dir=True)
 
 
 def _downscaling_training_study_path() -> Path:

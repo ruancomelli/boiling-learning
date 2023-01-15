@@ -16,4 +16,5 @@ glossary: Final = {
     'power': 'q',
     'heat flux': 'q^{\\prime\\prime}',
     'excess temperature': '\\Delta T_{\\mathrm{e}}',
+    'downscaling factor': 'f_\\text{ds}',
 }
