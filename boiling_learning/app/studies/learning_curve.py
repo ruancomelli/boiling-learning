@@ -6,6 +6,7 @@ import pandas as pd
 import seaborn as sns
 import typer
 from loguru import logger
+from rich.columns import Columns
 from rich.console import Console
 from rich.table import Table
 
@@ -36,9 +37,7 @@ FRACTIONS = tuple(Fraction(i + 1, 100) for i in range(10)) + tuple(
 
 
 @app.command()
-def boiling1d(
-    direct: bool = typer.Option(..., '--direct/--indirect'),
-) -> None:
+def boiling1d() -> None:
     logger.info('Analyzing learning curve')
 
     strategy = configure(
@@ -47,73 +46,79 @@ def boiling1d(
         require_gpu=True,
     )
 
-    datasets = baseline_boiling_dataset(direct_visualization=direct)
-
-    table = Table(
-        'Subsample',
-        'Training loss',
-        'Validation loss',
-        'Test loss',
-        title='Learning curve',
-    )
-
     evaluator = cached_model_evaluator('boiling1d')
 
-    losses: list[tuple[Fraction, float, str]] = []
-    for fraction in FRACTIONS:
-        subsampled = (
-            datasets | dataset_sampler(count=fraction, subset='train')
-            if fraction != 1
-            else datasets
+    tables: list[Table] = []
+    for direct in False, True:
+        direct_label = 'direct' if direct else 'indirect'
+
+        datasets = baseline_boiling_dataset(direct_visualization=direct)
+
+        table = Table(
+            'Subsample',
+            'Training loss',
+            'Validation loss',
+            'Test loss',
+            title=f'Learning curve - {direct_label}',
         )
 
-        model = get_baseline_boiling_architecture(
-            direct_visualization=direct,
-            normalize_images=True,
-            strategy=strategy,
-        ) | compile_model(
-            **get_baseline_compile_params(strategy=strategy),
-        )
-
-        fit_model = fit_boiling_model(
-            model,
-            subsampled,
-            get_baseline_fit_params(),
-            target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
-            strategy=strategy,
-        )
-
-        compiled_model = fit_model.architecture | compile_model(
-            **get_baseline_compile_params(strategy=strategy),
-        )
-        evaluation = evaluator(compiled_model, subsampled)
-
-        table.add_row(
-            f'{fraction} ({float(fraction):.0%})',
-            f'{evaluation.training_metrics["MSE"]}',
-            f'{evaluation.validation_metrics["MSE"]}',
-            f'{evaluation.test_metrics["MSE"]}',
-        )
-
-        losses.extend(
-            (
-                (fraction, evaluation.training_metrics['MSE'], 'train'),
-                (fraction, evaluation.validation_metrics['MSE'], 'val'),
-                (fraction, evaluation.test_metrics['MSE'], 'test'),
+        losses: list[tuple[Fraction, float, str]] = []
+        for fraction in FRACTIONS:
+            subsampled = (
+                datasets | dataset_sampler(count=fraction, subset='train')
+                if fraction != 1
+                else datasets
             )
-        )
 
-    console.print(table)
+            model = get_baseline_boiling_architecture(
+                direct_visualization=direct,
+                normalize_images=True,
+                strategy=strategy,
+            ) | compile_model(
+                **get_baseline_compile_params(strategy=strategy),
+            )
 
-    plot_data = pd.DataFrame(losses, columns=['fraction', 'loss', 'subset'])
-    f, ax = plt.subplots(1, 1, figsize=(4, 4))
-    sns.scatterplot(ax=ax, data=plot_data, x='fraction', y='loss', hue='subset')
-    ax.set_xlabel('Dataset subsample size')
-    ax.set_ylabel(f'Loss [{units["mse"]}]')
-    ax.set_xscale('log')
-    ax.set_yscale('log')
+            fit_model = fit_boiling_model(
+                model,
+                subsampled,
+                get_baseline_fit_params(),
+                target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
+                strategy=strategy,
+            )
 
-    f.savefig(_learning_curve_study_path() / f"boiling1d-{'direct' if direct else 'indirect'}.png")
+            compiled_model = fit_model.architecture | compile_model(
+                **get_baseline_compile_params(strategy=strategy),
+            )
+            evaluation = evaluator(compiled_model, subsampled)
+
+            table.add_row(
+                f'{fraction} ({float(fraction):.0%})',
+                f'{evaluation.training_metrics["MSE"]}',
+                f'{evaluation.validation_metrics["MSE"]}',
+                f'{evaluation.test_metrics["MSE"]}',
+            )
+
+            losses.extend(
+                (
+                    (fraction, evaluation.training_metrics['MSE'].value, 'train'),
+                    (fraction, evaluation.validation_metrics['MSE'].value, 'val'),
+                    (fraction, evaluation.test_metrics['MSE'].value, 'test'),
+                )
+            )
+
+        tables.append(table)
+
+        plot_data = pd.DataFrame(losses, columns=['fraction', 'loss', 'subset'])
+        f, ax = plt.subplots(1, 1, figsize=(4, 4))
+        sns.scatterplot(ax=ax, data=plot_data, x='fraction', y='loss', hue='subset')
+        ax.set_xlabel('Dataset subsample size')
+        ax.set_ylabel(f'Loss [{units["mse"]}]')
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+
+        f.savefig(_learning_curve_study_path() / f"boiling1d-{direct_label}.png")
+
+    console.print(Columns(tables))
 
 
 @app.command()
