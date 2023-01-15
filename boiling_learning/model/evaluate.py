@@ -13,7 +13,7 @@ from boiling_learning.model.model import ModelArchitecture
 MetricName: TypeAlias = str
 
 
-@dataclass
+@dataclass(frozen=True, order=True)
 class UncertainValue:
     value: float
     upper: float

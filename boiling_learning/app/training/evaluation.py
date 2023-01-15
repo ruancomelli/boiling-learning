@@ -18,7 +18,7 @@ from boiling_learning.model.evaluate import (
 from boiling_learning.model.model import ModelArchitecture
 
 
-@dataclass
+@dataclass(frozen=True)
 class ModelEvaluation:
     trainable_parameters_count: int
     total_parameters_count: int
