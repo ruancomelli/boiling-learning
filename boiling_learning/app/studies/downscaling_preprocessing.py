@@ -6,10 +6,12 @@ import pandas as pd
 import seaborn as sns
 import typer
 
+from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import figures_path
 from boiling_learning.app.datasets.generators import get_image_dataset
 from boiling_learning.app.datasets.preprocessing import default_boiling_preprocessors
 from boiling_learning.app.datasets.raw.boiling1d import boiling_cases
+from boiling_learning.app.displaying.figures import save_figure
 from boiling_learning.app.paths import studies_path
 from boiling_learning.image_datasets import Image, ImageDataset
 from boiling_learning.lazy import LazyDescribed
@@ -38,32 +40,43 @@ DATASET_MARKER_STYLE = (
     ('Vertical ribbon', 'b', '^'),
 )
 
+DEFAULT_FACTORS = list(range(1, 11))
+
 
 @app.command()
-def boiling1d(
-    factors: list[int] = typer.Option(list(range(1, 10)) + list(range(10, 40, 10)))
-) -> None:
+def boiling1d(factors: list[int] = typer.Option(DEFAULT_FACTORS)) -> None:
+    configure(
+        force_gpu_allow_growth=True,
+        use_xla=True,
+        require_gpu=True,
+    )
+
     factors = sorted(frozenset(factors) | {1})
 
     for metric, metric_id, metric_name in METRICS:
         described_metric = LazyDescribed.from_value_and_description(metric, metric_id)
         data = _get_data(factors, described_metric)
 
-        f, ax = plt.subplots(1, 1, figsize=(6, 4))
+        f, ax = plt.subplots(1, 1, figsize=(2.8, 2.8))
 
-        sns.pointplot(
+        sns.scatterplot(
+            data,
             ax=ax,
-            data=data,
             x='Downscaling factor',
             y='Metric',
             hue='Dataset',
-            linestyles='',
+            style='Dataset',
             markers=[marker for _, _, marker in DATASET_MARKER_STYLE],
+            alpha=0.75,
         )
-        ax.set(ylabel=metric_name)
+        ax.set(
+            xticks=factors,
+            xticklabels=[str(factor) for factor in factors],
+            ylabel=metric_name,
+        )
 
-        f.savefig(_downscaling_study_path() / f'boiling1d-{metric_id}.pdf')
-        f.savefig(_downscaling_figures_path() / f'{metric_id}.pdf')
+        save_figure(f, _downscaling_study_path() / f'boiling1d-{metric_id}.pdf')
+        save_figure(f, _downscaling_figures_path() / f'{metric_id}.pdf')
 
 
 def _get_data(
@@ -97,7 +110,8 @@ def _get_data(
                 experiment='boiling1d',
                 shuffle=False,
             )
-            for subset_name in 'train', 'val', 'test':
+            for subset_name in ('train',):
+                # for subset_name in 'train', 'val', 'test':
                 dataset = datasets | subset(subset_name)
 
                 for index in [0]:
@@ -121,7 +135,10 @@ def condensation(
 
 
 def _downscaling_figures_path() -> Path:
-    return resolve(figures_path() / 'downscaling', dir=True)
+    return resolve(
+        figures_path() / 'machine-learning' / 'preprocessing' / 'downscaling',
+        dir=True,
+    )
 
 
 def _downscaling_study_path() -> Path:
