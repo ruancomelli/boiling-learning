@@ -43,11 +43,18 @@ class _CompileModelParams(TypedDict):
 def get_baseline_compile_params(
     *,
     strategy: LazyDescribed[tf.distribute.Strategy],
+    learning_rate: float | None = None,
 ) -> _CompileModelParams:
     with strategy_scope(strategy):
+        optimizer = (
+            'adam'
+            if learning_rate is None
+            else tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        )
+
         return {
             'loss': tf.keras.losses.MeanSquaredError(),
-            'optimizer': 'adam',
+            'optimizer': optimizer,
             'metrics': [
                 tf.keras.metrics.MeanSquaredError('MSE'),
                 tf.keras.metrics.RootMeanSquaredError('RMS'),
