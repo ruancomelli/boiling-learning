@@ -1,7 +1,7 @@
 import functools
-from collections.abc import Callable
 from typing import Literal
 
+from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
 from boiling_learning.app.datasets.bridged.boiling1d import default_boiling_bridging_gt10
 from boiling_learning.app.paths import shared_cache_path
 from boiling_learning.datasets.splits import DatasetTriplet
@@ -46,17 +46,18 @@ class ModelEvaluation:
 def cached_model_evaluator(
     experiment: Literal['boiling1d', 'condensation'],
     /,
-) -> Callable[
-    [LazyDescribed[ModelArchitecture], LazyDescribed[ImageDatasetTriplet]],
-    ModelEvaluation,
-]:
+):
     @cache(JSONAllocator(shared_cache_path() / 'evaluations' / experiment))
     def model_evaluator(
-        model: LazyDescribed[ModelArchitecture], datasets: LazyDescribed[ImageDatasetTriplet]
+        model: LazyDescribed[ModelArchitecture],
+        datasets: LazyDescribed[ImageDatasetTriplet],
+        *,
+        measure_uncertainty: bool = True,
     ) -> ModelEvaluation:
         training_metrics, validation_metrics, test_metrics = evaluate_boiling_model_with_dataset(
             model,
             datasets,
+            measure_uncertainty=measure_uncertainty,
         )
 
         trainable_size = model().count_parameters(
@@ -82,14 +83,21 @@ def cached_model_evaluator(
 def evaluate_boiling_model_with_dataset(
     model: LazyDescribed[ModelArchitecture],
     evaluation_dataset: LazyDescribed[ImageDatasetTriplet],
+    *,
+    measure_uncertainty: bool = True,
 ) -> DatasetTriplet[dict[str, UncertainValue]]:
     ds_train, ds_val, ds_test = default_boiling_bridging_gt10(
         evaluation_dataset,
         batch_size=None,
     )
 
-    train_metrics = evaluate_with_uncertainty(model(), ds_train())
-    validation_metrics = evaluate_with_uncertainty(model(), ds_val())
-    test_metrics = evaluate_with_uncertainty(model(), ds_test())
+    if measure_uncertainty:
+        train_metrics = evaluate_with_uncertainty(model(), ds_train())
+        validation_metrics = evaluate_with_uncertainty(model(), ds_val())
+        test_metrics = evaluate_with_uncertainty(model(), ds_test())
+    else:
+        train_metrics = model().evaluate(ds_train().batch(BOILING_BASELINE_BATCH_SIZE))
+        validation_metrics = model().evaluate(ds_val().batch(BOILING_BASELINE_BATCH_SIZE))
+        test_metrics = model().evaluate(ds_test().batch(BOILING_BASELINE_BATCH_SIZE))
 
     return DatasetTriplet(train_metrics, validation_metrics, test_metrics)
