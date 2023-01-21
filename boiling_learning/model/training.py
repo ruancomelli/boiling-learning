@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, Callable, Optional, ParamSpec, TypedDict, TypeVar, Union
 
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.losses import Loss
@@ -39,7 +40,31 @@ class TypeAndConfig(TypedDict):
 @describe.instance(Loss)
 @describe.instance(Optimizer)
 def _describe_configurable(instance: Union[Loss, Optimizer]) -> TypeAndConfig:
-    return {'typename': typename(instance), 'config': instance.get_config()}
+    return {
+        'typename': typename(instance),
+        'config': _numpy_types_to_builtin(instance.get_config()),
+    }
+
+
+def _numpy_types_to_builtin(model_config: dict[str, Any]) -> dict[str, Any]:
+    for key, value in model_config.items():
+        if isinstance(value, dict):
+            model_config[key] = _numpy_types_to_builtin(value)
+        elif isinstance(value, (list, tuple)):
+            model_config[key] = [_numpy_types_to_builtin(item) for item in value]
+        elif value is None or isinstance(value, (int, float, str, bool)):
+            pass
+        elif isinstance(value, np.bool_):
+            model_config[key] = bool(value)
+        elif isinstance(value, np.integer):
+            model_config[key] = int(value)
+        elif isinstance(value, np.floating):
+            model_config[key] = float(value)
+        else:
+            raise TypeError(
+                f'Unsupported type in model config: got type {type(value)} for value {value}'
+            )
+    return model_config
 
 
 @json.encode.instance(Loss)
