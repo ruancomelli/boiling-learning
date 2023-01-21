@@ -97,13 +97,7 @@ def fit_boiling_model(
     return LazyFitModelReturn(
         LazyDescribed.from_value_and_description(
             fit_model_return.architecture,
-            (
-                model,
-                datasets,
-                params,
-                target,
-                try_id,
-            ),
+            (model, datasets, params, target, try_id),
         ),
         trained_epochs=fit_model_return.trained_epochs,
         history=fit_model_return.history,

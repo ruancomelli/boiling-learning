@@ -51,8 +51,8 @@ def _configure_random_state() -> None:
 
 def _configure_logger() -> None:
     logger.remove()  # remove default logger configuration
-    logger.add(sys.stderr, level='DEBUG')
-    logger.add(str(_log_file_path()), level='DEBUG')
+    logger.add(sys.stderr, level='DEBUG', backtrace=True, diagnose=True)
+    logger.add(str(_log_file_path()), level='DEBUG', backtrace=True, diagnose=True)
 
     logger.info('Initializing script')
 
