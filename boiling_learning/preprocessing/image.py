@@ -1,6 +1,6 @@
 import typing
 from fractions import Fraction
-from typing import Optional, TypeVar, Union, overload
+from typing import TypeVar, overload
 
 import numpy as np
 import tensorflow as tf
@@ -13,7 +13,7 @@ from skimage.transform import resize
 from boiling_learning.preprocessing.transformers import wrap_as_partial_transformer
 from boiling_learning.preprocessing.video import VideoFrame, VideoFrames
 
-VideoFrameOrFrames = Union[VideoFrame, VideoFrames]
+VideoFrameOrFrames = VideoFrame | VideoFrames
 _VideoFrameOrFrames = TypeVar('_VideoFrameOrFrames', bound=VideoFrameOrFrames)
 
 
@@ -26,14 +26,14 @@ def image_dtype_converter(image: _VideoFrameOrFrames, dtype: str) -> _VideoFrame
 def cropper(
     image: _VideoFrameOrFrames,
     *,
-    left: Optional[Union[int, float, Fraction]] = None,
-    right: Optional[Union[int, float, Fraction]] = None,
-    right_border: Optional[Union[int, float, Fraction]] = None,
-    width: Optional[Union[int, float, Fraction]] = None,
-    top: Optional[Union[int, float, Fraction]] = None,
-    bottom: Optional[Union[int, float, Fraction]] = None,
-    bottom_border: Optional[Union[int, float, Fraction]] = None,
-    height: Optional[Union[int, float, Fraction]] = None,
+    left: int | float | Fraction | None = None,
+    right: int | float | Fraction | None = None,
+    right_border: int | float | Fraction | None = None,
+    width: int | float | Fraction | None = None,
+    top: int | float | Fraction | None = None,
+    bottom: int | float | Fraction | None = None,
+    bottom_border: int | float | Fraction | None = None,
+    height: int | float | Fraction | None = None,
 ) -> _VideoFrameOrFrames:
     if image.ndim == 3:
         total_height, total_width, _ = image.shape
@@ -115,8 +115,8 @@ def cropper(
 def center_cropper(
     image: _VideoFrameOrFrames,
     *,
-    height: Optional[Union[int, float, Fraction]] = None,
-    width: Optional[Union[int, float, Fraction]] = None,
+    height: int | float | Fraction | None = None,
+    width: int | float | Fraction | None = None,
 ) -> _VideoFrameOrFrames:
     if image.ndim == 3:
         total_height, total_width, _ = image.shape
@@ -134,7 +134,7 @@ def center_cropper(
 
 
 @overload
-def _ratio_to_size(total: int, x: Union[int, float, Fraction]) -> int:
+def _ratio_to_size(total: int, x: int | float | Fraction) -> int:
     ...
 
 
@@ -143,13 +143,17 @@ def _ratio_to_size(total: int, x: None) -> None:
     ...
 
 
-def _ratio_to_size(total: int, x: Optional[Union[int, float, Fraction]]) -> Optional[int]:
+def _ratio_to_size(
+    total: int,
+    x: int | float | Fraction | None,
+) -> int | None:
     return int(x * total) if isinstance(x, (float, Fraction)) else x
 
 
 @wrap_as_partial_transformer
 def downscaler(
-    image: _VideoFrameOrFrames, factors: Union[int, tuple[int, int]]
+    image: _VideoFrameOrFrames,
+    factors: int | tuple[int, int],
 ) -> _VideoFrameOrFrames:
     # 4-D Tensor of shape [batch, height, width, channels] or 3-D Tensor of shape
     # [height, width, channels].
@@ -188,8 +192,8 @@ def grayscaler(image: _VideoFrameOrFrames) -> _VideoFrameOrFrames:
 def random_cropper(
     image: _VideoFrameOrFrames,
     *,
-    height: Optional[int] = None,
-    width: Optional[int] = None,
+    height: int | None = None,
+    width: int | None = None,
 ) -> _VideoFrameOrFrames:
     if image.ndim == 3:
         total_height, total_width, number_of_channels = image.shape
@@ -221,14 +225,12 @@ def structural_similarity_ratio(ref: VideoFrame, image: VideoFrame) -> float:
 
 
 def structural_similarity(ref: VideoFrame, image: VideoFrame) -> float:
-    WINDOW_SIZE = 11
-
     ref, image = _reshape_to_largest(ref, image)
 
     return _structural_similarity(
         np.squeeze(ref),
         np.squeeze(image),
-        win_size=WINDOW_SIZE,
+        data_range=image.max() - image.min(),
     )
 
 
@@ -289,8 +291,9 @@ def nbins_shannon_entropy_ratio(ref: VideoFrame, image: VideoFrame, /) -> float:
     ref_hist = _hist(ref)
     image_hist = _hist(image)
 
-    return (entropy(ref_hist) + entropy(ref_hist, image_hist)) / (
-        entropy(ref_hist) + entropy(ref_hist, ref_hist)
+    return float(
+        (entropy(ref_hist) + entropy(ref_hist, image_hist))
+        / (entropy(ref_hist) + entropy(ref_hist, ref_hist))
     )
 
 
