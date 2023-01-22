@@ -18,70 +18,69 @@ from boiling_learning.utils.pathutils import resolve
 
 app = typer.Typer()
 
-
-DEFAULT_INDICES = list(range(100))
+INDICES = {f'0-{range_max}': range(range_max) for range_max in (100,)}
+# INDICES = {f'0-{range_max}': range(range_max) for range_max in (10, 20, 30, 50, 100, 200, 500)}
 
 
 @app.command()
-def boiling1d(indices: list[int] = typer.Option(DEFAULT_INDICES)) -> None:
+def boiling1d(start: int = typer.Option(0)) -> None:
     configure(
         force_gpu_allow_growth=True,
         use_xla=True,
         require_gpu=True,
     )
 
-    indices = sorted(frozenset(indices) | {0})
+    for indices_id, indices in INDICES.items():
+        indices = sorted(frozenset(indices) | {0})
 
-    metrics: list[tuple[int, float, str]] = []
-    for case, (dataset_name, _) in zip(boiling_cases(), DATASET_MARKER_STYLE):
-        preprocessors = [
-            default_boiling_preprocessors(
-                direct_visualization=False,
-                downscale_factor=1,
-            )[0]
-        ]
-        dataset = get_image_dataset(
-            case(),
-            transformers=preprocessors,
-            experiment='boiling1d',
-            shuffle=False,
+        metrics: list[tuple[int, float, str]] = []
+        for case, (dataset_name, _) in zip(boiling_cases(), DATASET_MARKER_STYLE):
+            preprocessors = [
+                default_boiling_preprocessors(
+                    direct_visualization=False,
+                    downscale_factor=1,
+                )[0]
+            ]
+            dataset = get_image_dataset(
+                case(),
+                transformers=preprocessors,
+                experiment='boiling1d',
+                shuffle=False,
+            )
+
+            ds_train, _, _ = dataset()
+            frames = features(ds_train).fetch(start + index for index in indices)
+            reference_frame = frames[0]
+            metrics.extend(
+                (index, structural_similarity(reference_frame, frame), dataset_name)
+                for index, frame in zip(indices, frames)
+            )
+
+        df = pd.DataFrame(
+            metrics,
+            columns=['Index', 'Structural similarity ratio', 'Dataset'],
         )
 
-        ds_train, _, _ = dataset()
-        frames = features(ds_train).fetch(indices)
-        reference_frame = frames[0]
-        metrics.extend(
-            (index, structural_similarity(reference_frame, frame), dataset_name)
-            for index, frame in zip(indices, frames)
+        f, ax = plt.subplots(1, 1, figsize=(4, 3))
+
+        sns.scatterplot(
+            ax=ax,
+            data=df,
+            x='Index',
+            y='Structural similarity ratio',
+            hue='Dataset',
+            style='Dataset',
+            markers=[marker for _, marker in DATASET_MARKER_STYLE],
+            alpha=0.5,
         )
+        ax.set(xscale='linear', yscale='linear', ylim=(0, 1))
 
-    df = pd.DataFrame(
-        metrics,
-        columns=['Index', 'Structural similarity ratio', 'Dataset'],
-    )
-
-    f, ax = plt.subplots(1, 1, figsize=(4, 3))
-
-    sns.scatterplot(
-        ax=ax,
-        data=df,
-        x='Index',
-        y='Structural similarity ratio',
-        hue='Dataset',
-        style='Dataset',
-        markers=[marker for _, marker in DATASET_MARKER_STYLE],
-        alpha=0.5,
-    )
-    ax.set(xscale='linear', yscale='linear', ylim=(0, 1))
-
-    save_figure(f, _consecutive_frames_study_path() / 'boiling1d.pdf')
-    save_figure(f, _consecutive_frames_figures_path() / 'boiling1d.pdf')
+        save_figure(f, _consecutive_frames_study_path() / f'boiling1d-{start}+{indices_id}.pdf')
+        save_figure(f, _consecutive_frames_figures_path() / f'boiling1d-{start}+{indices_id}.pdf')
 
 
 @app.command()
-def condensation(
-    indices: list[int] = typer.Option(DEFAULT_INDICES),
-) -> None:
+def condensation() -> None:
     raise NotImplementedError
 
 
