@@ -74,6 +74,7 @@ def boiling1d(factors: list[int] = typer.Option(DEFAULT_FACTORS)) -> None:
             xticklabels=[str(factor) for factor in factors],
             ylabel=metric_name,
         )
+        ax.grid(axis='x')
 
         save_figure(f, _downscaling_study_path() / f'boiling1d-{metric_id}.pdf')
         save_figure(f, _downscaling_figures_path() / f'{metric_id}.pdf')
