@@ -11,6 +11,7 @@ from boiling_learning.app.constants import figures_path
 from boiling_learning.app.datasets.bridged.boiling1d import DEFAULT_BOILING_OUTLIER_FILTER
 from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
 from boiling_learning.app.displaying import glossary, units
+from boiling_learning.app.displaying.figures import save_figure
 from boiling_learning.app.paths import studies_path
 from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.lazy import LazyDescribed
@@ -31,9 +32,11 @@ def boiling1d() -> None:
     )
 
     for direct in False, True:
+        direct_label = 'direct' if direct else 'indirect'
+
         data = _cached_data_getter()(direct_visualization=direct)
 
-        f, ax = plt.subplots(1, 1, figsize=(12, 4))
+        f, ax = plt.subplots(1, 1, figsize=(7, 4))
         sns.boxenplot(
             ax=ax,
             data=data,
@@ -45,17 +48,12 @@ def boiling1d() -> None:
             showfliers=False,  # exclude outliers
         )
         ax.set(
-            xlabel=f'Nominal power, {glossary["power"]} [{units["power"]}]',
+            xlabel=f'Nominal power, ${glossary["power"]}$ [{units["power"]}]',
             ylabel='Brightness',
         )
 
-        f.savefig(
-            _image_brightness_study_path()
-            / f'boiling1d-{"direct" if direct else "indirect"}-boxen.pdf'
-        )
-        f.savefig(
-            _results_path() / f'brightness-distribution-{"direct" if direct else "indirect"}.pdf'
-        )
+        save_figure(f, _image_brightness_study_path() / f'boiling1d-{direct_label}-boxen.pdf')
+        save_figure(f, _image_brightness_results_path() / f'boiling1d-{direct_label}.pdf')
 
 
 def _cached_data_getter():
@@ -119,5 +117,5 @@ def _image_brightness_study_path() -> Path:
     return resolve(studies_path() / 'image-brightness', dir=True)
 
 
-def _results_path() -> Path:
-    return resolve(figures_path() / 'results', dir=True)
+def _image_brightness_results_path() -> Path:
+    return resolve(figures_path() / 'results' / 'image-brightness', dir=True)
