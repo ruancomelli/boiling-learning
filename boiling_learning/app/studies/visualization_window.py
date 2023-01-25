@@ -5,14 +5,19 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 import typer
+from loguru import logger
+from matplotlib.ticker import PercentFormatter
 from rich.columns import Columns
 from rich.console import Console
 from rich.table import Table
 
 from boiling_learning.app.configuration import configure
+from boiling_learning.app.constants import figures_path
 from boiling_learning.app.datasets.generators import get_image_dataset
 from boiling_learning.app.datasets.preprocessing import default_boiling_preprocessors
 from boiling_learning.app.datasets.raw.boiling1d import boiling_cases
+from boiling_learning.app.displaying import units
+from boiling_learning.app.displaying.figures import save_figure
 from boiling_learning.app.paths import studies_path
 from boiling_learning.app.training.boiling1d import (
     DEFAULT_BOILING_HEAT_FLUX_TARGET,
@@ -25,15 +30,16 @@ from boiling_learning.app.training.common import (
 )
 from boiling_learning.app.training.evaluation import cached_model_evaluator
 from boiling_learning.model.training import compile_model
-from boiling_learning.utils.pathutils import resolve
 
 app = typer.Typer()
 console = Console()
 
-FRACTIONS = tuple(Fraction(num, 100) for num in range(100, 9, -10))
+FRACTIONS = sorted(Fraction(num, 100) for num in range(100, 9, -10))
+OUTLIER_LOSS = 1000
 
 
 @app.command()
+@logger.catch
 def boiling1d() -> None:
     strategy = configure(
         force_gpu_allow_growth=True,
@@ -42,6 +48,8 @@ def boiling1d() -> None:
     )
 
     tables: list[Table] = []
+
+    evaluator = cached_model_evaluator('boiling1d')
 
     for direct in False, True:
         direct_label = 'direct' if direct else 'indirect'
@@ -55,10 +63,9 @@ def boiling1d() -> None:
         )
 
         case = boiling_cases()[0]
-        evaluator = cached_model_evaluator('boiling1d')
 
         losses: list[tuple[Fraction, float, str]] = []
-        for fraction in FRACTIONS:
+        for fraction in sorted(FRACTIONS):
             preprocessors = default_boiling_preprocessors(
                 direct_visualization=direct,
                 visualization_window_width=fraction,
@@ -88,7 +95,7 @@ def boiling1d() -> None:
             compiled_model = fit_model.architecture | compile_model(
                 **get_baseline_compile_params(strategy=strategy),
             )
-            evaluation = evaluator(compiled_model, datasets)
+            evaluation = evaluator(compiled_model, datasets, measure_uncertainty=False)
 
             table.add_row(
                 f'{fraction} ({float(fraction):.0%})',
@@ -99,31 +106,38 @@ def boiling1d() -> None:
 
             losses.extend(
                 (
-                    (fraction, evaluation.training_metrics['MSE'].value, 'train'),
-                    (fraction, evaluation.validation_metrics['MSE'].value, 'val'),
-                    (fraction, evaluation.test_metrics['MSE'].value, 'test'),
+                    (fraction, evaluation.training_metrics['MSE'], 'Training'),
+                    (fraction, evaluation.validation_metrics['MSE'], 'Validation'),
+                    (fraction, evaluation.test_metrics['MSE'], 'Test'),
                 )
             )
 
         tables.append(table)
 
         plot_data = pd.DataFrame(
-            losses, columns=['visualization window fraction', 'loss', 'subset']
+            losses, columns=['Visualization window fraction', 'Loss', 'Subset']
         )
-        f, ax = plt.subplots(1, 1, figsize=(4, 4))
-        sns.scatterplot(
-            ax=ax, data=plot_data, x='visualization window fraction', y='loss', hue='subset'
-        )
-        ax.set_xlabel('Visualization window fraction')
-        ax.set_ylabel('Loss')
-        ax.set_xscale('log')
-        ax.set_yscale('log')
 
-        figure_path = resolve(
-            _learning_curve_study_path() / f'boiling1d-{direct_label}.png',
-            parents=True,
+        f, ax = plt.subplots(1, 1, figsize=(2.8, 2.8))
+        sns.scatterplot(
+            ax=ax,
+            data=plot_data[plot_data['Loss'] < OUTLIER_LOSS],
+            x='Visualization window fraction',
+            y='Loss',
+            hue='Subset',
+            alpha=0.75,
         )
-        f.savefig(str(figure_path))
+        ax.set(ylabel=f'Loss [{units["mse"]}]')
+
+        outliers = plot_data[plot_data['Loss'] >= OUTLIER_LOSS]['Visualization window fraction']
+        for outlier in outliers:
+            ax.axvspan(outlier - 0.025, outlier + 0.025, color='red', alpha=0.15, hatch='/')
+        # ax.set(xscale='linear', yscale='log', xticks=FRACTIONS)
+        ax.xaxis.set_major_formatter(PercentFormatter(xmax=max(map(float, FRACTIONS))))
+        ax.yaxis.set_major_formatter(lambda value, pos: int(value))
+
+        save_figure(f, _visualization_window_study_path() / f'boiling1d-{direct_label}.pdf')
+        save_figure(f, _visualization_window_figures_path() / f'boiling1d-{direct_label}.pdf')
 
     console.print(Columns(tables))
 
@@ -133,5 +147,9 @@ def condensation() -> None:
     raise NotImplementedError
 
 
-def _learning_curve_study_path() -> Path:
+def _visualization_window_figures_path() -> Path:
+    return figures_path() / 'results' / 'visualization-window'
+
+
+def _visualization_window_study_path() -> Path:
     return studies_path() / 'visualization-window'
