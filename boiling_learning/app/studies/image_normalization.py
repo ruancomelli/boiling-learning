@@ -120,7 +120,8 @@ def _latex_table_lines(
                 if direct_visualization is None:
                     yield '&'
                 else:
-                    for subset in 'train', 'val', 'test':
+                    for subset in 'val', 'test':
+                        # for subset in 'train', 'val', 'test':
                         uncertain_value = evaluations[
                             (normalized, direct_visualization, metric_name, subset)
                         ]
