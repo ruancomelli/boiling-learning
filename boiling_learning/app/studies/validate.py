@@ -1,3 +1,4 @@
+import textwrap
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from boiling_learning.app.configuration import configure
 from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
 from boiling_learning.app.displaying import units
 from boiling_learning.app.displaying.latex import NEW_LINE_TOKEN, latexify
+from boiling_learning.app.figures.architectures import diagrams_path
 from boiling_learning.app.paths import studies_path
 from boiling_learning.app.training.boiling1d import get_pretrained_baseline_boiling_model
 from boiling_learning.app.training.common import get_baseline_compile_params
@@ -39,7 +41,7 @@ def boiling1d() -> None:
     for direct in False, True:
         model = get_pretrained_baseline_boiling_model(
             direct_visualization=direct,
-            normalize_images=True,
+            normalize_images=False,
             strategy=strategy,
         )
 
@@ -77,7 +79,8 @@ def boiling1d() -> None:
     console.print(Columns(tables))
 
     text = _build_latex_table(evaluations, evaluation)
-    (_validation_study_path() / 'boiling1d-results.txt').write_text(text)
+    (_validation_study_path() / 'boiling1d-results.tex').write_text(text)
+    (_validation_study_results_path() / 'validate.tex').write_text(text)
 
 
 _REFERENCE_EVALUATIONS = {
@@ -111,6 +114,28 @@ def _latex_table_lines(
     evaluations: dict[tuple[str, bool, str], UncertainValue],
     evaluation: ModelEvaluation,
 ) -> Iterator[str]:
+    yield textwrap.dedent(
+        '''
+        \\begin{tabular}{@{}lrllllcll@{}}\\toprule
+            &
+            &
+            & \\multicolumn{3}{c}{This work}
+            &
+            & \\multicolumn{2}{c}{Reference}
+            \\\\ \\cmidrule{4-6} \\cmidrule{8-9}
+            & Metric
+            & Unit
+            & Training
+            & Validation
+            & Test
+            &
+            & Validation
+            & Test
+            \\\\
+            \\midrule
+        '''
+    )
+
     evaluations = {
         (metric_name.lower(), direct, subset): value
         for (metric_name, direct, subset), value in evaluations.items()
@@ -123,23 +148,29 @@ def _latex_table_lines(
             if metric_name == 'loss':
                 continue
 
-            yield f'& \\gls{{{metric_name}}}'
+            yield f'& {_metric_name_to_gls(metric_name)}'
             yield f'& {units[metric_name]}'
 
             for subset in 'train', 'val', 'test':
                 uncertain_value = evaluations[(metric_name, direct, subset)]
                 yield f'& {latexify(uncertain_value)}'
 
-            if (metric_name, direct, 'val') in _REFERENCE_EVALUATIONS and (
+            yield '&'
+            yield f'& {latexify(_REFERENCE_EVALUATIONS[(metric_name, direct, "val")])}' if (
+                metric_name,
+                direct,
+                'val',
+            ) in _REFERENCE_EVALUATIONS else '& ---'
+            yield f'& {latexify(_REFERENCE_EVALUATIONS[(metric_name, direct, "test")])}' if (
                 metric_name,
                 direct,
                 'test',
-            ) in _REFERENCE_EVALUATIONS:
-                yield '&'
-                yield f'& {latexify(_REFERENCE_EVALUATIONS[(metric_name, direct, "val")])}'
-                yield f'& {latexify(_REFERENCE_EVALUATIONS[(metric_name, direct, "test")])}'
+            ) in _REFERENCE_EVALUATIONS else '& ---'
 
             yield NEW_LINE_TOKEN
+
+    yield '\\bottomrule'
+    yield '\\end{tabular}'
 
 
 @app.command()
@@ -161,6 +192,14 @@ def condensation(
 
     console.print(model.validation_metrics)
     console.print(model.test_metrics)
+
+
+def _metric_name_to_gls(metric_name: str) -> str:
+    return '\\gls{rmse}' if metric_name == 'rms' else f'\\gls{{{metric_name}}}'
+
+
+def _validation_study_results_path() -> Path:
+    return resolve(diagrams_path() / 'machine-learning', dir=True)
 
 
 def _validation_study_path() -> Path:
