@@ -1,7 +1,8 @@
 import functools
 from typing import Literal
 
-from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
+import tensorflow as tf
+
 from boiling_learning.app.datasets.bridged.boiling1d import default_boiling_bridging_gt10
 from boiling_learning.app.paths import shared_cache_path
 from boiling_learning.datasets.splits import DatasetTriplet
@@ -16,6 +17,8 @@ from boiling_learning.model.evaluate import (
     evaluate_with_uncertainty,
 )
 from boiling_learning.model.model import ModelArchitecture
+
+EVALUATION_BATCH_SIZE = 32
 
 
 @dataclass(frozen=True)
@@ -96,8 +99,14 @@ def evaluate_boiling_model_with_dataset(
         validation_metrics = evaluate_with_uncertainty(model(), ds_val())
         test_metrics = evaluate_with_uncertainty(model(), ds_test())
     else:
-        train_metrics = model().evaluate(ds_train().batch(BOILING_BASELINE_BATCH_SIZE))
-        validation_metrics = model().evaluate(ds_val().batch(BOILING_BASELINE_BATCH_SIZE))
-        test_metrics = model().evaluate(ds_test().batch(BOILING_BASELINE_BATCH_SIZE))
+        train_metrics = model().evaluate(
+            ds_train().batch(EVALUATION_BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
+        )
+        validation_metrics = model().evaluate(
+            ds_val().batch(EVALUATION_BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
+        )
+        test_metrics = model().evaluate(
+            ds_test().batch(EVALUATION_BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
+        )
 
     return DatasetTriplet(train_metrics, validation_metrics, test_metrics)
