@@ -17,4 +17,8 @@ glossary: Final = {
     'heat flux': 'q^{\\prime\\prime}',
     'excess temperature': '\\Delta T_{\\mathrm{e}}',
     'downscaling factor': 'f_\\text{ds}',
+    'large wire ds': '\\mathcal{D}^{\\mathrm{LW}}',
+    'small wire ds': '\\mathcal{D}^{\\mathrm{SW}}',
+    'horizontal ribbon ds': '\\mathcal{D}^{\\mathrm{HR}}',
+    'vertical ribbon ds': '\\mathcal{D}^{\\mathrm{VR}}',
 }

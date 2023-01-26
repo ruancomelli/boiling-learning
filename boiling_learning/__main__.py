@@ -5,7 +5,9 @@ from boiling_learning.app.figures import boiling_curve, diameter_effects, inclin
 from boiling_learning.app.studies import (
     animate,
     automl,
+    automl_cross_surface,
     automl_strategies,
+    automl_transfer_learning_curve,
     consecutive_frames,
     cross_surface,
     data_augmentation,
@@ -21,6 +23,7 @@ from boiling_learning.app.studies import (
     image_normalization,
     learning_curve,
     preprocessing,
+    single_surface,
     transfer_learning_curve,
     validate,
     visualization_window,
@@ -29,7 +32,9 @@ from boiling_learning.app.studies import (
 app = typer.Typer()
 app.add_typer(animate.app, name='animate')
 app.add_typer(automl.app, name='automl')
+app.add_typer(automl_cross_surface.app, name='automl-cross-surface')
 app.add_typer(automl_strategies.app, name='automl-strategies')
+app.add_typer(automl_transfer_learning_curve.app, name='automl-transfer-learning-curve')
 app.add_typer(boiling_curve.app, name='boiling-curve')
 app.add_typer(consecutive_frames.app, name='consecutive-frames')
 app.add_typer(cross_surface.app, name='cross-surface')
@@ -49,6 +54,7 @@ app.add_typer(image_standardization.app, name='image-standardization')
 app.add_typer(inclination_effects.app, name='inclination-effects')
 app.add_typer(learning_curve.app, name='learning-curve')
 app.add_typer(preprocessing.app, name='preprocessing')
+app.add_typer(single_surface.app, name='single-surface')
 app.add_typer(transfer_learning_curve.app, name='transfer-learning-curve')
 app.add_typer(validate.app, name='validate')
 app.add_typer(visualization_window.app, name='visualization-window')
