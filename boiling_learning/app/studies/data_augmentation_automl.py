@@ -5,18 +5,18 @@ from rich.columns import Columns
 from rich.console import Console
 from rich.table import Table
 
-from boiling_learning.app.automl.autofit_dataset import autofit_dataset
+from boiling_learning.app.automl.autofit_dataset import best_baseline_boiling1d_model
+from boiling_learning.app.cancellation import CancelledError
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.datasets.generators import get_image_dataset
 from boiling_learning.app.datasets.preprocessing import default_boiling_preprocessors
 from boiling_learning.app.datasets.raw.boiling1d import boiling_cases
 from boiling_learning.app.training.boiling1d import (
     DEFAULT_BOILING_HEAT_FLUX_TARGET,
-    get_pretrained_baseline_boiling_model,
+    get_baseline_model_size,
 )
 from boiling_learning.app.training.common import get_baseline_compile_params
 from boiling_learning.app.training.evaluation import cached_model_evaluator
-from boiling_learning.lazy import LazyDescribed
 from boiling_learning.model.training import compile_model
 
 app = typer.Typer()
@@ -30,6 +30,8 @@ def boiling1d() -> None:
         use_xla=True,
         require_gpu=True,
     )
+
+    raise CancelledError('This study is cancelled for not providing useful information.')
 
     model_evaluator = cached_model_evaluator('boiling1d')
     case = boiling_cases()[0]
@@ -46,16 +48,6 @@ def boiling1d() -> None:
                 + f' visualization - {crop_mode} crop.'
             ),
         )
-        baseline_fit_return = get_pretrained_baseline_boiling_model(
-            direct_visualization=direct,
-            normalize_images=True,
-            strategy=strategy,
-        )
-
-        baseline_architecture_size = baseline_fit_return.architecture().count_parameters(
-            trainable=True,
-            non_trainable=False,
-        )
 
         preprocessors = default_boiling_preprocessors(
             direct_visualization=direct,
@@ -67,21 +59,34 @@ def boiling1d() -> None:
             experiment='boiling1d',
         )
 
-        hypermodel = autofit_dataset(
-            datasets,
+        # hypermodel = autofit_dataset(
+        #     datasets,
+        #     target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
+        #     normalize_images=True,
+        #     max_model_size=baseline_architecture_size,
+        #     goal=None,
+        #     experiment='boiling1d',
+        #     strategy=strategy,
+        # )
+
+        # compiled_model = LazyDescribed.from_describable(hypermodel.best_model()) | compile_model(
+        #     **get_baseline_compile_params(strategy=strategy),
+        # )
+
+        model = best_baseline_boiling1d_model(
+            direct_visualization=direct,
+            strategy=strategy,
             target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
             normalize_images=True,
-            max_model_size=baseline_architecture_size,
-            goal=None,
-            experiment='boiling1d',
-            strategy=strategy,
-        )
-
-        compiled_model = LazyDescribed.from_describable(hypermodel.best_model()) | compile_model(
+            max_model_size=get_baseline_model_size(
+                direct_visualization=direct,
+                strategy=strategy,
+            ),
+        ) | compile_model(
             **get_baseline_compile_params(strategy=strategy),
         )
 
-        evaluation = model_evaluator(compiled_model, datasets)
+        evaluation = model_evaluator(model, datasets, measure_uncertainty=False)
         for metric in evaluation.metrics_names:
             table.add_row(
                 metric,

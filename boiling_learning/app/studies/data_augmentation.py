@@ -3,6 +3,7 @@ import typer
 from rich.columns import Columns
 from rich.table import Table
 
+from boiling_learning.app.cancellation import CancelledError
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.datasets.generators import get_image_dataset
 from boiling_learning.app.datasets.preprocessing import default_boiling_preprocessors
@@ -25,11 +26,14 @@ console = rich.console.Console()
 @app.command()
 def boiling1d() -> None:
     """Validate current implementation against reference."""
+
     strategy = configure(
         force_gpu_allow_growth=True,
         use_xla=True,
         require_gpu=True,
     )
+
+    raise CancelledError('This study is cancelled for not providing useful information.')
 
     case = boiling_cases()[0]
 
@@ -80,8 +84,5 @@ def boiling1d() -> None:
 
 
 @app.command()
-def condensation(
-    each: int = typer.Option(60),
-    normalize: bool = typer.Option(...),
-) -> None:
+def condensation() -> None:
     raise NotImplementedError

@@ -7,13 +7,14 @@ from rich.columns import Columns
 from rich.console import Console
 from rich.table import Table
 
+from boiling_learning.app.automl.autofit_dataset import best_baseline_boiling1d_model
 from boiling_learning.app.cancellation import CancelledError
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
 from boiling_learning.app.training.boiling1d import (
     DEFAULT_BOILING_HEAT_FLUX_TARGET,
     fit_boiling_model,
-    get_pretrained_baseline_boiling_model,
+    get_baseline_model_size,
 )
 from boiling_learning.app.training.common import (
     get_baseline_compile_params,
@@ -60,10 +61,15 @@ def boiling1d() -> None:
         )
 
         for fraction in FRACTIONS:
-            pretrained_model = get_pretrained_baseline_boiling_model(
+            best_model = best_baseline_boiling1d_model(
                 direct_visualization=direct,
-                normalize_images=True,
                 strategy=strategy,
+                target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
+                normalize_images=True,
+                max_model_size=get_baseline_model_size(
+                    direct_visualization=direct,
+                    strategy=strategy,
+                ),
             )
 
             if fraction:
@@ -73,22 +79,23 @@ def boiling1d() -> None:
                     else datasets
                 )
 
-                compiled_pretrained_model = pretrained_model.architecture | compile_model(
+                compiled_pretrained_model = best_model | compile_model(
                     **get_baseline_compile_params(strategy=strategy),
                 )
-                fit_model = fit_boiling_model(
+                fine_tuned_model_return = fit_boiling_model(
                     compiled_pretrained_model,
                     subsampled,
-                    get_baseline_fit_params(),
+                    get_baseline_fit_params(batch_size=32),
                     target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
                     strategy=strategy,
                 )
-                trained_epochs = fit_model.trained_epochs
+                fine_tuned_model = fine_tuned_model_return.architecture
+                trained_epochs = fine_tuned_model_return.trained_epochs
             else:
-                fit_model = pretrained_model
+                fine_tuned_model = best_model
                 trained_epochs = 0
 
-            compiled_model = fit_model.architecture | compile_model(
+            compiled_model = fine_tuned_model | compile_model(
                 **get_baseline_compile_params(strategy=strategy)
             )
 
@@ -121,14 +128,19 @@ def boiling1d() -> None:
         subsampled = datasets | dataset_sampler(count=Fraction(1, 100), subset='train')
         for learning_rate in 1, 0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001:
             for freezing in 'none', 'pre', 'body':
-                pretrained_model = get_pretrained_baseline_boiling_model(
+                best_model = best_baseline_boiling1d_model(
                     direct_visualization=direct,
-                    normalize_images=True,
                     strategy=strategy,
+                    target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
+                    normalize_images=True,
+                    max_model_size=get_baseline_model_size(
+                        direct_visualization=direct,
+                        strategy=strategy,
+                    ),
                 )
 
                 frozen_model = _freeze(
-                    pretrained_model.architecture,
+                    best_model,
                     strategy=strategy,
                     freezing=freezing,
                 )
@@ -143,7 +155,7 @@ def boiling1d() -> None:
                 fit_model = fit_boiling_model(
                     compiled_frozen_model,
                     subsampled,
-                    get_baseline_fit_params(),
+                    get_baseline_fit_params(batch_size=32),
                     target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
                     strategy=strategy,
                 )
