@@ -1,9 +1,10 @@
 from functools import cache
-from typing import Literal, Optional
+from typing import Literal
 
 import tensorflow as tf
 
 from boiling_learning.app.automl.tuning import autofit
+from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
 from boiling_learning.app.paths import analyses_path
 from boiling_learning.app.training.common import get_baseline_compile_params
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
@@ -12,6 +13,7 @@ from boiling_learning.automl.tuning import TuneModelParams
 from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
+from boiling_learning.model.model import ModelArchitecture
 
 
 def autofit_dataset(
@@ -21,7 +23,7 @@ def autofit_dataset(
     target: str,
     experiment: Literal['boiling1d', 'condensation'],
     normalize_images: bool = True,
-    max_model_size: Optional[int] = None,
+    max_model_size: int | None = None,
     goal: float | None = None,
     tuner_class: type[AutoTuner] = EarlyStoppingGreedy,
 ) -> HyperModel:
@@ -76,6 +78,53 @@ def autofit_dataset(
     )
 
     return hypermodel
+
+
+def best_model_for_dataset(
+    datasets: LazyDescribed[ImageDatasetTriplet],
+    *,
+    strategy: LazyDescribed[tf.distribute.Strategy],
+    target: str,
+    experiment: Literal['boiling1d', 'condensation'],
+    normalize_images: bool = True,
+    max_model_size: int | None = None,
+    goal: float | None = None,
+    tuner_class: type[AutoTuner] = EarlyStoppingGreedy,
+) -> LazyDescribed[ModelArchitecture]:
+    hypermodel = autofit_dataset(
+        datasets,
+        strategy=strategy,
+        target=target,
+        experiment=experiment,
+        normalize_images=normalize_images,
+        max_model_size=max_model_size,
+        goal=goal,
+        tuner_class=tuner_class,
+    )
+    return LazyDescribed.from_describable(hypermodel.best_model())
+
+
+def best_baseline_boiling1d_model(
+    *,
+    direct_visualization: bool,
+    strategy: LazyDescribed[tf.distribute.Strategy],
+    target: str,
+    normalize_images: bool = True,
+    max_model_size: int | None = None,
+    goal: float | None = None,
+    tuner_class: type[AutoTuner] = EarlyStoppingGreedy,
+) -> LazyDescribed[ModelArchitecture]:
+    datasets = baseline_boiling_dataset(direct_visualization=direct_visualization)
+    return best_model_for_dataset(
+        datasets,
+        strategy=strategy,
+        target=target,
+        experiment='boiling1d',
+        normalize_images=normalize_images,
+        max_model_size=max_model_size,
+        goal=goal,
+        tuner_class=tuner_class,
+    )
 
 
 @cache
