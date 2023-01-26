@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 import typer
+from matplotlib.ticker import MaxNLocator, ScalarFormatter
 from rich.columns import Columns
 from rich.console import Console
 from rich.table import Table
@@ -32,6 +33,8 @@ from boiling_learning.utils.pathutils import resolve
 
 app = typer.Typer()
 console = Console()
+
+OUTLIER_LOSS = 500
 
 
 @app.command()
@@ -110,24 +113,34 @@ def boiling1d(
         tables.append(table)
 
         plot_data = pd.DataFrame(evaluations, columns=['Downscaling factor', 'Subset', 'Loss'])
-        f, ax = plt.subplots(1, 1, figsize=(2.8, 2.8))
+        f, ax = plt.subplots(1, 1, figsize=(3, 3))
 
         sns.scatterplot(
             ax=ax,
-            data=plot_data,
+            data=plot_data[plot_data['Loss'] < OUTLIER_LOSS],
             x='Downscaling factor',
             y='Loss',
             hue='Subset',
             alpha=0.75,
         )
+        outliers = plot_data[plot_data['Loss'] >= OUTLIER_LOSS]['Downscaling factor']
+        for outlier in outliers:
+            ax.axvspan(outlier - 0.1, outlier + 0.1, color='red', alpha=0.15, hatch='/')
 
-        ax.grid(visible=False, which='both', axis='x')
-        ax.grid(visible=True, which='major', axis='y')
+        ax.grid(which='minor', axis='x')
         ax.set(
             xlabel=f'Downscaling factor, ${glossary["downscaling factor"]}$',
             ylabel=f'Loss [{units["mse"]}]',
             yscale='log',
-            xticks=factors,
+        )
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.xaxis.set_major_formatter(ScalarFormatter())
+
+        ax.yaxis.set_minor_formatter(
+            lambda val, pos: int(val) if abs(val - int(val)) < 1e-6 else val
+        )
+        ax.yaxis.set_major_formatter(
+            lambda val, pos: int(val) if abs(val - int(val)) < 1e-6 else val
         )
 
         save_figure(f, _downscaling_training_study_path() / f'boiling1d-{direct_label}.pdf')
@@ -139,9 +152,7 @@ def boiling1d(
 
 
 @app.command()
-def condensation(
-    factors: list[int] = typer.Option(list(range(1, 10))),
-) -> None:
+def condensation() -> None:
     raise NotImplementedError
 
 
