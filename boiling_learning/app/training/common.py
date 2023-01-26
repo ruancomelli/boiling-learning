@@ -68,9 +68,10 @@ def get_baseline_compile_params(
 def get_baseline_fit_params(
     *,
     early_stopping_patience: int | None = 10,
+    batch_size: int = BOILING_BASELINE_BATCH_SIZE,
 ) -> FitModelParams:
     return FitModelParams(
-        batch_size=BOILING_BASELINE_BATCH_SIZE,
+        batch_size=batch_size,
         epochs=100,
         callbacks=LazyDescribed.from_list(
             [

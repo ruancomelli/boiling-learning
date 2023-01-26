@@ -120,6 +120,21 @@ def get_baseline_boiling_architecture(
     )
 
 
+def get_baseline_model_size(
+    *,
+    direct_visualization: bool,
+    strategy: LazyDescribed[tf.distribute.Strategy],
+) -> int:
+    return get_baseline_boiling_architecture(
+        direct_visualization=direct_visualization,
+        normalize_images=True,
+        strategy=strategy,
+    )().count_parameters(
+        trainable=True,
+        non_trainable=False,
+    )
+
+
 def get_pretrained_baseline_boiling_model(
     *,
     strategy: LazyDescribed[tf.distribute.Strategy],
