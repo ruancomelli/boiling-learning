@@ -11,7 +11,7 @@ from boiling_learning.app.configuration import configure
 from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
 from boiling_learning.app.displaying import units
 from boiling_learning.app.displaying.figures import DATASET_MARKER_STYLE
-from boiling_learning.app.displaying.latex import NEW_LINE_TOKEN
+from boiling_learning.app.displaying.latex import NEW_LINE_TOKEN, latexify
 from boiling_learning.app.figures.architectures import diagrams_path
 from boiling_learning.app.paths import studies_path
 from boiling_learning.app.training.boiling1d import fit_boiling_model
@@ -67,7 +67,7 @@ def boiling1d() -> None:
                 **get_baseline_compile_params(strategy=strategy),
             )
 
-            evaluation = evaluator(compiled_model, dataset, measure_uncertainty=False)
+            evaluation = evaluator(compiled_model, dataset)
 
             table = Table(
                 'Metric',
@@ -97,37 +97,41 @@ def boiling1d() -> None:
 
     console.print(Columns(tables))
 
-    text = _build_latex_table(evaluations, evaluation)
-    (_single_surface_study_path() / 'single-surface.tex').write_text(text)
-    (_single_surface_study_results_path() / 'single-surface.tex').write_text(text)
+    for direct in False, True:
+        direct_label = 'direct' if direct else 'indirect'
+        text = _build_latex_table(evaluations, evaluation, direct_visualization=direct)
+        (_single_surface_study_path() / f'single-surface-{direct_label}.tex').write_text(text)
+        (_single_surface_study_results_path() / f'single-surface-{direct_label}.tex').write_text(
+            text
+        )
 
 
 def _build_latex_table(
     evaluations: dict[tuple[str, str, bool, str], UncertainValue],
     evaluation: ModelEvaluation,
+    *,
+    direct_visualization: bool,
 ) -> str:
-    return '\n'.join(_latex_table_lines(evaluations, evaluation))
+    return '\n'.join(
+        _latex_table_lines(
+            evaluations,
+            evaluation,
+            direct_visualization=direct_visualization,
+        )
+    )
 
 
 def _latex_table_lines(
     evaluations: dict[tuple[str, str, bool, str], UncertainValue],
     evaluation: ModelEvaluation,
+    *,
+    direct_visualization: bool,
 ) -> Iterator[str]:
     yield textwrap.dedent(
         '''
         \\begin{tabular}{@{}lrllllclll@{}}\\toprule
-            &
-            &
-            & \\multicolumn{3}{c}{Direct visualization}
-            &
-            & \\multicolumn{3}{c}{Indirect visualization}
-            \\\\ \\cmidrule{4-6} \\cmidrule{8-10}
             & Metric
             & Unit
-            & Training
-            & Validation
-            & Test
-            &
             & Training
             & Validation
             & Test
@@ -152,14 +156,10 @@ def _latex_table_lines(
             yield f'& {units[metric_name]}'
 
             for subset in 'train', 'val', 'test':
-                value = evaluations[(dataset_name, metric_name, True, subset)]
-                yield f'& {value:.2f}'
-
-            yield '&'
-
-            for subset in 'train', 'val', 'test':
-                value = evaluations[(dataset_name, metric_name, False, subset)]
-                yield f'& {value:.2f}'
+                uncertain_value = evaluations[
+                    (dataset_name, metric_name, direct_visualization, subset)
+                ]
+                yield f'& {latexify(uncertain_value)}'
 
             yield NEW_LINE_TOKEN
 
