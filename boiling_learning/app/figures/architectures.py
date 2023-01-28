@@ -9,20 +9,23 @@ from typing import TypeVar
 import more_itertools as mit
 import tensorflow as tf
 import typer
+from autokeras.keras_layers import CastToFloat32
 
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import figures_path
 from boiling_learning.app.displaying.latex import NEW_LINE_TOKEN
 from boiling_learning.io.dataclasses import dataclass
 from boiling_learning.model.definitions import hoboldnet2, kramernet
+from boiling_learning.model.layers import ImageNormalization
 from boiling_learning.model.model import ModelArchitecture
 
 _T = TypeVar('_T')
 
-SKIPPED_LAYERS = {
+SKIPPED_LAYERS = (
     tf.keras.layers.Flatten,
     tf.keras.layers.Activation,
-}
+    CastToFloat32,
+)
 
 app = typer.Typer()
 
@@ -140,6 +143,10 @@ def model_to_tikz(
                 color = 'gray!20!white'
                 layer_name = 'Input layer'
                 notes = ()
+            case NormalizedInputBlock():
+                color = 'gray!20!white'
+                layer_name = 'Input layer'
+                notes = ('Standardized',)
             case tf.keras.layers.Conv2D():
                 color = 'blue!20!white'
                 layer_name = 'Convolutional layer'
@@ -224,7 +231,7 @@ def model_to_tikz(
                     f'{dense_layer.units} units' if dense_layer.units > 1 else '1 unit',
                     'Activation: ReLU',
                 )
-            case _ if type(layer) in SKIPPED_LAYERS:
+            case _ if isinstance(layer, SKIPPED_LAYERS):
                 continue
             case _:
                 raise TypeError(f'Unknown layer type: {type(layer)}')
@@ -336,6 +343,7 @@ def _allocate_layers(
 
 convolutional_names = (f'convolutional_block_{index}' for index in itertools.count())
 dense_names = (f'dense_block_{index}' for index in itertools.count())
+input_names = (f'input_block_{index}' for index in itertools.count())
 
 
 @dataclass
@@ -403,17 +411,45 @@ class DenseBlock:
         return self.dense_layer.trainable_weights
 
 
+@dataclass
+class NormalizedInputBlock:
+    name: str
+    input_layer: tf.keras.layers.InputLayer
+    normalization_layer: ImageNormalization
+
+    @classmethod
+    def new(
+        cls,
+        input_layer: tf.keras.layers.InputLayer,
+        normalization_layer: ImageNormalization,
+    ) -> NormalizedInputBlock:
+        return NormalizedInputBlock(
+            name=next(input_names),
+            input_layer=input_layer,
+            normalization_layer=normalization_layer,
+        )
+
+    @property
+    def input_shape(self) -> tuple[int, ...]:
+        return self.input_layer.input_shape
+
+    @property
+    def output_shape(self) -> tuple[int, ...]:
+        return self.normalization_layer.output_shape
+
+    @property
+    def trainable_weights(self) -> list[tf.Variable]:
+        return self.normalization_layer.trainable_weights
+
+
 def _group_layers(
     layers: Iterable[tf.keras.layers.Layer],
-) -> Iterator[tf.keras.layers.Layer | ConvolutionalBlock | DenseBlock]:
-    layer_list = list(layers)
+) -> Iterator[tf.keras.layers.Layer | ConvolutionalBlock | DenseBlock | NormalizedInputBlock]:
+    layer_list = [layer for layer in layers if not isinstance(layer, SKIPPED_LAYERS)]
     must_skip = set[int]()
 
     for index, layer in enumerate(layer_list):
         if index in must_skip:
-            continue
-
-        if type(layer) in SKIPPED_LAYERS:
             continue
 
         if (
@@ -439,6 +475,17 @@ def _group_layers(
             yield DenseBlock.new(
                 dense_layer=layer,
                 activation_layer=layer_list[index + 1],
+            )
+        elif (
+            index < len(layer_list) - 1
+            and isinstance(layer, tf.keras.layers.InputLayer)
+            and isinstance(layer_list[index + 1], ImageNormalization)
+        ):
+            must_skip |= {index + 1}
+
+            yield NormalizedInputBlock.new(
+                input_layer=layer,
+                normalization_layer=layer_list[index + 1],
             )
         else:
             yield layer
