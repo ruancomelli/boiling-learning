@@ -27,6 +27,7 @@ from boiling_learning.app.studies import (
     transfer_learning_curve,
     validate,
     visualization_window,
+    visualization_window_multi_surface,
 )
 
 app = typer.Typer()
@@ -58,6 +59,7 @@ app.add_typer(single_surface.app, name='single-surface')
 app.add_typer(transfer_learning_curve.app, name='transfer-learning-curve')
 app.add_typer(validate.app, name='validate')
 app.add_typer(visualization_window.app, name='visualization-window')
+app.add_typer(visualization_window_multi_surface.app, name='visualization-window-multi-surface')
 
 
 if __name__ == '__main__':
