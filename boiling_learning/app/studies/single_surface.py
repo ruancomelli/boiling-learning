@@ -67,7 +67,8 @@ def boiling1d() -> None:
                 **get_baseline_compile_params(strategy=strategy),
             )
 
-            evaluation = evaluator(compiled_model, dataset)
+            evaluation = evaluator(compiled_model, dataset, gt10=False)
+            evaluation_gt10 = evaluator(compiled_model, dataset)
 
             table = Table(
                 'Metric',
@@ -76,24 +77,41 @@ def boiling1d() -> None:
                 'Test',
                 title=f'{dataset_name} - {"direct" if direct else "indirect"}',
             )
-            for metric in evaluation.metrics_names:
-                table.add_row(
-                    metric,
-                    str(evaluation.training_metrics[metric]),
-                    str(evaluation.validation_metrics[metric]),
-                    str(evaluation.test_metrics[metric]),
-                )
-                evaluations[(dataset_name, metric, direct, 'train')] = evaluation.training_metrics[
-                    metric
-                ]
-                evaluations[(dataset_name, metric, direct, 'val')] = evaluation.validation_metrics[
-                    metric
-                ]
-                evaluations[(dataset_name, metric, direct, 'test')] = evaluation.test_metrics[
-                    metric
-                ]
+            table_gt10 = Table(
+                'Metric',
+                'Training',
+                'Validation',
+                'Test',
+                title=f'{dataset_name} - {"direct" if direct else "indirect"} - GT10',
+            )
 
-            tables.append(table)
+            for (
+                metric_name,
+                training_metric,
+                validation_metric,
+                test_metric,
+            ) in evaluation.iter_metrics():
+                table.add_row(
+                    metric_name, str(training_metric), str(validation_metric), str(test_metric)
+                )
+                evaluations[(dataset_name, metric_name, direct, 'train')] = training_metric
+                evaluations[(dataset_name, metric_name, direct, 'val')] = validation_metric
+                evaluations[(dataset_name, metric_name, direct, 'test')] = test_metric
+
+            for (
+                metric_name,
+                training_metric,
+                validation_metric,
+                test_metric,
+            ) in evaluation_gt10.iter_metrics():
+                table_gt10.add_row(
+                    metric_name,
+                    str(training_metric),
+                    str(validation_metric),
+                    str(test_metric),
+                )
+
+            tables.extend((table, table_gt10))
 
     console.print(Columns(tables))
 
