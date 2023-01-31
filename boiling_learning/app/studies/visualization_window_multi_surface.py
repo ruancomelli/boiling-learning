@@ -45,6 +45,7 @@ def boiling1d() -> None:
         force_gpu_allow_growth=True,
         use_xla=True,
         require_gpu=True,
+        use_high_speed_cache=False,
     )
 
     tables: list[Table] = []

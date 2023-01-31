@@ -7,6 +7,7 @@ import seaborn as sns
 import tensorflow as tf
 from loguru import logger
 
+from boiling_learning.app import options
 from boiling_learning.app.constants import masters_path
 from boiling_learning.descriptions import describe
 from boiling_learning.lazy import LazyDescribed
@@ -21,6 +22,7 @@ def configure(
     mixed_precision_global_policy: str = 'float32',
     require_gpu: bool = False,
     nvidia_output: str | None = None,
+    use_high_speed_cache: bool = True,
 ) -> LazyDescribed[tf.distribute.Strategy]:
     _configure_random_state()
     _configure_logger()
@@ -42,6 +44,9 @@ def configure(
     # type-ignore is necessary until the classes plugin works again
     strategy_description: str = describe(lazy_strategy)  # type: ignore[arg-type]
     logger.info(f'Using distribute strategy: {strategy_description}')
+
+    options.USE_HIGH_SPEED_CACHE = use_high_speed_cache
+
     return lazy_strategy
 
 
