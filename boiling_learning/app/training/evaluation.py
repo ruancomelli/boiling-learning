@@ -1,9 +1,13 @@
 import functools
+from collections.abc import Iterator
 from typing import Literal
 
 import tensorflow as tf
 
-from boiling_learning.app.datasets.bridged.boiling1d import default_boiling_bridging_gt10
+from boiling_learning.app.datasets.bridged.boiling1d import (
+    default_boiling_bridging,
+    default_boiling_bridging_gt10,
+)
 from boiling_learning.app.paths import shared_cache_path
 from boiling_learning.datasets.splits import DatasetTriplet
 from boiling_learning.image_datasets import ImageDatasetTriplet
@@ -44,6 +48,17 @@ class ModelEvaluation:
             }.get(metric_name, 10),
         )
 
+    def iter_metrics(self) -> Iterator[tuple[str, UncertainValue, UncertainValue, UncertainValue]]:
+        return (
+            (
+                metric_name,
+                self.training_metrics[metric_name],
+                self.validation_metrics[metric_name],
+                self.test_metrics[metric_name],
+            )
+            for metric_name in self.metrics_names
+        )
+
 
 @functools.cache
 def cached_model_evaluator(
@@ -56,11 +71,13 @@ def cached_model_evaluator(
         datasets: LazyDescribed[ImageDatasetTriplet],
         *,
         measure_uncertainty: bool = True,
+        gt10: bool = True,
     ) -> ModelEvaluation:
         training_metrics, validation_metrics, test_metrics = evaluate_boiling_model_with_dataset(
             model,
             datasets,
             measure_uncertainty=measure_uncertainty,
+            gt10=gt10,
         )
 
         trainable_size = model().count_parameters(
@@ -88,8 +105,10 @@ def evaluate_boiling_model_with_dataset(
     evaluation_dataset: LazyDescribed[ImageDatasetTriplet],
     *,
     measure_uncertainty: bool = True,
+    gt10: bool = True,
 ) -> DatasetTriplet[dict[str, UncertainValue]]:
-    ds_train, ds_val, ds_test = default_boiling_bridging_gt10(
+    bridger = default_boiling_bridging_gt10 if gt10 else default_boiling_bridging
+    ds_train, ds_val, ds_test = bridger(
         evaluation_dataset,
         batch_size=None,
     )
