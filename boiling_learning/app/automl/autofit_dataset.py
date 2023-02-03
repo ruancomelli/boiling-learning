@@ -3,6 +3,7 @@ from typing import Literal
 
 import tensorflow as tf
 
+from boiling_learning.app.automl.evaluation import cached_best_model_evaluator
 from boiling_learning.app.automl.tuning import autofit
 from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
 from boiling_learning.app.paths import analyses_path
@@ -101,7 +102,15 @@ def best_model_for_dataset(
         goal=goal,
         tuner_class=tuner_class,
     )
-    return LazyDescribed.from_describable(hypermodel.best_model())
+    best_model_evaluator = cached_best_model_evaluator(
+        experiment='boiling1d',
+        strategy=strategy,
+    )
+    return best_model_evaluator(
+        hypermodel,
+        datasets,
+        measure_uncertainty=False,
+    )
 
 
 def best_baseline_boiling1d_model(

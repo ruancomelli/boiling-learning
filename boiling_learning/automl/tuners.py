@@ -107,6 +107,12 @@ class AutoTuner(ak.engine.tuner.AutoTuner):
     def iter_trained_models(self) -> Iterator[ModelArchitecture]:
         return self._models_from_trials(self.iter_trials(order='trained'))
 
+    def iter_scored_models(self) -> Iterator[tuple[ModelArchitecture, float]]:
+        trials = tuple(self._iter_best_trials())
+        models = self._models_from_trials(trials)
+        scores = (trial.score for trial in trials)
+        return zip(models, scores)
+
     def _models_from_trials(self, trials: Iterable[Trial]) -> Iterator[ModelArchitecture]:
         return (ModelArchitecture(self.load_model(trial)) for trial in trials)
 

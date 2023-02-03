@@ -40,6 +40,9 @@ class HyperModel(kt.HyperModel):
     def iter_best_models(self) -> Iterator[ModelArchitecture]:
         return self.tuner.iter_best_models()
 
+    def iter_scored_models(self) -> Iterator[tuple[ModelArchitecture, float]]:
+        return self.tuner.iter_scored_models()
+
 
 class ImageRegressor(HyperModel):
     def __init__(
