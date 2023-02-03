@@ -6,6 +6,7 @@ from boiling_learning.app.studies import (
     animate,
     automl,
     automl_cross_surface,
+    automl_learning_curve,
     automl_strategies,
     automl_transfer_learning_curve,
     consecutive_frames,
@@ -34,6 +35,7 @@ app = typer.Typer()
 app.add_typer(animate.app, name='animate')
 app.add_typer(automl.app, name='automl')
 app.add_typer(automl_cross_surface.app, name='automl-cross-surface')
+app.add_typer(automl_learning_curve.app, name='automl-learning-curve')
 app.add_typer(automl_strategies.app, name='automl-strategies')
 app.add_typer(automl_transfer_learning_curve.app, name='automl-transfer-learning-curve')
 app.add_typer(boiling_curve.app, name='boiling-curve')
