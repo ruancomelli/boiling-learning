@@ -1,3 +1,4 @@
+from collections import defaultdict
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -8,6 +9,7 @@ import typer
 from loguru import logger
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import ScalarFormatter
+from rich.columns import Columns
 from rich.console import Console
 from rich.table import Table
 
@@ -36,6 +38,7 @@ from boiling_learning.utils.pathutils import resolve
 app = typer.Typer()
 console = Console()
 
+METRIC_NAMES = ('MSE', 'MAPE')
 CASES_INDICES = ((0,), (1,), (2,), (3,), (0, 1), (2, 3), (0, 1, 2, 3))
 CASE_NAMES = {
     0: 'large wire ds',
@@ -54,109 +57,139 @@ def boiling1d() -> None:
         require_gpu=True,
     )
 
-    table = Table(
-        'Train \\ Eval',
-        *(map(_format_sets, CASES_INDICES)),
-        title='Cross surface analysis',
-    )
+    tables: dict[tuple[str, str, bool], Table] = {
+        (metric_name, subset, direct): Table(
+            'Train \\ Eval',
+            *(map(_format_sets, CASES_INDICES)),
+            title=(
+                'AutoML cross surface analysis'
+                f' - {metric_name}'
+                f' - {subset}'
+                f' - {"direct" if direct else "indirect"}'
+            ),
+        )
+        for metric_name in METRIC_NAMES
+        for subset in ('training', 'validation', 'test')
+        for direct in (False, True)
+    }
 
     cases_latex = {cases: _cases_to_latex(cases) for cases in CASES_INDICES}
 
-    evaluations: list[tuple[str, str, float, bool]] = []
-    for training_indices in CASES_INDICES:
-        formated_results: list[str] = []
+    evaluations: list[tuple[str, str, float, float, float, bool, str]] = []
+    for direct in False, True:
+        direct_label = 'direct' if direct else 'indirect'
 
-        for evaluation_indices in CASES_INDICES:
-            direct_visualization_evaluation = _boiling_cross_surface_evaluation(
-                direct_visualization=True,
-                training_cases=training_indices,
-                evaluation_cases=evaluation_indices,
-                strategy=strategy,
-            ).validation_metrics['MSE']
-            indirect_visualization_evaluation = _boiling_cross_surface_evaluation(
-                direct_visualization=False,
-                training_cases=training_indices,
-                evaluation_cases=evaluation_indices,
-                strategy=strategy,
-            ).validation_metrics['MSE']
+        for training_indices in CASES_INDICES:
+            results = defaultdict[tuple[str, str], list[float]](list)
 
-            evaluations.extend(
-                (
-                    (
-                        cases_latex[training_indices],
-                        cases_latex[evaluation_indices],
-                        direct_visualization_evaluation,
-                        True,
-                    ),
-                    (
-                        cases_latex[training_indices],
-                        cases_latex[evaluation_indices],
-                        indirect_visualization_evaluation,
-                        False,
-                    ),
+            for evaluation_indices in CASES_INDICES:
+                evaluation = _boiling_cross_surface_evaluation(
+                    direct_visualization=direct,
+                    training_cases=training_indices,
+                    evaluation_cases=evaluation_indices,
+                    strategy=strategy,
                 )
-            )
 
-            formated_results.append(
-                _get_and_format_results(
-                    direct_visualization_evaluation,
-                    indirect_visualization_evaluation,
-                )
-            )
+                for (
+                    metric_name,
+                    training_metric,
+                    validation_metric,
+                    test_metric,
+                ) in evaluation.iter_metrics():
+                    evaluations.append(
+                        (
+                            cases_latex[training_indices],
+                            cases_latex[evaluation_indices],
+                            training_metric,
+                            validation_metric,
+                            test_metric,
+                            direct,
+                            metric_name,
+                        )
+                    )
+                    if metric_name in METRIC_NAMES:
+                        results[metric_name, 'training'].append(training_metric)
+                        results[metric_name, 'validation'].append(validation_metric)
+                        results[metric_name, 'test'].append(test_metric)
 
-        table.add_row(
-            _format_sets(training_indices),
-            *formated_results,
-            end_section=True,
-        )
+            for metric_name in METRIC_NAMES:
+                for subset in 'training', 'validation', 'test':
+                    tables[metric_name, subset, direct].add_row(
+                        _format_sets(training_indices),
+                        *map(str, results[metric_name, subset]),
+                        end_section=True,
+                    )
 
-    console.print(table)
+    console.print(Columns(tables.values()))
 
     data = pd.DataFrame(
         evaluations,
-        columns=['Training set', 'Evaluation set', 'Result', 'Visualization'],
+        columns=[
+            'Training set',
+            'Evaluation set',
+            'Training metric',
+            'Validation metric',
+            'Test metric',
+            'Visualization mode',
+            'Metric name',
+        ],
     )
     data['Training set'] = pd.Categorical(data['Training set'], cases_latex.values())
     data['Evaluation set'] = pd.Categorical(data['Evaluation set'], cases_latex.values())
 
     for direct in False, True:
         direct_label = 'direct' if direct else 'indirect'
+        for subset, subset_name in zip(
+            ('training', 'validation', 'test'),
+            ('Training metric', 'Validation metric', 'Test metric'),
+        ):
+            plot_data = {
+                metric_name: (
+                    data[
+                        (data['Visualization mode'] == direct)
+                        & (data['Metric name'] == metric_name)
+                    ]
+                    .pivot(index='Training set', columns='Evaluation set', values=subset_name)
+                    .sort_index(level=0, ascending=True)
+                )
+                for metric_name in METRIC_NAMES
+            }
 
-        plot_data = (
-            data[data['Visualization'] == direct]
-            .pivot(index='Training set', columns='Evaluation set', values='Result')
-            .sort_index(level=0, ascending=True)
-        )
+            f, ax = plt.subplots(1, 1, figsize=(4, 6))
 
-        f, ax = plt.subplots(1, 1, figsize=(5, 5))
+            annot = [
+                [f'{mse:.0f}\n\\small({mape:.0f}\\%)' for mse, mape in zip(mse_row, mape_row)]
+                for mse_row, mape_row in zip(plot_data['MSE'].values, plot_data['MAPE'].values)
+            ]
 
-        sns.heatmap(
-            plot_data,
-            annot=True,
-            norm=LogNorm(),
-            cmap=sns.color_palette('Blues', as_cmap=True),
-            linewidth=1,
-            cbar_kws={
-                'label': f'Validation loss [{units["mse"]}]',
-                'orientation': 'horizontal',
-                'format': ScalarFormatter(),
-            },
-            fmt='.0f',
-            ax=ax,
-        )
-        ax.xaxis.tick_top()
-        ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='left')
-        ax.yaxis.tick_right()
-        ax.set_yticklabels(ax.get_yticklabels(), rotation=0, ha='left')
+            sns.heatmap(
+                plot_data['MSE'],
+                annot=annot,
+                norm=LogNorm(),
+                cmap=sns.color_palette('Blues', as_cmap=True),
+                linewidth=1,
+                cbar_kws={
+                    'label': f'Validation loss [{units["mse"]}]',
+                    'orientation': 'horizontal',
+                    'format': ScalarFormatter(),
+                },
+                fmt='',
+                ax=ax,
+            )
 
-        save_figure(
-            f,
-            _automl_cross_surface_study_path() / f'boiling1d-{direct_label}.pdf',
-        )
-        save_figure(
-            f,
-            _automl_cross_surface_figures_path() / f'boiling1d-{direct_label}.pdf',
-        )
+            ax.xaxis.tick_top()
+            ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='left')
+            ax.yaxis.tick_right()
+            ax.set_yticklabels(ax.get_yticklabels(), rotation=0, ha='left')
+
+            save_figure(
+                f,
+                _automl_cross_surface_study_path() / f'boiling1d-{direct_label}-{subset}.pdf',
+            )
+            save_figure(
+                f,
+                _automl_cross_surface_figures_path() / f'boiling1d-{direct_label}-{subset}.pdf',
+            )
 
 
 @app.command()
@@ -241,20 +274,6 @@ def _boiling_cross_surface_evaluation(
     return evaluation
 
 
-def _get_and_format_results(direct_result: float, indirect_result: float) -> str:
-    formatted_direct_result = f'[bold]{direct_result:.4f}[/bold]'
-    formatted_indirect_result = f'{indirect_result:.4f}'
-
-    ratio = (indirect_result - direct_result) / direct_result
-    formatted_ratio = (
-        f'[bold][bright_red]{ratio:+.2%}[/bright_red][/bold]'
-        if ratio > 0
-        else f'[bold][bright_green]{ratio:+.2%}[/bright_green][/bold]'
-    )
-
-    return f'{formatted_direct_result}\n{formatted_indirect_result}\n({formatted_ratio})'
-
-
 def _format_sets(indices: tuple[int, ...]) -> str:
     return ' + '.join(map(str, indices))
 
@@ -276,4 +295,4 @@ def _automl_cross_surface_study_path() -> Path:
 
 
 def _automl_cross_surface_figures_path() -> Path:
-    return resolve(figures_path() / 'results' / 'automl-cross-surface', dir=True)
+    return resolve(figures_path() / 'results' / 'automl' / 'cross-surface', dir=True)
