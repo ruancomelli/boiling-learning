@@ -1,5 +1,4 @@
 from fractions import Fraction
-from pathlib import Path
 
 import typer
 from loguru import logger
@@ -10,10 +9,7 @@ from rich.table import Table
 from boiling_learning.app.automl.autofit_dataset import autofit_dataset
 from boiling_learning.app.automl.evaluation import cached_best_model_evaluator
 from boiling_learning.app.configuration import configure
-from boiling_learning.app.constants import figures_path
 from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
-from boiling_learning.app.figures.architectures import diagrams_path
-from boiling_learning.app.paths import studies_path
 from boiling_learning.app.training.boiling1d import (
     DEFAULT_BOILING_HEAT_FLUX_TARGET,
     fit_boiling_model,
@@ -26,7 +22,6 @@ from boiling_learning.app.training.common import (
 from boiling_learning.app.training.evaluation import cached_model_evaluator
 from boiling_learning.model.training import compile_model
 from boiling_learning.transforms import dataset_sampler
-from boiling_learning.utils.pathutils import resolve
 
 app = typer.Typer()
 console = Console()
@@ -125,7 +120,7 @@ def boiling1d(model_size_reduce: int = 1) -> None:
             best_model_table.add_row(
                 'Size',
                 None,
-                best_model_evaluation.trainable_parameters_count,
+                str(best_model_evaluation.trainable_parameters_count),
                 None,
             )
 
@@ -153,15 +148,3 @@ def boiling1d(model_size_reduce: int = 1) -> None:
 @app.command()
 def condensation() -> None:
     raise NotImplementedError
-
-
-def _automl_study_path() -> Path:
-    return resolve(studies_path() / 'automl', dir=True)
-
-
-def _automl_figures_path() -> Path:
-    return resolve(figures_path() / 'results' / 'automl', dir=True)
-
-
-def _automl_diagrams_path() -> Path:
-    return resolve(diagrams_path() / 'results' / 'automl', dir=True)
