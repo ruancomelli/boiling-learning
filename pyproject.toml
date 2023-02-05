@@ -1,6 +1,6 @@
 [project]
 name = "boiling-learning"
-version = "0.38.1"
+version = "0.39.0"
 description = "Deep learning models for phase-change quantification and classification."
 authors = [
     {name = "Ruan Comelli", email = "ruancomelli@gmail.com"}
@@ -12,15 +12,15 @@ dependencies = [
     "frozendict>=2.3.4",
     "funcy>=1.17",
     "more-itertools>=9.0.0",
-    "nidaqmx<1.0.0>=0.5.7",
+    "nidaqmx<1.0.0,>=0.5.7",
     "numpy>=1.23.0",
-    "parse<2.0.0>=1.19.0",
+    "parse<2.0.0,>=1.19.0",
     "pint>=0.20",
     "scikit-image>=0.19.1",
-    "classes<1.0.0>=0.4.1",
-    "iteround<2.0.0>=1.0.3",
+    "classes<1.0.0,>=0.4.1",
+    "iteround<2.0.0,>=1.0.3",
     "pyqtgraph==0.12.3",
-    "PyQt6<7.0.0>=6.2.2",
+    "PyQt6<7.0.0,>=6.2.2",
     "loguru>=0.6.0",
     "decord==0.6.0",
     "keras-tuner>=1.1.2",
@@ -152,7 +152,7 @@ enable_incomplete_feature = [
 [tool.commitizen]
 tag_format = "v$major.$minor.$patch$prerelease"
 update_changelog_on_bump = true
-version = "0.38.1"
+version = "0.39.0"
 version_files = ["pyproject.toml:version"]
 bump_message = "chore: release $new_version"
 

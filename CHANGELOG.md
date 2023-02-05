@@ -1,6 +1,301 @@
+## v0.39.0 (2023-02-05)
 
+### Feat
 
-## v0.38.1 (2022-11-14)
+- **app/studies**: add AutoML learning curve study
+- **app/studies**: add AutoML cross surface study
+- **app/automl**: cache best model evaluation
+- **app/studies/cross_surface**: separate the cross-surface results per subset
+- **app/studies/single_surface**: display results filtering and not filtering a minimum heat flux
+- **app**: support disabling the high-speed cache for studies that do not need it
+- **app/training/evaluation**: support choosing to filter for a minimum heat flux or not
+- **app/studies/cross_surface**: add heatmap plot to cross surface study
+- **app/studies**: add study for the visualization window on multiple surfaces
+- **app/figures/architectures**: add support for standardized inputs
+- **app/automl/autofit_dataset**: add utility functions
+- **app/studies**: add separate heater surface datasets study
+- **app/displaying/figures**: extract out dataset markers as a constant
+- **app/studies/consecutive_frames**: support displaced consecutive frames analysis
+- **app/configuration**: attempt to catch all exceptions with loguru
+- **app/studies/transfer_learning_curve**: add sub-study for different learning rates
+- **app/training/evaluation**: support skipping uncertainty evaluation
+- **app**: add example showing image standardization
+- make model evaluations frozen, hashable and comparable
+- **app/figures**: add figure generator for model architectures
+- **app/datasets/generators**: support choosing caching stages
+- **app/figures**: generate the boiling curve
+- **app/studies/automl**: generate more tables
+- **app/studies/dataset_sizes**: display total dataset size as well
+- **app/studies**: add heat flux levels study
+- **app/studies**: add improved study for generating example frames
+- **app/figures**: add generator for a figure about the effects of the wire diameter
+- **app**: add app command for generating a figure for surface inclination effects
+- **app/studies**: add consecutive frames study
+- **app/studies**: add study for different AutoML tuning strategies
+- **app/studies**: add small studies for checking dataset sizes
+- **app/studies/downscaling-training**: plot metrics versus downscaling factors
+- **app/studies/image-normalization**: also display metrics units
+- **app/studies**: add study about the visualization window
+- **app/studies**: export results as LaTeX
+- **model/training**: accept optimizers as strings
+- **io**: make dataclasses JSON-(de)serializable
+- **app/studies**: add study about data splitting
+- **app/studies**: add data augmentation studies
+- **automl/tuners**: add and test the Bayesian tuner
+- **model/evaluate**: extend the contents of a model evaluation
+- **app/datasets/generators**: include the real frame index in its targets
+- **app/studies**: add study for image brightness
+- **app/studies/automl**: generate model size per validation error map
+- **app/studies/preprocessing**: optionally accept a downscaling factor
+- **model/model**: support passing `x` and `y` datasets separately
+- **app/studies/transfer_learning_curve**: expand list of learning rates
+- **app/studies**: correctly add transfer learning curve
+- **app/studies**: add learning curve study
+- **app/studies**: add downscaling training study
+- **app/automl/autofit_dataset**: add initial implementation for condensation
+- **automl/hypermodels**: add method for iterating over tried models
+- add basic auto machine learning study
+- add image normalization and preprocessing studies
+- add condensation to the downscaling study
+- add app script for analyzing downscaling
+- add condensation to the validation command
+- **app/studies/animate**: add `--tensorflow` option to `boiling1d` animation
+- **app/datasets/generators**: support extracting frames in the pipeline
+- **preprocessing/extract**: add custom logic for marking extraction as done
+- **app**: provide the example frames pseudo-study as a standalone app command
+- **scripts**: generate examples for the grayscaling preprocessing step
+- **visualization/training**: add `pandera` as dependency for validating dataframes and write first plotting function
+- **app**: add command for running the validation script
+- **datasets/cache**: add a no-op cache for more easily making datasets eager
+- **main**: add initial attempt to process condensation data
+- initial work towards modularizing the `main` script in a CLI
+
+### Fix
+
+- **app/studies/automl_learning_curve**: correctly cast results to `str`
+- **app/studies/automl_strategies**: use cached best model evaluation
+- **app/studies/single_surface**: separate direct and indirect visualization
+- **app/training/evaluation**: always evaluate models with batch size of 32 to avoid memory exhaustion
+- **model/training**: support describing some scalar numpy types
+- **app/displaying/latex**: correctly round uncertain values when displaying as LaTeX
+- **app/examples**: add missing `__init__.py` file
+- **datasets/hdf5_cache**: disallow empty images and sort keys before storing
+- **app/options**: reduce prefetch size to avoid memory exhaustion
+- **app/studies/visualization_window**: fix plotting of visualization window
+- **app/datasets/preprocessing**: use a downscaling factor of 5 by default
+- **app/studies/consecutive_frames**: expand analysis to cover all datasets
+- **app/studies**: correctly add `heat-flux-levels`
+- **app/studies/image_normalization**: skip `"loss"` metric
+- **preprocessing/extract**: make frame extraction more robust by re-generating empty frames
+- **app**: include required changes for the previous commit
+- **app/figures/inclination_effects**: fix units
+- **app/studies/inclination_effects**: use better data and LaTeX tooling
+- **app/datasets/generators**: randomically sample the train, val and test sets
+- **preprocessing/video**: add specific method for calculating the length of `.MTS` videos
+- **app/studies/image-normalization**: ensure that metrics are always displayed in the same order
+- **io/dataclasses**: fix function calls
+- **model/evaluate**: ensure that model evaluations are serializable
+- **app**: add all new studies to the app
+- **app/studies/downscaling_preprocessing**: fix implementation for N-bins analyses
+- **automl/hypermodels**: use correct argument name
+- **app/studies/downscaling_preprocessing**: add new implementation for retained variance and entropy ratio
+- **app/studies/cross-surface**: fix study
+- fix many typing issues
+- **image_datasets**: fix type annotation
+- **main**: train first condensation model
+- fix validation script by turning mixed training off
+- **app/automl/autofit_dataset**: only instantiate allocator on demand
+- **app**: ensure that a seed is always set for the random state
+- **app/datasets/generators**: only extract boiling frames
+- **resources**: fix flake8 issues in `resources`
+- **main**: correctly generate condensation datasets
+- ensure condensation datasets are grouped (#186)
+- **main**: fix animation generation and make sure that frame dimensions are multiples of `16` for extra performance on Tensor Cores
+- **app**: fix type issues in `app`
+- **datasets/sliceable**: fix all type errors
+- **datasets/sliceable**: fix a few typing errors
+- **main**: partially fix condensation classification script
+- **main**: remove old, unused condensation training functions
+- **main**: correctly pass `experiment` as parameter to functions that require it
+- **utils/functional**: allow `cls` as a normal keyword argument to `P` and remove the no-longer-used `sentinels` module
+- **app**: fix `__init__` module name
+- **main**: temporarily disable eager cache
+- **main**: fix eager versus lazy processing in training for condensation
+- **main**: correctly lift condensation datasets to lazy mode
+- **preprocessing/case**: remove unused parameter to `Case.set_video_data_from_file`
+- **main**: relax strictness when zipping condensation data
+- **main**: try to fix auto ML cross-surface study
+- **main**: realize lazy evaluation dataset in `boiling_cross_surface_evaluation`
+- **main**: fix cross-surface training function
+- **main**: correct imports and remove unused ones
+
+### Refactor
+
+- **app/studies/automl_cross_surface**: align with the cross-surface study
+- **app/studies/learning_curve**: improve learning curve to final format
+- **app/studies/downscaling_training**: improve figure to final format
+- **app/studies/image_normalization**: remove the training set from the reported results
+- **app/studies/validate**: improve output of the validation study
+- **app/studies/visualization_window**: finish the visualization window analysis
+- **app/studies/image_brightness**: finish the image brightness figure generator
+- **app/studies/downscaling_preprocessing**: only show horizontal grid lines
+- **app/studies/downscaling_preprocessing**: finish downscaling preprocessing analysis
+- **app/studies/consecutive_frames**: improve consecutive frames figure
+- **app/datasets/preprocessing**: separate values recommended by Hobold from the default, validated ones from this work
+- **app/studies/downscaling_training**: improve plotting
+- **app/studies/learning_curve**: always run both direct and indirect visualizations
+- **datasets/sliceable**: apply minor refactorings and add optimization ideas
+- **app/studies/visualization_window**: print all tables together
+- **app/studies/cross_surface**: use cached model evaluator
+- **app/displaying/latex**: extract out token for newlines in LaTeX
+- **datasets/hdf5_cache**: delete old numpy cache after migrating to HDF5
+- remove reminiscents from modin
+- **app/datasets/generators**: reduce nesting of lazy objects
+- **app/datasets/multimap**: remove unnecessary logging
+- remove unused functionality
+- **app/studies/downscaling_training**: improve plot appearance
+- **app/studies/example_frames**: extract constant
+- **app/studies/image_brightness**: improve plot appearance
+- **preprocessing/extract**: remove unnecessary logging
+- **preprocessing/extract**: simplify error catching logic
+- **preprocessing/extract**: improve reliability of robust frame extraction
+- **app/studies/image_brightness**: always run both direct and indirect cases
+- **main**: remove unused functionality from main
+- **app/studies/data_split**: plot data split for all boiling datasets
+- remove unused `analyze_downsampling` script
+- **datasets**: rename `datasets` module as `splits`
+- **preprocessing/video**: make `Video`s immutable and cache methods when possible
+- **preprocessing/extract**: extract only required frames
+- **preprocessing/extract**: remove unused exception
+- **preprocessing/extract**: remove unnecessary constructor from `ExtractedFramesDataset`
+- **datasets/cache**: use Python 3.8 features
+- **preprocessing/experiment_video**: make the `ExperimentVideo.data` attribute read-only
+- **preprocessing**: remove `start` and `end` from the state of `ExperimentVideo`s
+- **preprocessing**: remove unnecessary class `ExperimentalData`
+- **app/datasets/raw/boiling1d**: reduce number of references to `ExperimentVideo.df`
+- **preprocessing/experiment_video**: always assume `overwrite=False` when loading `ExperimentVideo.df`
+- **app/automl/autofit_dataset**: return only the hypermodel
+- **model/evaluate**: simplify `UncertainValue` by making it specific to `float`s
+- **automl/tuning**: do not persist tune model returns
+- improve code structure and enhance studies
+- **automl**: improve code structure and provide helper classes and methods
+- **app/studies**: improve downscaling studies
+- **app/studies/cross_surface**: remove unused helper function
+- **automl/tuners**: improve error message if models are invalid
+- **lazy**: fix type by wrapping evaluator function into `Lazy`
+- **dataclasses**: simplify function signature and fix typing
+- **app/studies/validate**: correctly display uncertainties
+- remove dataclass `CompileModelParams`
+- make architecture generation lazier
+- make model compilation lazier and remove `CompiledModel`
+- **transforms**: add decorator for automatically supporting triplets
+- **main**: incorporate "less data autoML" into the standard autoML study with a CLI option
+- **main**: move cross-surface study to its own app module
+- **main**: remove old code that will never be used
+- **main**: remove studies that were already moved to the app
+- **datasets/sliceable**: prefetch entire dataset by default
+- **preprocessing/experiment_video**: make `save_df` stateless
+- **preprocessing/experiment_video**: make `load_df` less stateful
+- **preprocessing/experiment_video**: make `make_dataframe` less stateful
+- **app/datasets/raw/boiling1d**: remove unnecessary step of making a new dataframe
+- **preprocessing/experiment_video**: make `sync_time_series` a bit more side-effect-free
+- **preprocessing/experiment_video**: always overwrite when saving targets
+- ensure that boiling case data is always set
+- improve type annotations in `dataclasses` module and move it to a level higher in the project hierarchy
+- **app/studies/example-frames**: simplify example frames study
+- **visualization/training**: add helper constructor to `TrainingHistory` dataframe
+- **app**: improve separation of app subcommands
+- apply minor refactorings
+- **app/datasets**: make allocators fine-grained per experiment
+- **main**: extract out function for autofitting a dataset
+- **app/datasets**: instead of calculating if experiment videos are condensation or not, require the `experiment` parameter
+- **main**: extract out baseline training functions and add validation command
+- **main**: extract out autotuning function
+- **main**: extract out training functions
+- **main**: extract preprocessed condensation dataset to its own module
+- **app**: generate constants and datasets lazily
+- require shapes to be multiples of `8` as required by NVIDIA Tensor Cores
+- **preprocessing/experiment_video**: make `video` private and instead only expose the frames dataset
+- **preprocessing/experiment_video**: remove sequence-like methods
+- **main**: move pre-processed datasets to a proper app submodule
+- replace preprocessor generating scripts with an app submodule
+- **main**: extract dataset dataset bridging to its own app submodule
+- **main**: extract dataset generation function to its own submodule
+- **main**: extract condensation data generation to proper app submodule
+- **main**: make `scripts.load_dataset_tree` lazy
+- **scripts/load_dataset_tree**: extract out function and simplify generator
+- **main**: remove unused class `Options`
+- remove unused functionality from `Pack` and fix type errors
+- remove adaptor around `frozendict`s
+- **main**: extract out a few constants
+- **main**: only set other experiment videos in the same case
+- **main**: move boiling dataset loading logic to app
+- **app**: merge `scripts.connect_gpus` into `app.configuration`
+- **main**: move experimental data loading logic to `Case`
+- **main**: move logging configuration to `bl.app.configuration`
+- **main**: move unused case data to an `unused` directory
+- **main**: extract out initial dataset generation logic to `boiling_learning.app.datasets`
+- **main**: extract paths to `boiling_learning.app.paths`
+- **main**: extract path constants to `boiling_learning.app.constants`
+- **main**: turn complex classes into simpler functions
+- **scripts**: remove error message from when trying to run scripts as scripts
+- **io/json**: serialize dictionaries as plain JSON objects
+- **preprocessing/experiment_video**: simplify `ExperimentVideo` constructor and always require `df_path`
+- **preprocessing/cases**: remove side-effect from `Case.convert_video`
+- **preprocessing/experiment_video**: remove option `exist_load` from `ExperimentVideo.load_df`
+- **preprocessing/experiment_video**: simplify function interfaces
+- **preprocessing/experiment_video_dataset**: replace `make_union` with the simpler `union`
+- **utils/sentinels**: make `_Sentinel` private
+- **io/storage**: remove unnecessary metaclasses and associated types
+- **io/storage**: make `save` a regular function
+- **io/storage**: extract literal strings as module constants
+- **management/allocators**: default to empty suffixes in `JSONAllocator`
+- **management/allocators**: rename `JSONTableAllocator` as `JSONAllocator`
+- **main**: separate allocators for boiling and condensation
+- **preprocessing/experiment_video**: extract `ExperimentVideo._shrink_to_video_data` as a method `video_limits` on `VideoData`
+- **preprocessing/experiment_video**: extract `convert_dataframe_type` as a private helper function
+- **preprocessing/experiment_video**: move class `VideoData` to the top-level
+- **preprocessing/experiment_video**: remove constructor parameters `column_names` and `column_types` from `ExperimentVideo`
+- **preprocessing/experiment_video**: remove unused parameter from `ExperimentVideo.targets`
+- **main**: accept two arguments in prefilterers instead of single tuples
+- **main**: remove `GetImageDatasetParams` and instead automatically generate description for `get_image_dataset`
+- **main**: re-use `cache` when saving dataset targets
+- remove unused parameters and variables
+- **preprocessing/cases**: remove constructor parameter `name`
+- **preprocessing/cases**: remove constructor parameters `column_names` and `column_types`
+- **preprocessing/experiment_video_dataset**: remove attribute `ExperimentVideoDataset.name`
+- **preprocessing**: move `set_video_data_*` methods from `ExperimentVideoDataset` to `Case`
+- **preprocessing/experiment_video**: simplify `ExperimentVideo.make_dataframe`
+- **preprocessing/experiment_video**: remove unnecessary parameter `columns` from `load_df`
+- **preprocessing/experiment_video**: remove unnecessary parameter `path` from `load_df`
+- **preprocessing/experiment_video**: remove useless parameter `path` from `ExperimentVideo.save_df`
+- **main**: simplify dataset prefilterer
+- use further Python 3.9 features
+- use Python 3.9 built-in generic classes
+- use Python 3.9+ `typing` features
+- **management/cacher**: inline `Cacher.decorate` into `cache`
+- **management**: inline `provide` into `Cacher.provide` and remove module `management.persister`
+- **management**: remove unnecessary class `Persister`
+- **management/persister**: replace unnecessary class `Provider` with function `provide`
+- **management/persister**: use composition over inheritance between `Provider`s and `Persister`s
+- **management/persister**: remove unused class `FilePersister`
+- **management/cacher**: fix type annotations in method `Cacher.allocate`
+- **management**: remove unnecessary class `FileProvider`
+- **datasets/bridging**: experiment with not passing the dataset spec when saving or loading
+- **main**: simplify cache allocators
+- **main**: simplify data directories
+
+### Perf
+
+- **app/datasets/generators**: only multimap transformers that consume little memory and increase prefetch size
+- **datasets**: replace Numpy cache with HDF5 cache
+- **app/datasets/generators**: only compute video info when necessary
+- **app/datasets/generators**: rely less on `decord.Video` operations
+- **datasets/cache**: avoid casting numpy arrays to tuples
+- speed up preprocessing by running transformations in parallel and not de-structuring numpy arrays
+- **app**: speed up pipelines by caching intermediate transformed datasets
+- **app**: store TF datasets on a high-speed location
+- **preprocessing**: eagerly extract pool boiling frames
 
 ## v0.38.0 (2022-11-14)
 
