@@ -16,6 +16,7 @@ from boiling_learning.app.automl.evaluation import cached_best_model_evaluator
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import figures_path
 from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
+from boiling_learning.app.displaying import units
 from boiling_learning.app.displaying.figures import save_figure
 from boiling_learning.app.figures.architectures import diagrams_path, model_to_tikz
 from boiling_learning.app.paths import studies_path
@@ -197,7 +198,7 @@ def boiling1d(model_size_reduce: int = 1) -> None:
             ret = sns.scatterplot(
                 df[df['Type'] == weights_group],
                 x='Model size',
-                y='Validation loss',
+                y=f'Validation loss [{units["mse"]}]',
                 hue='Model',
                 alpha=0.75,
                 ax=ax,
