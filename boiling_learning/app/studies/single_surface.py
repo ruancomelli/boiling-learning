@@ -41,9 +41,12 @@ def boiling1d() -> None:
     evaluator = cached_model_evaluator('boiling1d')
 
     evaluations: dict[tuple[str, str, bool, str], UncertainValue] = {}
+    evaluations_gt10: dict[tuple[str, str, bool, str], UncertainValue] = {}
     tables: list[Table] = []
 
     for direct in False, True:
+        direct_label = 'direct' if direct else 'indirect'
+
         for (dataset_name, _), dataset in zip(
             DATASET_MARKER_STYLE,
             boiling_datasets(direct_visualization=direct),
@@ -75,14 +78,14 @@ def boiling1d() -> None:
                 'Training',
                 'Validation',
                 'Test',
-                title=f'{dataset_name} - {"direct" if direct else "indirect"}',
+                title=f'{dataset_name} - {direct_label}',
             )
             table_gt10 = Table(
                 'Metric',
                 'Training',
                 'Validation',
                 'Test',
-                title=f'{dataset_name} - {"direct" if direct else "indirect"} - GT10',
+                title=f'{dataset_name} - {direct_label} - GT10',
             )
 
             for (
@@ -91,12 +94,15 @@ def boiling1d() -> None:
                 validation_metric,
                 test_metric,
             ) in evaluation.iter_metrics():
-                table.add_row(
-                    metric_name, str(training_metric), str(validation_metric), str(test_metric)
-                )
-                evaluations[(dataset_name, metric_name, direct, 'train')] = training_metric
-                evaluations[(dataset_name, metric_name, direct, 'val')] = validation_metric
-                evaluations[(dataset_name, metric_name, direct, 'test')] = test_metric
+                if metric_name.lower() != 'mape':
+                    # the MAPE makes little sense here since it will surely explode if
+                    # we are not restricting to `>= 10`
+                    table.add_row(
+                        metric_name, str(training_metric), str(validation_metric), str(test_metric)
+                    )
+                    evaluations[(dataset_name, metric_name, direct, 'train')] = training_metric
+                    evaluations[(dataset_name, metric_name, direct, 'val')] = validation_metric
+                    evaluations[(dataset_name, metric_name, direct, 'test')] = test_metric
 
             for (
                 metric_name,
@@ -110,18 +116,24 @@ def boiling1d() -> None:
                     str(validation_metric),
                     str(test_metric),
                 )
+                evaluations_gt10[(dataset_name, metric_name, direct, 'train')] = training_metric
+                evaluations_gt10[(dataset_name, metric_name, direct, 'val')] = validation_metric
+                evaluations_gt10[(dataset_name, metric_name, direct, 'test')] = test_metric
 
             tables.extend((table, table_gt10))
 
-    console.print(Columns(tables))
-
-    for direct in False, True:
-        direct_label = 'direct' if direct else 'indirect'
         text = _build_latex_table(evaluations, evaluation, direct_visualization=direct)
         (_single_surface_study_path() / f'single-surface-{direct_label}.tex').write_text(text)
         (_single_surface_study_results_path() / f'single-surface-{direct_label}.tex').write_text(
             text
         )
+        text = _build_latex_table(evaluations_gt10, evaluation_gt10, direct_visualization=direct)
+        (_single_surface_study_path() / f'single-surface-{direct_label}-gt10.tex').write_text(text)
+        (
+            _single_surface_study_results_path() / f'single-surface-{direct_label}-gt10.tex'
+        ).write_text(text)
+
+    console.print(Columns(tables))
 
 
 def _build_latex_table(
@@ -174,10 +186,13 @@ def _latex_table_lines(
             yield f'& {units[metric_name]}'
 
             for subset in 'train', 'val', 'test':
-                uncertain_value = evaluations[
+                uncertain_value = evaluations.get(
                     (dataset_name, metric_name, direct_visualization, subset)
-                ]
-                yield f'& {latexify(uncertain_value)}'
+                )
+                if uncertain_value is None:
+                    yield '& -'
+                else:
+                    yield f'& {latexify(uncertain_value)}'
 
             yield NEW_LINE_TOKEN
 
