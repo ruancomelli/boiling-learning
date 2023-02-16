@@ -131,7 +131,6 @@ def boiling1d(
         ax.set(
             xlabel=f'Downscaling factor, ${glossary["downscaling factor"]}$',
             ylabel=f'Loss [{units["mse"]}]',
-            yscale='log',
         )
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         ax.xaxis.set_major_formatter(ScalarFormatter())
