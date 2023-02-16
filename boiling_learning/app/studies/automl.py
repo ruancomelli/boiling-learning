@@ -198,7 +198,7 @@ def boiling1d(model_size_reduce: int = 1) -> None:
             ret = sns.scatterplot(
                 df[df['Type'] == weights_group],
                 x='Model size',
-                y=f'Validation loss [{units["mse"]}]',
+                y='Validation loss',
                 hue='Model',
                 alpha=0.75,
                 ax=ax,
@@ -209,7 +209,11 @@ def boiling1d(model_size_reduce: int = 1) -> None:
             baseline_color = colors[2]
             ax.axvline(baseline_architecture_size, color=baseline_color, alpha=0.5, linestyle='--')
             ax.axhline(baseline_loss, color=baseline_color, alpha=0.5, linestyle='--')
-            ax.set(xscale='log', yscale='log')
+            ax.set(
+                xscale='log',
+                yscale='log',
+                ylabel=f'Validation loss [{units["mse"]}]',
+            )
             save_figure(
                 f,
                 _automl_study_path()
