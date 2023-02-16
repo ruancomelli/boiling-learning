@@ -81,8 +81,8 @@ def _configure_tensorflow(
 
 
 def _configure_seaborn(*, color_palette: str = 'deep') -> None:
-    sns.set_style('whitegrid')
     sns.set(
+        style='whitegrid',
         rc={
             'text.usetex': True,
             'font.size': 12.0,
@@ -97,8 +97,9 @@ def _configure_seaborn(*, color_palette: str = 'deep') -> None:
                     '\\usepackage[per-mode=symbol]{siunitx}',
                 )
             ),
+            'grid.linestyle': '--',
+            'grid.linewidth': 0.5,
         },
-        style='whitegrid',
     )
     sns.set_palette(color_palette)
 
