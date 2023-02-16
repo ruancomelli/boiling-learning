@@ -160,6 +160,10 @@ def _latex_table_lines(
     yield textwrap.dedent(
         '''
         \\begin{tabular}{@{}lrllllclll@{}}\\toprule
+            &
+            &
+            & \\multicolumn{3}{c}{Subset}
+            \\\\ \\cmidrule{4-6}
             & Metric
             & Unit
             & Training
