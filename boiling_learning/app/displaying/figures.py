@@ -6,7 +6,7 @@ from boiling_learning.utils.pathutils import PathLike, resolve
 
 DATASET_MARKER_STYLE: Final = (
     ('Large wire', 'o'),
-    ('Small wire', '.'),
+    ('Small wire', 's'),
     ('Horizontal ribbon', '>'),
     ('Vertical ribbon', '^'),
 )
