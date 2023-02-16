@@ -23,6 +23,7 @@ def configure(
     require_gpu: bool = False,
     nvidia_output: str | None = None,
     use_high_speed_cache: bool = True,
+    color_palette: str = 'bright',
 ) -> LazyDescribed[tf.distribute.Strategy]:
     _configure_random_state()
     _configure_logger()
@@ -33,7 +34,7 @@ def configure(
 
     _configure_tensorflow(use_xla, mixed_precision_global_policy)
 
-    _configure_seaborn()
+    _configure_seaborn(color_palette=color_palette)
 
     lazy_strategy = LazyDescribed.from_value_and_description(
         strategy,
@@ -79,7 +80,7 @@ def _configure_tensorflow(
     tf.keras.mixed_precision.set_global_policy(mixed_precision_global_policy)
 
 
-def _configure_seaborn() -> None:
+def _configure_seaborn(*, color_palette: str = 'deep') -> None:
     sns.set_style('whitegrid')
     sns.set(
         rc={
@@ -99,6 +100,7 @@ def _configure_seaborn() -> None:
         },
         style='whitegrid',
     )
+    sns.set_palette(color_palette)
 
 
 def _configure_gpu(
