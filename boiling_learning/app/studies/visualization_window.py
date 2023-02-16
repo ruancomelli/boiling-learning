@@ -131,7 +131,7 @@ def boiling1d() -> None:
 
         outliers = plot_data[plot_data['Loss'] >= OUTLIER_LOSS]['Visualization window fraction']
         for outlier in outliers:
-            ax.axvspan(outlier - 0.025, outlier + 0.025, color='red', alpha=0.15, hatch='/')
+            ax.axvspan(outlier - 0.015, outlier + 0.015, color='red', alpha=0.15, hatch='/')
         # ax.set(xscale='linear', yscale='log', xticks=FRACTIONS)
         ax.xaxis.set_major_formatter(PercentFormatter(xmax=max(map(float, FRACTIONS))))
         ax.yaxis.set_major_formatter(lambda value, pos: int(value))
