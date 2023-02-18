@@ -54,11 +54,9 @@ summary = "Classes Without Boilerplate"
 
 [[package]]
 name = "autokeras"
-version = "1.1.0"
-requires_python = ">=3.8"
+version = "1.0.20"
 summary = "AutoML for deep learning"
 dependencies = [
-    "keras-nlp>=0.4.0",
     "keras-tuner>=1.1.0",
     "packaging",
     "pandas",
@@ -440,19 +438,6 @@ version = "2.10.0"
 summary = "Deep learning for humans."
 
 [[package]]
-name = "keras-nlp"
-version = "0.4.0"
-requires_python = ">=3.8"
-summary = "Industry-strength Natural Language Processing extensions for Keras."
-dependencies = [
-    "absl-py",
-    "numpy",
-    "packaging",
-    "tensorflow-text; platform_system != \"Darwin\"",
-    "tensorflow; platform_system != \"Darwin\"",
-]
-
-[[package]]
 name = "keras-preprocessing"
 version = "1.1.2"
 summary = "Easy data preprocessing and data augmentation for deep learning models"
@@ -463,14 +448,15 @@ dependencies = [
 
 [[package]]
 name = "keras-tuner"
-version = "1.2.0"
-summary = "A Hyperparameter Tuning Library for Keras"
+version = "1.1.3"
+summary = "Hypertuner for Keras"
 dependencies = [
     "ipython",
     "kt-legacy",
+    "numpy",
     "packaging",
     "requests",
-    "tensorflow>=2.0",
+    "tensorboard",
 ]
 
 [[package]]
@@ -1137,58 +1123,10 @@ requires_python = ">=3.7"
 summary = "TensorFlow Estimator."
 
 [[package]]
-name = "tensorflow-hub"
-version = "0.12.0"
-summary = "TensorFlow Hub is a library to foster the publication, discovery, and consumption of reusable parts of machine learning models."
-dependencies = [
-    "numpy>=1.12.0",
-    "protobuf>=3.8.0",
-]
-
-[[package]]
 name = "tensorflow-io-gcs-filesystem"
 version = "0.30.0"
 requires_python = ">=3.7, <3.12"
 summary = "TensorFlow IO"
-
-[[package]]
-name = "tensorflow-macos"
-version = "2.10.0"
-requires_python = ">=3.7"
-summary = "TensorFlow is an open source machine learning framework for everyone."
-dependencies = [
-    "absl-py>=1.0.0",
-    "astunparse>=1.6.0",
-    "flatbuffers>=2.0",
-    "gast<=0.4.0,>=0.2.1",
-    "google-pasta>=0.1.1",
-    "grpcio<2.0,>=1.24.3",
-    "h5py>=2.9.0",
-    "keras-preprocessing>=1.1.1",
-    "keras<2.11,>=2.10.0",
-    "libclang>=13.0.0",
-    "numpy>=1.20",
-    "opt-einsum>=2.3.2",
-    "packaging",
-    "protobuf<3.20,>=3.9.2",
-    "setuptools",
-    "six>=1.12.0",
-    "tensorboard<2.11,>=2.10",
-    "tensorflow-estimator<2.11,>=2.10.0",
-    "termcolor>=1.1.0",
-    "typing-extensions>=3.6.6",
-    "wrapt>=1.11.0",
-]
-
-[[package]]
-name = "tensorflow-text"
-version = "2.10.0"
-summary = "TF.Text is a TensorFlow library of text related ops, modules, and subgraphs."
-dependencies = [
-    "tensorflow-hub>=0.8.0",
-    "tensorflow-macos<2.11,>=2.10.0; platform_machine == \"arm64\" and platform_system == \"Darwin\"",
-    "tensorflow<2.11,>=2.10.0; platform_machine != \"arm64\" or platform_system != \"Darwin\"",
-]
 
 [[package]]
 name = "termcolor"
@@ -1416,7 +1354,7 @@ summary = "Module for decorators, wrappers and monkey patching."
 
 [metadata]
 lock_version = "4.1"
-content_hash = "sha256:3fe62baeb3cd734b5e9b8b82b4aa653f24060e1d714bd335ba463106fd9c57f1"
+content_hash = "sha256:cb54f066baab55e077597cf45aaffdca6919d4818d5a398f84d7c7ececeaef29"
 
 [metadata.files]
 "absl-py 1.4.0" = [
@@ -1447,9 +1385,9 @@ content_hash = "sha256:3fe62baeb3cd734b5e9b8b82b4aa653f24060e1d714bd335ba463106f
     {url = "https://files.pythonhosted.org/packages/21/31/3f468da74c7de4fcf9b25591e682856389b3400b4b62f201e65f15ea3e07/attrs-22.2.0.tar.gz", hash = "sha256:c9227bfc2f01993c03f68db37d1d15c9690188323c067c641f1a35ca58185f99"},
     {url = "https://files.pythonhosted.org/packages/fb/6e/6f83bf616d2becdf333a1640f1d463fef3150e2e926b7010cb0f81c95e88/attrs-22.2.0-py3-none-any.whl", hash = "sha256:29e95c7f6778868dbd49170f98f8818f78f3dc5e0e37c0b1f474e3561b240836"},
 ]
-"autokeras 1.1.0" = [
-    {url = "https://files.pythonhosted.org/packages/8e/46/374e1c992f2c2e0226af0bc99b5abf827e2f7a293c8d2eaf752a3077adba/autokeras-1.1.0-py3-none-any.whl", hash = "sha256:2a4865d84294ff9d8bcf119ed8c281e052e8c18372371d7f24fbcc4db96513bd"},
-    {url = "https://files.pythonhosted.org/packages/8e/9d/3013e7f48742e23cd44f52ee3089b399dc8755b538fb5fac2d8d96340d61/autokeras-1.1.0.tar.gz", hash = "sha256:5667bb787e5d6eb86727b69ca1d7d6498025a5d93eca00133bd206d892ef49b9"},
+"autokeras 1.0.20" = [
+    {url = "https://files.pythonhosted.org/packages/04/1b/a6bf6bac7840e42640db06c49ea1a4442bda94087932d989a6ee90f9e224/autokeras-1.0.20-py3-none-any.whl", hash = "sha256:66da8c3c9f25afe456b2bbb123219fb91402e6015fb0df9479b9bacb0caab7aa"},
+    {url = "https://files.pythonhosted.org/packages/f2/5d/a3c46434a1d050f550db75ac21a59bdc5622bbcf67faf63c25a8fffca238/autokeras-1.0.20.tar.gz", hash = "sha256:3d0f09629abb9b98f9059e3c8b9d39b4acd7f6dcde6d0584146a02035159141a"},
 ]
 "backcall 0.2.0" = [
     {url = "https://files.pythonhosted.org/packages/4c/1c/ff6546b6c12603d8dd1070aa3c3d273ad4c07f5771689a7b69a550e8c951/backcall-0.2.0-py2.py3-none-any.whl", hash = "sha256:fbbce6a29f263178a1f7915c1940bde0ec2b2a967566fe1c65c1dfb7422bd255"},
@@ -1854,17 +1792,13 @@ content_hash = "sha256:3fe62baeb3cd734b5e9b8b82b4aa653f24060e1d714bd335ba463106f
 "keras 2.10.0" = [
     {url = "https://files.pythonhosted.org/packages/f9/4d/dc255a437c9616b155e5bd55e325e092b7cdcb4652361d733ae051d40853/keras-2.10.0-py2.py3-none-any.whl", hash = "sha256:26a6e2c2522e7468ddea22710a99b3290493768fc08a39e75d1173a0e3452fdf"},
 ]
-"keras-nlp 0.4.0" = [
-    {url = "https://files.pythonhosted.org/packages/cb/c1/97fa0858a6c3a2d7758fbebe1066a89b995f86b884b8bfced36988305f24/keras-nlp-0.4.0.tar.gz", hash = "sha256:c9ca866426fd50da3055749abdf86b742ec2a48aa959931876fc5a656be298f7"},
-    {url = "https://files.pythonhosted.org/packages/eb/90/991757e205e070fd169fb31e105f06be801ad04e8a35378bf1719fef2a22/keras_nlp-0.4.0-py3-none-any.whl", hash = "sha256:ba98acc78cda5db03d304f747e9941e90624c079f47f87c6faa25bee56e14fc7"},
-]
 "keras-preprocessing 1.1.2" = [
     {url = "https://files.pythonhosted.org/packages/5e/f1/b44337faca48874333769a29398fe4666686733c8880aa160b9fd5dfe600/Keras_Preprocessing-1.1.2.tar.gz", hash = "sha256:add82567c50c8bc648c14195bf544a5ce7c1f76761536956c3d2978970179ef3"},
     {url = "https://files.pythonhosted.org/packages/79/4c/7c3275a01e12ef9368a892926ab932b33bb13d55794881e3573482b378a7/Keras_Preprocessing-1.1.2-py2.py3-none-any.whl", hash = "sha256:7b82029b130ff61cc99b55f3bd27427df4838576838c5b2f65940e4fcec99a7b"},
 ]
-"keras-tuner 1.2.0" = [
-    {url = "https://files.pythonhosted.org/packages/da/41/53166189d0158fc74c97bc4f779208cf11b180233e37f386f415e0834a5a/keras_tuner-1.2.0-py3-none-any.whl", hash = "sha256:5d898a13d73932673980e28ce3deeeb32a233e8c18be709eef6d49a8267cd568"},
-    {url = "https://files.pythonhosted.org/packages/f8/11/10bf700724f16bcaa2efbb64b3f37ef1dbfca19fb3519913c8f2fdabe60f/keras-tuner-1.2.0.tar.gz", hash = "sha256:b81dc07a6e543f040e088ec4f4e2859f27c7f720100498a48fe71f79c0b49bdc"},
+"keras-tuner 1.1.3" = [
+    {url = "https://files.pythonhosted.org/packages/7f/6c/8ac746c9d0e7776bf119c511c98ce10f04e9b9d7c37cb8c0ea226b0968d1/keras_tuner-1.1.3-py3-none-any.whl", hash = "sha256:8e3b4605c6989a8a7020f03e2a52573c2a1e41854bb7ba27e0b579ffd3967dd8"},
+    {url = "https://files.pythonhosted.org/packages/f7/be/c4bc3a03d3fd73dd5bc0678069b38f4a24ae0a4385969480a59164a0543e/keras-tuner-1.1.3.tar.gz", hash = "sha256:296edb4e8fdbb8563c0145273ea94fb8889942841a1fcef1391ae09455477d70"},
 ]
 "kiwisolver 1.4.4" = [
     {url = "https://files.pythonhosted.org/packages/03/93/11790e8e81b89acd3a1c8a6b501f8a05b1c41beee0990582699cdda29557/kiwisolver-1.4.4-cp37-cp37m-win_amd64.whl", hash = "sha256:03baab2d6b4a54ddbb43bba1a3a2d1627e82d205c5cf8f4c924dc49284b87166"},
@@ -2787,9 +2721,6 @@ content_hash = "sha256:3fe62baeb3cd734b5e9b8b82b4aa653f24060e1d714bd335ba463106f
 "tensorflow-estimator 2.10.0" = [
     {url = "https://files.pythonhosted.org/packages/b6/05/9d7f3a6c783669cba36a6eb4555d0c73a516eee935dde6176dfb8512f94e/tensorflow_estimator-2.10.0-py2.py3-none-any.whl", hash = "sha256:f324ea17cd57f16e33bf188711d5077e6b2e5f5a12c328d6e01a07b23888edcd"},
 ]
-"tensorflow-hub 0.12.0" = [
-    {url = "https://files.pythonhosted.org/packages/29/32/899878aa65cae5429f30449cdda61224e3f4319e6a155027bc3af4c3f07b/tensorflow_hub-0.12.0-py2.py3-none-any.whl", hash = "sha256:822fe5f7338c95efcc3a534011c6689e4309ba2459def87194179c4de8a6e1fc"},
-]
 "tensorflow-io-gcs-filesystem 0.30.0" = [
     {url = "https://files.pythonhosted.org/packages/1a/a0/80072e72b4a5218f7a25d81b00c7695288142de801d43ade0a6d68521bef/tensorflow_io_gcs_filesystem-0.30.0-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:f5aa1aa0ec88b7d309ebf520c950ed12894ec1908c3d7335f080de9e16e88360"},
     {url = "https://files.pythonhosted.org/packages/2c/22/35e50d55e42f600dd52fb0018640bf6837e60fb6751f777e10322567046c/tensorflow_io_gcs_filesystem-0.30.0-cp311-cp311-macosx_10_14_x86_64.whl", hash = "sha256:e4cea42fe5ab47cc6af7e146935489620ce2c4606a9483090bc9cac8f32ef111"},
@@ -2810,28 +2741,6 @@ content_hash = "sha256:3fe62baeb3cd734b5e9b8b82b4aa653f24060e1d714bd335ba463106f
     {url = "https://files.pythonhosted.org/packages/e2/f7/972698e7a1d4fb9449402fdaabe08d016c07810e5d1510c74efcefe70c33/tensorflow_io_gcs_filesystem-0.30.0-cp38-cp38-win_amd64.whl", hash = "sha256:86169a799752cf61c07d1a5a818e00d6233e3cb3ebe6bb144af5f0fed1dc2b89"},
     {url = "https://files.pythonhosted.org/packages/e8/71/0b03a6215e5139c54734e28d78fa9a95774def4d4c58667160898b18b256/tensorflow_io_gcs_filesystem-0.30.0-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:65f9cefcf52ef04caea1481faa0c3553b3cfd8ee65a01bcf7d9baf617361aaca"},
     {url = "https://files.pythonhosted.org/packages/f1/00/0a02b9eeef964989c95f860412977e037c415cdb3fe709261c14c3ce79b9/tensorflow_io_gcs_filesystem-0.30.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bd5ef0e38ed87696c2fbfbc9534a056484b6ee4ddd68967d644cc17e7d111018"},
-]
-"tensorflow-macos 2.10.0" = [
-    {url = "https://files.pythonhosted.org/packages/30/6b/0ceaa806258dd33b15a160b79eeedb37ff8cb24269b308773afb81d11517/tensorflow_macos-2.10.0-cp39-cp39-macosx_12_0_arm64.whl", hash = "sha256:f2ec603c5496c25fb1bcda8eb4166423bf023bfb7ae6cbdec0be8796ca67e866"},
-    {url = "https://files.pythonhosted.org/packages/32/18/d7d06e1c8bf4cafd091d62854b8e6a9e8db176c1b1a5171a586ec17d4b54/tensorflow_macos-2.10.0-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:dfd1dd478b3ae01e8d578c38083bef68bc838ceaa05a813b6788fe9e6ec19140"},
-    {url = "https://files.pythonhosted.org/packages/6f/a1/3bd220bacb1dcd4eea526c4b5376eddfb0fbb156c9814684dc9be24b7bc8/tensorflow_macos-2.10.0-cp310-cp310-macosx_12_0_x86_64.whl", hash = "sha256:aa074b5442d3411e5416c5112531d8b78a8c469ca92fa41c0e0cf14428608bf3"},
-    {url = "https://files.pythonhosted.org/packages/a1/80/0fcb14b77ed8edeb86137d8c44febfee9c9d50c5db256afe51d076e839c8/tensorflow_macos-2.10.0-cp39-cp39-macosx_12_0_x86_64.whl", hash = "sha256:3177a8a97149f78748eeb20009aa3dc27ae2c112ab6380886ec8620bbcb70f19"},
-    {url = "https://files.pythonhosted.org/packages/a2/f7/4f9b4a5b3f75415fd438f20037d7436a70536ab190a4bec627741e9b4623/tensorflow_macos-2.10.0-cp38-cp38-macosx_12_0_x86_64.whl", hash = "sha256:00be07ffcf8b6288fa3dd9a27a3b6dd0f6c85af5c3109451a1b7e720bb817d14"},
-    {url = "https://files.pythonhosted.org/packages/af/8c/e9f3871a00e9c3e0b24a5236af7804d6a398ff7ab83071b92b56a9083484/tensorflow_macos-2.10.0-cp38-cp38-macosx_12_0_arm64.whl", hash = "sha256:e15ab56f39f3d2e7c07a72a5969f025e259b1d3fcb9c3f7217f17b62581c33a8"},
-]
-"tensorflow-text 2.10.0" = [
-    {url = "https://files.pythonhosted.org/packages/24/01/682004ecce213ddfc6344a99b2d76808519968beb430d2eddfe62b41a81a/tensorflow_text-2.10.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:bb9682bffd28aaa89d24d110928b954d0d8c8718f49ccc0975ab5be20c3c4657"},
-    {url = "https://files.pythonhosted.org/packages/37/a5/bf11fb427226283b2abefcad355030effdb1a0c45978b80c63a38556bdd2/tensorflow_text-2.10.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:554f05956922afe0269dfb1e2fd73f5e049fa5746c47fd34d92ff7e447d746d4"},
-    {url = "https://files.pythonhosted.org/packages/3b/d8/78dc0ff5d9cee0baddb8e1caed17e5ef85e22d33b910818cdfc394d1b40f/tensorflow_text-2.10.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3998dfc852ddd8ec4dd363659f7ec491204cc6a89a7460880c88137de12dbc41"},
-    {url = "https://files.pythonhosted.org/packages/6b/2f/cb3fcc2160cc575b75f935f4a0fc42e5b03cc94cab0e324601687cc21372/tensorflow_text-2.10.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:51a608d78c1bdc5ddad53aa30ad25f85b9ee569ed5604eed2a4764342672ec1c"},
-    {url = "https://files.pythonhosted.org/packages/88/a2/8d2ee50c8e5e355bf23975a0b7fa49ddd9c9b0ecb48b8c77d78ff4b3bcc0/tensorflow_text-2.10.0-cp310-cp310-win_amd64.whl", hash = "sha256:269a3d7c3bd34e069e5d4ccaece902fc46aad65220301ee3bdb70d4ab031a60d"},
-    {url = "https://files.pythonhosted.org/packages/99/26/8afe28f3bb4683f65295cdcc431c2e1efed302ebea94e75d39ddc950d044/tensorflow_text-2.10.0-cp38-cp38-win_amd64.whl", hash = "sha256:9205542ac5f96893938c5c9e2e20a69c446f3e00a751ea86194c4848ee5eecb2"},
-    {url = "https://files.pythonhosted.org/packages/9e/90/2651f4d5d36cafa968f1ae36a619a9751beeefb547d99736a4ea6fd93d83/tensorflow_text-2.10.0-cp37-cp37m-win_amd64.whl", hash = "sha256:11d93b2200a2cf3aa6c911796b3469a99d2c9c2603f61c7f6422cdce640c6999"},
-    {url = "https://files.pythonhosted.org/packages/ab/97/a4841b4a68c08a2d9aa942b08ad69f9a287dd5630afb4857bb7c76847ace/tensorflow_text-2.10.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:9a687c555536aa1a39ae0ebfac9575e026647cc0a59da4343d59eb2952b68681"},
-    {url = "https://files.pythonhosted.org/packages/ba/77/12b690ebf48c9093683e489d4ecf796286bb6bf620e78d8cae3af41966d7/tensorflow_text-2.10.0-cp39-cp39-win_amd64.whl", hash = "sha256:0423860f33e9ba9f476d42ebca90a7d91bedeceb71c473044de3acd914e00b7b"},
-    {url = "https://files.pythonhosted.org/packages/c6/64/4f22247883e036b086c5fa19663bbeff712a1f5b98c57c6ea983ba9e04c1/tensorflow_text-2.10.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:002a2f85f57c62c272cc420abb95f38d1502b10596f2d112fbd8781d4447ac84"},
-    {url = "https://files.pythonhosted.org/packages/ef/64/489c459f46f678ec4822b815ba9dfb1182c351e2208e98b6e83543254b55/tensorflow_text-2.10.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:84b76847189d0d7bc8d4a130f0617e13bc9b810cf1feeb9c49da2906a2f39785"},
-    {url = "https://files.pythonhosted.org/packages/fb/68/89478e8db2f10bbe95d4f734ee8f3cf7287517bf64b6d0cb42da4c2f07b0/tensorflow_text-2.10.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9443e5be4c02bc97d81d8e12e3925290155895ee876942e40168fc5a27736465"},
 ]
 "termcolor 2.2.0" = [
     {url = "https://files.pythonhosted.org/packages/aa/f4/8ddd8a684b4c005345f45740a449d93d0af7ccecd91319d0f4426cf08b36/termcolor-2.2.0-py3-none-any.whl", hash = "sha256:91ddd848e7251200eac969846cbae2dacd7d71c2871e92733289e7e3666f48e7"},
