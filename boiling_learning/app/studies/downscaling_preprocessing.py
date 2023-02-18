@@ -11,7 +11,7 @@ from boiling_learning.app.constants import figures_path
 from boiling_learning.app.datasets.generators import get_image_dataset
 from boiling_learning.app.datasets.preprocessing import default_boiling_preprocessors
 from boiling_learning.app.datasets.raw.boiling1d import boiling_cases
-from boiling_learning.app.displaying.figures import save_figure
+from boiling_learning.app.displaying.figures import DATASET_MARKER_STYLE, save_figure
 from boiling_learning.app.paths import studies_path
 from boiling_learning.image_datasets import Image, ImageDataset
 from boiling_learning.lazy import LazyDescribed
@@ -31,13 +31,6 @@ app = typer.Typer()
 METRICS = (
     (nbins_retained_variance, 'retained-variance', 'Relative variance'),
     (nbins_shannon_entropy_ratio, 'cross-entropy', 'Cross-entropy ratio'),
-)
-
-DATASET_MARKER_STYLE = (
-    ('Large wire', 'k', 'o'),
-    ('Small wire', 'r', '.'),
-    ('Horizontal ribbon', 'g', '>'),
-    ('Vertical ribbon', 'b', '^'),
 )
 
 DEFAULT_FACTORS = list(range(1, 11))
@@ -66,7 +59,7 @@ def boiling1d(factors: list[int] = typer.Option(DEFAULT_FACTORS)) -> None:
             y='Metric',
             hue='Dataset',
             style='Dataset',
-            markers=[marker for _, _, marker in DATASET_MARKER_STYLE],
+            markers=[marker for _, marker in DATASET_MARKER_STYLE],
             alpha=0.75,
         )
         ax.set(
@@ -98,7 +91,7 @@ def _get_data(
         return metric()(frame, downscaled)
 
     data = []
-    for case, (dataset_name, _color, _marker) in zip(boiling_cases(), DATASET_MARKER_STYLE):
+    for case, (dataset_name, _marker) in zip(boiling_cases(), DATASET_MARKER_STYLE):
         for factor in factors:
             preprocessors = default_boiling_preprocessors(
                 direct_visualization=True,
