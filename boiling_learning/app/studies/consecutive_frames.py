@@ -61,7 +61,7 @@ def boiling1d(start: int = typer.Option(0)) -> None:
             columns=['Index', 'Structural similarity ratio', 'Dataset'],
         )
 
-        f, ax = plt.subplots(1, 1, figsize=(2.8, 2.8))
+        f, ax = plt.subplots(1, 1, figsize=(6, 2.5))
 
         sns.scatterplot(
             ax=ax,
