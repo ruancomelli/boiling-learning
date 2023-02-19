@@ -1,6 +1,6 @@
 import typer
 
-from boiling_learning.app.examples import image_standardization
+from boiling_learning.app.examples import image_standardization, uncertainties
 from boiling_learning.app.figures import boiling_curve, diameter_effects, inclination_effects
 from boiling_learning.app.studies import (
     animate,
@@ -59,6 +59,7 @@ app.add_typer(learning_curve.app, name='learning-curve')
 app.add_typer(preprocessing.app, name='preprocessing')
 app.add_typer(single_surface.app, name='single-surface')
 app.add_typer(transfer_learning_curve.app, name='transfer-learning-curve')
+app.add_typer(uncertainties.app, name='uncertainties')
 app.add_typer(validate.app, name='validate')
 app.add_typer(visualization_window.app, name='visualization-window')
 app.add_typer(visualization_window_multi_surface.app, name='visualization-window-multi-surface')

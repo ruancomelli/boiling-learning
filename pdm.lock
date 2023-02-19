@@ -1278,6 +1278,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "uncertainties"
+version = "3.1.7"
+summary = "Transparent calculations with uncertainties on the quantities involved (aka error propagation); fast calculation of derivatives"
+dependencies = [
+    "future",
+]
+
+[[package]]
 name = "unimport"
 version = "0.14.1"
 requires_python = ">=3.6"
@@ -1354,7 +1362,7 @@ summary = "Module for decorators, wrappers and monkey patching."
 
 [metadata]
 lock_version = "4.1"
-content_hash = "sha256:cb54f066baab55e077597cf45aaffdca6919d4818d5a398f84d7c7ececeaef29"
+content_hash = "sha256:cfeca30de1191eff6a9748db9d40ecb4567c6097d442e790824718c3fa3d2966"
 
 [metadata.files]
 "absl-py 1.4.0" = [
@@ -2809,6 +2817,10 @@ content_hash = "sha256:cb54f066baab55e077597cf45aaffdca6919d4818d5a398f84d7c7ece
 "typing-inspect 0.8.0" = [
     {url = "https://files.pythonhosted.org/packages/72/23/bed3ea644bcd77ffe9a7f591eb058c00739747e33ab94d80cc4319ddee8e/typing_inspect-0.8.0.tar.gz", hash = "sha256:8b1ff0c400943b6145df8119c41c244ca8207f1f10c9c057aeed1560e4806e3d"},
     {url = "https://files.pythonhosted.org/packages/be/01/59b743dca816c4b6ca891b9e0f84d20513cd61bdbbaa8615de8f5aab68c1/typing_inspect-0.8.0-py3-none-any.whl", hash = "sha256:5fbf9c1e65d4fa01e701fe12a5bca6c6e08a4ffd5bc60bfac028253a447c5188"},
+]
+"uncertainties 3.1.7" = [
+    {url = "https://files.pythonhosted.org/packages/13/f7/9d94eeea3f6475456fb5c6b72d3a3cc652c1ecd342c5491274cbfc9ebaab/uncertainties-3.1.7-py2.py3-none-any.whl", hash = "sha256:4040ec64d298215531922a68fa1506dc6b1cb86cd7cca8eca848fcfe0f987151"},
+    {url = "https://files.pythonhosted.org/packages/9d/22/34b918373b9626a50117abd31c0185b96ad1242e46096d6b0a2ef6dd4303/uncertainties-3.1.7.tar.gz", hash = "sha256:80111e0839f239c5b233cb4772017b483a0b7a1573a581b92ab7746a35e6faab"},
 ]
 "unimport 0.14.1" = [
     {url = "https://files.pythonhosted.org/packages/34/4b/6dcbe1ffe030f6712d2e7f8d8ed325d619ea4cf53fbd49e798dfe60e1a65/unimport-0.14.1-py3-none-any.whl", hash = "sha256:eae3a5f4528703566980a078036d14cce5575d43d5fd9885d86dea227198cd15"},
