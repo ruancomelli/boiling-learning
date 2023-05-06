@@ -227,3 +227,11 @@ and think of other things.
 - \[ \] take a look at [Probabilistic Layers Regression](https://www.tensorflow.org/probability/examples/Probabilistic_Layers_Regression)
 - \[ \] make [LeakyReLU trainable](https://www.tensorflow.org/guide/intro_to_modules#the_build_step)?
 - \[ \] [quantize models](https://www.tensorflow.org/model_optimization/guide/quantization/training_example#clone_and_fine-tune_pre-trained_model_with_quantization_aware_training)?
+- \[ \] generate a test case in which temperature is estimated from the boiling curve and that's what the models have to predict
+- \[ \] in condensation, investigate center cropping versus random cropping of the ROI
+- \[ \] test autoML with center and random cropping
+- \[ \] generate some videos like Hobold's showing boiling together with an error bar,
+  the nominal heat flux and the predicted flux. This can be done for the four surfaces
+  simultaneously
+- \[ \] investigate error as a function of the heat flux
+- \[ \] try assembling models: a first model classifies the boiling regime in low/mid/high heat fluxes. After that, prediction is dispatched to a model specialized in that heat flux range.
