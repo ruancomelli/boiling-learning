@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Any, Callable, Generic, Optional, TypeVar, final
 
 from classes import AssociatedType, Supports, typeclass
-from loguru import logger
 
 from boiling_learning.descriptions import describe
 from boiling_learning.io import json
@@ -129,13 +128,7 @@ class JSONAllocator(Allocator):
             _json.dump(self.data, file)
 
     def __call__(self, pack: Pack[Any, Any]) -> Path:
-        logger.debug(f'Allocating path for args {pack}')
-
         args, kwargs = pack.pair()  # this normalizes `Pack` and `P`
         serialized = self.describer(Pack(args, kwargs))
-        logger.debug(f'Described arguments: {serialized}')
-
         doc_id = self._provide(serialized)
-        path = self._doc_path(doc_id)
-        logger.debug(f'Allocated path is {path}')
-        return path
+        return self._doc_path(doc_id)
