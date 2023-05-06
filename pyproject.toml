@@ -71,11 +71,11 @@ test = [
     "tox-pdm>=0.6.0",
 ]
 lint = [
-    "black>=22.6.0",
-    "isort>=5.10.1",
-    "unimport>=0.11.1",
-    "pylint>=2.14.5",
-    "vulture>=2.6",
+    "black>=23.3.0",
+    "isort>=5.12.0",
+    "unimport>=0.16.0",
+    "pylint>=2.17.0",
+    "vulture>=2.7",
     "flake8>=6.0.0",
 ]
 ci = [
@@ -86,7 +86,7 @@ build = [
     "pip>=22.2.2",
 ]
 types = [
-    "mypy>=0.982",
+    "mypy>=1.2.0",
     "types-decorator>=5.1.8",
     "types-PyYAML>=6.0.11",
     "funcy-stubs>=0.1.1",
