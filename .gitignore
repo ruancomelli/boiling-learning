@@ -148,4 +148,4 @@ sandbox/
 !tox.ini
 .envrc
 __pypackages__
-.pdm.toml
+.pdm-python
