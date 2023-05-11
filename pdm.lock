@@ -1186,11 +1186,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tensorrt"
-version = "8.6.1"
-summary = "A high performance deep learning inference library"
-
-[[package]]
 name = "termcolor"
 version = "2.3.0"
 requires_python = ">=3.7"
@@ -1416,7 +1411,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 [metadata]
 lock_version = "4.2"
 groups = ["default", "build", "ci", "lint", "test", "types"]
-content_hash = "sha256:28bfdbbf41cbdbe522c1a09c71fc9dd7a3c279e2d7d17dca848bcfb51f0eef2c"
+content_hash = "sha256:f1b501d2a7315ce9b60df9ab4d4f0994279cc2ade4a30ce08ad5db6d4c6a2645"
 
 [metadata.files]
 "absl-py 1.4.0" = [
@@ -2954,9 +2949,6 @@ content_hash = "sha256:28bfdbbf41cbdbe522c1a09c71fc9dd7a3c279e2d7d17dca848bcfb51
     {url = "https://files.pythonhosted.org/packages/d3/b0/de8b98171e99106e4f3196f541842873a3897ac5e1ea7fe758dc4a786102/tensorflow_text-2.12.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d196d43d8bdcc80153c097485c7c24862c550ef129423323f9a18cf1a4241598"},
     {url = "https://files.pythonhosted.org/packages/f6/b1/6b4e5c8828f5c4bdda63c7e68fb66abd4a6084f4a37e0e77bfeb7d3aea33/tensorflow_text-2.12.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:625e72e2f444c41243556c3155b48eef78127988e6e0aa43adcab2998caed268"},
     {url = "https://files.pythonhosted.org/packages/fc/b9/2fcd17db37355ee2bdd880d10e86a1bdac97641643e602e996ef917f5a4f/tensorflow_text-2.12.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9d5751ff8ad3eea2f32641e65bf29814a1b6059f0dc0ccb09d44676f26fbf6ac"},
-]
-"tensorrt 8.6.1" = [
-    {url = "https://files.pythonhosted.org/packages/25/d8/081cb57cd77e4be6ce55462b51938b00ac570076f37aade5f5c3cdfa8f82/tensorrt-8.6.1.tar.gz", hash = "sha256:865c8c18d7ea5de4661df276156a3bdb8c4ff5499b1a00844e9d7291ec60fb67"},
 ]
 "termcolor 2.3.0" = [
     {url = "https://files.pythonhosted.org/packages/67/e1/434566ffce04448192369c1a282931cf4ae593e91907558eaecd2e9f2801/termcolor-2.3.0-py3-none-any.whl", hash = "sha256:3afb05607b89aed0ffe25202399ee0867ad4d3cb4180d98aaf8eefa6a5f7d475"},
