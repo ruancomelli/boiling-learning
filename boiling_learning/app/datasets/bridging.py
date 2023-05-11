@@ -107,11 +107,7 @@ def to_tensorflow_triplet(
 def _training_datasets_allocator(
     experiment: Literal['boiling1d', 'condensation']
 ) -> JSONAllocator:
-    cache_path = (
-        (high_speed_cache_path() if USE_HIGH_SPEED_CACHE else shared_cache_path())
-        / 'datasets'
-        / 'training'
-    )
+    cache_path = high_speed_cache_path() if USE_HIGH_SPEED_CACHE else shared_cache_path()
     return JSONAllocator(cache_path / 'datasets' / 'training' / experiment)
 
 
