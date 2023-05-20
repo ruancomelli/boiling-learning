@@ -76,6 +76,7 @@ def _configure_tensorflow(
     use_xla: bool = False,
     mixed_precision_global_policy: str = 'float32',
 ) -> None:
+    tf.get_logger().setLevel('ERROR')
     tf.config.optimizer.set_jit(use_xla)
     tf.keras.mixed_precision.set_global_policy(mixed_precision_global_policy)
 
