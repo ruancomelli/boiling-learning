@@ -12,7 +12,6 @@ dependencies = [
     "frozendict>=2.3.4",
     "funcy>=1.17",
     "more-itertools>=9.0.0",
-    "nidaqmx<1.0.0,>=0.5.7",
     "numpy>=1.23.0",
     "parse<2.0.0,>=1.19.0",
     "pint>=0.20",
