@@ -18,7 +18,7 @@ runs:
       sudo apt install libegl1-mesa -y
 
   - name: Checkout code
-    uses: actions/checkout@v2
+    uses: actions/checkout@v3
 
   - name: Setup python ${{ inputs.python-version }}
     uses: pdm-project/setup-pdm@v3
