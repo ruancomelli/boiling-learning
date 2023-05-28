@@ -38,6 +38,7 @@ dependencies = [
     "pandas>=1.5.2",
     "h5py>=3.7.0",
     "uncertainties>=3.1.7",
+    "pyyaml>=6.0",
 ]
 
 requires-python = ">=3.10,<3.11"
@@ -482,15 +483,6 @@ spelling-ignore-comment-directives = "fmt: on,fmt: off,noqa:,noqa,nosec,isort:sk
 # Tells whether to store unknown words to the private dictionary (see the
 # --spelling-private-dict-file option) instead of raising a message.
 # spelling-store-unknown-words =
-
-[tool.pylint.string]
-# This flag controls whether inconsistent-quotes generates a warning when the
-# character used as a quote delimiter is used inconsistently within a module.
-# check-quote-consistency =
-
-# This flag controls whether the implicit-str-concat should generate a warning on
-# implicit string concatenation in sequences defined over several lines.
-# check-str-concat-over-line-jumps =
 
 [tool.pylint.typecheck]
 # List of decorators that produce context managers, such as
