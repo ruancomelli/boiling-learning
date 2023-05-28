@@ -8,7 +8,7 @@ from boiling_learning.app.datasets.bridged.boiling1d import (
     default_boiling_bridging,
     default_boiling_bridging_gt10,
 )
-from boiling_learning.app.paths import shared_cache_path
+from boiling_learning.app.paths import analyses_path
 from boiling_learning.datasets.splits import DatasetTriplet
 from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.io.dataclasses import dataclass
@@ -65,7 +65,7 @@ def cached_model_evaluator(
     experiment: Literal['boiling1d', 'condensation'],
     /,
 ):
-    @cache(JSONAllocator(shared_cache_path() / 'evaluations' / experiment))
+    @cache(JSONAllocator(analyses_path() / 'evaluations' / experiment))
     def model_evaluator(
         model: LazyDescribed[ModelArchitecture],
         datasets: LazyDescribed[ImageDatasetTriplet],

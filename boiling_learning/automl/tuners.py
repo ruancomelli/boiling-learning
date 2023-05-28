@@ -241,9 +241,6 @@ class _FixedMaxModelSizeTuner(_SaveBestModelAtTrainingEndTuner):
         K.clear_session()
         gc.collect()
 
-        # print(hp)
-        # assert False, 'stop here'
-
         # Build a model - failed attempts are handled elsewhere
         model = self._build_hypermodel(hp)
 
