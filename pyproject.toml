@@ -19,7 +19,7 @@ dependencies = [
     "scikit-image>=0.19.1",
     "classes<1.0.0,>=0.4.1",
     "iteround<2.0.0,>=1.0.3",
-    "pyqtgraph==0.12.3",
+    "pyqtgraph==0.13.3",
     "PyQt6<7.0.0,>=6.2.2",
     "loguru>=0.6.0",
     "decord==0.6.0",
