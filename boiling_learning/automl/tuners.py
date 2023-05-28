@@ -8,6 +8,7 @@ import autokeras as ak
 import keras_tuner as kt
 import tensorflow as tf
 from keras_tuner.engine.trial import Trial, TrialStatus
+from keras_tuner.engine.tuner_utils import SaveBestEpoch as SaveBestEpochBase
 from loguru import logger
 from tensorflow.keras import backend as K
 
@@ -16,7 +17,13 @@ from boiling_learning.utils.pathutils import resolve
 
 
 class PopulateSpaceReturn(TypedDict):
-    status: TrialStatus
+    status: Literal[
+        'RUNNING',
+        'IDLE',
+        'INVALID',
+        'STOPPED',
+        'COMPLETED',
+    ]
     values: Optional[dict[str, Any]]
 
 
@@ -35,10 +42,10 @@ class EarlyStoppingGreedyOracle(GreedyOracle):
 
     def populate_space(self, trial_id: str) -> PopulateSpaceReturn:
         if self.stop_search:
-            return {
-                'status': TrialStatus.STOPPED,
-                'values': None,
-            }
+            return PopulateSpaceReturn(
+                status=TrialStatus.STOPPED,
+                values=None,
+            )
         return typing.cast(PopulateSpaceReturn, super().populate_space(trial_id))
 
     def get_state(self) -> dict[str, Any]:
@@ -58,10 +65,10 @@ class EarlyStoppingBayesianOracle(BayesianOracle):
 
     def populate_space(self, trial_id: str) -> PopulateSpaceReturn:
         if self.stop_search:
-            return {
-                'status': TrialStatus.STOPPED,
-                'values': None,
-            }
+            return PopulateSpaceReturn(
+                status=TrialStatus.STOPPED,
+                values=None,
+            )
         return typing.cast(PopulateSpaceReturn, super().populate_space(trial_id))
 
     def get_state(self) -> dict[str, Any]:
@@ -81,10 +88,10 @@ class EarlyStoppingHyperbandOracle(kt.oracles.HyperbandOracle):
 
     def populate_space(self, trial_id: str) -> PopulateSpaceReturn:
         if self.stop_search:
-            return {
-                'status': TrialStatus.STOPPED,
-                'values': None,
-            }
+            return PopulateSpaceReturn(
+                status=TrialStatus.STOPPED,
+                values=None,
+            )
         return typing.cast(PopulateSpaceReturn, super().populate_space(trial_id))
 
     def get_state(self) -> dict[str, Any]:
@@ -161,7 +168,7 @@ class _SaveBestModelAtTrainingEndTuner(AutoTuner):
                     (
                         index
                         for index, callback in enumerate(callbacks)
-                        if isinstance(callback, kt.engine.tuner_utils.SaveBestEpoch)
+                        if isinstance(callback, SaveBestEpochBase)
                     ),
                     None,
                 )
@@ -233,6 +240,9 @@ class _FixedMaxModelSizeTuner(_SaveBestModelAtTrainingEndTuner):
         # clean-up TF graph from previously stored (defunct) graph
         K.clear_session()
         gc.collect()
+
+        # print(hp)
+        # assert False, 'stop here'
 
         # Build a model - failed attempts are handled elsewhere
         model = self._build_hypermodel(hp)
