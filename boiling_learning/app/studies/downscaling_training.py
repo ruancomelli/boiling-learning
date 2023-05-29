@@ -88,6 +88,7 @@ def boiling1d(
                 get_baseline_fit_params(),
                 target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
                 strategy=strategy,
+                try_id=1 if factor == 2 else 0,
             )
 
             compiled_model = fit_model.architecture | compile_model(
