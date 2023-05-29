@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 from functools import partial
 from typing import Callable, Hashable, Mapping, Optional, TypeVar, Union
 
@@ -9,7 +8,6 @@ import tensorflow as tf
 from loguru import logger
 
 from boiling_learning.datasets.sliceable import SliceableDataset
-from boiling_learning.utils.mathutils import round_to_multiple
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 _T = TypeVar('_T')
@@ -32,7 +30,6 @@ def sliceable_dataset_to_tensorflow_dataset(
     prefilterer: Optional[Callable[[_T], bool]] = None,
     filterer: Optional[Callable[..., bool]] = None,
     prefetch: int = 0,
-    expand_to_batch_size: bool = False,
     deterministic: bool = False,
     target: Optional[str] = None,
 ) -> tf.data.Dataset:
@@ -79,15 +76,10 @@ def sliceable_dataset_to_tensorflow_dataset(
         ds = ds.cache()
 
     if batch_size is not None:
-        if expand_to_batch_size:
-            expanded_size = round_to_multiple(len(dataset), batch_size, rounder=math.ceil)
-            ds = ds.repeat().take(expanded_size)
-
         ds = ds.batch(
             batch_size,
-            drop_remainder=expand_to_batch_size,
+            drop_remainder=True,
             num_parallel_calls=tf.data.AUTOTUNE,
-            # deterministic=not shuffle,
             deterministic=deterministic,
         )
 

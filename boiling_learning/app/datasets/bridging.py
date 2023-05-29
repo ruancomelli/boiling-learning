@@ -55,7 +55,6 @@ def to_tensorflow(
         prefilterer=_prefilterer,
         filterer=filterer,
         prefetch=PREFETCH_BUFFER_SIZE,
-        expand_to_batch_size=True,
         deterministic=False,
         target=target,
     )
