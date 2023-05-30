@@ -34,8 +34,8 @@ from boiling_learning.utils.pathutils import resolve
 app = typer.Typer()
 console = Console()
 
-FRACTIONS = tuple(Fraction(i + 1, 100) for i in range(10)) + tuple(
-    Fraction(i + 1, 10) for i in range(10)
+FRACTIONS = tuple(Fraction(i, 100) for i in range(1, 10)) + tuple(
+    Fraction(i, 10) for i in range(1, 11)
 )
 
 
@@ -87,6 +87,7 @@ def boiling1d() -> None:
                 get_baseline_fit_params(),
                 target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
                 strategy=strategy,
+                try_id=4,
             )
 
             compiled_model = fit_model.architecture | compile_model(
