@@ -132,6 +132,19 @@ def boiling1d(model_size_reduce: int = 1) -> None:
             )
         tables.append(best_model_table)
 
+        best_hyperparameters_table = Table(
+            'Hyperparameter',
+            'Value',
+            title=f'AutoML best model hyperparameters - {direct_label} visualization',
+        )
+        best_hyperparameters = hypermodel.best_hyperparameters()
+        for hyperparameter, value in best_hyperparameters.values.items():
+            best_hyperparameters_table.add_row(
+                hyperparameter,
+                str(value),
+            )
+        tables.append(best_hyperparameters_table)
+
         evaluations: list[tuple[int, float, str, str]] = []
         for model in itertools.islice(
             hypermodel.iter_best_models(),

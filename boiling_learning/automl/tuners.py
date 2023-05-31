@@ -108,6 +108,12 @@ class AutoTuner(ak.engine.tuner.AutoTuner):
     def best_model(self) -> ModelArchitecture:
         return next(self.iter_best_models())
 
+    def best_trial(self) -> Trial:
+        return next(self.iter_trials(order='best'))
+
+    def best_hyperparameters(self) -> kt.HyperParameters:
+        return self.best_trial().hyperparameters
+
     def iter_best_models(self) -> Iterator[ModelArchitecture]:
         return self._models_from_trials(self.iter_trials(order='best'))
 

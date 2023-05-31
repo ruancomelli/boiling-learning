@@ -5,6 +5,7 @@ from typing import Any, Optional, Union
 import autokeras as ak
 import keras_tuner as kt
 import tensorflow as tf
+from keras_tuner.engine.trial import Trial
 
 from boiling_learning.automl.blocks import ImageNormalizationBlock, LayersBlock
 from boiling_learning.automl.tuners import AutoTuner
@@ -36,6 +37,12 @@ class HyperModel(kt.HyperModel):
 
     def best_model(self) -> ModelArchitecture:
         return self.tuner.best_model()
+
+    def best_trial(self) -> Trial:
+        return self.tuner.best_trial()
+
+    def best_hyperparameters(self) -> kt.HyperParameters:
+        return self.tuner.best_hyperparameters()
 
     def iter_best_models(self) -> Iterator[ModelArchitecture]:
         return self.tuner.iter_best_models()
