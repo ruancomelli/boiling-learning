@@ -24,7 +24,7 @@ class NukiyamaBoilingCurve:
 
     @staticmethod
     def fetch() -> tuple[Quantity, Quantity]:
-        temperature_excess = Q_(
+        wall_superheat = Q_(
             [
                 3,
                 8,
@@ -56,13 +56,13 @@ class NukiyamaBoilingCurve:
             ureg.cal / (ureg.cm**2 * ureg.s),
         )
 
-        return temperature_excess.to(ureg.delta_degC), heat_flux.to(ureg.W / ureg.cm**2)
+        return wall_superheat.to(ureg.delta_degC), heat_flux.to(ureg.W / ureg.cm**2)
 
 
 class IncroperaBoilingCurveImposedHeat:
     @staticmethod
     def fetch() -> tuple[Quantity, Quantity]:
-        temperature_excess = Q_(
+        wall_superheat = Q_(
             [
                 1.0212414255144324,
                 1.1018964979744297,
@@ -365,7 +365,7 @@ class IncroperaBoilingCurveImposedHeat:
             ]
         )
 
-        return temperature_excess, heat_flux_ratio
+        return wall_superheat, heat_flux_ratio
 
     @staticmethod
     def extra() -> dict[Literal['MAX', 'MIN', 'BURNOUT'], tuple[Quantity, Quantity]]:
@@ -388,7 +388,7 @@ class IncroperaBoilingCurveImposedHeat:
 class IncroperaBoilingCurveImposedTemperatureExcess:
     @staticmethod
     def fetch() -> tuple[Quantity, Quantity]:
-        temperature_excess = Q_(
+        wall_superheat = Q_(
             [
                 1.2746231374307015,
                 1.41943769421438,
@@ -614,7 +614,7 @@ class IncroperaBoilingCurveImposedTemperatureExcess:
             (ureg.W / ureg.m**2),
         )
 
-        return temperature_excess.to(ureg.delta_degC), heat_flux.to(ureg.W / ureg.cm**2)
+        return wall_superheat.to(ureg.delta_degC), heat_flux.to(ureg.W / ureg.cm**2)
 
     @staticmethod
     def extra() -> dict[Literal['A', 'B', 'C', 'D', 'E'], tuple[Quantity, Quantity]]:
