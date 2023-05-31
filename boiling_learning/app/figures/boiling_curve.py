@@ -97,12 +97,12 @@ def main() -> None:
     f, ax = plt.subplots(1, 1, figsize=(7, 4))
     data = pd.DataFrame(
         CENGEL_BOILING_CURVE,
-        columns=['Excess temperature', 'Heat flux', 'Regime'],
+        columns=['Wall superheat', 'Heat flux', 'Regime'],
     )
     sns.lineplot(
         ax=ax,
         data=data,
-        x='Excess temperature',
+        x='Wall superheat',
         y='Heat flux',
         hue='Regime',
         legend=False,
@@ -149,7 +149,7 @@ def main() -> None:
     )
 
     for regime in NATURAL_CONVECTION, PARTIAL_NUCLEATE_BOILING, FULLY_DEVELOPED_NUCLEATE_BOILING:
-        temperature_range = data[data['Regime'] == regime]['Excess temperature']
+        temperature_range = data[data['Regime'] == regime]['Wall superheat']
         start = temperature_range.min()
         end = temperature_range.max()
 
@@ -157,7 +157,7 @@ def main() -> None:
     ax.axvspan(dnb_x, burnout_x, color=regime_colors[FILM_BOILING], alpha=0.15)
 
     ax.set(
-        xlabel=f'Excess temperature, ${glossary["excess temperature"]}$ [${units["temperature"]}$]',
+        xlabel=f'Wall superheat, ${glossary["wall superheat"]}$ [${units["temperature"]}$]',
         ylabel=f'Heat flux, ${glossary["heat flux"]}$ [${units["heat flux"]}$]',
     )
     ax.set_xscale('log')

@@ -15,7 +15,7 @@ units: Final = {
 glossary: Final = {
     'power': 'q',
     'heat flux': 'q^{\\prime\\prime}',
-    'excess temperature': '\\Delta T_{\\mathrm{e}}',
+    'wall superheat': '\\Delta T_{\\mathrm{sat}}',
     'downscaling factor': 'f_\\text{ds}',
     'large wire ds': '\\mathcal{D}^{\\mathrm{LW}}',
     'small wire ds': '\\mathcal{D}^{\\mathrm{SW}}',

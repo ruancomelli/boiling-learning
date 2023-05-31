@@ -60,12 +60,12 @@ def main() -> None:
         require_gpu=True,
     )
 
-    data = pd.DataFrame(DATA, columns=['Excess temperature', 'Heat flux', 'Inclination'])
+    data = pd.DataFrame(DATA, columns=['Wall superheat', 'Heat flux', 'Inclination'])
     data['Heat flux'] /= 1e4  # W/m^2 -> W/cm^2
 
     grid = sns.lmplot(
         data=data,
-        x='Excess temperature',
+        x='Wall superheat',
         y='Heat flux',
         hue='Inclination',
         order=3,
@@ -81,7 +81,7 @@ def main() -> None:
     grid.ax.set(
         xscale='log',
         yscale='log',
-        xlabel=f'Excess temperature, ${glossary["excess temperature"]}$ [${units["temperature"]}$]',
+        xlabel=f'Wall superheat, ${glossary["wall superheat"]}$ [${units["temperature"]}$]',
         ylabel=f'Heat flux, ${glossary["heat flux"]}$ [${units["heat flux"]}$]',
     )
     grid.ax.minorticks_off()
