@@ -63,7 +63,7 @@ def model_to_tikz(
     architecture: ModelArchitecture,
     /,
     *,
-    max_rows_per_column: int = 8,
+    max_rows_per_column: int | None,
     standalone: bool,
 ) -> Iterator[str]:
     preamble = (
@@ -326,9 +326,14 @@ def _clean_shape(shape: tuple) -> Iterator[int]:
 
 
 def _allocate_layers(
-    layers: Sequence[_T], /, *, max_rows_per_column: int
+    layers: Sequence[_T], /, *, max_rows_per_column: int | None
 ) -> Iterator[Sequence[_T]]:
     """Allocate layers to columns."""
+    if max_rows_per_column is None:
+        # allocate all layers to a single column
+        yield layers
+        return
+
     if max_rows_per_column <= 0:
         raise ValueError('max_rows_per_column must be positive')
 
