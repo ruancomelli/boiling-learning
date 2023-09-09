@@ -38,25 +38,25 @@ def main() -> None:
         require_gpu=True,
     )
 
-    Path(diagrams_path() / 'hoboldnet.tex').write_text(
-        '\n'.join(
-            model_to_tikz(
-                hoboldnet2(input_shape=(120, 196), dropout=0.5, normalize_images=False),
-                max_rows_per_column=7,
-                standalone=False,
+    for model_name, model in (
+        ('hoboldnet', hoboldnet2(input_shape=(120, 196), dropout=0.5, normalize_images=False)),
+        ('kramernet', kramernet(input_shape=(128, 96), dropout=0.5, normalize_images=False)),
+    ):
+        for max_rows_per_column in (None, 7):
+            filename = (
+                f'{model_name}_{max_rows_per_column}_rows.text'
+                if max_rows_per_column is not None
+                else f'{model_name}_single_column.text'
             )
-        )
-    )
-
-    Path(diagrams_path() / 'kramernet.tex').write_text(
-        '\n'.join(
-            model_to_tikz(
-                kramernet(input_shape=(128, 96), dropout=0.5, normalize_images=False),
-                max_rows_per_column=7,
-                standalone=False,
+            Path(diagrams_path() / filename).write_text(
+                '\n'.join(
+                    model_to_tikz(
+                        model,
+                        max_rows_per_column=max_rows_per_column,
+                        standalone=True,
+                    )
+                )
             )
-        )
-    )
 
 
 def model_to_tikz(

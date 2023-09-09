@@ -1,7 +1,12 @@
 import typer
 
 from boiling_learning.app.examples import image_standardization, uncertainties
-from boiling_learning.app.figures import boiling_curve, diameter_effects, inclination_effects
+from boiling_learning.app.figures import (
+    architectures,
+    boiling_curve,
+    diameter_effects,
+    inclination_effects,
+)
 from boiling_learning.app.studies import (
     animate,
     automl,
@@ -33,6 +38,7 @@ from boiling_learning.app.studies import (
 
 app = typer.Typer()
 app.add_typer(animate.app, name='animate')
+app.add_typer(architectures.app, name='architectures')
 app.add_typer(automl.app, name='automl')
 app.add_typer(automl_cross_surface.app, name='automl-cross-surface')
 app.add_typer(automl_learning_curve.app, name='automl-learning-curve')
