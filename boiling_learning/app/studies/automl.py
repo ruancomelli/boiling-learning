@@ -15,7 +15,9 @@ from boiling_learning.app.automl.autofit_dataset import autofit_dataset
 from boiling_learning.app.automl.evaluation import cached_best_model_evaluator
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import figures_path
-from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
+from boiling_learning.app.datasets.preprocessed.boiling1d import (
+    baseline_boiling_dataset,
+)
 from boiling_learning.app.displaying import units
 from boiling_learning.app.displaying.figures import save_figure
 from boiling_learning.app.figures.architectures import diagrams_path, model_to_tikz
@@ -225,7 +227,7 @@ def boiling1d(model_size_reduce: int = 1) -> None:
             ax.set(
                 xscale='log',
                 yscale='log',
-                ylabel=f'Validation loss [{units["mse"]}]',
+                ylabel=f'MSE [{units['mse']}]',
             )
             save_figure(
                 f,
@@ -238,17 +240,27 @@ def boiling1d(model_size_reduce: int = 1) -> None:
                 / f'boiling1d-{direct_label}-{weights_group}-reduce{model_size_reduce}.pdf',
             )
 
-        (
-            _automl_diagrams_path() / f'best-automl-{direct_label}-reduce{model_size_reduce}.tex'
-        ).write_text(
-            '\n'.join(
-                model_to_tikz(
-                    best_model(),
-                    max_rows_per_column=7,
-                    standalone=False,
-                )
+        for max_rows_per_column in (None, 7):
+            filename_end = (
+                f'{max_rows_per_column}-columns'
+                if max_rows_per_column is not None
+                else 'single-column'
             )
-        )
+            for standalone in False, True:
+                filename = (
+                    f'best-automl-{direct_label}-reduce-{model_size_reduce}-{filename_end}-standalone.tex'
+                    if standalone
+                    else f'best-automl-{direct_label}-reduce-{model_size_reduce}-{filename_end}.tex'
+                )
+                (_automl_diagrams_path() / filename).write_text(
+                    '\n'.join(
+                        model_to_tikz(
+                            best_model(),
+                            max_rows_per_column=max_rows_per_column,
+                            standalone=standalone,
+                        )
+                    )
+                )
 
     console.print(Columns(tables))
 
