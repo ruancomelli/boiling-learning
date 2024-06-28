@@ -6,7 +6,7 @@ authors = [
     {name = "Ruan Comelli", email = "ruancomelli@gmail.com"}
 ]
 dependencies = [
-    "tensorflow<2.11.0,>=2.10.0",
+    "tensorflow<2.16.3,>=2.16.2",
     "tensorflow-addons>=0.18.0",
     "typing-extensions>=4.3.0",
     "frozendict>=2.3.4",
