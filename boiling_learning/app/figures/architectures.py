@@ -108,7 +108,7 @@ def model_to_tikz(
 
                 \\begin{figure}[ht]
                     \\begin{tikzpicture}
-            '''  # noqa
+            '''
         )
         if standalone
         else '\\begin{tikzpicture}'
@@ -292,16 +292,16 @@ def model_to_tikz(
                     key=lambda row_layer_pair: row_layer_pair[0],
                 )
 
-                yield f'\\node[below=0.1 of {previous_layer.name}] ({previous_layer.name}-below) {{}};'  # noqa
-                yield f'\\node[right=0 of {previous_layer.name}] ({previous_layer.name}-between) {{}};'  # noqa
+                yield f'\\node[below=0.1 of {previous_layer.name}] ({previous_layer.name}-below) {{}};'
+                yield f'\\node[right=0 of {previous_layer.name}] ({previous_layer.name}-between) {{}};'
                 yield f'\\node[above=0.1 of {layer.name}] ({layer.name}-above) {{}};'
 
                 yield (
                     '\\draw[->]'
                     f' ({previous_layer.name})'
                     f' -- ({previous_layer.name}-below.center)'
-                    f' -- ({previous_layer.name}-between.center |- 10, 10 |- {previous_layer.name}-below.center)'  # noqa
-                    f' -- ({previous_layer.name}-between.center |- 10, 10 |- {layer.name}-above.center)'  # noqa
+                    f' -- ({previous_layer.name}-between.center |- 10, 10 |- {previous_layer.name}-below.center)'
+                    f' -- ({previous_layer.name}-between.center |- 10, 10 |- {layer.name}-above.center)'
                     f' -- ({layer.name}-above.center)'
                     f' -- ({layer.name});'
                 )

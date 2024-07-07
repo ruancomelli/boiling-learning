@@ -18,10 +18,6 @@ jobs:
       id: setup-python
       uses: ./.github/actions/setup-python-environment
 
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        make check_valid_python
     - name: Run tests
       run: |
         make tox

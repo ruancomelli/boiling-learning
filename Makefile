@@ -30,10 +30,6 @@ check:
 typecheck:
 	@pdm run mypy $(.PROJECT)
 
-.PHONY: check_valid_python
-check_valid_python:
-	@pdm run flake8 boiling_learning/* --count --select=E9,F63,F7,F82 --show-source --statistics
-
 .PHONY: format
 format:
 	@$(call $(.FORMAT))

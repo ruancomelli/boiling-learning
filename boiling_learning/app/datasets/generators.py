@@ -13,13 +13,20 @@ from boiling_learning.app.paths import analyses_path, shared_cache_path
 from boiling_learning.datasets.hdf5_cache import HDF5NumpyCache
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.datasets.splits import DatasetSplits, DatasetTriplet
-from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
+from boiling_learning.image_datasets import (
+    Image,
+    ImageDataset,
+    ImageDatasetTriplet,
+    Targets,
+)
 from boiling_learning.io.dataclasses import dataclass
 from boiling_learning.lazy import LazyDescribed, eager
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import cache
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo
-from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
+from boiling_learning.preprocessing.experiment_video_dataset import (
+    ExperimentVideoDataset,
+)
 from boiling_learning.preprocessing.extract import ExtractedFramesDataset
 from boiling_learning.preprocessing.image import image_dtype_converter
 from boiling_learning.preprocessing.transformers import Transformer
@@ -195,9 +202,7 @@ def _video_dataset_from_video_and_transformers(
             extracted_frames_directory,
             eager=experiment == 'boiling1d',
             length=_video_info_getter()(experiment_video.video).length,
-        )[
-            experiment_video.start : experiment_video.end  # noqa
-        ]
+        )[experiment_video.start : experiment_video.end]
     else:
         frames = experiment_video.frames()
 

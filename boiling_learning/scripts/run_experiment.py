@@ -1,5 +1,3 @@
-# flake8: noqa
-
 # import csv
 # import functools
 # import time
