@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import typer
+from pint import Quantity
 from rich.console import Console
 from rich.panel import Panel
 
@@ -119,20 +120,29 @@ def main() -> None:
     large_wire_surface_area = large_wire.surface_area()
     small_wire_surface_area = small_wire.surface_area()
     ribbon_surface_area = ribbon.surface_area()
+
+    large_wire_surface_area_uncertainty = large_wire_surface_area.error * COVERAGE_FACTOR
     console.print(
         'Large wire surface area:',
         large_wire_surface_area.to(u.cm**2),
-        f'(uncertainty: {large_wire_surface_area.error * COVERAGE_FACTOR})',
+        f'(uncertainty: {large_wire_surface_area_uncertainty})',
+        f'(relative uncertainty: {(large_wire_surface_area_uncertainty / large_wire_surface_area).magnitude:.2%})',
     )
+
+    small_wire_surface_area_uncertainty = small_wire_surface_area.error * COVERAGE_FACTOR
     console.print(
         'Small wire surface area:',
         small_wire_surface_area.to(u.cm**2),
         f'(uncertainty: {small_wire_surface_area.error * COVERAGE_FACTOR})',
+        f'(relative uncertainty: {(small_wire_surface_area_uncertainty / small_wire_surface_area).magnitude:.2%})',
     )
+
+    ribbon_surface_area_uncertainty = ribbon_surface_area.error * COVERAGE_FACTOR
     console.print(
         'Ribbon surface area:',
         ribbon_surface_area.to(u.cm**2),
         f'(uncertainty: {ribbon_surface_area.error * COVERAGE_FACTOR})',
+        f'(relative uncertainty: {(ribbon_surface_area_uncertainty / ribbon_surface_area).magnitude:.2%})',
     )
 
     case_surfaces = {
@@ -200,7 +210,7 @@ def main() -> None:
 
 
 def _array_with_uncertainty(
-    array: np.ndarray, uncertainty: u.Quantity | float, relative: bool = False
+    array: np.ndarray, uncertainty: Quantity | float, relative: bool = False
 ) -> np.ndarray:
     return np.array([value.plus_minus(uncertainty, relative=relative) for value in array])
 

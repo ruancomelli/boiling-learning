@@ -64,7 +64,7 @@ def boiling1d() -> None:
                 'Cross surface analysis'
                 f' - {metric_name}'
                 f' - {subset}'
-                f' - {"direct" if direct else "indirect"}'
+                f' - {'direct' if direct else 'indirect'}'
             ),
         )
         for metric_name in METRIC_NAMES
@@ -168,18 +168,19 @@ def boiling1d() -> None:
                 cmap=sns.color_palette('Blues', as_cmap=True),
                 linewidth=1,
                 cbar_kws={
-                    'label': f'Validation loss [{units["mse"]}]',
+                    'label': f'MSE [{units['mse']}]',
                     'orientation': 'horizontal',
                     'format': ScalarFormatter(),
+                    'pad': 0.065,
                 },
                 fmt='',
                 ax=ax,
             )
 
             ax.xaxis.tick_top()
-            ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='left')
+            ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='center')
             ax.yaxis.tick_right()
-            ax.set_yticklabels(ax.get_yticklabels(), rotation=0, ha='left')
+            ax.set_yticklabels(ax.get_yticklabels(), rotation=0, horizontalalignment='left')
 
             save_figure(
                 f,
@@ -188,6 +189,14 @@ def boiling1d() -> None:
             save_figure(
                 f,
                 _cross_surface_figures_path() / f'boiling1d-{direct_label}-{subset}.pdf',
+            )
+            save_figure(
+                f,
+                _cross_surface_study_path() / f'boiling1d-{direct_label}-{subset}.png',
+            )
+            save_figure(
+                f,
+                _cross_surface_figures_path() / f'boiling1d-{direct_label}-{subset}.png',
             )
 
 
@@ -272,15 +281,16 @@ def _format_sets(indices: tuple[int, ...]) -> str:
 
 
 def _cases_to_latex(cases: tuple[int, ...]) -> str:
-    return (
-        (
-            '${\\mkern 1.5mu\\overline{\\mkern-1.5mu\\bigcup\\mkern-1.5mu}\\mkern 1.5mu}\\left('
-            + ', '.join(glossary[CASE_NAMES[case]] for case in cases)
-            + '\\right)$'
-        )
-        if len(cases) > 1
-        else '$' + glossary[CASE_NAMES[cases[0]]] + '$'
-    )
+    if set(cases) == {0, 1}:
+        return '$\\overline{\\mathrm{U}}^{\\mathrm{W}}$'
+    if set(cases) == {2, 3}:
+        return '$\\overline{\\mathrm{U}}^{\\mathrm{R}}$'
+    if set(cases) == {0, 1, 2, 3}:
+        return '$\\overline{\\mathrm{U}}^{\\mathrm{A}}$'
+
+    assert len(cases) == 1
+
+    return '$' + glossary[CASE_NAMES[cases[0]]] + '$'
 
 
 def _cross_surface_study_path() -> Path:

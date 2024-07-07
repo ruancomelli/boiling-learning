@@ -101,9 +101,9 @@ def boiling1d() -> None:
 
             table.add_row(
                 f'{fraction} ({float(fraction):.0%})',
-                f'{evaluation.training_metrics["MSE"]}',
-                f'{evaluation.validation_metrics["MSE"]}',
-                f'{evaluation.test_metrics["MSE"]}',
+                f'{evaluation.training_metrics['MSE']}',
+                f'{evaluation.validation_metrics['MSE']}',
+                f'{evaluation.test_metrics['MSE']}',
             )
 
             losses.extend(
@@ -128,7 +128,7 @@ def boiling1d() -> None:
         )
         ax.set(
             xlabel='Dataset subsample size',
-            ylabel=f'Loss [{units["mse"]}]',
+            ylabel=f'MSE [{units['mse']}]',
             xscale='log',
             # yscale='log',
         )
@@ -144,6 +144,10 @@ def boiling1d() -> None:
         save_figure(
             f,
             _learning_curve_figures_path() / f'boiling1d-{direct_label}.pdf',
+        )
+        save_figure(
+            f,
+            _learning_curve_study_path() / f'boiling1d-{direct_label}.png',
         )
 
     console.print(Columns(tables))
