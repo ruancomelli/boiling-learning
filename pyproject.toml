@@ -2,9 +2,7 @@
 name = "boiling-learning"
 version = "0.39.0"
 description = "Deep learning models for phase-change quantification and classification."
-authors = [
-    {name = "Ruan Comelli", email = "ruancomelli@gmail.com"}
-]
+authors = [{ name = "Ruan Comelli", email = "ruancomelli@gmail.com" }]
 dependencies = [
     "tensorflow<2.11.0,>=2.10.0",
     "tensorflow-addons>=0.18.0",
@@ -38,26 +36,37 @@ dependencies = [
 ]
 
 requires-python = ">=3.10,<3.11"
-license = {text = "MIT"}
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
 readme = "README.md"
-keywords = ["python", "machine-learning", "deep-learning", "tensorflow", "phase-change"]
+keywords = [
+    "automated-machine-learning",
+    "automl",
+    "deep-learning",
+    "machine-learning",
+    "phase-change",
+    "python",
+    "tensorflow",
+]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Manufacturing",
     "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Image Processing",
     "Topic :: Scientific/Engineering :: Image Recognition",
-    "Topic :: Scientific/Engineering :: Physics"
+    "Topic :: Scientific/Engineering :: Physics",
 ]
 
 [project.urls]
-homepage = ""
-"Bug Tracker" = "https://github.com/ruancomelli/boiling-learning/issues"
-repository = "https://github.com/ruancomelli/boiling-learning"
+homepage = "https://github.com/ruancomelli/boiling-learning"
+issues = "https://github.com/ruancomelli/boiling-learning/issues"
+repository = "https://github.com/ruancomelli/boiling-learning.git"
 documentation = "https://github.com/ruancomelli/boiling_learning/blob/main/README.md"
+changelog = "https://github.com/ruancomelli/boiling_learning/blob/main/CHANGELOG.md"
 
 [tool.pdm.dev-dependencies]
 test = [
@@ -74,13 +83,8 @@ lint = [
     "pylint>=2.17.0",
     "vulture>=2.7",
 ]
-ci = [
-    "commitizen>=2.29.5",
-    "pre-commit>=2.20.0",
-]
-build = [
-    "pip>=22.2.2",
-]
+ci = ["commitizen>=2.29.5", "pre-commit>=2.20.0"]
+build = ["pip>=22.2.2"]
 types = [
     "mypy>=1.2.0",
     "types-decorator>=5.1.8",
@@ -138,12 +142,9 @@ warn_unused_configs = true
 warn_unused_ignores = true
 plugins = [
     # "classes.contrib.mypy.classes_plugin",
-	"numpy.typing.mypy_plugin",
+    "numpy.typing.mypy_plugin",
 ]
-enable_incomplete_feature = [
-    "TypeVarTuple",
-    "Unpack"
-]
+enable_incomplete_feature = ["TypeVarTuple", "Unpack"]
 
 [tool.commitizen]
 tag_format = "v$major.$minor.$patch$prerelease"
@@ -383,7 +384,13 @@ logging-modules = ["logging"]
 [tool.pylint."messages control"]
 # Only show warnings with the listed confidence levels. Leave empty to show all.
 # Valid levels: HIGH, CONTROL_FLOW, INFERENCE, INFERENCE_FAILURE, UNDEFINED.
-confidence = ["HIGH", "CONTROL_FLOW", "INFERENCE", "INFERENCE_FAILURE", "UNDEFINED"]
+confidence = [
+    "HIGH",
+    "CONTROL_FLOW",
+    "INFERENCE",
+    "INFERENCE_FAILURE",
+    "UNDEFINED",
+]
 
 # Disable the message, report, category or checker with the given id(s). You can
 # either give multiple identifiers separated by comma (,) or put this option
@@ -394,7 +401,16 @@ confidence = ["HIGH", "CONTROL_FLOW", "INFERENCE", "INFERENCE_FAILURE", "UNDEFIN
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-disable = ["raw-checker-failed", "bad-inline-option", "locally-disabled", "file-ignored", "suppressed-message", "useless-suppression", "deprecated-pragma", "use-symbolic-message-instead"]
+disable = [
+    "raw-checker-failed",
+    "bad-inline-option",
+    "locally-disabled",
+    "file-ignored",
+    "suppressed-message",
+    "useless-suppression",
+    "deprecated-pragma",
+    "use-symbolic-message-instead",
+]
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -505,12 +521,22 @@ ignore-none = true
 ignore-on-opaque-inference = true
 
 # List of symbolic message names to ignore for Mixin members.
-ignored-checks-for-mixins = ["no-member", "not-async-context-manager", "not-context-manager", "attribute-defined-outside-init"]
+ignored-checks-for-mixins = [
+    "no-member",
+    "not-async-context-manager",
+    "not-context-manager",
+    "attribute-defined-outside-init",
+]
 
 # List of class names for which member attributes should not be checked (useful
 # for classes with dynamically set attributes). This supports the use of
 # qualified names.
-ignored-classes = ["optparse.Values", "thread._local", "_thread._local", "argparse.Namespace"]
+ignored-classes = [
+    "optparse.Values",
+    "thread._local",
+    "_thread._local",
+    "argparse.Namespace",
+]
 
 # Show a hint with possible names when a member name was not found. The aspect of
 # finding the hint is based on edit distance.
@@ -558,4 +584,10 @@ ignored-argument-names = "_.*|^ignored_|^unused_"
 
 # List of qualified module names which can have objects that can redefine
 # builtins.
-redefining-builtins-modules = ["six.moves", "past.builtins", "future.builtins", "builtins", "io"]
+redefining-builtins-modules = [
+    "six.moves",
+    "past.builtins",
+    "future.builtins",
+    "builtins",
+    "io",
+]
