@@ -1,35 +1,28 @@
 name: Setup Python Environment
-description: Setup Python and install dependencies with Poetry
-on:
-  workflow_call:
-    inputs:
-      python-version:
-        default: '3.10'
-        description: Python version number to use.
-        required: true
-        type: string
+description: Setup Python and install project dependencies
+
+inputs:
+  python-version:
+    default: "3.10"
+    description: Python version number to use.
+    required: true
+
 runs:
   using: composite
   steps:
-  - name: Install system dependencies
-    shell: bash
-    run: |
-      sudo apt update
-      sudo apt install libegl1-mesa -y
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-  - name: Checkout code
-    uses: actions/checkout@v4
+    - name: Setup python ${{ inputs.python-version }}
+      uses: pdm-project/setup-pdm@v3
+      with:
+        python-version: ${{ inputs.python-version }} # Version range or exact version of a Python version to use, the same as actions/setup-python
+        # architecture: x64    # The target architecture (x86, x64) of the Python interpreter. the same as actions/setup-python
+        # version: 1.4.0       # The version of PDM to install. Leave it as empty to use the latest version from PyPI
+        # prerelease: true     # Allow prerelease versions to be installed
+        enable-pep582: true # Enable PEP 582 package loading globally
+        cache: true
 
-  - name: Setup python ${{ inputs.python-version }}
-    uses: pdm-project/setup-pdm@v3
-    with:
-      python-version: ${{ inputs.python-version }} # Version range or exact version of a Python version to use, the same as actions/setup-python
-      # architecture: x64    # The target architecture (x86, x64) of the Python interpreter. the same as actions/setup-python
-      # version: 1.4.0       # The version of PDM to install. Leave it as empty to use the latest version from PyPI
-      # prerelease: true     # Allow prerelease versions to be installed
-      enable-pep582: true  # Enable PEP 582 package loading globally
-      cache: true
-
-  - name: Install package
-    shell: bash
-    run: pdm install
+    - name: Install project and dependencies
+      shell: bash
+      run: pdm install
