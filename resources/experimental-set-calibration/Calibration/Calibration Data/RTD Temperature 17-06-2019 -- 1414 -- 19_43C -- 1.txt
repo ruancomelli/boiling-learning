@@ -1,4 +1,4 @@
-LabVIEW Measurement	
+LabVIEW Measurement
 Writer_Version	2
 Reader_Version	2
 Separator	Tab
@@ -9,17 +9,17 @@ Time_Pref	Absolute
 Operator	ruan.comelli
 Date	2019/06/17
 Time	14:14:48,789849750058179406
-***End_of_Header***	
-	
-Channels	1	
-Samples	1	
-Date	2019/06/17	
-Time	14:14:48,789849750058179406	
-Y_Unit_Label	Deg C	
-X_Dimension	Time	
-X0	0,0000000000000000E+0	
-Delta_X	0,000000	
-***End_of_Header***		
+***End_of_Header***
+
+Channels	1
+Samples	1
+Date	2019/06/17
+Time	14:14:48,789849750058179406
+Y_Unit_Label	Deg C
+X_Dimension	Time
+X0	0,0000000000000000E+0
+Delta_X	0,000000
+***End_of_Header***
 X_Value	RTD Temperature	Comment
 0,000000	19,589431
 0,208979	19,591118
