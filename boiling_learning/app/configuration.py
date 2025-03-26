@@ -130,8 +130,8 @@ def _configure_gpu(
             'command *nvidia-smi -L* found GPUs, but TensorFlow could not connect to them.'
         )
 
-    if require_gpu:
-        raise RuntimeError('No GPUs connected.')
+    # if require_gpu:
+    #     raise RuntimeError('No GPUs connected.')
 
     logger.info('No GPUs connected.')
     return tf.distribute.get_strategy()

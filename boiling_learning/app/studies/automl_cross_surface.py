@@ -65,7 +65,7 @@ def boiling1d() -> None:
                 'AutoML cross surface analysis'
                 f' - {metric_name}'
                 f' - {subset}'
-                f' - {'direct' if direct else 'indirect'}'
+                f' - {"direct" if direct else "indirect"}'
             ),
         )
         for metric_name in METRIC_NAMES
@@ -169,7 +169,7 @@ def boiling1d() -> None:
                 cmap=sns.color_palette('Blues', as_cmap=True),
                 linewidth=1,
                 cbar_kws={
-                    'label': f'MSE [{units['mse']}]',
+                    'label': f'MSE [{units["mse"]}]',
                     'orientation': 'horizontal',
                     'format': ScalarFormatter(),
                     'pad': 0.065,

@@ -1,61 +1,53 @@
 repos:
-  - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v2.1.1
-    hooks:
-      - id: conventional-pre-commit
-        stages: [commit-msg]
+- repo: https://github.com/compilerla/conventional-pre-commit
+  rev: v2.1.1
+  hooks:
+  - id: conventional-pre-commit
+    stages: [commit-msg]
 
-  - repo: https://github.com/hakancelikdev/unimport
-    rev: 33ead41ee30f1d323a9c2fcfd0114297efbbc4d5
-    hooks:
-      - id: unimport
-        args:
-          [
-            --check,
-            --gitignore,
-            --ignore-init,
-            --include-star-import,
-            boiling_learning,
-            tests,
-          ]
+- repo: https://github.com/hakancelikdev/unimport
+  rev: 33ead41ee30f1d323a9c2fcfd0114297efbbc4d5
+  hooks:
+  - id: unimport
+    args: [--check, --gitignore, --ignore-init, --include-star-import, boiling_learning, tests]
 
-  - repo: https://github.com/psf/black
-    rev: 23.3.0
-    hooks:
-      - id: black
-        args: [--config, pyproject.toml]
+- repo: https://github.com/psf/black
+  rev: 23.3.0
+  hooks:
+  - id: black
+    args: [--config, pyproject.toml]
 
-  - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
-        name: isort (python)
-        args: [--check]
-      - id: isort
-        name: isort (cython)
-        types: [cython]
-        args: [--check]
-      - id: isort
-        name: isort (pyi)
-        types: [pyi]
-        args: [--check]
+- repo: https://github.com/pycqa/isort
+  rev: 5.12.0
+  hooks:
+  - id: isort
+    name: isort (python)
+    args: [--check]
+  - id: isort
+    name: isort (cython)
+    types: [cython]
+    args: [--check]
+  - id: isort
+    name: isort (pyi)
+    types: [pyi]
+    args: [--check]
 
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
-    hooks:
-      - id: double-quote-string-fixer
-      - id: end-of-file-fixer
-      - id: requirements-txt-fixer
-      - id: trailing-whitespace
-      - id: check-ast
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.4.0
+  hooks:
+  - id: double-quote-string-fixer
+  - id: end-of-file-fixer
+  - id: requirements-txt-fixer
+  - id: trailing-whitespace
+  - id: check-ast
 
-  - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-    rev: v2.5.0
-    hooks:
-      - id: pretty-format-yaml
-        args: [--autofix, --indent, "2"]
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+  rev: v2.5.0
+  hooks:
+  - id: pretty-format-yaml
+    args: [--autofix, --indent, '2']
 
-  - repo: https://github.com/floatingpurr/sync_with_pdm
-    rev: 0.3.0
-    hooks:
-      - id: sync_with_pdm
+- repo: https://github.com/floatingpurr/sync_with_pdm
+  rev: 0.3.0
+  hooks:
+  - id: sync_with_pdm
