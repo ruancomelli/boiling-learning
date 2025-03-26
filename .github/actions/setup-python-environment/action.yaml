@@ -14,7 +14,7 @@ runs:
       uses: actions/checkout@v4
 
     - name: Setup python ${{ inputs.python-version }}
-      uses: pdm-project/setup-pdm@v3
+      uses: pdm-project/setup-pdm@v4
       with:
         python-version: ${{ inputs.python-version }} # Version range or exact version of a Python version to use, the same as actions/setup-python
         # architecture: x64    # The target architecture (x86, x64) of the Python interpreter. the same as actions/setup-python
