@@ -1,4 +1,14 @@
 repos:
+
+- repo: https://github.com/astral-sh/uv-pre-commit
+  rev: 0.6.9
+  hooks:
+      # Update the uv lockfile
+  - id: uv-lock
+        # Install all packages
+  - id: uv-sync
+    args: [--locked, --all-packages]
+
 - repo: https://github.com/compilerla/conventional-pre-commit
   rev: v2.1.1
   hooks:
@@ -46,8 +56,3 @@ repos:
   hooks:
   - id: pretty-format-yaml
     args: [--autofix, --indent, '2']
-
-- repo: https://github.com/floatingpurr/sync_with_pdm
-  rev: 0.3.0
-  hooks:
-  - id: sync_with_pdm

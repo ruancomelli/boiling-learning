@@ -13,16 +13,12 @@ runs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup python ${{ inputs.python-version }}
-      uses: pdm-project/setup-pdm@v3
+    - name: Set up Python ${{ inputs.python-version }}
+      uses: astral-sh/setup-uv@v5
       with:
-        python-version: ${{ inputs.python-version }} # Version range or exact version of a Python version to use, the same as actions/setup-python
-        # architecture: x64    # The target architecture (x86, x64) of the Python interpreter. the same as actions/setup-python
-        # version: 1.4.0       # The version of PDM to install. Leave it as empty to use the latest version from PyPI
-        # prerelease: true     # Allow prerelease versions to be installed
-        enable-pep582: true # Enable PEP 582 package loading globally
-        cache: true
+        enable-cache: true
+        python-version: ${{ inputs.python-version }}
 
     - name: Install project and dependencies
       shell: bash
-      run: pdm install
+      run: uv sync

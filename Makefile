@@ -1,9 +1,9 @@
 .PROJECT = boiling_learning
 .TESTS_FOLDER = tests
 
-.UNIMPORT = $(shell pdm run unimport --remove --gitignore --ignore-init --include-star-import $(.PROJECT) $(.TESTS_FOLDER))
-.BLACK = $(shell pdm run black $(.PROJECT) $(.TESTS_FOLDER))
-.ISORT = $(shell pdm run isort $(.PROJECT) $(.TESTS_FOLDER))
+.UNIMPORT = $(shell uv run unimport --remove --gitignore --ignore-init --include-star-import $(.PROJECT) $(.TESTS_FOLDER))
+.BLACK = $(shell uv run black $(.PROJECT) $(.TESTS_FOLDER))
+.ISORT = $(shell uv run isort $(.PROJECT) $(.TESTS_FOLDER))
 .FORMAT = $(foreach command,.UNIMPORT .BLACK .ISORT,$(call $(command)))
 
 .READD = $(shell git update-index --again)
@@ -11,16 +11,12 @@
 
 .PHONY: coverage
 coverage:
-	@pdm run coverage run --source=$(.PROJECT)/ -m pytest $(.TESTS_FOLDER)
-	@pdm run coverage report -m
+	@uv run coverage run --source=$(.PROJECT)/ -m pytest $(.TESTS_FOLDER)
+	@uv run coverage report -m
 
 .PHONY: test
 test:
-	@pdm run pytest --doctest-modules $(.PROJECT) $(.TESTS_FOLDER) -vv
-
-.PHONY: tox
-tox:
-	@pdm run tox
+	@uv run pytest --doctest-modules $(.PROJECT) $(.TESTS_FOLDER) -vv
 
 .PHONY: check
 check:
@@ -28,7 +24,7 @@ check:
 
 .PHONY: typecheck
 typecheck:
-	@pdm run mypy $(.PROJECT)
+	@uv run mypy $(.PROJECT)
 
 .PHONY: format
 format:
@@ -36,7 +32,7 @@ format:
 
 .PHONY: vulture
 vulture:
-	@pdm run vulture --ignore-decorators @*.dispatch*,@*.instance* --ignore-names __*[!_][!_] $(.PROJECT) main.py
+	@uv run vulture --ignore-decorators @*.dispatch*,@*.instance* --ignore-names __*[!_][!_] $(.PROJECT) main.py
 
 .PHONY: autofix
 autofix:
@@ -54,10 +50,10 @@ release:
 # 	MINOR or PATCH -> PATCH (v0.2.3 -> v0.2.4)
 # effectively avoiding incrementing the MAJOR version number while the first
 # stable version (v1.0.0) is not released
-	pdm run cz bump --increment $(shell pdm run cz bump --dry-run | grep -q "MAJOR" && echo "MINOR" || echo "PATCH")
+	uv run cz bump --increment $(shell uv run cz bump --dry-run | grep -q "MAJOR" && echo "MINOR" || echo "PATCH")
 	git push
 	git push --tags
 
 .PHONY: run
 run:
-	pdm run python main.py
+	uv run python main.py
