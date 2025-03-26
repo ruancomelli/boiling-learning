@@ -13,7 +13,9 @@ from rich.table import Table
 
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import figures_path
-from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
+from boiling_learning.app.datasets.preprocessed.boiling1d import (
+    baseline_boiling_dataset,
+)
 from boiling_learning.app.displaying import units
 from boiling_learning.app.displaying.figures import save_figure
 from boiling_learning.app.paths import studies_path
@@ -41,7 +43,7 @@ FRACTIONS = tuple(Fraction(i, 100) for i in range(1, 10)) + tuple(
 
 @app.command()
 def boiling1d() -> None:
-    logger.info('Analyzing learning curve')
+    logger.info("Analyzing learning curve")
 
     strategy = configure(
         force_gpu_allow_growth=True,
@@ -49,26 +51,26 @@ def boiling1d() -> None:
         require_gpu=True,
     )
 
-    evaluator = cached_model_evaluator('boiling1d')
+    evaluator = cached_model_evaluator("boiling1d")
 
     tables: list[Table] = []
     for direct in False, True:
-        direct_label = 'direct' if direct else 'indirect'
+        direct_label = "direct" if direct else "indirect"
 
         datasets = baseline_boiling_dataset(direct_visualization=direct)
 
         table = Table(
-            'Subsample',
-            'Training loss',
-            'Validation loss',
-            'Test loss',
-            title=f'Learning curve - {direct_label}',
+            "Subsample",
+            "Training loss",
+            "Validation loss",
+            "Test loss",
+            title=f"Learning curve - {direct_label}",
         )
 
         losses: list[tuple[Fraction, float, str]] = []
         for fraction in FRACTIONS:
             subsampled = (
-                datasets | dataset_sampler(count=fraction, subset='train')
+                datasets | dataset_sampler(count=fraction, subset="train")
                 if fraction != 1
                 else datasets
             )
@@ -100,36 +102,36 @@ def boiling1d() -> None:
             )
 
             table.add_row(
-                f'{fraction} ({float(fraction):.0%})',
-                f'{evaluation.training_metrics["MSE"]}',
-                f'{evaluation.validation_metrics["MSE"]}',
-                f'{evaluation.test_metrics["MSE"]}',
+                f"{fraction} ({float(fraction):.0%})",
+                f"{evaluation.training_metrics['MSE']}",
+                f"{evaluation.validation_metrics['MSE']}",
+                f"{evaluation.test_metrics['MSE']}",
             )
 
             losses.extend(
                 (
-                    (fraction, evaluation.training_metrics['MSE'], 'Training'),
-                    (fraction, evaluation.validation_metrics['MSE'], 'Validation'),
-                    (fraction, evaluation.test_metrics['MSE'], 'Test'),
+                    (fraction, evaluation.training_metrics["MSE"], "Training"),
+                    (fraction, evaluation.validation_metrics["MSE"], "Validation"),
+                    (fraction, evaluation.test_metrics["MSE"], "Test"),
                 )
             )
 
         tables.append(table)
 
-        plot_data = pd.DataFrame(losses, columns=['fraction', 'loss', 'Subset'])
+        plot_data = pd.DataFrame(losses, columns=["fraction", "loss", "Subset"])
         f, ax = plt.subplots(1, 1, figsize=(2.8, 2.8))
         sns.scatterplot(
             ax=ax,
             data=plot_data,
-            x='fraction',
-            y='loss',
-            hue='Subset',
+            x="fraction",
+            y="loss",
+            hue="Subset",
             alpha=0.75,
         )
         ax.set(
-            xlabel='Dataset subsample size',
-            ylabel=f'MSE [{units["mse"]}]',
-            xscale='log',
+            xlabel="Dataset subsample size",
+            ylabel=f"MSE [{units['mse']}]",
+            xscale="log",
             # yscale='log',
         )
         # ax.xaxis.set_minor_formatter(PercentFormatter(xmax=max(map(float, FRACTIONS))))
@@ -139,15 +141,15 @@ def boiling1d() -> None:
 
         save_figure(
             f,
-            _learning_curve_study_path() / f'boiling1d-{direct_label}.pdf',
+            _learning_curve_study_path() / f"boiling1d-{direct_label}.pdf",
         )
         save_figure(
             f,
-            _learning_curve_figures_path() / f'boiling1d-{direct_label}.pdf',
+            _learning_curve_figures_path() / f"boiling1d-{direct_label}.pdf",
         )
         save_figure(
             f,
-            _learning_curve_study_path() / f'boiling1d-{direct_label}.png',
+            _learning_curve_study_path() / f"boiling1d-{direct_label}.png",
         )
 
     console.print(Columns(tables))
@@ -159,8 +161,8 @@ def condensation() -> None:
 
 
 def _learning_curve_study_path() -> Path:
-    return resolve(studies_path() / 'learning-curve', dir=True)
+    return resolve(studies_path() / "learning-curve", dir=True)
 
 
 def _learning_curve_figures_path() -> Path:
-    return resolve(figures_path() / 'results' / 'learning-curve', dir=True)
+    return resolve(figures_path() / "results" / "learning-curve", dir=True)

@@ -7,7 +7,7 @@ from fractions import Fraction
 from importlib import import_module
 from pathlib import Path, PosixPath
 from types import FunctionType
-from typing import Any, Optional, Protocol, TypedDict, TypeVar, Union, runtime_checkable
+from typing import Any, Protocol, TypedDict, TypeVar, runtime_checkable
 
 from classes import AssociatedType, Supports, typeclass
 from frozendict import frozendict  # type: ignore[attr-defined]
@@ -18,21 +18,20 @@ from boiling_learning.utils.table_dispatch import TableDispatcher
 
 # see <https://www.python.org/dev/peps/pep-0519/#provide-specific-type-hinting-support>
 
-BasicTypes = Union[None, bool, int, str, float]
-_BasicType = TypeVar('_BasicType', bound=BasicTypes)
-JSONDataType = Union[BasicTypes, list['JSONDataType'], dict[str, 'JSONDataType']]
+BasicTypes = None | bool | int | str | float
+_BasicType = TypeVar("_BasicType", bound=BasicTypes)
+JSONDataType = BasicTypes | list["JSONDataType"] | dict[str, "JSONDataType"]
 
 
 class SerializedJSONObject(TypedDict):
-    type: Optional[str]
+    type: str | None
     contents: JSONDataType
 
 
-SerializedJSONDataType = Union[BasicTypes, list[BasicTypes], SerializedJSONObject]
+SerializedJSONDataType = BasicTypes | list[BasicTypes] | SerializedJSONObject
 
 
-class JSONEncodable(AssociatedType):
-    ...
+class JSONEncodable(AssociatedType): ...
 
 
 class JSONEncodableMeta(type):
@@ -40,35 +39,34 @@ class JSONEncodableMeta(type):
         return encode.supports(instance)
 
 
-class SupportsJSONEncodable(Supports[JSONEncodable], metaclass=JSONEncodableMeta):
-    ...
+class SupportsJSONEncodable(Supports[JSONEncodable], metaclass=JSONEncodableMeta): ...
 
 
 @typeclass(JSONEncodable)
 def encode(instance: Supports[JSONEncodable]) -> JSONDataType:
-    '''Return a JSON encoding of an object.'''
+    """Return a JSON encoding of an object."""
 
 
 @typeclass
 def encode_type(instance: Any) -> JSONDataType:
-    '''Return a JSON encoding of the type of an object.'''
+    """Return a JSON encoding of the type of an object."""
 
 
 @encode_type.instance(object)
 def _encode_type_any(instance: object) -> str:
-    '''Return a JSON encoding of the type of an object.'''
+    """Return a JSON encoding of the type of an object."""
     return encode(type(instance))
 
 
 @encode_type.instance(Pack)
 def _encode_type_pack(instance: Pack) -> str:
-    '''Return a JSON encoding of the type ``Pack``.'''
+    """Return a JSON encoding of the type ``Pack``."""
     return encode(Pack)
 
 
 @encode_type.instance(FunctionType)
 def _encode_type_function_type(obj: FunctionType) -> str:
-    return 'types.FunctionType'
+    return "types.FunctionType"
 
 
 decode = TableDispatcher()
@@ -94,8 +92,7 @@ def _decode(obj: _BasicType) -> _BasicType:
 
 @runtime_checkable
 class HasJSONEncode(Protocol):
-    def __json_encode__(self) -> JSONDataType:
-        ...
+    def __json_encode__(self) -> JSONDataType: ...
 
 
 @encode.instance(protocol=HasJSONEncode)
@@ -122,8 +119,7 @@ class _PackOfJSONEncodableMeta(type):
 class PackOfJSONEncodable(
     Pack[Supports[JSONEncodable], Supports[JSONEncodable]],
     metaclass=_PackOfJSONEncodableMeta,
-):
-    ...
+): ...
 
 
 @encode.instance(delegate=PackOfJSONEncodable)
@@ -140,11 +136,14 @@ def _decode_Pack(obj: list[SerializedJSONObject]) -> Pack:
 
 class _ListOfJSONEncodableMeta(type):
     def __instancecheck__(self, instance: Any) -> bool:
-        return isinstance(instance, list) and all(encode.supports(item) for item in instance)
+        return isinstance(instance, list) and all(
+            encode.supports(item) for item in instance
+        )
 
 
-class ListOfJSONEncodable(list[Supports[JSONEncodable]], metaclass=_ListOfJSONEncodableMeta):
-    ...
+class ListOfJSONEncodable(
+    list[Supports[JSONEncodable]], metaclass=_ListOfJSONEncodableMeta
+): ...
 
 
 @encode.instance(delegate=ListOfJSONEncodable)
@@ -160,12 +159,14 @@ def _decode_list(obj: list[JSONDataType]) -> list:
 class _DictOfJSONEncodableMeta(type):
     def __instancecheck__(self, instance: Any) -> bool:
         return isinstance(instance, dict) and all(
-            isinstance(key, str) and encode.supports(value) for key, value in instance.items()
+            isinstance(key, str) and encode.supports(value)
+            for key, value in instance.items()
         )
 
 
-class DictOfJSONEncodable(dict[str, Supports[JSONEncodable]], metaclass=_DictOfJSONEncodableMeta):
-    ...
+class DictOfJSONEncodable(
+    dict[str, Supports[JSONEncodable]], metaclass=_DictOfJSONEncodableMeta
+): ...
 
 
 @encode.instance(delegate=DictOfJSONEncodable)
@@ -180,13 +181,14 @@ def _decode_dict(obj: dict[str, JSONDataType]) -> dict:
 
 class _TupleOfJSONEncodableMeta(type):
     def __instancecheck__(self, instance: Any) -> bool:
-        return isinstance(instance, tuple) and all(encode.supports(item) for item in instance)
+        return isinstance(instance, tuple) and all(
+            encode.supports(item) for item in instance
+        )
 
 
 class TupleOfJSONEncodable(
     tuple[Supports[JSONEncodable], ...], metaclass=_TupleOfJSONEncodableMeta
-):
-    ...
+): ...
 
 
 @encode.instance(delegate=TupleOfJSONEncodable)
@@ -201,11 +203,14 @@ def _decode_tuple(obj: list[JSONDataType]) -> tuple:
 
 class _SetOfJSONEncodableMeta(type):
     def __instancecheck__(self, instance: Any) -> bool:
-        return isinstance(instance, set) and all(encode.supports(item) for item in instance)
+        return isinstance(instance, set) and all(
+            encode.supports(item) for item in instance
+        )
 
 
-class SetOfJSONEncodable(set[Supports[JSONEncodable]], metaclass=_SetOfJSONEncodableMeta):
-    ...
+class SetOfJSONEncodable(
+    set[Supports[JSONEncodable]], metaclass=_SetOfJSONEncodableMeta
+): ...
 
 
 @encode.instance(delegate=SetOfJSONEncodable)
@@ -220,13 +225,14 @@ def _decode_set(obj: list[JSONDataType]) -> set:
 
 class _FrozenSetOfJSONEncodableMeta(type):
     def __instancecheck__(self, instance: Any) -> bool:
-        return isinstance(instance, frozenset) and all(encode.supports(item) for item in instance)
+        return isinstance(instance, frozenset) and all(
+            encode.supports(item) for item in instance
+        )
 
 
 class FrozenSetOfJSONEncodable(
     frozenset[Supports[JSONEncodable]], metaclass=_FrozenSetOfJSONEncodableMeta
-):
-    ...
+): ...
 
 
 @encode.instance(delegate=FrozenSetOfJSONEncodable)
@@ -251,8 +257,7 @@ class FrozenDictMeta(_FrozenDictOfJSONEncodableMeta, type(frozendict)):
 class FrozenDictOfJSONEncodable(
     frozendict[str, Supports[JSONEncodable]],
     metaclass=FrozenDictMeta,
-):
-    ...
+): ...
 
 
 @encode.instance(delegate=FrozenDictOfJSONEncodable)
@@ -291,14 +296,14 @@ def _decode_timedelta(instance: float) -> timedelta:
 @encode.instance(FunctionType)
 @encode.instance(type)
 def _encode_types(instance: type) -> str:
-    return f'{instance.__module__}.{instance.__qualname__}'
+    return f"{instance.__module__}.{instance.__qualname__}"
 
 
 @decode.dispatch(abc.ABCMeta)
 @decode.dispatch(FunctionType)
 @decode.dispatch(type)
 def _decode_types(instance: str) -> type:
-    modulepath, typename = instance.rsplit('.', maxsplit=1)
+    modulepath, typename = instance.rsplit(".", maxsplit=1)
     module = import_module(modulepath)
     return getattr(module, typename)
 
@@ -315,15 +320,15 @@ def _decode_slice(instance: list[int | None]) -> slice:
 
 
 def serialize(obj: Supports[JSONEncodable]) -> SerializedJSONObject:
-    '''Return a JSON serialization of an object.'''
+    """Return a JSON serialization of an object."""
     return _nested_sort_dicts(_serialize(obj))
 
 
 def _serialize(obj: Supports[JSONEncodable]) -> SerializedJSONObject:
-    if obj is None or isinstance(obj, (bool, int, str, float)):
+    if obj is None or isinstance(obj, bool | int | str | float):
         return obj
 
-    if isinstance(obj, (list, tuple)):
+    if isinstance(obj, list | tuple):
         return [encode_type(obj), *(serialize(item) for item in obj)]
 
     if isinstance(obj, Pack):
@@ -367,12 +372,12 @@ def dumps(obj: Supports[JSONEncodable]) -> str:
 def dump(obj: Supports[JSONEncodable], path: PathLike) -> None:
     serialized = serialize(obj)
 
-    with resolve(path, parents=True).open('w', encoding='utf-8') as file:
+    with resolve(path, parents=True).open("w", encoding="utf-8") as file:
         _json.dump(serialized, file, indent=4)
 
 
 def load(path: PathLike) -> Any:
-    with resolve(path).open('r', encoding='utf-8') as file:
+    with resolve(path).open("r", encoding="utf-8") as file:
         obj = _json.load(file)
 
     return deserialize(obj)

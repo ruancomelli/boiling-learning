@@ -49,17 +49,17 @@ def boiling1d() -> None:
 
     tables: list[Table] = []
 
-    evaluator = cached_model_evaluator('boiling1d')
+    evaluator = cached_model_evaluator("boiling1d")
 
     for direct in False, True:
-        direct_label = 'direct' if direct else 'indirect'
+        direct_label = "direct" if direct else "indirect"
 
         table = Table(
-            'Window size',
-            'Training loss',
-            'Validation loss',
-            'Test loss',
-            title=f'Visualization window analysis - {direct_label}',
+            "Window size",
+            "Training loss",
+            "Validation loss",
+            "Test loss",
+            title=f"Visualization window analysis - {direct_label}",
         )
 
         case = boiling_cases()[0]
@@ -74,7 +74,7 @@ def boiling1d() -> None:
             datasets = get_image_dataset(
                 case(),
                 transformers=preprocessors,
-                experiment='boiling1d',
+                experiment="boiling1d",
                 cache_stages=(0,),  # do not cache visualization window datasets
             )
 
@@ -99,46 +99,54 @@ def boiling1d() -> None:
             evaluation = evaluator(compiled_model, datasets, measure_uncertainty=False)
 
             table.add_row(
-                f'{fraction} ({float(fraction):.0%})',
-                f'{evaluation.training_metrics["MSE"]}',
-                f'{evaluation.validation_metrics["MSE"]}',
-                f'{evaluation.test_metrics["MSE"]}',
+                f"{fraction} ({float(fraction):.0%})",
+                f"{evaluation.training_metrics['MSE']}",
+                f"{evaluation.validation_metrics['MSE']}",
+                f"{evaluation.test_metrics['MSE']}",
             )
 
             losses.extend(
                 (
-                    (fraction, evaluation.training_metrics['MSE'], 'Training'),
-                    (fraction, evaluation.validation_metrics['MSE'], 'Validation'),
-                    (fraction, evaluation.test_metrics['MSE'], 'Test'),
+                    (fraction, evaluation.training_metrics["MSE"], "Training"),
+                    (fraction, evaluation.validation_metrics["MSE"], "Validation"),
+                    (fraction, evaluation.test_metrics["MSE"], "Test"),
                 )
             )
 
         tables.append(table)
 
         plot_data = pd.DataFrame(
-            losses, columns=['Visualization window fraction', 'Loss', 'Subset']
+            losses, columns=["Visualization window fraction", "Loss", "Subset"]
         )
 
         f, ax = plt.subplots(1, 1, figsize=(2.8, 2.8))
         sns.scatterplot(
             ax=ax,
-            data=plot_data[plot_data['Loss'] < OUTLIER_LOSS],
-            x='Visualization window fraction',
-            y='Loss',
-            hue='Subset',
+            data=plot_data[plot_data["Loss"] < OUTLIER_LOSS],
+            x="Visualization window fraction",
+            y="Loss",
+            hue="Subset",
             alpha=0.75,
         )
-        ax.set(ylabel=f'Loss [{units["mse"]}]')
+        ax.set(ylabel=f"Loss [{units['mse']}]")
 
-        outliers = plot_data[plot_data['Loss'] >= OUTLIER_LOSS]['Visualization window fraction']
+        outliers = plot_data[plot_data["Loss"] >= OUTLIER_LOSS][
+            "Visualization window fraction"
+        ]
         for outlier in outliers:
-            ax.axvspan(outlier - 0.015, outlier + 0.015, color='red', alpha=0.15, hatch='/')
+            ax.axvspan(
+                outlier - 0.015, outlier + 0.015, color="red", alpha=0.15, hatch="/"
+            )
         # ax.set(xscale='linear', yscale='log', xticks=FRACTIONS)
         ax.xaxis.set_major_formatter(PercentFormatter(xmax=max(map(float, FRACTIONS))))
         ax.yaxis.set_major_formatter(lambda value, pos: int(value))
 
-        save_figure(f, _visualization_window_study_path() / f'boiling1d-{direct_label}.pdf')
-        save_figure(f, _visualization_window_figures_path() / f'boiling1d-{direct_label}.pdf')
+        save_figure(
+            f, _visualization_window_study_path() / f"boiling1d-{direct_label}.pdf"
+        )
+        save_figure(
+            f, _visualization_window_figures_path() / f"boiling1d-{direct_label}.pdf"
+        )
 
     console.print(Columns(tables))
 
@@ -149,8 +157,8 @@ def condensation() -> None:
 
 
 def _visualization_window_figures_path() -> Path:
-    return figures_path() / 'results' / 'visualization-window'
+    return figures_path() / "results" / "visualization-window"
 
 
 def _visualization_window_study_path() -> Path:
-    return studies_path() / 'visualization-window'
+    return studies_path() / "visualization-window"

@@ -15,19 +15,23 @@ from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.management.cacher import CachedFunction, Cacher
 from boiling_learning.model.definitions import hoboldnet2
 from boiling_learning.model.model import Evaluation, ModelArchitecture
-from boiling_learning.model.training import FitModelParams, get_fit_model, load_with_strategy
+from boiling_learning.model.training import (
+    FitModelParams,
+    get_fit_model,
+    load_with_strategy,
+)
 
 
 @functools.cache
 def cached_fit_model_function(
-    experiment: Literal['boiling1d', 'condensation'],
+    experiment: Literal["boiling1d", "condensation"],
     *,
     strategy: LazyDescribed[tf.distribute.Strategy],
 ) -> CachedFunction:
     return CachedFunction(
         get_fit_model,
         Cacher(
-            allocator=JSONAllocator(analyses_path() / 'models' / experiment),
+            allocator=JSONAllocator(analyses_path() / "models" / experiment),
             exceptions=(FileNotFoundError, NotADirectoryError, tf.errors.OpError),
             loader=load_with_strategy(strategy),
         ),
@@ -47,20 +51,20 @@ def get_baseline_compile_params(
 ) -> _CompileModelParams:
     with strategy_scope(strategy):
         optimizer = (
-            'adam'
+            "adam"
             if learning_rate is None
             else tf.keras.optimizers.Adam(learning_rate=learning_rate)
         )
 
         return {
-            'loss': tf.keras.losses.MeanSquaredError(),
-            'optimizer': optimizer,
-            'metrics': [
-                tf.keras.metrics.MeanSquaredError('MSE'),
-                tf.keras.metrics.RootMeanSquaredError('RMS'),
-                tf.keras.metrics.MeanAbsoluteError('MAE'),
-                tf.keras.metrics.MeanAbsolutePercentageError('MAPE'),
-                tfa.metrics.RSquare('R2'),
+            "loss": tf.keras.losses.MeanSquaredError(),
+            "optimizer": optimizer,
+            "metrics": [
+                tf.keras.metrics.MeanSquaredError("MSE"),
+                tf.keras.metrics.RootMeanSquaredError("RMS"),
+                tf.keras.metrics.MeanAbsoluteError("MAE"),
+                tf.keras.metrics.MeanAbsolutePercentageError("MAPE"),
+                tfa.metrics.RSquare("R2"),
             ],
         }
 
@@ -80,11 +84,11 @@ def get_baseline_fit_params(
                     [
                         LazyDescribed.from_constructor(
                             tf.keras.callbacks.EarlyStopping,
-                            monitor='val_loss',
+                            monitor="val_loss",
                             min_delta=0,
                             patience=early_stopping_patience,
                             baseline=None,
-                            mode='auto',
+                            mode="auto",
                             restore_best_weights=True,
                             verbose=1,
                         ),

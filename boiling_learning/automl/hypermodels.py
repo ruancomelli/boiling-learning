@@ -1,6 +1,6 @@
 import typing
 from collections.abc import Iterator
-from typing import Any, Optional, Union
+from typing import Any
 
 import autokeras as ak
 import keras_tuner as kt
@@ -29,7 +29,7 @@ class HyperModel(kt.HyperModel):
 
     def __json_encode__(self) -> dict[str, Any]:
         return anonymize_model_json(
-            {key: value for key, value in self.get_config().items() if key != 'name'}
+            {key: value for key, value in self.get_config().items() if key != "name"}
         )
 
     def __describe__(self) -> dict[str, Any]:
@@ -56,20 +56,22 @@ class ImageRegressor(HyperModel):
         self,
         loss: tf.keras.losses.Loss,
         metrics: list[tf.keras.metrics.Metric],
-        normalize_images: Optional[bool] = None,
-        augment_images: Optional[bool] = None,
-        directory: Union[PathLike, Allocator, None] = None,
-        strategy: Optional[Lazy[tf.distribute.Strategy]] = None,
+        normalize_images: bool | None = None,
+        augment_images: bool | None = None,
+        directory: PathLike | Allocator | None = None,
+        strategy: Lazy[tf.distribute.Strategy] | None = None,
         **kwargs: Any,
     ) -> None:
-        if 'overwrite' in kwargs:
+        if "overwrite" in kwargs:
             raise TypeError("the argument 'overwrite' is not supported.")
 
-        if 'distribution_strategy' in kwargs:
+        if "distribution_strategy" in kwargs:
             raise TypeError("the argument 'distribution_strategy' is not supported.")
 
         inputs = ak.ImageInput()
-        outputs = ak.ImageBlock(normalize=normalize_images, augment=augment_images)(inputs)
+        outputs = ak.ImageBlock(normalize=normalize_images, augment=augment_images)(
+            inputs
+        )
         outputs = ak.SpatialReduction()(outputs)
         outputs = ak.DenseBlock()(outputs)
         outputs = ak.RegressionHead(output_dim=1, loss=loss, metrics=metrics)(outputs)
@@ -103,15 +105,15 @@ class ConvImageRegressor(HyperModel):
         self,
         loss: tf.keras.losses.Loss,
         metrics: list[tf.keras.metrics.Metric],
-        normalize_images: Optional[bool] = None,
-        directory: Union[PathLike, Allocator, None] = None,
-        strategy: Optional[Lazy[tf.distribute.Strategy]] = None,
+        normalize_images: bool | None = None,
+        directory: PathLike | Allocator | None = None,
+        strategy: Lazy[tf.distribute.Strategy] | None = None,
         **kwargs: Any,
     ) -> None:
-        if 'overwrite' in kwargs:
+        if "overwrite" in kwargs:
             raise TypeError("the argument 'overwrite' is not supported.")
 
-        if 'distribution_strategy' in kwargs:
+        if "distribution_strategy" in kwargs:
             raise TypeError("the argument 'distribution_strategy' is not supported.")
 
         outputs = inputs = ak.ImageInput()
@@ -150,14 +152,14 @@ class FixedArchitectureImageRegressor(HyperModel):
         layers: list[tf.keras.layers.Layer],
         loss: tf.keras.losses.Loss,
         metrics: list[tf.keras.metrics.Metric],
-        directory: Union[PathLike, Allocator, None] = None,
-        strategy: Optional[Lazy[tf.distribute.Strategy]] = None,
+        directory: PathLike | Allocator | None = None,
+        strategy: Lazy[tf.distribute.Strategy] | None = None,
         **kwargs: Any,
     ) -> None:
-        if 'overwrite' in kwargs:
+        if "overwrite" in kwargs:
             raise TypeError("the argument 'overwrite' is not supported.")
 
-        if 'distribution_strategy' in kwargs:
+        if "distribution_strategy" in kwargs:
             raise TypeError("the argument 'distribution_strategy' is not supported.")
 
         layers_block = LayersBlock(layers)

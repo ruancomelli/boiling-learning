@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Callable, Generic, Iterable, ParamSpec, Type, TypeVar
+from typing import Any, Generic, ParamSpec, TypeVar
 
 from loguru import logger
 
@@ -12,8 +13,8 @@ from boiling_learning.management.allocators import Allocator
 from boiling_learning.utils.functional import Pack
 from boiling_learning.utils.pathutils import PathLike, resolve
 
-_P = ParamSpec('_P')
-_R = TypeVar('_R')
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
 CreatorFunction = Callable[[], _R]
 
 
@@ -23,7 +24,7 @@ class Cacher(Generic[_R]):
         allocator: Allocator,
         saver: SaverFunction[_R] = save,
         loader: LoaderFunction[_R] = load,
-        exceptions: Iterable[Type[Exception]] = (
+        exceptions: Iterable[type[Exception]] = (
             FileNotFoundError,
             NotADirectoryError,
         ),
@@ -36,26 +37,26 @@ class Cacher(Generic[_R]):
         self.autosave = autosave
 
     def provide(self, creator: CreatorFunction[_R], path: Path) -> _R:
-        logger.debug(f'Providing result for file {path}')
+        logger.debug(f"Providing result for file {path}")
 
         resolved = resolve(path)
 
         if resolved.exists():
             with suppress(*self.exceptions):
-                logger.debug(f'Loading result from {resolved}')
+                logger.debug(f"Loading result from {resolved}")
                 result = self.loader(resolved)
-                logger.debug('Result successfully loaded')
+                logger.debug("Result successfully loaded")
 
                 return result
 
-        logger.debug('Unable to load result, creating...')
+        logger.debug("Unable to load result, creating...")
         obj = creator()
-        logger.debug('Result created')
+        logger.debug("Result created")
 
         if self.autosave:
-            logger.debug(f'Saving result to {resolved}')
+            logger.debug(f"Saving result to {resolved}")
             self.saver(obj, resolve(resolved, parents=True))
-            logger.debug('Result saved')
+            logger.debug("Result saved")
 
         return obj
 
@@ -97,7 +98,7 @@ def cache(
     allocator: Allocator,
     saver: SaverFunction[_R] = save,
     loader: LoaderFunction[_R] = load,
-    exceptions: Iterable[Type[Exception]] = (
+    exceptions: Iterable[type[Exception]] = (
         FileNotFoundError,
         NotADirectoryError,
     ),

@@ -1,13 +1,32 @@
 repos:
 
-- repo: https://github.com/astral-sh/uv-pre-commit
-  rev: 0.6.9
+- repo: https://gitlab.com/vojko.pribudic.foss/pre-commit-update
+  rev: v0.6.1
   hooks:
-      # Update the uv lockfile
-  - id: uv-lock
-        # Install all packages
-  - id: uv-sync
-    args: [--locked, --all-packages]
+  - id: pre-commit-update
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v5.0.0
+  hooks:
+  - id: check-added-large-files
+  - id: check-json
+  - id: check-toml
+  - id: check-xml
+  - id: check-yaml
+  - id: end-of-file-fixer
+  - id: no-commit-to-branch
+    args: [--branch, main]
+  - id: pretty-format-json
+    args: [--autofix, --indent, '2']
+  - id: trailing-whitespace
+
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+  rev: v2.14.0
+  hooks:
+  - id: pretty-format-yaml
+    args: [--autofix, --indent, '2']
+  - id: pretty-format-toml
+    args: [--autofix, --indent, '4', --no-sort]
 
 - repo: https://github.com/compilerla/conventional-pre-commit
   rev: v2.1.1
@@ -41,18 +60,3 @@ repos:
     name: isort (pyi)
     types: [pyi]
     args: [--check]
-
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.4.0
-  hooks:
-  - id: double-quote-string-fixer
-  - id: end-of-file-fixer
-  - id: requirements-txt-fixer
-  - id: trailing-whitespace
-  - id: check-ast
-
-- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.5.0
-  hooks:
-  - id: pretty-format-yaml
-    args: [--autofix, --indent, '2']

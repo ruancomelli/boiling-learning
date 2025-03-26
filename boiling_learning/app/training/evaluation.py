@@ -39,16 +39,18 @@ class ModelEvaluation:
         return sorted(
             self.training_metrics,
             key=lambda metric_name: {
-                'loss': 0,
-                'MSE': 1,
-                'RMS': 2,
-                'MAE': 3,
-                'MAPE': 4,
-                'R2': 5,
+                "loss": 0,
+                "MSE": 1,
+                "RMS": 2,
+                "MAE": 3,
+                "MAPE": 4,
+                "R2": 5,
             }.get(metric_name, 10),
         )
 
-    def iter_metrics(self) -> Iterator[tuple[str, UncertainValue, UncertainValue, UncertainValue]]:
+    def iter_metrics(
+        self,
+    ) -> Iterator[tuple[str, UncertainValue, UncertainValue, UncertainValue]]:
         return (
             (
                 metric_name,
@@ -62,10 +64,10 @@ class ModelEvaluation:
 
 @functools.cache
 def cached_model_evaluator(
-    experiment: Literal['boiling1d', 'condensation'],
+    experiment: Literal["boiling1d", "condensation"],
     /,
 ):
-    @cache(JSONAllocator(analyses_path() / 'evaluations' / experiment))
+    @cache(JSONAllocator(analyses_path() / "evaluations" / experiment))
     def model_evaluator(
         model: LazyDescribed[ModelArchitecture],
         datasets: LazyDescribed[ImageDatasetTriplet],
@@ -73,11 +75,13 @@ def cached_model_evaluator(
         measure_uncertainty: bool = True,
         gt10: bool = True,
     ) -> ModelEvaluation:
-        training_metrics, validation_metrics, test_metrics = evaluate_boiling_model_with_dataset(
-            model,
-            datasets,
-            measure_uncertainty=measure_uncertainty,
-            gt10=gt10,
+        training_metrics, validation_metrics, test_metrics = (
+            evaluate_boiling_model_with_dataset(
+                model,
+                datasets,
+                measure_uncertainty=measure_uncertainty,
+                gt10=gt10,
+            )
         )
 
         trainable_size = model().count_parameters(

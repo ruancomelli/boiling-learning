@@ -6,7 +6,9 @@ import numpy as np
 import tensorflow as tf
 from scipy.stats import entropy
 from skimage.measure import shannon_entropy
-from skimage.metrics import normalized_mutual_information as _normalized_mutual_information
+from skimage.metrics import (
+    normalized_mutual_information as _normalized_mutual_information,
+)
 from skimage.metrics import structural_similarity as _structural_similarity
 from skimage.transform import resize
 
@@ -14,11 +16,13 @@ from boiling_learning.preprocessing.transformers import wrap_as_partial_transfor
 from boiling_learning.preprocessing.video import VideoFrame, VideoFrames
 
 VideoFrameOrFrames = VideoFrame | VideoFrames
-_VideoFrameOrFrames = TypeVar('_VideoFrameOrFrames', bound=VideoFrameOrFrames)
+_VideoFrameOrFrames = TypeVar("_VideoFrameOrFrames", bound=VideoFrameOrFrames)
 
 
 @wrap_as_partial_transformer
-def image_dtype_converter(image: _VideoFrameOrFrames, dtype: str) -> _VideoFrameOrFrames:
+def image_dtype_converter(
+    image: _VideoFrameOrFrames, dtype: str
+) -> _VideoFrameOrFrames:
     return tf.image.convert_image_dtype(image, tf.dtypes.as_dtype(dtype)).numpy()
 
 
@@ -35,12 +39,15 @@ def cropper(
     bottom_border: int | float | Fraction | None = None,
     height: int | float | Fraction | None = None,
 ) -> _VideoFrameOrFrames:
-    if image.ndim == 3:
-        total_height, total_width, _ = image.shape
-    elif image.ndim == 4:
-        _, total_height, total_width, _ = image.shape
-    else:
-        raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
+    match image.ndim:
+        case 3:
+            total_height, total_width, _ = image.shape
+        case 4:
+            _, total_height, total_width, _ = image.shape
+        case _:
+            raise RuntimeError(
+                f"image must have either 3 or 4 dimensions, got {image.ndim}"
+            )
 
     left = _ratio_to_size(total_width, left)
     right = _ratio_to_size(total_width, right)
@@ -52,28 +59,38 @@ def cropper(
     height = _ratio_to_size(total_height, height)
 
     incompatible_arguments_error_message = (
-        'at least two of `{}`, `{}`, `{}` and `{}` must be `None` or omitted.'
+        "at least two of `{}`, `{}`, `{}` and `{}` must be `None` or omitted."
     )
-    incompatible_pair_error_message = 'at least one of `{}` and `{}` must be `None` or omitted.'
+    incompatible_pair_error_message = (
+        "at least one of `{}` and `{}` must be `None` or omitted."
+    )
 
-    if (left, right, right_border, width).count(None) < 2:
+    if (left, right, right_border, width).count(None) < 2:  # noqa: PLR2004
         raise TypeError(
-            incompatible_arguments_error_message.format('left', 'right', 'right_border', 'width')
+            incompatible_arguments_error_message.format(
+                "left", "right", "right_border", "width"
+            )
         )
 
-    if (top, bottom, bottom_border, height).count(None) < 2:
+    if (top, bottom, bottom_border, height).count(None) < 2:  # noqa: PLR2004
         raise TypeError(
-            incompatible_arguments_error_message.format('top', 'bottom', 'bottom_border', 'height')
+            incompatible_arguments_error_message.format(
+                "top", "bottom", "bottom_border", "height"
+            )
         )
 
     if right_border is not None:
         if right is not None:
-            raise TypeError(incompatible_pair_error_message.format('right', 'right_border'))
+            raise TypeError(
+                incompatible_pair_error_message.format("right", "right_border")
+            )
         right = total_width - right_border
 
     if bottom_border is not None:
         if bottom is not None:
-            raise TypeError(incompatible_pair_error_message.format('bottom', 'bottom_border'))
+            raise TypeError(
+                incompatible_pair_error_message.format("bottom", "bottom_border")
+            )
         bottom = total_height - bottom_border
 
     if width is not None:
@@ -118,12 +135,15 @@ def center_cropper(
     height: int | float | Fraction | None = None,
     width: int | float | Fraction | None = None,
 ) -> _VideoFrameOrFrames:
-    if image.ndim == 3:
-        total_height, total_width, _ = image.shape
-    elif image.ndim == 4:
-        _, total_height, total_width, _ = image.shape
-    else:
-        raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
+    match image.ndim:
+        case 3:
+            total_height, total_width, _ = image.shape
+        case 4:
+            _, total_height, total_width, _ = image.shape
+        case _:
+            raise RuntimeError(
+                f"image must have either 3 or 4 dimensions, got {image.ndim}"
+            )
 
     height = _ratio_to_size(total_width, height) if height is not None else total_height
     width = _ratio_to_size(total_width, width) if width is not None else total_width
@@ -134,20 +154,18 @@ def center_cropper(
 
 
 @overload
-def _ratio_to_size(total: int, x: int | float | Fraction) -> int:
-    ...
+def _ratio_to_size(total: int, x: int | float | Fraction) -> int: ...
 
 
 @overload
-def _ratio_to_size(total: int, x: None) -> None:
-    ...
+def _ratio_to_size(total: int, x: None) -> None: ...
 
 
 def _ratio_to_size(
     total: int,
     x: int | float | Fraction | None,
 ) -> int | None:
-    return int(x * total) if isinstance(x, (float, Fraction)) else x
+    return int(x * total) if isinstance(x, float | Fraction) else x
 
 
 @wrap_as_partial_transformer
@@ -157,16 +175,21 @@ def downscaler(
 ) -> _VideoFrameOrFrames:
     # 4-D Tensor of shape [batch, height, width, channels] or 3-D Tensor of shape
     # [height, width, channels].
-    if image.ndim == 3:
-        height = image.shape[0]
-        width = image.shape[1]
-    elif image.ndim == 4:
-        height = image.shape[1]
-        width = image.shape[2]
-    else:
-        raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
+    match image.ndim:
+        case 3:
+            height = image.shape[0]
+            width = image.shape[1]
+        case 4:
+            height = image.shape[1]
+            width = image.shape[2]
+        case _:
+            raise RuntimeError(
+                f"image must have either 3 or 4 dimensions, got {image.ndim}"
+            )
 
-    height_factor, width_factor = (factors, factors) if isinstance(factors, int) else factors
+    height_factor, width_factor = (
+        (factors, factors) if isinstance(factors, int) else factors
+    )
 
     new_height = round(height / height_factor)
     new_width = round(width / width_factor)
@@ -180,10 +203,12 @@ def downscaler(
 @wrap_as_partial_transformer
 def grayscaler(image: _VideoFrameOrFrames) -> _VideoFrameOrFrames:
     if image.ndim not in {3, 4}:
-        raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
+        raise RuntimeError(
+            f"image must have either 3 or 4 dimensions, got {image.ndim}"
+        )
 
-    if image.shape[-1] != 3:
-        raise RuntimeError('expected image to contain 3 color channels')
+    if image.shape[-1] != 3:  # noqa: PLR2004
+        raise RuntimeError("expected image to contain 3 color channels")
 
     return typing.cast(_VideoFrameOrFrames, tf.image.rgb_to_grayscale(image).numpy())
 
@@ -195,16 +220,22 @@ def random_cropper(
     height: int | None = None,
     width: int | None = None,
 ) -> _VideoFrameOrFrames:
-    if image.ndim == 3:
-        total_height, total_width, number_of_channels = image.shape
-
-        size = (height or total_height, width or total_width, number_of_channels)
-    elif image.ndim == 4:
-        batch_size, total_height, total_width, number_of_channels = image.shape
-
-        size = (batch_size, height or total_height, width or total_width, number_of_channels)
-    else:
-        raise RuntimeError(f'image must have either 3 or 4 dimensions, got {image.ndim}')
+    match image.ndim:
+        case 3:
+            total_height, total_width, number_of_channels = image.shape
+            size = (height or total_height, width or total_width, number_of_channels)
+        case 4:
+            batch_size, total_height, total_width, number_of_channels = image.shape
+            size = (
+                batch_size,
+                height or total_height,
+                width or total_width,
+                number_of_channels,
+            )
+        case _:
+            raise RuntimeError(
+                f"image must have either 3 or 4 dimensions, got {image.ndim}"
+            )
 
     return typing.cast(_VideoFrameOrFrames, tf.image.random_crop(image, size).numpy())
 
@@ -271,9 +302,9 @@ def shannon_cross_entropy_ratio(
     nbins: int = 100,
     epsilon: float = 1e-9,
 ) -> float:
-    return shannon_cross_entropy(ref, image, nbins=nbins, epsilon=epsilon) / shannon_cross_entropy(
-        ref, ref, nbins=nbins, epsilon=epsilon
-    )
+    return shannon_cross_entropy(
+        ref, image, nbins=nbins, epsilon=epsilon
+    ) / shannon_cross_entropy(ref, ref, nbins=nbins, epsilon=epsilon)
 
 
 def shannon_entropy_ratio(ref: VideoFrame, image: VideoFrame, /) -> float:
@@ -284,7 +315,9 @@ def nbins_retained_variance(ref: VideoFrame, image: VideoFrame, /) -> float:
     ref_hist = _hist(ref)
     image_hist = _hist(image)
 
-    return float(np.var(image_hist - image_hist.mean()) / np.var(ref_hist - ref_hist.mean()))
+    return float(
+        np.var(image_hist - image_hist.mean()) / np.var(ref_hist - ref_hist.mean())
+    )
 
 
 def nbins_shannon_entropy_ratio(ref: VideoFrame, image: VideoFrame, /) -> float:

@@ -50,19 +50,19 @@ def boiling1d() -> None:
 
     tables: list[Table] = []
 
-    evaluator = cached_model_evaluator('boiling1d')
+    evaluator = cached_model_evaluator("boiling1d")
 
     losses: list[tuple[Fraction, float, str, bool]] = []
     for (dataset_name, _), case in zip(DATASET_MARKER_STYLE, boiling_cases()):
         for direct in False, True:
-            direct_label = 'direct' if direct else 'indirect'
+            direct_label = "direct" if direct else "indirect"
 
             table = Table(
-                'Window size',
-                'Training loss',
-                'Validation loss',
-                'Test loss',
-                title=f'Visualization window analysis - {dataset_name} ({direct_label})',
+                "Window size",
+                "Training loss",
+                "Validation loss",
+                "Test loss",
+                title=f"Visualization window analysis - {dataset_name} ({direct_label})",
             )
 
             for fraction in sorted(FRACTIONS):
@@ -74,7 +74,7 @@ def boiling1d() -> None:
                 datasets = get_image_dataset(
                     case(),
                     transformers=preprocessors,
-                    experiment='boiling1d',
+                    experiment="boiling1d",
                     cache_stages=(0,),  # do not cache visualization window datasets
                 )
 
@@ -95,19 +95,21 @@ def boiling1d() -> None:
                 compiled_model = fit_model.architecture | compile_model(
                     **get_baseline_compile_params(strategy=strategy),
                 )
-                evaluation = evaluator(compiled_model, datasets, measure_uncertainty=False)
+                evaluation = evaluator(
+                    compiled_model, datasets, measure_uncertainty=False
+                )
 
                 table.add_row(
-                    f'{fraction} ({float(fraction):.0%})',
-                    f'{evaluation.training_metrics["MSE"]}',
-                    f'{evaluation.validation_metrics["MSE"]}',
-                    f'{evaluation.test_metrics["MSE"]}',
+                    f"{fraction} ({float(fraction):.0%})",
+                    f"{evaluation.training_metrics['MSE']}",
+                    f"{evaluation.validation_metrics['MSE']}",
+                    f"{evaluation.test_metrics['MSE']}",
                 )
 
                 losses.append(
                     (
                         fraction,
-                        evaluation.validation_metrics['MSE'],
+                        evaluation.validation_metrics["MSE"],
                         dataset_name,
                         direct,
                     )
@@ -116,36 +118,44 @@ def boiling1d() -> None:
             tables.append(table)
 
     plot_data = pd.DataFrame(
-        losses, columns=['Visualization window fraction', 'Loss', 'Dataset', 'Direct']
+        losses, columns=["Visualization window fraction", "Loss", "Dataset", "Direct"]
     )
 
     for direct in False, True:
-        direct_label = 'direct' if direct else 'indirect'
+        direct_label = "direct" if direct else "indirect"
 
-        visualization_plot_data = plot_data[plot_data['Direct'] == direct]
+        visualization_plot_data = plot_data[plot_data["Direct"] == direct]
 
         f, ax = plt.subplots(1, 1, figsize=(2.8, 2.8))
         sns.scatterplot(
             ax=ax,
-            data=visualization_plot_data[visualization_plot_data['Loss'] < OUTLIER_LOSS],
-            x='Visualization window fraction',
-            y='Loss',
-            hue='Dataset',
+            data=visualization_plot_data[
+                visualization_plot_data["Loss"] < OUTLIER_LOSS
+            ],
+            x="Visualization window fraction",
+            y="Loss",
+            hue="Dataset",
             alpha=0.75,
         )
-        ax.set(ylabel=f'Validation loss [{units["mse"]}]')
+        ax.set(ylabel=f"Validation loss [{units['mse']}]")
 
-        outliers = visualization_plot_data[visualization_plot_data['Loss'] >= OUTLIER_LOSS][
-            'Visualization window fraction'
-        ]
+        outliers = visualization_plot_data[
+            visualization_plot_data["Loss"] >= OUTLIER_LOSS
+        ]["Visualization window fraction"]
         for outlier in outliers:
-            ax.axvspan(outlier - 0.025, outlier + 0.025, color='red', alpha=0.15, hatch='/')
+            ax.axvspan(
+                outlier - 0.025, outlier + 0.025, color="red", alpha=0.15, hatch="/"
+            )
         # ax.set(xscale='linear', yscale='log', xticks=FRACTIONS)
         ax.xaxis.set_major_formatter(PercentFormatter(xmax=max(map(float, FRACTIONS))))
         ax.yaxis.set_major_formatter(lambda value, pos: int(value))
 
-        save_figure(f, _visualization_window_study_path() / f'boiling1d-{direct_label}.pdf')
-        save_figure(f, _visualization_window_figures_path() / f'boiling1d-{direct_label}.pdf')
+        save_figure(
+            f, _visualization_window_study_path() / f"boiling1d-{direct_label}.pdf"
+        )
+        save_figure(
+            f, _visualization_window_figures_path() / f"boiling1d-{direct_label}.pdf"
+        )
 
     console.print(Columns(tables))
 
@@ -156,8 +166,8 @@ def condensation() -> None:
 
 
 def _visualization_window_figures_path() -> Path:
-    return figures_path() / 'results' / 'visualization-window-multi-surface'
+    return figures_path() / "results" / "visualization-window-multi-surface"
 
 
 def _visualization_window_study_path() -> Path:
-    return studies_path() / 'visualization-window-multi-surface'
+    return studies_path() / "visualization-window-multi-surface"

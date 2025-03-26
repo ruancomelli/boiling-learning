@@ -4,7 +4,9 @@ import tensorflow as tf
 import typer
 
 from boiling_learning.app.constants import BOILING_BASELINE_BATCH_SIZE
-from boiling_learning.app.datasets.bridged.boiling1d import DEFAULT_BOILING_OUTLIER_FILTER
+from boiling_learning.app.datasets.bridged.boiling1d import (
+    DEFAULT_BOILING_OUTLIER_FILTER,
+)
 from boiling_learning.app.datasets.bridging import to_tensorflow_triplet
 from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
 from boiling_learning.app.paths import studies_path
@@ -18,7 +20,7 @@ app = typer.Typer()
 
 @app.command()
 def boiling1d(
-    direct: bool = typer.Option(..., '--direct/--indirect'),
+    direct: bool = typer.Option(..., "--direct/--indirect"),
     tensorflow: bool = typer.Option(False),
     each: int = typer.Option(60),
     fps: int = typer.Option(30),
@@ -28,17 +30,17 @@ def boiling1d(
     paths = {
         (dataset, subset_name): path
         for index, dataset in enumerate(datasets)
-        for subset_name in ('train', 'val', 'test')
+        for subset_name in ("train", "val", "test")
         if not (
             path := _animations_path()
             / (
-                'boiling-case'
-                f'-{index + 1}'
+                "boiling-case"
+                f"-{index + 1}"
                 f"-{'direct' if direct else 'indirect'}"
-                f'-{subset_name}'
-                f'-each-{each}'
+                f"-{subset_name}"
+                f"-each-{each}"
                 f"{'-tf' if tensorflow else ''}"
-                '.mp4'
+                ".mp4"
             )
         ).is_file()
     }
@@ -48,13 +50,13 @@ def boiling1d(
             dataset,
             each,
         )
-        subset_index = {'train': 0, 'val': 1, 'test': 2}[subset_name]
+        subset_index = {"train": 0, "val": 1, "test": 2}[subset_name]
         subset = triplet[subset_index]
 
         save_as_video(
             path,
             subset,
-            display_data={'index': 'Index', 'Flux [W/cm**2]': 'Flux [W/cm²]'},
+            display_data={"index": "Index", "Flux [W/cm**2]": "Flux [W/cm²]"},
             fps=fps,
         )
 
@@ -75,7 +77,7 @@ def _tensorflow_datasets(
             dataset,
             prefilterer=DEFAULT_BOILING_OUTLIER_FILTER,
             batch_size=BOILING_BASELINE_BATCH_SIZE,
-            experiment='boiling1d',
+            experiment="boiling1d",
             shuffle=False,
         )
     )
@@ -96,4 +98,4 @@ def condensation(
 
 
 def _animations_path() -> Path:
-    return studies_path() / 'animations'
+    return studies_path() / "animations"

@@ -13,12 +13,12 @@ from boiling_learning.utils.functional import P
 
 @pytest.fixture
 def filepath(tmp_path: Path) -> Path:
-    return tmp_path / 'file'
+    return tmp_path / "file"
 
 
 @pytest.fixture
 def cache_path(tmp_path: Path) -> Path:
-    return tmp_path / 'cache'
+    return tmp_path / "cache"
 
 
 @pytest.fixture
@@ -28,14 +28,14 @@ def allocator(cache_path: Path) -> JSONAllocator:
 
 class TestAllocators:
     def test_JSONAllocator(self, allocator: JSONAllocator) -> None:
-        p1 = P('3.14', 0, name='pi')
-        p2 = P('hello')
+        p1 = P("3.14", 0, name="pi")
+        p2 = P("hello")
 
         assert allocator(p1) == allocator(p1)
-        assert allocator(P('3.14', 0, name='pi')) == allocator(p1)
+        assert allocator(P("3.14", 0, name="pi")) == allocator(p1)
         assert allocator(p1) != allocator(p2)
-        assert allocator.allocate('3.14', 0, name='pi') == allocator(p1)
-        assert allocator.allocate('hello') == allocator(p2)
+        assert allocator.allocate("3.14", 0, name="pi") == allocator(p1)
+        assert allocator.allocate("hello") == allocator(p2)
 
 
 class TestCacher:
@@ -66,22 +66,22 @@ class TestCacher:
         @cache(allocator=allocator, saver=saver, loader=loader)
         def func(number: float, name: str) -> dict:
             side_effect(number, name)
-            return {'number': number, 'name': name}
+            return {"number": number, "name": name}
 
         assert not history
 
-        assert func(3.14, 'pi') == {'number': 3.14, 'name': 'pi'}
-        assert history == [(3.14, 'pi')]
+        assert func(3.14, "pi") == {"number": 3.14, "name": "pi"}
+        assert history == [(3.14, "pi")]
 
-        assert func(3.14, 'pi') == {'number': 3.14, 'name': 'pi'}
-        assert history == [(3.14, 'pi')]
+        assert func(3.14, "pi") == {"number": 3.14, "name": "pi"}
+        assert history == [(3.14, "pi")]
 
-        assert func(0.0, 'zero') == {'number': 0.0, 'name': 'zero'}
-        assert history == [(3.14, 'pi'), (0.0, 'zero')]
+        assert func(0.0, "zero") == {"number": 0.0, "name": "zero"}
+        assert history == [(3.14, "pi"), (0.0, "zero")]
 
-        assert func(3.14, 'pi') == {'number': 3.14, 'name': 'pi'}
-        assert func(0.0, 'zero') == {'number': 0.0, 'name': 'zero'}
-        assert history == [(3.14, 'pi'), (0.0, 'zero')]
+        assert func(3.14, "pi") == {"number": 3.14, "name": "pi"}
+        assert func(0.0, "zero") == {"number": 0.0, "name": "zero"}
+        assert history == [(3.14, "pi"), (0.0, "zero")]
 
 
 class TestDescriptor:
@@ -95,8 +95,8 @@ class TestDescriptor:
         assert describe.supports(3.14)
         assert math.isclose(describe(3.14), 3.14, abs_tol=1e-8)
 
-        assert describe.supports('hello')
-        assert describe('hello') == 'hello'
+        assert describe.supports("hello")
+        assert describe("hello") == "hello"
 
         class CrazyItems:
             def __init__(self, length: int) -> None:

@@ -8,27 +8,27 @@ from boiling_learning.utils.iterutils import unsort
 
 class Test_utils_collections:
     def test_KeyedSet(self) -> None:
-        keyed_set = KeyedSet(str.upper, ('hi', 'bye', 'hello'))
+        keyed_set = KeyedSet(str.upper, ("hi", "bye", "hello"))
 
-        assert set(keyed_set) == {'hi', 'bye', 'hello'}
-        assert set(keyed_set.values()) == {'hi', 'bye', 'hello'}
-        assert set(keyed_set.keys()) == {'HI', 'BYE', 'HELLO'}
+        assert set(keyed_set) == {"hi", "bye", "hello"}
+        assert set(keyed_set.values()) == {"hi", "bye", "hello"}
+        assert set(keyed_set.keys()) == {"HI", "BYE", "HELLO"}
         assert len(keyed_set) == 3
-        assert keyed_set['BYE'] == 'bye'
-        assert 'hello' in keyed_set
-        assert 'HELLO' not in keyed_set
+        assert keyed_set["BYE"] == "bye"
+        assert "hello" in keyed_set
+        assert "HELLO" not in keyed_set
 
-        assert 'byello' not in keyed_set
-        keyed_set.add('byello')
-        assert 'byello' in keyed_set
+        assert "byello" not in keyed_set
+        keyed_set.add("byello")
+        assert "byello" in keyed_set
 
-        keyed_set.discard('hello')
-        assert 'hello' not in keyed_set
+        keyed_set.discard("hello")
+        assert "hello" not in keyed_set
 
-        assert keyed_set.get('BYE') == 'bye'
-        assert keyed_set.get('BYE', 'wololoo') == 'bye'
-        assert keyed_set.get('WOLOLOOO') is None
-        assert keyed_set.get('WOLOLOOO', 'wololoo') == 'wololoo'
+        assert keyed_set.get("BYE") == "bye"
+        assert keyed_set.get("BYE", "wololoo") == "bye"
+        assert keyed_set.get("WOLOLOOO") is None
+        assert keyed_set.get("WOLOLOOO", "wololoo") == "wololoo"
 
 
 class Test_geometry:

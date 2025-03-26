@@ -20,7 +20,10 @@ from boiling_learning.app.training.common import (
     get_baseline_compile_params,
     get_baseline_fit_params,
 )
-from boiling_learning.app.training.evaluation import ModelEvaluation, cached_model_evaluator
+from boiling_learning.app.training.evaluation import (
+    ModelEvaluation,
+    cached_model_evaluator,
+)
 from boiling_learning.model.evaluate import UncertainValue
 from boiling_learning.model.training import compile_model
 from boiling_learning.utils.pathutils import resolve
@@ -38,14 +41,14 @@ def boiling1d() -> None:
         require_gpu=True,
     )
 
-    evaluator = cached_model_evaluator('boiling1d')
+    evaluator = cached_model_evaluator("boiling1d")
 
     evaluations: dict[tuple[str, str, bool, str], UncertainValue] = {}
     evaluations_gt10: dict[tuple[str, str, bool, str], UncertainValue] = {}
     tables: list[Table] = []
 
     for direct in False, True:
-        direct_label = 'direct' if direct else 'indirect'
+        direct_label = "direct" if direct else "indirect"
 
         for (dataset_name, _), dataset in zip(
             DATASET_MARKER_STYLE,
@@ -74,18 +77,18 @@ def boiling1d() -> None:
             evaluation_gt10 = evaluator(compiled_model, dataset)
 
             table = Table(
-                'Metric',
-                'Training',
-                'Validation',
-                'Test',
-                title=f'{dataset_name} - {direct_label}',
+                "Metric",
+                "Training",
+                "Validation",
+                "Test",
+                title=f"{dataset_name} - {direct_label}",
             )
             table_gt10 = Table(
-                'Metric',
-                'Training',
-                'Validation',
-                'Test',
-                title=f'{dataset_name} - {direct_label} - GT10',
+                "Metric",
+                "Training",
+                "Validation",
+                "Test",
+                title=f"{dataset_name} - {direct_label} - GT10",
             )
 
             for (
@@ -94,15 +97,24 @@ def boiling1d() -> None:
                 validation_metric,
                 test_metric,
             ) in evaluation.iter_metrics():
-                if metric_name.lower() != 'mape':
+                if metric_name.lower() != "mape":
                     # the MAPE makes little sense here since it will surely explode if
                     # we are not restricting to `>= 10`
                     table.add_row(
-                        metric_name, str(training_metric), str(validation_metric), str(test_metric)
+                        metric_name,
+                        str(training_metric),
+                        str(validation_metric),
+                        str(test_metric),
                     )
-                    evaluations[(dataset_name, metric_name, direct, 'train')] = training_metric
-                    evaluations[(dataset_name, metric_name, direct, 'val')] = validation_metric
-                    evaluations[(dataset_name, metric_name, direct, 'test')] = test_metric
+                    evaluations[(dataset_name, metric_name, direct, "train")] = (
+                        training_metric
+                    )
+                    evaluations[(dataset_name, metric_name, direct, "val")] = (
+                        validation_metric
+                    )
+                    evaluations[(dataset_name, metric_name, direct, "test")] = (
+                        test_metric
+                    )
 
             for (
                 metric_name,
@@ -116,21 +128,34 @@ def boiling1d() -> None:
                     str(validation_metric),
                     str(test_metric),
                 )
-                evaluations_gt10[(dataset_name, metric_name, direct, 'train')] = training_metric
-                evaluations_gt10[(dataset_name, metric_name, direct, 'val')] = validation_metric
-                evaluations_gt10[(dataset_name, metric_name, direct, 'test')] = test_metric
+                evaluations_gt10[(dataset_name, metric_name, direct, "train")] = (
+                    training_metric
+                )
+                evaluations_gt10[(dataset_name, metric_name, direct, "val")] = (
+                    validation_metric
+                )
+                evaluations_gt10[(dataset_name, metric_name, direct, "test")] = (
+                    test_metric
+                )
 
             tables.extend((table, table_gt10))
 
         text = _build_latex_table(evaluations, evaluation, direct_visualization=direct)
-        (_single_surface_study_path() / f'single-surface-{direct_label}.tex').write_text(text)
-        (_single_surface_study_results_path() / f'single-surface-{direct_label}.tex').write_text(
-            text
-        )
-        text = _build_latex_table(evaluations_gt10, evaluation_gt10, direct_visualization=direct)
-        (_single_surface_study_path() / f'single-surface-{direct_label}-gt10.tex').write_text(text)
         (
-            _single_surface_study_results_path() / f'single-surface-{direct_label}-gt10.tex'
+            _single_surface_study_path() / f"single-surface-{direct_label}.tex"
+        ).write_text(text)
+        (
+            _single_surface_study_results_path() / f"single-surface-{direct_label}.tex"
+        ).write_text(text)
+        text = _build_latex_table(
+            evaluations_gt10, evaluation_gt10, direct_visualization=direct
+        )
+        (
+            _single_surface_study_path() / f"single-surface-{direct_label}-gt10.tex"
+        ).write_text(text)
+        (
+            _single_surface_study_results_path()
+            / f"single-surface-{direct_label}-gt10.tex"
         ).write_text(text)
 
     console.print(Columns(tables))
@@ -142,7 +167,7 @@ def _build_latex_table(
     *,
     direct_visualization: bool,
 ) -> str:
-    return '\n'.join(
+    return "\n".join(
         _latex_table_lines(
             evaluations,
             evaluation,
@@ -158,7 +183,7 @@ def _latex_table_lines(
     direct_visualization: bool,
 ) -> Iterator[str]:
     yield textwrap.dedent(
-        '''
+        """
         \\begin{tabular}{@{}lrllllclll@{}}\\toprule
             &
             &
@@ -171,7 +196,7 @@ def _latex_table_lines(
             & Test
             \\\\
             \\midrule
-        '''
+        """
     )
 
     evaluations = {
@@ -180,28 +205,28 @@ def _latex_table_lines(
     }
 
     for dataset_name, _ in DATASET_MARKER_STYLE:
-        yield f'\\multicolumn{{2}}{{l}}{{{dataset_name}}}'
+        yield f"\\multicolumn{{2}}{{l}}{{{dataset_name}}}"
         yield NEW_LINE_TOKEN
         for metric_name in map(str.lower, evaluation.metrics_names):
-            if metric_name == 'loss':
+            if metric_name == "loss":
                 continue
 
-            yield f'& {_metric_name_to_gls(metric_name)}'
-            yield f'& {units[metric_name]}'
+            yield f"& {_metric_name_to_gls(metric_name)}"
+            yield f"& {units[metric_name]}"
 
-            for subset in 'train', 'val', 'test':
+            for subset in "train", "val", "test":
                 uncertain_value = evaluations.get(
                     (dataset_name, metric_name, direct_visualization, subset)
                 )
                 if uncertain_value is None:
-                    yield '& -'
+                    yield "& -"
                 else:
-                    yield f'& {latexify(uncertain_value)}'
+                    yield f"& {latexify(uncertain_value)}"
 
             yield NEW_LINE_TOKEN
 
-    yield '\\bottomrule'
-    yield '\\end{tabular}'
+    yield "\\bottomrule"
+    yield "\\end{tabular}"
 
 
 @app.command()
@@ -210,12 +235,12 @@ def condensation() -> None:
 
 
 def _metric_name_to_gls(metric_name: str) -> str:
-    return '\\gls{rmse}' if metric_name == 'rms' else f'\\gls{{{metric_name}}}'
+    return "\\gls{rmse}" if metric_name == "rms" else f"\\gls{{{metric_name}}}"
 
 
 def _single_surface_study_results_path() -> Path:
-    return resolve(diagrams_path() / 'results', dir=True)
+    return resolve(diagrams_path() / "results", dir=True)
 
 
 def _single_surface_study_path() -> Path:
-    return resolve(studies_path() / 'single-surface', dir=True)
+    return resolve(studies_path() / "single-surface", dir=True)

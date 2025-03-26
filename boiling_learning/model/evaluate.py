@@ -20,7 +20,7 @@ class UncertainValue:
     lower: float
 
     def __str__(self) -> str:
-        return f'{self.value} + {self.upper} - {self.lower}'
+        return f"{self.value} + {self.upper} - {self.lower}"
 
     def rounded(self) -> UncertainValue:
         position_to_round = min(
@@ -48,7 +48,7 @@ def evaluate_with_uncertainty(
     *,
     batches: int = 1000,
     samples: int = 1000,
-    method: Literal['percentile', 'basic', 'bca'] = 'bca',
+    method: Literal["percentile", "basic", "bca"] = "bca",
     confidence_level: float = 0.95,
 ) -> UncertainEvaluation:
     histograms: dict[MetricName, list[Any]] = {}
@@ -69,7 +69,7 @@ def evaluate_with_uncertainty(
 
 def _uncertain_value_from_histogram(
     histogram: list[float],
-    method: Literal['percentile', 'basic', 'bca'] = 'bca',
+    method: Literal["percentile", "basic", "bca"] = "bca",
     confidence_level: float = 0.95,
 ) -> UncertainValue:
     confidence_interval = bootstrap(

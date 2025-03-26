@@ -14,6 +14,8 @@ from boiling_learning.image_datasets import Image, Images
 from boiling_learning.preprocessing.video import Video
 from boiling_learning.utils.pathutils import PathLike, resolve
 
+DEFAULT_EMPTY_FRAME_THRESHOLD = 1e-6
+
 
 class ExtractionError(RuntimeError):
     pass
@@ -24,7 +26,7 @@ class LoadImageError(RuntimeError):
 
 
 class ExtractedFramesDataset(SliceableDataset[Image]):
-    '''A dataset composed of extracted frames.
+    """A dataset composed of extracted frames.
 
     Args:
         eager: in non-eager mode, every call to `fetch` will extract the required
@@ -34,7 +36,7 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
         robust: occasionally the frame extraction procedure may fail, yielding
             completely black images. In the `robust` mode, such frames are automatically
             deleted and re-extracted during the fetching step.
-    '''
+    """
 
     def __init__(
         self,
@@ -58,7 +60,7 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
         return self._length
 
     def __repr__(self) -> str:
-        return f'ExtractedFramesDataset({self.video_path}, {self.path})'
+        return f"ExtractedFramesDataset({self.video_path}, {self.path})"
 
     def getitem_from_index(self, index: int) -> Image:
         return self.fetch((index,))[0]
@@ -75,7 +77,7 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
 
         for index in unique_indices:
             if self._is_missing(index):
-                raise ExtractionError(f'failed to extract frame #{index} for {self}')
+                raise ExtractionError(f"failed to extract frame #{index} for {self}")
 
         return np.stack(
             list(self._robust_fetch_frames(indices))
@@ -85,7 +87,9 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
 
     def _robust_fetch_frames(self, indices: tuple[int, ...], /) -> Iterator[Image]:
         unique_indices = frozenset(indices)
-        indexed_frames = {index: self._maybe_load_frame(index) for index in unique_indices}
+        indexed_frames = {
+            index: self._maybe_load_frame(index) for index in unique_indices
+        }
 
         if failed_indices := tuple(
             index for index, frame in indexed_frames.items() if frame is None
@@ -94,13 +98,15 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
                 self._index_to_path(failed_index).unlink()
             self._extract_frames(failed_indices)
 
-            renewed_frames = {index: self._maybe_load_frame(index) for index in failed_indices}
+            renewed_frames = {
+                index: self._maybe_load_frame(index) for index in failed_indices
+            }
 
             if failed_indices := tuple(
                 index for index, frame in renewed_frames.items() if frame is None
             ):
                 raise RuntimeError(
-                    f'Failed generate frames {failed_indices} in robust mode for {self}'
+                    f"Failed generate frames {failed_indices} in robust mode for {self}"
                 )
 
             indexed_frames |= renewed_frames
@@ -122,10 +128,10 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
         try:
             frame = imageio.imread(path)
         except (ValueError, RuntimeError) as e:
-            raise LoadImageError(f'failed to load frame #{index} for {self}') from e
+            raise LoadImageError(f"failed to load frame #{index} for {self}") from e
 
-        if self._robust and _is_empty_frame(frame):
-            raise LoadImageError(f'frame #{index} for {self} is empty')
+        if self._robust and is_empty_frame(frame):
+            raise LoadImageError(f"frame #{index} for {self} is empty")
 
         return frame
 
@@ -138,8 +144,8 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
     def _index_to_filename(self, index: int) -> str:
         number_of_digits = self._filename_number_of_digits()
         index_str = str(index)
-        leading_zeros = '0' * (number_of_digits - len(index_str))
-        return f'{leading_zeros}{index_str}{self._filename_suffix()}'
+        leading_zeros = "0" * (number_of_digits - len(index_str))
+        return f"{leading_zeros}{index_str}{self._filename_suffix()}"
 
     def _extract_frames(self, indices: Iterable[int]) -> None:
         # Original code:
@@ -151,17 +157,21 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
         indices = sorted(frozenset(indices))
 
         if not indices:
-            logger.info(f'Skipping frame extraction for {self} since no indices were provided')
+            logger.info(
+                f"Skipping frame extraction for {self} since no indices were provided"
+            )
             return
 
-        logger.info(f'Extracting frames {indices} for {self}')
+        logger.info(f"Extracting frames {indices} for {self}")
 
-        filename_pattern = f'%{self._filename_number_of_digits()}d{self._filename_suffix()}'
+        filename_pattern = (
+            f"%{self._filename_number_of_digits()}d{self._filename_suffix()}"
+        )
 
         try:
             (
                 ffmpeg.input(str(self.video_path))
-                .filter('select', '+'.join(f'eq(n,{index})' for index in indices))
+                .filter("select", "+".join(f"eq(n,{index})" for index in indices))
                 .output(
                     str(self.path / filename_pattern),
                     frame_pts=True,  # saves each frame with their index as their name
@@ -176,8 +186,13 @@ class ExtractedFramesDataset(SliceableDataset[Image]):
         return len(str(len(self)))
 
     def _filename_suffix(self) -> str:
-        return '.png'
+        return ".png"
 
 
-def _is_empty_frame(frame: Image) -> bool:
-    return abs(float(frame.mean())) < 1e-8
+def is_empty_frame(
+    frame: Image,
+    /,
+    *,
+    threshold: float = DEFAULT_EMPTY_FRAME_THRESHOLD,
+) -> bool:
+    return float(np.absolute(frame).mean()) < threshold

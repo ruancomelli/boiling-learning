@@ -6,7 +6,9 @@ from rich.table import Table
 from boiling_learning.app.automl.autofit_dataset import autofit_dataset
 from boiling_learning.app.automl.evaluation import cached_best_model_evaluator
 from boiling_learning.app.configuration import configure
-from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
+from boiling_learning.app.datasets.preprocessed.boiling1d import (
+    baseline_boiling_dataset,
+)
 from boiling_learning.app.training.boiling1d import (
     DEFAULT_BOILING_HEAT_FLUX_TARGET,
     get_pretrained_baseline_boiling_model,
@@ -32,23 +34,27 @@ def boiling1d() -> None:
         require_gpu=True,
     )
 
-    evaluator = cached_model_evaluator('boiling1d')
+    evaluator = cached_model_evaluator("boiling1d")
     best_model_evaluator = cached_best_model_evaluator(
-        experiment='boiling1d',
+        experiment="boiling1d",
         strategy=strategy,
     )
 
     tables: list[Table] = []
     for direct in False, True:
-        direct_label = 'direct' if direct else 'indirect'
+        direct_label = "direct" if direct else "indirect"
 
-        for tuner_class in EarlyStoppingGreedy, EarlyStoppingHyperband, EarlyStoppingBayesian:
+        for tuner_class in (
+            EarlyStoppingGreedy,
+            EarlyStoppingHyperband,
+            EarlyStoppingBayesian,
+        ):
             table = Table(
-                'Validation loss',
-                'Test loss',
+                "Validation loss",
+                "Test loss",
                 title=(
-                    f'Automatic machine learning - {direct_label}'
-                    f' visualization {tuner_class.__name__}'
+                    f"Automatic machine learning - {direct_label}"
+                    f" visualization {tuner_class.__name__}"
                 ),
             )
 
@@ -73,7 +79,7 @@ def boiling1d() -> None:
                 normalize_images=True,
                 max_model_size=baseline_architecture_size,
                 goal=None,
-                experiment='boiling1d',
+                experiment="boiling1d",
                 strategy=strategy,
                 tuner_class=tuner_class,
             )
@@ -94,8 +100,8 @@ def boiling1d() -> None:
             )
 
             table.add_row(
-                str(best_model_evaluation.validation_metrics['MSE']),
-                str(best_model_evaluation.test_metrics['MSE']),
+                str(best_model_evaluation.validation_metrics["MSE"]),
+                str(best_model_evaluation.test_metrics["MSE"]),
             )
             tables.append(table)
 

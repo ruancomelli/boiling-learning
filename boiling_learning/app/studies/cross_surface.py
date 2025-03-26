@@ -37,13 +37,13 @@ from boiling_learning.utils.pathutils import resolve
 app = typer.Typer()
 console = Console()
 
-METRIC_NAMES = ('MSE', 'MAPE')
+METRIC_NAMES = ("MSE", "MAPE")
 CASES_INDICES = ((0,), (1,), (2,), (3,), (0, 1), (2, 3), (0, 1, 2, 3))
 CASE_NAMES = {
-    0: 'large wire ds',
-    1: 'small wire ds',
-    2: 'horizontal ribbon ds',
-    3: 'vertical ribbon ds',
+    0: "large wire ds",
+    1: "small wire ds",
+    2: "horizontal ribbon ds",
+    3: "vertical ribbon ds",
 }
 
 
@@ -58,17 +58,17 @@ def boiling1d() -> None:
 
     tables: dict[tuple[str, str, bool], Table] = {
         (metric_name, subset, direct): Table(
-            'Train \\ Eval',
+            "Train \\ Eval",
             *(map(_format_sets, CASES_INDICES)),
             title=(
-                'Cross surface analysis'
-                f' - {metric_name}'
-                f' - {subset}'
-                f' - {"direct" if direct else "indirect"}'
+                "Cross surface analysis"
+                f" - {metric_name}"
+                f" - {subset}"
+                f" - {'direct' if direct else 'indirect'}"
             ),
         )
         for metric_name in METRIC_NAMES
-        for subset in ('training', 'validation', 'test')
+        for subset in ("training", "validation", "test")
         for direct in (False, True)
     }
 
@@ -76,7 +76,7 @@ def boiling1d() -> None:
 
     evaluations: list[tuple[str, str, float, float, float, bool, str]] = []
     for direct in False, True:
-        direct_label = 'direct' if direct else 'indirect'
+        direct_label = "direct" if direct else "indirect"
 
         for training_indices in CASES_INDICES:
             results = defaultdict[tuple[str, str], list[float]](list)
@@ -107,12 +107,12 @@ def boiling1d() -> None:
                         )
                     )
                     if metric_name in METRIC_NAMES:
-                        results[metric_name, 'training'].append(training_metric)
-                        results[metric_name, 'validation'].append(validation_metric)
-                        results[metric_name, 'test'].append(test_metric)
+                        results[metric_name, "training"].append(training_metric)
+                        results[metric_name, "validation"].append(validation_metric)
+                        results[metric_name, "test"].append(test_metric)
 
             for metric_name in METRIC_NAMES:
-                for subset in 'training', 'validation', 'test':
+                for subset in "training", "validation", "test":
                     tables[metric_name, subset, direct].add_row(
                         _format_sets(training_indices),
                         *map(str, results[metric_name, subset]),
@@ -124,31 +124,37 @@ def boiling1d() -> None:
     data = pd.DataFrame(
         evaluations,
         columns=[
-            'Training set',
-            'Evaluation set',
-            'Training metric',
-            'Validation metric',
-            'Test metric',
-            'Visualization mode',
-            'Metric name',
+            "Training set",
+            "Evaluation set",
+            "Training metric",
+            "Validation metric",
+            "Test metric",
+            "Visualization mode",
+            "Metric name",
         ],
     )
-    data['Training set'] = pd.Categorical(data['Training set'], cases_latex.values())
-    data['Evaluation set'] = pd.Categorical(data['Evaluation set'], cases_latex.values())
+    data["Training set"] = pd.Categorical(data["Training set"], cases_latex.values())
+    data["Evaluation set"] = pd.Categorical(
+        data["Evaluation set"], cases_latex.values()
+    )
 
     for direct in False, True:
-        direct_label = 'direct' if direct else 'indirect'
+        direct_label = "direct" if direct else "indirect"
         for subset, subset_name in zip(
-            ('training', 'validation', 'test'),
-            ('Training metric', 'Validation metric', 'Test metric'),
+            ("training", "validation", "test"),
+            ("Training metric", "Validation metric", "Test metric"),
         ):
             plot_data = {
                 metric_name: (
                     data[
-                        (data['Visualization mode'] == direct)
-                        & (data['Metric name'] == metric_name)
+                        (data["Visualization mode"] == direct)
+                        & (data["Metric name"] == metric_name)
                     ]
-                    .pivot(index='Training set', columns='Evaluation set', values=subset_name)
+                    .pivot(
+                        index="Training set",
+                        columns="Evaluation set",
+                        values=subset_name,
+                    )
                     .sort_index(level=0, ascending=True)
                 )
                 for metric_name in METRIC_NAMES
@@ -157,46 +163,57 @@ def boiling1d() -> None:
             f, ax = plt.subplots(1, 1, figsize=(4, 6))
 
             annot = [
-                [f'{mse:.0f}\n\\small({mape:.0f}\\%)' for mse, mape in zip(mse_row, mape_row)]
-                for mse_row, mape_row in zip(plot_data['MSE'].values, plot_data['MAPE'].values)
+                [
+                    f"{mse:.0f}\n\\small({mape:.0f}\\%)"
+                    for mse, mape in zip(mse_row, mape_row)
+                ]
+                for mse_row, mape_row in zip(
+                    plot_data["MSE"].values, plot_data["MAPE"].values
+                )
             ]
 
             sns.heatmap(
-                plot_data['MSE'],
+                plot_data["MSE"],
                 annot=annot,
                 norm=LogNorm(),
-                cmap=sns.color_palette('Blues', as_cmap=True),
+                cmap=sns.color_palette("Blues", as_cmap=True),
                 linewidth=1,
                 cbar_kws={
-                    'label': f'MSE [{units["mse"]}]',
-                    'orientation': 'horizontal',
-                    'format': ScalarFormatter(),
-                    'pad': 0.065,
+                    "label": f"MSE [{units['mse']}]",
+                    "orientation": "horizontal",
+                    "format": ScalarFormatter(),
+                    "pad": 0.065,
                 },
-                fmt='',
+                fmt="",
                 ax=ax,
             )
 
             ax.xaxis.tick_top()
-            ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='center')
+            ax.set_xticklabels(
+                ax.get_xticklabels(), rotation=0, horizontalalignment="center"
+            )
             ax.yaxis.tick_right()
-            ax.set_yticklabels(ax.get_yticklabels(), rotation=0, horizontalalignment='left')
+            ax.set_yticklabels(
+                ax.get_yticklabels(), rotation=0, horizontalalignment="left"
+            )
 
             save_figure(
                 f,
-                _cross_surface_study_path() / f'boiling1d-{direct_label}-{subset}.pdf',
+                _cross_surface_study_path() / f"boiling1d-{direct_label}-{subset}.pdf",
             )
             save_figure(
                 f,
-                _cross_surface_figures_path() / f'boiling1d-{direct_label}-{subset}.pdf',
+                _cross_surface_figures_path()
+                / f"boiling1d-{direct_label}-{subset}.pdf",
             )
             save_figure(
                 f,
-                _cross_surface_study_path() / f'boiling1d-{direct_label}-{subset}.png',
+                _cross_surface_study_path() / f"boiling1d-{direct_label}-{subset}.png",
             )
             save_figure(
                 f,
-                _cross_surface_figures_path() / f'boiling1d-{direct_label}-{subset}.png',
+                _cross_surface_figures_path()
+                / f"boiling1d-{direct_label}-{subset}.png",
             )
 
 
@@ -213,8 +230,8 @@ def _boiling_cross_surface_evaluation(
     strategy: LazyDescribed[tf.distribute.Strategy],
 ):
     logger.info(
-        f'Training on cases {training_cases} '
-        f'| Evaluating on {evaluation_cases} '
+        f"Training on cases {training_cases} "
+        f"| Evaluating on {evaluation_cases} "
         f"| {'Direct' if direct_visualization else 'Indirect'} visualization"
     )
 
@@ -225,14 +242,17 @@ def _boiling_cross_surface_evaluation(
             all_boiling_datasets[training_case] for training_case in training_cases
         )
 
-        training_dataset = LazyDescribed.from_describable(training_datasets) | datasets_merger()
+        training_dataset = (
+            LazyDescribed.from_describable(training_datasets) | datasets_merger()
+        )
     else:
         (training_case,) = training_cases
         training_dataset = all_boiling_datasets[training_case]
 
     if len(evaluation_cases) > 1:
         evaluation_datasets = tuple(
-            all_boiling_datasets[evaluation_case] for evaluation_case in evaluation_cases
+            all_boiling_datasets[evaluation_case]
+            for evaluation_case in evaluation_cases
         )
         evaluation_dataset = (
             LazyDescribed.from_describable(evaluation_datasets) | datasets_merger()
@@ -249,7 +269,7 @@ def _boiling_cross_surface_evaluation(
         **get_baseline_compile_params(strategy=strategy),
     )
 
-    logger.info('Training...')
+    logger.info("Training...")
 
     fit_model = fit_boiling_model(
         model,
@@ -259,43 +279,43 @@ def _boiling_cross_surface_evaluation(
         strategy=strategy,
     )
 
-    logger.info('Evaluating')
+    logger.info("Evaluating")
 
     model = fit_model.architecture | compile_model(
         **get_baseline_compile_params(strategy=strategy),
     )
 
-    evaluation = cached_model_evaluator('boiling1d')(
+    evaluation = cached_model_evaluator("boiling1d")(
         model,
         evaluation_dataset,
         measure_uncertainty=False,
     )
 
-    logger.info(f'Done evaluating: {evaluation}')
+    logger.info(f"Done evaluating: {evaluation}")
 
     return evaluation
 
 
 def _format_sets(indices: tuple[int, ...]) -> str:
-    return ' + '.join(map(str, indices))
+    return " + ".join(map(str, indices))
 
 
 def _cases_to_latex(cases: tuple[int, ...]) -> str:
     if set(cases) == {0, 1}:
-        return '$\\overline{\\mathrm{U}}^{\\mathrm{W}}$'
+        return "$\\overline{\\mathrm{U}}^{\\mathrm{W}}$"
     if set(cases) == {2, 3}:
-        return '$\\overline{\\mathrm{U}}^{\\mathrm{R}}$'
+        return "$\\overline{\\mathrm{U}}^{\\mathrm{R}}$"
     if set(cases) == {0, 1, 2, 3}:
-        return '$\\overline{\\mathrm{U}}^{\\mathrm{A}}$'
+        return "$\\overline{\\mathrm{U}}^{\\mathrm{A}}$"
 
     assert len(cases) == 1
 
-    return '$' + glossary[CASE_NAMES[cases[0]]] + '$'
+    return "$" + glossary[CASE_NAMES[cases[0]]] + "$"
 
 
 def _cross_surface_study_path() -> Path:
-    return resolve(studies_path() / 'cross-surface', dir=True)
+    return resolve(studies_path() / "cross-surface", dir=True)
 
 
 def _cross_surface_figures_path() -> Path:
-    return resolve(figures_path() / 'results' / 'cross-surface', dir=True)
+    return resolve(figures_path() / "results" / "cross-surface", dir=True)

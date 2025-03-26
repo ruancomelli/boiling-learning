@@ -17,20 +17,20 @@ class X:
 
 @json.encode.instance(X)
 def _json_encode(obj: X) -> dict[str, int]:
-    return {'value': obj.value}
+    return {"value": obj.value}
 
 
 @json.decode.dispatch(X)
 def _json_decode(obj: json.JSONDataType) -> X:
-    return X(obj['value'])
+    return X(obj["value"])
 
 
 class TestStorage:
     def test_default_json_io(self):
         test_list = [
             314159,
-            'apple pie tastes good',
-            {'likes dinos': True, 'political opinion': None},
+            "apple pie tastes good",
+            {"likes dinos": True, "political opinion": None},
         ]
 
         encoded = json.dumps(json.serialize(test_list))
@@ -48,61 +48,61 @@ class TestStorage:
 
 
 @pytest.mark.parametrize(
-    'obj,encoded',
+    "obj,encoded",
     [
         pytest.param(None, None),
         pytest.param(3, 3),
         pytest.param(3.14, 3.14),
-        pytest.param('hello', 'hello'),
+        pytest.param("hello", "hello"),
         pytest.param(True, True),
-        pytest.param([], [], id='empty-list'),
-        pytest.param(X(5), {'value': 5}, id='custom-type'),
+        pytest.param([], [], id="empty-list"),
+        pytest.param(X(5), {"value": 5}, id="custom-type"),
         pytest.param(
-            [0, 1, 'hello'],
-            [0, 1, 'hello'],
-            id='list-of-basics',
+            [0, 1, "hello"],
+            [0, 1, "hello"],
+            id="list-of-basics",
         ),
         pytest.param(
-            (0, None, 'hello'),
-            [0, None, 'hello'],
-            id='tuple-of-basics',
+            (0, None, "hello"),
+            [0, None, "hello"],
+            id="tuple-of-basics",
         ),
         pytest.param(
-            (3, 'hi', ['no', 'yes'], True, None),
-            [3, 'hi', ['builtins.list', 'no', 'yes'], True, None],
-            id='tuple-of-nested-basics',
+            (3, "hi", ["no", "yes"], True, None),
+            [3, "hi", ["builtins.list", "no", "yes"], True, None],
+            id="tuple-of-nested-basics",
         ),
         pytest.param(
-            (3, 'hi', ('no', X(4)), True, None),
+            (3, "hi", ("no", X(4)), True, None),
             [
                 3,
-                'hi',
-                ['builtins.tuple', 'no', [f'{__name__}.X', {'value': 4}]],
+                "hi",
+                ["builtins.tuple", "no", [f"{__name__}.X", {"value": 4}]],
                 True,
                 None,
             ],
-            id='tuple-of-complex',
+            id="tuple-of-complex",
         ),
         pytest.param(
-            P(3, 'hi', ('no', X(4)), do=True, errors=None),
+            P(3, "hi", ("no", X(4)), do=True, errors=None),
             [
-                'builtins.tuple',
+                "builtins.tuple",
                 [
-                    'builtins.tuple',
+                    "builtins.tuple",
                     3,
-                    'hi',
+                    "hi",
                     [
-                        'builtins.tuple',
-                        'no',
-                        [f'{__name__}.X', {'value': 4}],
+                        "builtins.tuple",
+                        "no",
+                        [f"{__name__}.X", {"value": 4}],
                     ],
                 ],
                 [
-                    f'{frozendict.__module__}.{frozendict.__name__}',
-                    {'do': True, 'errors': None},
+                    f"{frozendict.__module__}.{frozendict.__name__}",
+                    {"do": True, "errors": None},
                 ],
             ],
-            id='pack-of-complex',
+            id="pack-of-complex",
         ),
     ],
 )
@@ -113,58 +113,60 @@ def test_json_encode_decode(obj: Any, encoded: Any) -> None:
 
 
 @pytest.mark.parametrize(
-    'obj,serialized',
+    "obj,serialized",
     [
         pytest.param(None, None),
         pytest.param(3, 3),
         pytest.param(3.14, 3.14),
-        pytest.param('hello', 'hello'),
+        pytest.param("hello", "hello"),
         pytest.param(True, True),
-        pytest.param([], ['builtins.list'], id='empty-list'),
-        pytest.param(X(5), [f'{__name__}.X', {'value': 5}], id='custom-type'),
-        pytest.param([0, 1, 'hello'], ['builtins.list', 0, 1, 'hello'], id='list-of-basics'),
+        pytest.param([], ["builtins.list"], id="empty-list"),
+        pytest.param(X(5), [f"{__name__}.X", {"value": 5}], id="custom-type"),
         pytest.param(
-            (0, None, 'hello'),
-            ['builtins.tuple', 0, None, 'hello'],
-            id='tuple-of-basics',
+            [0, 1, "hello"], ["builtins.list", 0, 1, "hello"], id="list-of-basics"
         ),
         pytest.param(
-            (3, 'hi', ['no', 'yes'], True, None),
-            ['builtins.tuple', 3, 'hi', ['builtins.list', 'no', 'yes'], True, None],
-            id='tuple-of-complex-native',
+            (0, None, "hello"),
+            ["builtins.tuple", 0, None, "hello"],
+            id="tuple-of-basics",
         ),
         pytest.param(
-            (3, 'hi', ('no', X(4)), True, None),
+            (3, "hi", ["no", "yes"], True, None),
+            ["builtins.tuple", 3, "hi", ["builtins.list", "no", "yes"], True, None],
+            id="tuple-of-complex-native",
+        ),
+        pytest.param(
+            (3, "hi", ("no", X(4)), True, None),
             [
-                'builtins.tuple',
+                "builtins.tuple",
                 3,
-                'hi',
+                "hi",
                 [
-                    'builtins.tuple',
-                    'no',
-                    [f'{__name__}.X', {'value': 4}],
+                    "builtins.tuple",
+                    "no",
+                    [f"{__name__}.X", {"value": 4}],
                 ],
                 True,
                 None,
             ],
-            id='tuple-of-complex-custom',
+            id="tuple-of-complex-custom",
         ),
         pytest.param(
-            P(3, 'hi', ('no', X(4)), do=True, errors=None),
+            P(3, "hi", ("no", X(4)), do=True, errors=None),
             [
-                'boiling_learning.utils.functional.Pack',
+                "boiling_learning.utils.functional.Pack",
                 [
                     3,
-                    'hi',
+                    "hi",
                     [
-                        'builtins.tuple',
-                        'no',
-                        [f'{__name__}.X', {'value': 4}],
+                        "builtins.tuple",
+                        "no",
+                        [f"{__name__}.X", {"value": 4}],
                     ],
                 ],
-                {'do': True, 'errors': None},
+                {"do": True, "errors": None},
             ],
-            id='pack-of-complex',
+            id="pack-of-complex",
         ),
     ],
 )

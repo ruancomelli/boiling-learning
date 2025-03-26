@@ -48,18 +48,18 @@ def boiling1d(
     )
 
     case = boiling_cases()[0]
-    evaluator = cached_model_evaluator('boiling1d')
+    evaluator = cached_model_evaluator("boiling1d")
     tables: list[Table] = []
 
     for direct in False, True:
-        direct_label = 'direct' if direct else 'indirect'
+        direct_label = "direct" if direct else "indirect"
 
         table = Table(
-            'Factor',
-            'Training',
-            'Validation',
-            'Test',
-            title=f'Downscaling analysis - {direct_label}',
+            "Factor",
+            "Training",
+            "Validation",
+            "Test",
+            title=f"Downscaling analysis - {direct_label}",
         )
 
         evaluations: list[tuple[int, str, UncertainValue]] = []
@@ -72,7 +72,7 @@ def boiling1d(
             datasets = get_image_dataset(
                 case(),
                 transformers=preprocessors,
-                experiment='boiling1d',
+                experiment="boiling1d",
             )
             compiled_model = get_baseline_architecture(
                 datasets,
@@ -88,7 +88,7 @@ def boiling1d(
                 get_baseline_fit_params(),
                 target=DEFAULT_BOILING_HEAT_FLUX_TARGET,
                 strategy=strategy,
-                try_id=1 if factor == 2 else 0,
+                try_id=1 if factor == 2 else 0,  # noqa: PLR2004
             )
 
             compiled_model = fit_model.architecture | compile_model(
@@ -98,54 +98,60 @@ def boiling1d(
 
             evaluations.extend(
                 (
-                    (factor, 'Training', evaluation.training_metrics['MSE'].value),
-                    (factor, 'Validation', evaluation.validation_metrics['MSE'].value),
-                    (factor, 'Test', evaluation.test_metrics['MSE'].value),
+                    (factor, "Training", evaluation.training_metrics["MSE"].value),
+                    (factor, "Validation", evaluation.validation_metrics["MSE"].value),
+                    (factor, "Test", evaluation.test_metrics["MSE"].value),
                 )
             )
 
             table.add_row(
-                f'{factor}',
-                f'{evaluation.training_metrics["MSE"]}',
-                f'{evaluation.validation_metrics["MSE"]}',
-                f'{evaluation.test_metrics["MSE"]}',
+                f"{factor}",
+                f"{evaluation.training_metrics['MSE']}",
+                f"{evaluation.validation_metrics['MSE']}",
+                f"{evaluation.test_metrics['MSE']}",
             )
 
         tables.append(table)
 
-        plot_data = pd.DataFrame(evaluations, columns=['Downscaling factor', 'Subset', 'Loss'])
+        plot_data = pd.DataFrame(
+            evaluations, columns=["Downscaling factor", "Subset", "Loss"]
+        )
         f, ax = plt.subplots(1, 1, figsize=(3, 3))
 
         sns.scatterplot(
             ax=ax,
-            data=plot_data[plot_data['Loss'] < OUTLIER_LOSS],
-            x='Downscaling factor',
-            y='Loss',
-            hue='Subset',
+            data=plot_data[plot_data["Loss"] < OUTLIER_LOSS],
+            x="Downscaling factor",
+            y="Loss",
+            hue="Subset",
             alpha=0.75,
         )
-        outliers = plot_data[plot_data['Loss'] >= OUTLIER_LOSS]['Downscaling factor']
+        outliers = plot_data[plot_data["Loss"] >= OUTLIER_LOSS]["Downscaling factor"]
         for outlier in outliers:
-            ax.axvspan(outlier - 0.1, outlier + 0.1, color='red', alpha=0.15, hatch='/')
+            ax.axvspan(outlier - 0.1, outlier + 0.1, color="red", alpha=0.15, hatch="/")
 
-        ax.grid(which='minor', axis='x')
+        ax.grid(which="minor", axis="x")
         ax.set(
-            xlabel=f'Downscaling factor, ${glossary["downscaling factor"]}$',
-            ylabel=f'MSE [{units["mse"]}]',
+            xlabel=f"Downscaling factor, ${glossary['downscaling factor']}$",
+            ylabel=f"MSE [{units['mse']}]",
         )
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         ax.xaxis.set_major_formatter(ScalarFormatter())
 
         ax.yaxis.set_minor_formatter(
-            lambda val, pos: int(val) if abs(val - int(val)) < 1e-6 else val
+            lambda val, pos: int(val) if abs(val - int(val)) < 1e-6 else val  # noqa: PLR2004
         )
         ax.yaxis.set_major_formatter(
-            lambda val, pos: int(val) if abs(val - int(val)) < 1e-6 else val
+            lambda val, pos: int(val) if abs(val - int(val)) < 1e-6 else val  # noqa: PLR2004
         )
 
-        save_figure(f, _downscaling_training_study_path() / f'boiling1d-{direct_label}.pdf')
         save_figure(
-            f, _downscaling_training_study_figures_path() / f'boiling1d-{direct_label}.pdf'
+            f, _downscaling_training_study_path() / f"boiling1d-{direct_label}.pdf"
+        )
+        save_figure(
+            f,
+            _downscaling_training_study_figures_path()
+            / f"boiling1d-{direct_label}.pdf",
         )
 
     console.print(Columns(tables))
@@ -157,8 +163,8 @@ def condensation() -> None:
 
 
 def _downscaling_training_study_figures_path() -> Path:
-    return resolve(figures_path() / 'results' / 'downscaling', dir=True)
+    return resolve(figures_path() / "results" / "downscaling", dir=True)
 
 
 def _downscaling_training_study_path() -> Path:
-    return resolve(studies_path() / 'downscaling-training', dir=True)
+    return resolve(studies_path() / "downscaling-training", dir=True)

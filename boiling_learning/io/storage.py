@@ -15,13 +15,12 @@ from boiling_learning.utils.table_dispatch import TableDispatcher
 
 Metadata = json.JSONDataType
 
-DATA_FILENAME = '__data__'
-METADATA_FILENAME = '__boiling_learning_save_meta__.json'
+DATA_FILENAME = "__data__"
+METADATA_FILENAME = "__boiling_learning_save_meta__.json"
 
 
 @final
-class Serializable(AssociatedType):
-    ...
+class Serializable(AssociatedType): ...
 
 
 class _SerializableMeta(type):
@@ -29,13 +28,12 @@ class _SerializableMeta(type):
         return serialize.supports(instance)
 
 
-class SupportsSerializable(Supports[Serializable], metaclass=_SerializableMeta):
-    ...
+class SupportsSerializable(Supports[Serializable], metaclass=_SerializableMeta): ...
 
 
 @typeclass(Serializable)
 def serialize(instance: Supports[Serializable], path: Path) -> Metadata:
-    '''Serialize object contents.'''
+    """Serialize object contents."""
 
 
 class _DeserializableMeta(type):
@@ -43,15 +41,13 @@ class _DeserializableMeta(type):
         return instance in deserialize
 
 
-class SupportsDeserializable(metaclass=_DeserializableMeta):
-    ...
+class SupportsDeserializable(metaclass=_DeserializableMeta): ...
 
 
 deserialize = TableDispatcher()
 
 
-class Saveable(AssociatedType):
-    ...
+class Saveable(AssociatedType): ...
 
 
 class _SupportsSaveableMeta(type):
@@ -62,13 +58,12 @@ class _SupportsSaveableMeta(type):
 class SupportsSaveable(
     Supports[Saveable],
     metaclass=_SupportsSaveableMeta,
-):
-    ...
+): ...
 
 
 @typeclass(Saveable)
 def save(obj: Supports[Saveable], path: PathLike) -> None:
-    '''Save objects.'''
+    """Save objects."""
 
 
 @save.instance(delegate=SupportsSerializable)
@@ -78,8 +73,8 @@ def _save_serializable(instance: Supports[Serializable], path: PathLike) -> None
     serialization_metadata = serialize(instance, path / DATA_FILENAME)
 
     metadata = {
-        'type': type(instance) if instance is not None else None,
-        'metadata': serialization_metadata,
+        "type": type(instance) if instance is not None else None,
+        "metadata": serialization_metadata,
     }
     json.dump(metadata, path / METADATA_FILENAME)
 
@@ -89,15 +84,15 @@ def load(path: PathLike) -> Any:
 
     metadata = json.load(path / METADATA_FILENAME)
 
-    obj_type = metadata['type']
+    obj_type = metadata["type"]
 
-    return deserialize[obj_type](path / DATA_FILENAME, metadata['metadata'])
+    return deserialize[obj_type](path / DATA_FILENAME, metadata["metadata"])
 
 
 class _SimpleJSONEncodableMeta(type):
     def __instancecheck__(self, instance: Any) -> bool:
         return instance is None or (
-            isinstance(instance, (bool, int, float, str, dict, list, tuple))
+            isinstance(instance, bool | int | float | str | dict | list | tuple)
             and json.encode.supports(instance)
         )
 
@@ -107,14 +102,18 @@ class SimpleJSONEncodable(metaclass=_SimpleJSONEncodableMeta):
 
 
 @serialize.instance(delegate=SimpleJSONEncodable)
-def _serialize_simple_json_serializable(instance: SimpleJSONEncodable, path: Path) -> Metadata:
-    json.dump(instance, path.with_suffix('.json'))
-    return {'json': True}
+def _serialize_simple_json_serializable(
+    instance: SimpleJSONEncodable, path: Path
+) -> Metadata:
+    json.dump(instance, path.with_suffix(".json"))
+    return {"json": True}
 
 
 class _ListOfSaveableMeta(type):
     def __instancecheck__(self, instance: Any) -> bool:
-        return isinstance(instance, list) and all(save.supports(item) for item in instance)
+        return isinstance(instance, list) and all(
+            save.supports(item) for item in instance
+        )
 
 
 class ListOfSaveable(list[Supports[Saveable]], metaclass=_ListOfSaveableMeta):
@@ -131,7 +130,9 @@ def _serialize_list(instance: ListOfSaveable, path: Path) -> None:
 
 class _TupleOfSaveableMeta(type):
     def __instancecheck__(self, instance: Any) -> bool:
-        return isinstance(instance, tuple) and all(save.supports(item) for item in instance)
+        return isinstance(instance, tuple) and all(
+            save.supports(item) for item in instance
+        )
 
 
 class TupleOfSaveable(tuple[Supports[Saveable], ...], metaclass=_TupleOfSaveableMeta):
@@ -146,7 +147,8 @@ def _serialize_tuple(instance: TupleOfSaveable, path: Path) -> None:
 class _DictOfSaveableMeta(type):
     def __instancecheck__(self, instance: Any) -> bool:
         return isinstance(instance, dict) and all(
-            isinstance(key, str) and save.supports(value) for key, value in instance.items()
+            isinstance(key, str) and save.supports(value)
+            for key, value in instance.items()
         )
 
 
@@ -169,28 +171,28 @@ def _deserialize_none(path: Path, metadata: Metadata) -> None:  # pylint: disabl
 
 @deserialize.dispatch(int)
 def _deserialize_int(path: Path, metadata: Metadata) -> int:  # pylint: disable=unused-argument
-    return json.load(path.with_suffix('.json'))
+    return json.load(path.with_suffix(".json"))
 
 
 @deserialize.dispatch(bool)
 def _deserialize_bool(path: Path, metadata: Metadata) -> bool:  # pylint: disable=unused-argument
-    return json.load(path.with_suffix('.json'))
+    return json.load(path.with_suffix(".json"))
 
 
 @deserialize.dispatch(float)
 def _deserialize_float(path: Path, metadata: Metadata) -> float:  # pylint: disable=unused-argument
-    return json.load(path.with_suffix('.json'))
+    return json.load(path.with_suffix(".json"))
 
 
 @deserialize.dispatch(str)
 def _deserialize_str(path: Path, metadata: Metadata) -> str:  # pylint: disable=unused-argument
-    return json.load(path.with_suffix('.json'))
+    return json.load(path.with_suffix(".json"))
 
 
 @deserialize.dispatch(list)
 def _deserialize_list(path: Path, metadata: Metadata) -> list:
-    if isinstance(metadata, dict) and metadata.get('json'):
-        return json.load(path.with_suffix('.json'))
+    if isinstance(metadata, dict) and metadata.get("json"):
+        return json.load(path.with_suffix(".json"))
 
     items = []
 
@@ -207,8 +209,8 @@ def _deserialize_list(path: Path, metadata: Metadata) -> list:
 
 @deserialize.dispatch(dict)
 def _deserialize_dict(path: Path, metadata: Metadata) -> dict:
-    if isinstance(metadata, dict) and metadata.get('json'):
-        return json.load(path.with_suffix('.json'))
+    if isinstance(metadata, dict) and metadata.get("json"):
+        return json.load(path.with_suffix(".json"))
 
     return {item_path.name: load(item_path) for item_path in path.iterdir()}
 
@@ -230,13 +232,13 @@ def _deserialize_timedelta(path: Path, _metadata: Metadata) -> timedelta:
 
 @serialize.instance(LazyDescribed)
 def _serialize_lazy_described(instance: LazyDescribed[Any], path: Path) -> None:
-    save(instance(), path / 'value')
-    save(describe(instance), path / 'description')
+    save(instance(), path / "value")
+    save(describe(instance), path / "description")
 
 
 @deserialize.dispatch(LazyDescribed)
 def _deserialize_lazy_described(path: Path, _metadata: Metadata) -> LazyDescribed:
     return LazyDescribed.from_value_and_description(
-        load(path / 'value'),
-        load(path / 'description'),
+        load(path / "value"),
+        load(path / "description"),
     )

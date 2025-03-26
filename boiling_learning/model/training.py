@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
-from typing import Any, Callable, Optional, ParamSpec, TypedDict, TypeVar, Union
+from typing import Any, ParamSpec, TypedDict, TypeVar
 
 import numpy as np
 import tensorflow as tf
@@ -23,8 +24,8 @@ from boiling_learning.preprocessing.transformers import wrap_as_partial_transfor
 from boiling_learning.utils.timing import Timer
 from boiling_learning.utils.typeutils import typename
 
-_P = ParamSpec('_P')
-_T = TypeVar('_T')
+_P = ParamSpec("_P")
+_T = TypeVar("_T")
 
 
 @describe.instance(Metric)
@@ -39,10 +40,10 @@ class TypeAndConfig(TypedDict):
 
 @describe.instance(Loss)
 @describe.instance(Optimizer)
-def _describe_configurable(instance: Union[Loss, Optimizer]) -> TypeAndConfig:
+def _describe_configurable(instance: Loss | Optimizer) -> TypeAndConfig:
     return {
-        'typename': typename(instance),
-        'config': _numpy_types_to_builtin(instance.get_config()),
+        "typename": typename(instance),
+        "config": _numpy_types_to_builtin(instance.get_config()),
     }
 
 
@@ -50,9 +51,9 @@ def _numpy_types_to_builtin(model_config: dict[str, Any]) -> dict[str, Any]:
     for key, value in model_config.items():
         if isinstance(value, dict):
             model_config[key] = _numpy_types_to_builtin(value)
-        elif isinstance(value, (list, tuple)):
+        elif isinstance(value, list | tuple):
             model_config[key] = [_numpy_types_to_builtin(item) for item in value]
-        elif value is None or isinstance(value, (int, float, str, bool)):
+        elif value is None or isinstance(value, int | float | str | bool):
             pass
         elif isinstance(value, np.bool_):
             model_config[key] = bool(value)
@@ -62,7 +63,7 @@ def _numpy_types_to_builtin(model_config: dict[str, Any]) -> dict[str, Any]:
             model_config[key] = float(value)
         else:
             raise TypeError(
-                f'Unsupported type in model config: got type {type(value)} for value {value}'
+                f"Unsupported type in model config: got type {type(value)} for value {value}"
             )
     return model_config
 
@@ -70,7 +71,7 @@ def _numpy_types_to_builtin(model_config: dict[str, Any]) -> dict[str, Any]:
 @json.encode.instance(Loss)
 @json.encode.instance(Metric)
 @json.encode.instance(Optimizer)
-def _encode_configurable(instance: Union[Loss, Metric, Optimizer]) -> json.JSONDataType:
+def _encode_configurable(instance: Loss | Metric | Optimizer) -> json.JSONDataType:
     return json.serialize(describe(instance))
 
 
@@ -82,7 +83,7 @@ def compile_model(
     *,
     loss: Loss,
     optimizer: Optimizer | str,
-    metrics: Optional[list[Metric]],
+    metrics: list[Metric] | None,
 ) -> ModelArchitecture:
     # TODO: create a clone here to ensure pureness
     # needs to do the clone in the same `strategy` as metrics
@@ -98,7 +99,7 @@ def compile_model(
 
 @dataclass(frozen=True)
 class FitModelParams:
-    batch_size: Optional[int]
+    batch_size: int | None
     epochs: int
     callbacks: LazyDescribed[list[Callback]]
 
@@ -145,9 +146,9 @@ def get_fit_model(
 
 
 def _wrap_with_strategy(
-    func: Callable[_P, _T]
-) -> Callable[[Optional[Lazy[tf.distribute.Strategy]]], Callable[_P, _T]]:
-    def _wrapper(strategy: Optional[Lazy[tf.distribute.Strategy]]) -> Callable[_P, _T]:
+    func: Callable[_P, _T],
+) -> Callable[[Lazy[tf.distribute.Strategy] | None], Callable[_P, _T]]:
+    def _wrapper(strategy: Lazy[tf.distribute.Strategy] | None) -> Callable[_P, _T]:
         def _wrapped(*args: _P.args, **kwargs: _P.kwargs) -> _T:
             with strategy_scope(strategy):
                 return func(*args, **kwargs)

@@ -12,10 +12,10 @@ from boiling_learning.app.displaying import glossary, units
 app = typer.Typer()
 console = Console()
 
-NATURAL_CONVECTION = 'Natural convection'
-PARTIAL_NUCLEATE_BOILING = 'Partial nucleate boiling'
-FULLY_DEVELOPED_NUCLEATE_BOILING = 'Fully; developed nucleate boiling'
-FILM_BOILING = 'Film boiling'
+NATURAL_CONVECTION = "Natural convection"
+PARTIAL_NUCLEATE_BOILING = "Partial nucleate boiling"
+FULLY_DEVELOPED_NUCLEATE_BOILING = "Fully; developed nucleate boiling"
+FILM_BOILING = "Film boiling"
 
 CENGEL_BOILING_CURVE = tuple(
     (temperature, heat_flux / 1e4, regime)  # W/m^2 -> W/cm^2
@@ -97,20 +97,20 @@ def main() -> None:
     f, ax = plt.subplots(1, 1, figsize=(7, 4))
     data = pd.DataFrame(
         CENGEL_BOILING_CURVE,
-        columns=['Wall superheat', 'Heat flux', 'Regime'],
+        columns=["Wall superheat", "Heat flux", "Regime"],
     )
     sns.lineplot(
         ax=ax,
         data=data,
-        x='Wall superheat',
-        y='Heat flux',
-        hue='Regime',
+        x="Wall superheat",
+        y="Heat flux",
+        hue="Regime",
         legend=False,
         linewidth=3,
     )
     lines = [line for line in ax.get_children() if isinstance(line, Line2D)]
     colors = [line.get_color() for line in lines]
-    regime_colors = dict(zip(data['Regime'].unique(), colors))
+    regime_colors = dict(zip(data["Regime"].unique(), colors))
 
     onb_x, onb_y = [
         (temperature, heat_flux)
@@ -144,12 +144,16 @@ def main() -> None:
     ax.plot(
         [dnb_x, start_film_line_x],
         [dnb_y, start_film_line_y],
-        '--',
+        "--",
         color=regime_colors[FILM_BOILING],
     )
 
-    for regime in NATURAL_CONVECTION, PARTIAL_NUCLEATE_BOILING, FULLY_DEVELOPED_NUCLEATE_BOILING:
-        temperature_range = data[data['Regime'] == regime]['Wall superheat']
+    for regime in (
+        NATURAL_CONVECTION,
+        PARTIAL_NUCLEATE_BOILING,
+        FULLY_DEVELOPED_NUCLEATE_BOILING,
+    ):
+        temperature_range = data[data["Regime"] == regime]["Wall superheat"]
         start = temperature_range.min()
         end = temperature_range.max()
 
@@ -157,11 +161,11 @@ def main() -> None:
     ax.axvspan(dnb_x, burnout_x, color=regime_colors[FILM_BOILING], alpha=0.15)
 
     ax.set(
-        xlabel=f'Wall superheat, ${glossary["wall superheat"]}$ [${units["temperature"]}$]',
-        ylabel=f'Heat flux, ${glossary["heat flux"]}$ [${units["heat flux"]}$]',
+        xlabel=f"Wall superheat, ${glossary['wall superheat']}$ [${units['temperature']}$]",
+        ylabel=f"Heat flux, ${glossary['heat flux']}$ [${units['heat flux']}$]",
     )
-    ax.set_xscale('log')
-    ax.set_yscale('log')
+    ax.set_xscale("log")
+    ax.set_yscale("log")
     # ax.minorticks_off()
     # grid.ax.set(
     #     xticks=[20, 25, 30],
@@ -170,4 +174,4 @@ def main() -> None:
     ax.xaxis.set_major_formatter(lambda val, pos: int(val))
     # ax.yaxis.set_major_formatter(lambda val, pos: int(val))
     # ax.xaxis.set_major_locator(MaxNLocator('auto', integer=True))
-    f.savefig(figures_path() / 'boiling-curve.pdf', bbox_inches='tight')
+    f.savefig(figures_path() / "boiling-curve.pdf", bbox_inches="tight")

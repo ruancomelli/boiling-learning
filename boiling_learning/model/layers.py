@@ -1,4 +1,4 @@
-from typing import Any, Union
+from typing import Any
 
 import numpy as np
 import tensorflow as tf
@@ -11,7 +11,7 @@ class RandomBrightness(tf.keras.layers.Layer):
     https://towardsdatascience.com/writing-a-custom-data-augmentation-layer-in-keras-2b53e048a98
     """
 
-    def __init__(self, factor: Union[float, tuple[float, float]], **kwargs: Any) -> None:
+    def __init__(self, factor: float | tuple[float, float], **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._factor = (
             (-abs(factor), abs(factor))
@@ -29,7 +29,7 @@ class RandomBrightness(tf.keras.layers.Layer):
         return tf.image.adjust_brightness(images, brightness)
 
     def get_config(self) -> dict[str, Any]:
-        return {**super().get_config(), 'factor': self._factor}
+        return {**super().get_config(), "factor": self._factor}
 
 
 class ImageNormalization(tf.keras.layers.Layer):

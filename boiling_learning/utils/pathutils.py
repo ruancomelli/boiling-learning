@@ -1,13 +1,12 @@
 import os
 from pathlib import Path
-from typing import Optional, Union
 
-PathLike = Union[str, os.PathLike]
+PathLike = str | os.PathLike
 
 
 def resolve(
     path: PathLike,
-    root: Optional[PathLike] = None,
+    root: PathLike | None = None,
     dir: bool = False,
     parents: bool = False,
 ) -> Path:
@@ -18,7 +17,7 @@ def resolve(
         if not path.is_absolute():
             path = root / path
         elif root not in path.resolve().parents:
-            raise ValueError(f'incompatible `root` and `path`: {(root, path)}')
+            raise ValueError(f"incompatible `root` and `path`: {(root, path)}")
 
     path = path.resolve()
 

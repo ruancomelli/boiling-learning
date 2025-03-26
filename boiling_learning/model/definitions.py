@@ -1,4 +1,4 @@
-from typing import Literal, Optional, Union
+from typing import Literal, assert_never
 
 from tensorflow.keras.experimental import LinearModel
 from tensorflow.keras.layers import (
@@ -31,16 +31,16 @@ def linear_regression(input_shape: tuple[int, ...]) -> ModelArchitecture:
 
 
 def tiny_convnet(
-    input_shape: Union[tuple[int, int, int], tuple[int, int]],
-    dropout: Optional[float],
-    hidden_layers_policy: Optional[Union[str, Policy]] = None,
-    output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: Literal['classification', 'regression'] = 'regression',
-    num_classes: Optional[int] = None,
+    input_shape: tuple[int, int, int] | tuple[int, int],
+    dropout: float | None,
+    hidden_layers_policy: str | Policy | None = None,
+    output_layer_policy: str | Policy | None = None,
+    problem: Literal["classification", "regression"] = "regression",
+    num_classes: int | None = None,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
     # start "current layer" as the input layer
-    outputs = inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    outputs = inputs = Input(shape=_ensure_3d_input(input_shape))
 
     outputs = AveragePooling2D((10, 10))(outputs)
 
@@ -50,29 +50,30 @@ def tiny_convnet(
         outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
     outputs = Flatten(dtype=hidden_layers_policy)(outputs)
 
-    if problem == 'classification':
-        outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
-        outputs = Softmax(dtype=output_layer_policy)(outputs)
-    elif problem == 'regression':
-        outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
-        outputs = Activation('linear', dtype=output_layer_policy)(outputs)
-    else:
-        raise ValueError(f'unknown problem type: \"{problem}\"')
+    match problem:
+        case "classification":
+            outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
+            outputs = Softmax(dtype=output_layer_policy)(outputs)
+        case "regression":
+            outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
+            outputs = Activation("linear", dtype=output_layer_policy)(outputs)
+        case never:
+            assert_never(never)
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
 
 def small_convnet(
-    input_shape: Union[tuple[int, int, int], tuple[int, int]],
-    dropout: Optional[float],
-    hidden_layers_policy: Optional[Union[str, Policy]] = None,
-    output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: Literal['classification', 'regression'] = 'regression',
-    num_classes: Optional[int] = None,
+    input_shape: tuple[int, int, int] | tuple[int, int],
+    dropout: float | None,
+    hidden_layers_policy: str | Policy | None = None,
+    output_layer_policy: str | Policy | None = None,
+    problem: Literal["classification", "regression"] = "regression",
+    num_classes: int | None = None,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
     # start "current layer" as the input layer
-    outputs = inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    outputs = inputs = Input(shape=_ensure_3d_input(input_shape))
 
     if normalize_images:
         outputs = ImageNormalization()(outputs)
@@ -80,7 +81,7 @@ def small_convnet(
     outputs = Conv2D(
         16,
         (5, 5),
-        padding='same',
+        padding="same",
         dtype=hidden_layers_policy,
     )(outputs)
     outputs = ReLU()(outputs)
@@ -93,33 +94,36 @@ def small_convnet(
     if dropout is not None:
         outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
-    if problem == 'classification':
-        outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
-        outputs = Softmax(dtype=output_layer_policy)(outputs)
-    elif problem == 'regression':
-        outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
-        outputs = Activation('linear', dtype=output_layer_policy)(outputs)
-    else:
-        raise ValueError(f'unknown problem type: \"{problem}\"')
+    match problem:
+        case "classification":
+            outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
+            outputs = Softmax(dtype=output_layer_policy)(outputs)
+        case "regression":
+            outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
+            outputs = Activation("linear", dtype=output_layer_policy)(outputs)
+        case never:
+            assert_never(never)
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
 
 def hoboldnet1(
-    input_shape: Union[tuple[int, int, int], tuple[int, int]],
-    dropout: Optional[float],
-    hidden_layers_policy: Optional[Union[str, Policy]] = None,
-    output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: Literal['classification', 'regression'] = 'regression',
-    num_classes: Optional[int] = None,
+    input_shape: tuple[int, int, int] | tuple[int, int],
+    dropout: float | None,
+    hidden_layers_policy: str | Policy | None = None,
+    output_layer_policy: str | Policy | None = None,
+    problem: Literal["classification", "regression"] = "regression",
+    num_classes: int | None = None,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
-    '''CNN #1 implemented according to the paper Hobold and da Silva (2019):
-    Visualization-based nucleate boiling heat flux quantification using machine
-    learning.
-    '''
+    """Instantiate the first model from Hobold and da Silva (2019).
+
+    This function instantiates the model named "CNN #1" in the paper Hobold and
+    da Silva (2019): Visualization-based nucleate boiling heat flux quantification
+    using machine learning.
+    """
     # start "current layer" as the input layer
-    outputs = inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    outputs = inputs = Input(shape=_ensure_3d_input(input_shape))
 
     if normalize_images:
         outputs = ImageNormalization()(outputs)
@@ -127,7 +131,7 @@ def hoboldnet1(
     outputs = Conv2D(
         16,
         (5, 5),
-        padding='same',
+        padding="same",
         dtype=hidden_layers_policy,
     )(outputs)
     outputs = ReLU()(outputs)
@@ -140,33 +144,36 @@ def hoboldnet1(
     if dropout is not None:
         outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
-    if problem == 'classification':
-        outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
-        outputs = Softmax(dtype=output_layer_policy)(outputs)
-    elif problem == 'regression':
-        outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
-        outputs = Activation('linear', dtype=output_layer_policy)(outputs)
-    else:
-        raise ValueError(f'unknown problem type: \"{problem}\"')
+    match problem:
+        case "classification":
+            outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
+            outputs = Softmax(dtype=output_layer_policy)(outputs)
+        case "regression":
+            outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
+            outputs = Activation("linear", dtype=output_layer_policy)(outputs)
+        case never:
+            assert_never(never)
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
 
 def hoboldnet2(
-    input_shape: Union[tuple[int, int, int], tuple[int, int]],
-    dropout: Optional[float],
-    hidden_layers_policy: Optional[Union[str, Policy]] = None,
-    output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: Literal['classification', 'regression'] = 'regression',
-    num_classes: Optional[int] = None,
+    input_shape: tuple[int, int, int] | tuple[int, int],
+    dropout: float | None,
+    hidden_layers_policy: str | Policy | None = None,
+    output_layer_policy: str | Policy | None = None,
+    problem: Literal["classification", "regression"] = "regression",
+    num_classes: int | None = None,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
-    '''CNN #2 implemented according to the paper Hobold and da Silva (2019):
-    Visualization-based nucleate boiling heat flux quantification using machine
-    learning.
-    '''
+    """Instantiate the second model from Hobold and da Silva (2019).
+
+    This function instantiates the model named "CNN #2" in the paper Hobold and
+    da Silva (2019): Visualization-based nucleate boiling heat flux quantification
+    using machine learning.
+    """
     # start "current layer" as the input layer
-    outputs = inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    outputs = inputs = Input(shape=_ensure_3d_input(input_shape))
 
     if normalize_images:
         outputs = ImageNormalization()(outputs)
@@ -174,7 +181,7 @@ def hoboldnet2(
     outputs = Conv2D(
         32,
         (5, 5),
-        padding='same',
+        padding="same",
         dtype=hidden_layers_policy,
     )(outputs)
     outputs = ReLU()(outputs)
@@ -187,33 +194,36 @@ def hoboldnet2(
     if dropout is not None:
         outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
-    if problem == 'classification':
-        outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
-        outputs = Softmax(dtype=output_layer_policy)(outputs)
-    elif problem == 'regression':
-        outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
-        outputs = Activation('linear', dtype=output_layer_policy)(outputs)
-    else:
-        raise ValueError(f'unknown problem type: \"{problem}\"')
+    match problem:
+        case "classification":
+            outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
+            outputs = Softmax(dtype=output_layer_policy)(outputs)
+        case "regression":
+            outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
+            outputs = Activation("linear", dtype=output_layer_policy)(outputs)
+        case never:
+            assert_never(never)
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
 
 def hoboldnet3(
-    input_shape: Union[tuple[int, int, int], tuple[int, int]],
-    dropout: Optional[float],
-    hidden_layers_policy: Optional[Union[str, Policy]] = None,
-    output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: Literal['classification', 'regression'] = 'regression',
-    num_classes: Optional[int] = None,
+    input_shape: tuple[int, int, int] | tuple[int, int],
+    dropout: float | None,
+    hidden_layers_policy: str | Policy | None = None,
+    output_layer_policy: str | Policy | None = None,
+    problem: Literal["classification", "regression"] = "regression",
+    num_classes: int | None = None,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
-    '''CNN #3 implemented according to the paper Hobold and da Silva (2019):
-    Visualization-based nucleate boiling heat flux quantification using machine
-    learning.
-    '''
+    """Instantiate the third model from Hobold and da Silva (2019).
+
+    This function instantiates the model named "CNN #3" in the paper Hobold and
+    da Silva (2019): Visualization-based nucleate boiling heat flux quantification
+    using machine learning.
+    """
     # start "current layer" as the input layer
-    outputs = inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    outputs = inputs = Input(shape=_ensure_3d_input(input_shape))
 
     if normalize_images:
         outputs = ImageNormalization()(outputs)
@@ -221,7 +231,7 @@ def hoboldnet3(
     outputs = Conv2D(
         32,
         (5, 5),
-        padding='same',
+        padding="same",
         dtype=hidden_layers_policy,
     )(outputs)
     outputs = ReLU()(outputs)
@@ -229,7 +239,7 @@ def hoboldnet3(
     outputs = Conv2D(
         64,
         (5, 5),
-        padding='same',
+        padding="same",
         dtype=hidden_layers_policy,
     )(outputs)
     outputs = ReLU()(outputs)
@@ -242,32 +252,35 @@ def hoboldnet3(
     if dropout is not None:
         outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
-    if problem == 'classification':
-        outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
-        outputs = Softmax(dtype=output_layer_policy)(outputs)
-    elif problem == 'regression':
-        outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
-        outputs = Activation('linear', dtype=output_layer_policy)(outputs)
-    else:
-        raise ValueError(f'unknown problem type: \"{problem}\"')
+    match problem:
+        case "classification":
+            outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
+            outputs = Softmax(dtype=output_layer_policy)(outputs)
+        case "regression":
+            outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
+            outputs = Activation("linear", dtype=output_layer_policy)(outputs)
+        case never:
+            assert_never(never)
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
 
 def hoboldnet_supplementary(
-    input_shape: Union[tuple[int, int, int], tuple[int, int]],
-    dropout: Optional[float],
-    hidden_layers_policy: Optional[Union[str, Policy]] = None,
-    output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: Literal['classification', 'regression'] = 'regression',
-    num_classes: Optional[int] = None,
+    input_shape: tuple[int, int, int] | tuple[int, int],
+    dropout: float | None,
+    hidden_layers_policy: str | Policy | None = None,
+    output_layer_policy: str | Policy | None = None,
+    problem: Literal["classification", "regression"] = "regression",
+    num_classes: int | None = None,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
-    '''See supplementary material for Hobold and da Silva (2019): Visualization-based
+    """Instantiate the supplementary model from Hobold and da Silva (2019).
+
+    See supplementary material for Hobold and da Silva (2019): Visualization-based
     nucleate boiling heat flux quantification using machine learning.
-    '''
+    """
     # start "current layer" as the input layer
-    outputs = inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    outputs = inputs = Input(shape=_ensure_3d_input(input_shape))
 
     if normalize_images:
         outputs = ImageNormalization()(outputs)
@@ -275,7 +288,7 @@ def hoboldnet_supplementary(
     outputs = Conv2D(
         32,
         (5, 5),
-        padding='same',
+        padding="same",
         dtype=hidden_layers_policy,
     )(outputs)
     outputs = ReLU()(outputs)
@@ -283,7 +296,7 @@ def hoboldnet_supplementary(
     outputs = Conv2D(
         64,
         (5, 5),
-        padding='same',
+        padding="same",
         dtype=hidden_layers_policy,
     )(outputs)
     outputs = ReLU()(outputs)
@@ -296,32 +309,31 @@ def hoboldnet_supplementary(
     if dropout is not None:
         outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
-    if problem == 'classification':
-        outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
-        outputs = Softmax(dtype=output_layer_policy)(outputs)
-    elif problem == 'regression':
-        outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
-        outputs = Activation('linear', dtype=output_layer_policy)(outputs)
-    else:
-        raise ValueError(f'unknown problem type: \"{problem}\"')
+    match problem:
+        case "classification":
+            outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
+            outputs = Softmax(dtype=output_layer_policy)(outputs)
+        case "regression":
+            outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
+            outputs = Activation("linear", dtype=output_layer_policy)(outputs)
+        case never:
+            assert_never(never)
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
 
 def kramernet(
-    input_shape: Union[tuple[int, int, int], tuple[int, int]],
-    dropout: Optional[float],
-    hidden_layers_policy: Optional[Union[str, Policy]] = None,
-    output_layer_policy: Optional[Union[str, Policy]] = None,
-    problem: Literal['classification', 'regression'] = 'regression',
-    num_classes: Optional[int] = None,
+    input_shape: tuple[int, int, int] | tuple[int, int],
+    dropout: float | None,
+    hidden_layers_policy: str | Policy | None = None,
+    output_layer_policy: str | Policy | None = None,
+    problem: Literal["classification", "regression"] = "regression",
+    num_classes: int | None = None,
     normalize_images: bool = True,
 ) -> ModelArchitecture:
-    '''See supplementary material for Hobold and da Silva (2019): Visualization-based
-    nucleate boiling heat flux quantification using machine learning.
-    '''
+    """Instantiate the model from Scariot (2018)."""
     # start "current layer" as the input layer
-    outputs = inputs = Input(shape=input_shape + (1,) if len(input_shape) == 2 else input_shape)
+    outputs = inputs = Input(shape=_ensure_3d_input(input_shape))
 
     if normalize_images:
         outputs = ImageNormalization()(outputs)
@@ -329,7 +341,7 @@ def kramernet(
     outputs = Conv2D(
         64,
         (3, 3),
-        padding='same',
+        padding="same",
         dtype=hidden_layers_policy,
     )(outputs)
     outputs = ReLU()(outputs)
@@ -337,7 +349,7 @@ def kramernet(
     outputs = Conv2D(
         64,
         (3, 3),
-        padding='same',
+        padding="same",
         dtype=hidden_layers_policy,
     )(outputs)
     outputs = ReLU()(outputs)
@@ -348,7 +360,7 @@ def kramernet(
     outputs = Conv2D(
         64,
         (3, 3),
-        padding='same',
+        padding="same",
         dtype=hidden_layers_policy,
     )(outputs)
     outputs = ReLU()(outputs)
@@ -356,7 +368,7 @@ def kramernet(
     outputs = Conv2D(
         64,
         (3, 3),
-        padding='same',
+        padding="same",
         dtype=hidden_layers_policy,
     )(outputs)
     outputs = ReLU()(outputs)
@@ -367,7 +379,7 @@ def kramernet(
     outputs = Conv2D(
         128,
         (3, 3),
-        padding='same',
+        padding="same",
         dtype=hidden_layers_policy,
     )(outputs)
     outputs = ReLU()(outputs)
@@ -375,7 +387,7 @@ def kramernet(
     outputs = Conv2D(
         128,
         (3, 3),
-        padding='same',
+        padding="same",
         dtype=hidden_layers_policy,
     )(outputs)
     outputs = ReLU()(outputs)
@@ -386,17 +398,19 @@ def kramernet(
     outputs = Flatten(dtype=hidden_layers_policy)(outputs)
     outputs = Dense(256, dtype=hidden_layers_policy)(outputs)
     outputs = ReLU()(outputs)
+
     if dropout is not None:
         outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
-    if problem == 'classification':
-        outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
-        outputs = Softmax(dtype=output_layer_policy)(outputs)
-    elif problem == 'regression':
-        outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
-        outputs = Activation('linear', dtype=output_layer_policy)(outputs)
-    else:
-        raise ValueError(f'unknown problem type: \"{problem}\"')
+    match problem:
+        case "classification":
+            outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
+            outputs = Softmax(dtype=output_layer_policy)(outputs)
+        case "regression":
+            outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
+            outputs = Activation("linear", dtype=output_layer_policy)(outputs)
+        case never:
+            assert_never(never)
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
@@ -412,3 +426,19 @@ def linear_model(
     outputs = LinearModel()(outputs)
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
+
+
+def _ensure_3d_input(
+    input_shape: tuple[int, int] | tuple[int, int, int],
+) -> tuple[int, int, int]:
+    """Ensure that the input shape is 3-dimensional.
+
+    Expects a 2-dimensional input shape (height, width) and converts it to a
+    3-dimensional input shape (height, width, 1) where the last dimension is
+    the grayscale channel.
+    """
+    match input_shape:
+        case (h, w):
+            return (h, w, 1)
+        case _:
+            return input_shape

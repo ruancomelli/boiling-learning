@@ -29,8 +29,8 @@ app = typer.Typer()
 
 
 METRICS = (
-    (nbins_retained_variance, 'retained-variance', 'Relative variance'),
-    (nbins_shannon_entropy_ratio, 'cross-entropy', 'Cross-entropy ratio'),
+    (nbins_retained_variance, "retained-variance", "Relative variance"),
+    (nbins_shannon_entropy_ratio, "cross-entropy", "Cross-entropy ratio"),
 )
 
 DEFAULT_FACTORS = list(range(1, 11))
@@ -55,10 +55,10 @@ def boiling1d(factors: list[int] = typer.Option(DEFAULT_FACTORS)) -> None:
         sns.scatterplot(
             data,
             ax=ax,
-            x='Downscaling factor',
-            y='Metric',
-            hue='Dataset',
-            style='Dataset',
+            x="Downscaling factor",
+            y="Metric",
+            hue="Dataset",
+            style="Dataset",
             markers=[marker for _, marker in DATASET_MARKER_STYLE],
             alpha=0.75,
         )
@@ -67,17 +67,17 @@ def boiling1d(factors: list[int] = typer.Option(DEFAULT_FACTORS)) -> None:
             xticklabels=[str(factor) for factor in factors],
             ylabel=metric_name,
         )
-        ax.grid(axis='x')
+        ax.grid(axis="x")
 
-        save_figure(f, _downscaling_study_path() / f'boiling1d-{metric_id}.pdf')
-        save_figure(f, _downscaling_figures_path() / f'{metric_id}.pdf')
+        save_figure(f, _downscaling_study_path() / f"boiling1d-{metric_id}.pdf")
+        save_figure(f, _downscaling_figures_path() / f"{metric_id}.pdf")
 
 
 def _get_data(
     factors: list[int],
     metric: LazyDescribed[Callable[[Image, Image], float]],
 ) -> pd.DataFrame:
-    @cache(JSONAllocator(_downscaling_study_path() / 'per-frame'))
+    @cache(JSONAllocator(_downscaling_study_path() / "per-frame"))
     def _per_frame_data_getter(
         dataset: LazyDescribed[ImageDataset],
         /,
@@ -97,14 +97,17 @@ def _get_data(
                 direct_visualization=True,
                 downscale_factor=factor,
             )
-            preprocessors = [preprocessors[0], preprocessors[1][:1]]  # remove cropping steps
+            preprocessors = [
+                preprocessors[0],
+                preprocessors[1][:1],
+            ]  # remove cropping steps
             datasets = get_image_dataset(
                 case(),
                 transformers=preprocessors,
-                experiment='boiling1d',
+                experiment="boiling1d",
                 shuffle=False,
             )
-            for subset_name in ('train',):
+            for subset_name in ("train",):
                 # for subset_name in 'train', 'val', 'test':
                 dataset = datasets | subset(subset_name)
 
@@ -118,7 +121,7 @@ def _get_data(
                     )
                     data.append((factor, result, dataset_name))
 
-    return pd.DataFrame(data, columns=['Downscaling factor', 'Metric', 'Dataset'])
+    return pd.DataFrame(data, columns=["Downscaling factor", "Metric", "Dataset"])
 
 
 @app.command()
@@ -130,10 +133,10 @@ def condensation(
 
 def _downscaling_figures_path() -> Path:
     return resolve(
-        figures_path() / 'machine-learning' / 'preprocessing' / 'downscaling',
+        figures_path() / "machine-learning" / "preprocessing" / "downscaling",
         dir=True,
     )
 
 
 def _downscaling_study_path() -> Path:
-    return resolve(studies_path() / 'downscaling-preprocessing', dir=True)
+    return resolve(studies_path() / "downscaling-preprocessing", dir=True)

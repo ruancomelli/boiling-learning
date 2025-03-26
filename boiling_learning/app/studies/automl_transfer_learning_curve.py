@@ -41,23 +41,25 @@ def boiling1d() -> None:
         require_gpu=True,
     )
 
-    raise CancelledError('This study is cancelled for not providing useful information.')
+    raise CancelledError(
+        "This study is cancelled for not providing useful information."
+    )
 
-    model_evaluator = cached_model_evaluator('boiling1d')
+    model_evaluator = cached_model_evaluator("boiling1d")
 
     tables: list[Table] = []
     for direct in False, True:
-        direct_label = 'direct' if direct else 'indirect'
+        direct_label = "direct" if direct else "indirect"
 
         datasets = boiling_datasets(direct_visualization=direct)[1]
 
         table = Table(
-            'Subsample',
-            'Training\nloss',
-            'Validation\nloss',
-            'Test\nloss',
-            'Epochs\ntrained',
-            title=f'Learning curve - {direct_label}',
+            "Subsample",
+            "Training\nloss",
+            "Validation\nloss",
+            "Test\nloss",
+            "Epochs\ntrained",
+            title=f"Learning curve - {direct_label}",
         )
 
         for fraction in FRACTIONS:
@@ -74,7 +76,7 @@ def boiling1d() -> None:
 
             if fraction:
                 subsampled = (
-                    datasets | dataset_sampler(count=fraction, subset='train')
+                    datasets | dataset_sampler(count=fraction, subset="train")
                     if fraction != 1
                     else datasets
                 )
@@ -106,28 +108,28 @@ def boiling1d() -> None:
             )
 
             table.add_row(
-                f'{fraction} ({float(fraction):.0%})',
-                f'{evaluation.training_metrics["MSE"]:.2f}',
-                f'{evaluation.validation_metrics["MSE"]:.2f}',
-                f'{evaluation.test_metrics["MSE"]:.2f}',
+                f"{fraction} ({float(fraction):.0%})",
+                f"{evaluation.training_metrics['MSE']:.2f}",
+                f"{evaluation.validation_metrics['MSE']:.2f}",
+                f"{evaluation.test_metrics['MSE']:.2f}",
                 str(trained_epochs),
             )
 
         tables.append(table)
 
         table = Table(
-            'Learning rate',
-            'Freezing',
-            'Training\nloss',
-            'Validation\nloss',
-            'Test\nloss',
-            'Epochs\ntrained',
-            title=f'Learning curve - 1% - {direct_label}',
+            "Learning rate",
+            "Freezing",
+            "Training\nloss",
+            "Validation\nloss",
+            "Test\nloss",
+            "Epochs\ntrained",
+            title=f"Learning curve - 1% - {direct_label}",
         )
 
-        subsampled = datasets | dataset_sampler(count=Fraction(1, 100), subset='train')
+        subsampled = datasets | dataset_sampler(count=Fraction(1, 100), subset="train")
         for learning_rate in 1, 0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001:
-            for freezing in 'none', 'pre', 'body':
+            for freezing in "none", "pre", "body":
                 best_model = best_baseline_boiling1d_model(
                     direct_visualization=direct,
                     strategy=strategy,
@@ -174,9 +176,9 @@ def boiling1d() -> None:
                 table.add_row(
                     str(learning_rate),
                     freezing,
-                    f'{evaluation.training_metrics["MSE"]:.2f}',
-                    f'{evaluation.validation_metrics["MSE"]:.2f}',
-                    f'{evaluation.test_metrics["MSE"]:.2f}',
+                    f"{evaluation.training_metrics['MSE']:.2f}",
+                    f"{evaluation.validation_metrics['MSE']:.2f}",
+                    f"{evaluation.test_metrics['MSE']:.2f}",
                     str(trained_epochs),
                 )
 
@@ -193,14 +195,14 @@ def condensation() -> None:
 def _freeze(
     model: LazyDescribed[ModelArchitecture],
     strategy: LazyDescribed[tf.distribute.Strategy],
-    freezing: Literal['none', 'pre', 'body'],
+    freezing: Literal["none", "pre", "body"],
 ) -> LazyDescribed[ModelArchitecture]:
     architecture = model().clone(strategy=strategy)
 
-    if freezing == 'body':
+    if freezing == "body":
         architecture.model.trainable = False
         architecture.model.layers[-1].trainable = True
-    elif freezing == 'pre':
+    elif freezing == "pre":
         architecture.model.trainable = False
         architecture.model.layers[-2].trainable = True
         architecture.model.layers[-1].trainable = True

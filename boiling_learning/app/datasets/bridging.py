@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from functools import cache, partial
-from typing import Callable, Literal, Optional, Union
+from typing import Literal
 
 import numpy as np
 import tensorflow as tf
@@ -10,7 +11,12 @@ from boiling_learning.app.options import PREFETCH_BUFFER_SIZE, USE_HIGH_SPEED_CA
 from boiling_learning.app.paths import shared_cache_path
 from boiling_learning.datasets.bridging import sliceable_dataset_to_tensorflow_dataset
 from boiling_learning.datasets.splits import DatasetTriplet
-from boiling_learning.image_datasets import Image, ImageDataset, ImageDatasetTriplet, Targets
+from boiling_learning.image_datasets import (
+    Image,
+    ImageDataset,
+    ImageDatasetTriplet,
+    Targets,
+)
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.management.allocators import JSONAllocator
 from boiling_learning.transforms import subset
@@ -19,12 +25,12 @@ from boiling_learning.transforms import subset
 def to_tensorflow(
     dataset: LazyDescribed[ImageDataset],
     *,
-    experiment: Literal['boiling1d', 'condensation'],
-    batch_size: Optional[int] = None,
-    prefilterer: Optional[LazyDescribed[Callable[[Image, Targets], bool]]] = None,
-    filterer: Optional[Callable[..., bool]] = None,
-    target: Optional[str] = None,
-    shuffle: Union[bool, int] = True,
+    experiment: Literal["boiling1d", "condensation"],
+    batch_size: int | None = None,
+    prefilterer: LazyDescribed[Callable[[Image, Targets], bool]] | None = None,
+    filterer: Callable[..., bool] | None = None,
+    target: str | None = None,
+    shuffle: bool | int = True,
 ) -> LazyDescribed[tf.data.Dataset]:
     dataset_value = dataset()
 
@@ -45,7 +51,7 @@ def to_tensorflow(
         shuffle,
     )
 
-    logger.debug(f'Converting dataset to TF and saving to {save_path}')
+    logger.debug(f"Converting dataset to TF and saving to {save_path}")
 
     tf_dataset = sliceable_dataset_to_tensorflow_dataset(
         dataset_value,
@@ -66,9 +72,9 @@ def to_tensorflow(
         tf_dataset,
         (
             dataset,
-            ('prefilterer', prefilterer),
-            ('batch', batch_size),
-            ('target', target),
+            ("prefilterer", prefilterer),
+            ("batch", batch_size),
+            ("target", target),
         ),
     )
 
@@ -76,12 +82,12 @@ def to_tensorflow(
 def to_tensorflow_triplet(
     dataset: LazyDescribed[ImageDatasetTriplet],
     *,
-    experiment: Literal['boiling1d', 'condensation'],
-    batch_size: Optional[int] = None,
-    prefilterer: Optional[LazyDescribed[Callable[[Image, Targets], bool]]] = None,
-    filterer: Optional[Callable[..., bool]] = None,
-    target: Optional[str] = None,
-    shuffle: Union[bool, int] = True,
+    experiment: Literal["boiling1d", "condensation"],
+    batch_size: int | None = None,
+    prefilterer: LazyDescribed[Callable[[Image, Targets], bool]] | None = None,
+    filterer: Callable[..., bool] | None = None,
+    target: str | None = None,
+    shuffle: bool | int = True,
 ) -> DatasetTriplet[LazyDescribed[tf.data.Dataset]]:
     _to_tensorflow = partial(
         to_tensorflow,
@@ -93,21 +99,23 @@ def to_tensorflow_triplet(
         experiment=experiment,
     )
 
-    logger.debug('Converting TRAIN set to tensorflow')
-    ds_train = _to_tensorflow(dataset | subset('train'))
-    logger.debug('Converting VAL set to tensorflow')
-    ds_val = _to_tensorflow(dataset | subset('val'))
-    logger.debug('Converting TEST set to tensorflow')
-    ds_test = _to_tensorflow(dataset | subset('test'))
+    logger.debug("Converting TRAIN set to tensorflow")
+    ds_train = _to_tensorflow(dataset | subset("train"))
+    logger.debug("Converting VAL set to tensorflow")
+    ds_val = _to_tensorflow(dataset | subset("val"))
+    logger.debug("Converting TEST set to tensorflow")
+    ds_test = _to_tensorflow(dataset | subset("test"))
     return DatasetTriplet(ds_train, ds_val, ds_test)
 
 
 @cache
 def _training_datasets_allocator(
-    experiment: Literal['boiling1d', 'condensation']
+    experiment: Literal["boiling1d", "condensation"],
 ) -> JSONAllocator:
-    cache_path = high_speed_cache_path() if USE_HIGH_SPEED_CACHE else shared_cache_path()
-    return JSONAllocator(cache_path / 'datasets' / 'training' / experiment)
+    cache_path = (
+        high_speed_cache_path() if USE_HIGH_SPEED_CACHE else shared_cache_path()
+    )
+    return JSONAllocator(cache_path / "datasets" / "training" / experiment)
 
 
 def _default_filter_for_frames_dataset(

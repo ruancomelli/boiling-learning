@@ -1,18 +1,19 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import lru_cache, partial, wraps
-from typing import Any, Callable, Concatenate, Generic, ParamSpec, TypeVar, Union
+from typing import Any, Concatenate, Generic, ParamSpec, TypeVar
 
 from boiling_learning.descriptions import Describable, describe
 from boiling_learning.io import json
 from boiling_learning.utils.functional import Pack
 
-__all__ = ('Lazy', 'LazyCallable', 'LazyTransform')
+__all__ = ("Lazy", "LazyCallable", "LazyTransform")
 
-_T = TypeVar('_T')
-_S = TypeVar('_S')
-_P = ParamSpec('_P')
-_Desc = TypeVar('_Desc', bound=Describable[json.JSONDataType])
+_T = TypeVar("_T")
+_S = TypeVar("_S")
+_P = ParamSpec("_P")
+_Desc = TypeVar("_Desc", bound=Describable[json.JSONDataType])
 
 
 class Lazy(Generic[_T]):
@@ -31,7 +32,9 @@ class Lazy(Generic[_T]):
 
 
 class LazyDescribed(Lazy[_T]):
-    def __init__(self, value: Lazy[_T], description: Describable[json.JSONDataType]) -> None:
+    def __init__(
+        self, value: Lazy[_T], description: Describable[json.JSONDataType]
+    ) -> None:
         super().__init__(value)
         self._description = describe(description)
 
@@ -88,10 +91,10 @@ class LazyTransform(LazyDescribed[_S]):
 
 
 def eager(
-    function: Callable[Concatenate[_T, _P], _S]
-) -> Callable[Concatenate[Union[_T, Lazy[_T]], _P], _S]:
+    function: Callable[Concatenate[_T, _P], _S],
+) -> Callable[Concatenate[_T | Lazy[_T], _P], _S]:
     @wraps(function)
-    def _wrapped(first: Union[_T, Lazy[_T]], *args: _P.args, **kwargs: _P.kwargs) -> _S:
+    def _wrapped(first: _T | Lazy[_T], *args: _P.args, **kwargs: _P.kwargs) -> _S:
         return (
             function(first(), *args, **kwargs)
             if isinstance(first, Lazy)

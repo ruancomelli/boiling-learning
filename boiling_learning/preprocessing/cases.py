@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json as _json
 from dataclasses import asdict
-from typing import Optional
 
 import pandas as pd
 from loguru import logger
@@ -10,27 +9,29 @@ from loguru import logger
 from boiling_learning.dataclasses import dataclass_from_mapping
 from boiling_learning.io.dataclasses import dataclass
 from boiling_learning.preprocessing.experiment_video import ExperimentVideo, VideoData
-from boiling_learning.preprocessing.experiment_video_dataset import ExperimentVideoDataset
+from boiling_learning.preprocessing.experiment_video_dataset import (
+    ExperimentVideoDataset,
+)
 from boiling_learning.utils.pathutils import PathLike, resolve
 
 
 class Case(ExperimentVideoDataset):
     @dataclass(frozen=True)
     class VideoDataKeys(ExperimentVideo.VideoDataKeys):
-        name: str = 'name'
-        ignore: str = 'ignore'
+        name: str = "name"
+        ignore: str = "ignore"
 
     def __init__(
         self,
         path: PathLike,
-        dataframes_dir_name: str = 'dataframes',
-        videos_dir_name: str = 'videos',
-        video_suffix: str = '.mp4',
-        video_data_path: Optional[PathLike] = None,
-        experimental_data_path: Optional[PathLike] = None,
+        dataframes_dir_name: str = "dataframes",
+        videos_dir_name: str = "videos",
+        video_suffix: str = ".mp4",
+        video_data_path: PathLike | None = None,
+        experimental_data_path: PathLike | None = None,
     ) -> None:
-        if not video_suffix.startswith('.'):
-            raise ValueError('argument `video_suffix` must start with a dot \'.\'')
+        if not video_suffix.startswith("."):
+            raise ValueError("argument `video_suffix` must start with a dot '.'")
 
         self.path = resolve(path, dir=True)
         self.dataframes_dir = resolve(self.path / dataframes_dir_name, dir=True)
@@ -39,13 +40,15 @@ class Case(ExperimentVideoDataset):
         super().__init__(
             ExperimentVideo(
                 video_path=video_path,
-                df_path=self.dataframes_dir / f'{video_path.stem}.csv',
+                df_path=self.dataframes_dir / f"{video_path.stem}.csv",
             )
-            for video_path in self.videos_dir.rglob(f'*{video_suffix}')
+            for video_path in self.videos_dir.rglob(f"*{video_suffix}")
         )
 
-        self.video_data_path = resolve(video_data_path or self.path / 'data.json')
-        self.experimental_data_path = resolve(experimental_data_path or self.path / 'data.csv')
+        self.video_data_path = resolve(video_data_path or self.path / "data.json")
+        self.experimental_data_path = resolve(
+            experimental_data_path or self.path / "data.csv"
+        )
         self.df: pd.DataFrame | None = None
 
     @property
@@ -58,7 +61,7 @@ class Case(ExperimentVideoDataset):
         keys: VideoDataKeys = VideoDataKeys(),
     ) -> ExperimentVideoDataset:
         data_path = resolve(self.video_data_path)
-        video_data = _json.loads(data_path.read_text(encoding='utf8'))
+        video_data = _json.loads(data_path.read_text(encoding="utf8"))
 
         if isinstance(video_data, list):
             video_data = {
@@ -73,7 +76,9 @@ class Case(ExperimentVideoDataset):
                 if not value.pop(keys.ignore, False)
             }
         else:
-            raise RuntimeError(f'could not load video data from {data_path}. Got {video_data!r}.')
+            raise RuntimeError(
+                f"could not load video data from {data_path}. Got {video_data!r}."
+            )
 
         video_data = {
             name: dataclass_from_mapping(
@@ -94,9 +99,9 @@ class Case(ExperimentVideoDataset):
 
         return (
             pd.read_csv(self.experimental_data_path)
-            .drop(columns='Time instant')
-            .astype({'Elapsed time': 'float64'})
-            .set_index('Elapsed time')
+            .drop(columns="Time instant")
+            .astype({"Elapsed time": "float64"})
+            .set_index("Elapsed time")
         )
 
     def convert_videos(
@@ -105,10 +110,10 @@ class Case(ExperimentVideoDataset):
         new_videos_dirname: str,
         overwrite: bool = False,
     ) -> Case:
-        logger.info(f'Converting videos for case {self.name}...')
+        logger.info(f"Converting videos for case {self.name}...")
 
-        if not new_suffix.startswith('.'):
-            raise ValueError('new_suffix is expected to start with a dot (\'.\')')
+        if not new_suffix.startswith("."):
+            raise ValueError("new_suffix is expected to start with a dot ('.')")
 
         new_videos_dir = resolve(self.path / new_videos_dirname, dir=True)
         for experiment_video in self:
@@ -116,7 +121,7 @@ class Case(ExperimentVideoDataset):
             dest_path = (new_videos_dir / tail).with_suffix(new_suffix)
             experiment_video.convert_video(dest_path, overwrite=overwrite)
 
-        logger.info(f'Successfully converted videos for case {self.name}...')
+        logger.info(f"Successfully converted videos for case {self.name}...")
 
         return Case(
             path=self.path,

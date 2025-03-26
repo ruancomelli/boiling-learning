@@ -5,7 +5,7 @@ from typing import TypeVar
 
 import more_itertools as mit
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 
 def unsort(iterable: Iterable[_T]) -> tuple[Iterable[int], Iterable[_T]]:

@@ -26,7 +26,7 @@ def boiling_datasets(
     bottom_border: int | None = None,
     width: int = DEFAULT_WIDTH,
     visualization_window_width: Fraction = DEFAULT_VISUALIZATION_WINDOW_WIDTH,
-    crop_mode: Literal['center', 'random'] = 'center',
+    crop_mode: Literal["center", "random"] = "center",
     shuffle: bool = True,
 ) -> tuple[LazyDescribed[ImageDatasetTriplet], ...]:
     return tuple(
@@ -41,7 +41,7 @@ def boiling_datasets(
                 visualization_window_width=visualization_window_width,
                 crop_mode=crop_mode,
             ),
-            experiment='boiling1d',
+            experiment="boiling1d",
             shuffle=shuffle,
         )
         for case in boiling_cases()
@@ -57,5 +57,5 @@ def baseline_boiling_dataset(
         downscale_factor=RECOMMENDED_DOWNSCALE_FACTOR,
         width=RECOMMENDED_WIDTH,
         visualization_window_width=RECOMMENDED_VISUALIZATION_WINDOW_WIDTH,
-        crop_mode='center',
+        crop_mode="center",
     )[0]

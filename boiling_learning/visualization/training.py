@@ -16,13 +16,13 @@ class TrainingHistory(pa.SchemaModel):
         fit_model: FitModelReturn,
         /,
         *,
-        epoch_key: str = 'epoch',
+        epoch_key: str = "epoch",
         target_key: str,
     ) -> DataFrame[TrainingHistory]:
         return DataFrame[TrainingHistory](
             {
-                'epoch': entry[epoch_key],
-                'target': entry[target_key],
+                "epoch": entry[epoch_key],
+                "target": entry[target_key],
             }
             for entry in fit_model.history
         )

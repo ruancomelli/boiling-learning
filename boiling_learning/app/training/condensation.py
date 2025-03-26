@@ -14,9 +14,18 @@ from boiling_learning.app.training.common import (
 )
 from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.lazy import LazyDescribed
-from boiling_learning.model.callbacks import MemoryCleanUp, RegisterEpoch, SaveHistory, TimePrinter
+from boiling_learning.model.callbacks import (
+    MemoryCleanUp,
+    RegisterEpoch,
+    SaveHistory,
+    TimePrinter,
+)
 from boiling_learning.model.model import ModelArchitecture
-from boiling_learning.model.training import FitModelParams, FitModelReturn, compile_model
+from boiling_learning.model.training import (
+    FitModelParams,
+    FitModelReturn,
+    compile_model,
+)
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.pathutils import resolve
 
@@ -33,14 +42,14 @@ def fit_condensation_model(
         (
             TimePrinter(
                 when={
-                    'on_epoch_begin',
-                    'on_epoch_end',
-                    'on_predict_begin',
-                    'on_predict_end',
-                    'on_test_begin',
-                    'on_test_end',
-                    'on_train_begin',
-                    'on_train_end',
+                    "on_epoch_begin",
+                    "on_epoch_end",
+                    "on_predict_begin",
+                    "on_predict_end",
+                    "on_test_begin",
+                    "on_test_end",
+                    "on_train_begin",
+                    "on_train_end",
                 }
             ),
             # BackupAndRestore(workspace_path / 'backup', delete_on_end=False),
@@ -48,7 +57,7 @@ def fit_condensation_model(
         )
     )
 
-    fitter = cached_fit_model_function('condensation', strategy=strategy)
+    fitter = cached_fit_model_function("condensation", strategy=strategy)
 
     workspace_path = resolve(
         fitter.allocate(model, datasets, params, target),
@@ -63,15 +72,15 @@ def fit_condensation_model(
                 datasets,
                 batch_size=params.batch_size,
                 target=target,
-                experiment='condensation',
+                experiment="condensation",
             )
         ),
         params,
-        epoch_registry=RegisterEpoch(workspace_path / 'epoch.json'),
-        history_registry=SaveHistory(workspace_path / 'history.json', mode='a'),
+        epoch_registry=RegisterEpoch(workspace_path / "epoch.json"),
+        history_registry=SaveHistory(workspace_path / "history.json", mode="a"),
     ).partial(fitter.function)
 
-    fit_model_return = fitter.provide(creator, workspace_path / 'model')
+    fit_model_return = fitter.provide(creator, workspace_path / "model")
 
     return LazyFitModelReturn(
         LazyDescribed.from_value_and_description(

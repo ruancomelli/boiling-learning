@@ -18,7 +18,7 @@ from boiling_learning.utils.pathutils import resolve
 
 app = typer.Typer()
 
-INDICES = {f'0-{range_max}': range(range_max) for range_max in (100,)}
+INDICES = {f"0-{range_max}": range(range_max) for range_max in (100,)}
 # INDICES = {f'0-{range_max}': range(range_max) for range_max in (10, 20, 30, 50, 100, 200, 500)}
 
 
@@ -31,7 +31,7 @@ def boiling1d(start: int = typer.Option(0)) -> None:
     )
 
     for indices_id, indices in INDICES.items():
-        indices = sorted(frozenset(indices) | {0})
+        sorted_indices = sorted(frozenset(indices) | {0})
 
         metrics: list[tuple[int, float, str]] = []
         for case, (dataset_name, _) in zip(boiling_cases(), DATASET_MARKER_STYLE):
@@ -44,21 +44,21 @@ def boiling1d(start: int = typer.Option(0)) -> None:
             dataset = get_image_dataset(
                 case(),
                 transformers=preprocessors,
-                experiment='boiling1d',
+                experiment="boiling1d",
                 shuffle=False,
             )
 
             ds_train, _, _ = dataset()
-            frames = features(ds_train).fetch(start + index for index in indices)
+            frames = features(ds_train).fetch(start + index for index in sorted_indices)
             reference_frame = frames[0]
             metrics.extend(
                 (index, structural_similarity(reference_frame, frame), dataset_name)
-                for index, frame in zip(indices, frames)
+                for index, frame in zip(sorted_indices, frames)
             )
 
         df = pd.DataFrame(
             metrics,
-            columns=['Index', 'Structural similarity ratio', 'Dataset'],
+            columns=["Index", "Structural similarity ratio", "Dataset"],
         )
 
         f, ax = plt.subplots(1, 1, figsize=(6, 2.5))
@@ -66,17 +66,22 @@ def boiling1d(start: int = typer.Option(0)) -> None:
         sns.scatterplot(
             ax=ax,
             data=df,
-            x='Index',
-            y='Structural similarity ratio',
-            hue='Dataset',
-            style='Dataset',
+            x="Index",
+            y="Structural similarity ratio",
+            hue="Dataset",
+            style="Dataset",
             markers=[marker for _, marker in DATASET_MARKER_STYLE],
             alpha=0.5,
         )
-        ax.set(xscale='linear', yscale='linear', ylim=(0, 1))
+        ax.set(xscale="linear", yscale="linear", ylim=(0, 1))
 
-        save_figure(f, _consecutive_frames_study_path() / f'boiling1d-{start}+{indices_id}.pdf')
-        save_figure(f, _consecutive_frames_figures_path() / f'boiling1d-{start}+{indices_id}.pdf')
+        save_figure(
+            f, _consecutive_frames_study_path() / f"boiling1d-{start}+{indices_id}.pdf"
+        )
+        save_figure(
+            f,
+            _consecutive_frames_figures_path() / f"boiling1d-{start}+{indices_id}.pdf",
+        )
 
 
 @app.command()
@@ -86,10 +91,10 @@ def condensation() -> None:
 
 def _consecutive_frames_figures_path() -> Path:
     return resolve(
-        figures_path() / 'machine-learning' / 'preprocessing' / 'consecutive-frames',
+        figures_path() / "machine-learning" / "preprocessing" / "consecutive-frames",
         dir=True,
     )
 
 
 def _consecutive_frames_study_path() -> Path:
-    return resolve(studies_path() / 'consecutive-frames', dir=True)
+    return resolve(studies_path() / "consecutive-frames", dir=True)
