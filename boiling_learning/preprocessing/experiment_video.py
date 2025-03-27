@@ -66,6 +66,22 @@ class VideoData:
     end_index: int | None = None
 
     def video_limits(self) -> tuple[int, int | None]:
+        """Calculate the start and end frame indices for video processing.
+
+        This method determines the frame range for video processing based on either:
+        - Frame indices (start_index, end_index)
+        - Elapsed time (start_elapsed_time, end_elapsed_time)
+
+        The method prioritizes frame indices over elapsed time if both are provided.
+        If neither is provided for a limit, it defaults to:
+        - start: 0 (first frame)
+        - end: None (process until the end of video)
+
+        Returns:
+            A tuple containing:
+                - start: The starting frame index (inclusive)
+                - end: The ending frame index (inclusive) or None to process until the end
+        """
         if self.start_index is not None:
             start = self.start_index
         elif self.start_elapsed_time is not None:
