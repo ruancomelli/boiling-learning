@@ -71,7 +71,7 @@ def convert_video(
         logger.debug("Command list =", command_list)
 
         logger.info("Running conversion...")
-        subprocess.run(command_list, check=False)
+        subprocess.run(command_list, check=True)
         logger.info("Succesfully converted video")
 
 
