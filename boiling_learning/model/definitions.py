@@ -9,6 +9,7 @@ from tensorflow.keras.layers import (
     Dropout,
     Flatten,
     Input,
+    Layer,
     MaxPool2D,
     ReLU,
     Softmax,
@@ -51,15 +52,13 @@ def tiny_convnet(
         outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
     outputs = Flatten(dtype=hidden_layers_policy)(outputs)
 
-    match problem:
-        case "classification":
-            outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
-            outputs = Softmax(dtype=output_layer_policy)(outputs)
-        case "regression":
-            outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
-            outputs = Activation("linear", dtype=output_layer_policy)(outputs)
-        case never:
-            assert_never(never)
+    outputs = _append_output_layer(
+        outputs,
+        problem,
+        num_classes,
+        hidden_layers_policy=hidden_layers_policy,
+        output_layer_policy=output_layer_policy,
+    )
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
@@ -95,15 +94,13 @@ def small_convnet(
     if dropout is not None:
         outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
-    match problem:
-        case "classification":
-            outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
-            outputs = Softmax(dtype=output_layer_policy)(outputs)
-        case "regression":
-            outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
-            outputs = Activation("linear", dtype=output_layer_policy)(outputs)
-        case never:
-            assert_never(never)
+    outputs = _append_output_layer(
+        outputs,
+        problem,
+        num_classes,
+        hidden_layers_policy=hidden_layers_policy,
+        output_layer_policy=output_layer_policy,
+    )
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
@@ -145,15 +142,13 @@ def hoboldnet1(
     if dropout is not None:
         outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
-    match problem:
-        case "classification":
-            outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
-            outputs = Softmax(dtype=output_layer_policy)(outputs)
-        case "regression":
-            outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
-            outputs = Activation("linear", dtype=output_layer_policy)(outputs)
-        case never:
-            assert_never(never)
+    outputs = _append_output_layer(
+        outputs,
+        problem,
+        num_classes,
+        hidden_layers_policy=hidden_layers_policy,
+        output_layer_policy=output_layer_policy,
+    )
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
@@ -195,15 +190,13 @@ def hoboldnet2(
     if dropout is not None:
         outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
-    match problem:
-        case "classification":
-            outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
-            outputs = Softmax(dtype=output_layer_policy)(outputs)
-        case "regression":
-            outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
-            outputs = Activation("linear", dtype=output_layer_policy)(outputs)
-        case never:
-            assert_never(never)
+    outputs = _append_output_layer(
+        outputs,
+        problem,
+        num_classes,
+        hidden_layers_policy=hidden_layers_policy,
+        output_layer_policy=output_layer_policy,
+    )
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
@@ -253,15 +246,13 @@ def hoboldnet3(
     if dropout is not None:
         outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
-    match problem:
-        case "classification":
-            outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
-            outputs = Softmax(dtype=output_layer_policy)(outputs)
-        case "regression":
-            outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
-            outputs = Activation("linear", dtype=output_layer_policy)(outputs)
-        case never:
-            assert_never(never)
+    outputs = _append_output_layer(
+        outputs,
+        problem,
+        num_classes,
+        hidden_layers_policy=hidden_layers_policy,
+        output_layer_policy=output_layer_policy,
+    )
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
@@ -310,15 +301,13 @@ def hoboldnet_supplementary(
     if dropout is not None:
         outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
-    match problem:
-        case "classification":
-            outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
-            outputs = Softmax(dtype=output_layer_policy)(outputs)
-        case "regression":
-            outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
-            outputs = Activation("linear", dtype=output_layer_policy)(outputs)
-        case never:
-            assert_never(never)
+    outputs = _append_output_layer(
+        outputs,
+        problem,
+        num_classes,
+        hidden_layers_policy=hidden_layers_policy,
+        output_layer_policy=output_layer_policy,
+    )
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
@@ -403,15 +392,13 @@ def kramernet(
     if dropout is not None:
         outputs = Dropout(dropout, dtype=hidden_layers_policy)(outputs)
 
-    match problem:
-        case "classification":
-            outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
-            outputs = Softmax(dtype=output_layer_policy)(outputs)
-        case "regression":
-            outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
-            outputs = Activation("linear", dtype=output_layer_policy)(outputs)
-        case never:
-            assert_never(never)
+    outputs = _append_output_layer(
+        outputs,
+        problem,
+        num_classes,
+        hidden_layers_policy=hidden_layers_policy,
+        output_layer_policy=output_layer_policy,
+    )
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
 
@@ -427,6 +414,30 @@ def linear_model(
     outputs = LinearModel()(outputs)
 
     return ModelArchitecture.from_inputs_and_outputs(inputs=inputs, outputs=outputs)
+
+
+# TODO: add two overloads:
+# - one for regression, where `num_classes` is not forbidden
+# - one for classification, where `num_classes` is required
+def _append_output_layer(
+    outputs: Layer,
+    problem: Literal["classification", "regression"],
+    num_classes: int | None = None,
+    *,
+    hidden_layers_policy: str | Policy | None = None,
+    output_layer_policy: str | Policy | None = None,
+) -> Layer:
+    match problem:
+        case "classification":
+            outputs = Dense(num_classes, dtype=hidden_layers_policy)(outputs)
+            outputs = Softmax(dtype=output_layer_policy)(outputs)
+        case "regression":
+            outputs = Dense(1, dtype=hidden_layers_policy)(outputs)
+            outputs = Activation("linear", dtype=output_layer_policy)(outputs)
+        case never:
+            assert_never(never)
+
+    return outputs
 
 
 def _ensure_3d_input(
