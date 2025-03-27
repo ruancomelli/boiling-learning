@@ -7,10 +7,10 @@ import math
 import os
 import subprocess
 import typing
+from collections.abc import Iterable, Iterator
 from fractions import Fraction
 from pathlib import Path
 from types import TracebackType
-from typing import Iterable, Iterator, Optional, Type, Union
 
 import decord
 import ffmpeg
@@ -27,13 +27,13 @@ from boiling_learning.utils.pathutils import PathLike, resolve
 if typing.TYPE_CHECKING:
     VideoFrameU8 = npt.NDArray[np.uint8]
     VideoFrameF32 = npt.NDArray[np.float32]
-    VideoFrame = Union[VideoFrameU8, VideoFrameF32]
+    VideoFrame = VideoFrameU8 | VideoFrameF32
 else:
     VideoFrameU8 = np.ndarray
     VideoFrameF32 = np.ndarray
     VideoFrame = np.ndarray
 
-# there is no shape in nympy yet, so we can't really differentiate one frame from many
+# there is no shape in numpy yet, so we can't really differentiate one frame from many
 VideoFrames = VideoFrame
 
 
@@ -41,7 +41,7 @@ def convert_video(
     in_path: PathLike,
     out_path: PathLike,
     remove_audio: bool = False,
-    fps: Optional[Union[str, int, float]] = None,
+    fps: str | int | float | None = None,
     overwrite: bool = False,
 ) -> None:
     # For `fps`, see <https://superuser.com/a/729351>.
@@ -49,28 +49,30 @@ def convert_video(
     in_path = resolve(in_path)
     out_path = resolve(out_path, parents=True)
 
-    logger.info(f'Converting video: {in_path} -> {out_path}')
+    logger.info(f"Converting video: {in_path} -> {out_path}")
 
     if overwrite and out_path.is_file():
-        logger.info(f'Overwriting {out_path}')
+        logger.info(f"Overwriting {out_path}")
         out_path.unlink()
         # TO-DO: in Python 3.8, use out_path.unlink(missing_ok=True) and remove one condition
 
     if out_path.is_file():
-        logger.info(f'Destination file already exists. Skipping video conversion: {out_path}')
+        logger.info(
+            f"Destination file already exists. Skipping video conversion: {out_path}"
+        )
     else:
-        command_list = ['ffmpeg', '-i', str(in_path), '-vsync', '0']
+        command_list = ["ffmpeg", "-i", str(in_path), "-vsync", "0"]
         if remove_audio:
-            command_list.append('-an')
+            command_list.append("-an")
         if fps is not None:
-            command_list.extend(['-r', str(fps)])
+            command_list.extend(["-r", str(fps)])
         command_list.append(str(out_path))
 
-        logger.debug('Command list =', command_list)
+        logger.debug("Command list =", command_list)
 
-        logger.info('Running conversion...')
-        subprocess.run(command_list)
-        logger.info('Succesfully converted video')
+        logger.info("Running conversion...")
+        subprocess.run(command_list, check=True)
+        logger.info("Succesfully converted video")
 
 
 class VideoFormat(enum.Enum):
@@ -81,7 +83,7 @@ class VideoFormat(enum.Enum):
 class Video(SliceableDataset[VideoFrame]):
     def __init__(self, path: PathLike) -> None:
         # workaround for limiting memory usage
-        os.environ['DECORD_EOF_RETRY_MAX'] = '128'
+        os.environ["DECORD_EOF_RETRY_MAX"] = "128"
 
         self._path = resolve(path)
         self._video: decord.VideoReader | None = None
@@ -94,7 +96,7 @@ class Video(SliceableDataset[VideoFrame]):
         with self as frames:
             return typing.cast(VideoFrameU8, frames[index].asnumpy())
 
-    def fetch(self, indices: Optional[Iterable[int]] = None) -> VideoFrames:
+    def fetch(self, indices: Iterable[int] | None = None) -> VideoFrames:
         indices = range(len(self)) if indices is None else list(indices)
 
         with self as frames:
@@ -118,14 +120,14 @@ class Video(SliceableDataset[VideoFrame]):
             # https://github.com/kkroening/ffmpeg-python/blob/master/examples/video_info.py
             probe = ffmpeg.probe(str(self.path))
             video_stream = next(
-                stream for stream in probe['streams'] if stream['codec_type'] == 'video'
+                stream for stream in probe["streams"] if stream["codec_type"] == "video"
             )
 
-            fps = Fraction(video_stream['avg_frame_rate'])
-            duration = float(video_stream['duration'])
+            fps = Fraction(video_stream["avg_frame_rate"])
+            duration = float(video_stream["duration"])
             return math.floor(fps * duration)
         else:
-            raise ValueError(f'unsupported video format: {video_format}')
+            raise ValueError(f"unsupported video format: {video_format}")
 
     @functools.cache
     def fps(self) -> float:
@@ -139,15 +141,15 @@ class Video(SliceableDataset[VideoFrame]):
                 # workaround for limiting memory usage
                 self._video.seek(0)
             except Exception as e:
-                raise OpenVideoError(f'Error while opening video {self.path}') from e
+                raise OpenVideoError(f"Error while opening video {self.path}") from e
 
         return self._video
 
     def __exit__(
         self,
-        _exc_type: Optional[Type[BaseException]],
-        _exc_value: Optional[BaseException],
-        _traceback: Optional[TracebackType],
+        _exc_type: type[BaseException] | None,
+        _exc_value: BaseException | None,
+        _traceback: TracebackType | None,
     ) -> None:
         if self._video is not None:
             # workaround for limiting memory usage
@@ -157,10 +159,10 @@ class Video(SliceableDataset[VideoFrame]):
             self._video = None
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self.path})'
+        return f"{self.__class__.__name__}({self.path})"
 
     def get_format(self) -> VideoFormat:
-        suffix = self.path.suffix.removeprefix('.').upper()
+        suffix = self.path.suffix.removeprefix(".").upper()
         return VideoFormat[suffix]
 
 
@@ -180,9 +182,9 @@ def _describe_video(obj: Video) -> Path:
 
 @serialize.instance(VideoFrame)
 def _serialize_video_frame(instance: VideoFrame, path: Path) -> None:
-    np.save(path.with_suffix('.npy'), instance)
+    np.save(path.with_suffix(".npy"), instance)
 
 
 @deserialize.dispatch(VideoFrame)
 def _deserialize_video_frame(path: Path, metadata: Metadata) -> VideoFrame:
-    return np.load(path.with_suffix('.npy'))
+    return np.load(path.with_suffix(".npy"))

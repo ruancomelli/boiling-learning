@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 import autokeras as ak
 import keras_tuner as kt
@@ -33,17 +33,20 @@ class LayersBlock(ak.engine.block.Block):
         return output_node
 
     def get_config(self) -> dict[str, Any]:
-        return {'layers': clean_config([layer.get_config() for layer in self.layers])}
+        return {"layers": clean_config([layer.get_config() for layer in self.layers])}
 
     @classmethod
     def from_config(cls, config: dict[str, Any]) -> LayersBlock:
         return cls(
-            [tf.keras.layers.Layer.from_config(layer_config) for layer_config in config['layers']]
+            [
+                tf.keras.layers.Layer.from_config(layer_config)
+                for layer_config in config["layers"]
+            ]
         )
 
 
 class ImageNormalizationBlock(ak.engine.block.Block):
-    def __init__(self, normalize_images: Optional[bool] = None, **kwargs: Any) -> None:
+    def __init__(self, normalize_images: bool | None = None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.normalize_images = normalize_images
 
@@ -56,7 +59,7 @@ class ImageNormalizationBlock(ak.engine.block.Block):
         node = tf.nest.flatten(inputs)[0]
 
         if self.normalize_images is None:
-            normalize_images = hp.Boolean('normalize_images', default=False)
+            normalize_images = hp.Boolean("normalize_images", default=False)
         else:
             normalize_images = self.normalize_images
 
@@ -68,7 +71,7 @@ class ImageNormalizationBlock(ak.engine.block.Block):
 
 @typeclass
 def clean_config(config: Any) -> json.JSONDataType:
-    '''Return clean configuration for JSON serialization'''
+    """Return clean configuration for JSON serialization."""
 
 
 @clean_config.instance(object)

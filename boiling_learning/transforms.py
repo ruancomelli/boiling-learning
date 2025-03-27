@@ -1,17 +1,24 @@
 import functools
 import typing
+from collections.abc import Callable
 from fractions import Fraction
-from typing import Any, Callable, Concatenate, Literal, Optional, ParamSpec, TypeVar, Union
+from typing import (
+    Any,
+    Concatenate,
+    Literal,
+    ParamSpec,
+    TypeVar,
+)
 
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.datasets.splits import DatasetTriplet
 from boiling_learning.lazy import LazyDescribed, eager
 from boiling_learning.preprocessing.transformers import wrap_as_partial_transformer
 
-_P = ParamSpec('_P')
-_R = TypeVar('_R')
-_Dataset = TypeVar('_Dataset', bound=SliceableDataset[Any])
-_Element = TypeVar('_Element')
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+_Dataset = TypeVar("_Dataset", bound=SliceableDataset[Any])
+_Element = TypeVar("_Element")
 
 
 def automatic_triplet_support(function: Callable[Concatenate[_Dataset, _P], _R]):
@@ -20,16 +27,14 @@ def automatic_triplet_support(function: Callable[Concatenate[_Dataset, _P], _R])
         dataset: _Dataset,
         *args: _P.args,
         **kwargs: _P.kwargs,
-    ) -> _R:
-        ...
+    ) -> _R: ...
 
     @typing.overload
     def _wrapped(
         dataset: DatasetTriplet[_Dataset],
         *args: _P.args,
         **kwargs: _P.kwargs,
-    ) -> DatasetTriplet[_R]:
-        ...
+    ) -> DatasetTriplet[_R]: ...
 
     @functools.wraps(function)
     def _wrapped(
@@ -37,7 +42,7 @@ def automatic_triplet_support(function: Callable[Concatenate[_Dataset, _P], _R])
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> _R | DatasetTriplet[_R]:
-        if isinstance(dataset, (DatasetTriplet, tuple)):
+        if isinstance(dataset, DatasetTriplet | tuple):
             ds_train, ds_val, ds_test = dataset
             return DatasetTriplet(
                 function(ds_train, *args, **kwargs),
@@ -81,15 +86,17 @@ def map_transformers(
 
 @wrap_as_partial_transformer
 @eager
-def subset(datasets: DatasetTriplet[_Dataset], name: Literal['train', 'val', 'test']) -> _Dataset:
+def subset(
+    datasets: DatasetTriplet[_Dataset], name: Literal["train", "val", "test"]
+) -> _Dataset:
     ds_train, ds_val, ds_test = datasets
 
-    return {'train': ds_train, 'val': ds_val, 'test': ds_test}[name]
+    return {"train": ds_train, "val": ds_val, "test": ds_test}[name]
 
 
 @wrap_as_partial_transformer
 def datasets_merger(
-    datasets: tuple[LazyDescribed[DatasetTriplet[SliceableDataset[_Element]]], ...]
+    datasets: tuple[LazyDescribed[DatasetTriplet[SliceableDataset[_Element]]], ...],
 ) -> DatasetTriplet[SliceableDataset[_Element]]:
     dataset_triplet = datasets_concatenater()(datasets)
     return dataset_sampler(count=Fraction(1, len(datasets)))(dataset_triplet)
@@ -97,7 +104,7 @@ def datasets_merger(
 
 @wrap_as_partial_transformer
 def datasets_concatenater(
-    datasets: tuple[LazyDescribed[DatasetTriplet[SliceableDataset[_Element]]], ...]
+    datasets: tuple[LazyDescribed[DatasetTriplet[SliceableDataset[_Element]]], ...],
 ) -> DatasetTriplet[SliceableDataset[_Element]]:
     train_datasets = []
     val_datasets = []
@@ -121,17 +128,19 @@ def datasets_concatenater(
 @eager
 def dataset_sampler(
     dataset_triplet: DatasetTriplet[SliceableDataset[_Element]],
-    count: Union[int, Fraction],
-    subset: Optional[Literal['train', 'val', 'test']] = None,
+    count: int | Fraction,
+    subset: Literal["train", "val", "test"] | None = None,
 ) -> DatasetTriplet[SliceableDataset[_Element]]:
     train, val, test = dataset_triplet
 
     if subset is None:
-        return DatasetTriplet(train.sample(count), val.sample(count), test.sample(count))
+        return DatasetTriplet(
+            train.sample(count), val.sample(count), test.sample(count)
+        )
 
-    if subset == 'train':
+    if subset == "train":
         train = train.sample(count)
-    elif subset == 'val':
+    elif subset == "val":
         val = val.sample(count)
     else:
         test = test.sample(count)

@@ -23,9 +23,11 @@ app = typer.Typer()
 @app.command()
 def boiling1d(
     number_of_columns: int = typer.Option(4),
-    direct: bool = typer.Option(..., '--direct/--indirect'),
+    direct: bool = typer.Option(..., "--direct/--indirect"),
 ) -> None:
-    logger.debug(f"Displaying {'directly' if direct else 'indirectly'} visualized boiling frames")
+    logger.debug(
+        f"Displaying {'directly' if direct else 'indirectly'} visualized boiling frames"
+    )
 
     total_examples_count = sum(len(case()) for case in boiling_cases())
     number_of_rows = math.ceil(total_examples_count / number_of_columns)
@@ -47,27 +49,30 @@ def boiling1d(
                 # some experiment videos have no transformers associated
                 continue
 
-            logger.debug(f'Getting example frame from dataset {case_index} and video {ev.name}')
+            logger.debug(
+                f"Getting example frame from dataset {case_index} and video {ev.name}"
+            )
             frame = _first_frame_getter()(ev)
-            logger.debug('Transforming frame')
+            logger.debug("Transforming frame")
             frame = transformer()(frame)
 
-            logger.debug('Showing frame')
+            logger.debug("Showing frame")
             col = index % number_of_columns
             row = index // number_of_columns
 
-            axs[row, col].imshow(frame.squeeze(), cmap='gray')
-            axs[row, col].set_title(f'Dataset {case_index} - {ev.name}')
+            axs[row, col].imshow(frame.squeeze(), cmap="gray")
+            axs[row, col].set_title(f"Dataset {case_index} - {ev.name}")
             axs[row, col].grid(False)
 
             index += 1
 
     output_path = resolve(
-        _example_frames_figures_path() / f"boiling1d-{'direct' if direct else 'indirect'}.png",
+        _example_frames_figures_path()
+        / f"boiling1d-{'direct' if direct else 'indirect'}.png",
         parents=True,
     )
 
-    logger.debug(f'Saving figure to {output_path}')
+    logger.debug(f"Saving figure to {output_path}")
     fig.savefig(resolve(output_path, parents=True))
 
 
@@ -88,12 +93,12 @@ def _first_frame_getter() -> Callable[[ExperimentVideo], Image]:
 
 
 def _example_frames_figures_path() -> Path:
-    return _example_frames_study_path() / 'frames'
+    return _example_frames_study_path() / "frames"
 
 
 def _frames_cache_path() -> Path:
-    return _example_frames_study_path() / 'cache'
+    return _example_frames_study_path() / "cache"
 
 
 def _example_frames_study_path() -> Path:
-    return studies_path() / 'example-frames-matrix'
+    return studies_path() / "example-frames-matrix"

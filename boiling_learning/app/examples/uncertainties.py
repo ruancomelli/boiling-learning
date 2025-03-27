@@ -7,6 +7,7 @@ from pint import Quantity
 from rich.console import Console
 from rich.panel import Panel
 
+from boiling_learning.app.datasets.bridged.boiling1d import BOILING_OUTLIER_THRESHOLD
 from boiling_learning.app.datasets.raw.boiling1d import boiling_data_path
 from boiling_learning.utils.geometry import Cylinder, RectangularPrism
 from boiling_learning.utils.units import unit_registry as u
@@ -28,7 +29,8 @@ SMALL_WIRE_DIAMETER_MEASUREMENTS = [
 ]
 
 RIBBON_THICKNESS_MEASUREMENTS = [
-    (value * u.micrometer).plus_minus(MICROMETER_UNCERTAINTY) for value in (79, 80, 79, 79, 79)
+    (value * u.micrometer).plus_minus(MICROMETER_UNCERTAINTY)
+    for value in (79, 80, 79, 79, 79)
 ]
 
 RIBBON_WIDTH_MEASUREMENTS = [
@@ -46,11 +48,11 @@ LENGTH_MEASUREMENTS = [
 VOLTAGE_MODULE_UNCERTAINTY_10V = 6230 * u.microvolt
 VOLTAGE_MODULE_UNCERTAINTY_02V = 174 * u.microvolt
 
-VOLTAGE_COLUMN = 'Voltage [V]'
-CURRENT_COLUMN = 'Current [A]'
-POWER_COLUMN = 'Power [W]'
-FLUX_COLUMN = 'Flux [W/cm**2]'
-NOMINAL_POWER_COLUMN = 'nominal_power'
+VOLTAGE_COLUMN = "Voltage [V]"
+CURRENT_COLUMN = "Current [A]"
+POWER_COLUMN = "Power [W]"
+FLUX_COLUMN = "Flux [W/cm**2]"
+NOMINAL_POWER_COLUMN = "nominal_power"
 
 HEAT_FLUX_UNIT = u.watt / u.centimeter**2
 COVERAGE_FACTOR = 2
@@ -59,27 +61,29 @@ COVERAGE_FACTOR = 2
 @app.command()
 def main() -> None:
     case_name_mapping = {
-        'LW': 'case 1',
-        'SW': 'case 2',
-        'HR': 'case 3',
-        'VR': 'case 4',
+        "LW": "case 1",
+        "SW": "case 2",
+        "HR": "case 3",
+        "VR": "case 4",
     }
 
     max_currents = {
-        'LW': 18 * u.ampere,
-        'SW': 7 * u.ampere,
-        'HR': 18 * u.ampere,
-        'VR': 17 * u.ampere,
+        "LW": 18 * u.ampere,
+        "SW": 7 * u.ampere,
+        "HR": 18 * u.ampere,
+        "VR": 17 * u.ampere,
     }
 
     case_data = {
         case_name: _filter_outliers(
-            _load_data_from_csvs(boiling_data_path() / case_directory_name / 'dataframes')
+            _load_data_from_csvs(
+                boiling_data_path() / case_directory_name / "dataframes"
+            )
         )
         for case_name, case_directory_name in case_name_mapping.items()
     }
 
-    console.print(Panel('Starting uncertainties example'))
+    console.print(Panel("Starting uncertainties example"))
 
     sample_length = np.array(LENGTH_MEASUREMENTS).mean()
     large_wire_diameter = np.array(LARGE_WIRE_DIAMETER_MEASUREMENTS).mean()
@@ -88,29 +92,29 @@ def main() -> None:
     ribbon_width = np.array(RIBBON_WIDTH_MEASUREMENTS).mean()
 
     console.print(
-        'Sample length:',
+        "Sample length:",
         sample_length,
-        f'(uncertainty: {sample_length.error * COVERAGE_FACTOR})',
+        f"(uncertainty: {sample_length.error * COVERAGE_FACTOR})",
     )
     console.print(
-        'Large wire diameter:',
+        "Large wire diameter:",
         large_wire_diameter,
-        f'(uncertainty: {large_wire_diameter.error * COVERAGE_FACTOR})',
+        f"(uncertainty: {large_wire_diameter.error * COVERAGE_FACTOR})",
     )
     console.print(
-        'Small wire diameter:',
+        "Small wire diameter:",
         small_wire_diameter,
-        f'(uncertainty: {small_wire_diameter.error * COVERAGE_FACTOR})',
+        f"(uncertainty: {small_wire_diameter.error * COVERAGE_FACTOR})",
     )
     console.print(
-        'Ribbon thickness:',
+        "Ribbon thickness:",
         ribbon_thickness,
-        f'(uncertainty: {ribbon_thickness.error * COVERAGE_FACTOR})',
+        f"(uncertainty: {ribbon_thickness.error * COVERAGE_FACTOR})",
     )
     console.print(
-        'Ribbon width:',
+        "Ribbon width:",
         ribbon_width,
-        f'(uncertainty: {ribbon_width.error * COVERAGE_FACTOR})',
+        f"(uncertainty: {ribbon_width.error * COVERAGE_FACTOR})",
     )
 
     large_wire = Cylinder(sample_length, large_wire_diameter)
@@ -121,56 +125,65 @@ def main() -> None:
     small_wire_surface_area = small_wire.surface_area()
     ribbon_surface_area = ribbon.surface_area()
 
-    large_wire_surface_area_uncertainty = large_wire_surface_area.error * COVERAGE_FACTOR
+    large_wire_surface_area_uncertainty = (
+        large_wire_surface_area.error * COVERAGE_FACTOR
+    )
     console.print(
-        'Large wire surface area:',
+        "Large wire surface area:",
         large_wire_surface_area.to(u.cm**2),
-        f'(uncertainty: {large_wire_surface_area_uncertainty})',
-        f'(relative uncertainty: {(large_wire_surface_area_uncertainty / large_wire_surface_area).magnitude:.2%})',
+        f"(uncertainty: {large_wire_surface_area_uncertainty})",
+        f"(relative uncertainty: {(large_wire_surface_area_uncertainty / large_wire_surface_area).magnitude:.2%})",
     )
 
-    small_wire_surface_area_uncertainty = small_wire_surface_area.error * COVERAGE_FACTOR
+    small_wire_surface_area_uncertainty = (
+        small_wire_surface_area.error * COVERAGE_FACTOR
+    )
     console.print(
-        'Small wire surface area:',
+        "Small wire surface area:",
         small_wire_surface_area.to(u.cm**2),
-        f'(uncertainty: {small_wire_surface_area.error * COVERAGE_FACTOR})',
-        f'(relative uncertainty: {(small_wire_surface_area_uncertainty / small_wire_surface_area).magnitude:.2%})',
+        f"(uncertainty: {small_wire_surface_area.error * COVERAGE_FACTOR})",
+        f"(relative uncertainty: {(small_wire_surface_area_uncertainty / small_wire_surface_area).magnitude:.2%})",
     )
 
     ribbon_surface_area_uncertainty = ribbon_surface_area.error * COVERAGE_FACTOR
     console.print(
-        'Ribbon surface area:',
+        "Ribbon surface area:",
         ribbon_surface_area.to(u.cm**2),
-        f'(uncertainty: {ribbon_surface_area.error * COVERAGE_FACTOR})',
-        f'(relative uncertainty: {(ribbon_surface_area_uncertainty / ribbon_surface_area).magnitude:.2%})',
+        f"(uncertainty: {ribbon_surface_area.error * COVERAGE_FACTOR})",
+        f"(relative uncertainty: {(ribbon_surface_area_uncertainty / ribbon_surface_area).magnitude:.2%})",
     )
 
     case_surfaces = {
-        'LW': large_wire,
-        'SW': small_wire,
-        'HR': ribbon,
-        'VR': ribbon,
+        "LW": large_wire,
+        "SW": small_wire,
+        "HR": ribbon,
+        "VR": ribbon,
     }
 
     shunt_resistance = (4 * u.milliohm).plus_minus(0.5 / 100, relative=True)
 
     shunt_current_samples = {
-        case_name: data[CURRENT_COLUMN].values.clip(0, max_currents[case_name].m_as(u.ampere))
+        case_name: data[CURRENT_COLUMN].values.clip(
+            0, max_currents[case_name].m_as(u.ampere)
+        )
         * u.ampere
         for case_name, data in case_data.items()
     }
 
     shunt_voltages = {
         case_name: _array_with_uncertainty(
-            (shunt_resistance.value * current).to(u.millivolt), VOLTAGE_MODULE_UNCERTAINTY_02V
+            (shunt_resistance.value * current).to(u.millivolt),
+            VOLTAGE_MODULE_UNCERTAINTY_02V,
         )
         for case_name, current in shunt_current_samples.items()
     }
 
-    console.print('Shunt resistance:', shunt_resistance)
+    console.print("Shunt resistance:", shunt_resistance)
 
     currents = {
-        case_name: np.array([current.to(u.ampere) for current in voltage / shunt_resistance])
+        case_name: np.array(
+            [current.to(u.ampere) for current in voltage / shunt_resistance]
+        )
         for case_name, voltage in shunt_voltages.items()
     }
 
@@ -190,7 +203,10 @@ def main() -> None:
 
     heat_fluxes = {
         case_name: np.array(
-            [flux.to(u.watt / u.cm**2) for flux in thermal_power / surface.surface_area()]
+            [
+                flux.to(u.watt / u.cm**2)
+                for flux in thermal_power / surface.surface_area()
+            ]
         )
         for case_name, (thermal_power, surface) in zip(
             case_data, zip(thermal_powers.values(), case_surfaces.values())
@@ -212,11 +228,16 @@ def main() -> None:
 def _array_with_uncertainty(
     array: np.ndarray, uncertainty: Quantity | float, relative: bool = False
 ) -> np.ndarray:
-    return np.array([value.plus_minus(uncertainty, relative=relative) for value in array])
+    return np.array(
+        [value.plus_minus(uncertainty, relative=relative) for value in array]
+    )
 
 
 def _filter_outliers(data: pd.DataFrame) -> pd.DataFrame:
-    return data[(data['Power [W]'] - data['nominal_power']).abs() < 5]
+    return data[
+        (data[POWER_COLUMN] - data[NOMINAL_POWER_COLUMN]).abs()
+        < BOILING_OUTLIER_THRESHOLD
+    ]
 
 
 def _load_data_from_csvs(path: Path) -> pd.DataFrame:
@@ -231,5 +252,5 @@ def _load_data_from_csvs(path: Path) -> pd.DataFrame:
                 NOMINAL_POWER_COLUMN,
             ],
         )
-        for csv_file_path in path.glob('*.csv')
+        for csv_file_path in path.glob("*.csv")
     )

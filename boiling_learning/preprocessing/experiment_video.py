@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import contextlib
 import typing
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Mapping, Optional
+from typing import Any
 
 import funcy
 import pandas as pd
@@ -22,30 +22,66 @@ from boiling_learning.utils.pathutils import PathLike, resolve
 
 @dataclass
 class VideoData:
-    '''Class for video data representation.
-    # TODO: improve this doc
+    """Data class for storing metadata and timing information about experiment videos.
+
+    This class represents metadata associated with experiment videos, including
+    categorical information about the experiment conditions and timing data for
+    video synchronization and frame selection.
 
     Attributes
     ----------
-    categories: [...]. Example: {
+    categories : Mapping[str, Any]
+        Dictionary containing categorical information about the experiment,
+        such as wire type and nominal power settings.
+        Example: {
             'wire': 'NI80-...',
             'nominal_power': 85
         }
-    fps: [...]. Example: 30
-    ref_index: [...]. Example: 155
-    ref_elapsed_time: [...]. Example: 12103
-    '''
+    fps : float | None
+        Frames per second of the video. Used for time calculations and synchronization.
+        Example: 30
+    ref_index : int | None
+        Reference frame index used for time synchronization.
+        Example: 155
+    ref_elapsed_time : timedelta | None
+        Reference time point used for synchronization, in timedelta format.
+        Example: timedelta(seconds=12103)
+    start_elapsed_time : timedelta | None
+        Start time of the video segment in timedelta format.
+    start_index : int | None
+        Starting frame index of the video segment.
+    end_elapsed_time : timedelta | None
+        End time of the video segment in timedelta format.
+    end_index : int | None
+        Ending frame index of the video segment.
+    """
 
     categories: Mapping[str, Any] = field(default_factory=dict)
-    fps: Optional[float] = None
-    ref_index: Optional[int] = None
-    ref_elapsed_time: Optional[timedelta] = None
-    start_elapsed_time: Optional[timedelta] = None
-    start_index: Optional[int] = None
-    end_elapsed_time: Optional[timedelta] = None
-    end_index: Optional[int] = None
+    fps: float | None = None
+    ref_index: int | None = None
+    ref_elapsed_time: timedelta | None = None
+    start_elapsed_time: timedelta | None = None
+    start_index: int | None = None
+    end_elapsed_time: timedelta | None = None
+    end_index: int | None = None
 
-    def video_limits(self) -> tuple[int, Optional[int]]:
+    def video_limits(self) -> tuple[int, int | None]:
+        """Calculate the start and end frame indices for video processing.
+
+        This method determines the frame range for video processing based on either:
+        - Frame indices (start_index, end_index)
+        - Elapsed time (start_elapsed_time, end_elapsed_time)
+
+        The method prioritizes frame indices over elapsed time if both are provided.
+        If neither is provided for a limit, it defaults to:
+        - start: 0 (first frame)
+        - end: None (process until the end of video)
+
+        Returns:
+            A tuple containing:
+                - start: The starting frame index (inclusive)
+                - end: The ending frame index (inclusive) or None to process until the end
+        """
         if self.start_index is not None:
             start = self.start_index
         elif self.start_elapsed_time is not None:
@@ -69,9 +105,9 @@ class VideoData:
 
 @dataclass(frozen=True)
 class _DataFrameColumnNames:
-    index: str = 'index'
-    name: str = 'name'
-    elapsed_time: str = 'elapsed_time'
+    index: str = "index"
+    name: str = "name"
+    elapsed_time: str = "elapsed_time"
 
 
 @dataclass(frozen=True)
@@ -79,8 +115,8 @@ class _DataFrameColumnTypes:
     index = int
     path = str
     name = str
-    elapsed_time = 'timedelta64[s]'
-    categories = 'category'
+    elapsed_time = "timedelta64[s]"
+    categories = "category"
 
 
 _COLUMN_NAMES = _DataFrameColumnNames()
@@ -90,20 +126,20 @@ _COLUMN_TYPES = _DataFrameColumnTypes()
 class ExperimentVideo:
     @dataclass(frozen=True)
     class VideoDataKeys:
-        categories: str = 'categories'
-        fps: str = 'fps'
-        ref_index: str = 'ref_index'
-        ref_elapsed_time: str = 'ref_elapsed_time'
-        start_elapsed_time: str = 'start_elapsed_time'
-        start_index: str = 'start_index'
-        end_elapsed_time: str = 'end_elapsed_time'
-        end_index: str = 'end_index'
+        categories: str = "categories"
+        fps: str = "fps"
+        ref_index: str = "ref_index"
+        ref_elapsed_time: str = "ref_elapsed_time"
+        start_elapsed_time: str = "start_elapsed_time"
+        start_index: str = "start_index"
+        end_elapsed_time: str = "end_elapsed_time"
+        end_index: str = "end_index"
 
     def __init__(
         self,
         video_path: PathLike,
         df_path: PathLike,
-        name: str = '',
+        name: str = "",
         data: VideoData | None = None,
         df: pd.DataFrame | None = None,
     ) -> None:
@@ -127,13 +163,15 @@ class ExperimentVideo:
 
     def __str__(self) -> str:
         kwargs = {
-            'name': self.name,
-            'video_path': self.path,
-            'df_path': self.df_path,
-            'data': self.data,
+            "name": self.name,
+            "video_path": self.path,
+            "df_path": self.df_path,
+            "data": self.data,
         }
-        joined_kwargs = ', '.join(f'{k}={v}' for k, v in kwargs.items() if v is not None)
-        return f'{self.__class__.__name__}({joined_kwargs})'
+        joined_kwargs = ", ".join(
+            f"{k}={v}" for k, v in kwargs.items() if v is not None
+        )
+        return f"{self.__class__.__name__}({joined_kwargs})"
 
     @property
     def video(self) -> Video:
@@ -177,7 +215,7 @@ class ExperimentVideo:
         dest_path: PathLike,
         overwrite: bool = False,
     ) -> None:
-        """Use this function to move or convert video"""
+        """Use this function to move or convert video."""
         dest_path = resolve(dest_path, parents=True)
         convert_video(self.path, dest_path, overwrite=overwrite)
 
@@ -186,7 +224,9 @@ class ExperimentVideo:
             return self.df
 
         if self.data is None:
-            raise ValueError('cannot convert to DataFrame. Video data must be previously set.')
+            raise ValueError(
+                "cannot convert to DataFrame. Video data must be previously set."
+            )
 
         indices = range(len(self.frames()))
 
@@ -202,8 +242,8 @@ class ExperimentVideo:
             and self.data.ref_elapsed_time is not None
         ):
             ref_index = self.data.ref_index
-            ref_elapsed_time = pd.to_timedelta(self.data.ref_elapsed_time, unit='s')
-            delta = pd.to_timedelta(1 / self.data.fps, unit='s')
+            ref_elapsed_time = pd.to_timedelta(self.data.ref_elapsed_time, unit="s")
+            delta = pd.to_timedelta(1 / self.data.fps, unit="s")
             elapsed_time_list = [
                 ref_elapsed_time + delta * (index - ref_index) for index in indices
             ]
@@ -211,8 +251,8 @@ class ExperimentVideo:
             data[_COLUMN_NAMES.elapsed_time] = elapsed_time_list
         elif enforce_time:
             raise ValueError(
-                'there is not enough time info in video data'
-                ' (set `enforce_time=False` to suppress this error).'
+                "there is not enough time info in video data"
+                " (set `enforce_time=False` to suppress this error)."
             )
 
         df = pd.DataFrame(data)
@@ -233,7 +273,7 @@ class ExperimentVideo:
 
     def load_df(self) -> pd.DataFrame:
         logger.debug(
-            f'Loading dataframe for experiment video {self.name} from file {self.df_path}'
+            f"Loading dataframe for experiment video {self.name} from file {self.df_path}"
         )
 
         if self.df is not None:
@@ -268,9 +308,11 @@ def _describe_video(obj: ExperimentVideo) -> Path:
     return obj.path
 
 
-def _convert_dataframe_type(df: pd.DataFrame, categories: Iterable[str]) -> pd.DataFrame:
+def _convert_dataframe_type(
+    df: pd.DataFrame, categories: Iterable[str]
+) -> pd.DataFrame:
     col_types = funcy.merge(
-        dict.fromkeys(categories, 'category'),
+        dict.fromkeys(categories, "category"),
         {
             _COLUMN_NAMES.index: _COLUMN_TYPES.index,
             _COLUMN_NAMES.name: _COLUMN_TYPES.name,
@@ -284,7 +326,7 @@ def _convert_dataframe_type(df: pd.DataFrame, categories: Iterable[str]) -> pd.D
 
     with contextlib.suppress(KeyError):
         elapsed_time_column = _COLUMN_NAMES.elapsed_time
-        if df[elapsed_time_column].dtype.kind == 'm':
+        if df[elapsed_time_column].dtype.kind == "m":
             df[elapsed_time_column] = df[elapsed_time_column].dt.total_seconds()
 
     return df
@@ -293,15 +335,15 @@ def _convert_dataframe_type(df: pd.DataFrame, categories: Iterable[str]) -> pd.D
 def _sync_dataframes(
     source_df: pd.DataFrame,
     dest_df: pd.DataFrame,
-    dest_time_column: Optional[str] = None,
+    dest_time_column: str | None = None,
 ) -> pd.DataFrame:
     allowed_index = (pd.DatetimeIndex, pd.TimedeltaIndex, pd.Float64Index)
 
     if not isinstance(source_df.index, allowed_index):
         raise ValueError(
-            f'the source DataFrame index must be one of {allowed_index}.'
-            ' Ensure this or pass a valid column name as input.'
-            f' Got {type(source_df.index)}'
+            f"the source DataFrame index must be one of {allowed_index}."
+            " Ensure this or pass a valid column name as input."
+            f" Got {type(source_df.index)}"
         )
 
     if dest_time_column is not None:
@@ -309,9 +351,9 @@ def _sync_dataframes(
 
     if not isinstance(dest_df.index, allowed_index):
         raise ValueError(
-            f'the dest DataFrame index must be one of {allowed_index}.'
-            ' Ensure this or pass a valid column name as input.'
-            f' Got {type(dest_df.index)}'
+            f"the dest DataFrame index must be one of {allowed_index}."
+            " Ensure this or pass a valid column name as input."
+            f" Got {type(dest_df.index)}"
         )
 
     if isinstance(source_df.index, pd.TimedeltaIndex):
@@ -322,12 +364,14 @@ def _sync_dataframes(
 
     if type(source_df.index) is not type(dest_df.index):
         raise ValueError(
-            f'the source and dest DataFrames indices must have the same type.'
-            f' Got {type(source_df.index)} and {type(dest_df.index)}'
+            f"the source and dest DataFrames indices must have the same type."
+            f" Got {type(source_df.index)} and {type(dest_df.index)}"
         )
 
     concat = pd.concat([source_df, dest_df]).sort_index()
-    interpolation_method = 'index' if isinstance(source_df.index, pd.Float64Index) else 'time'
-    concat = concat.interpolate(method=interpolation_method, limit_direction='both')
+    interpolation_method = (
+        "index" if isinstance(source_df.index, pd.Float64Index) else "time"
+    )
+    concat = concat.interpolate(method=interpolation_method, limit_direction="both")
     concat = concat.loc[dest_df.index]
     return concat

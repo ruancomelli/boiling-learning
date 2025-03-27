@@ -17,13 +17,13 @@ from boiling_learning.model.training import load_with_strategy
 @functools.cache
 def cached_best_model_evaluator(
     *,
-    experiment: Literal['boiling1d', 'condensation'],
+    experiment: Literal["boiling1d", "condensation"],
     strategy: LazyDescribed[tf.distribute.Strategy],
 ):
     model_evaluator = cached_model_evaluator(experiment)
 
     @cache(
-        JSONAllocator(shared_cache_path() / 'best-model-evaluations' / experiment),
+        JSONAllocator(shared_cache_path() / "best-model-evaluations" / experiment),
         loader=load_with_strategy(strategy),
     )
     def hypermodel_evaluator(
@@ -32,7 +32,7 @@ def cached_best_model_evaluator(
         *,
         measure_uncertainty: bool = True,
         gt10: bool = True,
-        metric_name: str = 'loss',
+        metric_name: str = "loss",
     ) -> LazyDescribed[ModelArchitecture]:
         return min(
             map(LazyDescribed.from_describable, hypermodel.iter_best_models()),

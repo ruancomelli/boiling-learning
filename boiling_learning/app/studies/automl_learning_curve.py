@@ -9,7 +9,9 @@ from rich.table import Table
 from boiling_learning.app.automl.autofit_dataset import autofit_dataset
 from boiling_learning.app.automl.evaluation import cached_best_model_evaluator
 from boiling_learning.app.configuration import configure
-from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
+from boiling_learning.app.datasets.preprocessed.boiling1d import (
+    baseline_boiling_dataset,
+)
 from boiling_learning.app.training.boiling1d import (
     DEFAULT_BOILING_HEAT_FLUX_TARGET,
     fit_boiling_model,
@@ -36,21 +38,21 @@ def boiling1d(model_size_reduce: int = 1) -> None:
         use_xla=True,
         require_gpu=True,
     )
-    model_evaluator = cached_model_evaluator('boiling1d')
+    model_evaluator = cached_model_evaluator("boiling1d")
     best_model_evaluator = cached_best_model_evaluator(
-        experiment='boiling1d',
+        experiment="boiling1d",
         strategy=strategy,
     )
 
     tables: list[Table] = []
     for direct in False, True:
-        direct_label = 'direct' if direct else 'indirect'
+        direct_label = "direct" if direct else "indirect"
 
         datasets = baseline_boiling_dataset(direct_visualization=direct)
 
         for fraction in FRACTIONS:
             subsampled = (
-                datasets | dataset_sampler(count=fraction, subset='train')
+                datasets | dataset_sampler(count=fraction, subset="train")
                 if fraction != 1
                 else datasets
             )
@@ -69,7 +71,9 @@ def boiling1d(model_size_reduce: int = 1) -> None:
                 measure_uncertainty=False,
             )
 
-            baseline_architecture_size = baseline_model_evaluation.trainable_parameters_count
+            baseline_architecture_size = (
+                baseline_model_evaluation.trainable_parameters_count
+            )
 
             hypermodel = autofit_dataset(
                 subsampled,
@@ -79,7 +83,7 @@ def boiling1d(model_size_reduce: int = 1) -> None:
                 if model_size_reduce == 1
                 else baseline_architecture_size // model_size_reduce,
                 goal=None,
-                experiment='boiling1d',
+                experiment="boiling1d",
                 strategy=strategy,
             )
 
@@ -110,15 +114,15 @@ def boiling1d(model_size_reduce: int = 1) -> None:
             )
 
             best_model_table = Table(
-                'Metric',
-                'Training',
-                'Validation',
-                'Test',
-                title=f'AutoML best model metrics - {direct_label} - {fraction}',
+                "Metric",
+                "Training",
+                "Validation",
+                "Test",
+                title=f"AutoML best model metrics - {direct_label} - {fraction}",
             )
 
             best_model_table.add_row(
-                'Size',
+                "Size",
                 None,
                 str(best_model_evaluation.trainable_parameters_count),
                 None,
@@ -130,7 +134,7 @@ def boiling1d(model_size_reduce: int = 1) -> None:
                 validation_metric,
                 test_metric,
             ) in best_model_evaluation.iter_metrics():
-                if metric == 'loss':
+                if metric == "loss":
                     continue
 
                 best_model_table.add_row(

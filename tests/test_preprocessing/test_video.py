@@ -9,7 +9,7 @@ from boiling_learning.preprocessing.video import VideoFrame
 def test_save_frame(tmp_path: Path) -> None:
     frame: VideoFrame = np.random.random((10, 20, 3))
 
-    path = tmp_path / 'frame'
+    path = tmp_path / "frame"
     save(frame, path)
     other_frame = load(path)
 

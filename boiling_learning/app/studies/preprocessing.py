@@ -31,16 +31,16 @@ def boiling1d(
     ds: int = typer.Option(DEFAULT_DOWNSCALE_FACTOR),
 ) -> None:
     table = Table(
-        'Dataset',
-        'Visualization',
-        'Step',
-        'Image shape',
-        title='Shape summary',
+        "Dataset",
+        "Visualization",
+        "Step",
+        "Image shape",
+        title="Shape summary",
     )
 
     for case_index, case in enumerate(boiling_cases()):
         for direct in False, True:
-            direct_label = 'direct' if direct else 'indirect'
+            direct_label = "direct" if direct else "indirect"
             for step, preprocessors in enumerate(
                 iter_preprocessors(
                     direct_visualization=direct,
@@ -50,7 +50,7 @@ def boiling1d(
                 dataset = get_image_dataset(
                     case(),
                     transformers=preprocessors,
-                    experiment='boiling1d',
+                    experiment="boiling1d",
                     shuffle=False,
                 )
 
@@ -58,13 +58,13 @@ def boiling1d(
                 sample_frame, target = ds_train[frame]
 
                 output_path = _preprocessing_study_path() / (
-                    'boiling1d'
-                    f'-{direct_label}'
-                    f'-ds-{ds}'
-                    f'-case-{case_index}'
-                    f'-frame-{frame}'
-                    f'-step-{step}'
-                    '.png'
+                    "boiling1d"
+                    f"-{direct_label}"
+                    f"-ds-{ds}"
+                    f"-case-{case_index}"
+                    f"-frame-{frame}"
+                    f"-step-{step}"
+                    ".png"
                 )
                 imsave(output_path, sample_frame)
 
@@ -72,9 +72,9 @@ def boiling1d(
                     imsave(
                         _preprocessing_figures_path()
                         / (
-                            f'step-{step}'
-                            + (f'-{direct_label}' if step >= VISUALIZATION_STEP else '')
-                            + f'-{target["nominal_power"]}W.png'
+                            f"step-{step}"
+                            + (f"-{direct_label}" if step >= VISUALIZATION_STEP else "")
+                            + f"-{target['nominal_power']}W.png"
                         ),
                         sample_frame,
                     )
@@ -121,8 +121,8 @@ def condensation() -> None:
 
 
 def _preprocessing_study_path() -> Path:
-    return resolve(studies_path() / 'preprocessing', dir=True)
+    return resolve(studies_path() / "preprocessing", dir=True)
 
 
 def _preprocessing_figures_path() -> Path:
-    return resolve(figures_path() / 'machine-learning' / 'preprocessing', dir=True)
+    return resolve(figures_path() / "machine-learning" / "preprocessing", dir=True)

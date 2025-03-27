@@ -15,10 +15,10 @@ def main() -> None:
     image_standardizer = ImageNormalization()
     standardized_image = image_standardizer(image).numpy()
 
-    console.print('Original:')
-    console.print(f'Mean={image.mean()}; Std={image.std()}')
+    console.print("Original:")
+    console.print(f"Mean={image.mean()}; Std={image.std()}")
     console.print(image)
 
-    console.print('Standardized:')
-    console.print(f'Mean={standardized_image.mean()}; Std={standardized_image.std()}')
+    console.print("Standardized:")
+    console.print(f"Mean={standardized_image.mean()}; Std={standardized_image.std()}")
     console.print(standardized_image)

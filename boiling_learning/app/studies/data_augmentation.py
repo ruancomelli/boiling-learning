@@ -26,27 +26,28 @@ console = rich.console.Console()
 @app.command()
 def boiling1d() -> None:
     """Validate current implementation against reference."""
-
     strategy = configure(
         force_gpu_allow_growth=True,
         use_xla=True,
         require_gpu=True,
     )
 
-    raise CancelledError('This study is cancelled for not providing useful information.')
+    raise CancelledError(
+        "This study is cancelled for not providing useful information."
+    )
 
     case = boiling_cases()[0]
 
     tables: list[Table] = []
     for direct in False, True:
         table = Table(
-            'Crop type',
-            'Validation loss',
-            'Test loss',
-            title=f'Random augmentation analysis - {"direct" if direct else "indirect"}',
+            "Crop type",
+            "Validation loss",
+            "Test loss",
+            title=f"Random augmentation analysis - {'direct' if direct else 'indirect'}",
         )
 
-        for crop_mode in 'center', 'random':
+        for crop_mode in "center", "random":
             preprocessors = default_boiling_preprocessors(
                 direct_visualization=direct,
                 crop_mode=crop_mode,
@@ -54,7 +55,7 @@ def boiling1d() -> None:
             dataset = get_image_dataset(
                 case(),
                 transformers=preprocessors,
-                experiment='boiling1d',
+                experiment="boiling1d",
             )
             compiled_model = get_baseline_architecture(
                 dataset,
@@ -74,8 +75,8 @@ def boiling1d() -> None:
 
             table.add_row(
                 str(crop_mode.title()),
-                str(fit_model.validation_metrics['MSE']),
-                str(fit_model.test_metrics['MSE']),
+                str(fit_model.validation_metrics["MSE"]),
+                str(fit_model.test_metrics["MSE"]),
             )
 
         tables.append(table)

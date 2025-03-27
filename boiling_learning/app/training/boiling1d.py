@@ -7,7 +7,9 @@ from boiling_learning.app.datasets.bridged.boiling1d import (
     default_boiling_bridging,
     default_boiling_bridging_gt10,
 )
-from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
+from boiling_learning.app.datasets.preprocessed.boiling1d import (
+    baseline_boiling_dataset,
+)
 from boiling_learning.app.training.common import (
     LazyFitModelReturn,
     cached_fit_model_function,
@@ -25,7 +27,11 @@ from boiling_learning.model.callbacks import (
     TimePrinter,
 )
 from boiling_learning.model.model import ModelArchitecture
-from boiling_learning.model.training import FitModelParams, FitModelReturn, compile_model
+from boiling_learning.model.training import (
+    FitModelParams,
+    FitModelReturn,
+    compile_model,
+)
 from boiling_learning.utils.functional import P
 from boiling_learning.utils.pathutils import resolve
 
@@ -39,11 +45,19 @@ def fit_boiling_model(
     try_id: int = 0,
     target: str = DEFAULT_BOILING_HEAT_FLUX_TARGET,
 ) -> LazyFitModelReturn:
-    """
-    try_id: use this to force this model to be trained again.
-        This may be used for instance to get a average and stddev.
-    """
+    """Fit a 1-D boiling model.
 
+    This function fits a 1-D boiling model to the given datasets.
+
+    Arguments:
+        model: The model to fit.
+        datasets: The datasets to fit the model on.
+        params: The parameters to use for the fit.
+        strategy: The worker distribution strategy to use for the fit.
+        try_id: use this to force this model to be trained again.
+            This may be used for instance to get a average and stddev.
+        target: The target variable to use for the fit (e.g. "Flux [W/cm**2]")
+    """
     _, ds_val_g10, _ = default_boiling_bridging_gt10(
         datasets,
         batch_size=params.batch_size,
@@ -54,23 +68,23 @@ def fit_boiling_model(
         (
             TimePrinter(
                 when={
-                    'on_epoch_begin',
-                    'on_epoch_end',
-                    'on_predict_begin',
-                    'on_predict_end',
-                    'on_test_begin',
-                    'on_test_end',
-                    'on_train_begin',
-                    'on_train_end',
+                    "on_epoch_begin",
+                    "on_epoch_end",
+                    "on_predict_begin",
+                    "on_predict_end",
+                    "on_test_begin",
+                    "on_test_end",
+                    "on_train_begin",
+                    "on_train_end",
                 }
             ),
             # BackupAndRestore(workspace_path / 'backup', delete_on_end=False),
-            AdditionalValidationSets({'HF10': ds_val_g10()}),
+            AdditionalValidationSets({"HF10": ds_val_g10()}),
             MemoryCleanUp(),
         )
     )
 
-    fitter = cached_fit_model_function('boiling1d', strategy=strategy)
+    fitter = cached_fit_model_function("boiling1d", strategy=strategy)
 
     workspace_path = resolve(
         fitter.allocate(model, datasets, params, target, try_id),
@@ -88,11 +102,11 @@ def fit_boiling_model(
             )
         ),
         params,
-        epoch_registry=RegisterEpoch(workspace_path / 'epoch.json'),
-        history_registry=SaveHistory(workspace_path / 'history.json', mode='a'),
+        epoch_registry=RegisterEpoch(workspace_path / "epoch.json"),
+        history_registry=SaveHistory(workspace_path / "history.json", mode="a"),
     ).partial(fitter.function)
 
-    fit_model_return = fitter.provide(creator, workspace_path / 'model')
+    fit_model_return = fitter.provide(creator, workspace_path / "model")
 
     return LazyFitModelReturn(
         LazyDescribed.from_value_and_description(

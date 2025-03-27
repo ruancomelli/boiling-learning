@@ -7,7 +7,9 @@ import seaborn as sns
 import typer
 
 from boiling_learning.app.configuration import configure
-from boiling_learning.app.datasets.bridged.boiling1d import DEFAULT_BOILING_OUTLIER_FILTER
+from boiling_learning.app.datasets.bridged.boiling1d import (
+    DEFAULT_BOILING_OUTLIER_FILTER,
+)
 from boiling_learning.app.datasets.preprocessed.boiling1d import boiling_datasets
 from boiling_learning.app.paths import studies_path
 from boiling_learning.app.training.boiling1d import DEFAULT_BOILING_HEAT_FLUX_TARGET
@@ -36,14 +38,14 @@ def boiling1d() -> None:
         sns.scatterplot(
             ax=ax,
             data=data,
-            x='index',
-            y='heat flux',
-            hue='class',
+            x="index",
+            y="heat flux",
+            hue="class",
             alpha=0.5,
         )
-        ax.set_title(f'Dataset {index}')
+        ax.set_title(f"Dataset {index}")
 
-    f.savefig(str(_data_split_study_path() / 'boiling1d.pdf'))
+    f.savefig(str(_data_split_study_path() / "boiling1d.pdf"))
 
 
 @app.command()
@@ -54,22 +56,24 @@ def condensation(
     raise NotImplementedError
 
 
-def _sorted_boiling_datasets(datasets: LazyDescribed[ImageDatasetTriplet]) -> pd.DataFrame:
+def _sorted_boiling_datasets(
+    datasets: LazyDescribed[ImageDatasetTriplet],
+) -> pd.DataFrame:
     ds_train, ds_val, ds_test = datasets()
 
     df = pd.DataFrame(
         sorted(
             (
                 (
-                    target['nominal_power'],
+                    target["nominal_power"],
                     target[DEFAULT_BOILING_HEAT_FLUX_TARGET],
-                    target['elapsed_time'],
+                    target["elapsed_time"],
                     class_name,
                 )
                 for class_name, ds in (
-                    ('train', ds_train),
-                    ('val', ds_val),
-                    ('test', ds_test),
+                    ("train", ds_train),
+                    ("val", ds_val),
+                    ("test", ds_test),
                 )
                 for target in targets(ds).prefetch(1024)
                 if DEFAULT_BOILING_OUTLIER_FILTER()(None, target)
@@ -79,11 +83,11 @@ def _sorted_boiling_datasets(datasets: LazyDescribed[ImageDatasetTriplet]) -> pd
                 power_hf_et_class[2],
             ),
         ),
-        columns=['nominal power', 'heat flux', 'elapsed time', 'class'],
+        columns=["nominal power", "heat flux", "elapsed time", "class"],
     )
-    df['index'] = range(len(df))
+    df["index"] = range(len(df))
     return df
 
 
 def _data_split_study_path() -> Path:
-    return resolve(studies_path() / 'data-split', dir=True)
+    return resolve(studies_path() / "data-split", dir=True)

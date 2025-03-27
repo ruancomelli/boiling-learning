@@ -19,7 +19,7 @@ from boiling_learning.model.definitions import hoboldnet2, kramernet
 from boiling_learning.model.layers import ImageNormalization
 from boiling_learning.model.model import ModelArchitecture
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 SKIPPED_LAYERS = (
     tf.keras.layers.Flatten,
@@ -39,17 +39,23 @@ def main() -> None:
     )
 
     for model_name, model in (
-        ('hoboldnet', hoboldnet2(input_shape=(120, 196), dropout=0.5, normalize_images=False)),
-        ('kramernet', kramernet(input_shape=(128, 96), dropout=0.5, normalize_images=False)),
+        (
+            "hoboldnet",
+            hoboldnet2(input_shape=(120, 196), dropout=0.5, normalize_images=False),
+        ),
+        (
+            "kramernet",
+            kramernet(input_shape=(128, 96), dropout=0.5, normalize_images=False),
+        ),
     ):
         for max_rows_per_column in (None, 7):
             filename = (
-                f'{model_name}_{max_rows_per_column}_rows.text'
+                f"{model_name}_{max_rows_per_column}_rows.text"
                 if max_rows_per_column is not None
-                else f'{model_name}_single_column.text'
+                else f"{model_name}_single_column.text"
             )
             Path(diagrams_path() / filename).write_text(
-                '\n'.join(
+                "\n".join(
                     model_to_tikz(
                         model,
                         max_rows_per_column=max_rows_per_column,
@@ -59,7 +65,7 @@ def main() -> None:
             )
 
 
-def model_to_tikz(
+def model_to_tikz(  # noqa: PLR0915
     architecture: ModelArchitecture,
     /,
     *,
@@ -68,7 +74,7 @@ def model_to_tikz(
 ) -> Iterator[str]:
     preamble = (
         textwrap.dedent(
-            '''
+            """
                 \\documentclass[tikz]{standalone}
                 \\usetikzlibrary{shapes}
                 \\usetikzlibrary{shapes.multipart}
@@ -108,21 +114,21 @@ def model_to_tikz(
 
                 \\begin{figure}[ht]
                     \\begin{tikzpicture}
-            '''
+            """
         )
         if standalone
-        else '\\begin{tikzpicture}'
+        else "\\begin{tikzpicture}"
     )
     ending = (
         textwrap.dedent(
-            '''
+            """
                     \\end{tikzpicture}
                 \\end{figure}
                 \\end{document}
-            '''
+            """
         )
         if standalone
-        else '\\end{tikzpicture}'
+        else "\\end{tikzpicture}"
     )
     yield from preamble.splitlines()
 
@@ -140,143 +146,151 @@ def model_to_tikz(
     for (column_index, row_index), layer in layers.items():
         match layer:
             case tf.keras.layers.InputLayer():
-                color = 'gray!20!white'
-                layer_name = 'Input layer'
+                color = "gray!20!white"
+                layer_name = "Input layer"
                 notes = ()
             case NormalizedInputBlock():
-                color = 'gray!20!white'
-                layer_name = 'Input layer'
-                notes = ('Standardized',)
+                color = "gray!20!white"
+                layer_name = "Input layer"
+                notes = ("Standardized",)
             case tf.keras.layers.Conv2D():
-                color = 'blue!20!white'
-                layer_name = 'Convolutional layer'
+                color = "blue!20!white"
+                layer_name = "Convolutional layer"
 
-                kernel_size = '\\num{' + 'x'.join(map(str, layer.kernel_size)) + '}'
-                strides_size = '\\num{' + 'x'.join(map(str, layer.strides)) + '}'
+                kernel_size = "\\num{" + "x".join(map(str, layer.kernel_size)) + "}"
+                strides_size = "\\num{" + "x".join(map(str, layer.strides)) + "}"
 
                 notes = (
-                    ', '.join(
+                    ", ".join(
                         (
-                            f'\\num{{{layer.filters}}} filters',
-                            f'kernel size: {kernel_size}',
-                            f'stride: {strides_size}',
+                            f"\\num{{{layer.filters}}} filters",
+                            f"kernel size: {kernel_size}",
+                            f"stride: {strides_size}",
                         )
                     ),
                 )
             case tf.keras.layers.ReLU():
-                color = 'green!20!white'
-                layer_name = 'Activation layer'
-                notes = ('ReLU',)
+                color = "green!20!white"
+                layer_name = "Activation layer"
+                notes = ("ReLU",)
             case tf.keras.layers.MaxPool2D():
-                color = 'red!20!white'
-                layer_name = 'Pooling layer'
+                color = "red!20!white"
+                layer_name = "Pooling layer"
 
-                size = '\\num{' + 'x'.join(map(str, layer.pool_size)) + '}'
-                strides_size = '\\num{' + 'x'.join(map(str, layer.strides)) + '}'
+                size = "\\num{" + "x".join(map(str, layer.pool_size)) + "}"
+                strides_size = "\\num{" + "x".join(map(str, layer.strides)) + "}"
 
-                notes = (', '.join(('Max-pooling', f'size: {size}', f'stride: {strides_size}')),)
+                notes = (
+                    ", ".join(
+                        ("Max-pooling", f"size: {size}", f"stride: {strides_size}")
+                    ),
+                )
             case tf.keras.layers.Dropout():
-                color = 'gray!20!white'
-                layer_name = 'Regularization layer'
-                notes = (f'Dropout: \\SI{{{layer.rate*100:.0f}}}{{\\percent}}',)
+                color = "gray!20!white"
+                layer_name = "Regularization layer"
+                notes = (f"Dropout: \\SI{{{layer.rate * 100:.0f}}}{{\\percent}}",)
             case tf.keras.layers.Dense():
-                color = 'yellow!20!white'
-                layer_name = 'Dense layer'
-                notes = (f'{layer.units} units' if layer.units > 1 else '1 unit',)
+                color = "yellow!20!white"
+                layer_name = "Dense layer"
+                notes = (f"{layer.units} units" if layer.units > 1 else "1 unit",)
             case ConvolutionalBlock(
                 name=layer_name,
                 convolutional_layer=conv_layer,
                 activation_layer=tf.keras.layers.ReLU(),
                 pooling_layer=pooling_layer,
             ):
-                color = 'blue!20!white'
-                layer_name = 'Convolutional block'
+                color = "blue!20!white"
+                layer_name = "Convolutional block"
 
                 conv_layer_kernel_size = (
-                    '\\num{' + 'x'.join(map(str, conv_layer.kernel_size)) + '}'
+                    "\\num{" + "x".join(map(str, conv_layer.kernel_size)) + "}"
                 )
-                conv_layer_strides_size = '\\num{' + 'x'.join(map(str, conv_layer.strides)) + '}'
+                conv_layer_strides_size = (
+                    "\\num{" + "x".join(map(str, conv_layer.strides)) + "}"
+                )
 
-                maxpooling_size = '\\num{' + 'x'.join(map(str, pooling_layer.pool_size)) + '}'
+                maxpooling_size = (
+                    "\\num{" + "x".join(map(str, pooling_layer.pool_size)) + "}"
+                )
                 maxpooling_strides_size = (
-                    '\\num{' + 'x'.join(map(str, pooling_layer.strides)) + '}'
+                    "\\num{" + "x".join(map(str, pooling_layer.strides)) + "}"
                 )
 
                 notes = (
-                    ', '.join(
+                    ", ".join(
                         (
-                            f'\\num{{{conv_layer.filters}}} filters',
-                            f'kernel size: {conv_layer_kernel_size}',
-                            f'stride: {conv_layer_strides_size}',
+                            f"\\num{{{conv_layer.filters}}} filters",
+                            f"kernel size: {conv_layer_kernel_size}",
+                            f"stride: {conv_layer_strides_size}",
                         )
                     ),
-                    ', '.join(
+                    ", ".join(
                         (
-                            'Max-pooling',
-                            f'size: {maxpooling_size}',
-                            f'stride: {maxpooling_strides_size}',
+                            "Max-pooling",
+                            f"size: {maxpooling_size}",
+                            f"stride: {maxpooling_strides_size}",
                         )
                     ),
-                    'Activation: ReLU',
+                    "Activation: ReLU",
                 )
             case DenseBlock(
                 name=layer_name,
                 dense_layer=dense_layer,
                 activation_layer=tf.keras.layers.ReLU(),
             ):
-                color = 'yellow!20!white'
-                layer_name = 'Dense block'
+                color = "yellow!20!white"
+                layer_name = "Dense block"
 
                 notes = (
-                    f'{dense_layer.units} units' if dense_layer.units > 1 else '1 unit',
-                    'Activation: ReLU',
+                    f"{dense_layer.units} units" if dense_layer.units > 1 else "1 unit",
+                    "Activation: ReLU",
                 )
             case _ if isinstance(layer, SKIPPED_LAYERS):
                 continue
             case _:
-                raise TypeError(f'Unknown layer type: {type(layer)}')
+                raise TypeError(f"Unknown layer type: {type(layer)}")
 
-        emph_name = f'\\textbf{{{layer_name}}}'
+        emph_name = f"\\textbf{{{layer_name}}}"
 
-        shape = f'Shape: \\({tuple(_clean_shape(layer.output_shape))}\\)'
+        shape = f"Shape: \\({tuple(_clean_shape(layer.output_shape))}\\)"
         trainable_weights_count = sum(
             tf.keras.backend.count_params(p) for p in layer.trainable_weights
         )
-        trainable_weights = f'Weights: {trainable_weights_count}'
+        trainable_weights = f"Weights: {trainable_weights_count}"
 
         match column_index, row_index:
             case 0, 0:
                 location_text = None
             case _, 0:
                 previous_layer = layers[(column_index - 1, 0)]
-                location_text = f'right=0.3 of {previous_layer.name}'
+                location_text = f"right=0.3 of {previous_layer.name}"
             case _, _:
                 previous_layer = layers[(column_index, row_index - 1)]
-                location_text = f'below=0.3 of {previous_layer.name}'
+                location_text = f"below=0.3 of {previous_layer.name}"
 
-        node_options = ', '.join(
+        node_options = ", ".join(
             item
             for item in (
-                'rectangle',
-                'thick',
+                "rectangle",
+                "thick",
                 location_text,
-                f'fill={color}',
-                'minimum width=8cm',
+                f"fill={color}",
+                "minimum width=8cm",
             )
             if item is not None
         )
 
-        yield f'\\node[{node_options}] ({layer.name}) {{%'
-        yield '\\begin{tabular}{cc}%'
+        yield f"\\node[{node_options}] ({layer.name}) {{%"
+        yield "\\begin{tabular}{cc}%"
 
-        yield f'\\multicolumn{{2}}{{c}}{{{emph_name}}} {NEW_LINE_TOKEN}'
-        yield f'{shape} & {trainable_weights} {NEW_LINE_TOKEN}'
+        yield f"\\multicolumn{{2}}{{c}}{{{emph_name}}} {NEW_LINE_TOKEN}"
+        yield f"{shape} & {trainable_weights} {NEW_LINE_TOKEN}"
 
         for note in notes:
-            yield f'\\multicolumn{{2}}{{c}}{{\\textit{{{note}}}}}' + NEW_LINE_TOKEN
+            yield f"\\multicolumn{{2}}{{c}}{{\\textit{{{note}}}}}" + NEW_LINE_TOKEN
 
-        yield '\\end{tabular}%'
-        yield '};'  # finalize node
+        yield "\\end{tabular}%"
+        yield "};"  # finalize node
 
         match column_index, row_index:
             case 0, 0:
@@ -292,22 +306,22 @@ def model_to_tikz(
                     key=lambda row_layer_pair: row_layer_pair[0],
                 )
 
-                yield f'\\node[below=0.1 of {previous_layer.name}] ({previous_layer.name}-below) {{}};'
-                yield f'\\node[right=0 of {previous_layer.name}] ({previous_layer.name}-between) {{}};'
-                yield f'\\node[above=0.1 of {layer.name}] ({layer.name}-above) {{}};'
+                yield f"\\node[below=0.1 of {previous_layer.name}] ({previous_layer.name}-below) {{}};"
+                yield f"\\node[right=0 of {previous_layer.name}] ({previous_layer.name}-between) {{}};"
+                yield f"\\node[above=0.1 of {layer.name}] ({layer.name}-above) {{}};"
 
                 yield (
-                    '\\draw[->]'
-                    f' ({previous_layer.name})'
-                    f' -- ({previous_layer.name}-below.center)'
-                    f' -- ({previous_layer.name}-between.center |- 10, 10 |- {previous_layer.name}-below.center)'
-                    f' -- ({previous_layer.name}-between.center |- 10, 10 |- {layer.name}-above.center)'
-                    f' -- ({layer.name}-above.center)'
-                    f' -- ({layer.name});'
+                    "\\draw[->]"
+                    f" ({previous_layer.name})"
+                    f" -- ({previous_layer.name}-below.center)"
+                    f" -- ({previous_layer.name}-between.center |- 10, 10 |- {previous_layer.name}-below.center)"
+                    f" -- ({previous_layer.name}-between.center |- 10, 10 |- {layer.name}-above.center)"
+                    f" -- ({layer.name}-above.center)"
+                    f" -- ({layer.name});"
                 )
             case _, _:
                 previous_layer = layers[(column_index, row_index - 1)]
-                yield f'\\draw[->] ({previous_layer.name}) -- ({layer.name});'
+                yield f"\\draw[->] ({previous_layer.name}) -- ({layer.name});"
 
     yield from ending.splitlines()
 
@@ -322,7 +336,7 @@ def _clean_shape(shape: tuple) -> Iterator[int]:
             case tuple():
                 yield from _clean_shape(item)
             case _:
-                raise ValueError(f'unsupported nested value: {item}')
+                raise ValueError(f"unsupported nested value: {item}")
 
 
 def _allocate_layers(
@@ -335,9 +349,9 @@ def _allocate_layers(
         return
 
     if max_rows_per_column <= 0:
-        raise ValueError('max_rows_per_column must be positive')
+        raise ValueError("max_rows_per_column must be positive")
 
-    layer_placeholders = '_' * len(layers)
+    layer_placeholders = "_" * len(layers)
     chunked_placeholders = mit.chunked_even(layer_placeholders, max_rows_per_column)
     layers_per_column = reversed(tuple(len(chunk) for chunk in chunked_placeholders))
 
@@ -346,9 +360,9 @@ def _allocate_layers(
         layers = layers[column_size:]
 
 
-convolutional_names = (f'convolutional_block_{index}' for index in itertools.count())
-dense_names = (f'dense_block_{index}' for index in itertools.count())
-input_names = (f'input_block_{index}' for index in itertools.count())
+convolutional_names = (f"convolutional_block_{index}" for index in itertools.count())
+dense_names = (f"dense_block_{index}" for index in itertools.count())
+input_names = (f"input_block_{index}" for index in itertools.count())
 
 
 @dataclass
@@ -449,7 +463,9 @@ class NormalizedInputBlock:
 
 def _group_layers(
     layers: Iterable[tf.keras.layers.Layer],
-) -> Iterator[tf.keras.layers.Layer | ConvolutionalBlock | DenseBlock | NormalizedInputBlock]:
+) -> Iterator[
+    tf.keras.layers.Layer | ConvolutionalBlock | DenseBlock | NormalizedInputBlock
+]:
     layer_list = [layer for layer in layers if not isinstance(layer, SKIPPED_LAYERS)]
     must_skip = set[int]()
 
@@ -497,4 +513,4 @@ def _group_layers(
 
 
 def diagrams_path() -> Path:
-    return figures_path().parent / 'diagrams'
+    return figures_path().parent / "diagrams"

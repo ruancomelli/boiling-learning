@@ -5,7 +5,11 @@ import tensorflow as tf
 
 from boiling_learning.app.datasets.bridging import to_tensorflow_triplet
 from boiling_learning.automl.hypermodels import HyperModel
-from boiling_learning.automl.tuning import TuneModelParams, TuneModelReturn, fit_hypermodel
+from boiling_learning.automl.tuning import (
+    TuneModelParams,
+    TuneModelReturn,
+    fit_hypermodel,
+)
 from boiling_learning.image_datasets import ImageDatasetTriplet
 from boiling_learning.lazy import LazyDescribed
 from boiling_learning.model.callbacks import MemoryCleanUp
@@ -17,7 +21,7 @@ def autofit(
     datasets: LazyDescribed[ImageDatasetTriplet],
     params: TuneModelParams,
     target: str,
-    experiment: Literal['boiling1d', 'condensation'],
+    experiment: Literal["boiling1d", "condensation"],
     strategy: LazyDescribed[tf.distribute.Strategy],
 ) -> TuneModelReturn:
     datasets_tf = to_tensorflow_triplet(

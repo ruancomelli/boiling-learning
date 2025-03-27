@@ -1,8 +1,9 @@
 import contextlib
 import typing
+from collections.abc import Iterable
 from fractions import Fraction
 from numbers import Real
-from typing import Any, Iterable, Union
+from typing import Any
 
 import imageio
 import numpy as np
@@ -16,21 +17,21 @@ def save_as_video(
     path: PathLike,
     frames: Iterable[tuple[VideoFrame, dict[str, Any]]],
     *,
-    display_data: Union[str, tuple[str, ...], dict[str, str]] = (),
-    text_position: Union[tuple[int, int], tuple[Fraction, Fraction]] = (
+    display_data: str | tuple[str, ...] | dict[str, str] = (),
+    text_position: tuple[int, int] | tuple[Fraction, Fraction] = (
         Fraction(1, 10),
         Fraction(1, 10),
     ),
     text_color: int = 255,
     fps: Real,
-    fmt: str = 'mp4',
+    fmt: str = "mp4",
 ) -> None:
     path = resolve(path, parents=True)
     if isinstance(display_data, str):
         display_data = (display_data,)
 
     with contextlib.closing(
-        imageio.get_writer(str(path), format=fmt, mode='I', fps=float(fps))
+        imageio.get_writer(str(path), format=fmt, mode="I", fps=float(fps))
     ) as writer:
         for frame, data in frames:
             image = Image.fromarray((frame.squeeze() * 255).astype(np.uint8))
@@ -48,8 +49,8 @@ def save_as_gif(
     path: PathLike,
     frames: Iterable[tuple[VideoFrame, dict[str, Any]]],
     *,
-    display_data: Union[str, tuple[str, ...], dict[str, str]] = (),
-    text_position: Union[tuple[int, int], tuple[Fraction, Fraction]] = (
+    display_data: str | tuple[str, ...] | dict[str, str] = (),
+    text_position: tuple[int, int] | tuple[Fraction, Fraction] = (
         Fraction(1, 10),
         Fraction(1, 10),
     ),
@@ -72,29 +73,31 @@ def save_as_gif(
     )
 
     img = next(imgs)
-    img.save(str(path), format='GIF', append_images=imgs, save_all=True, duration=duration)
+    img.save(
+        str(path), format="GIF", append_images=imgs, save_all=True, duration=duration
+    )
 
 
 def _annotate_image(
     image: Image.Image,
     data: dict[str, Any],
     *,
-    display_data: Union[tuple[str, ...], dict[str, str]],
-    text_position: Union[tuple[int, int], tuple[Fraction, Fraction]],
+    display_data: tuple[str, ...] | dict[str, str],
+    text_position: tuple[int, int] | tuple[Fraction, Fraction],
     text_color: int = 255,
 ) -> Image.Image:
     absolute_text_position = _to_absolute_position(image, text_position)
 
     display_items = (
-        (f'{key}: {data[key]:.0f}' for key in display_data)
+        (f"{key}: {data[key]:.0f}" for key in display_data)
         if isinstance(display_data, tuple)
         else (
-            f'{translated}: {data[key]:.0f}' if translated else f'{data[key]:.0f}'
+            f"{translated}: {data[key]:.0f}" if translated else f"{data[key]:.0f}"
             for key, translated in display_data.items()
         )
     )
 
-    if text := '\n'.join(display_items):
+    if text := "\n".join(display_items):
         draw = ImageDraw.Draw(image)
         draw.text(absolute_text_position, text, fill=text_color)
 
@@ -102,7 +105,7 @@ def _annotate_image(
 
 
 def _to_absolute_position(
-    image: Image.Image, position: Union[tuple[int, int], tuple[Fraction, Fraction]]
+    image: Image.Image, position: tuple[int, int] | tuple[Fraction, Fraction]
 ) -> tuple[int, int]:
     x_position, y_position = position
     if isinstance(x_position, int):

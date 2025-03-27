@@ -25,12 +25,12 @@ def boiling1d() -> None:
     )
 
     table = Table(
-        'Dataset',
-        'Training length',
-        'Validation length',
-        'Test length',
-        'Total size',
-        title='Dataset sizes',
+        "Dataset",
+        "Training length",
+        "Validation length",
+        "Test length",
+        "Total size",
+        title="Dataset sizes",
     )
 
     all_boiling_datasets = boiling_datasets(direct_visualization=DIRECT_VISUALIZATION)
@@ -43,7 +43,7 @@ def boiling1d() -> None:
         train, val, test = datasets()
 
         table.add_row(
-            f'Dataset {indices}',
+            f"Dataset {indices}",
             str(len(train)),
             str(len(val)),
             str(len(test)),
@@ -62,9 +62,9 @@ def condensation() -> None:
     )
 
     train, val, test = condensation_dataset(each=1)()
-    console.print('Train set size:', len(train))
-    console.print('Val set size:', len(val))
-    console.print('Test set size:', len(test))
+    console.print("Train set size:", len(train))
+    console.print("Val set size:", len(val))
+    console.print("Test set size:", len(test))
 
 
 def _build_merged_datasets(

@@ -1,7 +1,8 @@
 import abc
 import json as _json
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Generic, Optional, TypeVar, final
+from typing import Any, Generic, TypeVar, final
 
 from classes import AssociatedType, Supports, typeclass
 
@@ -22,21 +23,24 @@ class Allocator(abc.ABC):
         return self(Pack(args, kwargs))
 
 
-_JSONDescription = TypeVar('_JSONDescription', bound=json.JSONDataType)
+_JSONDescription = TypeVar("_JSONDescription", bound=json.JSONDataType)
 
 
 @final
-class JSONDescribable(AssociatedType[_JSONDescription]):
-    ...
+class JSONDescribable(AssociatedType[_JSONDescription]): ...
 
 
 @typeclass(JSONDescribable)
-def json_describe(instance: Supports[JSONDescribable[_JSONDescription]]) -> _JSONDescription:
-    '''Return a JSON description of an object.'''
+def json_describe(
+    instance: Supports[JSONDescribable[_JSONDescription]],
+) -> _JSONDescription:
+    """Return a JSON description of an object."""
 
 
 @json_describe.instance(delegate=json.SupportsJSONEncodable)
-def _json_describe_json_serializable(instance: json.SupportsJSONEncodable) -> json.JSONDataType:
+def _json_describe_json_serializable(
+    instance: json.SupportsJSONEncodable,
+) -> json.JSONDataType:
     return json.serialize(instance)
 
 
@@ -60,8 +64,7 @@ class DescribableAsJSONDescribable(
     Supports[JSONDescribable[_JSONDescription]],
     Generic[_JSONDescription],
     metaclass=DescribableAsJSONDescribableMeta,
-):
-    ...
+): ...
 
 
 @json_describe.instance(delegate=DescribableAsJSONDescribable)
@@ -85,12 +88,12 @@ class JSONAllocator(Allocator):
             ],
             json.JSONDataType,
         ] = json_describe,
-        suffix: str = '',
+        suffix: str = "",
     ) -> None:
         root = resolve(path, dir=True)
-        self.path = resolve(root / 'data', dir=True)
-        self.db_path = root / 'db.json'
-        self._data: Optional[list[json.JSONDataType]] = None
+        self.path = resolve(root / "data", dir=True)
+        self.db_path = root / "db.json"
+        self._data: list[json.JSONDataType] | None = None
         self.describer = describer
         self.suffix = suffix
 
@@ -107,7 +110,7 @@ class JSONAllocator(Allocator):
         self._save_db()
 
     def _doc_path(self, doc_id: int) -> Path:
-        return self.path / f'{doc_id}{self.suffix}'
+        return self.path / f"{doc_id}{self.suffix}"
 
     def _provide(self, serialized: json.JSONDataType) -> int:
         try:
@@ -118,13 +121,13 @@ class JSONAllocator(Allocator):
 
     def _load_db(self) -> list[json.JSONDataType]:
         try:
-            with self.db_path.open('r', encoding='utf-8') as file:
+            with self.db_path.open("r", encoding="utf-8") as file:
                 return _json.load(file)
         except FileNotFoundError:
             return []
 
     def _save_db(self) -> None:
-        with self.db_path.open('w', encoding='utf-8') as file:
+        with self.db_path.open("w", encoding="utf-8") as file:
             _json.dump(self.data, file)
 
     def __call__(self, pack: Pack[Any, Any]) -> Path:

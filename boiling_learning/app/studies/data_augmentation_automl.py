@@ -31,21 +31,23 @@ def boiling1d() -> None:
         require_gpu=True,
     )
 
-    raise CancelledError('This study is cancelled for not providing useful information.')
+    raise CancelledError(
+        "This study is cancelled for not providing useful information."
+    )
 
-    model_evaluator = cached_model_evaluator('boiling1d')
+    model_evaluator = cached_model_evaluator("boiling1d")
     case = boiling_cases()[0]
     tables: list[Table] = []
-    for direct, crop_mode in itertools.product((False, True), ('center', 'random')):
+    for direct, crop_mode in itertools.product((False, True), ("center", "random")):
         table = Table(
-            'Metric',
-            'Training',
-            'Validation',
-            'Test',
+            "Metric",
+            "Training",
+            "Validation",
+            "Test",
             title=(
-                'Automatic machine learning - '
-                + ('direct' if direct else 'indirect')
-                + f' visualization - {crop_mode} crop.'
+                "Automatic machine learning - "
+                + ("direct" if direct else "indirect")
+                + f" visualization - {crop_mode} crop."
             ),
         )
 
@@ -56,7 +58,7 @@ def boiling1d() -> None:
         datasets = get_image_dataset(
             case(),
             transformers=preprocessors,
-            experiment='boiling1d',
+            experiment="boiling1d",
         )
 
         # hypermodel = autofit_dataset(

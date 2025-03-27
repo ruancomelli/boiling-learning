@@ -18,7 +18,7 @@ class NukiyamaBoilingCurve:
     367-374, Japan, 1934. Available at http://www.htsj.or.jp/wp/media/IJHMT1984-3.pdf. Table 3.
     """
 
-    material: str = 'Nichrome'
+    material: str = "Nichrome"
     diameter: Quantity = 0.575 * ureg.mm
     length: Quantity = 200 * ureg.mm
 
@@ -368,17 +368,17 @@ class IncroperaBoilingCurveImposedHeat:
         return wall_superheat, heat_flux_ratio
 
     @staticmethod
-    def extra() -> dict[Literal['MAX', 'MIN', 'BURNOUT'], tuple[Quantity, Quantity]]:
+    def extra() -> dict[Literal["MAX", "MIN", "BURNOUT"], tuple[Quantity, Quantity]]:
         return {
-            'MAX': (
+            "MAX": (
                 Q_(36.1792385571704, ureg.delta_degC),
                 Q_(1),
             ),
-            'MIN': (
+            "MIN": (
                 Q_(144.85562048610808, ureg.delta_degC),
                 Q_(0.01822916666666652),
             ),
-            'BURNOUT': (
+            "BURNOUT": (
                 Q_(1994.6304671307805, ureg.delta_degC),
                 Q_(1.1536458333333335),
             ),
@@ -617,25 +617,25 @@ class IncroperaBoilingCurveImposedTemperatureExcess:
         return wall_superheat.to(ureg.delta_degC), heat_flux.to(ureg.W / ureg.cm**2)
 
     @staticmethod
-    def extra() -> dict[Literal['A', 'B', 'C', 'D', 'E'], tuple[Quantity, Quantity]]:
+    def extra() -> dict[Literal["A", "B", "C", "D", "E"], tuple[Quantity, Quantity]]:
         return {
-            'A': (
+            "A": (
                 Q_(5.329765171785223, ureg.delta_degC),
                 Q_(6526.742602759848, ureg.W / ureg.m**2),
             ),
-            'B': (
+            "B": (
                 Q_(10, ureg.delta_degC),
                 Q_(100738.36274301627, ureg.W / ureg.m**2),
             ),
-            'C': (
+            "C": (
                 Q_(31.099515499401985, ureg.delta_degC),
                 Q_(1382213.3392412085, ureg.W / ureg.m**2),
             ),
-            'D': (
+            "D": (
                 Q_(141.62460655153197, ureg.delta_degC),
                 Q_(26021.687873296054, ureg.W / ureg.m**2),
             ),
-            'E': (
+            "E": (
                 Q_(1187.228084422286, ureg.delta_degC),
                 Q_(1402700.1913364157, ureg.W / ureg.m**2),
             ),

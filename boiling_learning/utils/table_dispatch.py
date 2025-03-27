@@ -1,6 +1,7 @@
-from typing import Any, Callable, Optional, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
-_Callable = TypeVar('_Callable', bound=Callable[..., Any])
+_Callable = TypeVar("_Callable", bound=Callable[..., Any])
 
 
 class DispatchError(Exception):
@@ -8,9 +9,9 @@ class DispatchError(Exception):
 
 
 class TableDispatcher(dict[type | None, Callable[..., Any]]):
-    def __init__(self, default: Optional[Callable[..., Any]] = None) -> None:
+    def __init__(self, default: Callable[..., Any] | None = None) -> None:
         super().__init__()
-        self._default: Optional[Callable[..., Any]] = default
+        self._default: Callable[..., Any] | None = default
 
     def dispatch(self, key: type | None) -> Callable[[_Callable], _Callable]:
         def _dispatcher(call: _Callable) -> _Callable:

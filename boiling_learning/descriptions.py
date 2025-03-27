@@ -2,35 +2,40 @@ from datetime import timedelta
 from fractions import Fraction
 from pathlib import Path
 from types import FunctionType
-from typing import Any, Generic, Protocol, Type, TypeVar, Union, final, runtime_checkable
+from typing import (
+    Any,
+    Generic,
+    Protocol,
+    TypeVar,
+    final,
+    runtime_checkable,
+)
 
 from classes import AssociatedType, Supports, typeclass
 from frozendict import frozendict  # type: ignore[attr-defined]
 
 from boiling_learning.dataclasses import is_dataclass_instance, shallow_asdict
 
-_AnyType = TypeVar('_AnyType', bound=Type[Any])
-_Description = TypeVar('_Description')
-_Description_co = TypeVar('_Description_co', covariant=True)
+_AnyType = TypeVar("_AnyType", bound=type[Any])
+_Description = TypeVar("_Description")
+_Description_co = TypeVar("_Description_co", covariant=True)
 
 
 @runtime_checkable
 class HasDescribe(Protocol[_Description_co]):
-    def __describe__(self) -> _Description_co:
-        ...
+    def __describe__(self) -> _Description_co: ...
 
 
 @final
-class Describable(AssociatedType[_Description]):
-    ...
+class Describable(AssociatedType[_Description]): ...
 
 
 @typeclass(Describable)
 def describe(instance: Supports[Describable[_Description]]) -> _Description:
-    '''Return a JSON description of an object.'''
+    """Return a JSON description of an object."""
 
 
-_BasicType = TypeVar('_BasicType', bound=Union[None, bool, int, str, float, Path])
+_BasicType = TypeVar("_BasicType", bound=None | bool | int | str | float | Path)
 
 
 @describe.instance(None)
@@ -50,34 +55,37 @@ def _describe_has_describe(instance: HasDescribe[_Description]) -> _Description:
 
 
 @describe.instance(list)
-def _describe_list(instance: list[Supports[Describable[_Description]]]) -> list[_Description]:
+def _describe_list(
+    instance: list[Supports[Describable[_Description]]],
+) -> list[_Description]:
     return [describe(item) for item in instance]
 
 
 @describe.instance(tuple)
 def _describe_tuple(
-    instance: tuple[Supports[Describable[_Description]], ...]
+    instance: tuple[Supports[Describable[_Description]], ...],
 ) -> tuple[_Description, ...]:
     return tuple(describe(item) for item in instance)
 
 
 @describe.instance(dict)
 def _describe_dict(
-    instance: dict[str, Supports[Describable[_Description]]]
+    instance: dict[str, Supports[Describable[_Description]]],
 ) -> dict[str, _Description]:
     return {key: describe(value) for key, value in instance.items()}
 
 
 class _DataclassOfDescribableFieldsMeta(type):
     def __instancecheck__(self, instance: Any) -> bool:
-        return is_dataclass_instance(instance) and describe.supports(shallow_asdict(instance))
+        return is_dataclass_instance(instance) and describe.supports(
+            shallow_asdict(instance)
+        )
 
 
 class DataclassOfDescribableFields(
     Generic[_Description],
     metaclass=_DataclassOfDescribableFieldsMeta,
-):
-    ...
+): ...
 
 
 @describe.instance(delegate=DataclassOfDescribableFields)
@@ -105,7 +113,9 @@ def _describe_frozendict(
 
 
 @describe.instance(set)
-def _describe_set(instance: set[Supports[Describable[_Description]]]) -> set[_Description]:
+def _describe_set(
+    instance: set[Supports[Describable[_Description]]],
+) -> set[_Description]:
     return {describe(item) for item in instance}
 
 

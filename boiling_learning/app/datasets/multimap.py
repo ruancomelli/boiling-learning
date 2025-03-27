@@ -22,7 +22,7 @@ class MultiMapSliceableDataset(SliceableDataset[Image]):
         return len(self._ancestor)
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self._map}, {self._ancestor})'
+        return f"{self.__class__.__name__}({self._map}, {self._ancestor})"
 
     def getitem_from_index(self, index: int) -> Image:
         return self.fetch((index,))[0]

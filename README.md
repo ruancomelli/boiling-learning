@@ -3,11 +3,10 @@ Boiling Learning
 </h1>
 
 [![uv-managed](https://img.shields.io/badge/managed-261230?label=uv&logo=uv&labelColor=gray)](https://github.com/astral-sh/uv)
+[![Code style: Ruff](https://img.shields.io/badge/Ruff-checked-261230.svg?logo=ruff)](https://docs.astral.sh/ruff/)
+[![Sourcery](https://img.shields.io/badge/Sourcery-enabled-brightgreen)](https://sourcery.ai)
 
 [![Github Actions](https://github.com/commitizen-tools/commitizen/workflows/Python%20package/badge.svg?style=flat-square)](https://github.com/ruancomelli/boiling-learning/actions)
-[![Sourcery](https://img.shields.io/badge/Sourcery-enabled-brightgreen)](https://sourcery.ai)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 [![SemVer](https://img.shields.io/badge/semver-2.0.0-green)](https://semver.org/spec/v2.0.0.html)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
 [![Author: ruancomelli](https://img.shields.io/badge/ruancomelli-blue?style=flat&label=author)](https://github.com/ruancomelli)

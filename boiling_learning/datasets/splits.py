@@ -9,7 +9,7 @@ from typing_extensions import NamedTuple
 
 from boiling_learning.io.dataclasses import dataclass
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 
 class DatasetTriplet(NamedTuple, Generic[_T]):
@@ -29,11 +29,11 @@ class DatasetSplits:
         n_nones = splits.count(None)
         if n_nones > 1:
             raise ValueError(
-                'at most one of *train*, *val* and *test* can be inferred (by passing `None`)'
+                "at most one of *train*, *val* and *test* can be inferred (by passing `None`)"
             )
 
         if n_nones == 1:
-            names = ('train', 'val', 'test')
+            names = ("train", "val", "test")
             dct = funcy.zipdict(names, splits)
             for name, split in dct.items():
                 if split is None:
@@ -42,18 +42,19 @@ class DatasetSplits:
 
                     if not 0 < others_sum <= 1:
                         raise ValueError(
-                            'it is required that 0 < '
-                            + ' + '.join(f'*{other}*' for other in others.keys())
-                            + ' <= 1'
+                            "it is required that 0 < "
+                            + " + ".join(f"*{other}*" for other in others.keys())
+                            + " <= 1"
                         )
 
-                    split = 1 - others_sum
-                    object.__setattr__(self, name, split)
+                    object.__setattr__(self, name, 1 - others_sum)
                     splits = (self.train, self.val, self.test)
                     break
 
         if sum(splits) != 1:
-            raise ValueError('*train* + *val* + *test* must equal 1')
+            raise ValueError("*train* + *val* + *test* must equal 1")
 
         if not (0 < self.train < 1 and 0 <= self.val < 1 and 0 < self.test < 1):
-            raise ValueError('it is required that 0 < (*train*, *test*) < 1 and 0 <= *val* < 1')
+            raise ValueError(
+                "it is required that 0 < (*train*, *test*) < 1 and 0 <= *val* < 1"
+            )

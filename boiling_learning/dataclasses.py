@@ -4,12 +4,12 @@ from dataclasses import asdict, field, fields, is_dataclass
 from typing import Any, Protocol, TypeGuard, TypeVar
 
 __all__ = (
-    'asdict',
-    'field',
-    'fields',
-    'is_dataclass',
-    'is_dataclass_class',
-    'is_dataclass_instance',
+    "asdict",
+    "field",
+    "fields",
+    "is_dataclass",
+    "is_dataclass_class",
+    "is_dataclass_instance",
 )
 
 
@@ -17,7 +17,7 @@ class DataClass(Protocol):
     __dataclass_fields__: dict[str, Any]
 
 
-_DataClass = TypeVar('_DataClass', bound=DataClass)
+_DataClass = TypeVar("_DataClass", bound=DataClass)
 
 
 def is_dataclass_class(obj: Any) -> TypeGuard[type[DataClass]]:
@@ -34,7 +34,7 @@ def dataclass_from_mapping(
     key_map: Mapping[str, str] | None = None,
 ) -> _DataClass:
     if not is_dataclass_class(dataclass_factory):
-        raise ValueError('*dataclass_factory* must be a dataclass.')
+        raise ValueError("*dataclass_factory* must be a dataclass.")
 
     dataclass_field_names = frozenset(field.name for field in fields(dataclass_factory))
 
@@ -49,7 +49,11 @@ def dataclass_from_mapping(
     return typing.cast(
         _DataClass,
         dataclass_factory(
-            **{key: value for key, value in mapping.items() if key in dataclass_field_names}
+            **{
+                key: value
+                for key, value in mapping.items()
+                if key in dataclass_field_names
+            }
         ),
     )
 

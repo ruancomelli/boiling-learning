@@ -17,8 +17,8 @@ def test_instance_dispatch() -> None:
     def _dispatch_x(obj: str) -> X:
         return X(dispatcher[int](obj))
 
-    assert dispatcher[int]('2022') == 2022
+    assert dispatcher[int]("2022") == 2022
 
-    dispatched = dispatcher[X]('2022')
+    dispatched = dispatcher[X]("2022")
     assert isinstance(dispatched, X)
     assert dispatched.value == 2022

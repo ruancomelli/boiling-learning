@@ -5,7 +5,9 @@ import tensorflow as tf
 
 from boiling_learning.app.automl.evaluation import cached_best_model_evaluator
 from boiling_learning.app.automl.tuning import autofit
-from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
+from boiling_learning.app.datasets.preprocessed.boiling1d import (
+    baseline_boiling_dataset,
+)
 from boiling_learning.app.paths import analyses_path
 from boiling_learning.app.training.common import get_baseline_compile_params
 from boiling_learning.automl.hypermodels import ConvImageRegressor, HyperModel
@@ -22,7 +24,7 @@ def autofit_dataset(
     *,
     strategy: LazyDescribed[tf.distribute.Strategy],
     target: str,
-    experiment: Literal['boiling1d', 'condensation'],
+    experiment: Literal["boiling1d", "condensation"],
     normalize_images: bool = True,
     max_model_size: int | None = None,
     goal: float | None = None,
@@ -31,15 +33,15 @@ def autofit_dataset(
     compile_params = get_baseline_compile_params(strategy=strategy)
 
     hypermodel = ConvImageRegressor(
-        loss=compile_params['loss'],
-        metrics=compile_params['metrics'],
+        loss=compile_params["loss"],
+        metrics=compile_params["metrics"],
         tuner=tuner_class,
         directory=_get_autofit_to_dataset_allocator(experiment).allocate(
             ConvImageRegressor,
             datasets,
             tuner=tuner_class,
-            loss=compile_params['loss'],
-            metrics=compile_params['metrics'],
+            loss=compile_params["loss"],
+            metrics=compile_params["metrics"],
             normalize_images=normalize_images,
             max_model_size=max_model_size,
             goal=goal,
@@ -57,11 +59,11 @@ def autofit_dataset(
                 LazyDescribed.from_constructor(tf.keras.callbacks.TerminateOnNaN),
                 LazyDescribed.from_constructor(
                     tf.keras.callbacks.EarlyStopping,
-                    monitor='val_loss',
+                    monitor="val_loss",
                     min_delta=0,
                     patience=10,
                     baseline=None,
-                    mode='auto',
+                    mode="auto",
                     restore_best_weights=True,
                     verbose=1,
                 ),
@@ -86,7 +88,7 @@ def best_model_for_dataset(
     *,
     strategy: LazyDescribed[tf.distribute.Strategy],
     target: str,
-    experiment: Literal['boiling1d', 'condensation'],
+    experiment: Literal["boiling1d", "condensation"],
     normalize_images: bool = True,
     max_model_size: int | None = None,
     goal: float | None = None,
@@ -103,7 +105,7 @@ def best_model_for_dataset(
         tuner_class=tuner_class,
     )
     best_model_evaluator = cached_best_model_evaluator(
-        experiment='boiling1d',
+        experiment="boiling1d",
         strategy=strategy,
     )
     return best_model_evaluator(
@@ -128,7 +130,7 @@ def best_baseline_boiling1d_model(
         datasets,
         strategy=strategy,
         target=target,
-        experiment='boiling1d',
+        experiment="boiling1d",
         normalize_images=normalize_images,
         max_model_size=max_model_size,
         goal=goal,
@@ -138,7 +140,9 @@ def best_baseline_boiling1d_model(
 
 @cache
 def _get_autofit_to_dataset_allocator(
-    experiment: Literal['boiling1d', 'condensation'],
+    experiment: Literal["boiling1d", "condensation"],
     /,
 ) -> JSONAllocator:
-    return JSONAllocator(analyses_path() / 'autofit' / 'autofit-to-dataset' / experiment)
+    return JSONAllocator(
+        analyses_path() / "autofit" / "autofit-to-dataset" / experiment
+    )

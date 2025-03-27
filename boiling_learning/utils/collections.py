@@ -1,30 +1,32 @@
 from __future__ import annotations
 
-from contextlib import suppress
-from itertools import chain
-from typing import (
+from collections.abc import (
     Callable,
-    Generic,
     Hashable,
     ItemsView,
     Iterable,
     Iterator,
     KeysView,
     MutableSet,
-    Optional,
-    TypeVar,
-    Union,
     ValuesView,
+)
+from contextlib import suppress
+from itertools import chain
+from typing import (
+    Generic,
+    TypeVar,
     overload,
 )
 
-_Any = TypeVar('_Any')
-_Key = TypeVar('_Key', bound=Hashable)
-_Value = TypeVar('_Value')
+_Any = TypeVar("_Any")
+_Key = TypeVar("_Key", bound=Hashable)
+_Value = TypeVar("_Value")
 
 
 class KeyedSet(MutableSet[_Value], Generic[_Key, _Value]):
-    def __init__(self, key: Callable[[_Value], _Key], iterable: Iterable[_Value] = ()) -> None:
+    def __init__(
+        self, key: Callable[[_Value], _Key], iterable: Iterable[_Value] = ()
+    ) -> None:
         self.__key = key
         self.__data = {self.__key(element): element for element in iterable}
 
@@ -95,12 +97,10 @@ class KeyedSet(MutableSet[_Value], Generic[_Key, _Value]):
         return self.__data.items()
 
     @overload
-    def get(self, key: _Key, default: _Any) -> Union[_Value, _Any]:
-        ...
+    def get(self, key: _Key, default: _Any) -> _Value | _Any: ...
 
     @overload
-    def get(self, key: _Key, default: None = None) -> Union[_Value, None]:
-        ...
+    def get(self, key: _Key, default: None = None) -> _Value | None: ...
 
-    def get(self, key: _Key, default: Optional[_Any] = None) -> Union[_Value, Optional[_Any]]:
+    def get(self, key: _Key, default: _Any | None = None) -> _Value | _Any | None:
         return self.__data.get(key, default)

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable, Hashable, Mapping
 from functools import partial
-from typing import Callable, Hashable, Mapping, Optional, TypeVar, Union
+from typing import TypeVar
 
 import funcy
 import tensorflow as tf
@@ -10,13 +11,13 @@ from loguru import logger
 from boiling_learning.datasets.sliceable import SliceableDataset
 from boiling_learning.utils.pathutils import PathLike, resolve
 
-_T = TypeVar('_T')
-NestedStructure = Union[
-    _T,
-    list['NestedStructure[_T]'],
-    tuple['NestedStructure[_T]', ...],
-    Mapping[Hashable, 'NestedStructure[_T]'],
-]
+_T = TypeVar("_T")
+NestedStructure = (
+    _T
+    | list["NestedStructure[_T]"]
+    | tuple["NestedStructure[_T]", ...]
+    | Mapping[Hashable, "NestedStructure[_T]"]
+)
 NestedTypeSpec = NestedStructure[tf.TypeSpec]
 NestedTensorLike = NestedStructure[tf.types.experimental.TensorLike]
 
@@ -25,13 +26,13 @@ def sliceable_dataset_to_tensorflow_dataset(
     dataset: SliceableDataset[_T],
     *,
     cache: bool = False,
-    save_path: Optional[PathLike] = None,
-    batch_size: Optional[int] = None,
-    prefilterer: Optional[Callable[[_T], bool]] = None,
-    filterer: Optional[Callable[..., bool]] = None,
+    save_path: PathLike | None = None,
+    batch_size: int | None = None,
+    prefilterer: Callable[[_T], bool] | None = None,
+    filterer: Callable[..., bool] | None = None,
     prefetch: int = 0,
     deterministic: bool = False,
-    target: Optional[str] = None,
+    target: str | None = None,
 ) -> tf.data.Dataset:
     creator = partial(
         _create_tensorflow_dataset,
@@ -49,14 +50,14 @@ def sliceable_dataset_to_tensorflow_dataset(
             if not save_path.exists():
                 raise FileNotFoundError
 
-            logger.debug(f'Loading dataset from {save_path}')
+            logger.debug(f"Loading dataset from {save_path}")
             # TODO: now passing the typespec is optional... try removing it!
             ds = tf.data.Dataset.load(
                 str(save_path),
                 reader_func=_make_reader_func(deterministic=deterministic),
             )
         except FileNotFoundError:
-            logger.debug(f'File does not exist: {save_path}')
+            logger.debug(f"File does not exist: {save_path}")
 
             ds = creator()
 
@@ -105,7 +106,7 @@ def _make_reader_func(
 def _create_tensorflow_dataset(
     dataset: SliceableDataset[_T],
     *,
-    prefilterer: Optional[Callable[[_T], bool]] = None,
+    prefilterer: Callable[[_T], bool] | None = None,
     prefetch: int = 0,
 ) -> tf.data.Dataset:
     if prefetch:
@@ -121,5 +122,5 @@ def auto_spec(elem: NestedTensorLike) -> NestedTypeSpec:
     try:
         return tf.type_spec_from_value(elem)
     except TypeError:
-        walker = funcy.walk_values if hasattr(elem, 'items') else funcy.walk  # type: ignore
+        walker = funcy.walk_values if hasattr(elem, "items") else funcy.walk  # type: ignore
         return walker(auto_spec, elem)

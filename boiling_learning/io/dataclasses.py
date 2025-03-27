@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass as _dataclass
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, Type, TypeVar
+from typing import Any, TypeVar
 
 from boiling_learning.dataclasses import (
     DataClass,
@@ -15,19 +16,20 @@ from boiling_learning.io import json
 from boiling_learning.io.storage import deserialize, save, serialize
 
 Metadata = json.JSONDataType
-_DataClassType = TypeVar('_DataClassType', bound=Type[DataClass])
-_AnyCallable = TypeVar('_AnyCallable', bound=Callable[..., Any])
+_DataClassType = TypeVar("_DataClassType", bound=type[DataClass])
+_AnyCallable = TypeVar("_AnyCallable", bound=Callable[..., Any])
 
 
 class DataclassOfJSONEncodableFieldsMeta(type):
     def __instancecheck__(self, instance: Any) -> bool:
-        return is_dataclass_instance(instance) and json.encode.supports(shallow_asdict(instance))
+        return is_dataclass_instance(instance) and json.encode.supports(
+            shallow_asdict(instance)
+        )
 
 
 class DataclassOfJSONEncodableFields(
     metaclass=DataclassOfJSONEncodableFieldsMeta,
-):
-    ...
+): ...
 
 
 @json.encode.instance(delegate=DataclassOfJSONEncodableFields)
@@ -39,11 +41,12 @@ def _encode_dataclass(
 
 class DataclassOfSaveableFieldsMeta(type):
     def __instancecheck__(self, instance: Any) -> bool:
-        return is_dataclass_instance(instance) and save.supports(shallow_asdict(instance))
+        return is_dataclass_instance(instance) and save.supports(
+            shallow_asdict(instance)
+        )
 
 
-class DataclassOfSaveableFields(metaclass=DataclassOfSaveableFieldsMeta):
-    ...
+class DataclassOfSaveableFields(metaclass=DataclassOfSaveableFieldsMeta): ...
 
 
 @serialize.instance(delegate=DataclassOfSaveableFields)
@@ -51,7 +54,9 @@ def _serialize_dataclass(instance: DataclassOfSaveableFields, path: Path) -> Met
     return serialize(shallow_asdict(instance), path)
 
 
-def register_deserializer_for_dataclass(dataclass_type: _DataClassType) -> _DataClassType:
+def register_deserializer_for_dataclass(
+    dataclass_type: _DataClassType,
+) -> _DataClassType:
     @deserialize.dispatch(dataclass_type)
     def _deserialize(path: Path, metadata: Metadata) -> DataClass:
         fields = deserialize[dict](path, metadata)
@@ -65,7 +70,9 @@ def register_deserializer_for_dataclass(dataclass_type: _DataClassType) -> _Data
     return dataclass_type
 
 
-def _auto_register_deserializer_for_dataclass(dataclass_decorator: _AnyCallable) -> _AnyCallable:
+def _auto_register_deserializer_for_dataclass(
+    dataclass_decorator: _AnyCallable,
+) -> _AnyCallable:
     @wraps(dataclass_decorator)
     def _wrapped(*args, **kwargs) -> Any:
         decorated_result = dataclass_decorator(*args, **kwargs)

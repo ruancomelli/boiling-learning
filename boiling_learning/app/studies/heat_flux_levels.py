@@ -29,22 +29,22 @@ def boiling1d() -> None:
     tables: list[Table] = []
     for dataset_index, dataset in enumerate(datasets):
         table = Table(
-            'Nominal power level [W]',
-            'Heat flux level [W/cm^2]',
-            title=f'Dataset {dataset_index}',
+            "Nominal power level [W]",
+            "Heat flux level [W/cm^2]",
+            title=f"Dataset {dataset_index}",
         )
 
         data = (
             pd.DataFrame(
                 [
-                    (target['nominal_power'], target[DEFAULT_BOILING_HEAT_FLUX_TARGET])
+                    (target["nominal_power"], target[DEFAULT_BOILING_HEAT_FLUX_TARGET])
                     for subset in dataset()
                     for target in targets(subset.prefetch(1024))
                     if DEFAULT_BOILING_OUTLIER_FILTER()(None, target)
                 ],
-                columns=['nominal power', 'heat flux'],
+                columns=["nominal power", "heat flux"],
             )
-            .groupby(['nominal power'])
+            .groupby(["nominal power"])
             .mean()
         )
 

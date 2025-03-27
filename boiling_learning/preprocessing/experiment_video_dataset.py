@@ -15,7 +15,7 @@ class ExperimentVideoDataset(KeyedSet[str, ExperimentVideo]):
         super().__init__(_get_experiment_video_name, experiment_videos)
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({sorted(self.keys())})'
+        return f"{self.__class__.__name__}({sorted(self.keys())})"
 
     def union(self, *others: Iterable[ExperimentVideo]) -> ExperimentVideoDataset:
         return ExperimentVideoDataset(super().union(*others))
@@ -37,7 +37,9 @@ def _serialize_experiment_video(instance: ExperimentVideoDataset, path: Path) ->
 
 
 @deserialize.dispatch(ExperimentVideoDataset)
-def _deserialize_experiment_video(path: Path, _metadata: Metadata) -> ExperimentVideoDataset:
+def _deserialize_experiment_video(
+    path: Path, _metadata: Metadata
+) -> ExperimentVideoDataset:
     return ExperimentVideoDataset(load(path))
 
 

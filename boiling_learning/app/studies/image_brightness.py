@@ -8,8 +8,12 @@ import typer
 
 from boiling_learning.app.configuration import configure
 from boiling_learning.app.constants import figures_path
-from boiling_learning.app.datasets.bridged.boiling1d import DEFAULT_BOILING_OUTLIER_FILTER
-from boiling_learning.app.datasets.preprocessed.boiling1d import baseline_boiling_dataset
+from boiling_learning.app.datasets.bridged.boiling1d import (
+    DEFAULT_BOILING_OUTLIER_FILTER,
+)
+from boiling_learning.app.datasets.preprocessed.boiling1d import (
+    baseline_boiling_dataset,
+)
 from boiling_learning.app.displaying import glossary, units
 from boiling_learning.app.displaying.figures import save_figure
 from boiling_learning.app.paths import studies_path
@@ -32,7 +36,7 @@ def boiling1d() -> None:
     )
 
     for direct in False, True:
-        direct_label = 'direct' if direct else 'indirect'
+        direct_label = "direct" if direct else "indirect"
 
         data = _cached_data_getter()(direct_visualization=direct)
 
@@ -40,25 +44,29 @@ def boiling1d() -> None:
         sns.boxenplot(
             ax=ax,
             data=data,
-            x='nominal power',
-            y='brightness',
-            hue='Subset',
-            hue_order=['Training', 'Validation', 'Test'],
+            x="nominal power",
+            y="brightness",
+            hue="Subset",
+            hue_order=["Training", "Validation", "Test"],
             linewidth=0.5,
             showfliers=False,  # exclude outliers
         )
         ax.set(
-            xlabel=f'Nominal power, ${glossary["power"]}$ [{units["power"]}]',
-            ylabel='Brightness',
+            xlabel=f"Nominal power, ${glossary['power']}$ [{units['power']}]",
+            ylabel="Brightness",
         )
 
-        save_figure(f, _image_brightness_study_path() / f'boiling1d-{direct_label}-boxen.pdf')
-        save_figure(f, _image_brightness_results_path() / f'boiling1d-{direct_label}.pdf')
+        save_figure(
+            f, _image_brightness_study_path() / f"boiling1d-{direct_label}-boxen.pdf"
+        )
+        save_figure(
+            f, _image_brightness_results_path() / f"boiling1d-{direct_label}.pdf"
+        )
 
 
 def _cached_data_getter():
     @cache(
-        JSONAllocator(_image_brightness_study_path() / 'boiling1d', suffix='.csv'),
+        JSONAllocator(_image_brightness_study_path() / "boiling1d", suffix=".csv"),
         saver=_dataframe_to_csv,
         loader=pd.read_csv,
         exceptions=(OSError, AttributeError),
@@ -82,22 +90,24 @@ def condensation(
     raise NotImplementedError
 
 
-def _sorted_boiling_datasets(datasets: LazyDescribed[ImageDatasetTriplet]) -> pd.DataFrame:
+def _sorted_boiling_datasets(
+    datasets: LazyDescribed[ImageDatasetTriplet],
+) -> pd.DataFrame:
     ds_train, ds_val, ds_test = datasets()
 
     df = pd.DataFrame(
         sorted(
             (
                 (
-                    target['nominal_power'],
+                    target["nominal_power"],
                     image.mean(),
-                    target['elapsed_time'],
+                    target["elapsed_time"],
                     class_name,
                 )
                 for class_name, ds in (
-                    ('Training', ds_train),
-                    ('Validation', ds_val),
-                    ('Test', ds_test),
+                    ("Training", ds_train),
+                    ("Validation", ds_val),
+                    ("Test", ds_test),
                 )
                 for image, target in ds.prefetch(1024)
                 if DEFAULT_BOILING_OUTLIER_FILTER()(None, target)
@@ -107,15 +117,15 @@ def _sorted_boiling_datasets(datasets: LazyDescribed[ImageDatasetTriplet]) -> pd
                 power_hf_et_class[2],
             ),
         ),
-        columns=['nominal power', 'brightness', 'elapsed time', 'Subset'],
+        columns=["nominal power", "brightness", "elapsed time", "Subset"],
     )
-    df['index'] = range(len(df))
+    df["index"] = range(len(df))
     return df
 
 
 def _image_brightness_study_path() -> Path:
-    return resolve(studies_path() / 'image-brightness', dir=True)
+    return resolve(studies_path() / "image-brightness", dir=True)
 
 
 def _image_brightness_results_path() -> Path:
-    return resolve(figures_path() / 'results' / 'image-brightness', dir=True)
+    return resolve(figures_path() / "results" / "image-brightness", dir=True)
