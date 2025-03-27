@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10"]
-        task:
+        check:
           - name: lint
             run: make lint
           - name: format
@@ -30,4 +30,5 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - run: ${{ matrix.task }}
+      - name: Run check '${{ matrix.check.name }}'
+        run: ${{ matrix.check.run }}
