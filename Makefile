@@ -1,30 +1,29 @@
 .PROJECT = boiling_learning
 .TESTS_FOLDER = tests
 
-.PHONY: coverage
-coverage:
-	@uv run coverage run --source=$(.PROJECT)/ -m pytest $(.TESTS_FOLDER)
-	@uv run coverage report -m
-
 .PHONY: test
 test:
-	@uv run pytest --doctest-modules $(.PROJECT) $(.TESTS_FOLDER) -vv
+	@bash scripts/test.sh -vv $(.PROJECT) $(.TESTS_FOLDER)
+
+.PHONY: test-cov
+test-cov:
+	@bash scripts/test-cov.sh -vv $(.PROJECT) $(.TESTS_FOLDER)
 
 .PHONY: format
 format:
-	@uv run --group format ruff format $(.PROJECT) $(.TESTS_FOLDER)
+	@bash scripts/format.sh $(.PROJECT) $(.TESTS_FOLDER)
 
 .PHONY: lint
 lint:
-	@uv run --group lint ruff check --fix $(.PROJECT) $(.TESTS_FOLDER)
+	@bash scripts/lint.sh $(.PROJECT) $(.TESTS_FOLDER)
 
 .PHONY: typecheck
 typecheck:
-	@uv run mypy $(.PROJECT)
+	@bash scripts/typecheck.sh $(.PROJECT)
 
 .PHONY: vulture
 vulture:
-	@uv run vulture --ignore-decorators @*.dispatch*,@*.instance* --ignore-names __*[!_][!_] $(.PROJECT) main.py
+	@bash scripts/vulture.sh $(.PROJECT)
 
 .PHONY: release
 release:
