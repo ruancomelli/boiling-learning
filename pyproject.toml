@@ -37,7 +37,7 @@ dependencies = [
     "frozendict==2.3.*",
     "funcy>=2.0",
     "more-itertools>=9.0.0",
-    "numpy==1.24.*",
+    "numpy==1.26.*",
     "parse==1.19.*",
     "pint==0.22",
     "scikit-image==0.20.*",
