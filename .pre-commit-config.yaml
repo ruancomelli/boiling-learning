@@ -1,4 +1,12 @@
 repos:
+- repo: https://github.com/astral-sh/uv-pre-commit
+  rev: 0.6.11
+  hooks:
+      # Update the uv lockfile
+  - id: uv-lock
+        # Install all packages
+  - id: uv-sync
+    args: [--locked, --all-packages]
 
 - repo: https://gitlab.com/vojko.pribudic.foss/pre-commit-update
   rev: v0.6.1
@@ -29,34 +37,31 @@ repos:
     args: [--autofix, --indent, '4', --no-sort]
 
 - repo: https://github.com/compilerla/conventional-pre-commit
-  rev: v2.1.1
+  rev: v4.0.0
   hooks:
   - id: conventional-pre-commit
     stages: [commit-msg]
 
-- repo: https://github.com/hakancelikdev/unimport
-  rev: 33ead41ee30f1d323a9c2fcfd0114297efbbc4d5
+- repo: local
   hooks:
-  - id: unimport
-    args: [--check, --gitignore, --ignore-init, --include-star-import, boiling_learning, tests]
 
-- repo: https://github.com/psf/black
-  rev: 23.3.0
-  hooks:
-  - id: black
-    args: [--config, pyproject.toml]
+  - id: format
+    name: Format Python code
+    stages: [pre-commit, pre-push]
+    language: system
+    entry: bash scripts/format.sh
+    types: [python]
 
-- repo: https://github.com/pycqa/isort
-  rev: 5.12.0
-  hooks:
-  - id: isort
-    name: isort (python)
-    args: [--check]
-  - id: isort
-    name: isort (cython)
-    types: [cython]
-    args: [--check]
-  - id: isort
-    name: isort (pyi)
-    types: [pyi]
-    args: [--check]
+  - id: lint
+    name: Lint Python code and fix violations
+    stages: [pre-commit, pre-push]
+    language: system
+    entry: bash scripts/lint.sh
+    types: [python]
+
+  - id: typecheck
+    name: Typecheck Python code
+    stages: [pre-commit, pre-push]
+    language: system
+    entry: bash scripts/typecheck.sh
+    types: [python]

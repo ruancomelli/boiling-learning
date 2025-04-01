@@ -2,7 +2,7 @@ name: Release package
 on:
   push:
     tags:
-      - v* # Push events to matching v*, i.e. v1.0, v20.15.10
+    - v*   # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   build:
@@ -12,14 +12,14 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'release-skip')"
 
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Set up Python
-        id: setup-python
-        uses: ./.github/actions/setup-python-environment
+    - name: Set up Python
+      id: setup-python
+      uses: ./.github/actions/setup-python-environment
 
-      - name: Run tests
-        run: make test
+    - name: Run tests
+      run: make test
 
   release:
     name: Create release
@@ -28,31 +28,31 @@ jobs:
     needs: build
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Zip boiling_learning/
-        run: |
-          zip -r boiling_learning.zip boiling_learning
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is auto provided by Actions
-        with:
-          tag_name: ${{ github.ref }} # get tag
-          release_name: Release ${{ github.ref }}
-          body: ${{ github.event.head_commit.message }} # get commit message
-          draft: false
-          prerelease: false
+    - name: Zip boiling_learning/
+      run: |
+        zip -r boiling_learning.zip boiling_learning
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # This token is auto provided by Actions
+      with:
+        tag_name: ${{ github.ref }}   # get tag
+        release_name: Release ${{ github.ref }}
+        body: ${{ github.event.head_commit.message }}   # get commit message
+        draft: false
+        prerelease: false
 
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the step above
-          asset_path: ./boiling_learning.zip
-          asset_name: boiling_learning.zip
-          asset_content_type: application/zip
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}   # This pulls from the step above
+        asset_path: ./boiling_learning.zip
+        asset_name: boiling_learning.zip
+        asset_content_type: application/zip

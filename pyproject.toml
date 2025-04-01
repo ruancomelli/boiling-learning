@@ -2,8 +2,7 @@
 dynamic = ["version"]
 name = "boiling-learning"
 description = "Deep learning models for phase-change quantification and classification"
-authors = [{ name = "Ruan Comelli", email = "ruancomelli@gmail.com" }]
-
+authors = [{name = "Ruan Comelli", email = "ruancomelli@gmail.com"}]
 license = "GPL-3.0-only"
 license-files = ["LICENSE"]
 readme = "README.md"
@@ -14,7 +13,7 @@ keywords = [
     "machine-learning",
     "phase-change",
     "python",
-    "tensorflow",
+    "tensorflow"
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -26,9 +25,8 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Image Processing",
     "Topic :: Scientific/Engineering :: Image Recognition",
-    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Physics"
 ]
-
 requires-python = "==3.10.*"
 dependencies = [
     "tensorflow==2.10.*",
@@ -59,7 +57,7 @@ dependencies = [
     "pandas==2.0.*",
     "h5py==3.8.*",
     "uncertainties==3.1.*",
-    "pyyaml==6.*",
+    "pyyaml==6.*"
 ]
 
 [project.urls]
@@ -78,9 +76,7 @@ test-cov = ["pytest>=8.3.4", "pytest-cov>=6.0.0"]
 typecheck = [
     "mypy>=1.15.0",
     "types-decorator>=5.1.8",
-    "types-PyYAML>=6.0.11",
-    # TODO: support funcy>=2 in funcy-stubs, and then re-add it:
-    # "funcy-stubs>=0.1.1",
+    "types-PyYAML>=6.0.11"
 ]
 vulture = ["vulture>=2.7"]
 
@@ -113,7 +109,7 @@ warn_unused_configs = true
 warn_unused_ignores = true
 plugins = [
     # "classes.contrib.mypy.classes_plugin",
-    "numpy.typing.mypy_plugin",
+    "numpy.typing.mypy_plugin"
 ]
 
 [tool.commitizen]
@@ -129,36 +125,36 @@ testpaths = ["boiling_learning", "tests"]
 
 [tool.ruff.lint]
 select = [
-    "D",      # pydocstyle
-    "F",      # pyflakes
-    "I",      # isort
-    "PL",     # pylint
-    "RUF100", # unused-noqa-directive
-    "UP",     # pyupgrade
+    "D",  # pydocstyle
+    "F",  # pyflakes
+    "I",  # isort
+    "PL",  # pylint
+    "RUF100",  # unused-noqa-directive
+    "UP"  # pyupgrade
 ]
 ignore = [
-    "D100",    # Missing docstring in public module
-    "D101",    # Missing docstring in public class
-    "D102",    # Missing docstring in public method
-    "D103",    # Missing docstring in public function
-    "D104",    # Missing docstring in public package
-    "D105",    # Missing docstring in magic method
-    "D106",    # Missing docstring in public nested class
-    "D107",    # Missing docstring in __init__
-    "D203",    # incorrect-blank-line-before-class
-    "D213",    # multi-line-summary-second-line
-    "D413",    # Missing blank line after last section
-    "PLR0912", # Too many branches
-    "PLR0913", # Too many arguments in function definition
+    "D100",  # Missing docstring in public module
+    "D101",  # Missing docstring in public class
+    "D102",  # Missing docstring in public method
+    "D103",  # Missing docstring in public function
+    "D104",  # Missing docstring in public package
+    "D105",  # Missing docstring in magic method
+    "D106",  # Missing docstring in public nested class
+    "D107",  # Missing docstring in __init__
+    "D203",  # incorrect-blank-line-before-class
+    "D213",  # multi-line-summary-second-line
+    "D413",  # Missing blank line after last section
+    "PLR0912",  # Too many branches
+    "PLR0913"  # Too many arguments in function definition
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [
-    "F401", # Unused imports
+    "F401"  # Unused imports
 ]
 "tests/**/*.py" = [
-    "D",       # Documentation
-    "PLR2004", # Magic value used in comparison
+    "D",  # Documentation
+    "PLR2004"  # Magic value used in comparison
 ]
 
 [tool.ruff.lint.pydocstyle]
