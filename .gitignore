@@ -97,7 +97,9 @@ celerybeat-schedule
 *.sage.py
 
 # Environments
+.envrc
 .env
+.env.*
 .venv
 env/
 venv/
@@ -145,6 +147,4 @@ cases/
 sandbox/
 *.vscode/
 
-!tox.ini
-.envrc
 __pypackages__
