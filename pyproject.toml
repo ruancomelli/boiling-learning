@@ -53,7 +53,7 @@ dependencies = [
     "pillow==9.5.*",
     "rich>=12.6.0",
     "typer[all]==0.9.*",
-    "pandera==0.15.*",
+    "pandera==0.19.*",
     "ffmpeg-python==0.2.*",
     "scipy==1.10.*",
     "pandas==2.0.*",
@@ -72,15 +72,17 @@ changelog = "https://github.com/ruancomelli/boiling_learning/blob/main/CHANGELOG
 [dependency-groups]
 ci = ["commitizen>=2.29.5", "pre-commit>=2.20.0"]
 format = ["ruff>=0.9.7"]
-lint = ["ruff>=0.9.7", "vulture>=2.7"]
-test = ["pytest>=7.1.2", "coverage>=6.4.3"]
-types = [
-    "mypy>=1.2.0",
+lint = ["ruff>=0.9.7"]
+test = ["pytest>=8.3.4"]
+test-cov = ["pytest>=8.3.4", "pytest-cov>=6.0.0"]
+typecheck = [
+    "mypy>=1.15.0",
     "types-decorator>=5.1.8",
     "types-PyYAML>=6.0.11",
     # TODO: support funcy>=2 in funcy-stubs, and then re-add it:
     # "funcy-stubs>=0.1.1",
 ]
+vulture = ["vulture>=2.7"]
 
 [build-system]
 requires = ["hatchling"]
@@ -113,7 +115,6 @@ plugins = [
     # "classes.contrib.mypy.classes_plugin",
     "numpy.typing.mypy_plugin",
 ]
-enable_incomplete_feature = ["TypeVarTuple", "Unpack"]
 
 [tool.commitizen]
 tag_format = "v$major.$minor.$patch$prerelease"
@@ -121,6 +122,10 @@ update_changelog_on_bump = true
 version = "0.39.0"
 version_files = ["pyproject.toml:version"]
 bump_message = "chore: release $new_version"
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules"
+testpaths = ["boiling_learning", "tests"]
 
 [tool.ruff.lint]
 select = [
