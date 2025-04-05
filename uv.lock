@@ -125,7 +125,7 @@ requires-dist = [
     { name = "classes", specifier = "==0.4.*" },
     { name = "decord", specifier = "==0.6.*" },
     { name = "ffmpeg-python", specifier = "==0.2.*" },
-    { name = "frozendict", specifier = "==2.3.*" },
+    { name = "frozendict", specifier = "==2.4.*" },
     { name = "funcy", specifier = ">=2.0" },
     { name = "h5py", specifier = "==3.8.*" },
     { name = "imageio", extras = ["ffmpeg"], specifier = "==2.30.*" },
@@ -439,19 +439,18 @@ wheels = [
 
 [[package]]
 name = "frozendict"
-version = "2.3.10"
+version = "2.4.6"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c8/0b/5892fa56dca4a3f133f317f5e1e59d99916d649b4d47b7408bae7ac26b1a/frozendict-2.3.10.tar.gz", hash = "sha256:aadc83510ce82751a0bb3575231f778bc37cbb373f5f05a52b888e26cbb92f79", size = 312896 }
+sdist = { url = "https://files.pythonhosted.org/packages/bb/59/19eb300ba28e7547538bdf603f1c6c34793240a90e1a7b61b65d8517e35e/frozendict-2.4.6.tar.gz", hash = "sha256:df7cd16470fbd26fc4969a208efadc46319334eb97def1ddf48919b351192b8e", size = 316416 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b8/99/098a63666c03b616295543c3d58946cec5ae9c8bdfafcf696dd3a22c66ef/frozendict-2.3.10-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:df2d2afa5af41bfa09dc9d5a8e6d73ae39b677a8572200c65a5ea353387ffccd", size = 36664 },
-    { url = "https://files.pythonhosted.org/packages/68/79/ff968e03f9ec2eef9e270bcd2b976522bbb4f5c248fb254f3f9a3a37e0e7/frozendict-2.3.10-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:b10df7f5d8637b1af319434f99dc25ca6f5537e28b293e4c405ebfb4bf9581fa", size = 36524 },
-    { url = "https://files.pythonhosted.org/packages/c6/0e/f4eabc2872085406884f95496dc18b091c6f205ec04880134b89feb4ac05/frozendict-2.3.10-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:da22a3e873f365f97445c49afc1e6d5198ed6d172f3efaf0e9fde0edcca3cea1", size = 116086 },
-    { url = "https://files.pythonhosted.org/packages/bf/e8/6eb098234b607ed660501a951b4b9190bf7bceff10a66cda828f32ad6e1a/frozendict-2.3.10-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:89218738e2122b50bf8a0444083dbe2de280402e9c2ef0929c0db0f93ff11271", size = 115872 },
-    { url = "https://files.pythonhosted.org/packages/fb/2a/30562648a2b977aeca38d354924d0a6b314bb7985bfea821724a5573e081/frozendict-2.3.10-cp310-cp310-musllinux_1_1_aarch64.whl", hash = "sha256:aa11add43a71fd47523fbd011be5cc011df79e25ec0b0339fc0d728623aaa7ec", size = 117730 },
-    { url = "https://files.pythonhosted.org/packages/b8/fc/4c8911a71959532a4539853d7c3c31b0665ac05f3b5068d4489874b82cc7/frozendict-2.3.10-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:af267bd6d98cbc10580105dc76f28f7156856fa48a5bbcadd40edb85f93657ae", size = 117064 },
-    { url = "https://files.pythonhosted.org/packages/17/42/95258bd1f9cf818f334a05e1036db9bfa384b5f04f97f97ccad2932808fd/frozendict-2.3.10-cp310-cp310-win_amd64.whl", hash = "sha256:c112024df64b8926a315d7e36b860967fcad8aae0c592b9f117589391373e893", size = 35809 },
-    { url = "https://files.pythonhosted.org/packages/d0/53/05c2f225cf9ecb29c0f3c46fb438be6e192c21a38d40d6309123508c6928/frozendict-2.3.10-cp310-cp310-win_arm64.whl", hash = "sha256:a0065db2bc76628853dd620bd08c1ca44ad0b711e92e89b4156493153add6f9d", size = 32463 },
-    { url = "https://files.pythonhosted.org/packages/b6/2c/e391d6d57bbd837d383a6b69b54ecb4768d75b31d8bc7a380b4b4afe4cb2/frozendict-2.3.10-py3-none-any.whl", hash = "sha256:66cded65f144393b4226bda9fe9ac2f42451d2d603e8a486015744bb566a7008", size = 14571 },
+    { url = "https://files.pythonhosted.org/packages/a6/7f/e80cdbe0db930b2ba9d46ca35a41b0150156da16dfb79edcc05642690c3b/frozendict-2.4.6-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:c3a05c0a50cab96b4bb0ea25aa752efbfceed5ccb24c007612bc63e51299336f", size = 37927 },
+    { url = "https://files.pythonhosted.org/packages/29/98/27e145ff7e8e63caa95fb8ee4fc56c68acb208bef01a89c3678a66f9a34d/frozendict-2.4.6-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:f5b94d5b07c00986f9e37a38dd83c13f5fe3bf3f1ccc8e88edea8fe15d6cd88c", size = 37945 },
+    { url = "https://files.pythonhosted.org/packages/ac/f1/a10be024a9d53441c997b3661ea80ecba6e3130adc53812a4b95b607cdd1/frozendict-2.4.6-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f4c789fd70879ccb6289a603cdebdc4953e7e5dea047d30c1b180529b28257b5", size = 117656 },
+    { url = "https://files.pythonhosted.org/packages/46/a6/34c760975e6f1cb4db59a990d58dcf22287e10241c851804670c74c6a27a/frozendict-2.4.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:da6a10164c8a50b34b9ab508a9420df38f4edf286b9ca7b7df8a91767baecb34", size = 117444 },
+    { url = "https://files.pythonhosted.org/packages/62/dd/64bddd1ffa9617f50e7e63656b2a7ad7f0a46c86b5f4a3d2c714d0006277/frozendict-2.4.6-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:9a8a43036754a941601635ea9c788ebd7a7efbed2becba01b54a887b41b175b9", size = 116801 },
+    { url = "https://files.pythonhosted.org/packages/45/ae/af06a8bde1947277aad895c2f26c3b8b8b6ee9c0c2ad988fb58a9d1dde3f/frozendict-2.4.6-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:c9905dcf7aa659e6a11b8051114c9fa76dfde3a6e50e6dc129d5aece75b449a2", size = 117329 },
+    { url = "https://files.pythonhosted.org/packages/d2/df/be3fa0457ff661301228f4c59c630699568c8ed9b5480f113b3eea7d0cb3/frozendict-2.4.6-cp310-cp310-win_amd64.whl", hash = "sha256:323f1b674a2cc18f86ab81698e22aba8145d7a755e0ac2cccf142ee2db58620d", size = 37522 },
+    { url = "https://files.pythonhosted.org/packages/4a/6f/c22e0266b4c85f58b4613fec024e040e93753880527bf92b0c1bc228c27c/frozendict-2.4.6-cp310-cp310-win_arm64.whl", hash = "sha256:eabd21d8e5db0c58b60d26b4bb9839cac13132e88277e1376970172a85ee04b3", size = 34056 },
 ]
 
 [[package]]
