@@ -47,7 +47,7 @@ dependencies = [
     "autokeras==1.0.20",
     "matplotlib==3.7.1",
     "seaborn[stats]==0.12.2",
-    "imageio[ffmpeg]==2.30.*",
+    "imageio[ffmpeg]==2.37.*",
     "pillow==9.5.*",
     "rich>=12.6.0",
     "typer[all]==0.9.*",
