@@ -32,7 +32,7 @@ dependencies = [
     "tensorflow==2.10.*",
     "tensorflow-addons==0.19.*",
     "typing-extensions>=4.3.0",
-    "frozendict==2.3.*",
+    "frozendict==2.4.*",
     "funcy>=2.0",
     "more-itertools>=9.0.0",
     "numpy==1.24.*",
