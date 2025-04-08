@@ -44,17 +44,18 @@ wheels = [
 
 [[package]]
 name = "autokeras"
-version = "1.0.20"
+version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "keras-nlp" },
     { name = "keras-tuner" },
     { name = "packaging" },
     { name = "pandas" },
     { name = "tensorflow" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f2/5d/a3c46434a1d050f550db75ac21a59bdc5622bbcf67faf63c25a8fffca238/autokeras-1.0.20.tar.gz", hash = "sha256:3d0f09629abb9b98f9059e3c8b9d39b4acd7f6dcde6d0584146a02035159141a", size = 93281 }
+sdist = { url = "https://files.pythonhosted.org/packages/8e/9d/3013e7f48742e23cd44f52ee3089b399dc8755b538fb5fac2d8d96340d61/autokeras-1.1.0.tar.gz", hash = "sha256:5667bb787e5d6eb86727b69ca1d7d6498025a5d93eca00133bd206d892ef49b9", size = 82081 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/04/1b/a6bf6bac7840e42640db06c49ea1a4442bda94087932d989a6ee90f9e224/autokeras-1.0.20-py3-none-any.whl", hash = "sha256:66da8c3c9f25afe456b2bbb123219fb91402e6015fb0df9479b9bacb0caab7aa", size = 162373 },
+    { url = "https://files.pythonhosted.org/packages/8e/46/374e1c992f2c2e0226af0bc99b5abf827e2f7a293c8d2eaf752a3077adba/autokeras-1.1.0-py3-none-any.whl", hash = "sha256:2a4865d84294ff9d8bcf119ed8c281e052e8c18372371d7f24fbcc4db96513bd", size = 148597 },
 ]
 
 [[package]]
@@ -121,7 +122,7 @@ vulture = [
 
 [package.metadata]
 requires-dist = [
-    { name = "autokeras", specifier = "==1.0.20" },
+    { name = "autokeras", specifier = "==1.1.0" },
     { name = "classes", specifier = "==0.4.*" },
     { name = "decord", specifier = "==0.6.*" },
     { name = "ffmpeg-python", specifier = "==0.2.*" },
@@ -669,11 +670,56 @@ wheels = [
 ]
 
 [[package]]
+name = "kagglehub"
+version = "0.3.11"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+    { name = "pyyaml" },
+    { name = "requests" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7a/14/496ad092984d40941c0f5abb4ce3df73456025eb5a4959c5e5d1882d67fe/kagglehub-0.3.11.tar.gz", hash = "sha256:8dd33e6bbd827590cc1e99d1bf5343135b22002fd01ea98d6494a8aa73fc0897", size = 107255 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/87/4b/b5023905576b960483207ab6506694101c594c18577e5a36a7189823015e/kagglehub-0.3.11-py3-none-any.whl", hash = "sha256:875f5bcfbda64f7e5ace96f4b2c8af5f9952ecbf8820e156300e8563ac177fc4", size = 63420 },
+]
+
+[[package]]
 name = "keras"
 version = "2.10.0"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f9/4d/dc255a437c9616b155e5bd55e325e092b7cdcb4652361d733ae051d40853/keras-2.10.0-py2.py3-none-any.whl", hash = "sha256:26a6e2c2522e7468ddea22710a99b3290493768fc08a39e75d1173a0e3452fdf", size = 1684294 },
+]
+
+[[package]]
+name = "keras-hub"
+version = "0.18.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "absl-py" },
+    { name = "kagglehub" },
+    { name = "numpy" },
+    { name = "packaging" },
+    { name = "regex" },
+    { name = "rich" },
+    { name = "tensorflow-text", marker = "sys_platform != 'darwin'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/33/0a/8fed7c03fd7acf15f486388a7a05586d20f5546e01407ba9120d2dd4c536/keras_hub-0.18.1.tar.gz", hash = "sha256:2aa6b2f233574cbe8193380d919ae4b516abcff8d96b210608b5b7af3762735c", size = 472629 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/02/ed/301ffa131fa576f0ed176a38c9be9be3d66af66dfc6f33e3ee792238e9c8/keras_hub-0.18.1-py3-none-any.whl", hash = "sha256:f1b83a2d2bc532ef39569e1201c03d0413f4e60aecd90293a42aca488a6ae6f2", size = 691170 },
+]
+
+[[package]]
+name = "keras-nlp"
+version = "0.18.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "keras-hub" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/83/c3/ee8f08f7fbe63697be1561c5bed1298e830f91c32bf2ba62e6120b15d733/keras_nlp-0.18.1.tar.gz", hash = "sha256:35f86bffec211622b35a2a922e4c5818af91e4564a558efb1eddf3af1011e14c", size = 2259 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2d/23/104d2283cdc8ef1c13ef70350c416e262f5c77efc2a6758ad648e27ca8fc/keras_nlp-0.18.1-py3-none-any.whl", hash = "sha256:28cbeaae3943a003357eee106cf7163076db1007dcb103a30e55f2c388f67f5d", size = 2012 },
 ]
 
 [[package]]
@@ -1341,6 +1387,30 @@ wheels = [
 ]
 
 [[package]]
+name = "regex"
+version = "2024.11.6"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/8e/5f/bd69653fbfb76cf8604468d3b4ec4c403197144c7bfe0e6a5fc9e02a07cb/regex-2024.11.6.tar.gz", hash = "sha256:7ab159b063c52a0333c884e4679f8d7a85112ee3078fe3d9004b2dd875585519", size = 399494 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/95/3c/4651f6b130c6842a8f3df82461a8950f923925db8b6961063e82744bddcc/regex-2024.11.6-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:ff590880083d60acc0433f9c3f713c51f7ac6ebb9adf889c79a261ecf541aa91", size = 482674 },
+    { url = "https://files.pythonhosted.org/packages/15/51/9f35d12da8434b489c7b7bffc205c474a0a9432a889457026e9bc06a297a/regex-2024.11.6-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:658f90550f38270639e83ce492f27d2c8d2cd63805c65a13a14d36ca126753f0", size = 287684 },
+    { url = "https://files.pythonhosted.org/packages/bd/18/b731f5510d1b8fb63c6b6d3484bfa9a59b84cc578ac8b5172970e05ae07c/regex-2024.11.6-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:164d8b7b3b4bcb2068b97428060b2a53be050085ef94eca7f240e7947f1b080e", size = 284589 },
+    { url = "https://files.pythonhosted.org/packages/78/a2/6dd36e16341ab95e4c6073426561b9bfdeb1a9c9b63ab1b579c2e96cb105/regex-2024.11.6-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d3660c82f209655a06b587d55e723f0b813d3a7db2e32e5e7dc64ac2a9e86fde", size = 782511 },
+    { url = "https://files.pythonhosted.org/packages/1b/2b/323e72d5d2fd8de0d9baa443e1ed70363ed7e7b2fb526f5950c5cb99c364/regex-2024.11.6-cp310-cp310-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:d22326fcdef5e08c154280b71163ced384b428343ae16a5ab2b3354aed12436e", size = 821149 },
+    { url = "https://files.pythonhosted.org/packages/90/30/63373b9ea468fbef8a907fd273e5c329b8c9535fee36fc8dba5fecac475d/regex-2024.11.6-cp310-cp310-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:f1ac758ef6aebfc8943560194e9fd0fa18bcb34d89fd8bd2af18183afd8da3a2", size = 809707 },
+    { url = "https://files.pythonhosted.org/packages/f2/98/26d3830875b53071f1f0ae6d547f1d98e964dd29ad35cbf94439120bb67a/regex-2024.11.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:997d6a487ff00807ba810e0f8332c18b4eb8d29463cfb7c820dc4b6e7562d0cf", size = 781702 },
+    { url = "https://files.pythonhosted.org/packages/87/55/eb2a068334274db86208ab9d5599ffa63631b9f0f67ed70ea7c82a69bbc8/regex-2024.11.6-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:02a02d2bb04fec86ad61f3ea7f49c015a0681bf76abb9857f945d26159d2968c", size = 771976 },
+    { url = "https://files.pythonhosted.org/packages/74/c0/be707bcfe98254d8f9d2cff55d216e946f4ea48ad2fd8cf1428f8c5332ba/regex-2024.11.6-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:f02f93b92358ee3f78660e43b4b0091229260c5d5c408d17d60bf26b6c900e86", size = 697397 },
+    { url = "https://files.pythonhosted.org/packages/49/dc/bb45572ceb49e0f6509f7596e4ba7031f6819ecb26bc7610979af5a77f45/regex-2024.11.6-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:06eb1be98df10e81ebaded73fcd51989dcf534e3c753466e4b60c4697a003b67", size = 768726 },
+    { url = "https://files.pythonhosted.org/packages/5a/db/f43fd75dc4c0c2d96d0881967897926942e935d700863666f3c844a72ce6/regex-2024.11.6-cp310-cp310-musllinux_1_2_i686.whl", hash = "sha256:040df6fe1a5504eb0f04f048e6d09cd7c7110fef851d7c567a6b6e09942feb7d", size = 775098 },
+    { url = "https://files.pythonhosted.org/packages/99/d7/f94154db29ab5a89d69ff893159b19ada89e76b915c1293e98603d39838c/regex-2024.11.6-cp310-cp310-musllinux_1_2_ppc64le.whl", hash = "sha256:fdabbfc59f2c6edba2a6622c647b716e34e8e3867e0ab975412c5c2f79b82da2", size = 839325 },
+    { url = "https://files.pythonhosted.org/packages/f7/17/3cbfab1f23356fbbf07708220ab438a7efa1e0f34195bf857433f79f1788/regex-2024.11.6-cp310-cp310-musllinux_1_2_s390x.whl", hash = "sha256:8447d2d39b5abe381419319f942de20b7ecd60ce86f16a23b0698f22e1b70008", size = 843277 },
+    { url = "https://files.pythonhosted.org/packages/7e/f2/48b393b51900456155de3ad001900f94298965e1cad1c772b87f9cfea011/regex-2024.11.6-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:da8f5fc57d1933de22a9e23eec290a0d8a5927a5370d24bda9a6abe50683fe62", size = 773197 },
+    { url = "https://files.pythonhosted.org/packages/45/3f/ef9589aba93e084cd3f8471fded352826dcae8489b650d0b9b27bc5bba8a/regex-2024.11.6-cp310-cp310-win32.whl", hash = "sha256:b489578720afb782f6ccf2840920f3a32e31ba28a4b162e13900c3e6bd3f930e", size = 261714 },
+    { url = "https://files.pythonhosted.org/packages/42/7e/5f1b92c8468290c465fd50c5318da64319133231415a8aa6ea5ab995a815/regex-2024.11.6-cp310-cp310-win_amd64.whl", hash = "sha256:5071b2093e793357c9d8b2929dfc13ac5f0a6c650559503bb81189d0a3814519", size = 274042 },
+]
+
+[[package]]
 name = "requests"
 version = "2.32.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1641,6 +1711,19 @@ wheels = [
 ]
 
 [[package]]
+name = "tensorflow-hub"
+version = "0.16.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "protobuf" },
+    { name = "tf-keras" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e5/50/00dba77925bf2a0a1e45d7bcf8a69a1d2534fb4bb277d9010bd148d2235e/tensorflow_hub-0.16.1-py2.py3-none-any.whl", hash = "sha256:e10c184b3d08daeafada11ffea2dd46781725b6bef01fad1f74d6634ad05311f", size = 30771 },
+]
+
+[[package]]
 name = "tensorflow-io-gcs-filesystem"
 version = "0.37.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1652,12 +1735,34 @@ wheels = [
 ]
 
 [[package]]
+name = "tensorflow-text"
+version = "2.10.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "tensorflow", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "tensorflow-hub" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/37/a5/bf11fb427226283b2abefcad355030effdb1a0c45978b80c63a38556bdd2/tensorflow_text-2.10.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:554f05956922afe0269dfb1e2fd73f5e049fa5746c47fd34d92ff7e447d746d4", size = 5889598 },
+    { url = "https://files.pythonhosted.org/packages/88/a2/8d2ee50c8e5e355bf23975a0b7fa49ddd9c9b0ecb48b8c77d78ff4b3bcc0/tensorflow_text-2.10.0-cp310-cp310-win_amd64.whl", hash = "sha256:269a3d7c3bd34e069e5d4ccaece902fc46aad65220301ee3bdb70d4ab031a60d", size = 5004273 },
+]
+
+[[package]]
 name = "termcolor"
 version = "2.5.0"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/37/72/88311445fd44c455c7d553e61f95412cf89054308a1aa2434ab835075fc5/termcolor-2.5.0.tar.gz", hash = "sha256:998d8d27da6d48442e8e1f016119076b690d962507531df4890fcd2db2ef8a6f", size = 13057 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7f/be/df630c387a0a054815d60be6a97eb4e8f17385d5d6fe660e1c02750062b4/termcolor-2.5.0-py3-none-any.whl", hash = "sha256:37b17b5fc1e604945c2642c872a3764b5d547a48009871aea3edd3afa180afb8", size = 7755 },
+]
+
+[[package]]
+name = "tf-keras"
+version = "2.15.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ce/0c/36054828137226dc3a559b525640f296a99ee8eb38beca32b36d29bb303b/tf_keras-2.15.0.tar.gz", hash = "sha256:d7559c2ba40667679fcb2105d3e4b68bbc07ecafbf1037462ce7b3974c3c6798", size = 1250420 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/19/26/ca8a6cca61f2a44f1e7ee71ebdb9c8dfbc4371f418db811cdca4641f6daa/tf_keras-2.15.0-py3-none-any.whl", hash = "sha256:48607ee60a4d1fa7c09d6a44293a803faf3136e7a43f92df089ac094117547d2", size = 1714973 },
 ]
 
 [[package]]
@@ -1688,6 +1793,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b1/09/a439bec5888f00a54b8b9f05fa94d7f901d6735ef4e55dcec9bc37b5d8fa/tomlkit-0.13.2.tar.gz", hash = "sha256:fff5fe59a87295b278abd31bec92c15d9bc4a06885ab12bcea52c71119392e79", size = 192885 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f9/b6/a447b5e4ec71e13871be01ba81f5dfc9d0af7e473da256ff46bc0e24026f/tomlkit-0.13.2-py3-none-any.whl", hash = "sha256:7a974427f6e119197f670fbbbeae7bef749a6c14e793db934baefc1b5f03efde", size = 37955 },
+]
+
+[[package]]
+name = "tqdm"
+version = "4.67.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl", hash = "sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2", size = 78540 },
 ]
 
 [[package]]
