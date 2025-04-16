@@ -26,8 +26,6 @@ Boiling Learning
 
 Project developed by [Ruan Comelli](https://github.com/ruancomelli) at [UFSC (Federal University of Santa Catarina)](https://ufsc.br/) in order to obtain a Master's degree in Mechanical Engineering.
 
-If you are curious about the evolution of this project, take a look at the [changelog](CHANGELOG.md).
-
 ## Versioning
 
 This project uses [ZeroVer](https://0ver.org/), a versioning scheme in which software never leaves major version **0**. This means that breaking changes are expected frequently.
