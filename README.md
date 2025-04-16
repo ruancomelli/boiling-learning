@@ -11,7 +11,6 @@ Boiling Learning
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
 [![Author: ruancomelli](https://img.shields.io/badge/ruancomelli-blue?style=flat&label=author)](https://github.com/ruancomelli)
 
-<h1 align="center">
 <a href="https://github.com/ruancomelli/boiling-learning">
 <img
   src=https://user-images.githubusercontent.com/22752929/181357665-f1fb9c59-ec02-46f8-b723-f38c15576bfd.gif
@@ -20,7 +19,6 @@ Boiling Learning
   align="center"
 >
 </a>
-</h1>
 
 ---
 
