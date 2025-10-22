@@ -27,7 +27,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Image Recognition",
     "Topic :: Scientific/Engineering :: Physics"
 ]
-requires-python = "==3.10.*"
+requires-python = "==3.14.*"
 dependencies = [
     "tensorflow==2.10.*",
     "tensorflow-addons==0.19.*",
