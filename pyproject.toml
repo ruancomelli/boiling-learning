@@ -51,7 +51,7 @@ dependencies = [
     "pillow==9.5.*",
     "rich>=12.6.0",
     "typer[all]==0.9.*",
-    "pandera==0.19.*",
+    "pandera==0.33.*",
     "ffmpeg-python==0.2.*",
     "scipy==1.10.*",
     "pandas==2.0.*",
