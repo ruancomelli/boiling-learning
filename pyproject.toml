@@ -36,7 +36,7 @@ dependencies = [
     "funcy>=2.0",
     "more-itertools>=9.0.0",
     "numpy==1.24.*",
-    "parse==1.19.*",
+    "parse==1.22.*",
     "pint==0.22",
     "scikit-image==0.20.*",
     "classes==0.4.*",
